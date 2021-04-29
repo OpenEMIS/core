@@ -206,8 +206,11 @@ class ProfilesController extends AppController
     {
         $session = $this->request->session();
         /*$studentId = $this->Auth->user('id');*/
-        $studentId  = $this->request->pass[1];
-
+        if ($session->read('Auth.User.is_guardian') == 1) { 
+            $studentId = $session->read('Student.Students.id'); 
+        } else {
+            $studentId  = $this->request->pass[1];
+        }
         $session->write('Student.ExaminationResults.student_id', $studentId);
 
         // tabs
@@ -274,7 +277,12 @@ class ProfilesController extends AppController
         $header = '';
 
         if ($this->Profiles->exists([$this->Profiles->primaryKey() => $loginUserId])) {
-            $studentId = $this->request->pass[1];
+            if ($session->read('Auth.User.is_guardian') == 1) {
+                $studentId = $session->read('Student.Students.id'); 
+            } else {
+                $studentId = $this->request->pass[1];
+            }
+            
             if (!empty($studentId)) {
                 $sId = $this->ControllerAction->paramsDecode($studentId);
                 $student_id = $sId['id'];
@@ -349,9 +357,13 @@ class ProfilesController extends AppController
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
         $action = $this->request->params['action'];
-        $studentId = $this->request->params['pass'][1];
+        if ($session->read('Auth.User.is_guardian') == 1) {
+            $studentId = $session->read('Student.Students.id');
+        }else {
+            $studentId = $this->request->params['pass'][1];
+        }
         if (!empty($studentId)) {
-             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards') {
+             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards' || $action == 'StudentAssociations') {
 				$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
                 $entity = $this->Profiles->get($studentId);
                 $name = $entity->name;
@@ -438,8 +450,10 @@ class ProfilesController extends AppController
         {
         $loginUserId = $this->Auth->user('id'); // login user
         $action = $this->request->params['action'];
+        $session = $this->request->session();
+        
         if ($model->hasField('security_user_id')) {
-            $session = $this->request->session();
+            
             $studentId = $session->read('Student.Students.id'); 
             if (!empty($studentId)) {
                 $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
@@ -449,8 +463,15 @@ class ProfilesController extends AppController
             }
         } else if ($model->hasField('student_id')) {
             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentTextbooks') {
-                $session = $this->request->session();
-                $studentId = $session->read('Student.Students.id'); 
+                if ($session->read('Auth.User.is_guardian') ==1) {
+                    $sId1 = $this->request->params['pass'][1];
+                    if (!empty($sId1)) {
+                        $session->write('Student.Students.id', $sId1);
+                    }
+                    $studentId = $session->read('Student.Students.id');
+                } else {
+                    $studentId = $session->read('Student.Students.id'); 
+                }
                 if (!empty($studentId)) {
                     $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
                     $query->where([$model->aliasField('student_id') => $sId]);
