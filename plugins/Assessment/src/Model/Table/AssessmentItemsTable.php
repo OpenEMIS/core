@@ -5,6 +5,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
+use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\AppTable;
 
@@ -187,16 +188,7 @@ class AssessmentItemsTable extends AppTable
 
     public function findSubjectNewTab(Query $query, array $options)
     {  
-        $url = $_SERVER['HTTP_REFERER'];
-        $queryString = parse_url($url);
-        $name = $queryString['query'];
-        $domain = substr($name, strpos($name, "="));
-        $test = base64_decode($domain);
-        $variable = substr($test, 0, strpos($test, "}"));
-        $newVaridable = $variable . "}";
-        $data = json_decode($newVaridable);
-       // $institutionId =  $data->institution_id;
-        //$academinPeriod = $data->academic_period_id;
+        $loggedInUserId = $options['user']['id'];
         $institutionId =  $options['institution_id'];
         $academinPeriod = $options['academic_period_id'];
         $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
@@ -205,8 +197,8 @@ class AssessmentItemsTable extends AppTable
         $assessmentId = $options['assessment_id'];
         $classId = $options['class_id'];
         $staffSubject = TableRegistry::get('Institution.InstitutionSubjectStaff');
-        
-                $query
+                
+        $query
                     ->contain('EducationSubjects')
                     ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
                         $ClassSubjects->aliasField('institution_class_id') => $classId
@@ -224,16 +216,55 @@ class AssessmentItemsTable extends AppTable
                         $InstitutionSubjects->aliasField('education_subject_id'),
                         $InstitutionSubjects->aliasField('id'),
                         $InstitutionSubjects->aliasField('name'),
-                        $educationSubject->aliasField('id'),
+                        $educationSubject->aliasField('id')
                     ])
                     ->where([
                         $this->aliasField('assessment_id') => $assessmentId,
                         $InstitutionSubjects->aliasField('institution_id') => $institutionId,
                         $InstitutionSubjects->aliasField('academic_period_id') => $academinPeriod,
                     ])
-                    ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name']);
+                   ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name']);
+            
+            //POCOR-5999 starts
+            $query
+                ->formatResults(function (ResultSetInterface $results) use($staffSubject, $loggedInUserId) {
+                    return $results->map(function ($row) use($staffSubject, $loggedInUserId) {
+                        $row['education_subject_id'] = $row->education_subject_id;
+                        $row['id'] = $row->id;
+                        $row['assessment_id'] = $row->assessment_id;
+                        $row['weight'] = $row->weight;
+                        $row['classification'] = $row->classification;
+                        $row['education_subject'] = [
+                            'id' => $row->education_subject->id,
+                            'code_name' => " - "
+                        ];
+                        $row['InstitutionSubjects'] = [
+                            'education_subject_id' => $row->InstitutionSubjects['education_subject_id'],
+                            'id' => $row->InstitutionSubjects['id'],
+                            'name' => $row->InstitutionSubjects['name']
+                        ];
+                
+                $data = $staffSubject->find()
+                        ->where([$staffSubject->aliasField('staff_id') => $loggedInUserId])
+                        ->toArray();
 
-                return $query;
+                    if (!empty($data)) {
+                        foreach ($data as $value) {
+                            $tabSubjectId = $row->InstitutionSubjects['id'];
+                            $staffSubjectId = $value->institution_subject_id;
+                            if ($staffSubjectId == $tabSubjectId) {
+                                $row['is_editable'] = 1;
+                            } else {
+                                $row['is_editable'] = 0;
+                            }
+                        }
+                    }
+                            
+                    return $row;
+                    });
+                });
+        //POCOR-5999 ends
+        return $query;
     }
 
     public function getSubjects($assessmentId)
