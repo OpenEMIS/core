@@ -423,7 +423,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                             switch (code) {
                                 case null:
                                 case mealType.Free.code:
-                                    ++presentCount;
+                                    // ++presentCount;
                                      break;
                                 case mealType.Paid.code:
                                     ++presentCount;
@@ -437,8 +437,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                         } 
                     });
                 }
-                
-
+              
                 vm.presentCount = presentCount;
                 vm.absenceCount = absenceCount;
                 vm.lateCount = lateCount;
