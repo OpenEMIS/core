@@ -215,23 +215,23 @@ class DatabaseTransferShell extends Shell
                     
                 }
             }
-            $checkconnection = ConnectionManager::get($transferConnectionsData['db_name']);
-            $collection = $checkconnection->schemaCollection();
-            $tableSchema = $collection->listTables();
-            if (in_array('institution_staff_attendances', $tableSchema)) {
-                $table_name = 'institution_staff_attendances';
-            }
-            $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_attendances_archive AS SELECT * FROM $table_name");
-            $stmt1->execute();
             $InstitutionStaffAttendancesData->deleteAll(['academic_period_id' => $academicPeriodId]);
             
         }
+        $checkconnection = ConnectionManager::get($transferConnectionsData['db_name']);
+        $collection = $checkconnection->schemaCollection();
+        $tableSchema = $collection->listTables();
+        if (in_array('institution_staff_attendances', $tableSchema)) {
+            $table_name = 'institution_staff_attendances';
+        }
+        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_attendances_archive AS SELECT * FROM $table_name");
+        $stmt1->execute();
         //institution_staff_attendances[END]
         //institution_staff_leave[Start]
 
-        $Tablecollection = $archive_connection->schemaCollection();
-        $tableSchema = $Tablecollection->listTables();
-        if (! in_array('institution_staff_leave', $tableSchema)) {
+        $TablecollectionOne = $archive_connection->schemaCollection();
+        $tableSchemaOne = $TablecollectionOne->listTables();
+        if (! in_array('institution_staff_leave', $tableSchemaOne)) {
               $archive_connection->execute("CREATE TABLE `institution_staff_leave` (
                 `id` int(11) NOT NULL,
                 `date_from` date NOT NULL,
@@ -374,18 +374,41 @@ class DatabaseTransferShell extends Shell
                 }catch (PDOException $e) {
                 }
             }
-            $checkconnection = ConnectionManager::get($transferConnectionsData['db_name']);
-            $collection = $checkconnection->schemaCollection();
-            $tableSchema = $collection->listTables();
-            if (in_array('institution_staff_leave', $tableSchema)) {
-                $table_name = 'institution_staff_leave';
-            }
-            $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_leave_archived AS SELECT * FROM $table_name");
-            $stmt1->execute();
             $InstitutionStaffLeaveData->deleteAll(['academic_period_id' => $academicPeriodId]);
         }
+        $checkconnection = ConnectionManager::get($transferConnectionsData['db_name']);
+        $collection = $checkconnection->schemaCollection();
+        $tableSchema = $collection->listTables();
+        if (in_array('institution_staff_leave', $tableSchema)) {
+            $table_name = 'institution_staff_leave';
+        }
+        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_leave_archived AS SELECT * FROM $table_name");
+        $stmt1->execute();
 
         //institution_staff_leave[END]
+
+        $TablecollectionTwo = $archive_connection->schemaCollection();
+        $tableSchemaTwo = $TablecollectionTwo->listTables();
+        if (! in_array('assessment_item_results', $tableSchemaTwo)) {
+              $archive_connection->execute("CREATE TABLE `assessment_item_results` (
+                `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+                `marks` decimal(6,2) DEFAULT NULL,
+                `assessment_grading_option_id` int(11) DEFAULT NULL,
+                `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+                `assessment_id` int(11) NOT NULL COMMENT 'links to assessments.id',
+                `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
+                `education_grade_id` int(11) NOT NULL COMMENT 'links to education_grades.id',
+                `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
+                `assessment_period_id` int(11) NOT NULL COMMENT 'links to assessment_periods.id',
+                `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
+                `modified_user_id` int(11) DEFAULT NULL,
+                `modified` datetime DEFAULT NULL,
+                `created_user_id` int(11) NOT NULL,
+                `created` datetime NOT NULL
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the assessment results for an individual student in an institution'
+              PARTITION BY HASH (`assessment_id`)
+              PARTITIONS 101");
+        }
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
@@ -404,89 +427,92 @@ class DatabaseTransferShell extends Shell
                         'AssessmentItemResults.academic_period_id' => $academicPeriodId
                     ])
                     ->toArray();
-        foreach($assessmentItemResultsData AS $data){
-            if(isset($data["modified_user_id"])){
-                $val = $data["modified_user_id"];
-            }else{
-                $val = 'NULL';
-            }
-            if(isset($data['modified'])){
-                if ($data['modified'] instanceof Time || $data['modified'] instanceof Date) {
-                    $modified = $data['modified']->format('Y-m-d H:i:s');
-                }else {
-                    $modified = date('Y-m-d H:i:s', strtotime($data['modified']));
+        if(!empty($assessmentItemResultsData)){
+            foreach($assessmentItemResultsData AS $data){
+                if(isset($data["modified_user_id"])){
+                    $val = $data["modified_user_id"];
+                }else{
+                    $val = 'NULL';
                 }
-            }
-            if(isset($data['created'])){
-                if ($data['created'] instanceof Time || $data['created'] instanceof Date) {
-                    $created = $data['created']->format('Y-m-d');
-                }else {
-                    $created = date('Y-m-d', strtotime($data['created']));
+                if(isset($data['modified'])){
+                    if ($data['modified'] instanceof Time || $data['modified'] instanceof Date) {
+                        $modified = $data['modified']->format('Y-m-d H:i:s');
+                    }else {
+                        $modified = date('Y-m-d H:i:s', strtotime($data['modified']));
+                    }
                 }
-            }
-
-            if(!empty($data && isset($data))){
-                try{
-                    $statement = $archive_connection->prepare('INSERT INTO assessment_item_results (id, 
-                    marks, 
-                    assessment_grading_option_id,
-                    student_id,
-                    assessment_id,
-                    education_subject_id,
-                    education_grade_id,
-                    academic_period_id,
-                    assessment_period_id,
-                    institution_id,
-                    modified_user_id,
-                    modified,
-                    created_user_id,
-                    created)
+                if(isset($data['created'])){
+                    if ($data['created'] instanceof Time || $data['created'] instanceof Date) {
+                        $created = $data['created']->format('Y-m-d');
+                    }else {
+                        $created = date('Y-m-d', strtotime($data['created']));
+                    }
+                }
+    
+                if(!empty($data && isset($data))){
+                    try{
+                        $statement = $archive_connection->prepare('INSERT INTO assessment_item_results (id, 
+                        marks, 
+                        assessment_grading_option_id,
+                        student_id,
+                        assessment_id,
+                        education_subject_id,
+                        education_grade_id,
+                        academic_period_id,
+                        assessment_period_id,
+                        institution_id,
+                        modified_user_id,
+                        modified,
+                        created_user_id,
+                        created)
+                        
+                        VALUES (:id, 
+                        :marks, 
+                        :assessment_grading_option_id,
+                        :student_id,
+                        :assessment_id,
+                        :education_subject_id,
+                        :education_grade_id,
+                        :academic_period_id,
+                        :assessment_period_id,
+                        :institution_id,
+                        :modified_user_id,
+                        :modified,
+                        :created_user_id,
+                        :created)');
+    
+                        $statement->execute([
+                        'id' => $data["id"],
+                        'marks' => $data["marks"],
+                        'assessment_grading_option_id' => $data["assessment_grading_option_id"],
+                        'student_id' => $data["student_id"],
+                        'assessment_id' => $data["assessment_id"],
+                        'education_subject_id' => $data["education_subject_id"],
+                        'education_grade_id' => $data["education_grade_id"],
+                        'academic_period_id' => $data["academic_period_id"],
+                        'assessment_period_id' => $data["assessment_period_id"],
+                        'institution_id' => $data["institution_id"],
+                        'modified_user_id' => isset($data["modified_user_id"]) ? $data["modified_user_id"] : NULL,
+                        'modified' => isset($modified) ? $modified : NULL,
+                        'created_user_id' => $data["created_user_id"],
+                        'created' => isset($created) ? $created : NULL,
+                        ]);
                     
-                    VALUES (:id, 
-                    :marks, 
-                    :assessment_grading_option_id,
-                    :student_id,
-                    :assessment_id,
-                    :education_subject_id,
-                    :education_grade_id,
-                    :academic_period_id,
-                    :assessment_period_id,
-                    :institution_id,
-                    :modified_user_id,
-                    :modified,
-                    :created_user_id,
-                    :created)');
-
-                    $statement->execute([
-                    'id' => $data["id"],
-                    'marks' => $data["marks"],
-                    'assessment_grading_option_id' => $data["assessment_grading_option_id"],
-                    'student_id' => $data["student_id"],
-                    'assessment_id' => $data["assessment_id"],
-                    'education_subject_id' => $data["education_subject_id"],
-                    'education_grade_id' => $data["education_grade_id"],
-                    'academic_period_id' => $data["academic_period_id"],
-                    'assessment_period_id' => $data["assessment_period_id"],
-                    'institution_id' => $data["institution_id"],
-                    'modified_user_id' => isset($data["modified_user_id"]) ? $data["modified_user_id"] : NULL,
-                    'modified' => isset($modified) ? $modified : NULL,
-                    'created_user_id' => $data["created_user_id"],
-                    'created' => isset($created) ? $created : NULL,
-                    ]);
-                
-                }catch (PDOException $e) {
+                    }catch (PDOException $e) {
+                        
+                    }
                     
                 }
-                
             }
         }
+        
         $checkconnection = ConnectionManager::get($transferConnectionsData['db_name']);
         $collection = $checkconnection->schemaCollection();
         $tableSchema = $collection->listTables();
         if (in_array('assessment_item_results', $tableSchema)) {
-            $table_name = 'assessment_item_results';
+            $assessment_item_results_table_name = 'assessment_item_results';
         }
-        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW assessment_item_results_archived AS SELECT * FROM $table_name");
+        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW assessment_item_results_archived AS SELECT * FROM $assessment_item_results_table_name");
         $stmt1->execute();
         $AssessmentItemResults->deleteAll(['academic_period_id' => $academicPeriodId]);
 

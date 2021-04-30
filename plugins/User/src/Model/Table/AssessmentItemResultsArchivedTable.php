@@ -86,7 +86,17 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             $staffId = $this->Session->read('Staff.Staff.id');
         }
 
-        $periodOptions = $AcademicPeriod->getYearList();
+        $academic_period_result = $this->find('all', array(
+            'fields'=>'academic_period_id',
+            'group' => 'academic_period_id'
+        ));
+        if(!empty($academic_period_result)){
+            foreach($academic_period_result AS $academic_period_data){
+                $archived_academic_period_arr[] = $academic_period_data['academic_period_id'];
+            }
+        }
+
+        $periodOptions = $AcademicPeriod->getArchivedYearList($archived_academic_period_arr);
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
         }
