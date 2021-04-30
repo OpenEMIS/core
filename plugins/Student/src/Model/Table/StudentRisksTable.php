@@ -153,14 +153,22 @@ class StudentRisksTable extends ControllerActionTable
         $user = $this->Auth->user();
 
         $session = $this->request->session();
-        $studentId = $session->read('Student.Students.id');
+        if ($session->read('Auth.User.is_guardian') == 1) {
+
+            $sId = $session->read('Student.ExaminationResults.student_id');
+            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+
+        } else {
+            $studentId = $session->read('Student.Students.id');
+        }
+
 /*
         if ($this->controller->name == 'Profiles' && $this->action == 'index') {
             $session = $this->request->session();
             $studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
         }*/
          
-        if ($user['is_student'] == 1) {
+        if ($user['is_student'] == 1 && $user['is_guardian'] == 0) {
             $query = $query
             ->where([
                 $this->aliasField('student_id') => $user['id'],

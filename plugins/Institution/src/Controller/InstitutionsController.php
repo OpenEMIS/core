@@ -1768,6 +1768,7 @@ class InstitutionsController extends AppController
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
                 'StudentRisks' => __('Risks'),
+                'StudentTextbooks' => __('Textbox'),
                 'StudentAssociations' => __('Associations')
             ];
             if (array_key_exists($alias, $studentModels)) {
