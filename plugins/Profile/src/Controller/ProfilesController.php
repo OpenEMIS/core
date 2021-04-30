@@ -277,11 +277,11 @@ class ProfilesController extends AppController
         $header = '';
 
         if ($this->Profiles->exists([$this->Profiles->primaryKey() => $loginUserId])) {
-            if ($session->read('Auth.User.is_guardian') == 1) {
-                $studentId = $session->read('Student.ExaminationResults.student_id'); 
-            } else {
+            // if ($session->read('Auth.User.is_guardian') == 1) {
+            //     $studentId = $session->read('Student.ExaminationResults.student_id'); 
+            // } else {
                 $studentId = $this->request->pass[1];
-            }
+            //}
             
             if (!empty($studentId)) {
                 $sId = $this->ControllerAction->paramsDecode($studentId);
