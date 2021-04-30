@@ -79,7 +79,17 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
             $staffId = $this->Session->read('Staff.Staff.id');
         }
 
-        $periodOptions = $AcademicPeriod->getYearList();
+        $academic_period_result = $this->find('all', array(
+            'fields'=>'academic_period_id',
+            'group' => 'academic_period_id'
+        ));
+        if(!empty($academic_period_result)){
+            foreach($academic_period_result AS $academic_period_data){
+                $archived_academic_period_arr[] = $academic_period_data['academic_period_id'];
+            }
+        }
+
+        $periodOptions = $AcademicPeriod->getArchivedYearList($archived_academic_period_arr);
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
         }
@@ -110,40 +120,41 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
                 }
                 $weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
             }
-            $academicPeriodObj = $AcademicPeriod->get($selectedPeriod);
-            $startYear = $academicPeriodObj->start_year;
-            $endYear = $academicPeriodObj->end_year;
-            if (date("Y") >= $startYear && date("Y") <= $endYear && !is_null($currentWeek)) {
-                $selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
-            } else {
-                $selectedWeek = $this->queryString('week', $weekOptions);
-            }
-
-            $weekStartDate = $weeks[$selectedWeek][0];
-            $weekEndDate = $weeks[$selectedWeek][1];
-
-            $this->advancedSelectOptions($weekOptions, $selectedWeek);
-            $this->controller->set(compact('weekOptions', 'selectedWeek'));
-            // end setup weeks
-
-            
-
-           
-            // End setup days
-
+            $weekOptions = ['-1' => __('All Weeks')] + $weekOptions;
             $conditions = [
                 $this->aliasField('academic_period_id') => $selectedPeriod,
                 $this->aliasField('institution_id') => $institutionId,
                 ];
-            $startDate = $weekStartDate;
-            $endDate = $weekEndDate;
-            $selectedFormatStartDate = date_format($startDate, 'Y-m-d');
-            $selectedFormatEndDate = date_format($endDate, 'Y-m-d');
-            $dateConditions = [
-                $this->aliasField('date >=') => $selectedFormatStartDate,
-                $this->aliasField('date <=') => $selectedFormatEndDate
-            ];
-            $conditions = array_merge($conditions, $dateConditions);
+            if(!empty($this->request->query('week')) && $this->request->query('week') != '-1'){
+                $academicPeriodObj = $AcademicPeriod->get($selectedPeriod);
+                $startYear = $academicPeriodObj->start_year;
+                $endYear = $academicPeriodObj->end_year;
+                if (date("Y") >= $startYear && date("Y") <= $endYear && !is_null($currentWeek)) {
+                    $selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
+                } else {
+                    $selectedWeek = $this->queryString('week', $weekOptions);
+                }
+
+                $weekStartDate = $weeks[$selectedWeek][0];
+                $weekEndDate = $weeks[$selectedWeek][1];
+                // end setup weeks
+                $startDate = $weekStartDate;
+                $endDate = $weekEndDate;
+                $selectedFormatStartDate = date_format($startDate, 'Y-m-d');
+                $selectedFormatEndDate = date_format($endDate, 'Y-m-d');
+                $dateConditions = [
+                    $this->aliasField('date >=') => $selectedFormatStartDate,
+                    $this->aliasField('date <=') => $selectedFormatEndDate
+                ];
+                $conditions = array_merge($conditions, $dateConditions);
+            }else{
+                $conditions = [
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('institution_id') => $institutionId,
+                    ];
+            }
+            $this->advancedSelectOptions($weekOptions, $selectedWeek);
+                $this->controller->set(compact('weekOptions', 'selectedWeek'));
             $query
                 ->find('all')
                 ->where($conditions);
