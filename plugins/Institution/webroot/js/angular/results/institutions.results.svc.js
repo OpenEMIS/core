@@ -222,7 +222,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
             this.getPermissions()
             .then(function(response) {
-                isSuperAdmin = response[0];
+               isSuperAdmin = response[0];
                 securityUserId = response[1];
                 var institutionId = response[2];
 
@@ -270,6 +270,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     
                     var items = response.data.data;
 
+
                     if (angular.isObject(items) && items.length > 0)
                     {
                         var educationSubject = null;
@@ -279,6 +280,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         {
                             educationSubject = item.InstitutionSubjects;
                             educationSubject.grading_type = item.grading_type;
+                            educationSubject.is_editable=item.is_editable;
                             
                             this.push(educationSubject);
                         }, subjects);
