@@ -7,6 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Routing\Router;
 
 use App\Controller\AppController;
 
@@ -253,11 +254,20 @@ class StudentsController extends AppController
     }
     // End
 
+    public function AssessmentItemResultsArchived()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.AssessmentItemResultsArchived']);
+    }
+
     // AngularJS
     public function Results()
     {
         $session = $this->request->session();
-
+        $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
+        $archiveUrl = $this->ControllerAction->url('index');
+        $archiveUrl['plugin'] = 'Student';
+        $archiveUrl['controller'] = 'Students';
+        $archiveUrl['action'] = 'AssessmentItemResultsArchived';
         if ($session->check('Student.Students.id')) {
             $studentId = $session->read('Student.Students.id');
             $session->write('Student.Results.student_id', $studentId);
@@ -265,12 +275,18 @@ class StudentsController extends AppController
             // tabs
             $options = ['type' => 'student'];
             $tabElements = $this->getAcademicTabElements($options);
+            $this->set('_archive', $_archive);
+            $this->set('archiveUrl', Router::url($archiveUrl));
             $this->set('tabElements', $tabElements);
             $this->set('selectedAction', 'Results');
             // End
 
             $this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
         }
+    }
+
+    public function InstitutionStudentAbsencesArchived(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStudentAbsencesArchived']);
     }
 
     public function ExaminationResults()

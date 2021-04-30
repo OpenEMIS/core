@@ -127,98 +127,102 @@ class StudentAttendanceMarkTypesTable extends AppTable
                     ])
             ->all();
 
-        if (!$gradesResultSet->isEmpty()) {
-            $gradeList = $gradesResultSet->toArray();
-            $attendencePerDay = 1;
+        if($dayId == -1){
+            $gradesResultSet = $gradesResultSet->toArray();
+        }else{
+            if (!$gradesResultSet->isEmpty()) {
+                $gradeList = $gradesResultSet->toArray();
+                $attendencePerDay = 1;
 
-            $markResultSet = $this
-                ->find()
-                ->select([
-                    $this->aliasField('attendance_per_day'),
-                    $StudentAttendanceTypes->aliasField('code')
-                ])
-                ->leftJoin(
-                [$StudentAttendanceTypes->alias() => $StudentAttendanceTypes->table()],
-                [
-                 $StudentAttendanceTypes->aliasField('id = ') . $this->aliasField('student_attendance_type_id')
-                ]
-                )
-                ->leftJoin(
-                [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
-                [
-                 $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $this->aliasField('id')
-                ]
-                )
-                ->leftJoin(
-                [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
-                [
-                 $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
-                ]
-                )
-                ->where([
-                    $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
-                    $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
-                    $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
-                    $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
-                ])
-                
-                ->all()
-                ->first();
+                $markResultSet = $this
+                    ->find()
+                    ->select([
+                        $this->aliasField('attendance_per_day'),
+                        $StudentAttendanceTypes->aliasField('code')
+                    ])
+                    ->leftJoin(
+                    [$StudentAttendanceTypes->alias() => $StudentAttendanceTypes->table()],
+                    [
+                     $StudentAttendanceTypes->aliasField('id = ') . $this->aliasField('student_attendance_type_id')
+                    ]
+                    )
+                    ->leftJoin(
+                    [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
+                    [
+                     $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $this->aliasField('id')
+                    ]
+                    )
+                    ->leftJoin(
+                    [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
+                    [
+                     $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
+                    ]
+                    )
+                    ->where([
+                        $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
+                        $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
+                        $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
+                        $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
+                    ])
+                    
+                    ->all()
+                    ->first();
 
-            $attendanceType = $markResultSet->StudentAttendanceTypes['code'];
-            if ($attendanceType != 'SUBJECT') {
-                if (!empty($markResultSet->attendance_per_day)) {
-                $attendencePerDay = $markResultSet->attendance_per_day;
+                $attendanceType = $markResultSet->StudentAttendanceTypes['code'];
+                if ($attendanceType != 'SUBJECT') {
+                    if (!empty($markResultSet->attendance_per_day)) {
+                    $attendencePerDay = $markResultSet->attendance_per_day;
+                    }
                 }
-            }
 
-            $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
-            $periodsData = $StudentAttendancePerDayPeriods
-                            ->find('all')
-                            ->leftJoin(
-                                        [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
-                                        [
-                                         $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id')
-                                        ]
-                                        )
-                            ->leftJoin(
-                                        [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
-                                        [
-                                         $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
-                                        ]
-                                        )
-                            ->where(
-                                [
-                                    $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
-                                    $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
-                                    $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
-                                    $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
-                                ])
-                            ->order(['order'=>'asc'])
-                            ->all()
-                            ->toArray();
+                $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+                $periodsData = $StudentAttendancePerDayPeriods
+                                ->find('all')
+                                ->leftJoin(
+                                            [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
+                                            [
+                                             $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id')
+                                            ]
+                                            )
+                                ->leftJoin(
+                                            [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
+                                            [
+                                             $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
+                                            ]
+                                            )
+                                ->where(
+                                    [
+                                        $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
+                                        $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
+                                        $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
+                                        $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
+                                    ])
+                                ->order(['order'=>'asc'])
+                                ->all()
+                                ->toArray();
 
-            $options = [];
-            $j = 0;  
-            $periodsDataId = [];
-            for ($k = 0; $k <= $attendencePerDay; ++$k) {
-              $periodsDataId[] =  $periodsData[$k]['id'];
-            }
-            
-            $periodsDataId = array_filter($periodsDataId);
-            asort($periodsDataId);
-            $periodsDataId = array_combine(range(1, count($periodsDataId)), array_values($periodsDataId));
-            $periodsDataId = array_flip($periodsDataId);  
-            
-            for ($i = 1; $i <= $attendencePerDay; ++$i) {
-                $options[] = [
-                    'id' => (!empty($periodsDataId[$periodsData[$j]['id']])) ? $periodsDataId[$periodsData[$j]['id']] : $i,
-                    'name' => __((!empty($periodsData[$j]['name'])) ? $periodsData[$j]['name'] : "Period ".$i)
-                ];
-                $j++;
-            }
+                $options = [];
+                $j = 0;  
+                $periodsDataId = [];
+                for ($k = 0; $k <= $attendencePerDay; ++$k) {
+                  $periodsDataId[] =  $periodsData[$k]['id'];
+                }
+                
+                $periodsDataId = array_filter($periodsDataId);
+                asort($periodsDataId);
+                $periodsDataId = array_combine(range(1, count($periodsDataId)), array_values($periodsDataId));
+                $periodsDataId = array_flip($periodsDataId);  
+                
+                for ($i = 1; $i <= $attendencePerDay; ++$i) {
+                    $options[] = [
+                        'id' => (!empty($periodsDataId[$periodsData[$j]['id']])) ? $periodsDataId[$periodsData[$j]['id']] : $i,
+                        'name' => __((!empty($periodsData[$j]['name'])) ? $periodsData[$j]['name'] : "Period ".$i)
+                    ];
+                    $j++;
+                }
 
-            return $options;
+                return $options;
+            } 
         }
     }
 
