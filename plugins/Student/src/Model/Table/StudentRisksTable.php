@@ -66,6 +66,23 @@ class StudentRisksTable extends ControllerActionTable
         // end element control
     }
 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        
+        if (isset($buttons['view'])) {
+            $icon = '<i class="fa fa-eye"></i>';
+
+            $buttons['view'] = $buttons['view'];
+            $buttons['view']['label'] = $icon . __('View');
+            $buttons['view']['url']['plugin'] = 'Institution';
+            $buttons['view']['url']['controller'] = 'Institutions';
+            $buttons['view']['url']['action'] = 'StudentRisks';
+        }
+
+        return $buttons;
+    }
+
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('name');
