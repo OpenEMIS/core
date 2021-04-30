@@ -238,11 +238,17 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStaffAttendanceActivities']);
     }
 
+    public function InstitutionStaffAttendancesArchive()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStaffAttendancesArchive']);
+    }
+
     // AngularJS
     public function StaffAttendances()
     {
         $_edit = $this->AccessControl->check(['Staff', 'StaffAttendances', 'edit']);
         $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
+        $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
         if (!empty($this->request->param('institutionId'))) {
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
         } else {
@@ -260,9 +266,16 @@ class StaffController extends AppController
         $historyUrl['controller'] = 'Staff';
         $historyUrl['action'] = 'InstitutionStaffAttendanceActivities';
 
+        $archiveUrl = $this->ControllerAction->url('index');
+        $archiveUrl['plugin'] = 'Staff';
+        $archiveUrl['controller'] = 'Staff';
+        $archiveUrl['action'] = 'InstitutionStaffAttendancesArchive';
+
         $this->set('historyUrl', Router::url($historyUrl));
         $this->set('_edit', $_edit);
         $this->set('_history', $_history);
+        $this->set('_archive', $_archive);
+        $this->set('archiveUrl', Router::url($archiveUrl));
         $this->set('institution_id', $institutionId);
         $this->set('staff_id', $staffId);
         $this->set('tabElements', $tabElements);
