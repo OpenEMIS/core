@@ -207,7 +207,7 @@ class ProfilesController extends AppController
         $session = $this->request->session();
         /*$studentId = $this->Auth->user('id');*/
         if ($session->read('Auth.User.is_guardian') == 1) { 
-            $studentId = $session->read('Student.Students.id'); 
+            $studentId = $session->read('Student.ExaminationResults.student_id'); 
         } else {
             $studentId  = $this->request->pass[1];
         }
@@ -278,7 +278,7 @@ class ProfilesController extends AppController
 
         if ($this->Profiles->exists([$this->Profiles->primaryKey() => $loginUserId])) {
             if ($session->read('Auth.User.is_guardian') == 1) {
-                $studentId = $session->read('Student.Students.id'); 
+                $studentId = $session->read('Student.ExaminationResults.student_id'); 
             } else {
                 $studentId = $this->request->pass[1];
             }
@@ -287,10 +287,10 @@ class ProfilesController extends AppController
                 $sId = $this->ControllerAction->paramsDecode($studentId);
                 $student_id = $sId['id'];
                 
-                if ($action == 'StudentReportCards') {
-                    //$student_id = $sId['student_id']; //POCOR-5979
-                    $student_id = $sId['id'];
-                }
+                // if ($action == 'StudentReportCards') {
+                //     //$student_id = $sId['student_id']; //POCOR-5979
+                //     $student_id = $sId['id'];
+                // }
                 $entity = $this->Profiles->get($student_id);
                 $name = $entity->name;
             } else {
@@ -358,7 +358,7 @@ class ProfilesController extends AppController
         //POCOR-5675
         $action = $this->request->params['action'];
         if ($session->read('Auth.User.is_guardian') == 1) {
-            $studentId = $session->read('Student.Students.id');
+            $studentId = $session->read('Student.ExaminationResults.student_id');
         }else {
             $studentId = $this->request->params['pass'][1];
         }
@@ -374,7 +374,7 @@ class ProfilesController extends AppController
             if ($alias == 'StudentAssociations') {
                 $header = $header . ' - ' . 'Associations';
             } else {
-                 $header = $header . ' - ' . $model->getHeader($alias);
+                $header = $header . ' - ' . $model->getHeader($alias);
             }        
      }
        //POCOR-5675
@@ -464,11 +464,7 @@ class ProfilesController extends AppController
         } else if ($model->hasField('student_id')) {
             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentTextbooks') {
                 if ($session->read('Auth.User.is_guardian') ==1) {
-                    $sId1 = $this->request->params['pass'][1];
-                    if (!empty($sId1)) {
-                        $session->write('Student.Students.id', $sId1);
-                    }
-                    $studentId = $session->read('Student.Students.id');
+                    $studentId = $session->read('Student.ExaminationResults.student_id');
                 } else {
                     $studentId = $session->read('Student.Students.id'); 
                 }
@@ -557,7 +553,11 @@ class ProfilesController extends AppController
     public function getAcademicTabElements($options = [])
     {  
         $session = $this->request->session();
-        $studentId = $this->request->pass[1];        
+        if ($session->read('Auth.User.is_guardian') == 1) {
+            $studentId = $session->read('Student.ExaminationResults.student_id'); 
+        } else {
+            $studentId = $this->request->pass[1];
+        }
         $id = (array_key_exists('id', $options))? $options['id'] : 0;
         $type = (array_key_exists('type', $options))? $options['type']: null;
         $tabElements = [];

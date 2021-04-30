@@ -61,12 +61,11 @@ class TextbooksTable extends ControllerActionTable {
         // POCOR-1893 Profile using loginId as studentId
         if ($this->controller->name == 'Profiles') {
             $session = $this->request->session();
-            $sId = $session->read('Student.Students.id');
-                        
+            $sId = $session->read('Student.Students.id');      
             if (!empty($sId)) {
                 $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
             } else if($session->read('Auth.User.is_guardian') ==1) {
-                $studentId = $session->read('Student.Students.id'); 
+                 $studentId = $this->ControllerAction->paramsDecode($session->read('Student.ExaminationResults.student_id'))['id'];
             } else {
                 $studentId = $session->read('Auth.User.id');
             }
