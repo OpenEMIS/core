@@ -1,3 +1,11 @@
+### [3.65.0] - 2021-04-30
+- Implemented: Changes to Data Archiving feature in OpenEMIS Core
+- Implemented: Improvement of the Workflow module
+- Bug Fixed: Institution > Attendance > Student > All Day > Export Page
+- Bug Fixed: Institution > Meals > Students Dashboard Statistics
+- Bug Fixed: Directory > Student > Academic > Risk page
+- Bug Fixed: Profile > Guardian > Student > Academic page
+
 ### [3.64.4] - 2021-04-22
 - Implemented: Add an option to modifying the student grade and specialty
 - Bug Fixed: Institutions > Staff > Finance > Payslip > Edit: Unable to edit record
