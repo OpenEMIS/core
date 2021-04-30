@@ -1320,7 +1320,7 @@ class NavigationComponent extends Component
                 'title' => 'Academic',
                 'parent' => 'Profiles.Student',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours',
+                'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours','Profiles.StudentCompetencies',
                 'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes','Profiles.StudentRisks','Profiles.StudentAssociations']
             ],
             'Profiles.StudentScheduleTimetable' => [
@@ -1360,9 +1360,18 @@ class NavigationComponent extends Component
 
     public function getProfileGuardianStudentNavigation()
     {   
+        $sID = $this->request->pass[1];
         $session = $this->request->session();
-        $studentId = $this->request->pass[1];        
-    
+        if (!empty($sID)) { 
+            if ($session->read('Auth.User.is_guardian') == 1) {
+                $session->write('Student.ExaminationResults.student_id', $sID);
+            } 
+            $studentId = $session->read('Student.ExaminationResults.student_id');
+        }else {
+            //$studentId = $this->request->pass[1];
+            $studentId = $session->read('Student.ExaminationResults.student_id');
+        }   
+       // echo '<pre>';print_r($_SESSION);die;
         $navigation = [
             'Profiles.ProfileStudentUser' => [
                 'title' => 'Overview',

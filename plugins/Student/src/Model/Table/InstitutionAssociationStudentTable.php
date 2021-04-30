@@ -38,7 +38,11 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
 	{
 		$session = $this->request->session();
 		if ($this->controller->name == 'Profiles') {
-			$sId = $session->read('Student.Students.id');
+            if ($session->read('Auth.User.is_guardian') == 1) {
+                $sId = $session->read('Student.ExaminationResults.student_id');
+            } else {
+                 $sId = $session->read('Student.Students.id');
+            }
 			if (!empty($sId)) {
 				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
 			} else {
