@@ -32,6 +32,30 @@
 						'data-named-group' => 'academic_period_id'
 					));
 				}
+
+				if (!empty($AssessmentPeriodsOptions)) {
+					echo $this->Form->input('assessment', array(
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $AssessmentPeriodsOptions,
+						'default' => $selectedAssessmentPeriods,
+						'url' => $baseUrl,
+						'data-named-key' => 'assessment_period_id',
+						'data-named-group' => 'assessment_id'
+					));
+				}
+
+				if (!empty($subjectOptions)) {
+					echo $this->Form->input('assessment', array(
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $subjectOptions,
+						'default' => $selectedSubject,
+						'url' => $baseUrl,
+						'data-named-key' => 'education_subject_id',
+						'data-named-group' => 'academic_period_id'
+					));
+				}
 			?>
 		</div>
 	</div>
