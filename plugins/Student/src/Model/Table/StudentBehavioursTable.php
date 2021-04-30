@@ -30,7 +30,7 @@ class StudentBehavioursTable extends AppTable {
 	{   
 		if ($this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
 			if ($this->Session->read('Auth.User.is_guardian') == 1) {
-				$sId = $this->Session->read('Student.Students.id'); 
+				$sId = $this->Session->read('Student.ExaminationResults.student_id'); 
 				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
 			} else {
 				$studentId = $this->Session->read('Auth.User.id');
