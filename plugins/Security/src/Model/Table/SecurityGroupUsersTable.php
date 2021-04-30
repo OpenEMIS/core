@@ -213,7 +213,7 @@ class SecurityGroupUsersTable extends AppTable {
         $where = array_key_exists('where', $options) ? $options['where'] : [];
         $area = array_key_exists('area', $options) ? $options['area'] : null;
 
-        $query->find('list', ['keyField' => $this->Users->aliasField('id'), 'valueField' => $this->Users->aliasField('name_with_id_role')])
+        $query->find('list', [/*'keyField' => $this->Users->aliasField('id'),*/ 'valueField' => $this->Users->aliasField('name_with_id_role')])
                 ->select([
                     $this->Users->aliasField('id'),
                     $this->Users->aliasField('openemis_no'),
@@ -248,7 +248,7 @@ class SecurityGroupUsersTable extends AppTable {
                         ]);
                     });
         }
-        
+         
         return $query;
     }
 
@@ -321,7 +321,8 @@ class SecurityGroupUsersTable extends AppTable {
                 } else {
                     $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                     $assigneeQuery = $SecurityGroupUsers
-                            ->find('userList', ['where' => $where]);
+                            ->find('userList', ['where' => $where])
+                            ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
                     
                     Log::write('debug', 'Non-School based assignee query:');
                     Log::write('debug', $assigneeQuery->sql());
