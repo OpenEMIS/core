@@ -76,7 +76,7 @@ class User extends Entity {
                     ->leftJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
                        'security_role_id = ' . $SecurityRoles->aliasField('id')
                     ])
-                    ->order(['security_role_id' => 'DESC'])
+                    ->order([$SecurityRoles->aliasField('id') => 'ASC'])
                     ->where(['security_user_id' => $this->id])
                     ->toArray(); 
         

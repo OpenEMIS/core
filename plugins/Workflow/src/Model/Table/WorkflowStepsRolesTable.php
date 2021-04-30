@@ -14,6 +14,7 @@ class WorkflowStepsRolesTable extends AppTable {
 	public function getRolesByStep($stepId) {
 		$roleList = $this
 			->find('list', ['keyField' => 'security_role_id', 'valueField' => 'security_role_id'])
+			->order([$this->aliasField('security_role_id') => 'DESC'])
 			->where([$this->aliasField('workflow_step_id') => $stepId])
 			->toArray();
 
