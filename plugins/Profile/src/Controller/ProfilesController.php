@@ -287,10 +287,10 @@ class ProfilesController extends AppController
                 $sId = $this->ControllerAction->paramsDecode($studentId);
                 $student_id = $sId['id'];
                 
-                // if ($action == 'StudentReportCards') {
-                //     //$student_id = $sId['student_id']; //POCOR-5979
-                //     $student_id = $sId['id'];
-                // }
+                if ($action == 'StudentReportCards') {
+                    //$student_id = $sId['student_id']; //POCOR-5979
+                    $student_id = $sId['id'];
+                }
                 $entity = $this->Profiles->get($student_id);
                 $name = $entity->name;
             } else {
