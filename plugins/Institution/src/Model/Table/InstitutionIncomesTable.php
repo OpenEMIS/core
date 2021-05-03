@@ -91,7 +91,12 @@ class InstitutionIncomesTable extends ControllerActionTable
         } else if ($field == 'income_type_id') {
             return  __('Type');
         } else if ($field == 'amount' && $this->action == 'index') {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+            if (!empty($module) && $module == 'InstitutionIncomes') {
+                return __('Amount');
+            } else {
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+            }
+            //return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
