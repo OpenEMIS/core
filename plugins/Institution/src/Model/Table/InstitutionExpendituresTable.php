@@ -91,7 +91,12 @@ class InstitutionExpendituresTable extends ControllerActionTable
         } else if ($field == 'expenditure_type_id') {
             return  __('Type');
         } else if ($field == 'amount' && $this->action == 'index') {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+            if (!empty($module) && $module == 'InstitutionExpenditures') {
+                return __('Amount');
+            } else {
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+            }
+            //return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
