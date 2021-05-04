@@ -544,7 +544,7 @@ trait MessagesTrait
             'savingError' => 'Some selected students record were not updated succesfully',
         ],
         'BulkStudentTransferIn' => [
-            'success' => 'Bulk students transfer successful',
+            'success' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution',
             'reconfirm' => 'Please review the information before proceeding with the operation',
             'noStudentSelected' => 'There are no students selected',
             'savingError' => 'Some selected students record were not updated succesfully',
@@ -2464,7 +2464,7 @@ trait MessagesTrait
                 ]
             ],
             'addEdit' => 'This feature is for historical record use only. For current records, please refrain from adding record on this page.'
-        ],        
+        ],
         'Schedule' => [
             'ScheduleTerms' => [
                 'start_date' => [
