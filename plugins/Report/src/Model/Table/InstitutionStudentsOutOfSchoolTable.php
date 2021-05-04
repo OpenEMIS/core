@@ -31,6 +31,9 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
     }
 
     public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+        // echo "<pre>"; print_r($academicPeriodId); die();
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
 
@@ -81,7 +84,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
                 ]);
         $query->autoFields('true');
 
-        $query->where([$this->aliasField('is_student') => 1]);
+        $query->where([$this->aliasField('is_student') => 1,'InstitutionStudent.academic_period_id' => $academicPeriodId]);
 
         // omit all records who are 'enrolled'
         $query->where([
@@ -93,7 +96,8 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
 
         // omit all students in current records who has 'enrolled'
         $query->where([
-            'InstitutionStudentFilter.student_status_id IS NULL'
+            'InstitutionStudentFilter.student_status_id IS NULL',
+            // 'InstitutionStudent.academic_period_id' => $academicPeriodId,
         ]);
 
         $query->group([$this->aliasField($this->primaryKey())]);
@@ -156,10 +160,132 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
             'key' => 'Age',
             'field' => 'Age',
             'type' => 'Age',
-            'label' => 'Age',
+            'label' => 'Age at End Date',
         ];
 
-        $newFields = array_merge($extraField, $fields->getArrayCopy());
-        $fields->exchangeArray($newFields);
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('Openemis No')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.student_name',
+            'field' => 'student_name',
+            'type' => 'string',
+            'label' => __('Full Name')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.preferred_name',
+            'field' => 'preferred_name',
+            'type' => 'string',
+            'label' => __('Preferred Name')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.email',
+            'field' => 'email',
+            'type' => 'string',
+            'label' => __('Email')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.address',
+            'field' => 'address',
+            'type' => 'string',
+            'label' => __('Address')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.postal_code',
+            'field' => 'postal_code',
+            'type' => 'string',
+            'label' => __('Postal Code')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.address_area_id',
+            'field' => 'address_area_id',
+            'type' => 'string',
+            'label' => __('Address Area')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.birthplace_area_id',
+            'field' => 'birthplace_area_id',
+            'type' => 'string',
+            'label' => __('Birthplace Area')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.gender_id',
+            'field' => 'gender_id',
+            'type' => 'string',
+            'label' => __('Gender')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.date_of_birth',
+            'field' => 'date_of_birth',
+            'type' => 'string',
+            'label' => __('Date Of Birth')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.nationality_id',
+            'field' => 'nationality_id',
+            'type' => 'string',
+            'label' => __('Nationality')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.identity_type_id',
+            'field' => 'identity_type_id',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.external_reference',
+            'field' => 'external_reference',
+            'type' => 'string',
+            'label' => __('External Reference')
+        ];
+
+
+        // $newFields = array_merge($extraField, $fields->getArrayCopy());
+        $fields->exchangeArray($extraField);
+    }
+
+    public function onExcelGetStudentName(Event $event, Entity $entity)
+    {
+        $studentName = [];
+        ($entity->first_name) ? $studentName[] = $entity->first_name : '';
+        ($entity->middle_name) ? $studentName[] = $entity->middle_name : '';
+        ($entity->third_name) ? $studentName[] = $entity->third_name : '';
+        ($entity->last_name) ? $studentName[] = $entity->last_name : '';
+
+        return implode(' ', $studentName);
+    }
+
+    public function onExcelGetDateOfBirth(Event $event, Entity $entity)
+    {
+        $dateOfBirth = '';
+        if ($entity->has('date_of_birth')) {
+            if (!empty($entity->date_of_birth)) {
+                $dateOfBirth = $entity->date_of_birth->format('F d,Y');
+            }
+        }
+    
+        return $dateOfBirth;
     }
 }
