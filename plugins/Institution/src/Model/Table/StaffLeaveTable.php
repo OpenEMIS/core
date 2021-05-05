@@ -212,7 +212,12 @@ class StaffLeaveTable extends ControllerActionTable
             $userId = $this->request->query['user_id'];
         }
         //POCOR-5364 starts
-        $leaveTypeId = $this->request->query['filter'];
+        if (isset($extra['toolbarButtons']['search']['data']['url']['filter'])) {
+            $leaveTypeId = $extra['toolbarButtons']['search']['data']['url']['filter'];
+        } elseif (isset($this->request->query['filter'])) {
+            $leaveTypeId = $this->request->query['filter'];
+        }
+        
         if (!empty($leaveTypeId) && $leaveTypeId != -1) {
             $where = [$this->aliasField('staff_leave_type_id') => $leaveTypeId];
         }
