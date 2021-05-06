@@ -283,7 +283,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
     };
 
     $scope.onChangeSubject = function(subject = undefined, editable) {
-        // console.log('editable',editable);
+        //console.log(editable);
         if(editable != undefined){
         $scope.editPermission= editable;
     }

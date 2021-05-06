@@ -224,7 +224,7 @@ class AssessmentItemsTable extends AppTable
                         $InstitutionSubjects->aliasField('academic_period_id') => $academinPeriod,
                     ])
                    ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name']);
-            
+            //echo "<pre>";print_r($query);die();
             //POCOR-5999 starts
             $query
                 ->formatResults(function (ResultSetInterface $results) use($staffSubject, $loggedInUserId) {
@@ -244,13 +244,14 @@ class AssessmentItemsTable extends AppTable
                             'name' => $row->InstitutionSubjects['name']
                         ];
                 
-                $data = $staffSubject->find()
+                    $data = $staffSubject->find()
                         ->where([$staffSubject->aliasField('staff_id') => $loggedInUserId])
                         ->toArray();
-
+                    $subjectId = $row->InstitutionSubjects['id'];
+                    //echo "<pre>";print_r();die();
                     if (!empty($data)) {
                         foreach ($data as $value) {
-                            $tabSubjectId = $row->InstitutionSubjects['id'];
+                            $tabSubjectId = $subjectId;
                             $staffSubjectId = $value->institution_subject_id;
                             if ($staffSubjectId == $tabSubjectId) {
                                 $row['is_editable'] = 1;
@@ -259,10 +260,9 @@ class AssessmentItemsTable extends AppTable
                             }
                         }
                     }
-                            
                     return $row;
-                    });
                 });
+            });
         //POCOR-5999 ends
         return $query;
     }
