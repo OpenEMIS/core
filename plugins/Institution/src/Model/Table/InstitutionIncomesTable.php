@@ -109,6 +109,7 @@ class InstitutionIncomesTable extends ControllerActionTable
         $this->field('income_type_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('amount', ['attr' => ['label' => __('Amount')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->setFieldOrder(['academic_period_id', 'income_source_id', 'income_type_id', 'amount','file_name', 'file_content', 'description']);
     }
 }
