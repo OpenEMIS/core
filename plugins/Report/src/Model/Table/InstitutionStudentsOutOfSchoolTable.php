@@ -322,7 +322,8 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         ])
         ->first();
 
-        return $comment->comment; 
+
+        return !empty($comment->comment) ? $comment->comment : '';
     }
 
     public function onExcelGetReasonId(Event $event, Entity $entity)
@@ -351,7 +352,8 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         ])
         ->first();
 
-        return $reason->student_withdraw_reason;    
+
+        return !empty($reason->student_withdraw_reason) ? $reason->student_withdraw_reason : '';
     }
 
     public function getIdByAcademicPeriods($code)
