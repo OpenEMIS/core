@@ -32,7 +32,9 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function validationDefault(Validator $validator)
     {
+
         $validator = parent::validationDefault($validator);
+
         return $validator
             ->notEmpty(['requested_date', 'workflow_assignee_id'])
             ->add('requested_date', [
@@ -103,6 +105,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     // POCOR-3649
     public function associated(Event $event, ArrayObject $extra)
     {
+
         $this->Alert->error($this->aliasField('unableToTransfer'));
         $currentEntity = $this->Session->read($this->registryAlias().'.associated');
         $action = $this->Session->read($this->registryAlias().'.referralAction');
@@ -176,7 +179,9 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $today = new Date();
 
         $dataBetweenDate = [];
+
         foreach ($relatedModels as $model) {
+//            print_r($model->alias());die();
             switch ($model->alias()) {
                 /*case 'InstitutionStudentAbsences':
                     $absenceCount = $model->find()
@@ -192,7 +197,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     }
                     break;
                 */
-                
+
                 case 'StudentBehaviours':
                     $behaviourCount = $model->find()
                         ->where([
@@ -281,6 +286,11 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
+
+//        print_r($selectedAcademicPeriodData->start_date);die();
+        $entity->start_date = $selectedAcademicPeriodData->start_date;
+        $entity->end_date = $selectedAcademicPeriodData->end_date;
         $this->addSections();
         if (empty($entity->start_date)) {
             $this->field('start_date', ['type' => 'hidden']);
@@ -291,8 +301,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             'status_id', 'assignee_id',
             'previous_information_header', 'student_id', 'previous_institution_id', 'previous_academic_period_id', 'previous_education_grade_id', 'requested_date',
             'new_information_header', 'academic_period_id', 'education_grade_id', 'institution_id', 'start_date', 'end_date',
-            'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
-        ]);
+            'transfer_reasons_header', 'student_transfer_reason_id', 'comment']);
 
         //POCOR-5944 starts
         $statusId = $entity['status']->id;
@@ -313,7 +322,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     'data-placement' => 'bottom',
                     'escape' => false
                 ];
-                
+
                 $extraButtons = [
                     'edit' => [
                         'Institution' => ['Institutions', 'Institutions', 'index'],
@@ -327,7 +336,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                         $button = [
                             'type' => 'hidden',
                             'attr' => $btnAttr,
-                            'url' => [0 => 'index'] 
+                            'url' => [0 => 'index']
                         ];
                         $button['url']['action'] = $attr['action'];
                         $button['attr']['title'] = $attr['title'];
@@ -345,7 +354,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     'data-placement' => 'bottom',
                     'escape' => false
                 ];
-                
+
                 $extraButtons = [
                     'remove' => [
                         'Institution' => ['Institutions', 'Institutions', 'index'],
@@ -359,7 +368,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                         $button = [
                             'type' => 'hidden',
                             'attr' => $btnAttr,
-                            'url' => [0 => 'index'] 
+                            'url' => [0 => 'index']
                         ];
                         $button['url']['action'] = $attr['action'];
                         $button['attr']['title'] = $attr['title'];
@@ -493,9 +502,11 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
+
         if (empty($entity->errors())) {
             // get the data between requested date and today date (if its back date)
             $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->alias());
+//            print_r($dataBetweenDate);die();
 
             if (!empty($dataBetweenDate)) {
                 // redirect if have student data between date
@@ -616,6 +627,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function onUpdateFieldRequestedDate(Event $event, array $attr, $action, Request $request)
     {
+
         if (in_array($action, ['add', 'edit', 'approve', 'associated'])) {
             $entity = $attr['entity'];
 
@@ -659,11 +671,9 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 if ($enrolledStudent) {
                     $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
                     $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
-
                     // for date options, date restriction
                     $startDate = ($studentStartDate >= $periodStartDate) ? $studentStartDate: $periodStartDate;
                     $endDate = ($studentEndDate <= $periodStartDate) ? $studentEndDate: $periodEndDate;
-
                     $attr['type'] = 'date';
                     $attr['date_options'] = [
                         'startDate' => $startDate->format('d-m-Y'),
