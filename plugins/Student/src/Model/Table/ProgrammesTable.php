@@ -9,6 +9,7 @@ use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -39,6 +40,33 @@ class ProgrammesTable extends ControllerActionTable
 		return $entity->education_grade->programme_grade_name;
 	}
 
+	//POCOR-5742 starts
+	public function onGetEndDate(Event $event, Entity $entity)
+	{ 
+		$studentId = $entity->student_id;
+		$gradeId = $entity->education_grade->id;
+		$periodId = $entity->academic_period_id;
+		$studentWithdraw = TableRegistry::get('institution_student_withdraw');
+		$record = $studentWithdraw->find()
+					->select([$studentWithdraw->aliasField('effective_date')])
+					->where([
+						$studentWithdraw->aliasField('student_id') => $studentId,
+						$studentWithdraw->aliasField('academic_period_id') => $periodId,
+						$studentWithdraw->aliasField('education_grade_id') => $gradeId
+					])
+					->first();
+		$statuses = $this->StudentStatuses->findCodeList();
+		$studentStatusId = $entity->student_status->id;
+		if (!empty($record) && $studentStatusId == $statuses['WITHDRAWN']) {
+			$endDate = date("F d, Y", strtotime($record->effective_date));
+			return $endDate;
+		} else {
+			$endDate = date("F d, Y", strtotime($entity->end_date));
+			return $endDate;
+		}
+	}
+	//POCOR-5742 ends
+
 	public function onGetInstitutionId(Event $event, Entity $entity)
 	{
 		return $entity->institution->code_name;
@@ -65,7 +93,7 @@ class ProgrammesTable extends ControllerActionTable
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-	{
+	{	
 		$session = $this->request->session();
 		if ($this->controller->name == 'Profiles') {
 			if ($session->read('Auth.User.is_guardian') == 1) {
@@ -89,36 +117,12 @@ class ProgrammesTable extends ControllerActionTable
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
-        $studentWithdraw = TableRegistry::get('institution_student_withdraw');
-        $studentWithdrawData = $studentWithdraw->find()
-            ->select([
-					'student_id' => 'institution_student_withdraw.student_id',
-				])
-				->where([$studentWithdraw->aliasField('student_id') => $studentId])
-                ->toArray();
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $lastRecord = $this->find()
-        			->select([max($this->aliasField('created'))])
-        			->where([
-        				$this->aliasField('student_id') => $studentId,
-        				$this->aliasField('institution_id') => $institutionId
-        			])
-        			->toArray();
-        echo "<pre>";print_r($lastRecord);die();
-        if (isset($studentWithdrawData)) {
-        	$query
-        			->select(['Programmes__end_date' => $studentWithdraw->aliasField('effective_date')])
-        			->leftJoin([$studentWithdraw->alias() => $studentWithdraw->table()],[
-                        $studentWithdraw->aliasField('student_id = ') . $this->aliasField('student_id'),
-                        $studentWithdraw->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                        $studentWithdraw->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                        $studentWithdraw->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
-                    ])->where([$this->aliasField('student_id') => $studentId]);
-        } else {
-        	$query->where([$this->aliasField('student_id') => $studentId]);
-        }
-        //$query->where([$this->aliasField('student_id') => $studentId]);
-        //echo "<pre>";print_r($query);die();
+        $query
+        		->where([
+        			$this->aliasField('student_id') => $studentId,
+        			//$this->aliasField('institution_id') => $institutionId
+        		]);
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
         
 	}
@@ -242,7 +246,7 @@ class ProgrammesTable extends ControllerActionTable
 	}
 
 	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
-	{
+	{		
 		$this->setupTabElements();
 	}
 
