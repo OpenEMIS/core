@@ -211,7 +211,17 @@ class StaffLeaveTable extends ControllerActionTable
         } elseif (isset($this->request->query['user_id'])) {
             $userId = $this->request->query['user_id'];
         }
-
+        //POCOR-5364 starts
+        if (isset($extra['toolbarButtons']['search']['data']['url']['filter'])) {
+            $leaveTypeId = $extra['toolbarButtons']['search']['data']['url']['filter'];
+        } elseif (isset($this->request->query['filter'])) {
+            $leaveTypeId = $this->request->query['filter'];
+        }
+        
+        if (!empty($leaveTypeId) && $leaveTypeId != -1) {
+            $where = [$this->aliasField('staff_leave_type_id') => $leaveTypeId];
+        }
+        //POCOR-5364 ends
         $extra['auto_contain'] = false;
 
         $select = [
@@ -269,7 +279,8 @@ class StaffLeaveTable extends ControllerActionTable
             ])
             ->where([
                 $this->aliasField('staff_id') => $userId,
-                $this->aliasField('institution_id') => $institutionId
+                $this->aliasField('institution_id') => $institutionId,
+                $where //POCOR-5364
             ]);
 
         $HistoricalTable = $historicalQuery->repository();
