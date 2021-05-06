@@ -224,7 +224,6 @@ class AssessmentItemsTable extends AppTable
                         $InstitutionSubjects->aliasField('academic_period_id') => $academinPeriod,
                     ])
                    ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name']);
-            //echo "<pre>";print_r($query);die();
             //POCOR-5999 starts
             $query
                 ->formatResults(function (ResultSetInterface $results) use($staffSubject, $loggedInUserId) {
@@ -243,22 +242,18 @@ class AssessmentItemsTable extends AppTable
                             'id' => $row->InstitutionSubjects['id'],
                             'name' => $row->InstitutionSubjects['name']
                         ];
-                
-                    $data = $staffSubject->find()
-                        ->where([$staffSubject->aliasField('staff_id') => $loggedInUserId])
-                        ->toArray();
                     $subjectId = $row->InstitutionSubjects['id'];
-                    //echo "<pre>";print_r();die();
+                    $data = $staffSubject->find()
+                            ->where([
+                                $staffSubject->aliasField('staff_id') => $loggedInUserId,
+                                $staffSubject->aliasField('institution_subject_id') => $subjectId
+                            ])
+                            ->toArray();
+                            
                     if (!empty($data)) {
-                        foreach ($data as $value) {
-                            $tabSubjectId = $subjectId;
-                            $staffSubjectId = $value->institution_subject_id;
-                            if ($staffSubjectId == $tabSubjectId) {
-                                $row['is_editable'] = 1;
-                            } else {
-                                $row['is_editable'] = 0;
-                            }
-                        }
+                        $row['is_editable'] = 1;
+                    } else {
+                        $row['is_editable'] = 0;
                     }
                     return $row;
                 });
