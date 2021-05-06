@@ -33,7 +33,6 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
     public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
-        // echo "<pre>"; print_r($academicPeriodId); die();
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
 
@@ -44,7 +43,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
                 'conditions' => [
                     $this->aliasField($this->primaryKey()) . ' = InstitutionStudent.student_id'
                 ],
-            ],
+            ],            
             'InstitutionStudentFilter' => [
                 'type' => 'left',
                 'table' => 'institution_students',
@@ -60,6 +59,13 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
                     'StudentStatus.id = InstitutionStudent.student_status_id'
                 ]
             ],
+            // 'Institution' => [
+            //     'type' => 'left',
+            //     'table' => 'institutions',
+            //     'conditions' => [
+            //         'Institution.id = InstitutionStudent.institution_id'
+            //     ]
+            // ],
             'AcademicPeriod' => [
                 'type' => 'left',
                 'table' => 'academic_periods',
@@ -75,12 +81,14 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
                 ]
             ]
         ]);
+        
 
         $query->contain(['MainNationalities', 'MainIdentityTypes']);
 
         $query->select([
                     'EndDate' => 'InstitutionStudent.end_date', 'StudentStatus' => 'StudentStatus.name', 'AcademicPeriod' => 'AcademicPeriod.name', 'EducationGrade' => 'EducationGrade.name',
-                    'nationality_id' => 'MainNationalities.name', 'identity_type_id' => 'MainIdentityTypes.name'
+                    'nationality_id' => 'MainNationalities.name', 'identity_type_id' => 'MainIdentityTypes.name',
+                    // 'institution_code' => 'InstitutionStudent.Institutions.code','institution_name' => 'InstitutionStudent.Institutions.name'
                 ]);
         $query->autoFields('true');
 
@@ -126,6 +134,20 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         $identity = $IdentityType->getDefaultEntity();
 
         $settings['identity'] = $identity;
+
+        // $extraField[] = [
+        //     'key' => 'Institution.code',
+        //     'field' => 'institution_code',
+        //     'type' => 'string',
+        //     'label' => 'Institution Code',
+        // ];
+
+        // $extraField[] = [
+        //     'key' => 'Institution.name',
+        //     'field' => 'institution_name',
+        //     'type' => 'string',
+        //     'label' => 'Institution Name',
+        // ];
 
         $extraField[] = [
             'key' => 'AcademicPeriod.name',
@@ -261,9 +283,110 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
             'label' => __('External Reference')
         ];
 
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.contact_id',
+            'field' => 'contact_id',
+            'type' => 'string',
+            'label' => __('Contact')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.reason_id',
+            'field' => 'reason_id',
+            'type' => 'string',
+            'label' => __('Reason')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.comment',
+            'field' => 'comment',
+            'type' => 'string',
+            'label' => __('Comment')
+        ];
+
 
         // $newFields = array_merge($extraField, $fields->getArrayCopy());
         $fields->exchangeArray($extraField);
+    }
+
+    public function onExcelGetComment(Event $event, Entity $entity)
+    {
+        $academicPeriods = $this->getIdByAcademicPeriods($entity->AcademicPeriod);
+        $userId = $entity->id;
+
+        $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+        $comment = $studentWithdraw
+        ->find()
+        ->where([
+            $studentWithdraw->aliasField('student_id') => $userId,
+            $studentWithdraw->aliasField('academic_period_id') => $academicPeriods,
+        ])
+        ->first();
+
+        return $comment->comment; 
+    }
+
+    public function onExcelGetReasonId(Event $event, Entity $entity)
+    {
+        $academicPeriods = $this->getIdByAcademicPeriods($entity->AcademicPeriod);
+        $userId = $entity->id;
+
+        $StudentWithdrawReasons = TableRegistry::get('Student.StudentWithdrawReasons');
+        $Statuses = TableRegistry::get('Student.StudentStatuses');
+        $InstitutionStudents = TableRegistry::get('institution_students');
+        $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+        $reason = $studentWithdraw
+        ->find()
+        ->select([
+                'student_withdraw_reason' => $StudentWithdrawReasons->aliasField('name')
+            ])
+        ->leftJoin(
+            [$StudentWithdrawReasons->alias() => $StudentWithdrawReasons->table()],
+            [
+                $StudentWithdrawReasons->aliasField('id = ') . $studentWithdraw->aliasField('student_withdraw_reason_id')
+            ]
+        )
+        ->where([
+            $studentWithdraw->aliasField('student_id') => $userId,
+            $studentWithdraw->aliasField('academic_period_id') => $academicPeriods,
+        ])
+        ->first();
+
+        return $reason->student_withdraw_reason;    
+    }
+
+    public function getIdByAcademicPeriods($code)
+    {
+        $academicPeriods = TableRegistry::get('academic_periods');
+        $entity = $academicPeriods->find()
+            ->where([$academicPeriods->aliasField('name') => $code])
+            ->first();
+
+        return $entity->id;
+    }
+
+
+    public function onExcelGetContactId(Event $event, Entity $entity)
+    {
+        $userId = $entity->id;
+
+        $contact = [];
+
+        $UserContacts = TableRegistry::get('User.Contacts');
+        $userContactResults = $UserContacts
+        ->find()
+        ->contain(['ContactTypes.ContactOptions'])
+        ->select(['value'])                     
+        ->where([
+            $UserContacts->aliasField('security_user_id') => $userId
+        ])
+        ->all();
+        if (!$userContactResults->isEmpty()) {
+             foreach ($userContactResults as $key => $code) {
+                $contact[] = $code->value;
+            }
+        }
+        return implode(',', $contact);
     }
 
     public function onExcelGetStudentName(Event $event, Entity $entity)
@@ -288,4 +411,6 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
     
         return $dateOfBirth;
     }
+
+   
 }
