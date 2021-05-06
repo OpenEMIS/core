@@ -773,7 +773,7 @@ class RecordBehavior extends Behavior
         }
 
         $query = $this->getCustomFieldQuery($entity, ['withContain' => ['CustomFields']]);
-
+		$tabSection = '';
         $fieldValues = [];  // values of custom field must be in sequence for validation errors to be placed correctly
         if (!is_null($query)) {
             $where =[];
@@ -796,7 +796,7 @@ class RecordBehavior extends Behavior
 				
                 // only apply for field type store in custom_field_values
                 if (in_array($fieldTypeCode, $this->fieldValueArray)) {
-					if($section == $tabSection) {
+					if(empty($tabSection) || ($section == $tabSection)) {
 						$fieldId = $customField->id;
 
 						if (array_key_exists($fieldId, $values)) {
