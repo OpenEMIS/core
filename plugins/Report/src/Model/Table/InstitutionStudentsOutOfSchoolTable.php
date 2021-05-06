@@ -59,13 +59,13 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
                     'StudentStatus.id = InstitutionStudent.student_status_id'
                 ]
             ],
-            // 'Institution' => [
-            //     'type' => 'left',
-            //     'table' => 'institutions',
-            //     'conditions' => [
-            //         'Institution.id = InstitutionStudent.institution_id'
-            //     ]
-            // ],
+            'Institution' => [
+                'type' => 'left',
+                'table' => 'institutions',
+                'conditions' => [
+                    'Institution.id = InstitutionStudent.institution_id'
+                ]
+            ],
             'AcademicPeriod' => [
                 'type' => 'left',
                 'table' => 'academic_periods',
@@ -88,7 +88,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         $query->select([
                     'EndDate' => 'InstitutionStudent.end_date', 'StudentStatus' => 'StudentStatus.name', 'AcademicPeriod' => 'AcademicPeriod.name', 'EducationGrade' => 'EducationGrade.name',
                     'nationality_id' => 'MainNationalities.name', 'identity_type_id' => 'MainIdentityTypes.name',
-                    // 'institution_code' => 'InstitutionStudent.Institutions.code','institution_name' => 'InstitutionStudent.Institutions.name'
+                    'institution_code' => 'Institution.code','institution_name' => 'Institution.name'
                 ]);
         $query->autoFields('true');
 
@@ -135,20 +135,6 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
 
         $settings['identity'] = $identity;
 
-        // $extraField[] = [
-        //     'key' => 'Institution.code',
-        //     'field' => 'institution_code',
-        //     'type' => 'string',
-        //     'label' => 'Institution Code',
-        // ];
-
-        // $extraField[] = [
-        //     'key' => 'Institution.name',
-        //     'field' => 'institution_name',
-        //     'type' => 'string',
-        //     'label' => 'Institution Name',
-        // ];
-
         $extraField[] = [
             'key' => 'AcademicPeriod.name',
             'field' => 'AcademicPeriod',
@@ -162,7 +148,20 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
             'type' => 'string',
             'label' => 'Student Status',
         ];
+        
+        $extraField[] = [
+            'key' => 'Institution.code',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => 'Institution Code',
+        ];
 
+        $extraField[] = [
+            'key' => 'Institution.name',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => 'Institution Name',
+        ];
     
         $extraField[] = [
             'key' => 'EducationGrade.name',
