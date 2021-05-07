@@ -1,3 +1,12 @@
+### [3.65.1] - 2021-05-07
+- Bug Fixed: Institution > Survey > Forms: Edited record disappeared
+- Bug Fixed: Institution > Student > Pending Transfer In: After successful Bulk Student Transfer In process, notification is incorrect
+- Bug Fixed: Directory > Search: Error encountered when click on a user without selecting User Type
+- Bug Fixed: Institution > Performance > Assessment: Homeroom Teacher is able to edit marks even though the Homeroom Teacher is not assigned to any Subjects
+- Bug Fixed: Institutions > Finance > Budget/Income/Expenditure : Remove the word PM
+- Bug Fixed: Institution > Student > Academic > Programmes tab: End Date is showing incorrect date for students with Withdrawn status
+- Bug Fixed: Institution > Staff > Career > Leave tab: Leave filter not able to filter Staff Leave Type accordingly
+
 ### [3.65.0] - 2021-04-30
 - Implemented: Changes to Data Archiving feature in OpenEMIS Core
 - Implemented: Improvement of the Workflow module
