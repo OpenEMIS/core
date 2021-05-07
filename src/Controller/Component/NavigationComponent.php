@@ -303,14 +303,30 @@ class NavigationComponent extends Component
             $this->checkClassification($navigations);
         } elseif (($controller->name == 'Directories' && $action != 'index') || in_array($controller->name, $directoryControllers)) {
             $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
-
-
-            $session = $this->request->session();
-            $userType = $session->read('Directories.advanceSearch.belongsTo.user_type');
+			
+			$encodedParam = $this->request->params['pass'][1];
+			if(!empty($encodedParam)) {
+				$securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
+            }
+			if(!empty($encodedParam)) {
+				$userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
+            }
+			
+			$userType = '';
+			if(!empty($userInfo)) {
+				if ($userInfo->is_student) {
+					$userType = 1;
+				} elseif ($userInfo->is_staff) {
+					$userType = 2;
+				} elseif ($userInfo->is_guardian) {
+					$userType = 3;
+				}
+			}
+			$session = $this->request->session();
             $isStudent = $session->read('Directory.Directories.is_student');
             $isStaff = $session->read('Directory.Directories.is_staff');
             $isGuardian = $session->read('Directory.Directories.is_guardian');
-            
+          
             if ($userType == 2) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
                 $session->write('Directory.Directories.reload', true);
