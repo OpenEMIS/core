@@ -1,10 +1,10 @@
 <?php
     
 	$mode = array(
-			'core' => false,
+			'core' => true,
 			'census' => false,
 			'school' => false,
-			'vaccinations' => true
+			'vaccinations' => false
 	);
 
 	$count_mode_value = array_sum($mode);
@@ -16,8 +16,8 @@
 		$application_name = 'OpenEMIS Core';
 		$application_colour = '6699CC';
 		$application_login_image = 'OpenEMIS_Core_Login_Image_Reduced.jpg';
-		$application_sql_name = 'openemis_prd_core_db';
-		$application_db_user_name = 'openemis_prd_core_user';
+		$application_sql_name = 'prd_cor_dmo';
+		$application_db_user_name = 'prd_core_user';
 		$application_theme = 'core';
 		$application_favicon = '_core';
 	}else if($mode['census'] == true){
@@ -25,8 +25,8 @@
 		$application_name = 'OpenEMIS Census';
 		$application_colour = '0099FF';
 		$application_login_image = 'OpenEMIS_Census_Login_Image_Reduced.jpg';
-		$application_sql_name = 'openemis_prd_census_db';
-		$application_db_user_name = 'openemis_prd_census_user';
+		$application_sql_name = 'prd_cen_dmo';
+		$application_db_user_name = 'prd_cen_user';
 		$application_theme = 'census';
 		$application_favicon = '_census';
 	}else if($mode['school'] == true){
@@ -34,8 +34,8 @@
 		$application_name = 'OpenEMIS School';
 		$application_colour = '3366CC';
 		$application_login_image = 'OpenEMIS_School_Login_Image_Reduced.jpg';
-		$application_sql_name = 'openemis_prd_school_db';
-		$application_db_user_name = 'openemis_prd_school_user';
+		$application_sql_name = 'prd_school_dmo';
+		$application_db_user_name = 'prd_school_user';
 		$application_theme = 'school';
 		$application_favicon = '_school';
 	}else if($mode['vaccinations'] == true){
@@ -43,8 +43,8 @@
 		$application_name = 'OpenEMIS Vaccinations';
 		$application_colour = '00CCFF';
 		$application_login_image = 'OpenEMIS_Vaccinations_Login_Image_Reduced.jpg';
-		$application_sql_name = 'openemis_prd_vaccinations_db';
-		$application_db_user_name = 'openemis_prd_vaccinations_user';
+		$application_sql_name = 'prd_vac_dmo';
+		$application_db_user_name = 'prd_vac_user';
 		$application_theme = 'vaccinations';
 		$application_favicon = '_vaccinations';
 	}
