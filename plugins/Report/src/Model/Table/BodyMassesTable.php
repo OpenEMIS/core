@@ -156,7 +156,6 @@ class BodyMassesTable extends AppTable
                 'bm_comment' => 'UserBodyMasses.comment',
                 'class_name' => 'InstitutionClasses.name',
                 'area_code' => 'Areas.code',
-                'area_name' => 'Areas.name'
             ])
             ->contain([
                 'Users' => [
@@ -175,7 +174,7 @@ class BodyMassesTable extends AppTable
                 ],
                 'EducationGrades' => [
                     'fields' => [
-                        'education_grade' => 'EducationGrades.name'
+							'education_grade' => 'EducationGrades.name'
                     ]
                 ],
                 'Users.Genders' => [
@@ -215,6 +214,25 @@ class BodyMassesTable extends AppTable
             ])
 
             ->where($conditions);
+			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $areaLevel = '';
+                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $areaLevelId = $ConfigItems->value('institution_area_level_id');
+                
+                $AreaTable = TableRegistry::get('Area.AreaLevels');
+                $value = $AreaTable->find()
+                            ->where([$AreaTable->aliasField('level') => $areaLevelId])
+                            ->first();
+            
+                if (!empty($value->name)) {
+                    $areaLevel = $value->name;
+                }
+
+                $row['area_name'] = $areaLevel;
+                return $row;
+            });
+        });
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -237,20 +255,19 @@ class BodyMassesTable extends AppTable
             'label' => __('Institution Name')
         ];  
 
-        $extraFieldsFirst[] = [
-            'key' => 'area_code',
-            'field' => 'area_code',
-            'type' => 'string',
-            'label' => __('Area Code')
-        ];
-
          $extraFieldsFirst[] = [
             'key' => 'area_name',
             'field' => 'area_name',
             'type' => 'string',
             'label' => __('Area Name')
         ];
-
+		
+		$extraFieldsFirst[] = [
+            'key' => 'area_code',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => __('Area Education Code')
+        ];
 
         $extraFields[] = [
             'key' => 'Users.openemis_no',
@@ -340,7 +357,7 @@ class BodyMassesTable extends AppTable
             'key' => 'body_mass_index',
             'field' => 'bmi',
             'type' => 'string',
-            'label' => __('GS Code')
+            'label' => __('BMI Category')
         ];
 
         $extraFields[] = [
