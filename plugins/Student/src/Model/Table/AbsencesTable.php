@@ -1,6 +1,7 @@
 <?php
 namespace Student\Model\Table;
 
+use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
@@ -27,6 +28,35 @@ class AbsencesTable extends AppTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades', 'foreignKey' => 'education_grade_id']);
 
     }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $newEvent = [
+            'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons'
+
+
+        ];
+        $events = array_merge($events, $newEvent);
+        return $events;
+    }
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+        switch ($action) {
+			case 'index':
+                    $toolbarButtons['edit'] = $buttons['index'];
+                    $toolbarButtons['edit']['url'][0] = 'index';
+                    $toolbarButtons['edit']['action'] = 'abc';
+                    $toolbarButtons['edit']['type'] = 'button';
+                    $toolbarButtons['edit']['label'] = '<i class="fa fa-folder"></i>';
+                    $toolbarButtons['edit']['attr'] = $attr;
+                    $toolbarButtons['edit']['attr']['title'] = __('Archive');
+                    if($toolbarButtons['edit']['url']['action'] == 'Absences'){
+                        $toolbarButtons['edit']['url']['action'] = 'InstitutionStudentAbsencesArchived';
+                    }
+				break;
+		}
+	}
 
     public function beforeAction($event)
     {
@@ -137,7 +167,13 @@ class AbsencesTable extends AppTable
     public function beforeFind( Event $event, Query $query )
     {
 		$userData = $this->Session->read();
-		$studentId = $userData['Auth']['User']['id'];
+
+        if ($userData['Auth']['User']['is_guardian'] == 1) { 
+            $sId = $userData['Student']['ExaminationResults']['student_id']; 
+            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+        } else {
+            $studentId = $userData['Auth']['User']['id'];
+        }
 
 		if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
 

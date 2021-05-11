@@ -749,6 +749,12 @@ class StudentsTable extends ControllerActionTable
         $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
         $session = $this->Session;
         $institutionId = $session->read('Institution.Institutions.id');
+		
+		if (empty($request->query['academic_period_id'])) {
+            $request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        }
+        $selectedStatus = $this->queryString('status_id', $statusOptions);
+        $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
 
         $educationGradesOptions = $InstitutionEducationGrades
             ->find('list', [
@@ -758,8 +764,10 @@ class StudentsTable extends ControllerActionTable
             ->select([
                     'EducationGrades.id', 'EducationGrades.name'
                 ])
-            ->contain(['EducationGrades'])
+            //->contain(['EducationGrades'])
+			->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
             ->where(['institution_id' => $institutionId])
+            ->where(['EducationSystems.academic_period_id' => $selectedAcademicPeriod])
             ->group('education_grade_id')
             ->toArray();
 
@@ -767,12 +775,7 @@ class StudentsTable extends ControllerActionTable
 
         // Query Strings
 
-        if (empty($request->query['academic_period_id'])) {
-            $request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
-        }
-        $selectedStatus = $this->queryString('status_id', $statusOptions);
         $selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
-        $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
 
         // Advanced Select Options
         $this->advancedSelectOptions($statusOptions, $selectedStatus);

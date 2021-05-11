@@ -91,8 +91,14 @@ class RubricStatusesTable extends AppTable
 
     public function addEditAfterAction(Event $event, Entity $entity)
     {
+		$academicPeriodIds = [];
+		if(!empty($entity->academic_periods)) {
+			foreach($entity->academic_periods as $academic_period) {
+				$academicPeriodIds[] = $academic_period->id;
+			}
+		}
         //Setup fields
-        list($securityRoleOptions, , $programmeOptions) = array_values($this->getSelectOptions());
+        list($securityRoleOptions, , $programmeOptions) = array_values($this->getSelectOptions($academicPeriodIds));
 
         $this->fields['security_roles']['options'] = $securityRoleOptions;
         $this->fields['programmes']['options'] = $programmeOptions;
@@ -129,10 +135,11 @@ class RubricStatusesTable extends AppTable
         $attr['type'] = 'chosenSelect';
         $attr['placeholder'] = __('Select Academic Periods');
         $attr['options'] = $periodOptions;
+		$attr['onChangeReload'] = true;
         return $attr;
     }
 
-    public function getSelectOptions()
+    public function getSelectOptions($academicPeriodIds)
     {
         //Return all required options and their key
         $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
@@ -144,13 +151,21 @@ class RubricStatusesTable extends AppTable
         $selectedSecurityRole = key($securityRoleOptions);
 
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-        $programmeOptions = $EducationProgrammes
-            ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
-            ->find('visible')
-            ->find('order')
-            ->toArray();
-        $selectedProgramme = key($programmeOptions);
-
+        $programmeOptions = [];
+		if(!empty($academicPeriodIds)) {
+			$programmeOptions = $EducationProgrammes
+				->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+				->find('visible')
+				->find('order')
+				->contain(['EducationCycles.EducationLevels.EducationSystems'])
+				->where(['EducationSystems.academic_period_id IN' => $academicPeriodIds])
+				->toArray();
+		}
+		$selectedProgramme = [];	
+		if(!empty($programmeOptions)) {
+			$selectedProgramme = key($programmeOptions);
+		}
+		
         return compact('securityRoleOptions', 'selectedSecurityRole', 'programmeOptions', 'selectedProgramme');
     }
 }
