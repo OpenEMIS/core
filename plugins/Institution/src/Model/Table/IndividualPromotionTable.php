@@ -304,14 +304,16 @@ class IndividualPromotionTable extends ControllerActionTable
                     $institutionId = $attr['entity']->institution_id;
                     $today = date('Y-m-d');
 
+
                     // list of grades available in the institution
                     $InstitutionGrades = $this->Institutions->InstitutionGrades;
                     $listOfInstitutionGrades = $InstitutionGrades
                         ->find('list', [
                             'keyField' => 'education_grade_id',
                             'valueField' => 'education_grade.programme_grade_name'])
-                        ->contain(['EducationGrades.EducationProgrammes'])
+                        ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
                         ->where([
+                            'EducationSystems.academic_period_id' => $toAcademicPeriodId,
                             $InstitutionGrades->aliasField('institution_id') => $institutionId,
                             'OR' => [
                                 [
@@ -327,6 +329,7 @@ class IndividualPromotionTable extends ControllerActionTable
                         ])
                         ->order(['EducationProgrammes.order', 'EducationGrades.order'])
                         ->toArray();
+
 
                     $statuses = $this->StudentStatuses->findCodeList();
                     $fromGradeId = $attr['entity']->education_grade_id;
@@ -364,7 +367,8 @@ class IndividualPromotionTable extends ControllerActionTable
                     }
 
                     // Only display the options that are available in the institution and also linked to the current programme
-                    $options = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
+                    // $options = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
+                    $options = $listOfInstitutionGrades;
 
                     if (count($options) == 0) {
                         $attr['select'] = false;

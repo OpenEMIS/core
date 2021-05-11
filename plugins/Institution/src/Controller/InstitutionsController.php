@@ -293,6 +293,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']);
     }
+    //POCOR-5671    
+    public function StudentTransition()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Transition']);
+    }
+     //POCOR-5671 
     public function Exams()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminations']);
@@ -1762,6 +1768,7 @@ class InstitutionsController extends AppController
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
                 'StudentRisks' => __('Risks'),
+                'StudentTextbooks' => __('Textbox'),
                 'StudentAssociations' => __('Associations')
             ];
             if (array_key_exists($alias, $studentModels)) {
