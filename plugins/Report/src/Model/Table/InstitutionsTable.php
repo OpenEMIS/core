@@ -972,15 +972,12 @@ class InstitutionsTable extends AppTable
                 $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
                 $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
                 $attr['attr']['default'] = $selectedPeriod->start_date;
-                //$attr['value'] = $selectedPeriod->start_date;
                 $attr['onChangeReload'] = true;
-                
                 if ($attr['value'] > 0) {
                     $attr['value'] = $this->request->data[$this->alias()]['report_start_date'];
                 } else {
                     $attr['value'] = $selectedPeriod->start_date;
                 }
-                //echo "<pre>";print_r($attr);die();
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -1023,27 +1020,26 @@ class InstitutionsTable extends AppTable
                 $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
-
+                
                 $attr['type'] = 'date';
-                $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                if ($request->data['Institutions']['report_start_date'] != 0) {
+                    $attr['date_options']['startDate'] = $request->data['Institutions']['report_start_date'];
+                } else {
+                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                }
                 $date = $attr['date_options']['startDate'];
                 $reportEndDate = date('d-m-Y',strtotime('+30 days',strtotime($date)));
-                $attr['attr']['default'] = $reportEndDate;
-                $dateString = $this->request->data[$this->alias()]['report_start_date'];
-                $endDate = date('d-m-Y',strtotime('+30 days',strtotime($dateString)));
-                $attr['date_options']['endDate'] = $endDate;
-                $attr['attr']['default'] = '31-01-2021';
-                $attr['onChangeReload'] = true;
-                $attr['value'] = $endDate;
+                $attr['date_options']['endDate'] = $reportEndDate;
                 if ($academicPeriodId == $AcademicPeriods->getCurrent()) {
-                    $attr['value'] = $endDate;
+                    $attr['value'] = $reportEndDate;
                 } else {
                     $attr['value'] = Time::now();
                 }
-                $attr['value'] = $endDate;
+                $attr['value'] = $reportEndDate;
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
+            
             return $attr;
         }
     }
