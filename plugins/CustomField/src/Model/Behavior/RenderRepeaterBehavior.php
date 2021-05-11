@@ -319,11 +319,12 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     if (!array_key_exists('value', $attr)) {
                                         if (!is_null($answerValue)) {
-                                            if ($answerValue instanceof Time || $answerValue instanceof Date) {
+											$attr['value'] = $answerValue->format('d-m-Y');
+                                            /*if ($answerValue instanceof Time || $answerValue instanceof Date) {
                                                 $attr['value'] = $answerValue->format('d-m-Y');
                                             } else {
                                                 $attr['value'] = date('d-m-Y', strtotime($answerValue));
-                                            }
+                                            }*/
                                         } else if ($attr['default_date']) {
                                             $attr['value'] = date('d-m-Y');
                                         }
