@@ -335,8 +335,9 @@ class StudentProfilesTable extends ControllerActionTable
 				->select([
 						'EducationGrades.id', 'EducationGrades.name'
 					])
-				->contain(['EducationGrades'])
+				->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
 				->where(['institution_id' => $selectedInstitution])
+                ->where(['EducationSystems.academic_period_id' => $selectedAcademicPeriod])
 				->group('education_grade_id')
 				->toArray();
         }

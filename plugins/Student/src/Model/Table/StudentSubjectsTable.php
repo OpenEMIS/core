@@ -164,8 +164,12 @@ class StudentSubjectsTable extends ControllerActionTable
 		
 		
 		$userData = $this->Session->read();
-		$studentId = $userData['Auth']['User']['id'];
-
+        if ($userData['Auth']['User']['is_guardian'] == 1) {
+            $sId = $userData['Student']['ExaminationResults']['student_id'];
+            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+        } else {
+            $studentId = $userData['Auth']['User']['id'];
+        }
 		if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
 
 		} else {

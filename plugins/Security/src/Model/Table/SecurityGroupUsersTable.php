@@ -213,7 +213,7 @@ class SecurityGroupUsersTable extends AppTable {
         $where = array_key_exists('where', $options) ? $options['where'] : [];
         $area = array_key_exists('area', $options) ? $options['area'] : null;
 
-        $query->find('list', ['keyField' => $this->Users->aliasField('id'), 'valueField' => $this->Users->aliasField('name_with_id')])
+        $query->find('list', [/*'keyField' => $this->Users->aliasField('id'),*/ 'valueField' => $this->Users->aliasField('name_with_id_role')])
                 ->select([
                     $this->Users->aliasField('id'),
                     $this->Users->aliasField('openemis_no'),
@@ -224,6 +224,15 @@ class SecurityGroupUsersTable extends AppTable {
                     $this->Users->aliasField('preferred_name')
                 ])
                 ->contain([$this->Users->alias()])
+                //POCOR-5688 starts
+                ->leftJoin([$this->SecurityRoles->alias() => $this->SecurityRoles->table()], [
+                    $this->SecurityRoles->aliasField('id =') . $this->aliasField('security_role_id')
+                ])
+                ->order([
+                    $this->SecurityRoles->aliasField('order') => 'ASC',
+                    $this->aliasField('security_role_id') => 'DESC'
+                ])
+                //POCOR-5688 ends
                 ->group([$this->Users->aliasField('id')]);
 
         if (!empty($where)) {
@@ -239,7 +248,7 @@ class SecurityGroupUsersTable extends AppTable {
                         ]);
                     });
         }
-
+         
         return $query;
     }
 
@@ -312,8 +321,9 @@ class SecurityGroupUsersTable extends AppTable {
                 } else {
                     $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                     $assigneeQuery = $SecurityGroupUsers
-                            ->find('userList', ['where' => $where]);
-
+                            ->find('userList', ['where' => $where])
+                            ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                    
                     Log::write('debug', 'Non-School based assignee query:');
                     Log::write('debug', $assigneeQuery->sql());
 

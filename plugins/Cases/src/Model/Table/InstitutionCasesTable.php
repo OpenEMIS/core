@@ -138,6 +138,14 @@ class InstitutionCasesTable extends ControllerActionTable
         $requestQuery = $this->request->query;
         $selectedFeature = $requestQuery['feature'];
         $featureModel = TableRegistry::get($this->features[$selectedFeature]);
+        $session = $this->Session;
+        $username = $session->read('Auth.User');
+        if(strtolower($username['username']) == 'superrole' || strtolower($username['username']) == 'admin' || strtolower($username['username']) == 'administrator')
+        {
+            $userId = 0;  
+        }else{
+            $userId = $session->read('Auth.User.id');
+        }
 
         $query
             ->select([
@@ -166,6 +174,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
                 ]
             )
+            ->where([$this->aliasField('assignee_id') => $userId])
             ->group($this->aliasField('id'));
 
         
