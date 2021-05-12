@@ -415,7 +415,8 @@ class StudentsTable extends AppTable
 									  'Report.SubjectsBookLists',
 									  'Report.StudentNotAssignedClass',
                                       'Report.StudentsEnrollmentSummary',
-                                      'Report.SpecialNeeds'
+                                      'Report.SpecialNeeds',
+                                      'Report.InstitutionStudentsOutOfSchool'
 									  
 									  ])
 			)) {
