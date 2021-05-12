@@ -13,6 +13,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Migrations\Migrations;
 use PDO;
+use PDOException;
 use Cake\Auth\DefaultPasswordHasher;
 
 /**
@@ -171,28 +172,27 @@ return [
         $rootPass = $data['database_admin_password'];
         if (APPLICATION_MODE == 'census') {
             $default_db_name = Configure::read('installerCensus') ? 'prd_cen_dmo' : APPLICATION_DB_NAME;
-            $default_db_user = Configure::read('installerCensus') ? 'prd_cen_user' : APPLICATION_DB_NAME;
+            $default_db_user = Configure::read('installerCensus') ? 'prd_cen_user' : APPLICATION_DB_USER_NAME;
         }else if(APPLICATION_MODE == 'school'){
-            $default_db_name = Configure::read('installerSchool') ? 'prd_sch_dmo' : APPLICATION_DB_NAME;
-            $default_db_user = Configure::read('installerSchool') ? 'prd_sch_user' : APPLICATION_DB_NAME;
+            $default_db_name = Configure::read('installerSchool') ? 'prd_school_dmo' : APPLICATION_DB_NAME;
+            $default_db_user = Configure::read('installerSchool') ? 'prd_school_user' : APPLICATION_DB_USER_NAME;
         }else if(APPLICATION_MODE == 'vaccinations'){
             $default_db_name = Configure::read('installerVaccinations') ? 'prd_vac_dmo' : APPLICATION_DB_NAME;
-            $default_db_user = Configure::read('installerVaccinations') ? 'prd_vac_user' : APPLICATION_DB_NAME;
+            $default_db_user = Configure::read('installerVaccinations') ? 'prd_vac_user' : APPLICATION_DB_USER_NAME;
         }else{
             $default_db_name = Configure::read('installerCore') ? 'prd_cor_dmo' : APPLICATION_DB_NAME;
-            $default_db_user = Configure::read('installerCore') ? 'prd_cor_user' : APPLICATION_DB_NAME;
+            $default_db_user = Configure::read('installerCore') ? 'prd_core_user' : APPLICATION_DB_USER_NAME;
         }
+
         $db = isset($data['datasource_db']) ? $data['datasource_db'] : $default_db_name;
         $dbUser = isset($data['datasource_user']) ? $data['datasource_user'] : $default_db_user;
         $dbPassword = isset($data['datasource_password']) ? $data['datasource_password'] : bin2hex(random_bytes(4));
-       
+    
         $connectionString = sprintf('mysql:host=%s;port=%d', $host, $port);
         $pdo = new PDO($connectionString, $root, $rootPass);
-
         $template = str_replace('{host}', "'$host'", self::CONFIG_TEMPLATE);
         $template = str_replace('{port}', "'$port'", $template);
         $template = str_replace('{pass}', "'$dbPassword'", $template);
-
         $dbFileHandle = fopen(CONFIG . 'datasource.php', 'w');
         $privateKeyHandle = fopen(CONFIG . 'private.key', 'w');
         $publicKeyHandle = fopen(CONFIG . 'public.key', 'w');
@@ -238,8 +238,28 @@ return [
             $dbname = $dbConfig['database']; 
             $password = $dbConfig['password']; 
             $fileName = DATABASE_DUMP_FILE;
+            $conn = mysqli_connect($host, $username, $password, $dbname);
 
-            $result = exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            $query = '';
+            $sqlScript = file(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            foreach ($sqlScript as $line)   {
+                
+                $startWith = substr(trim($line), 0 ,2);
+                $endWith = substr(trim($line), -1 ,1);
+                
+                if (empty($line) || $startWith == '--' || $startWith == '/*' || $startWith == '//') {
+                    continue;
+                }
+                    
+                $query = $query . $line;
+                if ($endWith == ';') {
+                    mysqli_query($conn,$query) or die('<div class="error-response sql-import-response">Problem in executing the SQL query <b>' . $query. '</b></div>');
+                    $query= '';     
+                }
+            }
+
+            // $result = exec('mysql -u'.$username.' -p'.$password.' --host'.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            // $result = exec("/Applications/MAMP/Library/bin/mysql --host=localhost -u$username -p$password $db < prd_cor_zip.sql");
             $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
             /*$sql = mysqli_connect($host, $username, $password, $dbname);
             $sqlSource = file_get_contents(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
