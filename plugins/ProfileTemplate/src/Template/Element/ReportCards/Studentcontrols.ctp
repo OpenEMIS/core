@@ -34,6 +34,19 @@
                         'data-named-group' => 'academic_period_id'
                     ));
                 }
+				
+				if (!empty($areaOptions)) {
+                    echo $this->Form->input('area_id', array(
+                        'type' => 'select',
+                        'class' => 'form-control',
+                        'label' => false,
+                        'options' => $areaOptions,
+                        'default' => $selectedArea,
+                        'url' => $baseUrl,
+                        'data-named-key' => 'area_id',
+                        'data-named-group' => 'academic_period_id,student_profile_template_id'
+                    ));
+                }
 
                 if (!empty($institutionOptions)) {
                     echo $this->Form->input('institution_id', array(
@@ -44,7 +57,7 @@
                         'default' => $selectedInstitution,
                         'url' => $baseUrl,
                         'data-named-key' => 'institution_id',
-                        'data-named-group' => 'academic_period_id,student_profile_template_id'
+                        'data-named-group' => 'academic_period_id,student_profile_template_id,area_id'
                     ));
                 }
 				
@@ -57,7 +70,7 @@
                         'default' => $selectedGrade,
                         'url' => $baseUrl,
                         'data-named-key' => 'education_grade_id',
-                        'data-named-group' => 'academic_period_id,student_profile_template_id,institution_id'
+                        'data-named-group' => 'academic_period_id,student_profile_template_id,area_id,institution_id'
                     ));
                 }
             ?>
