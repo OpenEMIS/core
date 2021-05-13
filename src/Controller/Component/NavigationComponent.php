@@ -612,14 +612,14 @@ class NavigationComponent extends Component
             'Institutions.StudentAttendances.index' => [
                 'title' => 'Students',
                 'parent' => 'Institution.Attendance',
-                'selected' => ['Institutions.StudentAttendances', 'Institutions.StudentAbsences', 'Institutions.ImportStudentAttendances' , 'Institutions.StudentArchive'],
+                'selected' => ['Institutions.StudentAttendances', 'Institutions.StudentAbsences', 'Institutions.ImportStudentAttendances' , 'Institutions.StudentArchive', 'Institutions.InstitutionStudentAbsencesArchived'],
                 'params' => ['plugin' => 'Institution']
             ],
 
             'Institutions.InstitutionStaffAttendances.index' => [
                 'title' => 'Staff',
                 'parent' => 'Institution.Attendance',
-                'selected' => ['Institutions.InstitutionStaffAttendances', 'Institutions.ImportStaffAttendances'],
+                'selected' => ['Institutions.InstitutionStaffAttendances', 'Institutions.ImportStaffAttendances','Institutions.InstitutionStaffAttendancesArchive'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -666,7 +666,7 @@ class NavigationComponent extends Component
             'Institutions.Assessments.index' => [
                 'title' => 'Assessments',
                 'parent' => 'Institution.Performance',
-                'selected' => ['Institutions.Assessments', 'Institutions.Results', 'Institutions.AssessmentsArchive', 'Institutions.ImportAssessmentItemResults.add', 'Institutions.ImportAssessmentItemResults.results'],
+                'selected' => ['Institutions.Assessments', 'Institutions.Results', 'Institutions.AssessmentsArchive', 'Institutions.ImportAssessmentItemResults.add', 'Institutions.ImportAssessmentItemResults.results','Institutions.AssessmentItemResultsArchived'],
                 'params' => ['plugin' => 'Institution'],
             ],
 
