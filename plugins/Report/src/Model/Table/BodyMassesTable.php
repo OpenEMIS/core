@@ -155,7 +155,7 @@ class BodyMassesTable extends AppTable
                 'bmi' => 'UserBodyMasses.body_mass_index',
                 'bm_comment' => 'UserBodyMasses.comment',
                 'class_name' => 'InstitutionClasses.name',
-                'area_code' => 'Areas.code',
+                'area_id' => 'Areas.id',
             ])
             ->contain([
                 'Users' => [
@@ -216,20 +216,44 @@ class BodyMassesTable extends AppTable
             ->where($conditions);
 			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $areaLevel = '';
-                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-                $areaLevelId = $ConfigItems->value('institution_area_level_id');
-                
-                $AreaTable = TableRegistry::get('Area.AreaLevels');
-                $value = $AreaTable->find()
-                            ->where([$AreaTable->aliasField('level') => $areaLevelId])
+				$areaTable = TableRegistry::get('areas');
+                $areasData = $areaTable
+                            ->find()
+                            ->where([$areaTable->alias('id')=>$row['area_id']])
                             ->first();
-            
-                if (!empty($value->name)) {
-                    $areaLevel = $value->name;
+             
+                if(!empty($areasData)){
+                    $areas = TableRegistry::get('areas');
+                    $areaLevels = TableRegistry::get('area_levels');
+                    $institutions = TableRegistry::get('institutions');
+                    $val = $areas
+                                ->find()
+                                ->select([
+                                    $areas->aliasField('code'),
+                                    $areas->aliasField('name'),
+                                    ])
+                                ->leftJoin(
+                                    [$areaLevels->alias() => $areaLevels->table()],
+                                    [
+                                        $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
+                                    ]
+                                )
+                                ->leftJoin(
+                                    [$institutions->alias() => $institutions->table()],
+                                    [
+                                        $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
+                                    ]
+                                )    
+                                ->where([
+                                    $areaLevels->aliasField('level !=') => 1,
+                                    $areas->aliasField('id') => $areasData->parent_id
+                                ])->first();
+                    
+                    if (!empty($val->name) && !empty($val->code)) {
+                        $row['area_code'] = $val->code;
+                        $row['area_name'] = $val->name;
+                    }
                 }
-
-                $row['area_name'] = $areaLevel;
                 return $row;
             });
         });
