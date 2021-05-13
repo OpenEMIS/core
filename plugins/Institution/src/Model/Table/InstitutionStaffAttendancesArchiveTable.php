@@ -4,6 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 
 use Cake\I18n\Date;
+use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -27,6 +28,11 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('Activity');
+        ini_set("memory_limit", "2048M");
+        $this->addBehavior('Excel', [
+            'excludes' => ['id'],
+            'autoFields' => false
+        ]);
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
@@ -36,14 +42,15 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
-        // $this->field('institution_student_absence_day_id', ['visible' => false]);
-        // $this->field('created', ['visible' => false]);
-        // $this->field('created_user_id', ['visible' => false]);
-        // $this->field('education_grade_id', ['visible' => false]);
-        $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+        $this->field('academic_period_id', ['visible' => false]);
+        $this->field('created', ['visible' => false]);
+        $this->field('created_user_id', ['visible' => false]);
+        $this->field('absence_type_id', ['visible' => false]);
+        $this->field('openemis_no');
+        $this->field('institution_name');
 
-        $this->field('institution_id');
-        $this->setFieldOrder(['institution_id']);
+        // $this->field('institution_id');
+        $this->setFieldOrder(['institution_name', 'date']);
         $toolbarButtons = $extra['toolbarButtons'];
         $extra['toolbarButtons']['back'] = [
             'url' => [
@@ -162,17 +169,118 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
         }
     }
 
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                
+                $UserData = TableRegistry::get('User.Users');
+                $UserDataRow = $UserData
+                            ->find()
+                            ->where([$UserData->alias('id')=>$row->staff_id])
+                            ->first();
+
+                $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+                $StaffLeaveTypes = $StaffLeaveTable
+                    ->find()
+                    ->matching('StaffLeaveTypes')
+                    ->where([
+                        $StaffLeaveTable->aliasField('staff_id') => $row->staff_id,
+                    ])
+                    ->first();
+
+                $firstName = $this->Auth->user('first_name');
+                $lastName = $this->Auth->user('last_name');
+                $name = $UserDataRow->first_name . " " . $UserDataRow->last_name;
+                $row['name'] = $name;
+                $row['openemis_no'] = $UserDataRow->openemis_no;
+                $row['time_in'] = isset($row->time_in) ? $row->time_in->format('h:i:s') : '';
+                $row['time_out'] = isset($row->time_out) ? $row->time_out->format('h:i:s') : '';
+                $row['leave_types'] = $StaffLeaveTypes->_matchingData['StaffLeaveTypes']->name;
+                return $row;
+            });
+        });
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $newFields = [];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaffAttendancesArchive.institution_id',
+            'field' => 'institution_id',
+            'type' => 'integer',
+            'label' => 'Institution',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaffAttendancesArchive.date',
+            'field' => 'date',
+            'type' => 'date',
+            'label' => 'Date',
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => 'OpenEMIS ID',
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'name',
+            'type' => 'integer',
+            'label' => 'Name',
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'time_in',
+            'type' => 'string',
+            'label' => 'Time In',
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'time_out',
+            'type' => 'string',
+            'label' => 'Time Out'
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'leave_types',
+            'type' => 'text',
+            'label' => 'Leave',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaffAttendancesArchive.comment',
+            'field' => 'comment',
+            'type' => 'text',
+            'label' => 'Comment',
+        ];
+
+        $fields->exchangeArray($newFields);
+    }
+
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
         return $entity->user->openemis_no;
     }
 
+    public function onGetInstitutionName(Event $event, Entity $entity)
+    {
+        return $entity->institution->name;
+    }
+
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'created_user_id') {
-            return __('Last Modified By');
-        } else if ($field == 'created') {
-            return  __('Last Modified On');
+        if ($field == 'institution_name') {
+            return __('Institution');
+        } else if ($field == 'staff_id') {
+            return  __('Name');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
