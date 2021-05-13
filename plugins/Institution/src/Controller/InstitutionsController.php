@@ -428,7 +428,7 @@ class InstitutionsController extends AppController
         $this->set('ngController', 'InstitutionAssessmentsArchiveCtrl as $ctrl');
     }
 
-    public function Distribution()
+    public function Distributions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDistributions']);
     }
