@@ -911,11 +911,11 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.Distribution' => [
-               'title' => 'Distribution',
+            'Institutions.Distributions' => [
+               'title' => 'Distributions',
                 'parent' => 'Meals',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.Distribution']
+                'selected' => ['Institutions.Distributions']
             ],
 
             'Institutions.StudentMeals.index' => [
