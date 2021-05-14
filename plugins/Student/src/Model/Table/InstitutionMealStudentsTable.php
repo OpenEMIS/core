@@ -78,7 +78,8 @@ class InstitutionMealStudentsTable extends ControllerActionTable
 
         $this->field('meal_received_id',['visible' => false]);
         $this->field('comment',['visible' => false]);
-        $this->setFieldOrder(['date','meal_programmes_id','meal_benefit_id','institution_id','paid']);
+        $this->field('paid',['visible' => false]);
+        $this->setFieldOrder(['date','meal_programmes_id','meal_benefit_id','institution_id']);
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
