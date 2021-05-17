@@ -48,27 +48,30 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
         $this->field('absence_type_id', ['visible' => false]);
         $this->field('openemis_no');
         $this->field('institution_name');
+        $this->field('leave');
+        $this->field('name');
+        $this->field('staff_id', ['visible' => false]);
 
         // $this->field('institution_id');
-        $this->setFieldOrder(['institution_name', 'date']);
+        $this->setFieldOrder(['institution_name', 'date','openemis_no','name', 'time_in','time_out',  'leave',]);
         $toolbarButtons = $extra['toolbarButtons'];
-        $extra['toolbarButtons']['back'] = [
-            'url' => [
-                'plugin' => 'Student',
-                'controller' => 'Students',
-                'action' => 'Absences',
-                '0' => 'index',
-            ],
-            'type' => 'button',
-            'label' => '<i class="fa kd-back"></i>',
-            'attr' => [
-                'class' => 'btn btn-xs btn-default',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false,
-                'title' => __('Back')
-            ]
-        ];
+        // $extra['toolbarButtons']['back'] = [
+        //     'url' => [
+        //         'plugin' => 'Student',
+        //         'controller' => 'Students',
+        //         'action' => 'Absences',
+        //         '0' => 'index',
+        //     ],
+        //     'type' => 'button',
+        //     'label' => '<i class="fa kd-back"></i>',
+        //     'attr' => [
+        //         'class' => 'btn btn-xs btn-default',
+        //         'data-toggle' => 'tooltip',
+        //         'data-placement' => 'bottom',
+        //         'escape' => false,
+        //         'title' => __('Back')
+        //     ]
+        // ];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -161,9 +164,43 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
             }
             $this->advancedSelectOptions($weekOptions, $selectedWeek);
                 $this->controller->set(compact('weekOptions', 'selectedWeek'));
+            $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+            $StaffLeaveTypesTable = TableRegistry::get('Staff.StaffLeaveTypes');
+            $StaffUser = TableRegistry::get('User.Users');
             $query
-                ->find('all')
-                ->where($conditions);
+            ->select([
+                'institution_id' => $this->aliasField('institution_id'),
+                'date' => $this->aliasField('date'),
+                'time_in' => $this->aliasField('time_in'),
+                'time_out' => $this->aliasField('time_out'),
+                'comment' => $this->aliasField('comment'),
+                'staff_id' => $this->aliasField('staff_id'),
+                'leave' => $StaffLeaveTypesTable->aliasField('name'),
+                'name' => $StaffUser->find()->func()->concat([
+                    'Users.first_name' => 'literal',
+                    " ",
+                    'Users.last_name' => 'literal'
+                ]),
+                'openemis_no' => $StaffUser->aliasField('openemis_no')
+
+            ])
+            ->leftJoin(
+                [$StaffUser->alias() => $StaffUser->table()], [
+                    $this->aliasField('staff_id = ') . $StaffUser->aliasField('id')
+                ]
+            )
+            ->leftJoin(
+                [$StaffLeaveTable->alias() => $StaffLeaveTable->table()], [
+                    $this->aliasField('staff_id = ') . $StaffLeaveTable->aliasField('staff_id')
+                ]
+            )
+            ->leftJoin(
+                [$StaffLeaveTypesTable->alias() => $StaffLeaveTypesTable->table()], [
+                    $StaffLeaveTable->aliasField('staff_leave_type_id = ') . $StaffLeaveTypesTable->aliasField('id')
+                ]
+            )
+            ->where($conditions);
+            // echo "<pre>";print_r($query->toArray());die;
 
             $extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => [], 'order' => 1];
         }
