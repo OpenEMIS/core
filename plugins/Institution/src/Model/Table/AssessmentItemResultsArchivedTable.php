@@ -47,11 +47,14 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra) {
         $this->field('assessment_grading_option_id', ['visible' => false]);
         $this->field('education_grade_id', ['visible' => false]);
+        $this->field('student_id', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+        $this->field('classes');
+        $this->field('name');
 
-        $this->setFieldOrder(['institution_id', 'academic_period_id', 'assessment_id', 'assessment_period_id','education_subject_id','openemis_no','student_id', 'marks']);
+        $this->setFieldOrder(['institution_id', 'academic_period_id', 'assessment_id', 'assessment_period_id','classes','education_subject_id','openemis_no','name', 'marks']);
         $toolbarButtons = $extra['toolbarButtons'];
         // $extra['toolbarButtons']['back'] = [
         //     'url' => [
@@ -126,7 +129,6 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             $this->advancedSelectOptions($assessmentOptions, $selectedassessment);
             $this->controller->set(compact('assessmentOptions', 'selectedAssessment'));
             //Assessment[End]
-            // echo "<pre>";print_r($this->request->query);die;
             if(empty($selectedAssessmentPeriods) && empty($selectedassessment) && empty($selectedSubject)){
                 $conditions = [
                     $this->aliasField('academic_period_id') => $selectedPeriod,
@@ -283,22 +285,37 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             
             $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $ArchivedUser = TableRegistry::get('User.Users');
             $query
-            // ->select([
-            //     'classes' => $InstitutionClasses->aliasField('name')
-            //     ])
-            //     ->innerJoin(
-            //         [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()], [
-            //             $this->aliasField('student_id = ') . $InstitutionClassStudents->aliasField('student_id')
-            //         ]
-            //     )
-            //     ->innerJoin(
-            //         [$InstitutionClasses->alias() => $InstitutionClasses->table()], [
-            //             $InstitutionClassStudents->aliasField('institution_class_id = ') . $InstitutionClasses->aliasField('id')
-            //         ]
-            //     )
+            ->select([
+                'academic_period_id' => $this->aliasField('academic_period_id'),
+                'assessment_id' => $this->aliasField('assessment_id'),
+                'assessment_period_id' => $this->aliasField('assessment_period_id'),
+                'education_subject_id' => $this->aliasField('education_subject_id'),
+                'marks' => $this->aliasField('marks'),
+                'classes' => $InstitutionClasses->aliasField('name'),
+                'name' => $ArchivedUser->find()->func()->concat([
+                    'Users.first_name' => 'literal',
+                    " ",
+                    'Users.last_name' => 'literal'
+                ]),
+                'openemis_no' => $ArchivedUser->aliasField('openemis_no')
+                ])
+                ->innerJoin(
+                    [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()], [
+                        $this->aliasField('student_id = ') . $InstitutionClassStudents->aliasField('student_id')
+                    ]
+                )
+                ->innerJoin(
+                    [$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                        $InstitutionClassStudents->aliasField('institution_class_id = ') . $InstitutionClasses->aliasField('id'),
+                        'AND' => [
+                            $this->aliasField('education_grade_id = ') . $InstitutionClassStudents->aliasField('education_grade_id'),
+                            $this->aliasField('academic_period_id = ') . $InstitutionClassStudents->aliasField('academic_period_id')
+                        ]
+                    ]
+                )
                 ->where($conditions);
-            // echo "<pre>";print_r($query->toArray());die;
 
             $extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => [], 'order' => 1];
             $extra['elements']['controls'] = ['name' => 'Institution.Assessment/controls', 'data' => [], 'options' => [], 'order' => 1];
@@ -412,7 +429,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
     {
         if ($field == 'education_subject_id') {
             return __('Subject');
-        } else if ($field == 'student_id') {
+        } else if ($field == 'name') {
             return  __('Name');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
