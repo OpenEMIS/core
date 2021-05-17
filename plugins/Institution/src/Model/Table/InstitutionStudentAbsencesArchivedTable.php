@@ -53,23 +53,23 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
 
         $this->setFieldOrder(['academic_period_id', 'institution_id', 'date', 'institution_class_id', 'openemis_no','student_id','absence_type_id']);
         $toolbarButtons = $extra['toolbarButtons'];
-        $extra['toolbarButtons']['back'] = [
-            'url' => [
-                'plugin' => 'Student',
-                'controller' => 'Students',
-                'action' => 'Absences',
-                '0' => 'index',
-            ],
-            'type' => 'button',
-            'label' => '<i class="fa kd-back"></i>',
-            'attr' => [
-                'class' => 'btn btn-xs btn-default',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false,
-                'title' => __('Back')
-            ]
-        ];
+        // $extra['toolbarButtons']['back'] = [
+        //     'url' => [
+        //         'plugin' => 'Student',
+        //         'controller' => 'Students',
+        //         'action' => 'Absences',
+        //         '0' => 'index',
+        //     ],
+        //     'type' => 'button',
+        //     'label' => '<i class="fa kd-back"></i>',
+        //     'attr' => [
+        //         'class' => 'btn btn-xs btn-default',
+        //         'data-toggle' => 'tooltip',
+        //         'data-placement' => 'bottom',
+        //         'escape' => false,
+        //         'title' => __('Back')
+        //     ]
+        // ];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -310,7 +310,9 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
             return __('Class');
         } else if ($field == 'absence_type_id') {
             return  __('Attendance');
-        } else {
+        } else if ($field == 'student_id') {
+            return  __('Name');
+        }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }

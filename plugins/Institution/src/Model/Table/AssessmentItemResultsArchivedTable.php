@@ -281,14 +281,49 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             $this->controller->set(compact('subjectOptions', 'selectedSubject'));
             
             
-            // $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $query
-                ->find('all')
+            // ->select([
+            //     'classes' => $InstitutionClasses->aliasField('name')
+            //     ])
+            //     ->innerJoin(
+            //         [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()], [
+            //             $this->aliasField('student_id = ') . $InstitutionClassStudents->aliasField('student_id')
+            //         ]
+            //     )
+            //     ->innerJoin(
+            //         [$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+            //             $InstitutionClassStudents->aliasField('institution_class_id = ') . $InstitutionClasses->aliasField('id')
+            //         ]
+            //     )
                 ->where($conditions);
+            // echo "<pre>";print_r($query->toArray());die;
 
             $extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => [], 'order' => 1];
             $extra['elements']['controls'] = ['name' => 'Institution.Assessment/controls', 'data' => [], 'options' => [], 'order' => 1];
         }
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                
+                $UserData = TableRegistry::get('User.Users');
+                $UserDataRow = $UserData
+                            ->find()
+                            ->where([$UserData->alias('id')=>$row->student_id])
+                            ->first();
+
+                $firstName = $this->Auth->user('first_name');
+                $lastName = $this->Auth->user('last_name');
+                $name = $UserDataRow->first_name . " " . $UserDataRow->last_name;
+                $row['name'] = $name;
+                $row['openemis_no'] = $UserDataRow->openemis_no;
+                return $row;
+            });
+        });
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -324,7 +359,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         ];
 
         $newFields[] = [
-            'key' => 'Users.openemis_no',
+            'key' => '',
             'field' => 'openemis_no',
             'type' => 'string',
             'label' => 'OpenEMIS ID',
@@ -332,9 +367,9 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
 
         $newFields[] = [
             'key' => '',
-            'field' => 'student_id',
+            'field' => 'name',
             'type' => 'integer',
-            'label' => 'Student',
+            'label' => 'Name',
         ];
 
         $newFields[] = [
