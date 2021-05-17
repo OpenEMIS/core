@@ -88,12 +88,15 @@ class StudentAttendancesTable extends ControllerActionTable
         $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('start_date') . ' <= ' => $weekStartDay, $InstitutionStudents->aliasField('end_date') . ' >= ' => $weekEndDay];
         /* POCOR-5912 condition for week filter ends */
         /* POCOR-5919 condition for day filter starts */
-        $conditionQuery = [$InstitutionStudents->aliasField('start_date <= ') => $day,
-                'OR' => [
-                $InstitutionStudents->aliasField('end_date is ') => null,
-                $InstitutionStudents->aliasField('end_date >= ') => $day
-                ]
-        ];
+        if ($day != -1) {
+            $conditionQuery = [$InstitutionStudents->aliasField('start_date <= ') => $day,
+                    'OR' => [
+                    $InstitutionStudents->aliasField('end_date is ') => null,
+                    $InstitutionStudents->aliasField('end_date >= ') => $day,
+
+                    ]
+            ];
+        }
         /* POCOR-5919 condition for day filter ends */
         
         if ($day == -1) {
@@ -139,7 +142,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 $this->aliasField('institution_class_id') => $institutionClassId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
                 $InstitutionSubjectStudents->aliasField('institution_subject_id') => $subjectId,
-                //POCOR-5900 condition
+                // //POCOR-5900 condition
                 $InstitutionStudents->aliasField('institution_id') => $institutionId,
                 $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                 $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
@@ -550,7 +553,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
                     $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
                    // $studentWithdraw->aliasField('effective_date >= ') => $day,
-                    $studentWithdraw->aliasField('effective_date <= ') => $day
+                    $studentWithdraw->aliasField('effective_date <= ') => $day['date']
                     ])
                 ->toArray();
                
