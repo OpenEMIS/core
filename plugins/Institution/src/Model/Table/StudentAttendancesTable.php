@@ -176,6 +176,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     ]
                 )
                 //POCOR-5900 end
+                
                 ->where([
                     $this->aliasField('academic_period_id') => $academicPeriodId,
                     $this->aliasField('institution_class_id') => $institutionClassId,
@@ -378,7 +379,9 @@ class StudentAttendancesTable extends ControllerActionTable
             $periodList = $StudentAttendanceMarkTypesTable
                 ->find('PeriodByClass', [
                     'institution_class_id' => $institutionClassId,
-                    'academic_period_id' => $academicPeriodId
+                    'academic_period_id' => $academicPeriodId,
+                    'day_id' => $day,
+                    'education_grade_id' => $educationGradeId,
                 ])
                 ->toArray();
 
