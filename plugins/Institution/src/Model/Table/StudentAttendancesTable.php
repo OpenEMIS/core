@@ -523,20 +523,24 @@ class StudentAttendancesTable extends ControllerActionTable
                 }
 
                 $query
-                    ->formatResults(function (ResultSetInterface $results) use ($studentAttenanceData) {
-                        return $results->map(function ($row) use ($studentAttenanceData) {
+                    ->formatResults(function (ResultSetInterface $results) use ($studentAttenanceData,$weekStartDay,$weekEndDay) {
+                        return $results->map(function ($row) use ($studentAttenanceData,$weekStartDay,$weekEndDay) {
                             $studentId = $row->student_id;
                             if (isset($studentAttenanceData[$studentId])) {
                                 $row->week_attendance = $studentAttenanceData[$studentId];
+                                
+                                $row->current = date("d/m/Y", strtotime($weekStartDay)) . ' - ' .date("d/m/Y", strtotime($weekEndDay));
 
                                 if (isset($this->request) && ('excel' === $this->request->pass[0])) {
                                     $row->name = $row['user']['openemis_no'] . ' - ' . $row['user']['first_name'] . ' ' . $row['user']['last_name'];
+
                                     foreach ($studentAttenanceData[$studentId] as $key => $value) {
                                         $row->{'week_attendance_status_'.$key} = $value[1];
                                     }
                                 }
 
                             }
+
                             return $row;
                         });
                     });
@@ -621,6 +625,9 @@ class StudentAttendancesTable extends ControllerActionTable
     // To select another one more field from the containable data
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+        // echo "<pre>"; print_r($settings); die();
+        $weekStartDay = $this->request->query['week_start_day'];
+        $weekEndDay = $this->request->query['week_end_day'];
         $day_id = $this->request->query('day_id');
         $newArray[] = [
             'key' => 'StudentAttendances.openemis_no',
@@ -637,6 +644,7 @@ class StudentAttendancesTable extends ControllerActionTable
         ];
 
         if ($day_id == -1) {
+
 
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
             $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
@@ -656,7 +664,12 @@ class StudentAttendancesTable extends ControllerActionTable
                 }
 
                 if (!empty($schooldays)) {
-               
+                    $newArray[] = [
+                            'key' => 'StudentAttendances.current',
+                            'field' => 'current',
+                            'type' => 'string',
+                            'label' => 'Current Week'
+                    ];
                    foreach ($schooldays as $key => $value) {
                         $newArray[] = [
                             'key' => 'StudentAttendances.week_attendance_status_'.$options[$value],
@@ -707,7 +720,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
         $fields_arr = $fields->getArrayCopy();
         $field_show = array();
-        $filter_key = array('StudentAttendances.id','StudentAttendances.student_id','StudentAttendances.institution_class_id','StudentAttendances.education_grade_id','StudentAttendances.academic_period_id','StudentAttendances.next_institution_class_id','StudentAttendances.student_status_id');
+        $filter_key = array('StudentAttendances.id','StudentAttendances.student_id','StudentAttendances.institution_class_id','StudentAttendances.education_grade_id','StudentAttendances.academic_period_id','StudentAttendances.next_institution_class_id','StudentAttendances.student_status_id','StudentAttendances.rahul');
 
         foreach ($fields_arr as $field){
             if (in_array($field['key'], $filter_key)) {
