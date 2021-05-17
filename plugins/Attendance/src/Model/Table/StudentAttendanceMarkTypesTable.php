@@ -127,9 +127,9 @@ class StudentAttendanceMarkTypesTable extends AppTable
                     ])
             ->all();
 
-        if($dayId == -1){
-            $gradesResultSet = $gradesResultSet->toArray();
-        }else{
+        // if($dayId == -1){
+        //     $gradesResultSet = $gradesResultSet->toArray();
+        // }else{
             if (!$gradesResultSet->isEmpty()) {
                 $gradeList = $gradesResultSet->toArray();
                 $attendencePerDay = 1;
@@ -223,7 +223,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
 
                 return $options;
             } 
-        }
+        //}
     }
 
     public function findPeriodByClass(Query $query, array $options)
