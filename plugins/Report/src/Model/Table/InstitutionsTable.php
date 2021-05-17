@@ -976,7 +976,11 @@ class InstitutionsTable extends AppTable
                 if ($attr['value'] > 0) {
                     $attr['value'] = $this->request->data[$this->alias()]['report_start_date'];
                 } else {
-                    $attr['value'] = $selectedPeriod->start_date;
+                    if ($this->request->data[$this->alias()]['report_start_date'] != 0) {
+                       $attr['value'] = $this->request->data[$this->alias()]['report_start_date'];
+                    } else {
+                        $attr['value'] = $selectedPeriod->start_date;
+                    }
                 }
             } else {
                 $attr['value'] = self::NO_FILTER;
