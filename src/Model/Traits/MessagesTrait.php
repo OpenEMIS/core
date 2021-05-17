@@ -549,6 +549,12 @@ trait MessagesTrait
             'noStudentSelected' => 'There are no students selected',
             'savingError' => 'Some selected students record were not updated succesfully',
         ],
+        'BulkStudentTransferOut' => [
+            'success' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution',
+            'reconfirm' => 'Please review the information before proceeding with the operation',
+            'noStudentSelected' => 'There are no students selected',
+            'savingError' => 'Some selected students record were not updated succesfully',
+        ],
         'IndividualPromotion' => [
             'noGrades' => 'No Available Grades',
             'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',
