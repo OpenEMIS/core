@@ -276,7 +276,8 @@ class AccessControlComponent extends Component
         }
 
         // exclude profile controllers
-        $excludedController = ['ProfileApplicationAttachments', 'ProfileApplicationInstitutionChoices', 'ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'Profiles', 'ScholarshipsDirectory'];
+        /*commenting Profiles as per task POCOR-5312 permission requirement*/
+        $excludedController = ['ProfileApplicationAttachments', 'ProfileApplicationInstitutionChoices', 'ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances',/* 'Profiles', */'ScholarshipsDirectory'];
         if (isset($url['controller']) && in_array($url['controller'], $excludedController)) {
             return true;
         }
