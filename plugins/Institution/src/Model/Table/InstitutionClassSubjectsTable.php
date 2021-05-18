@@ -111,7 +111,7 @@ class InstitutionClassSubjectsTable extends AppTable
                         ]
                     )
                     ->where([$ScheduleTimetables->aliasField('institution_class_id') => $institutionClassId,
-                        $ScheduleLessonDetails->aliasField('day_of_week') => $day_id
+                        // $ScheduleLessonDetails->aliasField('day_of_week') => $day_id
                     ])
                     ->group([
                         $InstitutionSubjects->aliasField('id')
