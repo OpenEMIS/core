@@ -176,14 +176,16 @@ class ProfilesController extends AppController
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        //$events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored'; //POCOR-5312
         return $events;
     }
 
-    public function isActionIgnored(Event $event, $action)
+    //POCOR-5312 starts
+    /*public function isActionIgnored(Event $event, $action)
     {
         return true;
-    }
+    }*/
+    //POCOR-5312 ends
 
     // AngularJS
     public function StudentResults()
