@@ -61,11 +61,12 @@ class PayslipsTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     { 
         if ($entity->isNew()) {
+            $path_uri = '/Staff/Payslips/add';
             if(!isset($entity->name)){
                 $response["name"][] ="Field Can not be empty";
                 $entity->errors($response);
                     return false;
-            }else if(!empty($entity->openemis_id)){
+            }else if(!isset($entity->openemis_id) && $this->request->here() != $path_uri ){
                 $response["openemis_id"][] ="Field Can not be empty";
                 $entity->errors($response);
                     return false;
@@ -74,6 +75,10 @@ class PayslipsTable extends ControllerActionTable
                 $entity->errors($response);
                     return false;
             }else if(!isset($entity->file_content)){
+                $response["file_content"][] ="Field Can not be empty";
+                $entity->errors($response);
+                    return false;
+            }else if(!isset($entity->identity_number) && $this->request->here() != $path_uri){
                 $response["file_content"][] ="Field Can not be empty";
                 $entity->errors($response);
                     return false;
@@ -133,6 +138,7 @@ class PayslipsTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
+        $this->field('identity_number', ['visible' => false]);
     }
 
     public function onGetFileType(Event $event, Entity $entity)
