@@ -43,7 +43,7 @@ class POCOR5312 extends AbstractMigration
         ];
 
         $this->insert('security_functions', $record);
-
+        
         $row = $this->fetchRow("SELECT `id` FROM `security_functions` WHERE `controller` = 'Profiles' AND
                 `module` = 'Profile'");
         $parentId = $row['id'];
@@ -66,7 +66,7 @@ class POCOR5312 extends AbstractMigration
                 'modified_user_id' => NULL,
                 'modified' => NULL,
                 'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
+                'created' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'Demographic',
@@ -517,6 +517,25 @@ class POCOR5312 extends AbstractMigration
                 '_delete' => 'SpecialNeedsPlans.remove',
                 '_execute' => NULL,
                 'order' => 445,
+                'visible' => 1,
+                'description' => NULL,
+                'modified_user_id' => NULL,
+                'modified' => NULL,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s'),
+            ],
+            [
+                'name' => 'Scholarship',
+                'controller' => 'Profiles',
+                'module' => 'Profile',
+                'category' => 'Scholarships',
+                'parent_id' => $parentId,
+                '_view' => 'ScholarshipApplications.index|ScholarshipApplications.view',
+                '_edit' => 'SpecialNeedsPlans.edit',
+                '_add' => 'SpecialNeedsPlans.add',
+                '_delete' => 'ScholarshipApplications.remove',
+                '_execute' => NULL,
+                'order' => 446,
                 'visible' => 1,
                 'description' => NULL,
                 'modified_user_id' => NULL,
