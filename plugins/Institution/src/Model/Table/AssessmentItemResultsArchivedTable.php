@@ -51,10 +51,10 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
-        $this->field('classes');
+        $this->field('class');
         $this->field('name');
 
-        $this->setFieldOrder(['institution_id', 'academic_period_id', 'assessment_id', 'assessment_period_id','classes','education_subject_id','openemis_no','name', 'marks']);
+        $this->setFieldOrder(['institution_id', 'academic_period_id', 'assessment_id', 'assessment_period_id','class','education_subject_id','openemis_no','name', 'marks']);
         $toolbarButtons = $extra['toolbarButtons'];
         // $extra['toolbarButtons']['back'] = [
         //     'url' => [
@@ -80,6 +80,8 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         // Setup period options
         $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
         if ($this->request->query('user_id') !== null) {
@@ -106,13 +108,16 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         $selectedPeriod = $this->request->query['academic_period_id'];
         $selectedassessment = $this->request->query['assessment_id'];
         $selectedAssessmentPeriods = $this->request->query['assessment_period_id'];
-        $selectedSubject = $this->request->query['education_subject_id'];
+        $selectedClassId = $this->request->query['institution_class_id'];
+        // $selectedSubject = $this->request->query['education_subject_id'];
 
         $this->request->query['academic_period_id'] = $selectedPeriod;
         $this->request->query['assessment_id'] = $selectedassessment;
         $this->request->query['assessment_period_id'] = $selectedAssessmentPeriods;
-        $this->request->query['education_subject_id'] = $selectedSubject;
+        $this->request->query['institution_class_id'] = $selectedClassId;
+        // $this->request->query['education_subject_id'] = $selectedSubject;
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);
+        // echo "<pre>";print_r($this->request->query);die;
 
         if ($selectedPeriod != 0) {
             $todayDate = date("Y-m-d");
@@ -129,25 +134,25 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             $this->advancedSelectOptions($assessmentOptions, $selectedassessment);
             $this->controller->set(compact('assessmentOptions', 'selectedAssessment'));
             //Assessment[End]
-            if(empty($selectedAssessmentPeriods) && empty($selectedassessment) && empty($selectedSubject)){
+            if(empty($selectedAssessmentPeriods) && empty($selectedassessment) && empty($selectedClassId)){
                 $conditions = [
                     $this->aliasField('academic_period_id') => $selectedPeriod,
                     $this->aliasField('institution_id') => $institutionId,
                     ];
             }
-            else if($selectedAssessmentPeriods == '-1' && $selectedassessment == "-1" && $selectedSubject == '-1'){
+            else if($selectedAssessmentPeriods == '-1' && $selectedassessment == "-1" && $selectedClassId == '-1'){
                 $conditions = [
                     $this->aliasField('academic_period_id') => $selectedPeriod,
                     $this->aliasField('institution_id') => $institutionId,
                     ];
             }
-            else if($selectedAssessmentPeriods == '-1' && $selectedassessment == "-1" && empty($selectedSubject)){
+            else if($selectedAssessmentPeriods == '-1' && $selectedassessment == "-1" && empty($selectedClassId)){
                 $conditions = [
                     $this->aliasField('academic_period_id') => $selectedPeriod,
                     $this->aliasField('institution_id') => $institutionId,
                     ];
             }
-            else if(empty($selectedAssessmentPeriods) && empty($selectedSubject)){
+            else if(empty($selectedAssessmentPeriods) && empty($selectedClassId)){
                 if($selectedassessment == '-1'){
                     $conditions = [
                         $this->aliasField('academic_period_id') => $selectedPeriod,
@@ -180,7 +185,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
                         ];
                 }
             }else if(!empty($selectedAssessmentPeriods) && $selectedAssessmentPeriods != '-1'){
-                if(empty($selectedSubject)){
+                if(empty($selectedClassId)){
                     if($selectedassessment == '-1'){
                         $conditions = [
                             $this->aliasField('academic_period_id') => $selectedPeriod,
@@ -195,7 +200,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
                             $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
                             ];
                     }
-                }else if($selectedSubject == '-1'){
+                }else if($selectedClassId == '-1'){
                     $conditions = [
                         $this->aliasField('academic_period_id') => $selectedPeriod,
                         $this->aliasField('institution_id') => $institutionId,
@@ -206,7 +211,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
                         $this->aliasField('academic_period_id') => $selectedPeriod,
                         $this->aliasField('institution_id') => $institutionId,
                         $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
-                        $this->aliasField('education_subject_id') => $selectedSubject,
+                        $InstitutionClassStudents->aliasField('institution_class_id') => $selectedClassId,
                         ];
                 }
             }else if(empty($selectedassessment)){
@@ -215,19 +220,19 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
                     $this->aliasField('institution_id') => $institutionId,
                     ];
             }else if(!empty($selectedassessment) && $selectedassessment == '-1'){
-                if(empty($selectedAssessmentPeriods) && empty($selectedassessment) && $selectedSubject == '-1'){
+                if(empty($selectedAssessmentPeriods) && empty($selectedassessment) && $selectedClassId == '-1'){
                     $conditions = [
                         $this->aliasField('academic_period_id') => $selectedPeriod,
                         $this->aliasField('institution_id') => $institutionId,
                         ];
                 }
-                else if(empty($selectedSubject)){
+                else if(empty($selectedClassId)){
                     $conditions = [
                         $this->aliasField('academic_period_id') => $selectedPeriod,
                         $this->aliasField('institution_id') => $institutionId,
                         $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
                         ];
-                }else if($selectedSubject == '-1'){
+                }else if($selectedClassId == '-1'){
                     if(empty($selectedAssessmentPeriods) && $selectedassessment == '-1'){
                         $conditions = [
                             $this->aliasField('academic_period_id') => $selectedPeriod,
@@ -240,11 +245,11 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
                             $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
                             ];
                     }
-                }elseif ($selectedSubject != '-1'){
+                }elseif ($selectedClassId != '-1'){
                     $conditions = [
                         $this->aliasField('academic_period_id') => $selectedPeriod,
                         $this->aliasField('institution_id') => $institutionId,
-                        $this->aliasField('education_subject_id') => $selectedSubject,
+                        $InstitutionClassStudents->aliasField('institution_class_id') => $selectedClassId,
                         ];
                 }else{
                     $conditions = [
@@ -270,21 +275,29 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             $this->controller->set(compact('AssessmentPeriodsOptions', 'selectedAssessmentPeriods'));
 
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-            $subjectOptions = $EducationSubjects
-                ->find('list')
-                ->find('visible')
-                ->where($subjectConditions)
-                ->order([
-                    $EducationSubjects->aliasField('order') => 'ASC'
-                ])
-                ->toArray();
-            $subjectOptions = ['-1' => __('All Subjects')] + $subjectOptions;
-            $this->advancedSelectOptions($subjectOptions, $selectedSubject);
-            $this->controller->set(compact('subjectOptions', 'selectedSubject'));
+            // $subjectOptions = $EducationSubjects
+            //     ->find('list')
+            //     ->find('visible')
+            //     ->where($subjectConditions)
+            //     ->order([
+            //         $EducationSubjects->aliasField('order') => 'ASC'
+            //     ])
+            //     ->toArray();
+            // $subjectOptions = ['-1' => __('All Subjects')] + $subjectOptions;
+            // $this->advancedSelectOptions($subjectOptions, $selectedSubject);
+            // $this->controller->set(compact('subjectOptions', 'selectedSubject'));
+
+            $Classes = TableRegistry::get('Institution.InstitutionClasses');
+            $selectedAcademicPeriodId = $params['academic_period_id'];
+
+            $classOptions = $Classes->getClassOptions($selectedPeriod, $institutionId);
+            if (!empty($classOptions)) {
+                $classOptions = [0 => 'All Classes'] + $classOptions;
+            }
+            $selectedClassId = $this->queryString('institution_class_id', $classOptions);
+            $this->advancedSelectOptions($classOptions, $selectedClassId);
+            $this->controller->set(compact('classOptions', 'selectedClassId'));
             
-            
-            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $ArchivedUser = TableRegistry::get('User.Users');
             $query
             ->select([
@@ -292,8 +305,9 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
                 'assessment_id' => $this->aliasField('assessment_id'),
                 'assessment_period_id' => $this->aliasField('assessment_period_id'),
                 'education_subject_id' => $this->aliasField('education_subject_id'),
+                'institution_class_id' => $InstitutionClassStudents->aliasField('institution_class_id'),
                 'marks' => $this->aliasField('marks'),
-                'classes' => $InstitutionClasses->aliasField('name'),
+                'class' => $InstitutionClasses->aliasField('name'),
                 'name' => $ArchivedUser->find()->func()->concat([
                     'Users.first_name' => 'literal',
                     " ",
