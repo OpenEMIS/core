@@ -506,7 +506,7 @@ class ProfilesController extends AppController
                 $tabElements[$key]['url']['action'] = 'Profiles';
                 $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
-            } else if ($key == 'Comments') {
+            } else if ($key == 'Comments' && $this->AccessControl->check(['Profiles', 'ProfileComments'])) {
                 $url = [
                     'plugin' => $plugin,
                     'controller' => 'ProfileComments',
