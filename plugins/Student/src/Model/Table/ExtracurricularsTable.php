@@ -1,6 +1,6 @@
 <?php
 namespace Student\Model\Table;
-
+use Cake\ORM\Query;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
@@ -73,5 +73,20 @@ class ExtracurricularsTable extends AppTable {
 
 	public function afterAction(Event $event, $data) {
 		$this->setupTabElements();
+	}
+
+	public function beforeFind( Event $event, Query $query )
+	{   
+		//if ($this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
+		if ($this->controller->name == 'Profiles') {
+			if ($this->Session->read('Auth.User.is_guardian') == 1) {
+				$sId = $this->Session->read('Student.ExaminationResults.student_id');
+				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+			} else {
+				$studentId = $this->Session->read('Auth.User.id');
+			}
+			$conditions[$this->aliasField('security_user_id')] = $studentId;
+			$query->where($conditions, [], true);
+		}            
 	}
 }

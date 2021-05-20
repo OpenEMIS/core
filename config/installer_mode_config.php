@@ -1,14 +1,14 @@
 <?php
     
 	$mode = array(
-			'core' => false,
+			'core' => true,
 			'census' => false,
 			'school' => false,
-			'vaccinations' => true
+			'vaccinations' => false
 	);
 
 	$count_mode_value = array_sum($mode);
-	$database_dump_file = 'prd_vac_dmo_2021-03-19';
+	$database_dump_file = 'prd_cor_zip';
 	$application_name = $application_colour = $application_login_image = $application_sql_name = $application_db_user_name = $application_mode = $application_theme = $application_favicon = '';
 	
 	if($mode['core'] == true){
@@ -26,7 +26,7 @@
 		$application_colour = '0099FF';
 		$application_login_image = 'OpenEMIS_Census_Login_Image_Reduced.jpg';
 		$application_sql_name = 'prd_cen_dmo';
-		$application_db_user_name = 'prd_census_user';
+		$application_db_user_name = 'prd_cen_user';
 		$application_theme = 'census';
 		$application_favicon = '_census';
 	}else if($mode['school'] == true){
@@ -34,7 +34,7 @@
 		$application_name = 'OpenEMIS School';
 		$application_colour = '3366CC';
 		$application_login_image = 'OpenEMIS_School_Login_Image_Reduced.jpg';
-		$application_sql_name = 'prd_sch_dmo';
+		$application_sql_name = 'prd_school_dmo';
 		$application_db_user_name = 'prd_school_user';
 		$application_theme = 'school';
 		$application_favicon = '_school';
@@ -44,7 +44,7 @@
 		$application_colour = '00CCFF';
 		$application_login_image = 'OpenEMIS_Vaccinations_Login_Image_Reduced.jpg';
 		$application_sql_name = 'prd_vac_dmo';
-		$application_db_user_name = 'prd_vaccinations_user';
+		$application_db_user_name = 'prd_vac_user';
 		$application_theme = 'vaccinations';
 		$application_favicon = '_vaccinations';
 	}
@@ -60,13 +60,6 @@
 	if (!defined('APPLICATION_FAVICON')) define('APPLICATION_FAVICON', $application_favicon);
 	if (!defined('DATABASE_DUMP_FILE')) define('DATABASE_DUMP_FILE', $database_dump_file);
 	if (!defined('APPLICATION_MODE_COUNT')) define('APPLICATION_MODE_COUNT', $count_mode_value);
-
-	
-	
-	
-	
-	
-	
 	
 	
 	

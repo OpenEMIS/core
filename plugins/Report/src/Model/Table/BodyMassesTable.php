@@ -155,8 +155,7 @@ class BodyMassesTable extends AppTable
                 'bmi' => 'UserBodyMasses.body_mass_index',
                 'bm_comment' => 'UserBodyMasses.comment',
                 'class_name' => 'InstitutionClasses.name',
-                'area_code' => 'Areas.code',
-                'area_name' => 'Areas.name'
+                'area_id' => 'Areas.id',
             ])
             ->contain([
                 'Users' => [
@@ -175,7 +174,7 @@ class BodyMassesTable extends AppTable
                 ],
                 'EducationGrades' => [
                     'fields' => [
-                        'education_grade' => 'EducationGrades.name'
+							'education_grade' => 'EducationGrades.name'
                     ]
                 ],
                 'Users.Genders' => [
@@ -215,6 +214,49 @@ class BodyMassesTable extends AppTable
             ])
 
             ->where($conditions);
+			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+				$areaTable = TableRegistry::get('areas');
+                $areasData = $areaTable
+                            ->find()
+                            ->where([$areaTable->alias('id')=>$row['area_id']])
+                            ->first();
+             
+                if(!empty($areasData)){
+                    $areas = TableRegistry::get('areas');
+                    $areaLevels = TableRegistry::get('area_levels');
+                    $institutions = TableRegistry::get('institutions');
+                    $val = $areas
+                                ->find()
+                                ->select([
+                                    $areas->aliasField('code'),
+                                    $areas->aliasField('name'),
+                                    ])
+                                ->leftJoin(
+                                    [$areaLevels->alias() => $areaLevels->table()],
+                                    [
+                                        $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
+                                    ]
+                                )
+                                ->leftJoin(
+                                    [$institutions->alias() => $institutions->table()],
+                                    [
+                                        $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
+                                    ]
+                                )    
+                                ->where([
+                                    $areaLevels->aliasField('level !=') => 1,
+                                    $areas->aliasField('id') => $areasData->parent_id
+                                ])->first();
+                    
+                    if (!empty($val->name) && !empty($val->code)) {
+                        $row['area_code'] = $val->code;
+                        $row['area_name'] = $val->name;
+                    }
+                }
+                return $row;
+            });
+        });
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -237,20 +279,19 @@ class BodyMassesTable extends AppTable
             'label' => __('Institution Name')
         ];  
 
-        $extraFieldsFirst[] = [
-            'key' => 'area_code',
-            'field' => 'area_code',
-            'type' => 'string',
-            'label' => __('Area Code')
-        ];
-
          $extraFieldsFirst[] = [
             'key' => 'area_name',
             'field' => 'area_name',
             'type' => 'string',
             'label' => __('Area Name')
         ];
-
+		
+		$extraFieldsFirst[] = [
+            'key' => 'area_code',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => __('Area Education Code')
+        ];
 
         $extraFields[] = [
             'key' => 'Users.openemis_no',
@@ -340,7 +381,7 @@ class BodyMassesTable extends AppTable
             'key' => 'body_mass_index',
             'field' => 'bmi',
             'type' => 'string',
-            'label' => __('GS Code')
+            'label' => __('BMI Category')
         ];
 
         $extraFields[] = [

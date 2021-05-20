@@ -40,7 +40,8 @@
 						'options' => $levelOptions,
 						'default' => $selectedLevel,
 						'url' => $baseUrl,
-						'data-named-key' => 'level'
+						'data-named-key' => 'level',
+						'data-named-group' => 'academic_period_id'
 					));
 				}
 
@@ -52,7 +53,7 @@
 						'default' => $selectedCycle,
 						'url' => $baseUrl,
 						'data-named-key' => 'cycle',
-						'data-named-group' => 'level'
+						'data-named-group' => 'level,academic_period_id'
 					));
 				}
 
@@ -64,19 +65,19 @@
 						'default' => $selectedProgramme,
 						'url' => $baseUrl,
 						'data-named-key' => 'programme',
-						'data-named-group' => 'level'
+						'data-named-group' => 'level,academic_period_id'
 					));
 				}
 
 				if (!empty($gradeOptions)) {
-					echo $this->Form->input('setups', array(
+					echo $this->Form->input('grades', array(
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $gradeOptions,
 						'default' => $selectedGrade,
 						'url' => $baseUrl,
 						'data-named-key' => 'grade',
-						'data-named-group' => 'level,programme'
+						'data-named-group' => 'level,programme,academic_period_id'
 					));
 				}
 

@@ -38,6 +38,22 @@ class WorkflowReportBehavior extends Behavior
 
         $localFields = (array) $fields;
 
+        $openEmis_field = array(
+
+            '0' => array(
+                'key' => '',
+                'field' => 'openemis_no',
+                'type' => 'integer',
+                'label' => 'OpenEMIS ID',
+                'style' => Array
+                    (
+                    ),
+
+                'formatting' => 'GENERAL'
+            )
+        );
+        array_splice( $localFields, 3, 0, $openEmis_field );
+
         foreach ($localFields as $currentIndex => $value) {
             if($value['field'] == 'status_id') {
                 $statusTempArr = $value;
@@ -79,6 +95,14 @@ class WorkflowReportBehavior extends Behavior
                     $query
                     ->contain('Statuses')
                     ->where(['Statuses.category' => $category, 'WorkflowStudentTransferIn.institution_id'=>$institution_id]);
+
+                    $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                        return $results->map(function ($row) {
+                                      
+                            $row['openemis_no'] = $row->user->openemis_no;
+                            return $row;
+                        });
+                    });
                 }
                 else{
                     return true;
@@ -87,6 +111,14 @@ class WorkflowReportBehavior extends Behavior
                 $query
                     ->contain('Statuses')
                     ->where(['WorkflowStudentTransferIn.institution_id'=>$institution_id]);
+
+                    $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                        return $results->map(function ($row) {
+                                      
+                            $row['openemis_no'] = $row->user->openemis_no;
+                            return $row;
+                        });
+                    });
             }
             else{
                 return true;
@@ -99,5 +131,74 @@ class WorkflowReportBehavior extends Behavior
                     ->where(['Statuses.category' => $category]);
             }
         }
+
+        if($requestData->model == 'Report.WorkflowStudentTransferOut'){
+            $category = $requestData->category;
+            $institution_id = $requestData->institution_id;
+
+            if ($category != -1) {
+                $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category, 'WorkflowStudentTransferOut.institution_id'=>$institution_id])
+                    ->toArray();
+                if(!empty($query)){
+                    $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category, 'WorkflowStudentTransferOut.institution_id'=>$institution_id]);
+                }
+                else{
+                    return true;
+                }
+            }else if($category == -1){
+                $query
+                    ->contain('Statuses')
+                    ->where(['WorkflowStudentTransferOut.institution_id'=>$institution_id]);
+            }
+            else{
+                return true;
+            }
+        }else{
+            $category = $requestData->category;
+            if ($category != -1) {
+                $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category]);
+            }
+        }
+
+        if($requestData->model == 'Report.WorkflowInstitutionCase'){
+            $category = $requestData->category;
+            $institution_id = $requestData->institution_id;
+
+            if ($category != -1) {
+                $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category, 'WorkflowInstitutionCase.institution_id'=>$institution_id])
+                    ->toArray();
+                if(!empty($query)){
+                    $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category, 'WorkflowInstitutionCase.institution_id'=>$institution_id]);
+                }
+                else{
+                    return true;
+                }
+            }else if($category == -1){
+                $query
+                    ->contain('Statuses')
+                    ->where(['WorkflowInstitutionCase.institution_id'=>$institution_id]);
+            }
+            else{
+                return true;
+            }
+        }else{
+            $category = $requestData->category;
+            if ($category != -1) {
+                $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category]);
+            }
+        }
+
     }
 }

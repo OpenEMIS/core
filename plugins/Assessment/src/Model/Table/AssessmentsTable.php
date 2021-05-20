@@ -250,6 +250,7 @@ class AssessmentsTable extends ControllerActionTable {
 
                 $attr['options'] = $periodOptions;
                 $attr['default'] = $selectedPeriod;
+				$attr['onChangeReload'] = true;
 
             } else {
 
@@ -267,13 +268,18 @@ class AssessmentsTable extends ControllerActionTable {
         if ($action == 'view') {
             $attr['visible'] = false;
         } else if ($action == 'add' || $action == 'edit') {
-            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
 
+            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+			
             if ($action == 'add') {
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                     ->find('availableProgrammes')
-                    ->toArray();
+                    ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+					->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+					->toArray();
 
                 $attr['options'] = $programmeOptions;
                 $attr['onChangeReload'] = 'changeEducationProgrammeId';

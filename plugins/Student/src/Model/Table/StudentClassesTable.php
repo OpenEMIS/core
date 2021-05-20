@@ -101,8 +101,12 @@ class StudentClassesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
 		$userData = $this->Session->read();
-		$studentId = $userData['Auth']['User']['id'];
-
+        if ($userData['Auth']['User']['is_guardian'] == 1) {
+            $sId = $userData['Student']['ExaminationResults']['student_id'];
+            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+        } else {
+            $studentId = $userData['Auth']['User']['id'];
+        }
 		$condition = [];
 		if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
 			$condition = [];

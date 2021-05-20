@@ -699,7 +699,7 @@ class HtmlFieldHelper extends Helper
                         $attr['value'] = date('d-m-Y', strtotime($value));
                     }
                 } elseif ($attr['default_date']) {
-                    $attr['value'] = date('d-m-Y');
+                    // $attr['value'] = date('d-m-Y');
                 }
             } else {
                 if (is_object($attr['value'])) {

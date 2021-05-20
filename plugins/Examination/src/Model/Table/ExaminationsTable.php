@@ -191,8 +191,8 @@ class ExaminationsTable extends ControllerActionTable {
             if ($action == 'add') {
 
                 list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-
-                $attr['options'] = $periodOptions;
+				$attr['options'] = $periodOptions;
+				$attr['onChangeReload'] = true;
                 $attr['default'] = $selectedPeriod;
 
             } else {
@@ -211,16 +211,19 @@ class ExaminationsTable extends ControllerActionTable {
             $attr['visible'] = false;
 
         } else if ($action == 'add' || $action == 'edit') {
-
+			
             $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
 
             if ($action == 'add') {
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                     ->find('visible')
-                    ->contain(['EducationCycles'])
+					->contain(['EducationCycles.EducationLevels.EducationSystems'])
                     ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
-                    ->toArray();
+                    ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+					->toArray();
 
                 $attr['options'] = $programmeOptions;
                 $attr['onChangeReload'] = 'changeEducationProgrammeId';
