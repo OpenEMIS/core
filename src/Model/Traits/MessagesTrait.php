@@ -2158,7 +2158,8 @@ trait MessagesTrait
                 'risk_value' => [
                     'ruleRange' => 'Value must be within 1 to 99'
                 ]
-            ]
+            ],
+            'generate' => 'Generate risk for all institutions successfully.',
         ],
         'Textbook' => [
             'Textbooks' => [
