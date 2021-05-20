@@ -143,10 +143,12 @@ class EducationLevelsTable extends ControllerActionTable
 					])
 					->toArray();
 		}else{
+			$educationSystems = TableRegistry::get('Education.EducationSystems');
 			$list = $this
 					->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
 					->find('visible')
 					->contain(['EducationSystems'])
+					->where([$educationSystems->aliasField('academic_period_id') => $selectedAcademicPeriod])
 					->order([
 						$this->EducationSystems->aliasField('order'),
 						$this->aliasField('order')
