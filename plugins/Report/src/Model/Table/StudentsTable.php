@@ -415,7 +415,8 @@ class StudentsTable extends AppTable
 									  'Report.SubjectsBookLists',
 									  'Report.StudentNotAssignedClass',
                                       'Report.StudentsEnrollmentSummary',
-                                      'Report.SpecialNeeds'
+                                      'Report.SpecialNeeds',
+                                      'Report.InstitutionStudentsOutOfSchool'
 									  
 									  ])
 			)) {
@@ -433,6 +434,7 @@ class StudentsTable extends AppTable
 									   'Report.StudentAttendanceSummary',
 									   'Report.StaffAttendances',
                                        'Report.StudentsEnrollmentSummary',
+                                       'Report.SubjectsBookLists',
                                       'Report.SpecialNeeds'])
 				) {
                     $attr['onChangeReload'] = true;
@@ -496,8 +498,11 @@ class StudentsTable extends AppTable
                         'name' => $EducationGrades->aliasField('name'),
                         'education_programme_name' => 'EducationProgrammes.name'
                     ])
-                    ->contain(['EducationProgrammes'])
-                    ->order([
+					->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                    ->where([
+						'EducationSystems.academic_period_id' => $academicPeriodId,
+					])
+					->order([
                         'EducationProgrammes.order' => 'ASC',
                         $EducationGrades->aliasField('name') => 'ASC'
                     ])

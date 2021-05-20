@@ -206,8 +206,11 @@ class ProfilesController extends AppController
     {
         $session = $this->request->session();
         /*$studentId = $this->Auth->user('id');*/
-        $studentId  = $this->request->pass[1];
-
+        if ($session->read('Auth.User.is_guardian') == 1) { 
+            $studentId = $session->read('Student.ExaminationResults.student_id'); 
+        } else {
+            $studentId  = $this->request->pass[1];
+        }
         $session->write('Student.ExaminationResults.student_id', $studentId);
 
         // tabs
@@ -272,17 +275,21 @@ class ProfilesController extends AppController
         $this->Navigation->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
         
         $header = '';
+
         if ($this->Profiles->exists([$this->Profiles->primaryKey() => $loginUserId])) {
-            $studentId = $this->request->pass[1];
+            // if ($session->read('Auth.User.is_guardian') == 1) {
+            //     $studentId = $session->read('Student.ExaminationResults.student_id'); 
+            // } else {
+                $studentId = $this->request->pass[1];
+            //}
+            
             if (!empty($studentId)) {
                 $sId = $this->ControllerAction->paramsDecode($studentId);
                 $student_id = $sId['id'];
                 
                 if ($action == 'StudentReportCards') {
-                    $student_id = $sId['student_id'];
-                }
-                if ($action == 'StudentRisks') {
-                    $student_id = $loginUserId;
+                    //$student_id = $sId['student_id']; //POCOR-5979
+                    $student_id = $sId['id'];
                 }
                 $entity = $this->Profiles->get($student_id);
                 $name = $entity->name;
@@ -350,10 +357,14 @@ class ProfilesController extends AppController
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
         $action = $this->request->params['action'];
-        $id = $session->read('Student.Students.id');
-        if (!empty($id)) {
-            if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards') {
-				$studentId = $this->ControllerAction->paramsDecode($this->request->params['pass'][1])['id'];
+        if ($session->read('Auth.User.is_guardian') == 1) {
+            $studentId = $session->read('Student.ExaminationResults.student_id');
+        }else {
+            $studentId = $this->request->params['pass'][1];
+        }
+        if (!empty($studentId)) {
+             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards' || $action == 'StudentAssociations') {
+				$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
                 $entity = $this->Profiles->get($studentId);
                 $name = $entity->name;
                 $header = $name;
@@ -363,7 +374,7 @@ class ProfilesController extends AppController
             if ($alias == 'StudentAssociations') {
                 $header = $header . ' - ' . 'Associations';
             } else {
-                 $header = $header . ' - ' . $model->getHeader($alias);
+                $header = $header . ' - ' . $model->getHeader($alias);
             }        
      }
        //POCOR-5675
@@ -439,8 +450,10 @@ class ProfilesController extends AppController
         {
         $loginUserId = $this->Auth->user('id'); // login user
         $action = $this->request->params['action'];
+        $session = $this->request->session();
+        
         if ($model->hasField('security_user_id')) {
-            $session = $this->request->session();
+            
             $studentId = $session->read('Student.Students.id'); 
             if (!empty($studentId)) {
                 $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
@@ -450,8 +463,11 @@ class ProfilesController extends AppController
             }
         } else if ($model->hasField('student_id')) {
             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentTextbooks') {
-                $session = $this->request->session();
-                $studentId = $session->read('Student.Students.id'); 
+                if ($session->read('Auth.User.is_guardian') ==1) {
+                    $studentId = $session->read('Student.ExaminationResults.student_id');
+                } else {
+                    $studentId = $session->read('Student.Students.id'); 
+                }
                 if (!empty($studentId)) {
                     $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
                     $query->where([$model->aliasField('student_id') => $sId]);
@@ -537,7 +553,11 @@ class ProfilesController extends AppController
     public function getAcademicTabElements($options = [])
     {  
         $session = $this->request->session();
-        $studentId = $session->read('Student.Students.id');
+        if ($session->read('Auth.User.is_guardian') == 1) {
+            $studentId = $session->read('Student.ExaminationResults.student_id'); 
+        } else {
+            $studentId = $this->request->pass[1];
+        }
         $id = (array_key_exists('id', $options))? $options['id'] : 0;
         $type = (array_key_exists('type', $options))? $options['type']: null;
         $tabElements = [];

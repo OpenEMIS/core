@@ -169,7 +169,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         return StudentAbsenceReasons
             .select(['id', 'name'])
-            .order(['order'])
+            //.order(['order']) //POCOR-5815
             .ajax({success: success, defer: true});
     }
 
@@ -284,7 +284,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return [];
     }
 
-    function getSubjectOptions(institutionId,institutionClassId,academicPeriodId,day_id) {
+    function getSubjectOptions(institutionId,institutionClassId,academicPeriodId,day_id, educationGradeId) {
         var success = function(response, deferred) {
             var subjectList = response.data.data;
             if (angular.isObject(subjectList)) {
@@ -299,7 +299,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 institution_id: institutionId,
                 institution_class_id: institutionClassId,
                 academic_period_id: academicPeriodId,
-                day_id: day_id
+                day_id: day_id,
+                education_grade_id: educationGradeId
             })
             .ajax({success: success, defer: true});
 

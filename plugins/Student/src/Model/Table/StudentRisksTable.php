@@ -66,6 +66,23 @@ class StudentRisksTable extends ControllerActionTable
         // end element control
     }
 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        
+        if (isset($buttons['view'])) {
+            $icon = '<i class="fa fa-eye"></i>';
+
+            $buttons['view'] = $buttons['view'];
+            $buttons['view']['label'] = $icon . __('View');
+            $buttons['view']['url']['plugin'] = 'Institution';
+            $buttons['view']['url']['controller'] = 'Institutions';
+            $buttons['view']['url']['action'] = 'StudentRisks';
+        }
+
+        return $buttons;
+    }
+
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('name');
@@ -136,14 +153,22 @@ class StudentRisksTable extends ControllerActionTable
         $user = $this->Auth->user();
 
         $session = $this->request->session();
-        $studentId = $session->read('Student.Students.id');
+        if ($session->read('Auth.User.is_guardian') == 1) {
+
+            $sId = $session->read('Student.ExaminationResults.student_id');
+            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+
+        } else {
+            $studentId = $session->read('Student.Students.id');
+        }
+
 /*
         if ($this->controller->name == 'Profiles' && $this->action == 'index') {
             $session = $this->request->session();
             $studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
         }*/
          
-        if ($user['is_student'] == 1) {
+        if ($user['is_student'] == 1 && $user['is_guardian'] == 0) {
             $query = $query
             ->where([
                 $this->aliasField('student_id') => $user['id'],

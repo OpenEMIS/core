@@ -54,6 +54,16 @@ class StudentWithdrawTable extends ControllerActionTable
         ]);
 
         $this->toggle('add', false);
+
+        //POCOR-5986
+        $this->addBehavior('User.User');
+        $this->addBehavior('User.AdvancedNameSearch');
+         $advancedSearchFieldOrder = [
+            'first_name', 'middle_name', 'third_name', 'last_name',
+            'openemis_no'
+        ];
+        $this->addBehavior('ControllerAction.Image');
+        //POCOR-5986
     }
 
     public function implementedEvents()
@@ -63,11 +73,18 @@ class StudentWithdrawTable extends ControllerActionTable
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
         $events['Model.Students.afterDelete'] = 'studentsAfterDelete';
         $events['Shell.StudentWithdraw.updateStudentStatusId'] = 'updateStudentStatusId';
+        $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
 
         foreach ($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
         }
         return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'student_id';
+        $searchableFields[] = 'openemis_no';
     }
 
     public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
@@ -151,9 +168,14 @@ class StudentWithdrawTable extends ControllerActionTable
     public function onApproval(Event $event, $id, Entity $workflowTransitionEntity)
     {
         $entity = $this->get($id);
+        $Students = TableRegistry::get('Institution.Students');
         $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
+        $institutionId = $entity->institution_id;
+        $studentId = $entity->student_id;
+        $periodId = $entity->academic_period_id;
+        $gradeId = $entity->education_grade_id;
         Log::write('debug', 'initializing insert newEntity to student_status_updates queue: id >>>> '. $entity->student_id.' student_id >>>> '.$entity->student_id);
         if($workflowTransitionEntity->workflow_action_name == 'Approve'){
             $newEntity = $StudentStatusUpdates->newEntity([
@@ -168,6 +190,20 @@ class StudentWithdrawTable extends ControllerActionTable
             ]);
             $StudentStatusUpdates->save($newEntity);           
             $StudentStatusUpdates->checkRequireUpdate();
+            /* POCOR-6062 Starts*/
+            $existingStudentEntity = $Students->find()->where([
+                                        $Students->aliasField('institution_id') => $institutionId,
+                                        $Students->aliasField('student_id') => $studentId,
+                                        $Students->aliasField('academic_period_id') => $periodId,
+                                        $Students->aliasField('education_grade_id') => $gradeId,
+                                        $Students->aliasField('student_status_id') => $statuses['CURRENT']
+                                    ])
+                                    ->first();
+            if ($existingStudentEntity) {
+                $existingStudentEntity->student_status_id = $statuses['WITHDRAWN'];
+                $Students->save($existingStudentEntity);
+            }
+            /* POCOR-6062 ends*/
         }
         Log::write('debug', 'newEntity record inserted into student_status_updates queue: id >>>> '. $newEntity->id.' student_id >>>> '.$newEntity->security_user_id);
     }
@@ -394,5 +430,20 @@ class StudentWithdrawTable extends ControllerActionTable
             });
 
         return $query;
+    }
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    { 
+         $this->field('openemis_no', ['visible' => false]);
+         $this->field('photo_content', ['visible' => false]);
+    }  
+
+     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+        } 
+
     }
 }

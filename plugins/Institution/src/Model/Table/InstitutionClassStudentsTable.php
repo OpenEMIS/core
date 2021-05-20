@@ -790,7 +790,8 @@ class InstitutionClassStudentsTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('institution_class_id') => $classId,
-                $this->aliasField('education_grade_id') => $educationGradeId
+                $this->aliasField('education_grade_id') => $educationGradeId,
+				$this->aliasField('student_status_id NOT IN') => [3],
             ])
             ->group([
                 $this->aliasField('student_id')

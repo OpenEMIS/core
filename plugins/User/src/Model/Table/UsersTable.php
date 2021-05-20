@@ -259,12 +259,14 @@ class UsersTable extends AppTable
                 return $query->where(['1 = 0']);
             }
         }
+
         return $query
             ->innerJoinWith('InstitutionStudents')
-            ->leftJoinWith('InstitutionClassStudents', function ($q) use ($academicPeriodId, $institutionId) {
+            ->leftJoinWith('InstitutionClassStudents', function ($q) use ($academicPeriodId, $institutionId, $enrolledStatus) {
                 return $q->where([
                     'InstitutionClassStudents.academic_period_id' => $academicPeriodId,
-                    'InstitutionClassStudents.institution_id' => $institutionId
+                    'InstitutionClassStudents.institution_id' => $institutionId,
+                    'InstitutionClassStudents.student_status_id' => $enrolledStatus //POCOR-5365
                 ]);
             })
             ->innerJoinWith('InstitutionStudents.StudentStatuses')

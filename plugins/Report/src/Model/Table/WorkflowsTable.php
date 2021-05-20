@@ -87,7 +87,9 @@ class WorkflowsTable extends AppTable
         }
         if (in_array($selectedFeature, 
         [
-            'Report.WorkflowStudentTransferIn'
+            'Report.WorkflowStudentTransferIn',
+            'Report.WorkflowStudentTransferOut',
+            'Report.WorkflowInstitutionCase'
         ])
         ) {
         $this->ControllerAction->field('institution_id', [
@@ -161,7 +163,6 @@ class WorkflowsTable extends AppTable
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
         $Areaid = $request['data']['Workflows']['area'];
-        //for POCOR-5992
         if($Areaid != ''){
             $InstitutionsTable = TableRegistry::get('Institution.Institutions');
             $institutionQuery = $InstitutionsTable
