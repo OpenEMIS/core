@@ -118,8 +118,9 @@ trait MessagesTrait
             'validationRules' => 'Validation Rules',
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
             'custom_validation_pattern' => 'Please enter a valid format',
+            'bulk_student_transfer_in' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution.',
             'inactive_message' => 'This institution is inactive, all data entry operation are disabled.',
-            'status_update' => 'By Saving this Page, the institution status will be updated.',
+            'status_update' => 'You are about to update the status of the Institution. This action will affect the availability of the Institution in the system.',
             'contactInstitution' => [
                     'telephone' => 'Telephone cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'fax' => 'Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
@@ -543,11 +544,17 @@ trait MessagesTrait
             'savingError' => 'Some selected students record were not updated succesfully',
         ],
         'BulkStudentTransferIn' => [
-            'success' => 'Bulk students transfer successful',
+            'success' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution',
             'reconfirm' => 'Please review the information before proceeding with the operation',
             'noStudentSelected' => 'There are no students selected',
             'savingError' => 'Some selected students record were not updated succesfully',
-        ],
+        ], //6028 starts
+        'BulkStudentTransferOut' => [
+            'success' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution',
+            'reconfirm' => 'Please review the information before proceeding with the operation',
+            'noStudentSelected' => 'There are no students selected',
+            'savingError' => 'Some selected students record were not updated succesfully',
+        ],//6028 ends
         'IndividualPromotion' => [
             'noGrades' => 'No Available Grades',
             'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',
@@ -2157,7 +2164,8 @@ trait MessagesTrait
                 'risk_value' => [
                     'ruleRange' => 'Value must be within 1 to 99'
                 ]
-            ]
+            ],
+            'generate' => 'Generate risk for all institutions successfully.',
         ],
         'Textbook' => [
             'Textbooks' => [
@@ -2353,7 +2361,45 @@ trait MessagesTrait
             ],
         ],
         'ProfileTemplate' => [
-            'StudentTemplates' => [
+            'ProfileTemplates' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+				'generate_start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'generate_end_date' => [
+                    'ruleCompareDateReverse' => 'Generate End Date should not be earlier than Generate Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ]
+            ],
+			'StaffTemplates' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+				'generate_start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'generate_end_date' => [
+                    'ruleCompareDateReverse' => 'Generate End Date should not be earlier than Generate Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ]
+            ],
+			'StudentTemplates' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period'
                 ],
@@ -2425,7 +2471,7 @@ trait MessagesTrait
                 ]
             ],
             'addEdit' => 'This feature is for historical record use only. For current records, please refrain from adding record on this page.'
-        ],        
+        ],
         'Schedule' => [
             'ScheduleTerms' => [
                 'start_date' => [

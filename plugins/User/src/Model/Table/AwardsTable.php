@@ -2,7 +2,7 @@
 namespace User\Model\Table;
 
 use ArrayObject;
-
+use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 
@@ -53,6 +53,28 @@ class AwardsTable extends ControllerActionTable
                 break;
         }
     }
+
+    // public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	// {
+    //     echo '<pre>';print_r($query->toArray());die;
+	// 	$session = $this->request->session();
+	// 	if ($this->controller->name == 'Profiles') {
+	// 		if ($session->read('Auth.User.is_guardian') == 1) {
+	// 			$sId = $session->read('Student.ExaminationResults.student_id');
+	// 		}else {
+	// 			$sId = $session->read('Student.Students.id');
+	// 		}
+	// 		if (!empty($sId)) {
+	// 			$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+	// 		} else {
+	// 			$studentId = $session->read('Auth.User.id');
+	// 		}
+	// 	} else {
+	// 			$studentId = $session->read('Student.Students.id');
+	// 	}
+    //     $query->where([$this->aliasField('security_user_id') => $studentId]);
+        
+	// }
 
     public function afterAction(Event $event, ArrayObject $extra)
     {

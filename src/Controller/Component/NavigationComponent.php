@@ -303,24 +303,41 @@ class NavigationComponent extends Component
             $this->checkClassification($navigations);
         } elseif (($controller->name == 'Directories' && $action != 'index') || in_array($controller->name, $directoryControllers)) {
             $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
-
-
-            $session = $this->request->session();
+			
+			$encodedParam = $this->request->params['pass'][1];
+			if(!empty($encodedParam)) {
+				$securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
+            }
+			if(!empty($encodedParam)) {
+				$userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
+            }
+			
+			$userType = '';
+			if(!empty($userInfo)) {
+				if ($userInfo->is_student) {
+					$userType = 1;
+				} elseif ($userInfo->is_staff) {
+					$userType = 2;
+				} elseif ($userInfo->is_guardian) {
+					$userType = 3;
+				}
+			}
+			$session = $this->request->session();
             $isStudent = $session->read('Directory.Directories.is_student');
             $isStaff = $session->read('Directory.Directories.is_staff');
             $isGuardian = $session->read('Directory.Directories.is_guardian');
-
-            if ($isStaff) {
+          
+            if ($userType == 2) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
 
-            if ($isStudent) {
+            if ($userType == 1) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
 
-            if ($isGuardian) {
+            if ($userType == 3) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
@@ -591,7 +608,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Students.add', 'Institutions.Students.addExisting', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
                 'Institutions.StudentAdmission', 'Institutions.StudentTransferIn', 'Institutions.StudentTransferOut', 'Institutions.StudentWithdraw', 'Institutions.WithdrawRequests', 'Institutions.StudentUser.add',
-                'Institutions.ImportStudentAdmission', 'Institutions.Students','StudentHistories.index', 'Institutions.BulkStudentAdmission', 'Institutions.ImportStudentBodyMasses', 'Institutions.ImportStudentGuardians', 'Institutions.StudentStatusUpdates','Institutions.ImportStudentExtracurriculars', 'Institutions.BulkStudentTransferIn'],
+                'Institutions.ImportStudentAdmission', 'Institutions.Students','StudentHistories.index', 'Institutions.BulkStudentAdmission', 'Institutions.ImportStudentBodyMasses', 'Institutions.ImportStudentGuardians', 'Institutions.StudentStatusUpdates','Institutions.ImportStudentExtracurriculars', 'Institutions.BulkStudentTransferIn', 'Institutions.BulkStudentTransferOut'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -611,14 +628,14 @@ class NavigationComponent extends Component
             'Institutions.StudentAttendances.index' => [
                 'title' => 'Students',
                 'parent' => 'Institution.Attendance',
-                'selected' => ['Institutions.StudentAttendances', 'Institutions.StudentAbsences', 'Institutions.ImportStudentAttendances' , 'Institutions.StudentArchive'],
+                'selected' => ['Institutions.StudentAttendances', 'Institutions.StudentAbsences', 'Institutions.ImportStudentAttendances' , 'Institutions.StudentArchive', 'Institutions.InstitutionStudentAbsencesArchived'],
                 'params' => ['plugin' => 'Institution']
             ],
 
             'Institutions.InstitutionStaffAttendances.index' => [
                 'title' => 'Staff',
                 'parent' => 'Institution.Attendance',
-                'selected' => ['Institutions.InstitutionStaffAttendances', 'Institutions.ImportStaffAttendances'],
+                'selected' => ['Institutions.InstitutionStaffAttendances', 'Institutions.ImportStaffAttendances','Institutions.InstitutionStaffAttendancesArchive'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -665,7 +682,7 @@ class NavigationComponent extends Component
             'Institutions.Assessments.index' => [
                 'title' => 'Assessments',
                 'parent' => 'Institution.Performance',
-                'selected' => ['Institutions.Assessments', 'Institutions.Results', 'Institutions.AssessmentsArchive', 'Institutions.ImportAssessmentItemResults.add', 'Institutions.ImportAssessmentItemResults.results'],
+                'selected' => ['Institutions.Assessments', 'Institutions.Results', 'Institutions.AssessmentsArchive', 'Institutions.ImportAssessmentItemResults.add', 'Institutions.ImportAssessmentItemResults.results','Institutions.AssessmentItemResultsArchived'],
                 'params' => ['plugin' => 'Institution'],
             ],
 
@@ -1041,7 +1058,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
                 'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentRisks', 'Students.Outcomes', 'Institutions.StudentProgrammes.view', 'Institutions.StudentProgrammes.edit',
-                'Students.Competencies','Institutions.Associations','Institutions.StudentAssociations']
+                'Students.Competencies', 'Students.AssessmentItemResultsArchived', 'Students.InstitutionStudentAbsencesArchived', 'Institutions.StudentTransition', 'Institutions.Associations','Institutions.StudentAssociations']
             ],
             'Students.StudentScheduleTimetable' => [
                 'title' => 'Timetables',
@@ -1125,7 +1142,7 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.HistoricalStaffPositions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Institutions.HistoricalStaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave','Staff.Duties','Staff.StaffAssociations'],
+                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.HistoricalStaffPositions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Institutions.HistoricalStaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave','Staff.Duties','Staff.StaffAssociations', 'Staff.InstitutionStaffAttendancesArchive'],
             ],
             'Staff.Employments' => [
                 'title' => 'Professional',
@@ -1319,7 +1336,7 @@ class NavigationComponent extends Component
                 'title' => 'Academic',
                 'parent' => 'Profiles.Student',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours',
+                'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours','Profiles.StudentCompetencies',
                 'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes','Profiles.StudentRisks','Profiles.StudentAssociations']
             ],
             'Profiles.StudentScheduleTimetable' => [
@@ -1359,13 +1376,18 @@ class NavigationComponent extends Component
 
     public function getProfileGuardianStudentNavigation()
     {   
+        $sID = $this->request->pass[1];
         $session = $this->request->session();
-        $sId = $this->request->pass[1];
-        $studentId = $session->read('Student.Students.id');        
-    
-        if ($this->action == "ProfileStudentUser" && empty($studentId)) {
-            $session->write('Student.Students.id', $sId);
-        }
+        if (!empty($sID)) { 
+            if ($session->read('Auth.User.is_guardian') == 1) {
+                $session->write('Student.ExaminationResults.student_id', $sID);
+            } 
+            $studentId = $session->read('Student.ExaminationResults.student_id');
+        }else {
+            //$studentId = $this->request->pass[1];
+            $studentId = $session->read('Student.ExaminationResults.student_id');
+        }   
+       // echo '<pre>';print_r($_SESSION);die;
         $navigation = [
             'Profiles.ProfileStudentUser' => [
                 'title' => 'Overview',
@@ -1373,12 +1395,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Profile','controller' => 'Profiles', 'action' => 'ProfileStudentUser', 0 => 'view', $studentId],
                 'selected' => ['Profiles.ProfileStudentUser']
             ],
-            'Profiles.ProfileStudents.index' => [
+            'Profiles.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Profiles.ProfileStudents.index',
                 'params' =>  ['plugin' => 'Profile', 'controller' => 'Profiles', $studentId],
                 'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours', 'Profiles.StudentCompetencies','Profiles.StudentCompetencies.index',
-                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes', 'Profiles.StudentRisks']
+                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes', 'Profiles.StudentRisks', 'Profiles.StudentAssociations']
             ],
         ];
 

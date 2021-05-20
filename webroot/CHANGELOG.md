@@ -1,3 +1,85 @@
+### [3.65.2] - 2021-05-12
+- Bug Fixed: Installer creates database without tables
+- Bug Fixed: Institution > Student > Transfer: Student's Start Date and End Date upon approval did no match with the Academic Period
+- Bug Fixed: Report > Students > Student Out of School Report: add / remove columns
+
+### [3.65.1] - 2021-05-07
+- Bug Fixed: Institution > Survey > Forms: Edited record disappeared
+- Bug Fixed: Institution > Student > Pending Transfer In: After successful Bulk Student Transfer In process, notification is incorrect
+- Bug Fixed: Directory > Search: Error encountered when click on a user without selecting User Type
+- Bug Fixed: Institution > Performance > Assessment: Homeroom Teacher is able to edit marks even though the Homeroom Teacher is not assigned to any Subjects
+- Bug Fixed: Institutions > Finance > Budget/Income/Expenditure : Remove the word PM
+- Bug Fixed: Institution > Student > Academic > Programmes tab: End Date is showing incorrect date for students with Withdrawn status
+- Bug Fixed: Institution > Staff > Career > Leave tab: Leave filter not able to filter Staff Leave Type accordingly### [3.65.1] - 2021-05-07
+
+### [3.65.0] - 2021-04-30
+- Implemented: Changes to Data Archiving feature in OpenEMIS Core
+- Implemented: Improvement of the Workflow module
+- Bug Fixed: Institution > Attendance > Student > All Day > Export Page
+- Bug Fixed: Institution > Meals > Students Dashboard Statistics
+- Bug Fixed: Directory > Student > Academic > Risk page
+- Bug Fixed: Profile > Guardian > Student > Academic page
+
+### [3.64.4] - 2021-04-22
+- Implemented: Add an option to modifying the student grade and specialty
+- Bug Fixed: Institutions > Staff > Finance > Payslip > Edit: Unable to edit record
+- Bug Fixed: Institutions > Staff > Career > Associations : Issues for staff
+- Bug Fixed: Institutions > Attendance > Student: Secondary Teacher unable to mark attendance for the Class he is assigned to
+- Bug Fixed: Institutions > Performance > Report Cards: Unable to generate Report Card
+- Bug Fixed: Institutions > Student > Promote: Education Grade is not reflecting based on the Academic Period selected
+- Bug Fixed: Institutions > Report Cards > Comments: Unable to view All Subjects comments even though security permission is given
+- Bug Fixed: Institutions > Cases > Student Attendance : Set All for Class filter dropdown as Default
+- Bug Fixed: Administration > System Setup > System Configuration > Automated Student Withdrawal: Encountered 404 error
+- Bug Fixed: Administration > System Setup > Field Options > Meal Implementers: Unable to add new record in other language
+- Bug Fixed: Administration > Security > Roles > Permission: Delete functions for Timetables are disabled
+- Bug Fixed: Profile > Workbench > Cases: There are Open Cases in the assignee workbench even though the Cases have been closed
+- Bug Fixed: Ensure that system shows education structure from the correct academic period
+
+### [3.64.3] - 2021-04-16
+- Bug Fixed: Institutions > Report Cards > Comments: Student transferred to another school, but report card record is still available in the previous school
+- Bug Fixed: Institutions > Academic > Classes: When a Student gets transferred back into the same school in the same year, student is not showing in the list of Unassigned students
+- Bug Fixed: Institutions > Attendance > Student: Withdrawn student still appear on Attendance page
+- Bug Fixed: Institutions > Staff > Finance > Payslip > Add: Unable to add record
+- Bug Fixed: Institutions > Report Cards > Comment: Homeroom Teacher unable to input/edit comment
+- Bug Fixed: Institutions > Students > Health > Vaccinations > Delete: Delete Prompt header is reflecting Immunizations
+- Bug Fixed: Institutions > Performance > Competencies > Import: There is no Option to select Class
+- Bug Fixed: Reports > Institution > Infrastructure: Changes to reports field
+- Bug Fixed: Reports > Institutions > Institutions > View: View format is incorrect
+- Bug Fixed: Administration > Workflow: Editable and Deletable check/uncheck function is not working
+- Bug Fixed: API: The list of Absence -Excused Reasons are not listed in the same order as in Student Attendance page
+- Bug Fixed: Directory > Search user: When selecting User Type as Students, the selection listed belongs to Staff
+- Bug Fixed: Profile: User Account is only showing First and Last Name
+
+### [3.64.2] - 2021-04-14
+- Implemented: Improvement to the school closing process
+- Implemented: Improvement to the student overview page
+- Implemented: Changes to reports for the Infrastructure module
+- Implemented: Improvement of readability of the student status in the current year
+- Bug Fixed: Reports > Institution > Students: Withdrawn: Data not reflected on the View page after report has been generated
+- Bug Fixed: Reports > Workflow report: Report is remain in In-Progress status
+- Bug Fixed: Reports > Institution > Infrastructure report: Add 'All' option for some of the fields
+- Bug Fixed: Users > Identities tab > Edit Page : Make Nationality mandatory
+- Bug Fixed: Institution > Attendance > Students: If a Multigrade Class period is configured as Subjects, the list of Subjects listed are Subjects from All Education Grade that are assigned to the Multi Grade class
+
+### [3.64.1] - 2021-04-09
+- Bug Fixed: Administration > System Setup > Education Structure > Programme: When selecting a past Academic Period filter and then selecting Levels filter, the Academic Period filter reverted to current Academic Period
+- Bug Fixed: Administration > System Setup > Academic Period > Edit: An error encountered when editing End Date for a non-current Academic Period
+- Bug Fixed: Administration > Profile > Institution and Staff > Add/Edit: Error message shows [Message Not Found]
+- Bug Fixed: Administration > Examinations > Centres > Add: 404 error encountered for Existing Institution with 1 Institution
+- Bug Fixed: Administration > System Setup > Education Structure > Programmes/Grades : Unable to save if there is an existing Programmes/Grades with the same code
+- Bug Fixed: Institutions > Academic > Schedules > Timetable > Timetable tab: Overview button is missing
+- Bug Fixed: Institutions > Academic > Schedules > Timetables Edit Page : System should allow user to add lessons without selecting a room
+- Bug Fixed: Institutions > Students> Withdrawn : Search is not working
+- Bug Fixed: Institutions > Survey > Forms: Checkbox question did not appear in the Repeater Survey Form
+- Bug Fixed: Reports > Trainings > Results: Unable to generate report and To add "All Training Courses" selection for Training Course field
+- Bug Fixed: Reports > Workflow Records: Institutions > Student Transfer > Receiving: Upon selecting the Institution, the Institution selected was removed from the field
+- Bug Fixed: Reports > Directory > User List Report: Add username column
+- Bug Fixed: Profile > Guardian > Students > Academic: Guardian is unable to view student Academic page
+- Bug Fixed: Workbench> Survey: Survey does not appear in workbench until user access institutions survey manually
+
+### [3.64.0] - 2021-04-06
+- Implemented: Installation Wizard
+
 ### [3.63.2] - 2021-04-01
 - Bug Fixed: Number appearing when editing Institutions > Survey > Forms page
 - Bug Fixed: Issues when viewing Students data in Guardian Login > Profiles > Students page

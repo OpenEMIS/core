@@ -101,11 +101,11 @@ class AcademicPeriodsTable extends AppTable
             ->add('end_date', [
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', false]
-                ],
-                'ruleCompareEndDate' => [
+                ]//POCOR-5964 starts
+                /*,'ruleCompareEndDate' => [
                     'rule' => ['compareEndDate', 'start_date', false],
                     'message' => __('End date should not be less than current date')
-                ]
+                ]*///POCOR-5964 ends
             ])//POCOR-5917 ends
             ->add('current', 'ruleValidateNeeded', [
                 'rule' => ['validateNeeded', 'current', $additionalParameters],
@@ -511,6 +511,36 @@ class AcademicPeriodsTable extends AppTable
             ->find('years')
             ->find('editable', ['isEditable' => $isEditable])
             ->where($conditions)
+            ->toArray();
+
+        if (!$withLevels) {
+            $list = $data;
+        } else {
+            $list[$level->name] = $data;
+        }
+
+        return $list;
+    }
+
+    public function getArchivedYearList($academicPeriod)
+    {
+        $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
+        $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
+        $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
+
+        $level = $this->Levels
+            ->find()
+            ->order([$this->Levels->aliasField('level ASC')])
+            ->first();
+        $where = [
+            $this->aliasField('current !=') => 1,
+            $this->aliasField('id IN')  => $academicPeriod
+        ];
+        
+
+        $data = $this
+            ->find('list')
+            ->where($where)
             ->toArray();
 
         if (!$withLevels) {
