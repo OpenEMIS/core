@@ -388,7 +388,11 @@ class InstitutionBuildingsTable extends ControllerActionTable
         ];
 
         // check if the same building is copy from / copy to other academic period, then not allow user to delete
-        $resultQuery = $this->find();
+        //POCOR-5330 starts
+        $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
+        $this->currentAcademicPeriod = $this->AcademicPeriods->get($currentAcademicPeriodId);
+        $resultQuery = $this->find()->where([$this->aliasField('academic_period_id') => $currentAcademicPeriodId]);
+        //POCOR-5330 ends
         $results = $resultQuery
             ->select([
                 'academic_period_name' => 'AcademicPeriods.name',
