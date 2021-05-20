@@ -58,7 +58,8 @@ class InstitutionSubjectsTable extends AppTable  {
         $query
             ->select([
                 'institution_code' => 'Institutions.code',
-                'institution_name' => $query->func()->concat(['Institutions.code' => 'literal', ' - ', 'Institutions.name' => 'literal']),
+                //'institution_name' => $query->func()->concat(['Institutions.code' => 'literal', ' - ', 'Institutions.name' => 'literal']),
+                'institution_name' => 'Institutions.name',
                 'area_code' => 'Areas.code',
                 // 'area_name' => $query->func()->concat(['Areas.code' => 'literal', ' - ', 'Areas.name' => 'literal']),
                 'area_name' => 'Areas.name',
@@ -224,13 +225,20 @@ class InstitutionSubjectsTable extends AppTable  {
             
             if ($value['field'] == 'class_name') {
                 $newFields[] = [
-                    'key' => 'institution_name',
-                    'field' => 'institution_name',
+                    'key' => 'institution_code',
+                    'field' => 'institution_code',
                     'type' => 'string',
-                    'label' => __('Institution')
+                    'label' => __('Institution Code')
                 ];
 
                 $newFields[] = [
+                    'key' => 'institution_name',
+                    'field' => 'institution_name',
+                    'type' => 'string',
+                    'label' => __('Institution Name')
+                ];
+
+               /* $newFields[] = [
                     'key' => '',
                     'field' => 'region_code',
                     'type' => 'string',
@@ -256,7 +264,7 @@ class InstitutionSubjectsTable extends AppTable  {
                     'field' => 'area_name',
                     'type' => 'string',
                     'label' => __('District Name')
-                ];
+                ];*/
                 
                 $newFields[] = [
                     'key' => 'InstitutionClasses.name',
