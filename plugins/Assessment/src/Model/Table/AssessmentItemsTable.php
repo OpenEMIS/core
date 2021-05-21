@@ -187,7 +187,7 @@ class AssessmentItemsTable extends AppTable
     }
 
     public function findSubjectNewTab(Query $query, array $options)
-    {  
+    {   
         $loggedInUserId = $options['user']['id'];
         $institutionId =  $options['institution_id'];
         $academinPeriod = $options['academic_period_id'];
@@ -249,12 +249,19 @@ class AssessmentItemsTable extends AppTable
                                 $staffSubject->aliasField('institution_subject_id') => $subjectId
                             ])
                             ->toArray();
-                            
-                    if (!empty($data)) {
+                    //checking whether logged in user is admin or not
+                    $UsersTable = TableRegistry::get('User.Users');
+                    $users = $UsersTable->find()->where([$UsersTable->aliasField('id') => $loggedInUserId])->first();
+                    if (!empty($users) && $users->super_admin == 1) {
                         $row['is_editable'] = 1;
                     } else {
-                        $row['is_editable'] = 0;
+                        if (!empty($data)) {
+                            $row['is_editable'] = 1;
+                        } else {
+                            $row['is_editable'] = 0;
+                        }
                     }
+
                     return $row;
                 });
             });

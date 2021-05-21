@@ -3043,11 +3043,12 @@ class ValidationBehavior extends Behavior
             $report_end_date =  strtotime($globalData['data']['report_end_date']);
             $datediff = $report_end_date - $report_start_date;
             $days = round($datediff / (60 * 60 * 24));  
-            if($days <= 31){
+            if($days <= 31) {
                 return true;
+            } else {
+                return false;
             }
         }
-        return false;
     }
 
     //POCOR-5917 starts
