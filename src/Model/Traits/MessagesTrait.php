@@ -119,6 +119,7 @@ trait MessagesTrait
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
             'custom_validation_pattern' => 'Please enter a valid format',
             'bulk_student_transfer_in' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution.',
+            'bulk_student_transfer_out' => 'Students Transferred Successful.',
             'inactive_message' => 'This institution is inactive, all data entry operation are disabled.',
             'status_update' => 'You are about to update the status of the Institution. This action will affect the availability of the Institution in the system.',
             'contactInstitution' => [
@@ -548,7 +549,13 @@ trait MessagesTrait
             'reconfirm' => 'Please review the information before proceeding with the operation',
             'noStudentSelected' => 'There are no students selected',
             'savingError' => 'Some selected students record were not updated succesfully',
-        ],
+        ], //6028 starts
+        'BulkStudentTransferOut' => [
+            'success' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution',
+            'reconfirm' => 'Please review the information before proceeding with the operation',
+            'noStudentSelected' => 'There are no students selected',
+            'savingError' => 'Some selected students record were not updated succesfully',
+        ],//6028 ends
         'IndividualPromotion' => [
             'noGrades' => 'No Available Grades',
             'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',
