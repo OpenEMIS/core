@@ -26,21 +26,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
-        $this->belongsTo('InstitutionStudents', [
-            'className' => 'Institution.InstitutionStudents',
-            'foreignKey' => [
-                'education_grade_id',
-                'student_id',
-                'institution_id',
-                'academic_period_id'
-            ],
-            'bindingKey' => [
-                'education_grade_id',
-                'student_id',
-                'institution_id',
-                'academic_period_id'
-            ]
-        ]);
+        $this->belongsTo('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
         
         $this->belongsTo('ClassStudents', [
             'className' => 'Institution.InstitutionClassStudents',

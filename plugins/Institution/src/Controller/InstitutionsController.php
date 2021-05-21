@@ -403,30 +403,36 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
     }
-    public function AssessmentsArchive()
+
+    public function AssessmentItemResultsArchived()
     {
-        if (!empty($this->request->param('institutionId'))) {
-            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
-        } else {
-            $session = $this->request->session();
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
-
-        $backUrl = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'Assessments',
-            'institutionId' => $institutionId,
-            'index',
-            $this->ControllerAction->paramsEncode(['id' => $timetableId])
-        ];
-        $this->set('backUrl', Router::url($backUrl));
-
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-            $this->Navigation->addCrumb($crumbTitle);
-        $this->set('institution_id', $institutionId);
-        $this->set('ngController', 'InstitutionAssessmentsArchiveCtrl as $ctrl');
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
     }
+
+    // public function AssessmentsArchive()
+    // {
+    //     if (!empty($this->request->param('institutionId'))) {
+    //         $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+    //     } else {
+    //         $session = $this->request->session();
+    //         $institutionId = $session->read('Institution.Institutions.id');
+    //     }
+
+    //     $backUrl = [
+    //         'plugin' => 'Institution',
+    //         'controller' => 'Institutions',
+    //         'action' => 'Assessments',
+    //         'institutionId' => $institutionId,
+    //         'index',
+    //         $this->ControllerAction->paramsEncode(['id' => $timetableId])
+    //     ];
+    //     $this->set('backUrl', Router::url($backUrl));
+
+    //     $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+    //         $this->Navigation->addCrumb($crumbTitle);
+    //     $this->set('institution_id', $institutionId);
+    //     $this->set('ngController', 'InstitutionAssessmentsArchiveCtrl as $ctrl');
+    // }
 
     public function Distribution()
     {
@@ -643,6 +649,11 @@ class InstitutionsController extends AppController
         $this->set('ngController', 'TimetableCtrl as $ctrl');
         $this->render('timetable');
     }
+
+    public function InstitutionStudentAbsencesArchived()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentAbsencesArchived']);
+    }
     
     public function StudentAttendances($pass='')
     {
@@ -712,13 +723,18 @@ class InstitutionsController extends AppController
             'add'
         ];
 
-        $archiveUrl = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'StudentArchive',
-            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-            'add'
-        ];
+        // $archiveUrl = [
+        //     'plugin' => 'Institution',
+        //     'controller' => 'Institutions',
+        //     'action' => 'StudentArchive',
+        //     'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+        //     'add'
+        // ];
+
+        $archiveUrl = $this->ControllerAction->url('index');
+        $archiveUrl['plugin'] = 'Institution';
+        $archiveUrl['controller'] = 'Institutions';
+        $archiveUrl['action'] = 'InstitutionStudentAbsencesArchived';
 
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
         $this->Navigation->addCrumb($crumbTitle);
@@ -1330,6 +1346,11 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionAssociationStudent']);
     }
 
+    public function InstitutionStaffAttendancesArchive()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffAttendancesArchive']);
+    }
+
     public function InstitutionStaffAttendances($pass = 'index')
     {
         if ($pass == 'excel') {
@@ -1351,6 +1372,37 @@ class InstitutionsController extends AppController
                 $institutionId = $session->read('Institution.Institutions.id');
             }
 
+            $securityFunctions = TableRegistry::get('SecurityFunctions');
+            $securityFunctionsData = $securityFunctions
+            ->find()
+            ->select([
+                'SecurityFunctions.id'
+            ])
+            ->where([
+                'SecurityFunctions.name' => 'Student Attendance Archive'
+            ])
+            ->first();
+            $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
+
+            $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+            $securityRoleFunctionsData = $securityRoleFunctions
+            ->find()
+            ->select([
+                'SecurityRoleFunctions._view'
+            ])
+            ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id' => $permission_id,
+            ])
+            ->first();
+            $is_button_accesible = 0;
+            if( (!empty($securityRoleFunctionsData) && $securityRoleFunctionsData->_view == 1) ){
+                $is_button_accesible = 1;
+            }
+            if($this->Auth->user('super_admin') == 1){
+                $is_button_accesible = 1;
+            }
+
             $excelUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -1367,6 +1419,13 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
                 'add'
             ];
+
+            $archiveUrl = $this->ControllerAction->url('index');
+            $archiveUrl['plugin'] = 'Institution';
+            $archiveUrl['controller'] = 'Institutions';
+            $archiveUrl['action'] = 'InstitutionStaffAttendancesArchive';
+
+
             $this->set('importUrl', Router::url($importUrl));
             $this->set('_import', $_import);
             $this->set('_edit', $_edit);
@@ -1377,6 +1436,9 @@ class InstitutionsController extends AppController
             $this->set('_permissionStaffId', $_permissionStaffId);
             $this->set('_excel', $_excel);
             $this->set('_history', $_history);
+            $this->set('_archive', $_archive);
+            $this->set('archiveUrl', Router::url($archiveUrl));
+            $this->set('is_button_accesible', $is_button_accesible);
             $this->set('institution_id', $institutionId);
             $this->set('excelUrl', Router::url($excelUrl));
             $this->set('ngController', 'InstitutionStaffAttendancesCtrl as $ctrl');
