@@ -118,8 +118,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         if( ($is_connection_is_online == 1) ){
             $extraButtons = [
                 'archive' => [
-                    'AssessmentsArchive' => ['Institutions', 'AssessmentsArchive', 'index'],
-                    'action' => 'AssessmentsArchive',
+                    'AssessmentItemResultsArchived' => ['Institutions', 'AssessmentItemResultsArchived', 'index'],
+                    'action' => 'AssessmentItemResultsArchived',
                     'icon' => '<i class="fa fa-folder"></i>',
                     'title' => __('Archive')
                 ]
