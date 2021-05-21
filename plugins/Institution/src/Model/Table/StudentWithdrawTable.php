@@ -168,9 +168,14 @@ class StudentWithdrawTable extends ControllerActionTable
     public function onApproval(Event $event, $id, Entity $workflowTransitionEntity)
     {
         $entity = $this->get($id);
+        $Students = TableRegistry::get('Institution.Students');
         $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
+        $institutionId = $entity->institution_id;
+        $studentId = $entity->student_id;
+        $periodId = $entity->academic_period_id;
+        $gradeId = $entity->education_grade_id;
         Log::write('debug', 'initializing insert newEntity to student_status_updates queue: id >>>> '. $entity->student_id.' student_id >>>> '.$entity->student_id);
         if($workflowTransitionEntity->workflow_action_name == 'Approve'){
             $newEntity = $StudentStatusUpdates->newEntity([
@@ -185,6 +190,20 @@ class StudentWithdrawTable extends ControllerActionTable
             ]);
             $StudentStatusUpdates->save($newEntity);           
             $StudentStatusUpdates->checkRequireUpdate();
+            /* POCOR-6062 Starts*/
+            $existingStudentEntity = $Students->find()->where([
+                                        $Students->aliasField('institution_id') => $institutionId,
+                                        $Students->aliasField('student_id') => $studentId,
+                                        $Students->aliasField('academic_period_id') => $periodId,
+                                        $Students->aliasField('education_grade_id') => $gradeId,
+                                        $Students->aliasField('student_status_id') => $statuses['CURRENT']
+                                    ])
+                                    ->first();
+            if ($existingStudentEntity) {
+                $existingStudentEntity->student_status_id = $statuses['WITHDRAWN'];
+                $Students->save($existingStudentEntity);
+            }
+            /* POCOR-6062 ends*/
         }
         Log::write('debug', 'newEntity record inserted into student_status_updates queue: id >>>> '. $newEntity->id.' student_id >>>> '.$newEntity->security_user_id);
     }

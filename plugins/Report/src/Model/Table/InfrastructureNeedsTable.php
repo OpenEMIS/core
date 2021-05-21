@@ -53,11 +53,16 @@ class InfrastructureNeedsTable extends AppTable  {
         $infrastructureNeedTypes = TableRegistry::get('infrastructure_need_types');
         $institutionStatus = TableRegistry::get('institution_statuses');
         $institutions = TableRegistry::get('institutions');
+        $areas = TableRegistry::get('Area.Areas');
+        $areaAdministratives = TableRegistry::get('Area.AreaAdministratives');
         $query
                 ->select([
+                'area_name' => 'Areas.name',
+                'area_administrative_name' => 'AreaAdministratives.name',
                 'institution_name' => 'Institutions.name',
                 'institution_code' => 'Institutions.code',
                 'institution_status_name'=> 'InstitutionStatuses.name',
+                'need_id'=>'InfrastructureNeeds.id',
                 'need_code'=>'InfrastructureNeeds.code',
                 'need_name'=>'InfrastructureNeeds.name',
                 'need_type'=>'InfrastructureNeedTypes.name',
@@ -75,13 +80,19 @@ class InfrastructureNeedsTable extends AppTable  {
                 ->LeftJoin(['Institutions' => $institutions->table()], [
                     'InfrastructureNeeds.institution_id = Institutions.id',
                 ])
+                ->LeftJoin(['Areas' => $areas->table()], [
+                    'Areas.id = Institutions.area_id',
+                ])
+                ->LeftJoin(['AreaAdministratives' => $areaAdministratives->table()], [
+                    'AreaAdministratives.id = Institutions.area_administrative_id',
+                ])
                 ->LeftJoin(['InstitutionStatuses' => $institutionStatus->table()], [
                     'InstitutionStatuses.id = Institutions.institution_status_id',
                 ])
                 ->LeftJoin(['InfrastructureNeedTypes' => $infrastructureNeedTypes->table()], [
                     'InfrastructureNeeds.infrastructure_need_type_id = InfrastructureNeedTypes.id',
                 ])
-                ->where($conditions);  
+                ->where($conditions);   
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -93,7 +104,21 @@ class InfrastructureNeedsTable extends AppTable  {
     {
         $requestData = json_decode($settings['process']['params']);
         $newFields = [];
-        
+        /*POCOR-6019 starts*/
+        $newFields[] = [
+            'key' => 'Areas.name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __('Area Education')
+        ];
+
+        $newFields[] = [
+            'key' => 'AreaAdministratives.name',
+            'field' => 'area_administrative_name',
+            'type' => 'string',
+            'label' => __('Administrative Area')
+        ];
+        /*POCOR-6019 ends*/
         $newFields[] = [
             'key' => 'Institutions.name',
             'field' => 'institution_name',
@@ -119,7 +144,7 @@ class InfrastructureNeedsTable extends AppTable  {
             'key' => 'InfrastructureNeeds.code',
             'field' => 'need_code',
             'type' => 'string',
-            'label' => __('Needs Code')
+            'label' => __('Needs Code') 
         ];
 
         $newFields[] = [
@@ -170,14 +195,43 @@ class InfrastructureNeedsTable extends AppTable  {
             'type' => 'string',
             'label' => __('Date Completed')
         ];
-
+        /*POCOR-6019 starts*/
+        $newFields[] = [
+            'key' => 'associated_project',
+            'field' => 'associated_project',
+            'type' => 'string',
+            'label' => __('Associated Project')
+        ];
+        /*POCOR-6019 ends*/
         $newFields[] = [
             'key' => 'InfrastructureNeeds.comment',
             'field' => 'need_comment',
             'type' => 'string',
             'label' => __('Comment')
         ];
-       
+      
         $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetAssociatedProject(Event $event, Entity $entity)
+    { 
+        $InfrastructureProjectsNeeds = TableRegistry::get('Institution.InfrastructureProjectsNeeds');
+        $InfrastructureProjects = TableRegistry::get('Institution.InfrastructureProjects');
+        $needId = $entity->need_id;
+        $data = $InfrastructureProjectsNeeds->find()
+                ->select([$InfrastructureProjects->aliasField('name')])
+                ->leftJoin([$InfrastructureProjects->alias() => $InfrastructureProjects->table()], [
+                    $InfrastructureProjects->aliasField('id = ') . $InfrastructureProjectsNeeds->aliasField('infrastructure_project_id'),
+                ])
+                ->where([$InfrastructureProjectsNeeds->aliasField('infrastructure_need_id') => $needId])
+                ->toArray();
+        $projects = [];
+        if (!empty($data)) {
+            foreach ($data as $value) {
+                $projects[] = $value->InfrastructureProjects['name'];
+            }
+        }
+        
+        return implode($projects, ",");
     }
 }
