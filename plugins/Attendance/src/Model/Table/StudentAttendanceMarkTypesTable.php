@@ -84,7 +84,6 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 ])
                 //->extract('attendance_per_day')
                 ->first();
-
             if (!is_null($attendancePerDay)) {
                 $attendancePerDayId = $attendancePerDay->id;
                 $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
@@ -95,8 +94,16 @@ class StudentAttendanceMarkTypesTable extends AppTable
                     
                                 ])
                              ->toArray();
-                
+                if (isset($modelData)) {
+                    $data[] = [
+                    'id' => 1,
+                    'name' => 'Period 1'
+                    ];
+             
+                    return $data;
+                }                
                 return $modelData;
+
             } else {
                 $data[] = [
                     'id' => 1,
