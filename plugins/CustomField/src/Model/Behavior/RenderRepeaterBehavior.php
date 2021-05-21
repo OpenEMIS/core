@@ -11,6 +11,7 @@ use Cake\Utility\Text;
 
 use Cake\View\Helper\IdGeneratorTrait;
 use ControllerAction\Model\Traits\PickerTrait;
+use Cake\I18n\Date;
 
 class RenderRepeaterBehavior extends RenderBehavior {
     use IdGeneratorTrait;
@@ -319,12 +320,11 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     if (!array_key_exists('value', $attr)) {
                                         if (!is_null($answerValue)) {
-											$attr['value'] = $answerValue->format('d-m-Y');
-                                            /*if ($answerValue instanceof Time || $answerValue instanceof Date) {
+                                            if ($answerValue instanceof Time || $answerValue instanceof Date) {
                                                 $attr['value'] = $answerValue->format('d-m-Y');
                                             } else {
                                                 $attr['value'] = date('d-m-Y', strtotime($answerValue));
-                                            }*/
+                                            }
                                         } else if ($attr['default_date']) {
                                             $attr['value'] = date('d-m-Y');
                                         }
