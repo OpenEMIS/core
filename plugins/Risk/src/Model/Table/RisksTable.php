@@ -693,6 +693,7 @@ class RisksTable extends ControllerActionTable
         // trigger shell
         $Risks->triggerUpdateRisksShell('UpdateRisks', $institutionId, $userId, $riskId, $academicPeriodId);
         }
+        $this->Alert->info(__('Risk.generate'));
 
         // redirect to index page
         $url = [

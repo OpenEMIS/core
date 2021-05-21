@@ -542,13 +542,21 @@ class StudentAttendancesTable extends ControllerActionTable
             ->select([
 					'student_id' => 'institution_student_withdraw.student_id',
 				])
+                /*POCOR-6062 starts*/
+                ->leftJoin([$InstitutionStudents->alias() => $InstitutionStudents->table()], [
+                    $InstitutionStudents->aliasField('student_id = ') . $studentWithdraw->aliasField('student_id'),
+                    $InstitutionStudents->aliasField('education_grade_id = ') . $studentWithdraw->aliasField('education_grade_id'),
+                    $InstitutionStudents->aliasField('academic_period_id = ') . $studentWithdraw->aliasField('academic_period_id'),
+                    $InstitutionStudents->aliasField('institution_id = ') . $studentWithdraw->aliasField('institution_id')
+                ])/*POCOR-6062 ends*/
 				->where([
                     $studentWithdraw->aliasField('institution_id') => $institutionId,
                     $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
                     $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
                    // $studentWithdraw->aliasField('effective_date >= ') => $day,
-                    $studentWithdraw->aliasField('effective_date <= ') => $day
-                    ])
+                    $studentWithdraw->aliasField('effective_date <= ') => $day,
+                    $InstitutionStudents->aliasField('student_status_id !=') => 1 //POCOR-6062
+                ])
                 ->toArray();
                
           if ($studentWithdrawData) {

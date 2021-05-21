@@ -481,7 +481,7 @@ class StudentReportCardsTable extends AppTable
 	public function onExcelTemplateInitialiseStudentExtracurriculars(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
-            $Extracurriculars = TableRegistry::get('Student.Extracurriculars');
+            $Extracurriculars = TableRegistry::get('student_extracurriculars');
 
             $entity = $Extracurriculars
                 ->find()
