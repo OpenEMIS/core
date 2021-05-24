@@ -1,3 +1,8 @@
+### [3.65.4] - 2021-05-24
+- Bug Fixed: Institution > Student > Transfer: Start Date and End Date is reflected incorrectly
+- Bug Fixed: Changes to Data Archiving feature in OpenEMIS Core - Part II
+- Bug Fixed: Remove default date for student / staff actions
+
 ### [3.65.3] - 2021-05-21
 - Bug Fixed: Institution > Performance > Assessment: Student who had Withdrawn/Transferred Status in 1 class and Enrolled Status in another class from the same Institution has Enrolled Status for both class in Assessment page
 - Bug Fixed: Administration > System Setup > Education Structure > Programme > Add: Upon adding a new record, the record is not reflected on the List page
