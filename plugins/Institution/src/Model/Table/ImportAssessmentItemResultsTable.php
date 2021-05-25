@@ -216,7 +216,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $classId = $this->request->query['class_name'];
+        $subjectId = $this->request->query['education_subject'];
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
         $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
 
@@ -236,10 +236,9 @@ class ImportAssessmentItemResultsTable extends AppTable {
                         ])
                         ->where([
                             $this->Assessments->aliasField('academic_period_id') => $academicPeriodId,
-                            //$this->InstitutionSubjects->aliasField('education_grade_id') => $educationGradeId
+                            $this->EducationSubjects->aliasField('id') => $subjectId
                         ]); 
-
-               
+       
         $translatedReadableCol = $this->getExcelLabel($EducationSubjectsResults, 'Name');
 
         $data[$columnOrder]['lookupColumn'] = 2;
