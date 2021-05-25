@@ -948,7 +948,7 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 
                                     'Report.InstitutionCases',
-                                    'Report.StudentAttendanceSummary',
+                                    //'Report.StudentAttendanceSummary',
                                     'Report.ClassAttendanceMarkedSummaryReport',
                 ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
                 ) {
@@ -956,11 +956,32 @@ class InstitutionsTable extends AppTable
                 $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
-
                 $attr['type'] = 'date';
                 $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
                 $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
                 $attr['value'] = $selectedPeriod->start_date;
+            } elseif (in_array($feature, [
+                                    'Report.StudentAttendanceSummary'
+                ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
+                ) {
+
+                $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
+                $attr['type'] = 'date';
+                $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                $attr['attr']['default'] = $selectedPeriod->start_date;
+                $attr['onChangeReload'] = true;
+                if ($attr['value'] > 0) {
+                    $attr['value'] = $this->request->data[$this->alias()]['report_start_date'];
+                } else {
+                    if ($this->request->data[$this->alias()]['report_start_date'] != 0) {
+                       $attr['value'] = $this->request->data[$this->alias()]['report_start_date'];
+                    } else {
+                        $attr['value'] = $selectedPeriod->start_date;
+                    }
+                }
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -974,7 +995,7 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 
                                     'Report.InstitutionCases',
-                                    'Report.StudentAttendanceSummary',
+                                    //'Report.StudentAttendanceSummary',
                                     'Report.ClassAttendanceMarkedSummaryReport'
                                     ])
                 ) {
@@ -995,9 +1016,34 @@ class InstitutionsTable extends AppTable
                 //POCOR-5907[START]
                 $attr['value'] = $selectedPeriod->end_date;
                 //POCOR-5907[END]
+            } elseif (in_array($feature, [
+                                    'Report.StudentAttendanceSummary'
+                                    ])
+                ) {
+                
+                $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
+                
+                $attr['type'] = 'date';
+                if ($request->data['Institutions']['report_start_date'] != 0) {
+                    $attr['date_options']['startDate'] = $request->data['Institutions']['report_start_date'];
+                } else {
+                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                }
+                $date = $attr['date_options']['startDate'];
+                $reportEndDate = date('d-m-Y',strtotime('+30 days',strtotime($date)));
+                $attr['date_options']['endDate'] = $reportEndDate;
+                if ($academicPeriodId == $AcademicPeriods->getCurrent()) {
+                    $attr['value'] = $reportEndDate;
+                } else {
+                    $attr['value'] = Time::now();
+                }
+                $attr['value'] = $reportEndDate;
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
+            
             return $attr;
         }
     }

@@ -608,7 +608,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Students.add', 'Institutions.Students.addExisting', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
                 'Institutions.StudentAdmission', 'Institutions.StudentTransferIn', 'Institutions.StudentTransferOut', 'Institutions.StudentWithdraw', 'Institutions.WithdrawRequests', 'Institutions.StudentUser.add',
-                'Institutions.ImportStudentAdmission', 'Institutions.Students','StudentHistories.index', 'Institutions.BulkStudentAdmission', 'Institutions.ImportStudentBodyMasses', 'Institutions.ImportStudentGuardians', 'Institutions.StudentStatusUpdates','Institutions.ImportStudentExtracurriculars', 'Institutions.BulkStudentTransferIn'],
+                'Institutions.ImportStudentAdmission', 'Institutions.Students','StudentHistories.index', 'Institutions.BulkStudentAdmission', 'Institutions.ImportStudentBodyMasses', 'Institutions.ImportStudentGuardians', 'Institutions.StudentStatusUpdates','Institutions.ImportStudentExtracurriculars', 'Institutions.BulkStudentTransferIn', 'Institutions.BulkStudentTransferOut'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -628,14 +628,14 @@ class NavigationComponent extends Component
             'Institutions.StudentAttendances.index' => [
                 'title' => 'Students',
                 'parent' => 'Institution.Attendance',
-                'selected' => ['Institutions.StudentAttendances', 'Institutions.StudentAbsences', 'Institutions.ImportStudentAttendances' , 'Institutions.StudentArchive'],
+                'selected' => ['Institutions.StudentAttendances', 'Institutions.StudentAbsences', 'Institutions.ImportStudentAttendances' , 'Institutions.StudentArchive', 'Institutions.InstitutionStudentAbsencesArchived'],
                 'params' => ['plugin' => 'Institution']
             ],
 
             'Institutions.InstitutionStaffAttendances.index' => [
                 'title' => 'Staff',
                 'parent' => 'Institution.Attendance',
-                'selected' => ['Institutions.InstitutionStaffAttendances', 'Institutions.ImportStaffAttendances'],
+                'selected' => ['Institutions.InstitutionStaffAttendances', 'Institutions.ImportStaffAttendances','Institutions.InstitutionStaffAttendancesArchive'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -682,7 +682,7 @@ class NavigationComponent extends Component
             'Institutions.Assessments.index' => [
                 'title' => 'Assessments',
                 'parent' => 'Institution.Performance',
-                'selected' => ['Institutions.Assessments', 'Institutions.Results', 'Institutions.AssessmentsArchive', 'Institutions.ImportAssessmentItemResults.add', 'Institutions.ImportAssessmentItemResults.results'],
+                'selected' => ['Institutions.Assessments', 'Institutions.Results', 'Institutions.AssessmentsArchive', 'Institutions.ImportAssessmentItemResults.add', 'Institutions.ImportAssessmentItemResults.results','Institutions.AssessmentItemResultsArchived'],
                 'params' => ['plugin' => 'Institution'],
             ],
 

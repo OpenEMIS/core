@@ -1,3 +1,27 @@
+### [3.65.4] - 2021-05-24
+- Bug Fixed: Institution > Student > Transfer: Start Date and End Date is reflected incorrectly
+- Bug Fixed: Changes to Data Archiving feature in OpenEMIS Core - Part II
+- Bug Fixed: Remove default date for student / staff actions
+
+### [3.65.3] - 2021-05-21
+- Bug Fixed: Institution > Performance > Assessment: Student who had Withdrawn/Transferred Status in 1 class and Enrolled Status in another class from the same Institution has Enrolled Status for both class in Assessment page
+- Bug Fixed: Administration > System Setup > Education Structure > Programme > Add: Upon adding a new record, the record is not reflected on the List page
+- Bug Fixed: Report > Institution > Student Attendance Summary report: Education Grade and Report End Date are not correct
+- Bug Fixed: Reports > Institution > Infrastructure Needs: Changes to reports columns
+- Bug Fixed: Institution > Performance > Assessment > Import: Issues with Import
+- Bug Fixed: Institution > Student > Pending Transfer Out: Bulk Transfer page missing
+- Bug Fixed: Institution > Attendance > Student: Attendance marked on Fridays disappeared
+- Bug Fixed: Directory > Add: Encountered error while adding users with Users Type
+- Bug Fixed: Administration > System Setup > Risk: 504 error encountered when generating risk for all Institutions	
+- Bug Fixed: Add area filter to the staff and student profile feature
+- Bug Fixed: Institution > Attendance > Students: Unable to view students Attendance even though the students are assigned to a class
+- Bug Fixed: Institution > Survey > Forms: Repeater Question is not saving the Date of Birth correctly
+- Bug Fixed: Reports > Institutions > Student Body Mass report: Changes to the report
+- Bug Fixed: Institution > Student > Meals: To remove "Total Paid" on the list page
+- Bug Fixed: Institution > Infrastructure > Overview > Export: Encountered 404 error
+- Bug Fixed: Institution > Student > Add: Education Grade field is listing Education Grade from all Academic Period
+- Bug Fixed: Institution > Performance > Assessments: Sys Admin unable to edit Assessment. Edit button is missing.
+
 ### [3.65.2] - 2021-05-12
 - Bug Fixed: Installer creates database without tables
 - Bug Fixed: Institution > Student > Transfer: Student's Start Date and End Date upon approval did no match with the Academic Period

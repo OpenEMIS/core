@@ -737,6 +737,7 @@ class DirectoriesTable extends ControllerActionTable
         }
         $this->field('password', ['order' => ++$highestOrder, 'visible' => true, 'attr' => ['autocomplete' => 'off']]);
         $this->field('nationality', ['attr' => ['required' => true]]);//POCOR-5987
+        $this->field('identity_number', ['visible' => true]);
         $this->setFieldOrder([
                 'information_section', 'photo_content', 'user_type', 'openemis_no', 'first_name', 'middle_name',
                 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'nationality_id',
