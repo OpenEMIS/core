@@ -306,11 +306,26 @@ class StudentProfilesTable extends ControllerActionTable
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//End	
 		
+		// Area filter
+		$Areas = TableRegistry::get('Area.Areas');
+
+		$areaOptions = [];
+		$areaOptions = $Areas->find('list')->toArray();
+       
+        $areaOptions = ['-1' => '-- '.__('Select Area').' --'] + $areaOptions;
+        $selectedArea = !is_null($this->request->query('area_id')) ? $this->request->query('area_id') : -1;
+        $this->controller->set(compact('areaOptions', 'selectedArea'));
+        //End
+		
         // Institution filter
 		$Institutions = TableRegistry::get('Institutions');
 
 		$institutionOptions = [];
-		$institutionOptions = $Institutions->find('list')->toArray();
+		$institutionOptions = $Institutions->find('list')
+								->where([
+									$Institutions->aliasField('area_id') => $selectedArea
+								])
+								->toArray();
        
         $institutionOptions = ['-1' => '-- '.__('Select Institution').' --'] + $institutionOptions;
         $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
