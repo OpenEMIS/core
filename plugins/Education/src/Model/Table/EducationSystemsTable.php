@@ -313,7 +313,26 @@ class EducationSystemsTable extends ControllerActionTable
 										$program_result = $education_programmes->save($newProgEntites);
 
 										if(!empty($program_result)){
-											//grades data
+											//POCOR-6053 starts
+                                            //next programmes data
+                                            $EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+                                            $nextProgrammesData = $EducationProgrammesNextProgrammesTable->find()
+                                                                    ->where([$EducationProgrammesNextProgrammesTable->aliasField('education_programme_id') => $prog_val['id']])
+                                                                    ->toArray();
+
+                                            if (!empty($nextProgrammesData)) {
+                                                foreach ($nextProgrammesData as $nextProgramekey => $value) {
+                                                   $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['id'] = Text::uuid();
+                                                    $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['education_programme_id'] = $program_result->id;
+                                                   $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['next_programme_id'] = $value['next_programme_id'];
+
+                                                   //insert next programmes data
+                                                    $newNextProgramEntites = $EducationProgrammesNextProgrammesTable->newEntity($nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]);
+                                                    $nextProgramResult = $EducationProgrammesNextProgrammesTable->save($newNextProgramEntites);
+                                                }
+                                            }
+                                            //POCOR-6053 ends
+                                            //grades data
 											$education_grades = TableRegistry::get('education_grades');
 									    	$educationGradesData = $education_grades
 																	    ->find()
