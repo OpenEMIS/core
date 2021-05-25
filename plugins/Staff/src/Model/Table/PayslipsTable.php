@@ -61,13 +61,15 @@ class PayslipsTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     { 
         if ($entity->isNew()) {
+            $emptyFields = 0;
+            if(!isset($entity->openemis_id)){
+                if(( !isset($entity->user_identity_number) && !isset($entity->user_identity_type_id))){
+                    $emptyFields = 1;
+                }
+            }
             $path_uri = '/Staff/Payslips/add';
             if(!isset($entity->name)){
                 $response["name"][] ="Field Can not be empty";
-                $entity->errors($response);
-                    return false;
-            }else if(!isset($entity->openemis_id) && $this->request->here() != $path_uri ){
-                $response["openemis_id"][] ="Field Can not be empty";
                 $entity->errors($response);
                     return false;
             }else if(!isset($entity->file_name)){
@@ -78,10 +80,11 @@ class PayslipsTable extends ControllerActionTable
                 $response["file_content"][] ="Field Can not be empty";
                 $entity->errors($response);
                     return false;
-            }else if(!isset($entity->identity_number) && $this->request->here() != $path_uri){
-                $response["file_content"][] ="Field Can not be empty";
-                $entity->errors($response);
-                    return false;
+            }else if($emptyFields == 1 && $_SERVER['REQUEST_URI'] != $path_uri){
+                echo $_SERVER['REQUEST_URI'];die;
+                $response = array('error'=> 'Please enter either OpenEMIS ID or identity number');
+                $entity->errors($response);    
+                return false;
             }else{
                 $apiSecuritiesScopes = TableRegistry::get('AcademicPeriod.ApiSecuritiesScopes');
                 $apiSecurities = TableRegistry::get('AcademicPeriod.ApiSecurities');
@@ -108,6 +111,7 @@ class PayslipsTable extends ControllerActionTable
                     return false;
                 }else{
                     if (!empty($entity->openemis_id)) {
+                        $openemis_payload_exist = 1;
                         $Users = TableRegistry::get('security_users');
                         $user_data= $Users
                                     ->find()
@@ -120,6 +124,37 @@ class PayslipsTable extends ControllerActionTable
                             $entity->errors($response);
                             return false;
                         } 
+                    }
+
+                    if(( !empty($entity->user_identity_number) && !empty($entity->user_identity_type_id))){
+                        $UsersIdentity = TableRegistry::get('user_identities');
+                        $user_identity_data= $UsersIdentity
+                                    ->find()
+                                    ->where(['user_identities.number' => $entity->user_identity_number,
+                                             'user_identities.identity_type_id' => $entity->user_identity_type_id,
+                                            ])
+                                    ->first();
+                        if ((!empty($user_identity_data))) {
+                            $entity->staff_id = $user_identity_data['security_user_id'];
+                        }else{
+                            if($openemis_payload_exist == 0){
+                                $response["user_identity_number"][] ="Record not found";
+                                $entity->errors($response);
+                                return false;
+                            }
+                        } 
+                    }else{
+                        if(($openemis_payload_exist == 0 && $_SERVER['REQUEST_URI'] != $path_uri)){
+                            if(empty($entity->user_identity_number)){
+                                $response["user_identity_number"][] ="Field Can not be empty";
+                                $entity->errors($response);
+                                return false;
+                            }else if(empty($entity->user_identity_type_id)){
+                                $response["user_identity_type_id"][] ="Field Can not be empty";
+                                $entity->errors($response);
+                                return false;
+                            }
+                        }
                     }
                 } 
             }
