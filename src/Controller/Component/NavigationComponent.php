@@ -404,7 +404,7 @@ class NavigationComponent extends Component
 
         $navigation = [
             'Profiles.Profiles' => [
-                'title' => 'Profile',
+                'title' => 'Personal',
                 'icon' => '<span><i class="fa kd-role"></i></span>',
                 'params' => ['plugin' => 'Profile', 'action' => 'Profiles', 0 => 'view', $userId]
             ],
@@ -1744,7 +1744,7 @@ class NavigationComponent extends Component
             ],
 			
 			'ProfileTemplates' => [
-                'title' => 'Profiles',
+                'title' => 'Personal',
                 'parent' => 'Administration',
                 'link' => false
             ],
