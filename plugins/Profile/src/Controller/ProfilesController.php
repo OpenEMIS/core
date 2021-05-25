@@ -73,7 +73,7 @@ class ProfilesController extends AppController
         $this->loadComponent('Scholarship.ScholarshipTabs');
         $this->attachAngularModules();
 
-        $this->set('contentHeader', 'Profiles');
+        $this->set('contentHeader', 'Personal');
     }
 
     public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
@@ -272,7 +272,7 @@ class ProfilesController extends AppController
 
         $loginUserId = $this->Auth->user('id'); // login user
 
-        $this->Navigation->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
+        $this->Navigation->addCrumb('Personal', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
         
         $header = '';
 
@@ -357,17 +357,23 @@ class ProfilesController extends AppController
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
         $action = $this->request->params['action'];
+        if($action == 'Profiles'){
+            $action = __('Personal');
+        }
         if ($session->read('Auth.User.is_guardian') == 1) {
             $studentId = $session->read('Student.ExaminationResults.student_id');
         }else {
             $studentId = $this->request->params['pass'][1];
         }
         if (!empty($studentId)) {
-             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards' || $action == 'StudentAssociations') {
+             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards' || $action == 'StudentAssociations' || $action == 'Personal') {
 				$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
                 $entity = $this->Profiles->get($studentId);
                 $name = $entity->name;
                 $header = $name;
+                if($alias == 'Profiles'){
+                    $alias = __('Personal');
+                }
                 $header = $header . ' - ' . $model->getHeader($alias);
             }
         } else {
@@ -379,6 +385,8 @@ class ProfilesController extends AppController
      }
        //POCOR-5675
      $this->set('contentHeader', $header);
+
+        // echo "<pre>"; print_r($action); die();
 
      if ($model->hasField('security_user_id')) { 
         $model->fields['security_user_id']['type'] = 'hidden';
