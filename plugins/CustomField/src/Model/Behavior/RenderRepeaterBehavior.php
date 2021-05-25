@@ -11,6 +11,7 @@ use Cake\Utility\Text;
 
 use Cake\View\Helper\IdGeneratorTrait;
 use ControllerAction\Model\Traits\PickerTrait;
+use Cake\I18n\Date;
 
 class RenderRepeaterBehavior extends RenderBehavior {
     use IdGeneratorTrait;

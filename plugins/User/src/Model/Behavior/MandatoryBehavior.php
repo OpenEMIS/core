@@ -87,7 +87,14 @@ class MandatoryBehavior extends Behavior
             if (!empty($defaultNationality)) {
                 // if default nationality can be found
                 $this->_table->fields['nationality']['default'] = $defaultNationality->id;
-                $defaultIdentityType = $defaultNationality->identity_type_id;
+                //POCOR-6047 starts
+                if ($this->_table->alias() == "Directories") {
+                    $defaultIdentityType = ['0' => '-- '.__('Select').' --'];
+                } else {
+                    $defaultIdentityType = $defaultNationality->identity_type_id;
+                }
+                //POCOR-6047 ends
+                
             }
 
             if (empty($defaultIdentityType)) {
@@ -96,12 +103,24 @@ class MandatoryBehavior extends Behavior
                     ->where([$IdentityTypes->aliasField('default') => 1])
                     ->first();
                 if (!empty($defaultIdentityTypeEntity)) {
+                    //POCOR-6047 starts
+                if ($this->_table->alias() == "Directories") {
+                    $defaultIdentityType = ['0' => '-- '.__('Select').' --'];
+                } else {
                     $defaultIdentityType = $defaultIdentityTypeEntity->id;
+                }
+                //POCOR-6047 ends
                 }
             }
 
             if (!empty($defaultIdentityType)) {
-                $this->_table->fields['identity_type']['default'] = $defaultIdentityType;
+                //POCOR-6047 starts
+                if ($this->_table->alias() == "Directories") {
+                    $this->_table->fields['identity_type']['default'] = ['0' => '-- '.__('Select').' --'];
+                } else {
+                    $this->_table->fields['identity_type']['default'] = $defaultIdentityType;
+                }
+                //POCOR-6047 ends
             }
         }
 
@@ -229,9 +248,22 @@ class MandatoryBehavior extends Behavior
 
         // overriding the  previous input to put in default identities
         if (isset($this->_table->fields['identity_type'])) {
-            $this->_table->fields['identity_type']['default'] = $defaultIdentityType;
+            //POCOR-6047 starts
+            if ($this->_table->alias() == "Directories") {
+                $this->_table->fields['identity_type']['default'] = ['0' => '-- '.__('Select').' --'];
+            } else {
+                $this->_table->fields['identity_type']['default'] = $defaultIdentityType;
+            }
+            //POCOR-6047 ends
         }
-        $data[$this->_table->alias()]['identities'][0]['identity_type_id'] = $defaultIdentityType;
+
+        //POCOR-6047 starts
+        if ($this->_table->alias() == "Directories") {
+            $data[$this->_table->alias()]['identities'][0]['identity_type_id'] = ['0' => '-- '.__('Select').' --'];
+        } else {
+            $data[$this->_table->alias()]['identities'][0]['identity_type_id'] = $defaultIdentityType;
+        }
+        //POCOR-6047 ends
 
         $options['associated'] = [
             'InstitutionStudents' => ['validate' => false],
