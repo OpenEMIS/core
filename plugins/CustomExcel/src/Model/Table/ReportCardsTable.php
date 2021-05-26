@@ -1059,7 +1059,7 @@ class ReportCardsTable extends AppTable
                         END
                     )',
             ];
-            
+
             if (!empty($extra['assessment_id'])) {
                 $extra['assessment_id'] = $extra['assessment_id'];
             } else{
