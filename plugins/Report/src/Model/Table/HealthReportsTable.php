@@ -1261,10 +1261,10 @@ class HealthReportsTable extends AppTable
     {
         //cant use $this->Users->get() since it will load big data and cause memory allocation problem
         $studentName = [];
-        ($entity->student_first_name) ? $studentName[] = $entity->student_first_name : '';
-        ($entity->student_middle_name) ? $studentName[] = $entity->student_middle_name : '';
-        ($entity->student_third_name) ? $studentName[] = $entity->student_third_name : '';
-        ($entity->student_last_name) ? $studentName[] = $entity->student_last_name : '';
+        ($entity->first_name) ? $studentName[] = $entity->first_name : '';
+        ($entity->middle_name) ? $studentName[] = $entity->middle_name : '';
+        ($entity->third_name) ? $studentName[] = $entity->third_name : '';
+        ($entity->last_name) ? $studentName[] = $entity->last_name : '';
 
         return implode(' ', $studentName);
     }
