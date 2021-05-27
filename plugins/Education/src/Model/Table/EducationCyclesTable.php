@@ -94,7 +94,7 @@ class EducationCyclesTable extends ControllerActionTable
         if($entity->isNew()){
             $body = array();
             $body = [
-                'education_level_id' =>'',
+                'education_level_id' =>$entity->education_level_id,
                 'name' =>$entity->name,
                 'admission_age' =>$entity->admission_age,
                 'order' =>$entity->order,
