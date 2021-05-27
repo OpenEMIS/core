@@ -88,6 +88,22 @@ class LicensesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
+    /*POCOR-5833 starts*/
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->fields['license_type_id']['type'] = 'select';
+        $this->fields['license_type_id']['attr']['value'] = $entity->license_type_id;
+        $this->field('classifications', [
+            'type' => 'chosenSelect',
+            'fieldNameKey' => 'classifications',
+            'fieldName' => $this->alias() . '.classifications._ids',
+            'placeholder' => $this->getMessage($this->aliasField('select_classification'))
+        ]);
+
+        $this->setFieldOrder(['license_type_id', 'classifications', 'license_number', 'issue_date', 'expiry_date', 'issuer', 'comments']);
+    }
+    /*POCOR-5833 ends*/
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->setupTabElements();
