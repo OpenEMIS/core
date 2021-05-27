@@ -263,7 +263,7 @@ class StaffTemplatesTable extends ControllerActionTable
         $tabUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
         $templateUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
         $tabElements = [
-            'Profiles' => ['text' => __('Personal')],
+            'Profiles' => ['text' => __('Profile')],
             'Templates' => ['text' => __('Templates')]
         ];
 		

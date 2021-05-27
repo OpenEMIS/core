@@ -76,7 +76,8 @@ class ProfilesController extends AppController
         $this->set('contentHeader', 'Personal');
     }
 
-    public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
+    public function Personal() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
+    // public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
 
     // CAv4
     public function StudentFees()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']); }
@@ -272,7 +273,7 @@ class ProfilesController extends AppController
 
         $loginUserId = $this->Auth->user('id'); // login user
 
-        $this->Navigation->addCrumb('Personal', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
+        $this->Navigation->addCrumb('Personal', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Personal', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
         
         $header = '';
 
@@ -386,7 +387,6 @@ class ProfilesController extends AppController
        //POCOR-5675
      $this->set('contentHeader', $header);
 
-        // echo "<pre>"; print_r($action); die();
 
      if ($model->hasField('security_user_id')) { 
         $model->fields['security_user_id']['type'] = 'hidden';
@@ -526,7 +526,7 @@ class ProfilesController extends AppController
 
         foreach ($tabElements as $key => $value) {
             if ($key == $this->name) {
-                $tabElements[$key]['url']['action'] = 'Profiles';
+                $tabElements[$key]['url']['action'] = 'Personal';
                 $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
             } else if ($key == 'Comments') {

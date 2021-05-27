@@ -30,9 +30,9 @@ class ProfileTemplatesController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-        $header = __('Personal');
+        $header = __('Profile');
         $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Personal', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
+        $this->Navigation->addCrumb('Profile', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
         $this->set('contentHeader', $header);
     }
 }
