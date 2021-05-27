@@ -39,8 +39,9 @@ class ConfigWebhooksTable extends ControllerActionTable
         'staff_delete'        => 'Staff Delete',
         'security_user_delete' => 'Delete Security User',
         'education_cycle_create' => 'Education Structure Cycle Create',
-        'education_cycle_update' => 'Education Structure Cycle Update'
-    ];
+        'education_cycle_update' => 'Education Structure Cycle Update',
+        'education_cycle_delete' => 'Education Structure Cycle Delete'
+     ];
 
     public function initialize(array $config)
     {
