@@ -166,13 +166,39 @@ class AcademicPeriodsTable extends AppTable
         return $buttons;
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    {
+    
+        if($entity->isNew()){
+          
+            $body = array();
+            $body = [
+                'academic_period_level_id' =>$entity->academic_period_level_id,
+                'code' =>$entity->code,
+                'name' =>$entity->name,
+                'start_date' =>$entity->start_date,
+                'end_date' =>$entity->end_date,
+                'current' =>$entity->start_date,
+                'academic_period_id' =>'',
+            ];
+          
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('academic_period_create', ['username' => $username], $body);
+            }
+        }
+
+    }
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
+      
+       
         //POCOR-5917 starts
         if(isset($entity->old_end_date) && !empty($entity->old_end_date) && isset($entity->old_end_year) && !empty($entity->old_end_year)){ //when edit academic period
             $academic_end_date = (new Date($entity->old_end_date))->format('Y-m-d'); 
             $academic_end_year = $entity->old_end_year; 
             $institutionStudents = TableRegistry::get('institution_students');
+       
             $institutionStudentsData = $institutionStudents
                                             ->find()
                                             ->where([
@@ -181,6 +207,7 @@ class AcademicPeriodsTable extends AppTable
                                                 $institutionStudents->aliasField('student_status_id') => 1
                                             ])->toArray();
             if(!empty($institutionStudentsData)){
+               
                 foreach ($institutionStudentsData as $key => $val) {
                     $institution_students_end_date = (new Date($entity->end_date))->format('Y-m-d');
                     $institution_students_end_year = $entity->end_year;
@@ -225,6 +252,7 @@ class AcademicPeriodsTable extends AppTable
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
+     
         $this->addAfterSave($event, $entity, $requestData);
     }
 
