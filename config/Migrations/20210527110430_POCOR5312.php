@@ -22,23 +22,7 @@ class POCOR5312 extends AbstractMigration
         //insert 
         $record = [
             [
-                'name' => 'Overview',
-                'controller' => 'Profiles',
-                'module' => 'Profile',
-                'category' => 'General',
-                'parent_id' => -1,
-                '_view' => 'Profiles.index|Profiles.view',
-                '_edit' => 'Profiles.edit',
-                '_add' => 'Profiles.add',
-                '_delete' => 'Profiles.remove',
-                '_execute' => NULL,
-                'order' => 420,
-                'visible' => 1,
-                'description' => NULL,
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s'),
+                'name' => 'Overview', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'General', 'parent_id' => -1,'_view' => 'Profiles.index|Profiles.view', '_edit' => 'Profiles.edit', '_add' => 'Profiles.add', '_delete' => 'Profiles.remove', '_execute' => NULL, 'order' => 420, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
 
@@ -50,61 +34,14 @@ class POCOR5312 extends AbstractMigration
 
         $data = [
             [
-                'name' => 'Accounts',
-                'controller' => 'Profiles',
-                'module' => 'Profile',
-                'category' => 'General',
-                'parent_id' => $parentId,
-                '_view' => 'Accounts.view',
-                '_edit' => 'Accounts.edit',
-                '_add' => 'Accounts.add',
-                '_delete' => 'Accounts.remove',
-                '_execute' => NULL,
-                'order' => 421,
-                'visible' => 1,
-                'description' => NULL,
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s'),
+                'name' => 'Accounts','controller' => 'Profiles', 'module' => 'Profile', 'category' => 'General', 'parent_id' => $parentId,
+                '_view' => 'Accounts.view', '_edit' => 'Accounts.edit', '_add' => 'Accounts.add', '_delete' => 'Accounts.remove', '_execute' => NULL, 'order' => 421, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ],
             [
-                'name' => 'Demographic',
-                'controller' => 'Profiles',
-                'module' => 'Profile',
-                'category' => 'General',
-                'parent_id' => $parentId,
-                '_view' => 'Demographic.index|Demographic.view',
-                '_edit' => 'Demographic.edit',
-                '_add' => 'Demographic.add',
-                '_delete' => 'Demographic.remove',
-                '_execute' => NULL,
-                'order' => 422,
-                'visible' => 1,
-                'description' => NULL,
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s'),
+                'name' => 'Demographic', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'General', 'parent_id' => $parentId, '_view' => 'Demographic.index|Demographic.view', '_edit' => 'Demographic.edit', '_add' => 'Demographic.add', '_delete' => 'Demographic.remove', '_execute' => NULL, 'order' => 422, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ],
             [
-                'name' => 'Identities',
-                'controller' => 'Profiles',
-                'module' => 'Profile',
-                'category' => 'General',
-                'parent_id' => $parentId,
-                '_view' => 'Identities.index|Identities.view',
-                '_edit' => 'Identities.edit',
-                '_add' => 'Identities.add',
-                '_delete' => 'Identities.remove',
-                '_execute' => NULL,
-                'order' => 423,
-                'visible' => 1,
-                'description' => NULL,
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s'),
+                'name' => 'Identities', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'General', 'parent_id' => $parentId, '_view' => 'Identities.index|Identities.view', '_edit' => 'Identities.edit', '_add' => 'Identities.add', '_delete' => 'Identities.remove', '_execute' => NULL, 'order' => 423, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'Nationalities',
@@ -531,8 +468,8 @@ class POCOR5312 extends AbstractMigration
                 'category' => 'Scholarships',
                 'parent_id' => $parentId,
                 '_view' => 'ScholarshipApplications.index|ScholarshipApplications.view',
-                '_edit' => 'SpecialNeedsPlans.edit',
-                '_add' => 'SpecialNeedsPlans.add',
+                '_edit' => 'ScholarshipApplications.edit',
+                '_add' => 'ScholarshipApplications.add',
                 '_delete' => 'ScholarshipApplications.remove',
                 '_execute' => NULL,
                 'order' => 446,
@@ -542,7 +479,41 @@ class POCOR5312 extends AbstractMigration
                 'modified' => NULL,
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s'),
-            ]
+            ],[
+              'name' => 'Students', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Guardian', 'parent_id' => $parentId, '_view' => 'ProfileStudents.index|ProfileStudents.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 447, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+              'name' => 'Students', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Overview', 'parent_id' => $parentId, '_view' => 'ProfileStudentUser.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 448, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+              'name' => 'Programmes', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentProgrammes.index|StudentProgrammes.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 449, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Classes', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentClasses.index|StudentClasses.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 450, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Subjects', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentSubjects.index|StudentSubjects.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 451, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Absences', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentAbsences.index|StudentAbsences.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 452, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Behaviours', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentBehaviours.index|StudentBehaviours.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 453, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Outcomes', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentOutcomes.index', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 454, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Competencies', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentCompetencies.index', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 455, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Assessments', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentResults.index.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 456, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Examinations', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentExaminationResults.index', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 457, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Report Cards', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentReportCards.index|StudentReportCards.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 458, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Awards', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentProgrammes.index|StudentProgrammes.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 459, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Extracurriculars', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentProgrammes.index|StudentProgrammes.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 460, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Textbooks', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentProgrammes.index|StudentProgrammes.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 461, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Risks', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentRisks.index|StudentRisks.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 462, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Associations', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentAssociations.index|StudentAssociations.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 463, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ] 
         ];
 
         $this->insert('security_functions', $data);
