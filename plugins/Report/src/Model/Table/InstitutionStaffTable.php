@@ -112,7 +112,12 @@ class InstitutionStaffTable extends AppTable
                         'area_administrative_code' => 'AreaAdministratives.code',
                         'area_administrative_name' => 'AreaAdministratives.name'
                     ]
-                ],
+                ],//POCOR-5388 starts
+                'Institutions.Localities' => [
+                    'fields' => [
+                        'locality_name' => 'Localities.name'
+                    ]
+                ],//POCOR-5388 ends
                 'Users' => [
                     'fields' => [
                         'Users.id', // this field is required for Identities and IdentityTypes to appear
@@ -329,7 +334,14 @@ class InstitutionStaffTable extends AppTable
             'type' => 'integer',
             'label' => '',
         ];
-
+        //POCOR-5388 starts
+        $newFields[] = [
+            'key' => 'Institutions.locality_name',
+            'field' => 'locality_name',
+            'type' => 'string',
+            'label' => __('Locality')
+        ];
+        //POCOR-5388 ends
         $newFields[] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
