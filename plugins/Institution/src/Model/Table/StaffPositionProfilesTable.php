@@ -552,7 +552,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->field('institution_staff_id', ['visible' => true, 'type' => 'hidden', 'value' => $entity->institution_staff_id]);
         $this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->name]]);
         $this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->staff_id)->name_with_id]]);
-        $this->field('start_date', ['type' => 'readonly']);
+        //$this->field('start_date', ['type' => 'readonly']);
+        $this->field('start_date', ['type' => 'date']);
         $this->field('staff_change_type_id');
         $this->field('staff_type_id', ['type' => 'select']);
         $this->field('current_staff_type', ['before' => 'staff_type_id']);
@@ -683,7 +684,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+    /*public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
     {
         $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
 
@@ -705,7 +706,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
 
         return $attr;
-    }
+    }*/
 
     public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
     {
@@ -805,7 +806,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $entity->staff_id = $staff->staff_id;
             $entity->institution_position_id = $staff->institution_position_id;
             $entity->institution_id = $staff->institution_id;
-            $entity->start_date = $staff->start_date;
+            //$entity->start_date = $staff->start_date;
+            $entity->start_date = '';
             $entity->end_date = $staff->end_date;
             $entity->staff_type_id = $staff->staff_type_id;
             $entity->FTE = $staff->FTE;
