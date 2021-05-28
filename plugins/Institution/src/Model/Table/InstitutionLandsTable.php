@@ -404,7 +404,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
         $entity->name = $entity->code;
         $extra['excludedModels'] = [
-            $this->CustomFieldValues->alias(),
+            //$this->CustomFieldValues->alias(),
             $this->InstitutionBuildings->alias()
         ];
 
