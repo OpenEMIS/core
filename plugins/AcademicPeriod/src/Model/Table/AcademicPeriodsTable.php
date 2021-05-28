@@ -188,7 +188,7 @@ class AcademicPeriodsTable extends AppTable
             }
         }
 
-        //webhook academoc period update starts
+        //webhook academic period update starts
         if(!$entity->isNew()) {
             $body = array();
             $updateBody = [
