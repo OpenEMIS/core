@@ -127,12 +127,28 @@ class StudentAttendanceMarkTypesTable extends AppTable
                     ])
             ->all();
 
-        if($dayId == -1){
-            $gradesResultSet = $gradesResultSet->toArray();
-        }else{
+        // if($dayId == -1){
+        //     $gradesResultSet = $gradesResultSet->toArray();
+        // }else{
             if (!$gradesResultSet->isEmpty()) {
                 $gradeList = $gradesResultSet->toArray();
                 $attendencePerDay = 1;
+                if ($dayId == -1) {
+                $conditions = [
+                            $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
+                        $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
+                        //$StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
+                        //$StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
+                        ];
+                }
+                else{
+                    $conditions = [
+                            $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
+                        $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
+                        $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
+                        $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
+                        ];
+                }
 
                 $markResultSet = $this
                     ->find()
@@ -158,12 +174,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
                      $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
                     ]
                     )
-                    ->where([
-                        $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
-                        $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
-                        $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
-                        $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
-                    ])
+                    ->where($conditions)
                     
                     ->all()
                     ->first();
@@ -223,7 +234,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
 
                 return $options;
             } 
-        }
+        //}
     }
 
     public function findPeriodByClass(Query $query, array $options)
