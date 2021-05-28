@@ -492,8 +492,22 @@ class WorkflowsTable extends AppTable {
 
             list($plugin, $modelAlias) = explode('.', $filter, 2);
             $labelText = Inflector::underscore(Inflector::singularize($modelAlias));
-            $filterOptions = TableRegistry::get($filter)->getList()->toArray();
-
+            /*POCOR-5833 starts*/
+            $LicenseTypes = TableRegistry::get('FieldOption.LicenseTypes');
+            $paramsPass = $this->ControllerAction->paramsPass();
+            if (!empty($paramsPass)) {
+                $workflowId = $this->paramsDecode(current($paramsPass))['id'];
+                $filterOptions = $LicenseTypes->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                            ->leftJoin([$this->WorkflowsFilters->alias() => $this->WorkflowsFilters->table()], [
+                                $this->WorkflowsFilters->aliasField('filter_id = ') . $LicenseTypes->aliasField('id'),
+                            ])
+                            ->where([$this->WorkflowsFilters->aliasField('workflow_id = ') => $workflowId])
+                            ->toArray();
+            } else {
+                $filterOptions = TableRegistry::get($filter)->getList()->toArray();
+            }
+            
+            /*POCOR-5833 ends*/
             // Trigger event to get the correct wofkflow filter options
             $subject = TableRegistry::get($model);
             $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', null, $subject);
