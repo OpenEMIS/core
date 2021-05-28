@@ -311,14 +311,14 @@ class POCOR5312 extends AbstractMigration
             ],
             [
                 'name' => 'Body Mass',
-                'controller' => 'Profiles',
+                'controller' => 'ProfileBodyMasses',
                 'module' => 'Profile',
                 'category' => 'Health',
                 'parent_id' => $parentId,
-                '_view' => 'ProfileBodyMasses.index|ProfileBodyMasses.view',
-                '_edit' => 'ProfileBodyMasses.edit',
-                '_add' => 'ProfileBodyMasses.add',
-                '_delete' => 'ProfileBodyMasses.remove',
+                '_view' => 'index|view',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'remove',
                 '_execute' => NULL,
                 'order' => 438,
                 'visible' => 1,
@@ -330,14 +330,14 @@ class POCOR5312 extends AbstractMigration
             ],
             [
                 'name' => 'Insurances',
-                'controller' => 'Profiles',
+                'controller' => 'ProfileInsurances',
                 'module' => 'Profile',
                 'category' => 'Health',
                 'parent_id' => $parentId,
-                '_view' => 'ProfileInsurances.index|ProfileInsurances.view',
-                '_edit' => 'ProfileInsurances.edit',
-                '_add' => 'ProfileInsurances.add',
-                '_delete' => 'ProfileInsurances.remove',
+                '_view' => 'index|view',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'remove',
                 '_execute' => NULL,
                 'order' => 439,
                 'visible' => 1,
@@ -469,8 +469,8 @@ class POCOR5312 extends AbstractMigration
                 'parent_id' => $parentId,
                 '_view' => 'ScholarshipApplications.index|ScholarshipApplications.view',
                 '_edit' => 'ScholarshipApplications.edit',
-                '_add' => 'ScholarshipApplications.add',
-                '_delete' => 'ScholarshipApplications.remove',
+                '_add' => 'ScholarshipsDirectory.index',
+                '_delete' => NULL,
                 '_execute' => NULL,
                 'order' => 446,
                 'visible' => 1,
@@ -513,7 +513,47 @@ class POCOR5312 extends AbstractMigration
              'name' => 'Risks', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentRisks.index|StudentRisks.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 462, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ],[
              'name' => 'Associations', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentAssociations.index|StudentAssociations.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 463, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
-            ] 
+            ],[
+             'name' => 'Guardians', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Guardians', 'parent_id' => $parentId, '_view' => 'ProfileGuardians.index|ProfileGuardians.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 464, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Timetables', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Timetables', 'parent_id' => $parentId, '_view' => 'StudentScheduleTimetable.index|StudentScheduleTimetable.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 465, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Finance', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Students - Finance', 'parent_id' => $parentId, '_view' => 'StudentBankAccounts.index|StudentBankAccounts.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 466, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Statuses', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Career', 'parent_id' => $parentId, '_view' => 'StaffEmploymentStatuses.index|StaffEmploymentStatuses.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 467, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Positions', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Career', 'parent_id' => $parentId, '_view' => 'StaffPositions.index|StaffPositions.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 468, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Classes', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Career', 'parent_id' => $parentId, '_view' => 'StaffClasses.index|StaffClasses.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 469, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Subjects', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Career', 'parent_id' => $parentId, '_view' => 'StaffSubjects.index|StaffSubjects.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 470, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Leave', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Career', 'parent_id' => $parentId, '_view' => 'StaffLeave.index|StaffLeave.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 471, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Attendances', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Career', 'parent_id' => $parentId, '_view' => 'StaffAttendances.index|StaffAttendances.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 472, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Behaviours', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Career', 'parent_id' => $parentId, '_view' => 'StaffBehaviours.index|StaffBehaviours.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 473, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Appraisals', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Career', 'parent_id' => $parentId, '_view' => 'StaffAppraisals.index|StaffAppraisals.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 474, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Duties', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Career', 'parent_id' => $parentId, '_view' => 'StaffDuties.index|StaffDuties.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 475, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Associations', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Career', 'parent_id' => $parentId, '_view' => 'StaffAssociations.index|StaffAssociations.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 476, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Bank Accounts', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Finance', 'parent_id' => $parentId, '_view' => 'StaffBankAccounts.index|StaffBankAccounts.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 477, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Salaries', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Finance', 'parent_id' => $parentId, '_view' => 'StaffSalaries.index|StaffSalaries.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 478, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Payslips', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Finance', 'parent_id' => $parentId, '_view' => 'StaffPayslips.index|StaffPayslips.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 479, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Training Needs', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Training', 'parent_id' => $parentId, '_view' => 'TrainingNeeds.index|TrainingNeeds.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 480, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Training Results', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Training', 'parent_id' => $parentId, '_view' => 'TrainingResults.index|TrainingResults.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 481, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Courses', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Training', 'parent_id' => $parentId, '_view' => 'Courses.index|Courses.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 482, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+             'name' => 'Timetables', 'controller' => 'Profiles', 'module' => 'Profile', 'category' => 'Staff - Timetables', 'parent_id' => $parentId, '_view' => 'ScheduleTimetable.index|ScheduleTimetable.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 483, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ]
         ];
 
         $this->insert('security_functions', $data);
