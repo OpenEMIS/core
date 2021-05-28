@@ -72,7 +72,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
+    {die("ll");
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         $params = [
@@ -114,15 +114,35 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->field('comments', ['visible' => false]);
         $this->field('requested_amount', ['visible' => false]);
         $this->setFieldOrder(['status_id', 'assignee_id', 'academic_period_id', 'scholarship_id', 'financial_assistance_type_id']);
-
-        // scholarship directory add button
-        if ($extra['toolbarButtons']->offsetExists('add')) {
-            $extra['toolbarButtons']['add']['url'] = [
-                'plugin' => 'Profile',
-                'controller' => 'ScholarshipsDirectory',
-                'action' => 'index'
-            ];
-        }
+        // from onUpdateToolbarButtons
+        $btnAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        
+        $extraButtons = [
+            'add' => [
+                'Profile' => ['Profile', 'Profiles'],
+                'action' => 'ScholarshipApplications',
+                'icon' => '<i class="fa kd-add"></i>',
+                'title' => __('Add')
+            ]
+        ];
+        
+        foreach ($extraButtons as $key => $attr) {
+            if ($this->AccessControl->check($attr['permission'])) {
+                // scholarship directory add button
+                if ($extra['toolbarButtons']->offsetExists('add')) {
+                    $extra['toolbarButtons']['add']['url'] = [
+                        'plugin' => 'Profile',
+                        'controller' => 'ScholarshipsDirectory',
+                        'action' => 'index'
+                    ];
+                }
+            }
+        }    
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
