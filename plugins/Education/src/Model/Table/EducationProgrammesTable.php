@@ -77,6 +77,7 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options){
         // Webhook Education Cycle create -- start
+
         if($entity->isNew()){
             $body = array();
             $body = [
@@ -89,6 +90,7 @@ class EducationProgrammesTable extends ControllerActionTable {
                 $Webhooks->triggerShell('education_programme_create', ['username' => $username], $body);
             }
         }
+
         // Webhook Education Cycle create -- end
     }
 
