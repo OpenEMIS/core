@@ -1,3 +1,11 @@
+### [3.66.0] - 2021-05-28
+- Bug Fixed: Institutions > Performance > Report Cards: Report Cards remained In-Progress
+- Bug Fixed: Institution > Staff > Edit: Remove Default Start Date for Staff Change of Start Date
+- Bug Fixed: Meals Modules: Add 's' to Distribution and Meal Programme
+- Bug Fixed: Reports> Institutions > Subjects: Data not reflected correctly on the report
+- Bug Fixed: Institution > Appointment > Duties > Add: Unable to add Head of Department
+- Bug Fixed: Institution > Attendance > Student: All Week page is not reflecting the attendance
+
 ### [3.65.4] - 2021-05-24
 - Bug Fixed: Institution > Student > Transfer: Start Date and End Date is reflected incorrectly
 - Bug Fixed: Changes to Data Archiving feature in OpenEMIS Core - Part II
