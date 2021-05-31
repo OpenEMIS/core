@@ -133,6 +133,18 @@ class EducationGradesTable extends ControllerActionTable
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
         $this->updateAdmissionAgeAfterDelete($entity);
+
+        // Webhook Education Grade Delete -- Start
+
+        $body = array();
+        $body = [
+            'grade_id' => $entity->id
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('education_grade_delete', ['username' => $username], $body);
+        }
+        // Webhook Education Grade Delete -- End
     }
 
      /**
