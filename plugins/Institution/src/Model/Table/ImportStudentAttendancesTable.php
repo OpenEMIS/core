@@ -49,6 +49,7 @@ class ImportStudentAttendancesTable extends AppTable {
             'Model.import.onImportPopulateAbsenceTypesData' => 'onImportPopulateAbsenceTypesData',
             'Model.import.onImportPopulateStudentAttendanceTypesData' => 'onImportPopulateStudentAttendanceTypesData',
             'Model.import.onImportPopulateInstitutionSubjectsData' => 'onImportPopulateInstitutionSubjectsData',
+            'Model.import.onImportPopulateInstitutionSubjectsId' => 'onImportPopulateInstitutionSubjectsId',
             'Model.import.onImportPopulatePeriodData' => 'onImportPopulatePeriodData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.import.onImportGetPeriodId' => 'onImportGetPeriodId',
@@ -233,7 +234,6 @@ class ImportStudentAttendancesTable extends AppTable {
     }
 
     public function onImportPopulateInstitutionSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
-        // die('eee');
         $classId = !empty($this->request->query('class')) ? $this->request->query('class') : '';
 
         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
@@ -420,7 +420,7 @@ class ImportStudentAttendancesTable extends AppTable {
         }
 
         if($tempRow['subject_id'] !=  1 && empty($tempRow['subject_id'])) {
-            $tempRow['subject_id'] = NULL;
+            $tempRow['subject_id'] = 0;
         }
 
          $GradeId = TableRegistry::get('institution_class_grades');
