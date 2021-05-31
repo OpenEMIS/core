@@ -103,7 +103,23 @@ class EducationCyclesTable extends ControllerActionTable
                 $Webhooks->triggerShell('education_cycle_create', ['username' => $username], $body);
             }
         }
-        // Webhook Education Cycle create -- start
+        // Webhook Education Cycle create -- end
+
+        //webhook Education Cycle update -- start
+        if(!$entity->isNew()){
+            $body = array();
+            $body = [
+                'education_level_id' =>$entity->education_level_id,
+                'education_cycle_id' =>$entity->education_level_id,
+                'education_cycle_name' =>$entity->name,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_cycle_update', ['username' => $username], $body);
+            }
+        }
+
+        //webhook Education Cycle update -- start
 
         // update the admission age in education grade if there is changes on the admission age
 		if (!$entity->isNew()) {
