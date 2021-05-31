@@ -226,19 +226,8 @@ class ImportAssessmentItemResultsTable extends AppTable {
                             $this->EducationSubjects->aliasField('code'),
                             $this->EducationSubjects->aliasField('name')
                         ])
-                        ->leftJoin([$this->AssessmentItems->alias() => $this->AssessmentItems->table()],
-                            [
-                                $this->EducationSubjects->aliasField('id = ') . $this->AssessmentItems->aliasField('education_subject_id')
-                        ])
-                        ->leftJoin([$this->Assessments->alias() => $this->Assessments->table()],
-                            [
-                                $this->AssessmentItems->aliasField('assessment_id = ') . $this->Assessments->aliasField('id')
-                        ])
-                        ->where([
-                            $this->Assessments->aliasField('academic_period_id') => $academicPeriodId,
-                            $this->EducationSubjects->aliasField('id') => $subjectId
-                        ]); 
-       
+                        ->where([$this->EducationSubjects->aliasField('id') => $subjectId]); 
+        
         $translatedReadableCol = $this->getExcelLabel($EducationSubjectsResults, 'Name');
 
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -358,7 +347,6 @@ class ImportAssessmentItemResultsTable extends AppTable {
                 ->first();
 
         $classId = $record->id;
-
         return $classId;
     }
 
@@ -435,7 +423,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
     }
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-        
+       
         $educationGradeId = $this->request->query['education_grade'];
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
@@ -453,6 +441,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
                         ->where([$this->AssessmentPeriods->aliasField('id') => $tempRow['assessment_period_id']])
                         ->first();
         $tempRow['assessment_id'] = $assessment->assessment_id;
+        $tempRow['institution_classes_id'] = $tempRow['class_id'];
         
         return true;
     }
