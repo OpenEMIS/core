@@ -212,7 +212,7 @@ class ProfilesTable extends ControllerActionTable
         $tabUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
         $templateUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
         $tabElements = [
-            'Profiles' => ['text' => __('Profiles')],
+            'Profiles' => ['text' => __('Profile')],
             'Templates' => ['text' => __('Templates')]
         ];
 		
