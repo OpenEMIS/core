@@ -114,14 +114,14 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->field('comments', ['visible' => false]);
         $this->field('requested_amount', ['visible' => false]);
         $this->setFieldOrder(['status_id', 'assignee_id', 'academic_period_id', 'scholarship_id', 'financial_assistance_type_id']);
-
-        // scholarship directory add button
-        if ($extra['toolbarButtons']->offsetExists('add')) {
-            $extra['toolbarButtons']['add']['url'] = [
-                'plugin' => 'Profile',
-                'controller' => 'ScholarshipsDirectory',
-                'action' => 'index'
-            ];
+        if ($this->AccessControl->check(['Profiles', 'ScholarshipsDirectory', 'index'])) {
+            if ($extra['toolbarButtons']->offsetExists('add')) {
+                $extra['toolbarButtons']['add']['url'] = [
+                    'plugin' => 'Profile',
+                    'controller' => 'ScholarshipsDirectory',
+                    'action' => 'index'
+                ];     
+            }  
         }
     }
 
