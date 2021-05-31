@@ -343,6 +343,7 @@ class NavigationComponent extends Component
             }
         } elseif (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
             $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
+            $navigations = $this->appendNavigation('Profiles.Personal', $navigations, $this->getProfileNavigation());
 
             $session = $this->request->session();
             $isStudent = $session->read('Auth.User.is_student');
@@ -403,10 +404,10 @@ class NavigationComponent extends Component
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
 
         $navigation = [
-            'Profiles.Profiles' => [
-                'title' => 'Profile',
+            'Profiles.Personal' => [
+                'title' => 'Personal',
                 'icon' => '<span><i class="fa kd-role"></i></span>',
-                'params' => ['plugin' => 'Profile', 'action' => 'Profiles', 0 => 'view', $userId]
+                'params' => ['plugin' => 'Profile', 'action' => 'Personal', 0 => 'view', $userId]
             ],
 
             'Institutions.Institutions.index' => [
@@ -1204,32 +1205,32 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Profiles.view' => [
                 'title' => 'General',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 //POCOR-5886 starts
-                'params' => ['plugin' => 'Profile', 'action' => 'Profiles', 0 => $profileUserId],//POCOR-5886 ends
-                'selected' => ['Profiles.Profiles.view', 'Profiles.Profiles.edit', 'Profiles.Profiles.pull', 'Profiles.Accounts', 'Profiles.Demographic', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'ProfileComments.index', 'ProfileComments.view', 'Profiles.Attachments', 'Profiles.History', 'Profiles.Contacts']
+                'params' => ['plugin' => 'Profile', 'action' => 'Personal', 0 => $profileUserId],//POCOR-5886 ends
+                'selected' => ['Profiles.Personal.view', 'Profiles.Personal.edit', 'Profiles.Personal.pull', 'Profiles.Accounts', 'Profiles.Demographic', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'ProfileComments.index', 'ProfileComments.view', 'Profiles.Attachments', 'Profiles.History', 'Profiles.Contacts']
             ],
             'Profiles.Healths' => [
                 'title' => 'Health',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Healths', 'Profiles.HealthAllergies', 'Profiles.HealthConsultations', 'Profiles.HealthFamilies', 'Profiles.HealthHistories', 'Profiles.HealthImmunizations', 'Profiles.HealthMedications', 'Profiles.HealthTests', 'ProfileBodyMasses.index', 'ProfileBodyMasses.add', 'ProfileBodyMasses.edit', 'ProfileBodyMasses.view', 'ProfileBodyMasses.delete', 'ProfileInsurances.index', 'ProfileInsurances.add', 'ProfileInsurances.edit', 'ProfileInsurances.view', 'ProfileInsurances.delete']
             ],
             'Profiles.Employments' => [
                 'title' => 'Professional',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Employments', 'Profiles.StaffQualifications', 'Profiles.StaffExtracurriculars', 'Profiles.StaffMemberships', 'Profiles.StaffLicenses', 'Profiles.StaffAwards']
             ],
             'Profiles.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.SpecialNeedsReferrals', 'Profiles.SpecialNeedsAssessments', 'Profiles.SpecialNeedsServices', 'Profiles.SpecialNeedsDevices', 'Profiles.SpecialNeedsPlans']
             ],
             'Profiles.ScholarshipApplications' => [
                 'title' => 'Scholarships',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.ScholarshipApplications', 'ScholarshipsDirectory.index', 'ScholarshipsDirectory.view', 'ProfileApplicationInstitutionChoices.index', 'ProfileApplicationInstitutionChoices.view', 'ProfileApplicationInstitutionChoices.add', 'ProfileApplicationInstitutionChoices.edit', 'ProfileApplicationInstitutionChoices.delete', 'ProfileApplicationAttachments.index', 'ProfileApplicationAttachments.view', 'ProfileApplicationAttachments.add', 'ProfileApplicationAttachments.edit', 'ProfileApplicationAttachments.delete']
             ],
