@@ -32,14 +32,18 @@ class ConfigWebhooksTable extends ControllerActionTable
         'programme_update'    => 'Programme Update',
         'programme_delete'    => 'Programme Delete',
         'class_delete'        => 'Class Delete',
-        'programme_delete'    => 'Programme Delete',  
+        'programme_delete'    => 'Programme Delete',
         'subject_delete'      => 'Subject Delete',
-        'programme_delete'    => 'Programme Delete',  
+        'programme_delete'    => 'Programme Delete',
         'student_delete'      => 'Student Delete',
         'staff_delete'        => 'Staff Delete',
         'security_user_delete' => 'Delete Security User',
+<<<<<<< HEAD
 		'academic_period_create' => 'Academic Period Create',
         'academic_period_update' => 'Academic Period Update'
+=======
+        'education_cycle_create' => 'Education Structure Cycle Create',
+>>>>>>> origin/POCOR-6091
     ];
 
     public function initialize(array $config)
