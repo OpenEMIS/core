@@ -61,6 +61,27 @@ class SecurityRolesTable extends ControllerActionTable
         ]);
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    {
+        // webhook create role starts
+         if($entity->isNew()) {
+          
+            $body = array();
+            $createRole = [
+                'role_id' =>$entity->id,
+                'role_name' =>$entity->name,
+               
+            ];
+          
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('academic_period_create', [], $createRole);
+            }
+        }
+
+        // webhook academic period update ends
+
+    }
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
