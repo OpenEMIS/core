@@ -63,6 +63,7 @@ class SecurityRolesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
+      
         // webhook create role starts
          if($entity->isNew()) {
           
@@ -75,11 +76,31 @@ class SecurityRolesTable extends ControllerActionTable
           
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
-                $Webhooks->triggerShell('academic_period_create', [], $createRole);
+                $Webhooks->triggerShell('role_create', [], $createRole);
             }
         }
 
-        // webhook academic period update ends
+        // webhook create role ends
+
+        // webhook update role starts
+         if(!$entity->isNew()) {
+          
+           
+            $updateRole = [
+                'role_id' =>$entity->id,
+                'role_name' =>$entity->name,
+               
+            ];
+          
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('role_update', [], $updateRole);
+            }
+        }
+
+        // webhook update role ends
+
+      
 
     }
     public function validationDefault(Validator $validator)
