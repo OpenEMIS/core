@@ -41,7 +41,9 @@ class ConfigWebhooksTable extends ControllerActionTable
 		'academic_period_create' => 'Academic Period Create',
         'academic_period_update' => 'Academic Period Update',
         'education_cycle_create' => 'Education Structure Cycle Create',
-        'education_cycle_update' => 'Education Structure Cycle Update'
+        'education_cycle_update' => 'Education Structure Cycle Update',
+         'role-create'           => 'Role Create',
+
     ];
 
     public function initialize(array $config)
