@@ -200,6 +200,23 @@ class AreasTable extends ControllerActionTable
         }
         // Webhook Education Area create -- end
 
+        //webhook Education Cycle update -- start
+        if(!$entity->isNew()){
+            $body = array();
+            $body = [
+                'area_id' =>$entity->id,
+                'area_name' =>$entity->name,
+                'area_code' =>$entity->code,
+                'area_parent_id' =>$entity->parent_id,
+                'area_level_id' =>$entity->area_level_id
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('area_education_update', ['username' => $username], $body);
+            }
+        }
+        //webhook Education Cycle update -- end
+
     }
 
     public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
