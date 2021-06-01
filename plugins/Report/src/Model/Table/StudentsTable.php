@@ -9,7 +9,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;;
+use App\Model\Table\AppTable;
+use PDOException;
 
 class StudentsTable extends AppTable
 {
@@ -321,87 +322,286 @@ class StudentsTable extends AppTable
     }
 
    
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    {
-      
-        $query
-            ->select([
-                'username' => 'Students.username',
-                'openemis_no' => 'Students.openemis_no',
-                'first_name' => 'Students.first_name',
-                'middle_name' => 'Students.middle_name',
-                'third_name' => 'Students.third_name',
-                'last_name' => 'Students.last_name',
-                'preferred_name' => 'Students.preferred_name',
-                'email' => 'Students.email',
-                'address' => 'Students.address',
-                'postal_code' => 'Students.postal_code',
-                'address_area' => 'AddressAreas.name',
-                'birthplace_area' => 'BirthplaceAreas.name',
-                'gender' => 'Genders.name',
-                'date_of_birth' => 'Students.date_of_birth',
-                'date_of_death' => 'Students.date_of_death',
-                'nationality_name' => 'MainNationalities.name',
-                'identity_type' => 'MainIdentityTypes.name',
-                'identity_number' => 'Students.identity_number',
-                'external_reference' => 'Students.external_reference',
-                'last_login' => 'Students.last_login',
-                'preferred_language' => 'Students.preferred_language',
-             ])
-            ->contain(['Genders', 'AddressAreas', 'BirthplaceAreas', 'MainNationalities', 'MainIdentityTypes'])
-            ->where([$this->aliasField('is_student') => 1]);
-            
+    public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $enrolled = $StudentStatuses->getIdByCode('CURRENT');
+        
+        $query->join([
+            'InstitutionStudent' => [
+                'type' => 'inner',
+                'table' => 'institution_students',
+                'conditions' => [
+                    'InstitutionStudent.student_id = '.$this->aliasField('id')
+                ],
+            ],
+            'Institution' => [
+                'type' => 'inner',
+                'table' => 'institutions',
+                'conditions' => [
+                    'Institution.id = InstitutionStudent.institution_id'
+                ]
+            ],
+            'InstitutionTypes' => [
+                'type' => 'inner',
+                'table' => 'institution_types',
+                'conditions' => [
+                    'InstitutionTypes.id = Institution.institution_type_id'
+                ]
+            ],
+            'Localities' => [
+                'type' => 'inner',
+                'table' => 'institution_localities',
+                'conditions' => [
+                    'Localities.id = Institution.institution_locality_id'
+                ]
+            ],
+            'Areas' => [
+                'type' => 'inner',
+                'table' => 'areas',
+                'conditions' => [
+                    'Areas.id = Institution.area_id'
+                ]
+            ],
+            'AreaAdministratives' => [
+                'type' => 'inner',
+                'table' => 'area_administratives',
+                'conditions' => [
+                    'AreaAdministratives.id = Institution.area_administrative_id'
+                ]
+            ],
+        ]);
+        $query->select([
+            'username' => 'Students.username',
+            'openemis_no' => 'Students.openemis_no',
+            'first_name' => 'Students.first_name',
+            'middle_name' => 'Students.middle_name',
+            'third_name' => 'Students.third_name',
+            'last_name' => 'Students.last_name',
+            'preferred_name' => 'Students.preferred_name',
+            'email' => 'Students.email',
+            'address' => 'Students.address',
+            'postal_code' => 'Students.postal_code',
+            'address_area' => 'AddressAreas.name',
+            'birthplace_area' => 'BirthplaceAreas.name',
+            'gender' => 'Genders.name',
+            'date_of_birth' => 'Students.date_of_birth',
+            'date_of_death' => 'Students.date_of_death',
+            'nationality_name' => 'MainNationalities.name',
+            'identity_type' => 'MainIdentityTypes.name',
+            'identity_number' => 'Students.identity_number',
+            'external_reference' => 'Students.external_reference',
+            'last_login' => 'Students.last_login',
+            'preferred_language' => 'Students.preferred_language',
+            'EndDate' => 'InstitutionStudent.end_date',
+            'institution_name' => 'Institution.name',
+            'institution_type' => 'InstitutionTypes.name',
+            'institution_localities' => 'Localities.name',
+            'area_administratives'=> 'AreaAdministratives.name',
+            'area_education'=> 'Areas.name',
+            'external_reference' => 'Students.external_reference'
+        ])
+        ->contain(['Genders', 'AddressAreas', 'BirthplaceAreas', 'MainNationalities', 'MainIdentityTypes'])
+        ->where([$this->aliasField('is_student') => 1])
+        ->group([$this->aliasField('openemis_no')]);
+        
+        
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
-    {
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $identity = $IdentityType->getDefaultEntity();
+
+        $settings['identity'] = $identity;
+
+        $extraField[] = [
+            'key' => 'Students.username',
+            'field' => 'username',
+            'type' => 'string',
+            'label' => 'Username',
+        ];
+
+        $extraField[] = [
+            'key' => 'Students.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => 'OpenEMIS ID',
+        ];
+
+        $extraField[] = [
+            'key' => 'Students.first_name',
+            'field' => 'first_name',
+            'type' => 'string',
+            'label' => 'First Name',
+        ];
+
+        $extraField[] = [
+            'key' => 'Students.middle_name',
+            'field' => 'middle_name',
+            'type' => 'string',
+            'label' => 'Middle Name',
+        ];
+
+        $extraField[] = [
+            'key' => 'Students.third_name',
+            'field' => 'third_name',
+            'type' => 'string',
+            'label' => 'Third Name',
+        ];
+
+        $extraField[] = [
+            'key' => 'Students.last_name',
+            'field' => 'last_name',
+            'type' => 'string',
+            'label' => 'Last Name',
+        ];
+
+        $extraField[] = [
+            'key' => 'Students.preferred_name',
+            'field' => 'preferred_name',
+            'type' => 'string',
+            'label' => 'Preferred Name',
+        ];
+
+        $extraField[] = [
+            'key' => 'Students.email',
+            'field' => 'email',
+            'type' => 'string',
+            'label' => 'Email',
+        ];
+
+        $extraField[] = [
+            'key' => 'Students.address',
+            'field' => 'address',
+            'type' => 'string',
+            'label' => 'Address',
+        ];
+
+        $extraField[] = [
+            'key' => 'Students.postal_code',
+            'field' => 'postal_code',
+            'type' => 'string',
+            'label' => 'Postal Code',
+        ];
+
+        $extraField[] = [
+            'key' => 'AddressAreas.name',
+            'field' => 'address_area',
+            'type' => 'string',
+            'label' => 'Address Area',
+        ];
+
+
+        $extraField[] = [
+            'key' => 'BirthplaceAreas.name',
+            'field' => 'birthplace_area',
+            'type' => 'string',
+            'label' => 'Birthplace Area',
+        ];
+
+        $extraField[] = [
+            'key' => 'Genders.name',
+            'field' => 'gender',
+            'type' => 'string',
+            'label' => 'Gender',
+        ];
+
+        // $extraField[] = [
+        //     'key' => 'Students.date_of_birth',
+        //     'field' => 'date_of_birth',
+        //     'type' => 'string',
+        //     'label' => 'Date Of Birth',
+        // ];
+
+        $extraField[] = [
+            'key' => 'Students.date_of_death',
+            'field' => 'date_of_death',
+            'type' => 'string',
+            'label' => 'Date Of Death',
+        ];
+
+        $extraField[] = [
+            'key' => 'MainNationalities.name',
+            'field' => 'nationality_name',
+            'type' => 'string',
+            'label' => 'Main Nationality',
+        ];
+
+        $extraField[] = [
+            'key' => 'MainIdentityTypes.name',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => 'Main Identity Type',
+        ];
+
+        $extraField[] = [
+            'key' => 'Students.identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => 'Identity Number',
+        ];
+
+        $extraField[] = [
+            'key' => 'Institution.name',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => 'Institution Name',
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionTypes.name',
+            'field' => 'institution_type',
+            'type' => 'string',
+            'label' => 'Institution Type',
+        ];
+
+        $extraField[] = [
+            'key' => 'Localities.name',
+            'field' => 'institution_localities',
+            'type' => 'string',
+            'label' => 'Institution Locality',
+        ];
+
+        $extraField[] = [
+            'key' => 'Areas.name',
+            'field' => 'area_education',
+            'type' => 'string',
+            'label' => 'Area Education',
+        ];
+
+        $extraField[] = [
+            'key' => 'AreaAdministratives.name',
+            'field' => 'area_administratives',
+            'type' => 'string',
+            'label' => 'Area Administration',
+        ];
+    
         
-        foreach ($fields as $key => $field) { 
-            if ($field['field'] == 'identity_type_id') { 
-                $fields[$key] = [
-                    'key' => 'MainIdentityTypes.name',
-                    'field' => 'identity_type',
-                    'type' => 'string',
-                    'label' => __('Main Identity Type')
-                ];
-            }
+        $extraField[] = [
+            'key' => 'Students.external_reference',
+            'field' => 'external_reference',
+            'type' => 'string',
+            'label' => 'External Reference',
+        ];
 
-            if ($field['field'] == 'nationality_id') { 
-                $fields[$key] = [
-                    'key' => 'MainNationalities.name',
-                    'field' => 'nationality_name',
-                    'type' => 'string',
-                    'label' => __('Main Nationality')
-                ];
-            }
+        $extraField[] = [
+            'key' => 'Students.last_login',
+            'field' => 'external_reference',
+            'type' => 'string',
+            'label' => 'Last Login',
+        ];
 
-            if ($field['field'] == 'address_area_id') { 
-                $fields[$key] = [
-                    'key' => 'AddressAreas.name',
-                    'field' => 'address_area',
-                    'type' => 'string',
-                    'label' => __('Address Area')
-                ];
-            }
+        $extraField[] = [
+            'key' => 'Students.preferred_language',
+            'field' => 'preferred_language',
+            'type' => 'string',
+            'label' => 'Preferred Language',
+        ];
 
-            if ($field['field'] == 'birthplace_area_id') { 
-                $fields[$key] = [
-                    'key' => 'BirthplaceAreas.name',
-                    'field' => 'birthplace_area',
-                    'type' => 'string',
-                    'label' => __('Birthplace Area')
-                ];
-            }
 
-            if ($field['field'] == 'gender_id') { 
-                $fields[$key] = [
-                    'key' => 'Genders.name',
-                    'field' => 'gender',
-                    'type' => 'string',
-                    'label' => __('Gender')
-                ];
-            }
-        }
+        // $newFields = array_merge($extraField, $fields->getArrayCopy());
+        $fields->exchangeArray($extraField);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
