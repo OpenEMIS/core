@@ -105,6 +105,20 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         // Webhook Education grade subject -- end
     }
 
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options){
+
+        // Webhook Education Grade Subject Delete -- Start
+        $body = array();
+        $body = [
+            'grade_subject_id' => $entity->id
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('education_grade_subject_delete', ['username' => $username], $body);
+        }
+        // Webhook Education Grade Subject Delete -- End
+    }
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
         // visible field is not used for now
