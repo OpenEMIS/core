@@ -226,6 +226,7 @@ class EducationSystemsTable extends ControllerActionTable
     
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+		
     	$session = $this->request->session();
     	if ($entity->isNew()) {
             $academic_period_id = $entity->academic_period_id;
@@ -392,7 +393,27 @@ class EducationSystemsTable extends ControllerActionTable
 					} // if educationCyclesData
 				}//level ends
 			}
-		} //if educationLevelsData            	           
+		} //if educationLevelsData     
+		
+		// Webhook Education Structure System starts
+		if($entity->isNew()) {
+
+			$educationStructure = [
+				'education_system_id' =>$entity->id,
+				'education_system_name' =>$entity->name,
+				'academic_period_id' =>$entity->academic_period_id
+			];
+		
+			$Webhooks = TableRegistry::get('Webhook.Webhooks');
+			if ($this->Auth->user()) {
+				$Webhooks->triggerShell('education_structure_system_create', [], $educationStructure);
+			}
+		}
+
+		// Webhook Education Structure System ends
     }
+
     //POCOR-5696 ends
+
+	
 }
