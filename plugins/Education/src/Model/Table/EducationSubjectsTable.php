@@ -139,6 +139,20 @@ class EducationSubjectsTable extends ControllerActionTable
         // Webhook Education Subject` update -- end
     }
 
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options){
+
+        // Webhook Education Subject Delete -- Start
+        $body = array();
+        $body = [
+            'subject_id' => $entity->id
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('education_subject_delete', ['username' => $username], $body);
+        }
+        // Webhook Education Subject Delete -- End
+    }
+
     public function getFieldOfStudiesOptions()
     {
         $EducationFieldOfStudies = TableRegistry::get('Education.EducationFieldOfStudies');
