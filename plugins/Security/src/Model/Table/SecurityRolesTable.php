@@ -103,6 +103,21 @@ class SecurityRolesTable extends ControllerActionTable
       
 
     }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // Webhook role delete -- Start
+       
+        $deleteBody = [
+            'role_id' => $entity->id
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('role_delete', [], $deleteBody);
+        }
+        // Webhook role delete -- Ends
+    }
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
