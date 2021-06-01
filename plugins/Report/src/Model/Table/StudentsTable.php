@@ -507,12 +507,12 @@ class StudentsTable extends AppTable
             'label' => 'Gender',
         ];
 
-        // $extraField[] = [
-        //     'key' => 'Students.date_of_birth',
-        //     'field' => 'date_of_birth',
-        //     'type' => 'string',
-        //     'label' => 'Date Of Birth',
-        // ];
+        $extraField[] = [
+            'key' => 'Students.date_of_birth',
+            'field' => 'date_of_birth',
+            'type' => 'date',
+            'label' => 'Date Of Birth',
+        ];
 
         $extraField[] = [
             'key' => 'Students.date_of_death',
