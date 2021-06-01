@@ -88,6 +88,21 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             }
         }
         // Webhook Education Subject` create -- end
+
+        // Webhook Education Subject grade subject -- start
+        if(!$entity->isNew()){
+            $body = array();
+            $body = [
+                'grade_subject_id' =>$entity->id,
+                'education_subject_id' =>$entity->education_subject_id,
+                'education_grade_id' =>$entity->education_grade_id,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_grade_subject_update', ['username' => $username], $body);
+            }
+        }
+        // Webhook Education grade subject -- end
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
