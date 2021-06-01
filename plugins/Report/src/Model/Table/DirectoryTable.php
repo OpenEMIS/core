@@ -84,6 +84,11 @@ class DirectoryTable extends AppTable
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('openemis_no'),
+				'user_name' => $query->func()->concat([
+					$this->aliasField('first_name') => 'literal',
+					" ",
+					$this->aliasField('last_name') => 'literal'
+				]),
                 $this->aliasField('first_name'),
                 $this->aliasField('middle_name'),
                 $this->aliasField('third_name'),
@@ -138,6 +143,13 @@ class DirectoryTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
+        $extraFields[] = [
+            'key' => 'user_name',
+            'field' => 'user_name',
+            'type' => 'string',
+            'label' => __('Username')
+        ];
+
         $extraFields[] = [
             'key' => 'Directory.openemis_no',
             'field' => 'openemis_no',
