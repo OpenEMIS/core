@@ -76,10 +76,7 @@ class EducationLevelsTable extends ControllerActionTable
 
         $body = array();
         $body = [
-            'education_system_id' =>$entity->education_system_id,
             'education_level_id' =>$entity->id,
-            'education_level_name' =>$entity->name,
-            'education_level_isced' =>$entity->education_level_isced_id,
         ];
         $Webhooks = TableRegistry::get('Webhook.Webhooks');
         if($this->Auth->user()){
