@@ -116,7 +116,10 @@ class HealthReportsTable extends AppTable
         }
         
         if($healthReportType == 'Overview'){
-            $query
+            
+			$conditions[$this->aliasField('student_status_id')] = '1';
+            
+			$query
                 ->select([
                     $this->aliasField('student_id'),
                     $this->aliasField('education_grade_id'),
