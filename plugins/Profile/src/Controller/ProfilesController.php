@@ -177,14 +177,16 @@ class ProfilesController extends AppController
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        //$events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored'; //POCOR-5312
         return $events;
     }
 
-    public function isActionIgnored(Event $event, $action)
+    //POCOR-5312 starts
+    /*public function isActionIgnored(Event $event, $action)
     {
         return true;
-    }
+    }*/
+    //POCOR-5312 ends
 
     // AngularJS
     public function StudentResults()
@@ -320,7 +322,7 @@ class ProfilesController extends AppController
             }
 
             $alias = $model->alias();
-            $excludedModel = ['ScholarshipApplications', 'Leave', 'StudentReportCards'];
+            $excludedModel = ['ScholarshipApplications', 'Leave', 'StudentReportCards', 'Contacts'];
 
             if (!in_array($alias, $excludedModel)) {
                 $model->toggle('add', false);
@@ -529,7 +531,7 @@ class ProfilesController extends AppController
                 $tabElements[$key]['url']['action'] = 'Personal';
                 $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
-            } else if ($key == 'Comments') {
+            } else if ($key == 'Comments' && $this->AccessControl->check(['Profiles', 'ProfileComments'])) {
                 $url = [
                     'plugin' => $plugin,
                     'controller' => 'ProfileComments',
