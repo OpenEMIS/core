@@ -106,6 +106,16 @@ class StudentContactsTable extends AppTable  {
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
         $query
+			->select([
+                $this->aliasField('value'),
+                $this->aliasField('preferred'),
+                $this->aliasField('security_user_id'),
+                'user_name' => $query->func()->concat([
+					'Users.first_name' => 'literal',
+					" ",
+					'Users.last_name' => 'literal'
+				]),
+            ])
             ->contain([
                 'Users' => [
                     'fields' => [
@@ -120,7 +130,41 @@ class StudentContactsTable extends AppTable  {
                 ],
             ])
             ->order([$this->aliasField('security_user_id')])
-            ->where(['Users.is_student' => 1]);
+            ->where(['Users.is_student' => 1])
+			->group([
+                $this->aliasField('security_user_id')
+            ]);
+		    $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+				
+				$ContactTypes = TableRegistry::get('User.ContactTypes');
+                    
+				$contactTypesData = $ContactTypes->find()
+					->select([
+						'contact_option_id' => $ContactTypes->aliasfield('contact_option_id'),
+						'contact_type' => $ContactTypes->aliasfield('name')
+					])
+					->innerJoin(['UserContacts' => 'user_contacts' ], [
+						'UserContacts.contact_type_id = ' . $ContactTypes->aliasField('id'),
+					])
+					->where(['UserContacts.security_user_id' => $row->security_user_id])
+					->toArray();
+					
+					if(!empty($contactTypesData)) {
+						foreach($contactTypesData as $data) {
+							$row['value_'.$data->contact_option_id] = $row->value;
+							$row['description_'.$data->contact_option_id] = $data->contact_type;
+							if($row->preferred == 1) {
+								$row['preferred_'.$data->contact_option_id] = 'Yes';								
+							} else {
+								$row['preferred_'.$data->contact_option_id] = 'No';
+							}
+						}
+					}
+                return $row;
+            });
+        });
+    	
 	}
 
 	public function onExcelGetPreferred(Event $event, Entity $entity) {
@@ -130,8 +174,21 @@ class StudentContactsTable extends AppTable  {
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-        $cloneFields = $fields->getArrayCopy();
-
+		//echo '<pre>';print_r($cloneFields);die;
+		$extraFields[] = [
+            'key' => 'institution_name',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution Name')
+        ];
+		
+		$extraFields[] = [
+            'key' => 'education_name',
+            'field' => 'education_name',
+            'type' => 'string',
+            'label' => __('Education Grade')
+        ];
+		
         $extraFields[] = [
             'key' => 'openemis_no',
             'field' => 'openemis_no',
@@ -140,28 +197,57 @@ class StudentContactsTable extends AppTable  {
         ];    
 
         $extraFields[] = [
+            'key' => 'user_name',
+            'field' => 'user_name',
+            'type' => 'string',
+            'label' => __('Student')
+        ];    
+
+        $extraFields[] = [
             'key' => 'identity_number',
             'field' => 'identity_number',
             'type' => 'string',
             'label' => __('Identity Number')
         ];
+		
+		$ContactOptions = TableRegistry::get('contact_options');
+                    
+        $contactOptionsData = $ContactOptions->find()
+            ->select([
+                'contact_option_id' => $ContactOptions->aliasfield('id'),
+                'contact_option' => $ContactOptions->aliasfield('name')
+            ])
+            ->toArray();
+       
+		if(!empty($contactOptionsData)) {
+			foreach($contactOptionsData as $data) {
+				$contact_option_id = $data->contact_option_id;
+				$contact_option = $data->contact_option;
+				$extraFields[] = [
+					'key' => '',
+					'field' => 'value_'.$contact_option_id,
+					'type' => 'string',
+					'label' => __($contact_option)
+				];
+				
+				$extraFields[] = [
+					'key' => '',
+					'field' => 'description_'.$contact_option_id,
+					'type' => 'string',
+					'label' => __('Description')
+				];
+				
+				$extraFields[] = [
+					'key' => '',
+					'field' => 'preferred_'.$contact_option_id,
+					'type' => 'string',
+					'label' => __('Preferred')
+				];
 
-        $extraFields[] = [
-            'key' => 'education_name',
-            'field' => 'education_name',
-            'type' => 'string',
-            'label' => __('Education Grade')
-        ];
+			}
+		}
 
-        $extraFields[] = [
-            'key' => 'institution_name',
-            'field' => 'institution_name',
-            'type' => 'string',
-            'label' => __('Institution Name')
-        ];
-
-        $newFields = array_merge($cloneFields, $extraFields);
-        $fields->exchangeArray($newFields);
+        $fields->exchangeArray($extraFields);
     }
 
 }
