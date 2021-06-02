@@ -272,6 +272,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->field('end_year', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('infrastructure_condition_id', ['visible' => false]);
+        $this->field('area', ['visible' => false]);
         $this->field('previous_institution_room_id', ['visible' => false]);
 
         $extra['elements']['toolbarElements'] = $this->addBreadcrumbElement();
@@ -871,7 +872,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     private function setupFields(Entity $entity)
     {
         $this->setFieldOrder([
-            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_institution_room_id', 'new_room_type', 'new_start_date'
+            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_institution_room_id','area', 'new_room_type', 'new_start_date'
         ]);
 
         $this->field('change_type');
