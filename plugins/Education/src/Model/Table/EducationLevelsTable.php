@@ -37,7 +37,7 @@ class EducationLevelsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options){
 
-        // Webhook Education Cycle create -- start
+        // Webhook Education Level create -- start
         if($entity->isNew()){
             $body = array();
             $body = [
@@ -51,7 +51,23 @@ class EducationLevelsTable extends ControllerActionTable
                 $Webhooks->triggerShell('education_level_create', ['username' => $username], $body);
             }
         }
-        // Webhook Education Cycle create -- end
+        // Webhook Education Level create -- end
+
+        // Webhook Education Level update -- start
+        if(!$entity->isNew()){
+            $body = array();
+            $body = [
+                'education_system_id' =>$entity->education_system_id,
+                'education_level_id' =>$entity->id,
+                'education_level_name' =>$entity->name,
+                'education_level_isced' =>$entity->education_level_isced_id,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_level_update', ['username' => $username], $body);
+            }
+        }
+        // Webhook Education Level update -- end
     }
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
