@@ -226,7 +226,7 @@ class EducationSystemsTable extends ControllerActionTable
     
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-		
+	
     	$session = $this->request->session();
     	if ($entity->isNew()) {
             $academic_period_id = $entity->academic_period_id;
@@ -411,6 +411,24 @@ class EducationSystemsTable extends ControllerActionTable
 		}
 
 		// Webhook Education Structure System ends
+
+
+		 //webhook education structure system update starts
+		 if(!$entity->isNew()) {
+            $body = array();
+            $educationUpdateArray = [
+				'education_system_id' =>$entity->id,
+				'education_system_name' =>$entity->name,
+				'visible' =>$entity->visible,
+				'academic_period_id' =>$entity->academic_period_id
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_structure_system_update', [], $educationUpdateArray);
+            }
+        }
+
+        // webhook education structure system update ends
     }
 
     //POCOR-5696 ends
