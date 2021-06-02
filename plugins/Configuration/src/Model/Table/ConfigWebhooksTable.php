@@ -57,8 +57,8 @@ class ConfigWebhooksTable extends ControllerActionTable
         'area_education_update' => 'Area Education Update',
         'area_education_delete' => 'Area Education Delete',
         'education_level_create' => 'Education Structure Level Create',
-        'education_level_update' => 'Education Structure Level Update'
-
+        'education_level_update' => 'Education Structure Level Update',
+        'education_level_delete' => 'Education Structure Level Delete'
     ];
 
     public function initialize(array $config)
