@@ -1287,7 +1287,7 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Staff' => [
                 'title' => 'Staff',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'link' => false,
             ],
 
@@ -1324,7 +1324,7 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Student' => [
                 'title' => 'Student',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'link' => false,
             ],
             'Profiles.ProfileGuardians' => [
@@ -1361,7 +1361,7 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Guardian' => [
                 'title' => 'Guardian',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'link' => false,
             ],
             'Profiles.ProfileStudents.index' => [
