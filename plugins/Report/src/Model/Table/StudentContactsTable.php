@@ -107,8 +107,6 @@ class StudentContactsTable extends AppTable  {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
         $query
 			->select([
-                $this->aliasField('value'),
-                $this->aliasField('preferred'),
                 $this->aliasField('security_user_id'),
                 'user_name' => $query->func()->concat([
 					'Users.first_name' => 'literal',
@@ -142,19 +140,21 @@ class StudentContactsTable extends AppTable  {
 				$contactTypesData = $ContactTypes->find()
 					->select([
 						'contact_option_id' => $ContactTypes->aliasfield('contact_option_id'),
-						'contact_type' => $ContactTypes->aliasfield('name')
+						'contact_type' => $ContactTypes->aliasfield('name'),
+						'value' => 'UserContacts.value',
+						'preferred' => 'UserContacts.preferred'
 					])
 					->innerJoin(['UserContacts' => 'user_contacts' ], [
 						'UserContacts.contact_type_id = ' . $ContactTypes->aliasField('id'),
 					])
 					->where(['UserContacts.security_user_id' => $row->security_user_id])
 					->toArray();
-					
+			
 					if(!empty($contactTypesData)) {
 						foreach($contactTypesData as $data) {
-							$row['value_'.$data->contact_option_id] = $row->value;
+							$row['value_'.$data->contact_option_id] = $data->value;
 							$row['description_'.$data->contact_option_id] = $data->contact_type;
-							if($row->preferred == 1) {
+							if($data->preferred == 1) {
 								$row['preferred_'.$data->contact_option_id] = 'Yes';								
 							} else {
 								$row['preferred_'.$data->contact_option_id] = 'No';
@@ -174,7 +174,6 @@ class StudentContactsTable extends AppTable  {
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-		//echo '<pre>';print_r($cloneFields);die;
 		$extraFields[] = [
             'key' => 'institution_name',
             'field' => 'institution_name',
