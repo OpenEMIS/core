@@ -96,7 +96,7 @@ class ReportsController extends AppController
                 'Report.InstitutionInfrastructures' => __('Infrastructure'),
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
                 'Report.InstitutionCommittees' => __('Committees'),
-                //'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),//POCOR-5852 
+                //'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),//POCOR-5852
                 'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report'),
                 'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
                 'Report.Income' => __('Income Report'),
@@ -105,19 +105,19 @@ class ReportsController extends AppController
         } elseif ($module == 'Students') {
             $options = [
                 'Report.Students' => __('Students'),
-                'Report.StudentsPhoto' => __('Students Photo'), 
+                'Report.StudentsPhoto' => __('Students Photo'),
                 'Report.StudentIdentities' => __('Identities'),
                 'Report.StudentContacts' => __('Contacts'),
                 'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School'),
                 //'Report.StudentGuardians' => __('Guardians'), //POCOR-5393
                 'Report.HealthReports' => __('Student Health Report'),
-                'Report.BodyMassStatusReports' => __('BMI Status Report'), 
+                'Report.BodyMassStatusReports' => __('BMI Status Report'),
                 'Report.StudentsRiskAssessment' => __('Risk Assessment Report') ,
 				'Report.SubjectsBookLists' => __('Subject and Book List'),
                 'Report.StudentNotAssignedClass' => __('Not Assigned to Class'),
                 'Report.StudentsEnrollmentSummary' => __('Enrollment Summary'),
                 'Report.SpecialNeeds' => __('Special Needs')
-				
+
             ];
         } elseif ($module == 'Staff') {
             $options = [
@@ -137,7 +137,7 @@ class ReportsController extends AppController
                 'Report.PositionSummary' => __('Position Summary Report'),
                 'Report.StaffDuties' => __('Duties Report'),
                 'Report.StaffExtracurriculars' => __('Staff Extracurricular'),
-				
+
             ];
         } elseif ($module == 'Textbooks') {
             $options = [
@@ -262,9 +262,9 @@ class ReportsController extends AppController
         echo json_encode($dataSet);
         die;
     }
-	
+
 	public function Profiles()
-    { 
+    {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.Profiles']);
     }
 
@@ -290,8 +290,8 @@ class ReportsController extends AppController
         $objReader = PHPExcel_IOFactory::createReader($inputFileType);
         $objPHPExcel = $objReader->load($inputFileName);
 
-        $sheet = $objPHPExcel->getSheet(0); 
-        $highestRow = $sheet->getHighestRow(); 
+        $sheet = $objPHPExcel->getSheet(0);
+        $highestRow = $sheet->getHighestRow();
         $highestColumn = $sheet->getHighestColumn();
 
         for ($row = 1; $row <= 1; $row++){
@@ -300,8 +300,9 @@ class ReportsController extends AppController
                                             TRUE,
                                             FALSE);
         }
+
         $rowHeaderNew = $this->array_flatten($rowHeader);
-        for ($row = 2; $row <= $highestRow -1; $row++){ 
+        for ($row = 2; $row <= $highestRow -1; $row++){
             //  Read a row of data into an array
             $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
                                             NULL,
@@ -317,25 +318,26 @@ class ReportsController extends AppController
         		}
         	}
         }
+//        print_r($newArr2);die();
         $this->set('rowHeader', $rowHeader);
         $this->set('newArr2', $newArr2);
 
         $this->set('contentHeader', $header);
     }
 
-    function array_flatten($array) { 
-        if (!is_array($array)) { 
-          return false; 
-        } 
-        $result = array(); 
-        foreach ($array as $key => $value) { 
-          if (is_array($value)) { 
-            $result = array_merge($result, $this->array_flatten($value)); 
-          } else { 
+    function array_flatten($array) {
+        if (!is_array($array)) {
+          return false;
+        }
+        $result = array();
+        foreach ($array as $key => $value) {
+          if (is_array($value)) {
+            $result = array_merge($result, $this->array_flatten($value));
+          } else {
             $result = array_merge($result, array($key => $value));
-          } 
-        } 
-        return $result; 
+          }
+        }
+        return $result;
       }
 
     function isEmptyRow($row) {
@@ -344,5 +346,5 @@ class ReportsController extends AppController
         }
         return true;
     }
-	
+
 }
