@@ -26,6 +26,7 @@ class POCOR6041 extends AbstractMigration
     //rollback
     public function down()
     {
-       $this->execute('RENAME TABLE `z_6041_security_functions` TO `security_functions`');
+        $this->execute('DROP TABLE IF EXISTS `import_mapping`');
+        $this->execute('RENAME TABLE `z_6041_security_functions` TO `import_mapping`');
     }
 }   
