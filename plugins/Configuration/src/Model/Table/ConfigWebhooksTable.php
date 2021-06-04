@@ -32,13 +32,23 @@ class ConfigWebhooksTable extends ControllerActionTable
         'programme_update'    => 'Programme Update',
         'programme_delete'    => 'Programme Delete',
         'class_delete'        => 'Class Delete',
-        'programme_delete'    => 'Programme Delete',  
+        'programme_delete'    => 'Programme Delete',
         'subject_delete'      => 'Subject Delete',
-        'programme_delete'    => 'Programme Delete',  
+        'programme_delete'    => 'Programme Delete',
         'student_delete'      => 'Student Delete',
         'staff_delete'        => 'Staff Delete',
-        'security_user_delete' => 'Delete Security User'
-    ];
+        'security_user_delete' => 'Delete Security User',
+        'education_cycle_create' => 'Education Structure Cycle Create',
+        'education_cycle_update' => 'Education Structure Cycle Update',
+        'education_cycle_delete' => 'Education Structure Cycle Delete',
+        'education_programme_create' => 'Education Programme Create',
+        'education_programme_update' => 'Education Programme Update',
+        'education_programme_delete' => 'Education Programme Delete',
+        'education_grade_create' => 'Education Grade Create',
+        'education_grade_update' => 'Education Grade Update',
+        'education_grade_delete' => 'Education Grade Delete',
+        'education_subject_create' => 'Education Subject Create',
+     ];
 
     public function initialize(array $config)
     {
