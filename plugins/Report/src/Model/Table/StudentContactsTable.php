@@ -11,11 +11,11 @@ use Cake\ORM\TableRegistry;
 
 class StudentContactsTable extends AppTable  {
 	public function initialize(array $config) {
-		$this->table('user_contacts');
+		$this->table('security_users');
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('ContactTypes', ['className' => 'User.ContactTypes']);
+		//$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		//$this->belongsTo('ContactTypes', ['className' => 'User.ContactTypes']);
 		
 		$this->addBehavior('Excel');
 		$this->addBehavior('Report.ReportList');
@@ -107,31 +107,15 @@ class StudentContactsTable extends AppTable  {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
         $query
 			->select([
-                $this->aliasField('security_user_id'),
-                'user_name' => $query->func()->concat([
-					'Users.first_name' => 'literal',
+                'security_user_id' => $this->aliasField('id'),
+				'user_name' => $query->func()->concat([
+					$this->aliasField('first_name') => 'literal',
 					" ",
-					'Users.last_name' => 'literal'
+					$this->aliasField('last_name') => 'literal'
 				]),
             ])
-            ->contain([
-                'Users' => [
-                    'fields' => [
-                        'openemis_no' => 'Users.openemis_no',
-                        'Users.id',
-                        'Users.first_name',
-                        'Users.middle_name',
-                        'Users.third_name',
-                        'Users.last_name',
-                        'Users.preferred_name',
-                    ]
-                ],
-            ])
-            ->order([$this->aliasField('security_user_id')])
-            ->where(['Users.is_student' => 1])
-			->group([
-                $this->aliasField('security_user_id')
-            ]);
+            ->order([$this->aliasField('id') => 'DESC'])
+            ->where([$this->aliasField('is_student') => 1]);
 		    $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
 				
