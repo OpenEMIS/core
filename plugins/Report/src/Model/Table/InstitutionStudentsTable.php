@@ -62,8 +62,7 @@ class InstitutionStudentsTable extends AppTable  {
         $UserIdentities = TableRegistry::get('User.UserIdentities');
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         
-
-		if ($academicPeriodId!=0) {
+        if ($academicPeriodId!=0) {
 			$query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
 		}
 
@@ -157,7 +156,17 @@ class InstitutionStudentsTable extends AppTable  {
                         'area_administrative_code' => 'AreaAdministratives.code',
                         'area_administrative_name' => 'AreaAdministratives.name'
                     ]
+                ],//POCOR-5388 starts
+                'Institutions.Localities' => [
+                    'fields' => [
+                        'locality_name' => 'Localities.name'
+                    ]
                 ],
+                'Institutions.Sectors' => [
+                    'fields' => [
+                        'sector_name' => 'Sectors.name'
+                    ]
+                ],//POCOR-5388 ends
                 'StudentStatuses' => [
                     'fields' => [
                         'StudentStatuses.name'
@@ -540,17 +549,28 @@ class InstitutionStudentsTable extends AppTable  {
 			'type' => 'integer',
 			'label' => __('Type'),
 		];
-
-
+        //POCOR-5388 starts
+        $PrimaryField[] = [
+            'key' => 'Institutions.sector_name',
+            'field' => 'sector_name',
+            'type' => 'string',
+            'label' => __('Sector')
+        ];
+        //POCOR-5388 ends
         $PrimaryField[] = [
             'key' => 'Institutions.institution_provider_id',
             'field' => 'institution_provider',
             'type' => 'integer',
             'label' => __('Provider'),
         ];
-
-        
-
+        //POCOR-5388 starts
+        $PrimaryField[] = [
+            'key' => 'Institutions.locality_name',
+            'field' => 'locality_name',
+            'type' => 'string',
+            'label' => __('Locality')
+        ];
+        //POCOR-5388 ends
         if ($statusId == $this->statuses['TRANSFERRED']) {
             $PrimaryField[] = [
                 'key' => 'Institutions.area_code',
