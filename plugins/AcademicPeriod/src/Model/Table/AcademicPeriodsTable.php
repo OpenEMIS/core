@@ -188,6 +188,26 @@ class AcademicPeriodsTable extends AppTable
             }
         }
 
+        //webhook academic period update starts
+        if(!$entity->isNew()) {
+            $body = array();
+            $updateBody = [
+                'academic_period_level_id' =>$entity->academic_period_level_id,
+                'code' =>$entity->code,
+                'name' =>$entity->name,
+                'start_date' =>$entity->start_date,
+                'end_date' =>$entity->end_date,
+                'current' =>$entity->start_date,
+                'academic_period_id' =>$entity->id,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('academic_period_update', [], $updateBody);
+            }
+        }
+
+        // webhook academic period update ends
+
     }
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
