@@ -116,6 +116,18 @@ class EducationProgrammesTable extends ControllerActionTable {
         $EducationProgrammesNextProgrammesTable->deleteAll([
             $EducationProgrammesNextProgrammesTable->aliasField('next_programme_id') => $id
         ]);
+
+        // Webhook Education Programme Delete -- Start
+
+        $body = array();
+        $body = [
+            'programme_id' => $entity->id
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('education_programme_delete', ['username' => $username], $body);
+        }
+        // Webhook Education Programme Delete -- End
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
