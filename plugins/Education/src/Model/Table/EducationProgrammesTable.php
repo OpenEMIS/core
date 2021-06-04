@@ -76,7 +76,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options){
-        // Webhook Education Cycle create -- start
+        // Webhook Education programme create -- start
 
         if($entity->isNew()){
             $body = array();
@@ -90,8 +90,24 @@ class EducationProgrammesTable extends ControllerActionTable {
                 $Webhooks->triggerShell('education_programme_create', ['username' => $username], $body);
             }
         }
+        // Webhook Education programme create -- end
 
-        // Webhook Education Cycle create -- end
+        // Webhook Education programme update -- start
+
+        if(!$entity->isNew()){
+            $body = array();
+            $body = [
+                'education_cycle_id' => $entity->education_cycle_id,
+                'programme_name' => $entity->name,
+                'programme_id' => $entity->id
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_programme_update', ['username' => $username], $body);
+            }
+        }
+
+        // Webhook Education programme update -- end
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
