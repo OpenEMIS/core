@@ -425,9 +425,10 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('student_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
 
-            $Extracurriculars = TableRegistry::get('Student.Extracurriculars');
+            //$Extracurriculars = TableRegistry::get('Student.Extracurriculars');
+            $Extracurriculars = TableRegistry::get('student_extracurriculars');
             $entity = $Extracurriculars->find()
-                ->contain('ExtracurricularTypes')
+                //->contain('ExtracurricularTypes')
                 ->where([
                     $Extracurriculars->aliasField('security_user_id') => $params['student_id'],
                     'OR' => [
@@ -1058,7 +1059,12 @@ class ReportCardsTable extends AppTable
                         END
                     )',
             ];
-           
+
+            if (!empty($extra['assessment_id'])) {
+                $extra['assessment_id'] = $extra['assessment_id'];
+            } else{
+                $extra['assessment_id'] = NULL;
+            }
             $subjectList = $AssessmentItems
                 ->find('list', [
                     'keyField' => 'education_subject_id',
