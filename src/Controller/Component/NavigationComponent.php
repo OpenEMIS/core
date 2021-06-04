@@ -115,7 +115,7 @@ class NavigationComponent extends Component
     {
         $linkOnly = [];
 
-        $ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking
+        //$ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking //POCOR-5312
 
         $roles = [];
         $restrictedTo = [];
@@ -148,7 +148,7 @@ class NavigationComponent extends Component
                 }
 
                 // $ignoredAction will be excluded from permission checking
-                if (array_key_exists('controller', $url) && !in_array($url['plugin'], $ignoredPlugin)) {
+                if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
                     if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
                         unset($navigations[$key]);
                     }
