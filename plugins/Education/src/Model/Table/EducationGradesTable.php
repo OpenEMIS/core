@@ -98,9 +98,53 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
+         // Webhook Education Grade create -- start
+         if($entity->isNew()){
+            $body = array();
+            $body = [
+                'education_programme_id' =>$entity->education_programme_id,
+                'grade_name' =>$entity->name,
+                'grade_id' =>$entity->id,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_grade_create', ['username' => $username], $body);
+            }
+        }
+        // Webhook Education Grade create -- end
+
+        //webhook Education Grade update -- start
+        if(!$entity->isNew()){
+            $body = array();
+            $body = [
+                'education_programme_id' =>$entity->education_programme_id,
+                'grade_name' =>$entity->name,
+                'grade_id' =>$entity->id,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_grade_update', ['username' => $username], $body);
+            }
+        }
+        //webhook Education Grade update -- start
+    }
+
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
         $this->updateAdmissionAgeAfterDelete($entity);
+
+        // Webhook Education Grade Delete -- Start
+
+        $body = array();
+        $body = [
+            'grade_id' => $entity->id
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('education_grade_delete', ['username' => $username], $body);
+        }
+        // Webhook Education Grade Delete -- End
     }
 
      /**
@@ -227,7 +271,7 @@ class EducationGradesTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme'));
         $query->where([$this->aliasField('education_programme_id') => $selectedProgramme])
-                ->order([ $this->aliasField('order') => 'ASC', 
+                ->order([ $this->aliasField('order') => 'ASC',
                           $this->aliasField('modified') => 'DESC'
                         ]); */
         // Academic period filter
@@ -245,7 +289,7 @@ class EducationGradesTable extends ControllerActionTable
             $levelOptions = ['0' => '-- '.__('No Education Level').' --'] + $levelOptions;
             $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
         }
-        
+
         $this->controller->set(compact('levelOptions', 'selectedLevel'));
 
         $cycleIds = $this->EducationProgrammes->EducationCycles
@@ -281,11 +325,11 @@ class EducationGradesTable extends ControllerActionTable
             $programmeOptions = ['0' => '-- '.__('No Education Programme').' --'] + $programmeOptions;
             $selectedProgramme = !empty($this->request->query('programme')) ? $this->request->query('programme') : 0;
         }
-        
+
         $this->controller->set(compact('programmeOptions', 'selectedProgramme'));
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $query->where([$this->aliasField('education_programme_id') => $selectedProgramme])
-                        ->order([$this->aliasField('order') => 'ASC']);  
+                        ->order([$this->aliasField('order') => 'ASC']);
 
         $sortList = ['order', 'name', 'code', 'EducationProgrammes.name', 'EducationStages.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
@@ -442,7 +486,7 @@ class EducationGradesTable extends ControllerActionTable
         $academicPeriodOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
-        
+
         //Return all required options and their key
         $levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
@@ -565,4 +609,3 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 }
-                                                                                                                                  
