@@ -113,6 +113,21 @@ class EducationGradesTable extends ControllerActionTable
             }
         }
         // Webhook Education Grade create -- end
+
+        //webhook Education Grade update -- start
+        if(!$entity->isNew()){
+            $body = array();
+            $body = [
+                'education_programme_id' =>$entity->education_programme_id,
+                'grade_name' =>$entity->name,
+                'grade_id' =>$entity->id,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_grade_update', ['username' => $username], $body);
+            }
+        }
+        //webhook Education Grade update -- start
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
