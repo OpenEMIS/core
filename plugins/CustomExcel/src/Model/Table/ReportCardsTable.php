@@ -425,9 +425,10 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('student_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
 
-            $Extracurriculars = TableRegistry::get('Student.Extracurriculars');
+            //$Extracurriculars = TableRegistry::get('Student.Extracurriculars');
+            $Extracurriculars = TableRegistry::get('student_extracurriculars');
             $entity = $Extracurriculars->find()
-                ->contain('ExtracurricularTypes')
+                //->contain('ExtracurricularTypes')
                 ->where([
                     $Extracurriculars->aliasField('security_user_id') => $params['student_id'],
                     'OR' => [
@@ -636,7 +637,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionClasses(Event $event, array $params, ArrayObject $extra)
     {
-        
+
         if (array_key_exists('institution_class_id', $params)) {
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $entity = $InstitutionClasses->get($params['institution_class_id'], [
@@ -1035,7 +1036,7 @@ class ReportCardsTable extends AppTable
                 //POCOR-5056 end
 
                 ->toArray();
-            
+
             return $entity;
         }
     }
@@ -1058,7 +1059,12 @@ class ReportCardsTable extends AppTable
                         END
                     )',
             ];
-           
+
+            if (!empty($extra['assessment_id'])) {
+                $extra['assessment_id'] = $extra['assessment_id'];
+            } else {
+                $extra['assessment_id'] = NULL;
+            }
             $subjectList = $AssessmentItems
                 ->find('list', [
                     'keyField' => 'education_subject_id',
@@ -1069,7 +1075,7 @@ class ReportCardsTable extends AppTable
                     'class_id' => $params['institution_class_id']
                 ])
                 ->toArray();
-            
+
             // to only process the query if the class has subjects
             $conditions = [];
             if (!empty($subjectList)) {
@@ -1129,7 +1135,7 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
 
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-            
+
             $entity = $AssessmentItems->find()
                 ->find('assessmentItemsInClass', [
                     'assessment_id' => $extra['assessment_id'],
@@ -1325,7 +1331,7 @@ class ReportCardsTable extends AppTable
                     });
                 })
                 ->autoFields(true);
-            
+
             return $entity->toArray();
         }
     }
@@ -1649,17 +1655,17 @@ class ReportCardsTable extends AppTable
                 return null;
         }
     }
-    
+
     //  POCOR-4988
     public function onExcelTemplateInitialiseStudentNextYearClass(Event $event, array $params, ArrayObject $extra)
     {
-        
-        $condition =  array_key_exists('student_id', $params) 
-                      && array_key_exists('institution_class_id', $params) 
-                      && array_key_exists('institution_id', $params) 
+
+        $condition =  array_key_exists('student_id', $params)
+                      && array_key_exists('institution_class_id', $params)
+                      && array_key_exists('institution_id', $params)
                       && array_key_exists('academic_period_id', $params)
                       && array_key_exists('report_card_education_grade_id', $extra);
-        
+
         if ($condition) {
             $studentId = $params['student_id'];
             $institutionId = $params['institution_id'];
@@ -1673,9 +1679,9 @@ class ReportCardsTable extends AppTable
                 ])
                 ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
                     'InstitutionClasses.id = '.$InstitutionClassStudents->aliasField('next_institution_class_id')
-                ])                
+                ])
                 ->hydrate(false)
-                ->first();               
+                ->first();
             $result['name'] = $institutionClassStudentsEntities['InstitutionClasses']['name'];
             return $result;
         }

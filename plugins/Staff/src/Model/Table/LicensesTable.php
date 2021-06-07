@@ -88,6 +88,22 @@ class LicensesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
+    /*POCOR-5833 starts*/
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->fields['license_type_id']['type'] = 'select';
+        $this->fields['license_type_id']['attr']['value'] = $entity->license_type_id;
+        $this->field('classifications', [
+            'type' => 'chosenSelect',
+            'fieldNameKey' => 'classifications',
+            'fieldName' => $this->alias() . '.classifications._ids',
+            'placeholder' => $this->getMessage($this->aliasField('select_classification'))
+        ]);
+
+        $this->setFieldOrder(['license_type_id', 'classifications', 'license_number', 'issue_date', 'expiry_date', 'issuer', 'comments']);
+    }
+    /*POCOR-5833 ends*/
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->setupTabElements();
@@ -95,10 +111,46 @@ class LicensesTable extends ControllerActionTable
 
     public function onUpdateFieldLicenseTypeId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
             $attr['onChangeReload'] = 'changeLicenseType';
         }
-
+        /*PCORO-5833 starts*/
+        if ($action == 'edit') {
+            $staffId = $this->Session->read('Staff.Staff.id');
+            $licenseTypeId = $request->data['Licenses']['license_type_id'];
+            $StaffLicensesTable = TableRegistry::get('staff_licenses');
+            $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+            $LicenseTypes = TableRegistry::get('FieldOption.LicenseTypes');
+            $getData = $StaffLicensesTable->find()
+                        ->select([$WorkflowSteps->aliasField('workflow_id')])
+                        ->leftJoin([$WorkflowSteps->alias() => $WorkflowSteps->table()], [
+                            $StaffLicensesTable->aliasField('status_id = ') . $WorkflowSteps->aliasField('id')
+                        ])
+                        ->where([
+                            $StaffLicensesTable->aliasField('staff_id') => $staffId,
+                            $StaffLicensesTable->aliasField('license_type_id') => $licenseTypeId
+                        ])->first();
+            $selectedModel = $getData->WorkflowSteps['workflow_id'];
+            $filterOptions = $LicenseTypes->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                            ->leftJoin([$WorkflowsFilters->alias() => $WorkflowsFilters->table()], [
+                                $WorkflowsFilters->aliasField('filter_id = ') . $LicenseTypes->aliasField('id'),
+                            ])
+                            ->where([$WorkflowsFilters->aliasField('workflow_id = ') => $selectedModel])
+                            ->toArray();
+            if (!empty($filterOptions)) {
+                $attr['options'] = $filterOptions;
+            } else {
+                $filterOptions = $LicenseTypes->find('list', 
+                                    ['keyField' => 'id', 'valueField' => 'name'])
+                                ->where([$LicenseTypes->aliasField('id = ') => $licenseTypeId])
+                                ->toArray();
+                                
+                $attr['options'] = $filterOptions;
+            }
+        }
+        /*POCOR-5833 ends*/
         return $attr;
     }
 
