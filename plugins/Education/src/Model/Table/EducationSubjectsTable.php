@@ -106,6 +106,24 @@ class EducationSubjectsTable extends ControllerActionTable
         $this->field('field_of_studies', ['after' => 'visible', 'entity' => $entity, 'type' => 'custom_field_of_studies']);
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
+
+        // Webhook Education Subject create -- start
+        if($entity->isNew()){
+            $body = array();
+            $body = [
+                'subject_id' =>$entity->id,
+                'subject_name' =>$entity->name,
+                'subject_code' =>$entity->code,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_subject_create', ['username' => $username], $body);
+            }
+        }
+        // Webhook Education Subject create -- end
+    }
+
     public function getFieldOfStudiesOptions()
     {
         $EducationFieldOfStudies = TableRegistry::get('Education.EducationFieldOfStudies');
