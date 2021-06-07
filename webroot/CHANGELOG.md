@@ -1,3 +1,28 @@
+### [3.66.1] - 2021-06-04
+- Bug Fixed: Profiles > Contacts tab : Allow user to add contact information
+- Bug Fixed: Institution > Infrastructure : Unable to delete infrastructure
+- Bug Fixed: Reports > Institution > Students/Staff: To add Sector and Locality columns in the reports
+- Bug Fixed: Institutions > Staff > Professional > License > Edit : Allow user to edit the License Type dropdown
+- Bug Fixed: Update Reports > Students > Contacts
+- Bug Fixed: Rename Profile module to Personal
+- Bug Fixed: Administration > System Setup > Education Structure > Programmes: Next Programme was not copied when user copied from the current Academic Period to next Academic Period
+- Bug Fixed: Reports > Students > Student Health Report > Overview: Student without Middle and Third Name has a big gap in between the First and Last Name
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Cycle - Create
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Cycle - Update
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Cycle - Delete
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Programme - Create
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Programme - Update
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Programme - Delete
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade - Create
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade - Update
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade - Delete
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Subject - Create
+- Bug Fixed: OpenEMIS Core: Webhook Academic Period - Create
+- Bug Fixed: OpenEMIS Core: Webhook Academic Period - Update
+- Bug Fixed: Institution > Performance > Assessment > Import: Add Education Subject field on the Import Summary page
+- Bug Fixed: Institutions > Infrastructure > Overview > Rooms : Add a new field called area
+
+
 ### [3.66.0] - 2021-05-28
 - Bug Fixed: Institutions > Performance > Report Cards: Report Cards remained In-Progress
 - Bug Fixed: Institution > Staff > Edit: Remove Default Start Date for Staff Change of Start Date
