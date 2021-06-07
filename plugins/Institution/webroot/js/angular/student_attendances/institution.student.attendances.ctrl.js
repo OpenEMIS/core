@@ -340,10 +340,14 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     vm.setRowDatas = function(studentList) {
         studentList.forEach(function (dataItem, index) {
-            if(dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
-                dataItem.rowHeight = 60;
+            if(dataItem.hasOwnProperty('institution_student_absences')) {
+                if(dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
+                    dataItem.rowHeight = 60;
+                } else {
+                    dataItem.rowHeight = 60;
+                }
             } else {
-                dataItem.rowHeight = 120;
+                dataItem.rowHeight = 80;
             }
         });
         vm.gridOptions.api.setRowData(studentList);
