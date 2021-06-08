@@ -710,9 +710,9 @@ class UserGroupsTable extends ControllerActionTable
         // Required by patchEntity for associated data
         $newOptions = [];
         $newOptions['associated'] = [
-            /*'Areas' => [
+            'Areas' => [
                 'validate' => false
-            ],*/
+            ],
             'Institutions' => [
                 'validate' => false
             ],
