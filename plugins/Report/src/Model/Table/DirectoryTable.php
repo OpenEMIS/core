@@ -84,11 +84,7 @@ class DirectoryTable extends AppTable
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('openemis_no'),
-				'user_name' => $query->func()->concat([
-					$this->aliasField('first_name') => 'literal',
-					" ",
-					$this->aliasField('last_name') => 'literal'
-				]),
+                $this->aliasField('username'),
                 $this->aliasField('first_name'),
                 $this->aliasField('middle_name'),
                 $this->aliasField('third_name'),
@@ -152,8 +148,8 @@ class DirectoryTable extends AppTable
         ];
 		
 		$extraFields[] = [
-            'key' => 'user_name',
-            'field' => 'user_name',
+            'key' => 'username',
+            'field' => 'username',
             'type' => 'string',
             'label' => __('Username')
         ];
