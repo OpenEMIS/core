@@ -594,7 +594,7 @@ class InstitutionsTable extends AppTable
                          ['Report.InstitutionStudents',
                           'Report.InstitutionSubjectsClasses',
                           'Report.StudentAbsences', 
-                          'Report.StaffLeave', 
+                          //'Report.StaffLeave', 
                           'Report.InstitutionCases', 
                           'Report.ClassAttendanceNotMarkedRecords', 
                           'Report.InstitutionSubjects', 
@@ -982,6 +982,14 @@ class InstitutionsTable extends AppTable
                         $attr['value'] = $selectedPeriod->start_date;
                     }
                 }
+            } elseif (in_array($feature, ['Report.StaffLeave'])) {
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $academicPeriodId = $AcademicPeriods->getCurrent();
+                $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
+                $attr['type'] = 'date';
+                $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                $attr['value'] = $selectedPeriod->start_date;
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -1040,7 +1048,27 @@ class InstitutionsTable extends AppTable
                     $attr['value'] = Time::now();
                 }
                 $attr['value'] = $reportEndDate;
-            } else {
+            } elseif (in_array($feature, ['Report.StaffLeave'])) {
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $academicPeriodId = $AcademicPeriods->getCurrent();
+                $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
+
+                $attr['type'] = 'date';
+                $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                if ($academicPeriodId != $AcademicPeriods->getCurrent()) {
+                    $attr['value'] = $selectedPeriod->end_date;
+                } 
+                else {
+                    $attr['value'] = Time::now();
+                }
+                //POCOR-5907[START]
+                $attr['value'] = $selectedPeriod->end_date;
+                //POCOR-5907[END]
+            } 
+
+
+            else {
                 $attr['value'] = self::NO_FILTER;
             }
             
