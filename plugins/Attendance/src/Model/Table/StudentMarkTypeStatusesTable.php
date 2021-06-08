@@ -88,24 +88,27 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
 	{   
-		//echo '<pre>';print_r($entity);die('aaa');
+		$educationGrades = [];
+		foreach($entity->education_grades as $educationGrade) {
+			$educationGrades[] = $educationGrade->id;	
+		}
+		
 		$existingStatusCount = $this->find()
 		->select([$this->aliasField('id')])
-		//->contain([$this->EducationGrades->alias()])
+		->innerJoinWith('StudentMarkTypeStatusGrades')
 		->where([
 			$this->aliasField('academic_period_id') => $entity->academic_period_id,
 			$this->aliasField('student_attendance_mark_type_id') => $entity->student_attendance_mark_type_id,
+			'StudentMarkTypeStatusGrades.education_grade_id IN' => $educationGrades,
 			$this->aliasField('date_enabled <=') => $entity->date_enabled,
 		])
 		->count();
 
 		if ($existingStatusCount) {
-			//die('in');
-			$this->Alert->warning($this->aliasField('gradesAlreadyAdded'));
+			$this->Alert->warning($this->aliasField('statusAlreadyAdded'));
 			$event->stopPropagation();
 			return $this->controller->redirect($this->url('index'));
 		} else {
-			die('out');
 			return $process;
 		}	
 	}
