@@ -44,7 +44,9 @@ class StaffLeaveTable extends AppTable {
         $position = $requestData->position;
         $leaveType = $requestData->leave_type;
         $workflowStatus = $requestData->workflow_status;
-
+        $reportStartDate = $requestData->report_start_date;
+        $reportEndDate = $requestData->report_end_date;
+        
         $condition = [];
 
         if(isset($institutionId) && !empty($institutionId)){
@@ -59,8 +61,17 @@ class StaffLeaveTable extends AppTable {
         if(isset($workflowStatus) && !empty($workflowStatus)){
             $conditions[$this->aliasfield('status_id')] = $workflowStatus;
         }
-        if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
-            $query->find('academicPeriod', ['academic_period_id' => $academicPeriodId, 'start_date_field' => 'date_from', 'end_date_field' => 'date_to']);
+        if (!empty($reportStartDate) && !empty($reportEndDate)) {
+            $startDate = date('Y-m-d', strtotime($reportStartDate));
+            $endDate = date('Y-m-d', strtotime($reportEndDate));
+            $conditions['OR'] = [
+                    'OR' => [
+                        [
+                            $this->aliasField('date_from') . ' >=' => $startDate,
+                            $this->aliasField('date_to') . ' <=' => $endDate
+                        ]
+                    ]
+                ];
         }
 
         $query
@@ -93,6 +104,7 @@ class StaffLeaveTable extends AppTable {
                 $query->where($conditions);
             }
 			$query->order([$this->aliasField('date_from')]);
+           
             //POCOR-5762 starts
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
