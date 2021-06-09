@@ -25,6 +25,8 @@ class InstitutionGradesTable extends ControllerActionTable
         $this->belongsTo('EducationGrades',             ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Institutions',                ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
+
+        $this->hasMany('InstitutionGrades', ['className' => 'Institution.InstitutionGrades', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -34,7 +36,7 @@ class InstitutionGradesTable extends ControllerActionTable
         $this->toggle('search', false);
         $this->setDeleteStrategy('restrict');
 
-        $this->addBehavior('Excel', ['excludes' => [], 'pages' => ['index']]);;
+        $this->addBehavior('Excel', ['excludes' => ['start_date', 'end_date', 'start_year', 'end_year'], 'pages' => ['index']]);;
     }
 
     public function validationDefault(Validator $validator)
@@ -1255,5 +1257,75 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         }
 
         $extra['associatedRecords'][] = ['model' => 'InstitutionClasses', 'count' => $associatedClassCount];
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+        $cloneFields = $fields->getArrayCopy();
+        //print_r($cloneFields); exit;
+        $newFields = [];
+        foreach ($cloneFields as $key => $value) {
+            $newFields[] = $value;
+
+            $newFields[] = [
+                'key' => 'EducationCycles.name',
+                'field' => 'educaton_cycle_name',
+                'type' => 'string',
+                'label' => 'Education Cycle Name'
+            ];
+
+            $newFields[] = [
+                'key' => 'EducationGrades.name',
+                'field' => 'programme_name',
+                'type' => 'string',
+                'label' => 'Programme Name'
+            ];
+
+            $newFields[] = [
+                'key' => 'EducationLevels.name',
+                'field' => 'education_level_name',
+                'type' => 'string',
+                'label' => 'Education Level Name'
+            ];
+
+            $newFields[] = [
+                'key' => 'EducationSystems.name',
+                'field' => 'education_system_name',
+                'type' => 'string',
+                'label' => 'Education System Name'
+            ];
+
+
+        }
+        $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
+    {
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
+        $query
+        ->select(['grade_name' => 'EducationGrades.name', 'programme_name' => 'EducationProgrammes.name', 'educaton_cycle_name' => 'EducationCycles.name', 'education_level_name' => 'EducationLevels.name', 'education_system_name' => 'EducationSystems.name'])
+        ->LeftJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()],[
+            $this->EducationGrades->aliasField('id').' = ' . $this->InstitutionGrades->aliasField('education_grade_id')
+        ])
+        ->LeftJoin(['EducationProgrammes' => 'education_programmes'],[
+            'EducationProgrammes.id = '.$this->EducationGrades->aliasField('education_programme_id')
+        ])
+        ->LeftJoin(['EducationCycles' => 'education_cycles'],[
+            'EducationCycles.id = EducationProgrammes.education_cycle_id'
+        ])
+        ->LeftJoin(['EducationLevels' => 'education_levels'],[
+            'EducationLevels.id = EducationCycles.education_level_id'
+        ])
+        ->LeftJoin(['EducationSystems' => 'education_systems'],[
+            'EducationSystems.id = EducationLevels.education_system_id'
+        ])
+        ->where([
+            $this->aliasField('institution_id') => $institutionId,
+           //'EducationSystems.academic_period_id' => $selectedAcademicPeriod
+
+        ]);
     }
 }
