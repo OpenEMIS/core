@@ -33,6 +33,8 @@ class InstitutionGradesTable extends ControllerActionTable
 
         $this->toggle('search', false);
         $this->setDeleteStrategy('restrict');
+
+        $this->addBehavior('Excel', ['excludes' => [], 'pages' => ['index']]);;
     }
 
     public function validationDefault(Validator $validator)
