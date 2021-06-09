@@ -101,7 +101,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
 				$this->aliasField('academic_period_id') => $entity->academic_period_id,
 				$this->aliasField('student_attendance_mark_type_id') => $entity->student_attendance_mark_type_id,
 				'StudentMarkTypeStatusGrades.education_grade_id IN' => $educationGrades,
-				$this->aliasField('date_enabled <=') => $entity->date_enabled,
+				$this->aliasField('date_disabled >=') => $entity->date_enabled,
 			])
 			->count();
 
@@ -114,6 +114,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
 			}	
 		}
 	}
+	
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
