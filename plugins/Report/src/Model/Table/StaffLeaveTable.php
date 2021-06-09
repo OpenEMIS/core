@@ -204,6 +204,7 @@ class StaffLeaveTable extends AppTable {
 						}
 						
 					}
+                    //echo "<pre>";print_r($row);die();
 					return $row;
 				});
 			});
@@ -235,6 +236,13 @@ class StaffLeaveTable extends AppTable {
         ];
 
         $newFields[] = [
+            'key' => '',
+            'field' => 'position_title',
+            'type' => 'string',
+            'label' => __('Position')
+        ];
+
+        $newFields[] = [
             'key' => 'Institutions.area_code',
             'field' => 'area_code',
             'type' => 'string',
@@ -259,7 +267,7 @@ class StaffLeaveTable extends AppTable {
             'key' => '',
             'field' => 'identity_type',
             'type' => 'string',
-            'label' => __('Identity Type')
+            'label' => __('Identity Name')
         ];
 
         $newFields[] = [
@@ -294,13 +302,6 @@ class StaffLeaveTable extends AppTable {
             'field' => 'staff_id',
             'type' => 'integer',
             'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => '',
-            'field' => 'position_title',
-            'type' => 'string',
-            'label' => __('Position')
         ];
 
         $newFields[] = [
