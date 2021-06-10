@@ -783,6 +783,20 @@ public function onGetProgramme(Event $event, Entity $entity)
     return $programme = $entity->education_grade->education_programme->cycle_programme_name;;
 }
 
+public function onGetEducationSubjectId(Event $event, Entity $entity)
+{  
+    $gradeId = $entity->education_grade_id;
+    $EducationGradesSubjects = TableRegistry::get('institution_program_grade_subjects');
+    $subjectCount = $EducationGradesSubjects->find()
+                    ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId])->toArray();
+    $count = 0;
+    if (!empty($subjectCount)) {
+       return $count = count($subjectCount);
+    } else {
+       return $count;
+    }
+}
+
 public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
 {
 	$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
