@@ -35,6 +35,25 @@ class EducationLevelsTable extends ControllerActionTable
 		$this->fields['education_system_id']['sort'] = ['field' => 'EducationSystems.name'];
 	}
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
+
+        // Webhook Education Cycle create -- start
+        if($entity->isNew()){
+            $body = array();
+            $body = [
+                'education_system_id' =>$entity->education_system_id,
+                'education_level_id' =>$entity->id,
+                'education_level_name' =>$entity->name,
+                'education_level_isced' =>$entity->education_level_isced_id,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_level_create', ['username' => $username], $body);
+            }
+        }
+        // Webhook Education Cycle create -- end
+    }
+
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
 	{
 		$query->where([$this->aliasField('education_system_id') => $entity->education_system_id]);
@@ -63,7 +82,7 @@ class EducationLevelsTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $query->where([$this->aliasField('education_system_id') => $selectedSystem])
                         ->order([$this->aliasField('order')]);
-        
+
         //sort
 		$sortList = ['name', 'EducationLevelIsced.name', 'EducationSystems.name'];
 		if (array_key_exists('sortWhitelist', $extra['options'])) {
