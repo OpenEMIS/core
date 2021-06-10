@@ -672,6 +672,7 @@ class InstitutionsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['academic_period_id'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+            $institutionId = $this->request->data[$this->alias()]['institution_id'];
             if (in_array($feature, [
                             'Report.ClassAttendanceNotMarkedRecords',
                             'Report.SubjectsBookLists',
@@ -681,25 +682,26 @@ class InstitutionsTable extends AppTable
                         ])
                 ) {
                 
-                $EducationGrades = TableRegistry::get('Education.EducationGrades');
-                $gradeOptions = $EducationGrades
+                $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+                $gradeOptions = $InstitutionGrades
                     ->find('list', [
                         'keyField' => 'id',
                         'valueField' => 'name'
                     ])
                     ->select([
-                        'id' => $EducationGrades->aliasField('id'),
-                        'name' => $EducationGrades->aliasField('name'),
+                        'id' => 'EducationGrades.id',
+                        'name' => 'EducationGrades.name',
                         'education_programme_name' => 'EducationProgrammes.name'
                     ])
                     //->contain(['EducationProgrammes'])
-					->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+					->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
 					->where([
+						$InstitutionGrades->aliasField('institution_id') => $institutionId,
 						'EducationSystems.academic_period_id' => $academicPeriodId,
 					])
                     ->order([
                         'EducationProgrammes.order' => 'ASC',
-                        $EducationGrades->aliasField('name') => 'ASC'
+                        'EducationGrades.name' => 'ASC'
                     ])
                     ->toArray();
 
