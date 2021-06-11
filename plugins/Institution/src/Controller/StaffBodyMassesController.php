@@ -45,4 +45,12 @@ class StaffBodyMassesController extends BaseController
     
         $this->setTooltip();
     }
+
+    public function index()
+    {//die("kk");
+        $page = $this->Page;
+
+        // set field
+        //$page->exclude(['academic_period_id', 'institution_id']);
+    }
 }
