@@ -226,6 +226,21 @@ class StudentsTable extends AppTable
         }
     }
 
+    function array_flatten($array) { 
+        if (!is_array($array)) { 
+          return false; 
+        } 
+        $result = array(); 
+        foreach ($array as $key => $value) { 
+          if (is_array($value)) { 
+            $result = array_merge($result, $this->array_flatten($value)); 
+          } else { 
+            $result = array_merge($result, array($key => $value));
+          } 
+        } 
+        return $result; 
+      }
+
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
@@ -258,6 +273,7 @@ class StudentsTable extends AppTable
                             $InstitutionsTable->aliasField('code') => 'ASC',
                             $InstitutionsTable->aliasField('name') => 'ASC'
                         ]);
+                    
 
                     $superAdmin = $this->Auth->user('super_admin');
                     if (!$superAdmin) { // if user is not super admin, the list will be filtered
@@ -269,25 +285,31 @@ class StudentsTable extends AppTable
                 } else {
 					
                    $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-                    $institutionQuery = $InstitutionsTable
-                        ->find('list', [
-                           'keyField' => 'id',
-                            'valueField' => 'code_name'
-                        ])
-                        ->order([
-                           $InstitutionsTable->aliasField('code') => 'ASC',
-                            $InstitutionsTable->aliasField('name') => 'ASC'
-                        ]);
+                   $institutionQuery = $InstitutionsTable
+                   ->find()
+                   ->select([
+                       'id' => $InstitutionsTable->aliasField('id'),
+                       'code' => $InstitutionsTable->aliasField('code'),
+                       'name' => $InstitutionsTable->aliasField('name')
+                   ])
+                   ->order([
+                       $InstitutionsTable->aliasField('code') => 'ASC',
+                       $InstitutionsTable->aliasField('name') => 'ASC'
+                   ]);
 
-                    $superAdmin = $this->Auth->user('super_admin');
-                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
-                        $userId = $this->Auth->user('id');
-                        $institutionQuery->find('byAccess', ['userId' => $userId]);
-                    }
+                   $superAdmin = $this->Auth->user('super_admin');
+                   if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                       $userId = $this->Auth->user('id');
+                       $institutionQuery->find('byAccess', ['userId' => $userId]);
+                   }
 
-                    $institutionList = $institutionQuery->toArray();
+                   $institutionList = $institutionQuery->toArray();
+                   foreach($institutionList AS $institutionListData){
+                    $institutionListArr[] = array($institutionListData['id'] => $institutionListData['code']. ' - ' .$institutionListData['name']);
+                   }
+                   $institutionList = $this->array_flatten($institutionListArr);
                 }
-
+                
                 if (empty($institutionList)) {
                     $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
                     $attr['type'] = 'select';
