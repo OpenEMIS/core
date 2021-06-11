@@ -45,9 +45,9 @@ class InstitutionMapsTable extends ControllerActionTable
             'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
         ]);
+        $this->addBehavior('Excel', ['excludes' => ['name','alternative_name','code','address','postal_code','contact_person','telephone','fax','email','website','date_opened','year_opened','date_closed','year_closed','logo_name','logo_content','shift_type','classification','area_id','area_administrative_id','institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionActivities', 'key' => 'institution_id', 'session' => 'Institution.Institutions.id']);
-
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('Institution.LatLong');
@@ -73,7 +73,6 @@ class InstitutionMapsTable extends ControllerActionTable
             ]);
         return $validator;
     }
-
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -103,7 +102,7 @@ class InstitutionMapsTable extends ControllerActionTable
             $this->field('institution_ownership_id', ['visible' => false]);
             $this->field('institution_status_id', ['visible' => false]);
             $this->field('institution_sector_id', ['visible' => false]);
-            
+
             $this->field('institution_provider_id', ['visible' => false]);
 
             $this->field('institution_type_id', ['visible' => false]);
@@ -134,14 +133,14 @@ class InstitutionMapsTable extends ControllerActionTable
 
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
             $LatLongPermission = $ConfigItems->value("latitude_longitude");
-            
+
             if ($LatLongPermission == LatLongOptions::EXCLUDED) {
                 $this->field('longitude', ['visible' => false]);
                 $this->field('latitude', ['visible' => false]);
             }
         }
     }
-	
+
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
@@ -164,14 +163,14 @@ class InstitutionMapsTable extends ControllerActionTable
     }
 
     public function onGetGoogleMaps(Event $event, Entity $entity)
-    {  
+    {
         $ControllerActionHelper = $event->subject();
         $htmlHelper = $event->subject()->Html;
         $longitude  = $entity->longitude;
         $latitude   = $entity->latitude;
         $address    = "https://maps.google.com/?q=". $latitude . ',' . $longitude;
         $url        = json_encode(trim($address), JSON_FORCE_OBJECT);
-        
+
         return $htmlHelper->tag(__('a href='. $url .' target="_blank"> Open External Link</a'));
     }
 }
