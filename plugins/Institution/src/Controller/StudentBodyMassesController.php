@@ -6,6 +6,75 @@ use Profile\Controller\BodyMassesController as BaseController;
 
 class StudentBodyMassesController extends BaseController
 {
+     public function initialize()
+    {
+        parent::initialize();
+        $this->Page->enable(['download']);
+        // $this->Page->enable('page.FileUpload', [
+        //     'name' => 'file_name',
+        //     'content' => 'file_content',
+        //     'size' => '10MB',
+        //     'contentEditable' => true,
+        //     'allowable_file_types' => 'all',
+        //     'useDefaultName' => true
+        // ]);
+    }
+
+    public function index()
+    {
+        $page = $this->Page;
+
+        // set field
+        $page->exclude(['id','security_user_id','file_name', 'file_content', 'comment']);
+        parent::index();
+    }
+
+    public function view($id)
+    {
+        $page = $this->Page;
+        $page->exclude(['file_name']);
+
+        // set the file download for attachment
+        $page->get('file_content')
+            ->setLabel('Attachment')
+            ->setAttributes('fileNameField', 'file_name');
+
+        parent::view($id);
+
+        $entity = $page->getData();
+
+    } 
+
+    private function addEditBodyMass()
+    {
+        $page = $this->Page;
+        $page->exclude(['file_name']);
+
+        // set the file upload for attachment
+        $page->get('file_content')
+            ->setLabel('Attachment')
+            ->setAttributes('fileNameField', 'file_name');
+    }
+
+    public function add()
+    {
+        $this->addEditBodyMass();
+        parent::add();
+    }
+
+    public function delete($id)
+    {
+        $page = $this->Page;
+        $page->exclude(['file_content']);
+        parent::delete($id);
+    }
+
+    public function edit($id)
+    {
+        $this->addEditBodyMass();
+        parent::edit($id);
+    }
+
     public function beforeFilter(Event $event)
     {
         $page = $this->Page;
