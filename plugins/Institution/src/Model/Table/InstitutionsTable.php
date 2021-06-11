@@ -70,11 +70,13 @@ class InstitutionsTable extends ControllerActionTable
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
 
+
         $this->hasMany('InstitutionActivities', ['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionAttachments', ['className' => 'Institution.InstitutionAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
+        $this->hasMany('ShiftOptions', ['className' => 'InstitutionShifts.ShiftOptions', 'foreignKey' => 'shift_option_id']);
         $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
         // Note: InstitutionClasses already cascade deletes 'InstitutionSubjectStudents' - dependent and cascade not neccessary
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -180,7 +182,7 @@ class InstitutionsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
-        $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
+        $this->getSelectOptions('Shifts.types');//get from options trait
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index'],
             'Staff' => ['index', 'view'],
@@ -348,6 +350,42 @@ class InstitutionsTable extends ControllerActionTable
                     'label' => ''
                 ];
             }
+            if($value['field'] == 'shift_type'){
+                $newFields[] = [
+                    'key' => 'ShiftOptions.name',
+                    'field' => 'shift_name',
+                    'type' => 'string',
+                    'label' => 'Shift Name'
+                ];
+
+                $newFields[] = [
+                    'key' => 'InstitutionShifts.start_time',
+                    'field' => 'shift_start_time',
+                    'type' => 'string',
+                    'label' => ''
+                ];
+
+                $newFields[] = [
+                    'key' => 'InstitutionShifts.end_time',
+                    'field' => 'shift_end_time',
+                    'type' => 'string',
+                    'label' => ''
+                ];
+
+                $newFields[] = [
+                    'key' => 'Institutions.name',
+                    'field' => 'Owner',
+                    'type' => 'string',
+                    'label' => 'Owner'
+                ];
+
+                $newFields[] = [
+                    'key' => 'Institutions.name',
+                    'field' => 'Occupier',
+                    'type' => 'string',
+                    'label' => 'Occupier'
+                ];
+            }
         }
         $fields->exchangeArray($newFields);
     }
@@ -363,9 +401,28 @@ class InstitutionsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        $academicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
+        $institutionId = $this->Session->read('Institution.Institutions.id');
         $query
-        ->contain(['Areas'])
-        ->select(['area_code' => 'Areas.code']);
+        ->select(['area_code' => 'Areas.code','shift_name' => 'ShiftOptions.name','Owner' => 'Institutions.name','Occupier' => 'Institutions.name','shift_start_time' => 'InstitutionShifts.start_time','shift_end_time' => 'InstitutionShifts.end_time'])
+        ->LeftJoin([$this->Areas->alias() => $this->Areas->table()],[
+            $this->Areas->aliasField('id').' = ' . 'Institutions.area_id'
+        ])
+        ->innerJoinWith('InstitutionShifts')
+        ->LeftJoin(['InstitutionShifts' => 'institution_shifts'],[
+            $this->aliasField('institution_id').' = InstitutionShifts.institution_id',
+            $this->aliasField('academic_period_id').' = InstitutionShifts.academic_period_id'
+        ])
+        ->LeftJoin([$this->ShiftOptions->alias() => $this->ShiftOptions->table()],[
+            $this->ShiftOptions->aliasField('id').' = ' . $this->InstitutionShifts->aliasField('shift_option_id')
+        ])
+        ->where([
+            'OR' => [
+                [$this->InstitutionShifts->aliasField('location_institution_id') => $institutionId],
+                [$this->InstitutionShifts->aliasField('institution_id') => $institutionId]
+            ],
+            $this->InstitutionShifts->aliasField('academic_period_id') => $academicPeriod
+        ]);
     }
 
     public function onGetName(Event $event, Entity $entity)
@@ -397,7 +454,7 @@ class InstitutionsTable extends ControllerActionTable
                 ]);
             }
         }
-        
+
         return $name;
     }
 
@@ -434,7 +491,6 @@ class InstitutionsTable extends ControllerActionTable
             $this->InstitutionShifts->aliasField('academic_period_id') => $academicPeriod
         ])
         ->toArray();
-
         return $data;
     }
 
@@ -580,7 +636,7 @@ class InstitutionsTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {   
+    {
         $SecurityGroup = TableRegistry::get('Security.SystemGroups');
         $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 
@@ -588,7 +644,7 @@ class InstitutionsTable extends ControllerActionTable
         $dispatchTable[] = $SecurityGroup;
         $dispatchTable[] = $this->ExaminationCentres;
         $dispatchTable[] = $SecurityGroupAreas;
-        
+
         if(!empty($this->controllerAction) && ($this->controllerAction == 'Institutions')) {
             // Webhook institution create -- start
             $bodyData =  $this->find('all',
@@ -613,14 +669,14 @@ class InstitutionsTable extends ControllerActionTable
                 $areaAdministrativeId = $value->area_administrative->id;
                 $areaAdministrativeName = $value->area_administrative->name;
             }
-            
+
             $classificationId = $entity->classification;
             if($classificationId == 1 ){
                 $clss= 'Academic Institution';
             } else {
                 $clss = 'Non-academic institution';
             }
-            
+
             $body = array();
             $body = [
                 'institution_id' => $entity->id,
@@ -649,9 +705,9 @@ class InstitutionsTable extends ControllerActionTable
             ];
             if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
                 $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                if ($this->Auth->user()) { 
+                if ($this->Auth->user()) {
                     $Webhooks->triggerShell('institutions_create', ['username' => $username], $body);
-                }   
+                }
             }
         // Webhook institution create -- end
 
@@ -661,10 +717,10 @@ class InstitutionsTable extends ControllerActionTable
                 if ($this->Auth->user()) {
                     $Webhooks->triggerShell('institutions_update', ['username' => $username], $body);
                 }
-            }            
+            }
         // webhook institution update --end
         }
-        
+
         foreach ($dispatchTable as $model) {
             $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
         }
@@ -760,14 +816,14 @@ class InstitutionsTable extends ControllerActionTable
                 // Compile the dataset
                 $dataSet[] = [0 => $value['name'], 1 =>$value['count']];
             }
-            
+
             /*$dataSet = [
                 ['Lower Secondary', 7],
                 ['Upper  Secondary', 4],
                 ['Pre-primary', 6],
                 ['Primary', 15]
-            ];*/            
-            
+            ];*/
+
             $params['dataSet'] = $dataSet;
         }
         unset($institutionRecords);
@@ -968,10 +1024,10 @@ class InstitutionsTable extends ControllerActionTable
             'data-placement' => 'bottom',
             'escape' => false
         ];
-        
+
         $session = $this->request->session();
         $institutionId = $this->request->pass[1];
-        
+
         $extraButtons = [
             'close' => [
                 'Institution' => ['Institutions', 'edit', $institutionId],
@@ -985,7 +1041,7 @@ class InstitutionsTable extends ControllerActionTable
                 $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'edit', 1 => $institutionId] 
+                    'url' => [0 => 'edit', 1 => $institutionId]
                 ];
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
@@ -1508,7 +1564,6 @@ class InstitutionsTable extends ControllerActionTable
     {
         $value = "";
         $controllerName = $this->controller->name;
-
         $value = $this->defaultLogoView;
 
         return $value;
@@ -1526,7 +1581,7 @@ class InstitutionsTable extends ControllerActionTable
 
         return $value;
     }
-    
+
     public function findSearchInstitution(Query $query, array $options)
     {
         $search = $options['_controller']->request->query['_searchByCodeOrName'];
@@ -1538,7 +1593,7 @@ class InstitutionsTable extends ControllerActionTable
                 ]
             ]);
         }
-        
+
         //echo $query; die;
         return $query;
     }
