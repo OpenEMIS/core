@@ -86,6 +86,35 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         $query->contain($this->_contain);
     }
 
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+	{   
+		if(!empty($entity->education_grades) && !empty($entity->academic_period_id) && !empty($entity->student_attendance_mark_type_id) && !empty($entity->date_enabled)) {
+			$educationGrades = [];
+			foreach($entity->education_grades as $educationGrade) {
+				$educationGrades[] = $educationGrade->id;	
+			}
+			
+			$existingStatusCount = $this->find()
+			->select([$this->aliasField('id')])
+			->innerJoinWith('StudentMarkTypeStatusGrades')
+			->where([
+				$this->aliasField('academic_period_id') => $entity->academic_period_id,
+				$this->aliasField('student_attendance_mark_type_id') => $entity->student_attendance_mark_type_id,
+				'StudentMarkTypeStatusGrades.education_grade_id IN' => $educationGrades,
+				$this->aliasField('date_disabled >=') => $entity->date_enabled,
+			])
+			->count();
+
+			if ($existingStatusCount) {
+				$this->Alert->warning($this->aliasField('statusAlreadyAdded'));
+				$event->stopPropagation();
+				return $this->controller->redirect($this->url('index'));
+			} else {
+				return $process;
+			}	
+		}
+	}
+	
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');

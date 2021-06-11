@@ -2503,6 +2503,9 @@ trait MessagesTrait
             'ValidateNumberSuccess' => 'Identity number validate successfully.',
             'ValidateNumberFail' => 'Please enter correct identity number.',
             'IdentityNumberNotExist' => 'Identity number should not be blank.',
+        ],
+        'StudentMarkTypeStatuses' => [
+            'statusAlreadyAdded' => 'Attendance for the selected Education Grade already added.',
         ]
 
     ];
