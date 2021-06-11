@@ -2505,7 +2505,7 @@ trait MessagesTrait
             'IdentityNumberNotExist' => 'Identity number should not be blank.',
         ],
         'StudentMarkTypeStatuses' => [
-            'statusAlreadyAdded' => 'Duplicate Record.',
+            'statusAlreadyAdded' => 'Attendance for the selected Education Grade already added.',
         ]
 
     ];
