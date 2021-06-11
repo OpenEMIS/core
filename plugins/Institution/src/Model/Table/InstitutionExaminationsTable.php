@@ -19,7 +19,6 @@ class InstitutionExaminationsTable extends ControllerActionTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-        $this->hasMany('InstitutionGrades', ['className' => 'Education.InstitutionGrades']);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('ExaminationCentres', [
@@ -155,23 +154,17 @@ class InstitutionExaminationsTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $academicPeriod = $this->request->query['academic_period_id']; 
         
             $query
             ->select(['code' => 'InstitutionExaminations.code', 'name' => 'InstitutionExaminations.name', 'grade' => 'EducationGrades.code', '	registration_start_date' => 'InstitutionExaminations.registration_start_date',  'registration_end_date' => 'InstitutionExaminations.registration_end_date', 'academic_period' => 'AcademicPeriods.name'])
             ->LeftJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()],[
                 $this->EducationGrades->aliasField('id').' = ' . 'InstitutionExaminations.education_grade_id'
             ])
-
             ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
                 $this->AcademicPeriods->aliasField('id').' = ' . 'InstitutionExaminations.academic_period_id'
             ])
-
-            ->LeftJoin([$this->InstitutionGrades->alias() => $this->InstitutionGrades->table()],[
-                $this->InstitutionGrades->aliasField('education_grade_id ').' = ' . 'InstitutionExaminations.education_grade_id'
-            ])
-           
-            ->where(['InstitutionGrades.institution_id' =>  $institutionId]);
+            ->where(['InstitutionExaminations.academic_period_id' =>  $academicPeriod]);
      
     }
 }
