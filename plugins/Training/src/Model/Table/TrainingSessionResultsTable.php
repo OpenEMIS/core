@@ -33,8 +33,41 @@ class TrainingSessionResultsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
+        $this->belongsTo('TrainingSessions', ['className' => 'Training.TrainingSessions']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'assignee_id']);
+        $this->addBehavior('User.AdvancedNameSearch');
         $this->toggle('add', false);
 	}
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $request = $this->request;
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $query
+            ->contain([
+                'Sessions.Courses' => [
+                    'fields' => [
+                        'id',
+                        'name'
+                        ]
+                    ],
+                'Sessions.TrainingProviders' => [
+                    'fields' => [
+                        'id',
+                        'name'
+                        ]
+                    ]
+                ]);
+            $orConditions = [
+             'TrainingSessions.name LIKE' => $search.'%',
+             'Courses.name LIKE' => $search.'%',
+             'TrainingProviders.name LIKE' => $search.'%'
+        ];
+        // function from AdvancedNameSearchBehavior
+            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search,'OR' => $orConditions]);
+        }
+    }
 
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
 	{
