@@ -15,7 +15,44 @@ class POCOR5376 extends AbstractMigration
         // Backup locale_contents table
         $this->execute('CREATE TABLE `zz_5376_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `zz_5376_security_functions` SELECT * FROM `security_functions`');
+
+        $this->execute('CREATE TABLE `zz_5376_security_roles` LIKE `security_roles`');
+        $this->execute('INSERT INTO `zz_5376_security_roles` SELECT * FROM `security_roles`');
         // End
+
+        $roles = $this->fetchAll('SELECT * FROM `security_roles`'); 
+        if(!empty($roles)){
+            foreach ($roles as $key => $value) {
+                if($value['name'] == 'Group Administrator'){
+                    $code = 'GROUP_ADMINISTRATOR';  
+                }elseif ($value['name'] == 'Administrator') {
+                    $code = 'ADMINISTRATOR';  
+                }elseif ($value['name'] == 'District Officer') {
+                    $code = 'DISTRICT_OFFICER';
+                }elseif ($value['name'] == 'Principal') {
+                    $code = 'PRINCIPAL'; 
+                }elseif ($value['name'] == 'Homeroom Teacher') {
+                    $code = 'HOMEROOM_TEACHER';
+                }elseif ($value['name'] == 'Teacher') {
+                    $code = 'TEACHER';
+                }elseif ($value['name'] == 'Staff') {
+                    $code = 'STAFF';
+                }elseif ($value['name'] == 'Student') {
+                    $code = 'STUDENT';
+                }elseif ($value['name'] == 'Guardian') {
+                    $code = 'GUARDIAN';
+                }elseif ($value['name'] == 'Superrole') {
+                    $code = 'SUPERROLE';
+                }elseif ($value['name'] == 'Deputy Principal') {
+                    $code = 'DEPUTY_PRINCIPAL';
+                }
+
+                $id = $value['id'] ; 
+                $this->execute('UPDATE `security_roles` SET `code` = "'. $code .'" WHERE `id` = "'. $id .'" ');
+            }
+        }      
+
+
         // 1021 = Students
         $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 1021');
         $order = $row['order'];
