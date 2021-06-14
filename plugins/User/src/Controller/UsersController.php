@@ -206,16 +206,16 @@ class UsersController extends AppController
                         'token' => $checksum
                     ], true);
                     /*POCOR-5284 Starts*/
--                    $Themes = TableRegistry::get('Theme.Themes');
--                    $getData = $Themes->find()
--                                ->where([$Themes->aliasField('name') => 'Application Name'])
--                                ->first()
--                    if (!empty($getData) && !is_null($getData->value)) {
--                        $emailSubject = $getData->value;
--                    } else {
--                        $emailSubject = $getData->default_value;
--                    }
--                   /*POCOR-5284 Ends*/
+                    $Themes = TableRegistry::get('Theme.Themes');
+                    $getData = $Themes->find()
+                                ->where([$Themes->aliasField('name') => 'Application Name'])
+                                ->first();
+                    if (!empty($getData) && !is_null($getData->value) && !empty($getData->value)) {
+                        $emailSubject = $getData->value;
+                    } else {
+                        $emailSubject = $getData->default_value;
+                    }
+                   /*POCOR-5284 Ends*/
                     $email = new Email('openemis');
                     $emailSubject = $emailSubject. '- Password Reset Request';
                     //$emailSubject = __('OpenEMIS - Password Reset Request');
