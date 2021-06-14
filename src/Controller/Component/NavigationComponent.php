@@ -739,7 +739,7 @@ class NavigationComponent extends Component
             ],
 
             'Institutions.Appointment' => [
-                'title' => 'Appointment',
+                'title' => 'Appointments',
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false,
             ],
