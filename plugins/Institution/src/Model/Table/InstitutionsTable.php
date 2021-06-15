@@ -434,6 +434,9 @@ class InstitutionsTable extends ControllerActionTable
                 [$this->InstitutionShifts->aliasField('institution_id') => $institutionId]
             ],
             $this->InstitutionShifts->aliasField('academic_period_id') => $academicPeriod
+        ])
+        ->group([
+            $this->ShiftOptions->aliasField('id'),
         ]);
     }
 
