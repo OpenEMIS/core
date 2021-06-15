@@ -135,5 +135,8 @@ class POCOR5376 extends AbstractMigration
     {
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
         $this->execute('RENAME TABLE `zz_5376_security_functions` TO `security_functions`');
+
+        $this->execute('DROP TABLE IF EXISTS `security_roles`');
+        $this->execute('RENAME TABLE `zz_5376_security_roles` TO `security_roles`');
     }
 }
