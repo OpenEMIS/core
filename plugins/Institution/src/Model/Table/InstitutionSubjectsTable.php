@@ -819,6 +819,12 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $edCycleName  = $value->education_grade->education_programme->education_cycle->name;
                     $edLvlName = $value->education_grade->education_programme->education_cycle->education_level->name;
                     $edSysName = $value->education_grade->education_programme->education_cycle->education_level->education_system->name;
+                    //POCOR-6184
+                    $edSysId = $value->education_grade->education_programme->education_cycle->education_level->education_system->id;
+                    $edLvlId = $value->education_grade->education_programme->education_cycle->education_level->id;
+                    $edCycleId  = $value->education_grade->education_programme->education_cycle->id;
+                    $programmeId = $value->education_grade->education_programme->id;
+                    $academic_period_id = $value->academic_period->id;
                     if(!empty($value->students)) {
                         foreach ($value->students as $key => $students) {
                             $studentData[] = $students->openemis_no;
@@ -840,9 +846,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $body = array();
 
             $body = [
+                'education_systems_id' => !empty($edSysId) ? $edSysId : NULL,
                 'education_systems_name' => !empty($edSysName) ? $edSysName : NULL,
+                'education_levels_id' => !empty($edLvlId) ? $edLvlId : NULL,
                 'education_levels_name' => !empty($edLvlName) ? $edLvlName : NULL,
+                'education_cycles_id' => !empty($edCycleId) ? $edCycleId : NULL,
                 'education_cycles_name' => !empty($edCycleName) ? $edCycleName : NULL,
+                'education_programmes_id' => !empty($programmeId) ? $programmeId : NULL,
                 'education_programmes_code' => !empty($programmeCode) ? $programmeCode : NULL,
                 'education_programmes_name' => !empty($programmeName) ? $programmeName : NULL,
                 'education_grades_id' => !empty($educationGradeId) ? $educationGradeId : NULL,
@@ -856,6 +866,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
                 'institution_classes_id' => !empty($classId) ? $classId : NULL,
                 'institution_classes_name' => !empty($className) ? $className : NULL,
+                'academic_period_id' => !empty($academic_period_id) ? $academic_period_id : NULL,
                 'academic_periods_code' => !empty($academic_period_code) ? $academic_period_code : NULL,
                 'academic_periods_name' => !empty($academic_period_name) ? $academic_period_name : NULL,
                 'institution_subjects_id' => $entity->id,
@@ -888,7 +899,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     ])->where([
                         $this->aliasField('id') => $entity->id
                     ]);
-
             $studentData = $teacherData = $className = $classId = [];
 
             if(isset($bodyData)) {
@@ -909,6 +919,12 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $edCycleName  = $value->education_grade->education_programme->education_cycle->name;
                     $edLvlName = $value->education_grade->education_programme->education_cycle->education_level->name;
                     $edSysName = $value->education_grade->education_programme->education_cycle->education_level->education_system->name;
+                    //POCOR-6184
+                    $edSysId = $value->education_grade->education_programme->education_cycle->education_level->education_system->id;
+                    $edLvlId = $value->education_grade->education_programme->education_cycle->education_level->id;
+                    $edCycleId  = $value->education_grade->education_programme->education_cycle->id;
+                    $programmeId = $value->education_grade->education_programme->id;
+                    $academic_period_id = $value->academic_period->id;
                     if(!empty($value->students)) {
                             foreach ($value->students as $key => $students) {
                                 $studentData[] = $students->openemis_no;
@@ -930,9 +946,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $body = array();
 
             $body = [
+                'education_systems_id' => !empty($edSysId) ? $edSysId : NULL,
                 'education_systems_name' => !empty($edSysName) ? $edSysName : NULL,
+                'education_levels_id' => !empty($edLvlId) ? $edLvlId : NULL,
                 'education_levels_name' => !empty($edLvlName) ? $edLvlName : NULL,
+                'education_cycles_id' => !empty($edCycleId) ? $edCycleId : NULL,
                 'education_cycles_name' => !empty($edCycleName) ? $edCycleName : NULL,
+                'education_programmes_id' => !empty($programmeId) ? $programmeId : NULL,
                 'education_programmes_code' => !empty($programmeCode) ? $programmeCode : NULL,
                 'education_programmes_name' => !empty($programmeName) ? $programmeName : NULL,
                 'education_grades_id' => !empty($educationGradeId) ? $educationGradeId : NULL,
@@ -946,6 +966,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
                 'institution_classes_id' => !empty($classId) ? $classId : NULL,
                 'institution_classes_name' => !empty($className) ? $className : NULL,
+                'academic_period_id' => !empty($academic_period_id) ? $academic_period_id : NULL,
                 'academic_periods_code' => !empty($academic_period_code) ? $academic_period_code : NULL,
                 'academic_periods_name' => !empty($academic_period_name) ? $academic_period_name : NULL,
                 'institution_subjects_id' => $entity->id,

@@ -301,6 +301,12 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                                 $education_programme_name = $value->education_programme->name;
                                 $education_programme_name = $value->education_programme->name;
                                 $start_date = $start_date;
+                                //POCOR-6184
+                                $education_system_id = $value->education_programme->education_cycle->education_level->education_system->id;
+                                $education_level_id = $value->education_programme->education_cycle->education_level->id;
+                                $education_cycle_id = $value->education_programme->education_cycle->id;
+                                $education_programme_id = $value->education_programme->id;
+
                             }
                         }
 
@@ -313,9 +319,13 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                         }
 
                         $body = [
+                            'education_system_id' => !empty($education_system_id) ? $education_system_id : NULL,
                             'education_system_name' => !empty($education_system_name) ? $education_system_name : NULL,
+                            'education_level_id' => !empty($education_level_id) ? $education_level_id : NULL,
                             'education_level_name' => !empty($education_level_name) ? $education_level_name : NULL,
+                            'education_cycle_id' => !empty($education_cycle_id) ? $education_cycle_id : NULL,
                             'education_cycle_name' => !empty($education_cycle_name) ? $education_cycle_name : NULL,
+                            'education_programme_id' => !empty($education_programme_id) ? $education_programme_id : NULL,
                             'education_programme_code' => !empty($education_programme_code) ? $education_programme_code : NULL,
                             'education_programme_name' => !empty($education_programme_name) ? $education_programme_name : NULL,
                             'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
@@ -626,14 +636,23 @@ public function editBeforeSave(Event $event, Entity $entity,
         $institution_id = $value->institution->id;
         $institution_name = $value->institution->name;
         $institution_code = $value->institution->code;
+        //POCOR-6184
+        $education_system_id = $value->education_grade->education_programme->education_cycle->education_level->education_system->id;
+        $education_level_id = $value->education_grade->education_programme->education_cycle->education_level->id;
+        $education_cycle_id = $value->education_grade->education_programme->education_cycle->id;
+        $education_programme_id = $value->education_grade->education_programme->id;
     }
 }
 $body = array();
 
 $body = [
+    'education_system_id' => !empty($education_system_id) ? $education_system_id : NULL,
     'education_system_name' => !empty($education_system_name) ? $education_system_name : NULL,
+    'education_level_id' => !empty($education_level_id) ? $education_level_id : NULL,
     'education_level_name' => !empty($education_level_name) ? $education_level_name : NULL,
+    'education_cycle_id' => !empty($education_cycle_id) ? $education_cycle_id : NULL,
     'education_cycle_name' => !empty($education_cycle_name) ? $education_cycle_name : NULL,
+    'education_programme_id' => !empty($education_programme_id) ? $education_programme_id : NULL,
     'education_programme_code' => !empty($education_programme_code) ? $education_programme_code : NULL,
     'education_programme_name' => !empty($education_programme_name) ? $education_programme_name : NULL,
     'institution_id' => !empty($institution_id) ? $institution_id : NULL,
