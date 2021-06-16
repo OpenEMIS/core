@@ -314,13 +314,17 @@ class NavigationComponent extends Component
 			
 			$userType = '';
 			if(!empty($userInfo)) {
-				if ($userInfo->is_student) {
+				if ($userInfo->is_student && $userInfo->is_staff == 0 && $userInfo->is_guardian == 0) {
 					$userType = 1;
-				} elseif ($userInfo->is_staff) {
+				} elseif ($userInfo->is_staff && $userInfo->is_student == 0 && $userInfo->is_guardian == 0) {
 					$userType = 2;
-				} elseif ($userInfo->is_guardian) {
+				} elseif ($userInfo->is_guardian && $userInfo->is_staff == 0 && $userInfo->is_student == 0) {
 					$userType = 3;
-				}
+				} elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
+                   $userType = 4; //superrole user
+                } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 0) {
+                   $userType = 5;
+                }
 			}
 			$session = $this->request->session();
             $isStudent = $session->read('Directory.Directories.is_student');
@@ -339,6 +343,19 @@ class NavigationComponent extends Component
 
             if ($userType == 3) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
+                $session->write('Directory.Directories.reload', true);
+            }
+
+            if ($userType == 4) {
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
+                $session->write('Directory.Directories.reload', true);
+            }
+
+            if ($userType == 5) {
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
         } elseif (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
