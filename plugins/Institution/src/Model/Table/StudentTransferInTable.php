@@ -363,14 +363,6 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 ->where(['institution_id' => $institutionId, 'student_id' => $studentId, 'academic_period_id' => $academicPeriodId])
                 ->execute();
 
-        $academicPeriodTable = TableRegistry::get('academic_periods');
-        $academicQuery = $academicPeriodTable->query();
-//        print_r($query);die();
-        $academicQuery->update()
-            ->set(['start_date' => $newDate])
-            ->where(['id' => $academicPeriodId])
-            ->execute();
-
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
