@@ -209,7 +209,7 @@ class InstitutionsTable extends AppTable
     }//POCOR-5762 ends
 
     public function beforeAction(Event $event)
-    { 
+    {   
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
@@ -254,7 +254,7 @@ class InstitutionsTable extends AppTable
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {    
+    {
         if ($data[$this->alias()]['feature'] == 'Report.InstitutionSubjectsClasses') {
             $options['validate'] = 'subjectsClasses';
         } 
@@ -313,8 +313,18 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'infrastructure_level';
                     $fieldsOrder[] = 'format';
-                    break;                
-                
+                    break;
+                /*POCOR-5047 starts*/ 
+                case 'Report.StaffLeave':
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'position';
+                    $fieldsOrder[] = 'leave_type';
+                    $fieldsOrder[] = 'workflow_status';
+                    $fieldsOrder[] = 'format';
+                    break;
+                /*POCOR-5047 ends*/
                 default:
                     break;
             }
