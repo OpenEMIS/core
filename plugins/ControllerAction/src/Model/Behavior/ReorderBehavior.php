@@ -132,7 +132,7 @@ class ReorderBehavior extends Behavior {
 		}
 		$counter = 1;
 		foreach ($reorderItems as $key => $item) {
-			$table->updateAll([$orderField => $counter++], [$table->primaryKey() => $key]);
+			$table->updateAll(["`".$orderField."`" => $counter++], ["`".$table->primaryKey()."`" => $key]);
 		}
 	}
 
