@@ -41,7 +41,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
                 ],
                 'ruleCompareDateReverse' => [
-                    'rule' => ['compareDateReverse', 'requested_date', false],
+                    'rule' => ['compareDateReverse', 'requested_date', []],
                     'on' => function ($context) {
                         return array_key_exists('requested_date', $context['data']) && !empty($context['data']['requested_date']);
                     }
@@ -193,8 +193,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     {
         $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
 
-//        print_r($selectedAcademicPeriodData->start_date);die();
-        $entity->start_date = $selectedAcademicPeriodData->start_date;
+        //$entity->start_date = $selectedAcademicPeriodData->start_date;
         $entity->end_date = $selectedAcademicPeriodData->end_date;
         $this->addSections();
         if (empty($entity->requested_date)) {
@@ -293,11 +292,9 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-//        print_r($event);die();
         $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
 
-//        print_r($selectedAcademicPeriodData->start_date);die();
-        $entity->start_date = $selectedAcademicPeriodData->start_date;
+        //$entity->start_date = $selectedAcademicPeriodData->start_date;
         $entity->end_date = $selectedAcademicPeriodData->end_date;
         $this->addSections();
         $this->field('student_id', [
