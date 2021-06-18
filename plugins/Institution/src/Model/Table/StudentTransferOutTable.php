@@ -301,11 +301,6 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
-
-//        print_r($selectedAcademicPeriodData->start_date);die();
-        $entity->start_date = $selectedAcademicPeriodData->start_date;
-        $entity->end_date = $selectedAcademicPeriodData->end_date;
         $this->addSections();
         if (empty($entity->start_date)) {
             $this->field('start_date', ['type' => 'hidden']);
