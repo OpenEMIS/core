@@ -17,7 +17,6 @@ class POCOR6056 extends AbstractMigration
         $this->execute('INSERT INTO `zz_6056_institution_staff_transfers` SELECT * FROM `institution_staff_transfers`');
 
         $this->execute('ALTER TABLE `institution_staff_transfers` CHANGE `previous_end_date` `previous_end_date` DATE NOT NULL');
-        $this->execute('ALTER TABLE `institution_staff_transfers` CHANGE `new_start_date` `new_start_date` DATE NOT NULL');
     }
 
     // rollback
