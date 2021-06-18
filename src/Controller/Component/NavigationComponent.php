@@ -2019,4 +2019,5 @@ class NavigationComponent extends Component
         ];
         return $navigation;
     }
+    
 }
