@@ -78,6 +78,10 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
         $this->hasMany('ShiftOptions', ['className' => 'InstitutionShifts.ShiftOptions', 'foreignKey' => 'shift_option_id']);
         $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+        $this->hasMany('InstitutionCustomFieldValues', ['className' => 'Institution.InstitutionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']);
+        $this->hasMany('InstitutionCustomFields', ['className' => 'InstitutionCustomFieldValues.InstitutionCustomFields', 'foreignKey' => 'id']);
+
         // Note: InstitutionClasses already cascade deletes 'InstitutionSubjectStudents' - dependent and cascade not neccessary
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -386,6 +390,7 @@ class InstitutionsTable extends ControllerActionTable
                     'label' => 'Occupier'
                 ];
             }
+
         }
         $fields->exchangeArray($newFields);
     }
@@ -404,14 +409,21 @@ class InstitutionsTable extends ControllerActionTable
         $academicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $query
-        ->select(['area_code' => 'Areas.code','shift_name' => 'ShiftOptions.name','Owner' => 'Institutions.name','Occupier' => 'Institutions.name','shift_start_time' => 'InstitutionShifts.start_time','shift_end_time' => 'InstitutionShifts.end_time'])
+        ->select(['area_code' => 'Areas.code','shift_name' => 'ShiftOptions.name','Owner' => 'Institutions.name','Occupier' => 'Institutions.name','shift_start_time' => 'InstitutionShifts.start_time','shift_end_time' => 'InstitutionShifts.end_time','custom_field_name' =>'InstitutionCustomFields.name','custom_field_value' =>'InstitutionCustomFieldValues.text_value'])
         ->LeftJoin([$this->Areas->alias() => $this->Areas->table()],[
             $this->Areas->aliasField('id').' = ' . 'Institutions.area_id'
         ])
+
         ->innerJoinWith('InstitutionShifts')
         ->LeftJoin(['InstitutionShifts' => 'institution_shifts'],[
             $this->aliasField('institution_id').' = InstitutionShifts.institution_id',
             $this->aliasField('academic_period_id').' = InstitutionShifts.academic_period_id'
+        ])
+        ->LeftJoin([$this->InstitutionCustomFieldValues->alias() => $this->InstitutionCustomFieldValues->table()],[
+            $this->aliasField('id').' = ' . $this->InstitutionCustomFieldValues->aliasField('institution_id')
+        ])
+        ->leftJoin([$this->InstitutionCustomFields->alias() => $this->InstitutionCustomFields->table()],[
+            $this->InstitutionCustomFieldValues->aliasField('institution_custom_field_id').' = ' . $this->InstitutionCustomFields->aliasField('id')
         ])
         ->LeftJoin([$this->ShiftOptions->alias() => $this->ShiftOptions->table()],[
             $this->ShiftOptions->aliasField('id').' = ' . $this->InstitutionShifts->aliasField('shift_option_id')
@@ -422,6 +434,9 @@ class InstitutionsTable extends ControllerActionTable
                 [$this->InstitutionShifts->aliasField('institution_id') => $institutionId]
             ],
             $this->InstitutionShifts->aliasField('academic_period_id') => $academicPeriod
+        ])
+        ->group([
+            $this->ShiftOptions->aliasField('id'),
         ]);
     }
 
