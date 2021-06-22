@@ -117,7 +117,7 @@ class EducationSubjectsTable extends ControllerActionTable
                 'subject_code' =>$entity->code,
             ];
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
+            if (!empty($entity->created_user_id)) {
                 $Webhooks->triggerShell('education_subject_create', ['username' => $username], $body);
             }
         }
@@ -132,7 +132,7 @@ class EducationSubjectsTable extends ControllerActionTable
                 'subject_code' =>$entity->code,
             ];
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
+            if (!empty($entity->modified_user_id)) {
                 $Webhooks->triggerShell('education_subject_update', ['username' => $username], $body);
             }
         }
