@@ -74,6 +74,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
             .then(function (outcomeTemplate) {
                 Controller.outcomeTemplateName = outcomeTemplate.code_name;
                 Controller.educationGradeId = outcomeTemplate.education_grade_id;
+                Controller.selectedStudent = Controller.studentOptions[0].student_id; //6198 studentId 
 
                 Controller.periodOptions = outcomeTemplate.periods;
                 if (Controller.periodOptions.length > 0) {
@@ -83,7 +84,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     AlertSvc.warning(Controller, "Please setup outcome periods for the selected template");
                 }
 
-                return InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId);
+                return InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId, Controller.selectedStudent); //6198 studentId 
             }, function (error) {
                 console.log(error);
             })
