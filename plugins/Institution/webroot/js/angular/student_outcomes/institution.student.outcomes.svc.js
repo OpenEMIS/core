@@ -79,7 +79,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         var success = function(response, deferred) { 
             deferred.resolve(response.data.data);
         };
-
+        
         return InstitutionSubjects
             .find('bySubjectsInClass', {
                 institution_class_id: classId,
