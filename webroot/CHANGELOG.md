@@ -1,3 +1,16 @@
+### [3.66.3] - 2021-06-18
+- Bug Fixed: Institution > Students > Promote: There is no option to select for Next Class field
+- Bug Fixed: Directory: User who is a Student and a Staff has only 1 record in Directory page
+- Bug Fixed: Institution> Academic > Feeders > Outgoing: User is given security permission to delete record but is unable to do so
+- Bug Fixed: Update Export button function - Institutions > General > Overview (include custom fields contacts and shifts)
+- Bug Fixed: Administration > Security > Roles > Permission: Permission missing for Finance > Income, Budget and Expenditure
+- Bug Fixed: Administration > System Setup > Academic Period: Start Date changes when student is successfully Transferred to a new Institution
+- Bug Fixed: Institution > Bulk Transfer: To allow user to select the same Grade that student is currently in for the Next Institution
+- Bug Fixed: Administration > System Setup > Localization > Translations: Word/ phrases not created
+- Bug Fixed: Institutions > General > Map > Export
+- Bug Fixed: Administration > System Setup > Administrative Boundaries > Areas (Administrative) tab: Encountered 404 error
+- Bug Fixed: Institution > Staff > Transfer: To make Position End Date and Start Date fields mandatory fields
+
 ### [3.66.2] - 2021-06-12
 - Bug Fixed: Reports>Institutions:Progress Loading bar image is different between RTL and LTR
 - Bug Fixed: Administration > Security Groups : Allow the adding of Multiple Roles for the same user in User Groups
