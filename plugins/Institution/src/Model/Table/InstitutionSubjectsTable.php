@@ -143,7 +143,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             $ClassSubjectsTable->aliasField('institution_class_id') => $record['institution_class_id']
                         ];
                     }
-                    
+
                     $recordFound = $ClassSubjectsTable->find()->innerJoinWith('InstitutionSubjects', function ($q) use ($educationSubjectId) {
                         return $q->where(['InstitutionSubjects.education_subject_id' => $educationSubjectId]);
                     })->where($conditions)->where($anotherCondition)->count();
@@ -819,6 +819,12 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $edCycleName  = $value->education_grade->education_programme->education_cycle->name;
                     $edLvlName = $value->education_grade->education_programme->education_cycle->education_level->name;
                     $edSysName = $value->education_grade->education_programme->education_cycle->education_level->education_system->name;
+                    //POCOR-6184
+                    $edSysId = $value->education_grade->education_programme->education_cycle->education_level->education_system->id;
+                    $edLvlId = $value->education_grade->education_programme->education_cycle->education_level->id;
+                    $edCycleId  = $value->education_grade->education_programme->education_cycle->id;
+                    $programmeId = $value->education_grade->education_programme->id;
+                    $academic_period_id = $value->academic_period->id;
                     if(!empty($value->students)) {
                         foreach ($value->students as $key => $students) {
                             $studentData[] = $students->openemis_no;
@@ -838,11 +844,15 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
             }
             $body = array();
-            
-            $body = [   
+
+            $body = [
+                'education_systems_id' => !empty($edSysId) ? $edSysId : NULL,
                 'education_systems_name' => !empty($edSysName) ? $edSysName : NULL,
+                'education_levels_id' => !empty($edLvlId) ? $edLvlId : NULL,
                 'education_levels_name' => !empty($edLvlName) ? $edLvlName : NULL,
+                'education_cycles_id' => !empty($edCycleId) ? $edCycleId : NULL,
                 'education_cycles_name' => !empty($edCycleName) ? $edCycleName : NULL,
+                'education_programmes_id' => !empty($programmeId) ? $programmeId : NULL,
                 'education_programmes_code' => !empty($programmeCode) ? $programmeCode : NULL,
                 'education_programmes_name' => !empty($programmeName) ? $programmeName : NULL,
                 'education_grades_id' => !empty($educationGradeId) ? $educationGradeId : NULL,
@@ -856,6 +866,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
                 'institution_classes_id' => !empty($classId) ? $classId : NULL,
                 'institution_classes_name' => !empty($className) ? $className : NULL,
+                'academic_period_id' => !empty($academic_period_id) ? $academic_period_id : NULL,
                 'academic_periods_code' => !empty($academic_period_code) ? $academic_period_code : NULL,
                 'academic_periods_name' => !empty($academic_period_name) ? $academic_period_name : NULL,
                 'institution_subjects_id' => $entity->id,
@@ -869,7 +880,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             }
                     //POCOR-5439 subject update webhook end
         } else {
-                if(!empty($this->controllerAction) && ($this->controllerAction == 'Subjects')) {    
+                if(!empty($this->controllerAction) && ($this->controllerAction == 'Subjects')) {
                 // POCOR-5438 ->Webhook Feature subject (create) -- start
                 $bodyData = $this->find('all',
                             [ 'contain' => [
@@ -888,7 +899,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     ])->where([
                         $this->aliasField('id') => $entity->id
                     ]);
-
             $studentData = $teacherData = $className = $classId = [];
 
             if(isset($bodyData)) {
@@ -909,6 +919,12 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $edCycleName  = $value->education_grade->education_programme->education_cycle->name;
                     $edLvlName = $value->education_grade->education_programme->education_cycle->education_level->name;
                     $edSysName = $value->education_grade->education_programme->education_cycle->education_level->education_system->name;
+                    //POCOR-6184
+                    $edSysId = $value->education_grade->education_programme->education_cycle->education_level->education_system->id;
+                    $edLvlId = $value->education_grade->education_programme->education_cycle->education_level->id;
+                    $edCycleId  = $value->education_grade->education_programme->education_cycle->id;
+                    $programmeId = $value->education_grade->education_programme->id;
+                    $academic_period_id = $value->academic_period->id;
                     if(!empty($value->students)) {
                             foreach ($value->students as $key => $students) {
                                 $studentData[] = $students->openemis_no;
@@ -928,11 +944,15 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
             }
             $body = array();
-           
-            $body = [   
+
+            $body = [
+                'education_systems_id' => !empty($edSysId) ? $edSysId : NULL,
                 'education_systems_name' => !empty($edSysName) ? $edSysName : NULL,
+                'education_levels_id' => !empty($edLvlId) ? $edLvlId : NULL,
                 'education_levels_name' => !empty($edLvlName) ? $edLvlName : NULL,
+                'education_cycles_id' => !empty($edCycleId) ? $edCycleId : NULL,
                 'education_cycles_name' => !empty($edCycleName) ? $edCycleName : NULL,
+                'education_programmes_id' => !empty($programmeId) ? $programmeId : NULL,
                 'education_programmes_code' => !empty($programmeCode) ? $programmeCode : NULL,
                 'education_programmes_name' => !empty($programmeName) ? $programmeName : NULL,
                 'education_grades_id' => !empty($educationGradeId) ? $educationGradeId : NULL,
@@ -946,6 +966,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
                 'institution_classes_id' => !empty($classId) ? $classId : NULL,
                 'institution_classes_name' => !empty($className) ? $className : NULL,
+                'academic_period_id' => !empty($academic_period_id) ? $academic_period_id : NULL,
                 'academic_periods_code' => !empty($academic_period_code) ? $academic_period_code : NULL,
                 'academic_periods_name' => !empty($academic_period_name) ? $academic_period_name : NULL,
                 'institution_subjects_id' => $entity->id,
@@ -1031,15 +1052,15 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
             $body = array();
 
-            $body = [  
+            $body = [
                 'institution_subjects_id' => !empty($entity->id) ? $entity->id : NULL,
             ];
             if($this->action == 'remove') {
                 $Webhooks = TableRegistry::get('Webhook.Webhooks');
                 if ($this->Auth->user()) {
-                    $username = $this->Auth->user()['username']; 
+                    $username = $this->Auth->user()['username'];
                     $Webhooks->triggerShell('subject_delete', ['username' => $username], $body);
-                } 
+                }
             }
         }
     }
@@ -1506,7 +1527,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             ->select(['id'])
                             ->first();
                     }
-                    
+
                     if (!$existingSchoolSubjects) {
                         $newSchoolSubjects[$key] = [
                             'name' => $educationSubject['name'],
@@ -1523,21 +1544,21 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         ];
                     }
                 }
-                
+
                 if (!empty($newSchoolSubjects)) {
                     $programsubjects = 0;
                     $newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
                     foreach ($newSchoolSubjects as $subject) {     //POCOR 5001
                         //POCOR-5932 starts
-                        /*$institutionProgramGradeSubjects = 
+                        /*$institutionProgramGradeSubjects =
                             TableRegistry::get('InstitutionProgramGradeSubjects')
                             ->find('list')
                             ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $subject->education_grade_id,
                                 'InstitutionProgramGradeSubjects.education_grade_subject_id' => $subject->education_subject_id,
                                 'InstitutionProgramGradeSubjects.institution_id' => $subject->institution_id
                                 ])
-                            ->count(); 
-                        
+                            ->count();
+
                         if($institutionProgramGradeSubjects > 0){*/
                             $programsubjects++;
                             $InstitutionSubjects->save($subject);
@@ -1574,7 +1595,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                 'InstitutionSubjects.Classes'
                             ],
                 ])->where(['institution_class_id' => $entity->id])->toArray();
-                
+
                 $studentData = $teacherData = $className = [];
                 $body = array();
                 if (!empty($bodyData)) {
@@ -1612,7 +1633,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                 }
                             }
 
-                            $body = [   
+                            $body = [
                                 'education_systems_name' => !empty($edSysName) ? $edSysName : NULL,
                                 'education_levels_name' => !empty($edLvlName) ? $edLvlName : NULL,
                                 'education_cycles_name' => !empty($edCycleName) ? $edCycleName : NULL,
@@ -1638,7 +1659,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                 $Webhooks->triggerShell('subject_create', ['username' => $username], $body);
                             }
                         }
-                    }    
+                    }
                 }
                 //subject webhook ends---
             }
@@ -1741,7 +1762,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
             }
         }
- 
+
         return $data;
     }
 
@@ -1756,6 +1777,40 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ])
             ->toArray();
         return $classSubjects;
-          
+
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+        $cloneFields = $fields->getArrayCopy();
+        $newFields = [];
+        foreach ($cloneFields as $key => $value) {
+            $newFields[] = $value;
+            if($value['field'] == 'gender'){
+
+                $newFields[] = [
+                    'key' => 'InstitutionSubjects.total_male_students',
+                    'field' => 'total_male_students',
+                    'type' => 'string',
+                    'label' => 'Total Male Student'
+                ];
+
+                $newFields[] = [
+                    'key' => 'InstitutionSubjects.total_female_students',
+                    'field' => 'total_female_students',
+                    'type' => 'string',
+                    'label' => 'Total Female Student'
+                ];
+            }
+
+        }
+        //print_r($newFields); exit;
+        $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
+    {
+        $query
+        ->select(['total_male_students' => 'InstitutionSubjects.total_male_students','total_female_students' => 'InstitutionSubjects.total_female_students']);
     }
 }

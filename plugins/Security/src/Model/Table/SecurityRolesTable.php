@@ -126,7 +126,8 @@ class SecurityRolesTable extends ControllerActionTable
             ->add('name', 'ruleUnique', [
                 'rule' => 'validateUnique',
                 'provider' => 'table'
-            ]);
+            ])
+            ->notEmpty('code');
 
         return $validator;
     }
@@ -377,13 +378,33 @@ class SecurityRolesTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->setupFields($entity, $extra);
+        /*POCOR-5782 starts*/
+        if ($this->request->params['pass'][0] == 'edit') {
+            $this->field('code', [
+                'type' => 'readonly',
+                'entity' => $entity
+            ]);
+            $this->field('name', [
+                'type' => 'readonly',
+                'entity' => $entity
+            ]);
+            $this->field('security_group_id', [
+                'entity' => $entity
+            ]);
+            
+            $this->setFieldOrder([
+                'name', 'code', 'order', 'visible', 'security_group_id'
+            ]);
+        } else {
+           $this->setupFields($entity, $extra);
+        }
+        /*POCOR-5782 ends*/
     }
 
     private function setupFields(Entity $entity, ArrayObject $extra)
     {
         $this->field('code', [
-            'type' => 'hidden'
+            'entity' => $entity //POCOR-5782
         ]);
         $this->field('name', [
             'entity' => $entity

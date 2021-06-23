@@ -160,6 +160,21 @@ class EducationCyclesTable extends ControllerActionTable
 		}
 	}
 
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // Webhook Education Cycle Delete -- Start
+
+        $body = array();
+        $body = [
+            'education_cycle_id' => $entity->id
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('education_cycle_delete', ['username' => $username], $body);
+        }
+        // Webhook Education Cycle Delete -- End
+    }
+
 	public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, Request $request)
 	{
         //echo $this->ControllerAction; exit;
