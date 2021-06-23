@@ -4,6 +4,7 @@ namespace Health\Model\Table;
 use ArrayObject;
 
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -43,5 +44,12 @@ class ConsultationsTable extends ControllerActionTable
         $this->field('file_name', ['visible' => false]);
         $this->field('health_consultation_type_id', ['type' => 'select', 'after' => 'treatment']);
         $this->field('file_content', ['after' => 'health_consultation_type_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->allowEmpty('file_content');
+        return $validator;
     }
 }

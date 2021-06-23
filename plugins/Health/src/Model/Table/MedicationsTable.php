@@ -33,6 +33,7 @@ class MedicationsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
+            ->allowEmpty('file_content')
             ->allowEmpty('end_date')
             ->add('end_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'start_date', true]
@@ -56,4 +57,5 @@ class MedicationsTable extends ControllerActionTable
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'end_date','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
+    
 }

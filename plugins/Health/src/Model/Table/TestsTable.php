@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -46,5 +47,12 @@ class TestsTable extends ControllerActionTable
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'health_test_type_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->allowEmpty('file_content');
+        return $validator;
     }
 }

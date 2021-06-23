@@ -9,6 +9,7 @@ use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Validation\Validator;
 
 class AllergiesTable extends ControllerActionTable
 {
@@ -69,5 +70,12 @@ class AllergiesTable extends ControllerActionTable
         $this->field('severe', ['after' => 'description']);
         $this->field('health_allergy_type_id', ['type' => 'select', 'after' => 'comment']);
         $this->field('file_content', ['after' => 'health_allergy_type_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->allowEmpty('file_content');
+        return $validator;
     }
 }

@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -69,5 +70,12 @@ class HistoriesTable extends ControllerActionTable
         $this->field('current');
         $this->field('health_condition_id', ['type' => 'select', 'after' => 'comment']);
         $this->field('file_content', ['after' => 'health_condition_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->allowEmpty('file_content');
+        return $validator;
     }
 }
