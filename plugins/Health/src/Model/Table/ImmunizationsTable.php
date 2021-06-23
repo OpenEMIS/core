@@ -4,6 +4,7 @@ namespace Health\Model\Table;
 use ArrayObject;
 
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -18,6 +19,14 @@ class ImmunizationsTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
         $this->addBehavior('Health.Health');
+        $this->addBehavior('ControllerAction.FileUpload', [
+            'name' => 'file_name',
+            'content' => 'file_content',
+            'size' => '10MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
+        ]);
     }
 
     //POCOR-5890 starts remain work
@@ -25,10 +34,13 @@ class ImmunizationsTable extends ControllerActionTable
     {
         $this->field('health_immunization_type_id', ['attr'=>['label'=>'Vaccination Type'], 'type' => 'select', 'before' => 'comment']);
         $this->field('dosage',['visible' => false]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
     public function indexAfterAction(Event $event, $data)
     {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['visible' => false]);
         $this->field('health_immunization_type_id', ['attr'=>['label'=>'Vaccination Type'], 'before' => 'comment']);
         $this->field('dosage',['visible' => false]);
     }
@@ -46,12 +58,23 @@ class ImmunizationsTable extends ControllerActionTable
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {   
         $this->field('dosage', ['visible' => false]);
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
     public function viewBeforeAction(Event $event)
     {
         $this->field('health_immunization_type_id', ['attr'=>['label'=>'Vaccination Type'], 'before' => 'comment']);
         $this->field('dosage', ['visible' => false]);
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
     //POCOR-5890 ends
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->allowEmpty('file_content');
+        return $validator;
+    }
 }
