@@ -290,6 +290,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
             Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId)
         .then(function (results) {
             Controller.formatResults(results);
+            InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId, Controller.selectedStudent);// 6198 task
             return InstitutionStudentOutcomesSvc.getStudentOutcomeComments(
                 Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
         }, function (error) {
@@ -297,6 +298,21 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
         .then(function (outcomeComments) {
             Controller.studentComments = outcomeComments.length > 0 ? outcomeComments[0].comments : '';
             Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
+            // 6198 starts
+            return InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId, Controller.selectedStudent)
+            .then(function (subjectOptions){
+                console.log(subjectOptions);    
+                if (subjectOptions.length > 0) {
+                        var options = [];
+                    for (var i = 0; i < subjectOptions.length; ++i) {
+                        options.push(subjectOptions[i].education_subject);
+                    }
+
+                    Controller.subjectOptions = options;
+                    Controller.selectedSubject = subjectOptions[0].education_subject.id;
+                }
+                
+            });// 6198 ends
         }, function (error) {
         });
     }
