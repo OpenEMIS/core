@@ -1,3 +1,70 @@
+### [3.66.3] - 2021-06-18
+- Bug Fixed: Institution > Students > Promote: There is no option to select for Next Class field
+- Bug Fixed: Directory: User who is a Student and a Staff has only 1 record in Directory page
+- Bug Fixed: Institution> Academic > Feeders > Outgoing: User is given security permission to delete record but is unable to do so
+- Bug Fixed: Update Export button function - Institutions > General > Overview (include custom fields contacts and shifts)
+- Bug Fixed: Administration > Security > Roles > Permission: Permission missing for Finance > Income, Budget and Expenditure
+- Bug Fixed: Administration > System Setup > Academic Period: Start Date changes when student is successfully Transferred to a new Institution
+- Bug Fixed: Institution > Bulk Transfer: To allow user to select the same Grade that student is currently in for the Next Institution
+- Bug Fixed: Administration > System Setup > Localization > Translations: Word/ phrases not created
+- Bug Fixed: Institutions > General > Map > Export
+- Bug Fixed: Administration > System Setup > Administrative Boundaries > Areas (Administrative) tab: Encountered 404 error
+- Bug Fixed: Institution > Staff > Transfer: To make Position End Date and Start Date fields mandatory fields
+
+### [3.66.2] - 2021-06-12
+- Bug Fixed: Reports>Institutions:Progress Loading bar image is different between RTL and LTR
+- Bug Fixed: Administration > Security Groups : Allow the adding of Multiple Roles for the same user in User Groups
+- Bug Fixed: Administration > System Setup > Custom Field: Mandatory field is missing for Checkbox
+- Bug Fixed: Institution > Staff > Pending Change in Assignment: Search function under Staff Pending Change in Assignment is not working
+- Bug Fixed: Institutions > Academic > Programmes: Education Subjects on List page are not reflected
+- Bug Fixed: Administration > Training > Results: Search field not working
+- Bug Fixed: Reports > Students Report : Add Institutions information in existing report
+- Bug Fixed: Institutions > Attendances > Students > Import: Unable to Import even though all fills were filled up
+- Bug Fixed: Administrations > System Setup > Attendances > Status: No error validation when duplicate records are created
+- Bug Fixed: Administration > Security > Roles > Add/Edit page : Include Security Role code field in page
+- Bug Fixed: Reports > Directory > User Default Identity report: To add Username column in the report
+- Bug Fixed: Reports > Students > Student Health Report : Page Loading Issue
+- Bug Fixed: Administrations > System Setup > Localizations > Translations: Missing Translations
+- Bug Fixed: Reports > Students > Student Health Report > Overview: Transferred student still appear in the Institution which student was Transferred Out from
+- Bug Fixed: OpenEMIS Core: Webhook Education Area - Create
+- Bug Fixed: OpenEMIS Core: Webhook Education Area - Delete
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Level - Create
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Level - Update
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Level - Delete
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Subject - Update
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Subject - Delete
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade Subject - Create
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade Subject - Update
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade Subject - Delete
+- Bug Fixed: Report > Institution > Student Attendance Summary report: Education Grade listed not correct
+- Bug Fixed: Administration > System Setup > Academic Period > Delete: Encountered 404 error upon deleting the record
+- Bug Fixed: Institution > Appointment: To add "s" at the end of Appointment
+- Bug Fixed: Add Export button function - Institutions > General > Map
+
+### [3.66.1] - 2021-06-04
+- Bug Fixed: Profiles > Contacts tab : Allow user to add contact information
+- Bug Fixed: Institution > Infrastructure : Unable to delete infrastructure
+- Bug Fixed: Reports > Institution > Students/Staff: To add Sector and Locality columns in the reports
+- Bug Fixed: Institutions > Staff > Professional > License > Edit : Allow user to edit the License Type dropdown
+- Bug Fixed: Update Reports > Students > Contacts
+- Bug Fixed: Rename Profile module to Personal
+- Bug Fixed: Administration > System Setup > Education Structure > Programmes: Next Programme was not copied when user copied from the current Academic Period to next Academic Period
+- Bug Fixed: Reports > Students > Student Health Report > Overview: Student without Middle and Third Name has a big gap in between the First and Last Name
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Cycle - Create
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Cycle - Update
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Cycle - Delete
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Programme - Create
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Programme - Update
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Programme - Delete
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade - Create
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade - Update
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade - Delete
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure Subject - Create
+- Bug Fixed: OpenEMIS Core: Webhook Academic Period - Create
+- Bug Fixed: OpenEMIS Core: Webhook Academic Period - Update
+- Bug Fixed: Institution > Performance > Assessment > Import: Add Education Subject field on the Import Summary page
+- Bug Fixed: Institutions > Infrastructure > Overview > Rooms : Add a new field called area
+
 ### [3.66.0] - 2021-05-28
 - Bug Fixed: Institutions > Performance > Report Cards: Report Cards remained In-Progress
 - Bug Fixed: Institution > Staff > Edit: Remove Default Start Date for Staff Change of Start Date

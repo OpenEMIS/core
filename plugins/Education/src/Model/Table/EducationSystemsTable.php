@@ -412,7 +412,7 @@ class EducationSystemsTable extends ControllerActionTable
 
 		// Webhook Education Structure System ends
 
-
+		// POCOR-6086 starts
 		 //webhook education structure system update starts
 		 if(!$entity->isNew()) {
             $body = array();
@@ -427,6 +427,7 @@ class EducationSystemsTable extends ControllerActionTable
                 $Webhooks->triggerShell('education_structure_system_update', [], $educationUpdateArray);
             }
         }
+		// POCOR-6086 ends
 
         // webhook education structure system update ends
     }
