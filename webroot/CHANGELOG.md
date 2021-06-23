@@ -1,3 +1,13 @@
+### [3.66.4] - 2021-06-23
+- Bug Fixed: Add a function to attach multiple files under the student and staff health feature
+- Bug Fixed: Change password reset request email subject to application name
+- Bug Fixed: Institutions > School > Students > Students Transfer Out: Auto Assignee in student transfer showing as unassigned
+- Bug Fixed: Workflow Rule was not configured but it is processing
+- Bug Fixed: Assessment Mark Placeholders in Report Cards
+- Bug Fixed: Administration > Security > Roles > Permission: Unable to save record
+- Bug Fixed: Institution > Performance > Outcomes: User is able to mark Outcomes for student who is not taking the Subject selected
+- Bug Fixed: Administration > Security > Groups > Edit: Encountered 404 error when adding a new use
+
 ### [3.66.3] - 2021-06-18
 - Bug Fixed: Institution > Students > Promote: There is no option to select for Next Class field
 - Bug Fixed: Directory: User who is a Student and a Staff has only 1 record in Directory page
