@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -24,6 +25,14 @@ class HealthsTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
         $this->addBehavior('Health.Health');
+        $this->addBehavior('ControllerAction.FileUpload', [
+            'name' => 'file_name',
+            'content' => 'file_content',
+            'size' => '10MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
+        ]);
     }
 
     public function onGetBloodType(Event $event, Entity $entity)
@@ -40,6 +49,8 @@ class HealthsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['visible' => false]);
         // always redirect to view page if got record
         if ($data->count() == 1) {
             $entity = $data->first();
@@ -52,6 +63,8 @@ class HealthsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->setupFields($entity);
 
         // Remove back toolbarButton from directory>health>overview (POCOR-3358)
@@ -63,6 +76,8 @@ class HealthsTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->setupFields($entity);
     }
 
@@ -82,5 +97,13 @@ class HealthsTable extends ControllerActionTable
     {
         $this->field('blood_type');
         $this->field('health_insurance', ['after' => 'medical_facility']);
+        $this->field('file_content', ['after' => 'health_insurance','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->allowEmpty('file_content');
+        return $validator;
     }
 }
