@@ -74,7 +74,9 @@ class ReportCardsTable extends AppTable
                 'GroupAssessmentItemResults',
                 'AssessmentTermResults',
                 'NextClassSubjects',
-                'StudentNextYearClass'
+                'StudentNextYearClass',
+                'StudentIdentities',
+                'SubjectTeacher'
             ]
         ]);
     }
@@ -125,6 +127,8 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentTermResults'] = 'onExcelTemplateInitialiseAssessmentTermResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseNextClassSubjects'] = 'onExcelTemplateInitialiseNextClassSubjects';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentNextYearClass'] = 'onExcelTemplateInitialiseStudentNextYearClass';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentIdentities'] = 'onExcelTemplateInitialiseStudentIdentities';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseSubjectTeacher'] = 'onExcelTemplateInitialiseSubjectTeacher';
         return $events;
     }
 
@@ -353,6 +357,7 @@ class ReportCardsTable extends AppTable
                     $entity->student->body_mass_index = $userBodyMassData->body_mass_index;
                 }
                 // end POCOR-4156 body masses data
+				$entity->generated_date = date('m-d-Y');
             }
 
             return $entity;
@@ -1036,7 +1041,56 @@ class ReportCardsTable extends AppTable
                 //POCOR-5056 end
 
                 ->toArray();
+            return $entity;
+        }
+    }
+	
+    public function onExcelTemplateInitialiseSubjectTeacher(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('assessment_id', $extra) && array_key_exists('institution_class_id', $params)) {
+            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+            $StudentSubjects = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $AssessmentItemData = $AssessmentItems
+                ->find('assessmentItemsInClass', [
+                    'assessment_id' => $extra['assessment_id'],
+                    'class_id' => $params['institution_class_id']
+                ])
+				->select([
+					'education_subject_id' => $StudentSubjects->aliasField('education_subject_id'),
+					'institution_subject_id' => $StudentSubjects->aliasField('institution_subject_id'),
+                ])
+                ->innerJoin([$StudentSubjects->alias() => $StudentSubjects->table()], [
+                    $StudentSubjects->aliasField('education_subject_id = ') . $AssessmentItems->aliasField('education_subject_id')
+                ])
+                ->where([$StudentSubjects->aliasField('student_id') => $params['student_id']])
+                ->group('education_subject_id')
 
+                ->toArray();
+			foreach ($AssessmentItemData as $value) {
+				$StudentSubjectStaff = TableRegistry::get('institution_subject_staff');
+				$StudentSubjectStaffData = $StudentSubjectStaff->find()
+				->select([
+					'staff_id' => $StudentSubjectStaff->aliasField('staff_id'),
+					'institution_subject_id' => $StudentSubjectStaff->aliasField('institution_subject_id'),
+					'first_name' => 'SecurityUsers.first_name',
+					'last_name' => 'SecurityUsers.last_name',
+                ])
+				 ->innerJoin(['SecurityUsers' => 'security_users'], [
+                    'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
+                ])
+                ->where([
+                    $StudentSubjectStaff->aliasField('institution_subject_id') => $value->institution_subject_id,
+                ])
+                ->toArray();
+				$name = [];
+				foreach ($StudentSubjectStaffData as $data) {
+					$name[] = $data->first_name.' '.$data->last_name;
+				}
+				$entity[] = [
+					'education_subject_id' => $value->education_subject_id,
+					'name' => implode(",",$name)
+				];	
+			}				
             return $entity;
         }
     }
@@ -1684,6 +1738,32 @@ class ReportCardsTable extends AppTable
                 ->first();
             $result['name'] = $institutionClassStudentsEntities['InstitutionClasses']['name'];
             return $result;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStudentIdentities(Event $event, array $params, ArrayObject $extra)
+    {
+		if (array_key_exists('student_id', $params)) {
+            $UserIdentities = TableRegistry::get('user_identities');
+
+            $entity = $UserIdentities
+                ->find()
+                ->select([
+					'id' => $UserIdentities->aliasField('id'),
+					'number' => $UserIdentities->aliasField('number'),
+					'name' => 'IdentityTypes.name',
+                ])
+				->innerJoin(
+				[' IdentityTypes' => ' identity_types'],
+				[
+					'IdentityTypes.id ='. $UserIdentities->aliasField('identity_type_id')
+				]
+				)
+                ->where([
+                    $UserIdentities->aliasField('security_user_id') => $params['student_id'],
+                ])
+                ->toArray();
+            return $entity;
         }
     }
 }
