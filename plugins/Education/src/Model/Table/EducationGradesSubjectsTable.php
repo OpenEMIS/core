@@ -73,6 +73,52 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id', 'education_programme_id', 'education_level_id', 'hours_required']);
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
+        // Webhook Education Subject create -- start
+        if($entity->isNew()){
+            $body = array();
+            $body = [
+                'grade_subject_id' =>$entity->id,
+                'education_subject_id' =>$entity->education_subject_id,
+                'education_grade_id' =>$entity->education_grade_id,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_grade_subject_create', ['username' => $username], $body);
+            }
+        }
+        // Webhook Education Subject` create -- end
+
+        // Webhook Education Subject grade subject -- start
+        if(!$entity->isNew()){
+            $body = array();
+            $body = [
+                'grade_subject_id' =>$entity->id,
+                'education_subject_id' =>$entity->education_subject_id,
+                'education_grade_id' =>$entity->education_grade_id,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_grade_subject_update', ['username' => $username], $body);
+            }
+        }
+        // Webhook Education grade subject -- end
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options){
+
+        // Webhook Education Grade Subject Delete -- Start
+        $body = array();
+        $body = [
+            'grade_subject_id' => $entity->id
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('education_grade_subject_delete', ['username' => $username], $body);
+        }
+        // Webhook Education Grade Subject Delete -- End
+    }
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
         // visible field is not used for now
@@ -109,7 +155,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
-        
+
         //level filter
         $levelOptions = $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
         if (!empty($levelOptions)) {
@@ -150,7 +196,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             $programmeOptions = ['0' => '-- '.__('No Education Programme').' --'] + $programmeOptions;
             $selectedProgramme = !empty($this->request->query('programme')) ? $this->request->query('programme') : 0;
         }
-        
+
         $this->controller->set(compact('programmeOptions', 'selectedProgramme'));
 
         $EducationGrades = $this->EducationGrades;
@@ -166,7 +212,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             $gradeOptions = ['0' => '-- '.__('No Education Grade').' --'] + $gradeOptions;
             $selectedGrade = !empty($this->request->query('grade')) ? $this->request->query('grade') : 0;
         }
-        
+
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('gradeOptions', 'selectedGrade'));
 

@@ -26,7 +26,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
-        $this->toggle('edit', false);
+        $this->toggle('edit','delete', false);
     }
 
     public function validationDefault(Validator $validator)
@@ -64,6 +64,43 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         $this->field('recipient_institution');
         $this->field('area_education');
     }
+    
+    /* POCOR-6182 starts */
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {  
+        if (isset($buttons['view']) && $this->AccessControl->check(['Institutions', 'FeederOutgoingInstitutions', 'delete']) &&$this->Auth->user()['super_admin'] != 1) {
+            $icon = '<i class="fa fa-trash"></i>';
+            $removeUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'FeederOutgoingInstitutions',
+                'delete',
+                $this->paramsEncode(['id' => $entity->feeder_institution_id])
+            ];
+            $encodedId = $this->paramsEncode([
+                            'institution_id' => $entity->institution_id, 
+                            'feeder_institution_id' => $entity->feeder_institution_id,
+                            'academic_period_id' => $entity->academic_period_id,
+                            'education_grade_id' => $entity->education_grade_id
+                        ]);
+            $attr = [
+                'role' => 'menuitem',
+                'tabindex' => -1,
+                'escape' => false,
+                'data-toggle' => 'modal',
+                'data-target' => '#delete-modal',
+                'field-target' => '#recordId',
+                'field-value' => $encodedId,
+                'onclick' => 'ControllerAction.fieldMapping(this)'
+            ];
+            $buttons['delete'] = $buttons['view'];
+            $buttons['delete']['label'] = $icon . __('Delete');
+            $buttons['delete']['url'] = $removeUrl;
+            $buttons['delete']['attr'] = $attr;
+        }
+        return parent::onUpdateActionButtons($event, $entity, $buttons);
+    }
+    /* POCOR-6182 Ends */
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
