@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -97,5 +98,12 @@ class HealthsTable extends ControllerActionTable
         $this->field('blood_type');
         $this->field('health_insurance', ['after' => 'medical_facility']);
         $this->field('file_content', ['after' => 'health_insurance','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->allowEmpty('file_content');
+        return $validator;
     }
 }
