@@ -4,6 +4,7 @@ namespace Health\Model\Table;
 use ArrayObject;
 
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -69,4 +70,11 @@ class ImmunizationsTable extends ControllerActionTable
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
     //POCOR-5890 ends
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->allowEmpty('file_content');
+        return $validator;
+    }
 }
