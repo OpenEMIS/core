@@ -30,11 +30,15 @@ class QualificationsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
+        $this->addBehavior('Excel', [
+            'pages' => ['index'],
+        ]);
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('QualificationTitles', ['className' => 'FieldOption.QualificationTitles']);
         $this->belongsTo('QualificationCountries', ['className' => 'FieldOption.Countries', 'foreignKey' => 'qualification_country_id']);
 		$this->belongsTo('FieldOfStudies', ['className' => 'Education.EducationFieldOfStudies', 'foreignKey' => 'education_field_of_study_id']);
-        
+
         $this->belongsToMany('EducationSubjects', [
             'className' => 'Education.EducationSubjects',
             'joinTable' => 'staff_qualifications_subjects',
@@ -97,7 +101,7 @@ class QualificationsTable extends ControllerActionTable
     {
         $query->contain(['QualificationTitles.QualificationLevels']);
     }
-    
+
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'qualification_level') {
@@ -247,13 +251,13 @@ class QualificationsTable extends ControllerActionTable
                                         $this->QualificationSpecialisations->aliasField('education_field_of_study_id') => $fieldOfStudyId
                                     ])
                                     ->toArray();
-            
+
             if (!empty($specialisationOptions)) {
                 $attr['options'] = $specialisationOptions;
             } else {
                 $attr['placeholder'] = $this->getMessage('general.select.noOptions');
             }
-            
+
         }
         return $attr;
     }
@@ -395,6 +399,49 @@ class QualificationsTable extends ControllerActionTable
 
         $this->setFieldOrder([
             'qualification_title_id', 'qualification_level', 'education_field_of_study_id', 'qualification_specialisations', 'education_subjects', 'qualification_country_id', 'qualification_institution', 'document_no', 'graduate_year', 'gpa', 'file_content'
+        ]);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+
+        $qualificationLevel = TableRegistry::get('FieldOption.QualificationLevels');
+        //$level = $qualificationLevel->getDefaultEntity();
+
+        foreach ($fields as $key => $field) {
+            //get the value from the table, but change the label to become default identity type.
+            if ($field['field'] == 'qualification_institution') {
+                $fields[$key] = [
+                    'key' => 'QualificationLevels.name',
+                    'field' => 'qualification_level',
+                    'type' => 'string',
+                    'label' => 'Level'
+                ];
+                break;
+            }
+        }
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        $qualificationTitles = TableRegistry::get('QualificationTitles');
+        $qualificationLevel = TableRegistry::get('QualificationLevels');
+        $query
+        ->select([
+            'qualification_level' => 'QualificationLevels.name'
+        ])
+        ->leftJoin(
+            [$qualificationTitles->alias() => $qualificationTitles->table()],[
+                $qualificationTitles->aliasField('id = ').$this->aliasField('qualification_title_id')
+            ])
+        ->leftJoin(
+            [$qualificationLevel->alias() => $qualificationLevel->table()],[
+                $qualificationLevel->aliasField('id = ').$qualificationTitles->aliasField('qualification_level_id')
+            ])
+        ->where([
+            'staff_id =' .$staffUserId,
         ]);
     }
 }
