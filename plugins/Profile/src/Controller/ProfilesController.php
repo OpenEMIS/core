@@ -292,7 +292,13 @@ class ProfilesController extends AppController
                 
                 if ($action == 'StudentReportCards') {
                     //$student_id = $sId['student_id']; //POCOR-5979
-                    $student_id = $sId['id'];
+                    //$student_id = $sId['id']; //uncomment $student_id for POCOR-6202
+                    //POCOR-6202 start
+                    if(isset($sId['id']) && !empty($sId['id'])){
+                        $student_id = $sId['id'];
+                    }else{
+                        $student_id = $sId['student_id'];
+                    }//POCOR-6202 end
                 }
                 $entity = $this->Profiles->get($student_id);
                 $name = $entity->name;
@@ -364,14 +370,25 @@ class ProfilesController extends AppController
             $action = __('Personal');
         }
         if ($session->read('Auth.User.is_guardian') == 1) {
-            $studentId = $session->read('Student.ExaminationResults.student_id');
+            //$studentId = $session->read('Student.ExaminationResults.student_id');//POCOR-6202 uncomment $studentId 
+            $studentId = $session->read('Profile.StudentUser.primaryKey.id'); //POCOR-6202
         }else {
             $studentId = $this->request->params['pass'][1];
         }
+
         if (!empty($studentId)) {
              if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards' || $action == 'StudentAssociations' || $action == 'Personal') {
-				$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
-                $entity = $this->Profiles->get($studentId);
+                //POCOR-6202 starts
+                if ($session->read('Auth.User.is_guardian') == 1) {
+                    //$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];//POCOR-6202 uncomment $studentId
+                }else{
+                    if(isset($this->ControllerAction->paramsDecode($studentId)['id'])){
+                        $studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
+                    }else{
+                        $studentId = $this->ControllerAction->paramsDecode($studentId)['student_id'];
+                    }
+                }//POCOR-6202 ends
+				$entity = $this->Profiles->get($studentId);
                 $name = $entity->name;
                 $header = $name;
                 if($alias == 'Profiles'){
