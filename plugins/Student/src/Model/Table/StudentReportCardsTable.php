@@ -54,6 +54,7 @@ class StudentReportCardsTable extends ControllerActionTable
         $user = $this->Auth->user();
        
         $InstitutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $StudentGuardians = TableRegistry::get('student_guardians');
         
         if ($user['is_student'] == 1) {
             $query
@@ -61,14 +62,26 @@ class StudentReportCardsTable extends ControllerActionTable
             ->where([$this->aliasField('student_id') => $user['id']])   //  POCOR-5910
             //->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED])
             ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
-        }
-        else{
+        }else if($user['is_guardian'] == 1){ //POCOR-6202 starts
+            $query
+            ->contain('AcademicPeriods', 'Institutions', 'EducationGrades') 
+            ->leftJoin(
+                [$StudentGuardians->alias() => $StudentGuardians->table()],
+                [
+                    $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
+                ]
+            )           
+            ->where([
+                $this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED,
+                $StudentGuardians->aliasField('guardian_id') => $user['id']
+            ])
+            ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);//POCOR-6202 ends
+        }else{
             $query
             ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
             ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED])
             ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
         }
-
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
