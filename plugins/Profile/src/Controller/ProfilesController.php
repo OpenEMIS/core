@@ -322,7 +322,7 @@ class ProfilesController extends AppController
             }
 
             $alias = $model->alias();
-            $excludedModel = ['ScholarshipApplications', 'Leave', 'StudentReportCards', 'Contacts'];
+            $excludedModel = ['ScholarshipApplications', 'Leave', 'StudentReportCards', 'Contacts', 'TrainingNeeds']; //POCOR-5695 add TrainingNeeds
 
             if (!in_array($alias, $excludedModel)) {
                 $model->toggle('add', false);
