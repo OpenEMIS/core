@@ -48,7 +48,10 @@ class WorkflowBehavior extends Behavior
         'disableWorkflow' => false,
         'filter' => [
             'type' => true,
-            'category' => true
+            'category' => true,
+            'area' => true,
+            'period' => true,
+            'month' => true
         ]
     ];
 
@@ -463,6 +466,43 @@ class WorkflowBehavior extends Behavior
                 $this->_table->controller->set(compact('categoryOptions', 'selectedCategory'));
                 // End
             }
+            //POCOR-5695 starts
+            if ($filterConfig['area']) {
+                // Area Options
+                $Areas = TableRegistry::get('Area.Areas');
+                $areaOptions = $Areas
+                            ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                            ->order([$Areas->aliasField('order')]);
+                $areaOptions = ['-1' => '-- ' . __('All Areas') . ' --'] + $areaOptions->toArray();            
+                $selectedArea = $this->_table->queryString('area', $areaOptions);
+                $this->_table->advancedSelectOptions($areaOptions, $selectedArea);
+                $this->_table->controller->set(compact('areaOptions','selectedArea'));
+                // End
+            }
+
+            if ($filterConfig['period']) {
+                // Year Options
+                $AcademicPeriods = TableRegistry::get('academic_periods');
+                $periodsOptions = $AcademicPeriods
+                            ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
+                            ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);
+                $periodsOptions = ['-1' => '-- ' . __('Select Period') . ' --'] + $periodsOptions->toArray();            
+                $selectedPeriods = $this->_table->queryString('period', $periodsOptions);
+                $this->_table->advancedSelectOptions($periodsOptions, $selectedPeriods);
+                $this->_table->controller->set(compact('periodsOptions','selectedPeriods'));
+                // End
+            }
+
+            if ($filterConfig['month']) {
+                // Month Options
+                $monthOptions = ['1'=> '1', '2'=> '2','3'=> '3','4'=> '4', '5'=> '5', '6'=> '6','7'=> '7','8'=> '8','9'=> '9','10'=> '10', '11'=>'11', '12'=> '12'];
+                $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;            
+                $selectedMonth = $this->_table->queryString('month', $monthOptions);
+                $this->_table->advancedSelectOptions($monthOptions, $selectedMonth);
+                $this->_table->controller->set(compact('monthOptions','selectedMonth'));
+                // End
+            }
+            //POCOR-5695 ends
         }
     }
 
@@ -481,6 +521,7 @@ class WorkflowBehavior extends Behavior
             // Filter key
             list(, $base) = pluginSplit($filter);
             $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
+
             if ($selectedFilter != -1) {
                 $query->where([
                     $this->_table->aliasField($filterKey) => $selectedFilter
@@ -497,7 +538,43 @@ class WorkflowBehavior extends Behavior
                     });
             }
         }
+        //echo "<pre>"; print_r($this->_table); die;
+        //POCOR-5695 starts
+        if ($filterConfig['area']) {
+            $selectedArea = $this->_table->ControllerAction->getVar('selectedArea');
+            if (!is_null($selectedArea) && $selectedArea != -1) {
+                $query->where(['area_id' => $selectedArea]);
+            }
+        }
 
+        if ($filterConfig['period'] && $filterConfig['month']) { 
+            $selectedPeriods = $this->_table->ControllerAction->getVar('selectedPeriods');
+            $selectedMonth = $this->_table->ControllerAction->getVar('selectedMonth');
+            $checkFlag = 0;
+            if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && ($selectedMonth == -1)) {
+                
+                $compare_start_date = $selectedPeriods .'-01-01';
+                $compare_end_date = $selectedPeriods .'-12-31';   
+                $checkFlag =1;
+            }else if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && (!is_null($selectedMonth) && $selectedMonth != -1)) {
+
+                $cal_date_in_month = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedPeriods); //calcualte days in given month in given year
+                $compare_start_date = $selectedPeriods .'-'. $selectedMonth.'-'.'01';
+                $compare_end_date = $selectedPeriods .'-'. $selectedMonth.'-'.$cal_date_in_month;   
+                $checkFlag =1;
+            }
+            if($checkFlag == 1){
+                $query->where([
+                    'OR'=>[
+                            ['start_date >=' => $compare_start_date, 'end_date <=' => $compare_end_date],
+                            ['start_date >=' => $compare_start_date, 'start_date <=' => $compare_end_date],
+                            ['end_date >=' => $compare_start_date, 'end_date <=' => $compare_end_date]
+                        ]
+                    ]
+                );
+            }
+        }//POCOR-5695 ends
+        
         if ($this->isCAv4()) {
             $extra['options'] = $options;
         }
