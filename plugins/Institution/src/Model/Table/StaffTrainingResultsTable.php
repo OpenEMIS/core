@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
+use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 
 class StaffTrainingResultsTable extends ControllerActionTable
@@ -21,6 +22,11 @@ class StaffTrainingResultsTable extends ControllerActionTable
 		$this->toggle('edit', false);
 		$this->toggle('add', false);
 		$this->toggle('search', false);
+
+        $this->addBehavior('Excel',[
+            //'excludes' => ['reason','training_need_competency_id','training_need_sub_standard_id','training_priority_id'],
+            'pages' => ['index'],
+        ]);
 	}
 
 	public function beforeAction()
@@ -132,4 +138,37 @@ class StaffTrainingResultsTable extends ControllerActionTable
 	{
 		$this->setupTabElements();
 	}
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        $trainingSession = TableRegistry::get('TrainingSessions');
+        $trainingCourses = TableRegistry::get('TrainingCourses');
+        $trainingLevels = TableRegistry::get('TrainingLevels');
+        $trainingFieldOfStudies = TableRegistry::get('TrainingFieldOfStudies');
+
+        $query
+        ->select([
+            'course_name' => 'TrainingCourses.name',
+            'training_level_name' => 'TrainingLevels.name',
+            'training_study_of_fields' => 'TrainingFieldOfStudies.name',
+            'credit_hours' => 'TrainingCourses.credit_hours'
+        ])
+        ->leftJoin([$trainingSession->alias() => $trainingSession->table()],[
+            $trainingSession->aliasField('id = ').$this->aliasField('training_session_id')
+        ])
+        ->leftJoin([$trainingCourses->alias() => $trainingCourses->table()],[
+            $trainingCourses->aliasField('id = ').$trainingSession->aliasField('training_course_id')
+        ])
+        ->leftJoin([$trainingLevels->alias() => $trainingLevels->table()],[
+            $trainingLevels->aliasField('id = ').$trainingCourses->aliasField('training_level_id')
+        ])
+        ->leftJoin([$trainingFieldOfStudies->alias() => $trainingFieldOfStudies->table()],[
+            $trainingFieldOfStudies->aliasField('id = ').$trainingCourses->aliasField('training_field_of_study_id')
+        ])
+        ->where([
+            'trainee_id =' .$staffUserId,
+        ]);
+    }
 }
