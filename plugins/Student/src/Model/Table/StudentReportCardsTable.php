@@ -63,6 +63,7 @@ class StudentReportCardsTable extends ControllerActionTable
             //->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED])
             ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
         }else if($user['is_guardian'] == 1){ //POCOR-6202 starts
+            $student_id = $this->ControllerAction->paramsDecode($this->request->params['pass'][1])['id']; 
             $query
             ->contain('AcademicPeriods', 'Institutions', 'EducationGrades') 
             ->leftJoin(
@@ -70,10 +71,11 @@ class StudentReportCardsTable extends ControllerActionTable
                 [
                     $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
                 ]
-            )           
+            )    
             ->where([
                 $this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED,
-                $StudentGuardians->aliasField('guardian_id') => $user['id']
+                $StudentGuardians->aliasField('guardian_id') => $user['id'],
+                $StudentGuardians->aliasField('student_id') => $student_id 
             ])
             ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);//POCOR-6202 ends
         }else{
