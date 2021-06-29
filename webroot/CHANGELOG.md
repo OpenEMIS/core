@@ -1,3 +1,7 @@
+### [3.66.5] - 2021-06-29
+- Bug Fixed: Administration > Performance > Assessment > Assessment Period > Add: Encountered 404 error upon saving
+- Bug Fixed: Administration > Security > Permission > Personal tab: To enable Execute function for Report Cards
+
 ### [3.66.4] - 2021-06-23
 - Bug Fixed: Add a function to attach multiple files under the student and staff health feature
 - Bug Fixed: Change password reset request email subject to application name
