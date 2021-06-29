@@ -208,7 +208,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         $sessionId = $entity->training_session_id;
 		$selectedResultType = $this->request->query('result_type');
 
-		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Result'), __('Attendance Days'), __('Certificate Number')];
+		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Result'), __('Attendance Days'), __('Certificate Number')]; //5695
 		$tableCells = [];
 		$alias = $this->alias();
 		$key = 'trainees';
@@ -224,8 +224,8 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				->select([
 					$TraineeResults->aliasField('id'),
 					$TraineeResults->aliasField('result'),
-                    $TraineeResults->aliasField('attendance_days'),
-                    $TraineeResults->aliasField('certificate_number'),
+                    $TraineeResults->aliasField('attendance_days'), //5695
+                    $TraineeResults->aliasField('certificate_number'), //5695
 					$TraineeResults->aliasField('training_result_type_id')
 				])
 				->leftJoin(
@@ -266,8 +266,8 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				]);
 				$rowData[] = $traineeObj->name;
 				$rowData[] = strlen($traineeResult['result']) ? $traineeResult['result'] : '';
-                $rowData[] = strlen($traineeResult['attendance_days']) ? $traineeResult['attendance_days'] : '';
-                $rowData[] = strlen($traineeResult['certificate_number']) ? $traineeResult['certificate_number'] : '';
+                $rowData[] = strlen($traineeResult['attendance_days']) ? $traineeResult['attendance_days'] : ''; //5695
+                $rowData[] = strlen($traineeResult['certificate_number']) ? $traineeResult['certificate_number'] : ''; //5695
 				$tableCells[] = $rowData;
 			}
 		} else {
@@ -304,8 +304,8 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				$rowData[] = $traineeObj->openemis_no;
 				$rowData[] = $name;
 				$rowData[] = $result;
-                $rowData[] = $attendance_days;
-                $rowData[] = $certificate_number;
+                $rowData[] = $attendance_days; //5695
+                $rowData[] = $certificate_number; //5695
 				$tableCells[] = $rowData;
 			}
 		}
