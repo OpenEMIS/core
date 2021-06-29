@@ -309,8 +309,14 @@ class NavigationComponent extends Component
 				$securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
             }
 			if(!empty($encodedParam)) {
-				$userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
-            }
+                //POCOR-6202 start
+                if($action == 'GuardianStudents'){
+                    $userInfo = TableRegistry::get('student_guardians')->get($securityUserId);
+                }else{
+                    $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
+                }
+                //POCOR-6202 end
+			}
 			
 			$userType = '';
 			if(!empty($userInfo)) {
