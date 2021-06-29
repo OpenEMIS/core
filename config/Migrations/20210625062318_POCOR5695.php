@@ -11,7 +11,7 @@ class POCOR5695 extends AbstractMigration
      * @return void
      */
     public $autoId = false;
-    public function change()
+    public function up()
     {
         //backup
         /*$this->execute('CREATE TABLE `z_5695_security_functions` LIKE `security_functions`');
@@ -19,6 +19,12 @@ class POCOR5695 extends AbstractMigration
 
         $this->execute('CREATE TABLE `z_5695_training_courses` LIKE `training_courses`');
         $this->execute('INSERT INTO `z_5695_training_courses` SELECT * FROM `training_courses`');*/
+
+        $this->execute('CREATE TABLE `z_5695_locale_contents` LIKE `locale_contents`');
+        $this->execute('INSERT INTO `z_5695_locale_contents` SELECT * FROM `locale_contents`');
+
+        $this->execute('CREATE TABLE `z_5695_training_session_trainee_results` LIKE `training_session_trainee_results`');
+        $this->execute('INSERT INTO `z_5695_training_session_trainee_results` SELECT * FROM `training_session_trainee_results`');
 
         /*$this->execute('CREATE TABLE `z_5695_labels` LIKE `labels`');
         $this->execute('INSERT INTO `z_5695_labels` SELECT * FROM `labels`');*/
@@ -49,10 +55,33 @@ class POCOR5695 extends AbstractMigration
         /*$this->execute("ALTER TABLE `training_courses` ADD COLUMN `training_course_category_id` int(11) NOT NULL COMMENT 'links to training_course_categories.id' AFTER `training_course_type_id`");
 
         $this->execute("ALTER TABLE `training_courses` ADD INDEX( `training_course_category_id`)"); */
+
+        $this->execute("ALTER TABLE `training_session_trainee_results`  ADD `attendance_days` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL  AFTER `result`,  ADD `certificate_number` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL  AFTER `attendance_days`;")
         
         // labels
-        $this->execute("INSERT INTO labels (id, module, field, module_name, field_name, visible, created_user_id, created)
-        values (uuid(), 'TrainingCourses', 'training_course_category_id', 'Administration -> Training -> Course', 'Course Category', 1, 1, NOW())");
+        /*$this->execute("INSERT INTO labels (id, module, field, module_name, field_name, visible, created_user_id, created)
+        values (uuid(), 'TrainingCourses', 'training_course_category_id', 'Administration -> Training -> Course', 'Course Category', 1, 1, NOW())");*/
+
+        //locale conversion
+        $localeContent = [
+            [
+                'en' => 'Course Category',
+                'created_user_id' => 1,
+                'created' => 'NOW()'
+            ],
+            [
+                'en' => 'Attendance Days',
+                'created_user_id' => 1,
+                'created' => 'NOW()'
+            ],
+            [
+                'en' => 'Certificate Number',
+                'created_user_id' => 1,
+                'created' => 'NOW()'
+            ]
+        ];
+
+        $this->insert('locale_contents', $localeContent);
 
         /*SELECT *  FROM `phinxlog` WHERE `migration_name` LIKE '%POCOR5695%'*/
     }
@@ -68,6 +97,13 @@ class POCOR5695 extends AbstractMigration
 
         $this->execute('DROP TABLE IF EXISTS `labels`');
         $this->execute('RENAME TABLE `z_5695_labels` TO `labels`');
+
+        $this->execute('DROP TABLE IF EXISTS `training_session_trainee_results`');
+        $this->execute('RENAME TABLE `z_5695_training_session_trainee_results` TO `training_session_trainee_results`');
+
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Course Category'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Attendance Days'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Certificate Number'");
        
     }
 }
