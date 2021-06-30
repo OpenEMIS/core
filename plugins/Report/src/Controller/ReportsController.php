@@ -268,6 +268,7 @@ class ReportsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.Profiles']);
     }
 
+    // view report
     public function ViewReport()
     {
         ini_set('memory_limit', '-1');
