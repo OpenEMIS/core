@@ -105,6 +105,11 @@ $this->start('panelBody');
 								'file_path' => $obj->file_path,
 								'module' => $obj->module,
 							];
+							$deleteUrl = ['plugin' => $params['plugin'],
+								'controller' => $params['controller'],
+								'action' =>  $ControllerAction['table']->alias(),
+								'removeReport',$obj->id
+							];
 						?>	
 											
 						<ul class="dropdown-menu action-dropdown" role="menu" aria-labelledby="action-menu">
@@ -114,6 +119,9 @@ $this->start('panelBody');
 								</li>
 								<li role="presentation">
 									<a href="<?php echo $this->Url->build($downloadUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-download"></i>Download</a>			
+								</li>
+								<li role="presentation">
+									<a href="<?php echo $this->Url->build($deleteUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa  fa-trash"></i>Delete</a>			
 								</li>							
 						</ul>						
 						</div>
