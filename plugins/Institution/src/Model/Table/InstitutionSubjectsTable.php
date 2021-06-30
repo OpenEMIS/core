@@ -364,26 +364,37 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 return $arrResults;
             });
     }
-
+    //6198 starts 
     public function findBySubjectsInClass(Query $query, array $options)
     {
         $classId = $options['institution_class_id'];
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
         $gradeId = $options['education_grade_id'];
+        $student_id = $options['student_id'];
+        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 
         return $query
             ->matching('ClassSubjects', function ($q) use ($classId) {
                 return $q->where(['ClassSubjects.institution_class_id' => $classId]);
             })
             ->contain(['EducationSubjects'])
+            ->leftJoin([$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()], [
+                
+                $this->aliasField('id = ') . $InstitutionSubjectStudents->aliasField('institution_subject_id'),
+                $this->aliasField('institution_id = ') . $InstitutionSubjectStudents->aliasField('institution_id'),
+                $this->aliasField('education_grade_id = ') . $InstitutionSubjectStudents->aliasField('education_grade_id'), 
+                $this->aliasField('academic_period_id = ') . $InstitutionSubjectStudents->aliasField('academic_period_id')
+            ])
             ->where([
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('education_grade_id') => $gradeId,
-                $this->aliasField('academic_period_id') => $academicPeriodId
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $InstitutionSubjectStudents->aliasField('student_id') => $student_id
             ])
             ->order('EducationSubjects.order');
     }
+    //6198 ends 
 
     public function findSubjectDetails(Query $query, array $options)
     {
