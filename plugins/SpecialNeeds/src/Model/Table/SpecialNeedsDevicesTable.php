@@ -23,6 +23,11 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
         $this->belongsTo('SpecialNeedsDeviceTypes', ['className' => 'SpecialNeeds.SpecialNeedsDeviceTypes']);
 
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
+
+        $this->addBehavior('Excel',[
+            'excludes' => ['comment'],
+            'pages' => ['index'],
+        ]);
     }
 
     public function validationDefault(Validator $validator)
@@ -73,5 +78,16 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
         $this->field('comment', ['type' => 'text']);
 
         $this->setFieldOrder(['special_needs_device_type_id', 'comment']);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+
+        $session = $this->request->session();
+        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+
+        $query
+        ->where([
+            $this->aliasField('security_user_id = ').$staffUserId,
+        ]);
     }
 }

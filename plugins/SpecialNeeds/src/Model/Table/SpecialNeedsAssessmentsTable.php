@@ -33,6 +33,11 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
+        $this->addBehavior('Excel',[
+            'excludes' => ['date', 'file_name', 'comment'],
+            'pages' => ['index'],
+        ]);
+
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
@@ -146,5 +151,16 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->field('comment', ['type' => 'text']);
 
         $this->setFieldOrder(['date', 'special_need_type_id', 'special_need_difficulty_id', 'file_name', 'file_content', 'comment']);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+
+        $session = $this->request->session();
+        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+
+        $query
+        ->where([
+            $this->aliasField('security_user_id = ').$staffUserId,
+        ]);
     }
 }
