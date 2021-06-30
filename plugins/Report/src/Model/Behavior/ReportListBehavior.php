@@ -360,4 +360,20 @@ class ReportListBehavior extends Behavior {
 			return $this->_table->controller->redirect($url);
         }
     }
+
+    /*POCOR-6208 starts*/
+    public function removeReport($id)
+    {
+    	$entity = $this->ReportProgress->get($id);
+    	$file = $entity->file_path;
+    	unlink($file);
+        $this->ReportProgress->delete($entity);
+		$controller = $this->_table->controller->name;
+		$table = $this->_table->alias();
+		$this->_table->Alert->success('general.delete.success');
+		$url = ['controller' => $controller, 'action' => $table, 'index'];
+		
+		return $this->_table->controller->redirect($url);
+    }
+    /*POCOR-6208 ends*/
 }
