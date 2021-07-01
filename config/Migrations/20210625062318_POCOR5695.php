@@ -14,11 +14,11 @@ class POCOR5695 extends AbstractMigration
     public function up()
     {
         //backup
-        /*$this->execute('CREATE TABLE `z_5695_security_functions` LIKE `security_functions`');
+        $this->execute('CREATE TABLE `z_5695_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `z_5695_security_functions` SELECT * FROM `security_functions`');
 
         $this->execute('CREATE TABLE `z_5695_training_courses` LIKE `training_courses`');
-        $this->execute('INSERT INTO `z_5695_training_courses` SELECT * FROM `training_courses`');*/
+        $this->execute('INSERT INTO `z_5695_training_courses` SELECT * FROM `training_courses`');
 
         $this->execute('CREATE TABLE `z_5695_locale_contents` LIKE `locale_contents`');
         $this->execute('INSERT INTO `z_5695_locale_contents` SELECT * FROM `locale_contents`');
@@ -26,14 +26,14 @@ class POCOR5695 extends AbstractMigration
         $this->execute('CREATE TABLE `z_5695_training_session_trainee_results` LIKE `training_session_trainee_results`');
         $this->execute('INSERT INTO `z_5695_training_session_trainee_results` SELECT * FROM `training_session_trainee_results`');
 
-        /*$this->execute('CREATE TABLE `z_5695_labels` LIKE `labels`');
-        $this->execute('INSERT INTO `z_5695_labels` SELECT * FROM `labels`');*/
+        $this->execute('CREATE TABLE `z_5695_labels` LIKE `labels`');
+        $this->execute('INSERT INTO `z_5695_labels` SELECT * FROM `labels`');
 
         //enable add button in Profile > Staff > Training 
-        /*$this->execute("UPDATE security_functions SET _add = 'TrainingNeeds.add' WHERE name = 'Training Needs' AND controller = 'Profiles' AND module = 'Personal' AND category = 'Staff - Training'");*/
+        $this->execute("UPDATE security_functions SET _add = 'TrainingNeeds.add' WHERE name = 'Training Needs' AND controller = 'Profiles' AND module = 'Personal' AND category = 'Staff - Training'");
 
         // sql to create training_course_categories
-        /*$this->execute("CREATE TABLE `training_course_categories` (
+        $this->execute("CREATE TABLE `training_course_categories` (
                           `id` int(11) NOT NULL,
                           `name` varchar(50) NOT NULL,
                           `order` int(3) NOT NULL,
@@ -49,18 +49,18 @@ class POCOR5695 extends AbstractMigration
                         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains the course category records for staff'");
 
         $this->execute('ALTER TABLE `training_course_categories` ADD PRIMARY KEY (`id`)');
-        $this->execute('ALTER TABLE `training_course_categories` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT');*/
+        $this->execute('ALTER TABLE `training_course_categories` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT');
 
         // ADD COLUMN training_course_category_id in training_courses table
-        /*$this->execute("ALTER TABLE `training_courses` ADD COLUMN `training_course_category_id` int(11) NOT NULL COMMENT 'links to training_course_categories.id' AFTER `training_course_type_id`");
+        $this->execute("ALTER TABLE `training_courses` ADD COLUMN `training_course_category_id` int(11) NOT NULL COMMENT 'links to training_course_categories.id' AFTER `training_course_type_id`");
 
-        $this->execute("ALTER TABLE `training_courses` ADD INDEX( `training_course_category_id`)"); */
+        $this->execute("ALTER TABLE `training_courses` ADD INDEX( `training_course_category_id`)"); 
 
-        $this->execute("ALTER TABLE `training_session_trainee_results`  ADD `attendance_days` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL  AFTER `result`,  ADD `certificate_number` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL  AFTER `attendance_days`;")
+        /*$this->execute("ALTER TABLE `training_session_trainee_results`  ADD `attendance_days` VARCHAR(10) NOT NULL  AFTER `result`,  ADD `certificate_number` VARCHAR(10)  NOT NULL  AFTER `attendance_days`;");*/
         
         // labels
-        /*$this->execute("INSERT INTO labels (id, module, field, module_name, field_name, visible, created_user_id, created)
-        values (uuid(), 'TrainingCourses', 'training_course_category_id', 'Administration -> Training -> Course', 'Course Category', 1, 1, NOW())");*/
+        $this->execute("INSERT INTO labels (id, module, field, module_name, field_name, visible, created_user_id, created) 
+          values (uuid(), 'TrainingCourses', 'training_course_category_id', 'Administration -> Training -> Course', 'Course Category', 1, 1, NOW())");
 
         //locale conversion
         $localeContent = [

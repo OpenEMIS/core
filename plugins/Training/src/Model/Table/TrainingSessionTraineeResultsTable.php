@@ -20,15 +20,15 @@ class TrainingSessionTraineeResultsTable extends AppTable {
             ->add('result', 'ruleMaxLength', [
                 'rule' => ['maxLength', 10]
             ])
-            ->add('attendance_days', 'ruleMaxLength', [
+            /*->add('attendance_days', 'ruleMaxLength', [
                 'rule' => ['maxLength', 10]
             ])
             ->add('certificate_number', 'ruleMaxLength', [
                 'rule' => ['maxLength', 10]
-            ]);
+            ])*/;
     }
 
-    public function getTrainingSessionResults($sessionId) {
+    public function getTrainingSessionResults($sessionId) { 
         $results = $this->find()
             ->where([$this->aliasField('training_session_id') => $sessionId])
             ->toArray();
@@ -36,8 +36,8 @@ class TrainingSessionTraineeResultsTable extends AppTable {
         $returnArray = [];
         foreach ($results as $result) {
             $returnArray[$sessionId][$result['trainee_id']][$result['training_result_type_id']] = $result['result'];
-            /*$returnArray[$sessionId][$result['trainee_id']][$result['training_result_type_id']] = $result['attendance_days'];
-            $returnArray[$sessionId][$result['trainee_id']][$result['training_result_type_id']] = $result['certificate_number'];*/
+            $returnArray[$sessionId][$result['trainee_id']][$result['training_result_type_id']] = $result['attendance_days'];
+            $returnArray[$sessionId][$result['trainee_id']][$result['training_result_type_id']] = $result['certificate_number'];
         }
         return $returnArray;
     }
