@@ -16,7 +16,9 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->addBehavior('Excel', ['excludes' => ['preferred'],'pages' => ['index']]);
+        $this->addBehavior('Excel', [
+            'pages' => ['index']
+        ]);
     }
 
     public function validationDefault(Validator $validator)
