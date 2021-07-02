@@ -1,3 +1,7 @@
+### [3.67.0] - 2021-07-02
+- Bug Fixed: Administration > Survey > Forms > Questions tab > Edit > Delete: Options from Questions was deleted but was not removed
+- Bug Fixed: Administration > System Setup > Education Structure: Encountered 404 error when copying data on Systems tab
+
 ### [3.66.5] - 2021-06-29
 - Bug Fixed: Administration > Performance > Assessment > Assessment Period > Add: Encountered 404 error upon saving
 - Bug Fixed: Administration > Security > Permission > Personal tab: To enable Execute function for Report Cards
