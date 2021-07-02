@@ -17,7 +17,7 @@ class POCOR6208 extends AbstractMigration
         $this->execute('INSERT INTO `z_6208_security_functions` SELECT * FROM `security_functions`');
 
         //update delete function for all reports module
-        $this->execute("UPDATE security_functions SET _delete = 'Institution.delete' WHERE module = 'Reports' AND name = 'Institution'");
+        $this->execute("UPDATE security_functions SET _delete = 'Institutions.delete' WHERE module = 'Reports' AND name = 'Institution'");
         $this->execute("UPDATE security_functions SET _delete = 'Students.delete' WHERE module = 'Reports' AND name = 'Students'");
         $this->execute("UPDATE security_functions SET _delete = 'Staff.delete' WHERE module = 'Reports' AND name = 'Staff'");
         $this->execute("UPDATE security_functions SET _delete = 'Surveys.delete' WHERE module = 'Reports' AND name = 'Surveys'");

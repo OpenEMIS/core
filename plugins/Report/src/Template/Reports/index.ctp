@@ -118,12 +118,19 @@ $this->start('panelBody');
 									<a href="<?php echo $this->Url->build($viewUrl); ?>" role="menuitem" tabindex="-1"><i class="fa fa-eye"></i>View</a>			
 								</li>
 								<li role="presentation">
-									<a href="<?php echo $this->Url->build($downloadUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-download"></i>Download</a>			
+									<a href="<?php echo $this->Url->build($downloadUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-download"></i>Download</a>
 								</li>
-								<li role="presentation">
-									<a href="<?php echo $this->Url->build($deleteUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa  fa-trash"></i>Delete</a>			
-								</li>							
-						</ul>						
+								<?php if ($UsersCheck['super_admin'] == 1) { ?>
+									<li role="presentation">
+										<a href="<?php echo $this->Url->build($deleteUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-trash"></i>Delete</a>	
+								    </li>
+								<?php }?>
+								<?php if (!empty($AccessCheck) && $AccessCheck == 1) {?>
+									<li role="presentation">
+										<a href="<?php echo $this->Url->build($deleteUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-trash"></i>Delete</a>	
+								    </li>
+								<?php }?>		
+						    </ul>						
 						</div>
 						<?php }?>
 					</td>
@@ -133,6 +140,5 @@ $this->start('panelBody');
 		</table>
 	</div>
 </div>
-
 <?php
 $this->end();
