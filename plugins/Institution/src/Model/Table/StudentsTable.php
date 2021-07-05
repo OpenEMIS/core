@@ -30,7 +30,7 @@ class StudentsTable extends ControllerActionTable
     private $dashboardQuery = null;
 
     public function initialize(array $config)
-    { 
+    {
         $this->table('institution_students');
         parent::initialize($config);
 
@@ -41,6 +41,7 @@ class StudentsTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
+        /* $this->hasMany('StudentGuardians',['className' => 'StudentGuardian.StudentGuardians', 'foreignKey' => 'student_id']); */
 
         // Behaviors
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -212,9 +213,22 @@ class StudentsTable extends ControllerActionTable
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $periodId = $this->request->query['academic_period_id'];
+        $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
+        $GuardianRelations = TableRegistry::get('Student.GuardianRelations');
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $UserIdentities = TableRegistry::get('User.Identities');
+        $ContactTypes = TableRegistry::get('FieldOption.ContactTypes');
+        $UserContact = TableRegistry::get('User.Contacts');
 
+
+        /* $subquery = $this->Users->find()->select([
+            'guartdian_name' => "CONCAT(Users.first_name,' ',Users.last_name)"
+        ])
+        ->where([
+            'Users.id = StudentGurdians.guardian_id'
+        ]); */
         $query
-            ->where([$this->aliasField('institution_id') => $institutionId])
+       ->where([$this->aliasField('institution_id') => $institutionId])
             ->contain([
                 'Users.Genders',
                 'Institutions',
@@ -242,7 +256,17 @@ class StudentsTable extends ControllerActionTable
                 'student_third_name' => 'Users.third_name',
                 'student_last_name' => 'Users.last_name',
                 'nationalities' => 'MainNationalities.name',
-                'class_name' => 'InstitutionClasses.name'
+                'class_name' => 'InstitutionClasses.name',
+                'guardian_relation' => 'GuardianRelations.name',
+                'guardian_name' => $this->Users->find()->func()->concat([
+                    'GuardianUser.first_name' => 'literal',
+                    "  ",
+                    'GuardianUser.last_name' => 'literal'
+                ]),
+                'identity_type' => $IdentityTypes->aliasField('name'),
+                'identity_number' => $UserIdentities->aliasField('number'),
+                'contact_type' => $ContactTypes->aliasField('name'),
+                'contact_number' => $UserContact->aliasField('value'),
             ])
             ->leftJoin(
                 [$ClassStudents->alias() => $ClassStudents->table()],
@@ -259,12 +283,59 @@ class StudentsTable extends ControllerActionTable
                 [
                     $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ]
+            )
+            ->leftJoin(
+                [$StudentGuardians->alias() => $StudentGuardians->table()],
+                [
+                    $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
+                ]
+            )
+            ->leftJoin(
+                [$this->Users->alias() => $this->Users->table()],
+                [
+                    $this->Users->aliasField('id = ') . $this->aliasField('student_id')
+                ]
+            )
+            ->leftJoin(['GuardianUser' => 'security_users'], [
+                'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
+            ])
+            ->leftJoin(
+                [$GuardianRelations->alias() => $GuardianRelations->table()],
+                [
+                    $GuardianRelations->aliasField('id = ') . $StudentGuardians->aliasField('guardian_relation_id')
+                ]
+            )
+            ->leftJoin(['GuardianUser' => 'security_users'], [
+                'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
+            ])
+            ->leftJoin(
+                [$UserIdentities->alias() => $UserIdentities->table()],
+                [
+                    $UserIdentities->aliasField('security_user_id = ') . $this->Users->aliasField('id')
+                ]
+            )
+            ->leftJoin(
+                [$IdentityTypes->alias() => $IdentityTypes->table()],
+                [
+                    $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
+                ]
+            )
+            ->leftJoin(
+                [$UserContact->alias() => $UserContact->table()],
+                [
+                    $UserContact->aliasField('security_user_id = ') . $this->Users->aliasField('id')
+                ]
+            )
+            ->leftJoin(
+                [$ContactTypes->alias() => $ContactTypes->table()],
+                [
+                    $ContactTypes->aliasField('id = ') . $UserContact->aliasField('contact_type_id')
+                ]
             );
 
         if ($periodId > 0) {
             $query->where([$this->aliasField('academic_period_id') => $periodId]);
         }
-
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
 
@@ -290,7 +361,7 @@ class StudentsTable extends ControllerActionTable
                 }else{
                         $student_status = $row->student_status;
                 }
-                          
+
                 $row['student_status'] = $student_status;
                 return $row;
             });
@@ -398,6 +469,45 @@ class StudentsTable extends ControllerActionTable
             'field' => 'end_date',
             'type' => 'date',
             'label' => ''
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'guardian_name',
+            'type' => 'string',
+            'label' => __('Guardian Name')
+        ];
+
+        $extraField[] = [
+            'key' => 'GuardianRelations.name',
+            'field' => 'guardian_relation',
+            'type' => 'string',
+            'label' => __('Guardian Relations')
+        ];
+        $extraField[] = [
+            'key' => 'IdentityTypes.name',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];
+        $extraField[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'identity_number',
+            'type' => 'integer',
+            'label' => __('Identity Number')
+        ];
+
+        $extraField[] = [
+            'key' => 'ContactTypes.name',
+            'field' => 'contact_type',
+            'type' => 'string',
+            'label' => __('Contact Type')
+        ];
+        $extraField[] = [
+            'key' => 'Users.value',
+            'field' => 'contact_number',
+            'type' => 'integer',
+            'label' => __('Contact Number')
         ];
 
         $fields->exchangeArray($extraField);
@@ -591,7 +701,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
-    { 
+    {
         $this->field('previous_institution_student_id', ['type' => 'hidden']);
         $this->triggerAutomatedStudentWithdrawalShell();
     }
@@ -607,21 +717,21 @@ class StudentsTable extends ControllerActionTable
 
         $body = array();
 
-        $body = [  
+        $body = [
             'institution_student_id' => !empty($entity->student_id) ? $entity->student_id : NULL,
             'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
         ];
         if(!empty($this->action) && $this->action == 'remove') {
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
-                $username = $this->Auth->user()['username']; 
+                $username = $this->Auth->user()['username'];
                 $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
-            } 
+            }
         }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
-    { 
+    {
         // permission checking for import button
         $hasImportAdmissionPermission = $this->AccessControl->check(['Institutions', 'ImportStudentAdmission', 'add']);
         $hasImportBodyMassPermission = $this->AccessControl->check(['Institutions', 'ImportStudentBodyMasses', 'add']);
@@ -749,7 +859,7 @@ class StudentsTable extends ControllerActionTable
         $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
         $session = $this->Session;
         $institutionId = $session->read('Institution.Institutions.id');
-		
+
 		if (empty($request->query['academic_period_id'])) {
             $request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }
@@ -816,7 +926,7 @@ class StudentsTable extends ControllerActionTable
         // End
 
         $search = $this->getSearchKey();
-       
+
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
@@ -855,7 +965,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
-    { 
+    {
         foreach ($query->toArray() as $key => $value)
         {
             $InstitutionStudents = TableRegistry::get('InstitutionStudents');
@@ -888,7 +998,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    { 
+    {
         $studentStatusId = $entity->student_status_id;
         $statuses = $this->StudentStatuses->findCodeList();
         $code = array_search($studentStatusId, $statuses);
@@ -918,7 +1028,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     public function editAfterAction(Event $event, Entity $entity)
-    { 
+    {
         // Start PHPOE-1897
         $statuses = $this->StudentStatuses->findCodeList();
         if ($entity->student_status_id != $statuses['CURRENT']) {
@@ -1001,7 +1111,7 @@ class StudentsTable extends ControllerActionTable
                 ];
                 }
             }
-            
+
             foreach ($indexElements as $key => $value) {
                 if ($value['name']=='OpenEmis.ControllerAction/index') {
                     $indexElements[$key]['order'] = 3;
@@ -1016,7 +1126,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    { 	
+    {
         $listeners = [
             TableRegistry::get('Institution.StudentAdmission'),
             TableRegistry::get('Institution.StudentTransferIn'),
@@ -1049,7 +1159,7 @@ class StudentsTable extends ControllerActionTable
                 );
             }
         }
-		
+
 		if($entity->isNew()) {
 			$bodyData = $this->find('all',
 									[ 'contain' => [
@@ -1069,9 +1179,9 @@ class StudentsTable extends ControllerActionTable
 							$this->aliasField('student_id') => $entity->student_id
 						]);
 
-			
-			if (!empty($bodyData)) { 
-				foreach ($bodyData as $key => $value) { 
+
+			if (!empty($bodyData)) {
+				foreach ($bodyData as $key => $value) {
 					$user_id = $value->user->id;
 					$openemis_no = $value->user->openemis_no;
 					$first_name = $value->user->first_name;
@@ -1081,18 +1191,18 @@ class StudentsTable extends ControllerActionTable
 					$preferred_name = $value->user->preferred_name;
 					$gender = $value->user->gender->name;
 					$nationality = $value->user->main_nationality->name;
-					
+
 					if(!empty($value->user->date_of_birth)) {
 						foreach ($value->user->date_of_birth as $key => $date) {
 							$dateOfBirth = $date;
 						}
 					}
-					
+
 					$address = $value->user->address;
 					$postalCode = $value->user->postal_code;
 					$addressArea = $value->user->address_area->name;
 					$birthplaceArea = $value->user->birthplace_area->name;
-					
+
 					$contactValue = [];
 					$contactType = [];
 					if(!empty($value->user['contacts'])) {
@@ -1101,7 +1211,7 @@ class StudentsTable extends ControllerActionTable
 							$contactType[] = $contact->contact_type->name;
 						}
 					}
-					
+
 					$identityNumber = [];
 					$identityType = [];
 					if(!empty($value->user['identities'])) {
@@ -1110,7 +1220,7 @@ class StudentsTable extends ControllerActionTable
 							$identityType[] = $identity->identity_type->name;
 						}
 					}
-					
+
 					$username = $value->user->username;
 					$institution_id = $value->institution->id;
 					$institutionName = $value->institution->name;
@@ -1119,24 +1229,24 @@ class StudentsTable extends ControllerActionTable
 					$academicCode = $value->academic_period->code;
 					$academicGrade = $value->academic_period->name;
 					$studentStatus = $value->student_status->name;
-					
+
 					if(!empty($value->start_date)) {
 						foreach ($value->start_date as $key => $date) {
 							$startDate = $date;
 						}
 					}
-					
+
 					if(!empty($value->end_date)) {
 						foreach ($value->end_date as $key => $date) {
 							$endDate = $date;
 						}
 					}
-					
+
 				}
 			}
 			$body = array();
-				   
-			$body = [   
+
+			$body = [
 				'security_users_id' => !empty($user_id) ? $user_id : NULL,
 				'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
 				'security_users_first_name' =>	!empty($first_name) ? $first_name : NULL,
@@ -1164,9 +1274,9 @@ class StudentsTable extends ControllerActionTable
 				'education_grade_name' => !empty($educationGrade) ? $educationGrade : NULL,
 				'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
 				'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
-				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,	
+				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
 			];
-		
+
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
 			if (!empty($entity->created_user_id)) {
 				$Webhooks->triggerShell('student_create', ['username' => ''], $body);
@@ -1357,7 +1467,7 @@ class StudentsTable extends ControllerActionTable
         // check if student exists in current year
         $academicPeriodId = ($student->has('academic_period_id'))? $student->academic_period_id: null;
         $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
-        
+
         // POCOR-5003
         //if ($academicPeriodId != $currentAcademicPeriod) {
             //return false;
@@ -1703,7 +1813,7 @@ class StudentsTable extends ControllerActionTable
 
         return $params;
     }
-	
+
 	// For Dashboard (Home Page and Institution Dashboard page)
     public function getNumberOfStudentsByAttendanceType($params = [])
     {
@@ -1721,7 +1831,7 @@ class StudentsTable extends ControllerActionTable
         } else {
             $currentYear = __('Not Defined');
         }
-		
+
 		$studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
 
         $StudentAttendancesRecords = $studentAttendanceMarkedRecords->find('all')
@@ -1763,12 +1873,12 @@ class StudentsTable extends ControllerActionTable
 				'student_attendance_marked_records.institution_id' => $conditions['institution_id'],
 				'educationGrades.id IS NOT NULL',
             ])
-			->order(['educationGrades.id' => 'ASC'])			
+			->order(['educationGrades.id' => 'ASC'])
 			->toArray()
             ;
-		
+
 		foreach ($StudentAttendancesRecords as $key => $record) {
-	
+
 			$InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
 
 			$StudentAttendancesData = $InstitutionStudentAbsenceDetails->find('all')
@@ -1785,24 +1895,24 @@ class StudentsTable extends ControllerActionTable
 				'institution_student_absence_details.student_id' => $record->student_id,
             ])
 			->toArray();
-			
+
 			$StudentAttendances[$record->education_grade_id][] = array('attendance'=>$StudentAttendancesData, 'education_grade_id'=> $record->education_grade_id, 'education_grade'=>$record->education_grade);
-		}			
+		}
 
         $attendanceData = [];
-	
+
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
         $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
         $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
-		
+
         foreach ($StudentAttendances as $key => $attendances) {
-			
+
 			$total_present = $total_absent = $total_late = 0;
-			
+
 			foreach ($attendances as $key => $attendance) {
 
 				$attendanceData[$attendance['education_grade_id']] = $attendance['education_grade'];
-				
+
 				if(!empty($attendance['attendance'])) {
 					foreach ($attendance['attendance'] as $key => $markAttendanceData) {
 						$total_present = $markAttendanceData->present + $total_present;
@@ -1818,20 +1928,20 @@ class StudentsTable extends ControllerActionTable
 						$dataSet[$dkey]['data'][$attendance['education_grade_id']] = 0;
 					}
 				}
-				
+
 				$dataSet['Present']['data'][$attendance['education_grade_id']] = $total_present;
 				$dataSet['Absent']['data'][$attendance['education_grade_id']] = $total_absent;
 				$dataSet['Late']['data'][$attendance['education_grade_id']] = $total_late;
 			}
 		}
-		
+
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => __('For Today'));
         $params['options']['xAxis']['categories'] = array_values($attendanceData);
         $params['dataSet'] = $dataSet;
         return $params;
     }
-	
+
     public function completedGrade($educationGradeId, $studentId)
     {
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
@@ -2129,7 +2239,7 @@ class StudentsTable extends ControllerActionTable
                         ->find()
                         ->where($conditions)
                         ->all();
-                        
+
                         if ($StudentWithdrawAdd->isEmpty()) {
                             $date = date('Y-m-d H:i:s');
                             $newStudentWithdraw = [
@@ -2156,7 +2266,7 @@ class StudentsTable extends ControllerActionTable
                     }
                 }
             }
-            
+
         }
     }
 }

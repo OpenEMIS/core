@@ -115,7 +115,7 @@ class NavigationComponent extends Component
     {
         $linkOnly = [];
 
-        $ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking
+        //$ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking //POCOR-5312
 
         $roles = [];
         $restrictedTo = [];
@@ -148,7 +148,7 @@ class NavigationComponent extends Component
                 }
 
                 // $ignoredAction will be excluded from permission checking
-                if (array_key_exists('controller', $url) && !in_array($url['plugin'], $ignoredPlugin)) {
+                if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
                     if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
                         unset($navigations[$key]);
                     }
@@ -309,18 +309,28 @@ class NavigationComponent extends Component
 				$securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
             }
 			if(!empty($encodedParam)) {
-				$userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
-            }
+                //POCOR-6202 start
+                if($action == 'GuardianStudents'){
+                    $userInfo = TableRegistry::get('student_guardians')->get($securityUserId);
+                }else{
+                    $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
+                }
+                //POCOR-6202 end
+			}
 			
 			$userType = '';
 			if(!empty($userInfo)) {
-				if ($userInfo->is_student) {
+				if ($userInfo->is_student && $userInfo->is_staff == 0 && $userInfo->is_guardian == 0) {
 					$userType = 1;
-				} elseif ($userInfo->is_staff) {
+				} elseif ($userInfo->is_staff && $userInfo->is_student == 0 && $userInfo->is_guardian == 0) {
 					$userType = 2;
-				} elseif ($userInfo->is_guardian) {
+				} elseif ($userInfo->is_guardian && $userInfo->is_staff == 0 && $userInfo->is_student == 0) {
 					$userType = 3;
-				}
+				} elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
+                   $userType = 4; //superrole user
+                } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 0) {
+                   $userType = 5;
+                }
 			}
 			$session = $this->request->session();
             $isStudent = $session->read('Directory.Directories.is_student');
@@ -341,8 +351,22 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
+
+            if ($userType == 4) {
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
+                $session->write('Directory.Directories.reload', true);
+            }
+
+            if ($userType == 5) {
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
+                $session->write('Directory.Directories.reload', true);
+            }
         } elseif (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
             $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
+            $navigations = $this->appendNavigation('Profiles.Personal', $navigations, $this->getProfileNavigation());
 
             $session = $this->request->session();
             $isStudent = $session->read('Auth.User.is_student');
@@ -403,10 +427,10 @@ class NavigationComponent extends Component
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
 
         $navigation = [
-            'Profiles.Profiles' => [
-                'title' => 'Profile',
+            'Profiles.Personal' => [
+                'title' => 'Personal',
                 'icon' => '<span><i class="fa kd-role"></i></span>',
-                'params' => ['plugin' => 'Profile', 'action' => 'Profiles', 0 => 'view', $userId]
+                'params' => ['plugin' => 'Profile', 'action' => 'Personal', 0 => 'view', $userId]
             ],
 
             'Institutions.Institutions.index' => [
@@ -738,7 +762,7 @@ class NavigationComponent extends Component
             ],
 
             'Institutions.Appointment' => [
-                'title' => 'Appointment',
+                'title' => 'Appointments',
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false,
             ],
@@ -911,11 +935,11 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.Distribution' => [
-               'title' => 'Distribution',
+            'Institutions.Distributions' => [
+               'title' => 'Distributions',
                 'parent' => 'Meals',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.Distribution']
+                'selected' => ['Institutions.Distributions']
             ],
 
             'Institutions.StudentMeals.index' => [
@@ -1204,32 +1228,32 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Profiles.view' => [
                 'title' => 'General',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 //POCOR-5886 starts
-                'params' => ['plugin' => 'Profile', 'action' => 'Profiles', 0 => $profileUserId],//POCOR-5886 ends
-                'selected' => ['Profiles.Profiles.view', 'Profiles.Profiles.edit', 'Profiles.Profiles.pull', 'Profiles.Accounts', 'Profiles.Demographic', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'ProfileComments.index', 'ProfileComments.view', 'Profiles.Attachments', 'Profiles.History', 'Profiles.Contacts']
+                'params' => ['plugin' => 'Profile', 'action' => 'Personal', 0 => $profileUserId],//POCOR-5886 ends
+                'selected' => ['Profiles.Personal.view', 'Profiles.Personal.edit', 'Profiles.Personal.pull', 'Profiles.Accounts', 'Profiles.Demographic', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'ProfileComments.index', 'ProfileComments.view', 'Profiles.Attachments', 'Profiles.History', 'Profiles.Contacts']
             ],
             'Profiles.Healths' => [
                 'title' => 'Health',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Healths', 'Profiles.HealthAllergies', 'Profiles.HealthConsultations', 'Profiles.HealthFamilies', 'Profiles.HealthHistories', 'Profiles.HealthImmunizations', 'Profiles.HealthMedications', 'Profiles.HealthTests', 'ProfileBodyMasses.index', 'ProfileBodyMasses.add', 'ProfileBodyMasses.edit', 'ProfileBodyMasses.view', 'ProfileBodyMasses.delete', 'ProfileInsurances.index', 'ProfileInsurances.add', 'ProfileInsurances.edit', 'ProfileInsurances.view', 'ProfileInsurances.delete']
             ],
             'Profiles.Employments' => [
                 'title' => 'Professional',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Employments', 'Profiles.StaffQualifications', 'Profiles.StaffExtracurriculars', 'Profiles.StaffMemberships', 'Profiles.StaffLicenses', 'Profiles.StaffAwards']
             ],
             'Profiles.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.SpecialNeedsReferrals', 'Profiles.SpecialNeedsAssessments', 'Profiles.SpecialNeedsServices', 'Profiles.SpecialNeedsDevices', 'Profiles.SpecialNeedsPlans']
             ],
             'Profiles.ScholarshipApplications' => [
                 'title' => 'Scholarships',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.ScholarshipApplications', 'ScholarshipsDirectory.index', 'ScholarshipsDirectory.view', 'ProfileApplicationInstitutionChoices.index', 'ProfileApplicationInstitutionChoices.view', 'ProfileApplicationInstitutionChoices.add', 'ProfileApplicationInstitutionChoices.edit', 'ProfileApplicationInstitutionChoices.delete', 'ProfileApplicationAttachments.index', 'ProfileApplicationAttachments.view', 'ProfileApplicationAttachments.add', 'ProfileApplicationAttachments.edit', 'ProfileApplicationAttachments.delete']
             ],
@@ -1286,7 +1310,7 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Staff' => [
                 'title' => 'Staff',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'link' => false,
             ],
 
@@ -1323,7 +1347,7 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Student' => [
                 'title' => 'Student',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'link' => false,
             ],
             'Profiles.ProfileGuardians' => [
@@ -1360,7 +1384,7 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Guardian' => [
                 'title' => 'Guardian',
-                'parent' => 'Profiles.Profiles',
+                'parent' => 'Profiles.Personal',
                 'link' => false,
             ],
             'Profiles.ProfileStudents.index' => [
@@ -2001,4 +2025,5 @@ class NavigationComponent extends Component
         ];
         return $navigation;
     }
+    
 }

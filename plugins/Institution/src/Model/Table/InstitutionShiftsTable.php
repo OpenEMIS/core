@@ -30,7 +30,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->belongsTo('PreviousShifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'previous_shift_id']);
 
         $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_shift_id']);
-
+        $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
 
@@ -44,6 +44,9 @@ class InstitutionShiftsTable extends ControllerActionTable
             'actions' => ['search' => false],
         ]);
         $this->setDeleteStrategy('restrict');
+
+        $this->addBehavior('Excel', ['excludes' => ['start_time','end_time','academic_period_id','previous_shift_id'], 'pages' => ['index']]);;
+
     }
 
     public function validationDefault(Validator $validator)
@@ -121,6 +124,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //echo $query; exit;
         $institutionId = $this->Session->read('Institution.Institutions.id');
         if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
             $query->where([
@@ -776,7 +780,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
         return $query;
     }
-    
+
     public function findStaffShiftsAttendance(Query $query, array $options)
     {
         $staffId = $options['staff_id'];
@@ -796,7 +800,90 @@ class InstitutionShiftsTable extends ControllerActionTable
                             ->where([
                              $institutionStaffShifts->aliasField('staff_id') => $staffId
                             ])->first();
-            
+
         return $staffShiftsData;
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+        $cloneFields = $fields->getArrayCopy();
+        //print_r($cloneFields); exit;
+        $newFields = [];
+        foreach ($cloneFields as $key => $value) {
+            $newFields[] = $value;
+
+
+            $newFields[] = [
+                'key' => 'AcademicPeriods.name',
+                'field' => 'academic_period',
+                'type' => 'string',
+                'label' => 'Academic Period'
+            ];
+
+            $newFields[] = [
+                'key' => 'ShiftOptions.name',
+                'field' => 'shift_name',
+                'type' => 'string',
+                'label' => 'Shift Name'
+            ];
+
+            $newFields[] = [
+                'key' => 'InstitutionShifts.start_time',
+                'field' => 'shift_start_time',
+                'type' => 'string',
+                'label' => 'Start Time      '
+            ];
+
+            $newFields[] = [
+                'key' => 'InstitutionShifts.end_time',
+                'field' => 'shift_end_time',
+                'type' => 'string',
+                'label' => 'End Time'
+            ];
+
+            $newFields[] = [
+                'key' => 'Institutions.name',
+                'field' => 'Owner',
+                'type' => 'string',
+                'label' => 'Owner'
+            ];
+
+            $newFields[] = [
+                'key' => 'Institutions.name',
+                'field' => 'Occupier',
+                'type' => 'string',
+                'label' => 'Occupier'
+            ];
+
+        }
+        print_r($newFields); exit;
+        $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
+    {
+        $academicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        if($academicPeriod != ''){
+            $query
+            ->select(['academic_period' => 'AcademicPeriods.name', 'shift_name' => 'ShiftOptions.name','shift_start_time' => 'InstitutionShifts.start_time','shift_end_time' => 'InstitutionShifts.end_time','Owner' => 'Institutions.name','Occupier' => 'Institutions.name' ])
+            ->LeftJoin([$this->Institutions->alias() => $this->Institutions->table()],[
+                $this->Institutions->aliasField('id').' = ' . 'InstitutionShifts.institution_id'
+            ])
+            ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+                $this->AcademicPeriods->aliasField('id').' = ' . 'InstitutionShifts.academic_period_id'
+            ])
+            ->LeftJoin([$this->ShiftOptions->alias() => $this->ShiftOptions->table()],[
+                $this->ShiftOptions->aliasField('id').' = ' . $this->InstitutionShifts->aliasField('shift_option_id')
+            ])
+            ->where([
+                'OR' => [
+                    [$this->aliasField('location_institution_id') => $institutionId],
+                    [$this->aliasField('institution_id') => $institutionId]
+                ],
+                $this->aliasField('academic_period_id') => $academicPeriod
+            ]);
+        }
+
     }
 }
