@@ -82,8 +82,9 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				if (strlen($trainee['result']) > 0) {
 					$resultData = [
 						'result' => $trainee['result'],
-                        'attendance_days' => $trainee['attendance_days'],
-                        'certificate_number' => $trainee['certificate_number'],
+                        'attendance_days' => $trainee['attendance_days'],//5695
+                        'certificate_number' => $trainee['certificate_number'],//5695
+                        'practical' => $trainee['practical'],//5695
 						//'training_result_type_id' => $resultTypeId, //5695
 						'trainee_id' => $trainee['trainee_id'],
 						'training_session_id' => $sessionId,
@@ -126,6 +127,13 @@ class TrainingSessionResultsTable extends ControllerActionTable
                         $entity->trainees[$counterNo]['errors'] = $newEntity->errors();
 
                         $entity->errors('trainees', ['certificate_number' => $newEntity->errors('certificate_number')]);
+                    }
+
+                    if ($newEntity->errors('practical')) {
+                        $counterNo = $newData['counterNo'];
+                        $entity->trainees[$counterNo]['errors'] = $newEntity->errors();
+
+                        $entity->errors('trainees', ['practical' => $newEntity->errors('practical')]);
                     }//5695 ends
 
                     if (!$TraineeResults->save($newEntity)) {
@@ -221,7 +229,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 	}
 
 	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[])
-	{
+	{ 
         $sessionId = $entity->training_session_id;
 		//$selectedResultType = $this->request->query('result_type'); //5695 starts
         
@@ -257,6 +265,9 @@ class TrainingSessionResultsTable extends ControllerActionTable
         }
 
 		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Exam')]; //5695
+        if(in_array('Practical', $TrainingResultTypesArr)){
+            $tableHeaders[] = __('Practical'); //5695
+        }
         if(in_array('Attendance', $TrainingResultTypesArr)){
             $tableHeaders[] = __('Attendance Days');
         }
@@ -282,6 +293,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 					$TraineeResults->aliasField('result'),
                     $TraineeResults->aliasField('attendance_days'), //5695
                     $TraineeResults->aliasField('certificate_number'), //5695
+                    $TraineeResults->aliasField('practical'), //5695
 					$TraineeResults->aliasField('training_result_type_id')
 				])
 				->leftJoin(
@@ -289,7 +301,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 					[
 						$TraineeResults->aliasField('trainee_id = ') . $SessionsTrainees->aliasField('trainee_id'),
 						$TraineeResults->aliasField('training_session_id') => $sessionId,
-						$TraineeResults->aliasField('training_result_type_id IN') => $selectedResultType
+						//$TraineeResults->aliasField('training_result_type_id IN') => $selectedResultType
 					]
 				)
 				->where([
@@ -324,6 +336,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				$rowData[] = strlen($traineeResult['result']) ? $traineeResult['result'] : '';
                 $rowData[] = strlen($traineeResult['attendance_days']) ? $traineeResult['attendance_days'] : ''; //5695
                 $rowData[] = strlen($traineeResult['certificate_number']) ? $traineeResult['certificate_number'] : ''; //5695
+                $rowData[] = strlen($traineeResult['practical']) ? $traineeResult['practical'] : ''; //5695
 				$tableCells[] = $rowData;
 			}
 		} else {
@@ -376,16 +389,34 @@ class TrainingSessionResultsTable extends ControllerActionTable
                                 $certificate_number .= $value;
                             }
                             $certificate_number .= "</div>";
-                        }//5695 ends for certificate number
-                    }    
+                        }
+                    } //5695 ends for certificate number
+                    //5695 start for Practical
+                    if(in_array('Practical', $TrainingResultTypesArr)){
+                        $practical = $Form->input("$fieldPrefix.practical", ['label' => false, 'value' => $entity->trainees[$i]['practical']]);
+                        if (array_key_exists('errors', $entity->trainees[$i])) {
+                            $practical .= "<div class='error-message'>";
+                            $errors = [];
+                            //flattern 2 dimensional array to cater more than one error returned
+                            array_walk_recursive($entity->trainees[$i]['errors'], function($v, $k) use (&$errors){ $errors[] = $v; });
+                            foreach ($errors as $value) {
+                                $practical .= $value;
+                            }
+                            $practical .= "</div>";
+                        }
+                    } //5695 ends for Practical  
                 } else {
                     $result = $Form->input("$fieldPrefix.result", ['label' => false, 'value' => $traineeResult['result']]);
+                    //5695 start 
                     if(in_array('Attendance', $TrainingResultTypesArr)){
                         $attendance_days = $Form->input("$fieldPrefix.attendance_days", ['label' => false, 'value' => $traineeResult['attendance_days']]);
                     }
                     if(in_array('Certificate', $TrainingResultTypesArr)){
                         $certificate_number = $Form->input("$fieldPrefix.certificate_number", ['label' => false, 'value' => $traineeResult['certificate_number']]);
                     }
+                    if(in_array('Practical', $TrainingResultTypesArr)){
+                        $practical = $Form->input("$fieldPrefix.practical", ['label' => false, 'value' => $traineeResult['practical']]);
+                    }//5695 end
                 }
 
 				if (isset($traineeResult['id'])) {
@@ -401,6 +432,9 @@ class TrainingSessionResultsTable extends ControllerActionTable
                 }
                 if(in_array('Certificate', $TrainingResultTypesArr)){
                     $rowData[] = $certificate_number; //5695
+                }
+                if(in_array('Practical', $TrainingResultTypesArr)){
+                    $rowData[] = $practical; //5695
                 }
                 $tableCells[] = $rowData;
 			}
