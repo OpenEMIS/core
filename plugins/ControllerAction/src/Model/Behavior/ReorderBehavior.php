@@ -55,7 +55,7 @@ class ReorderBehavior extends Behavior {
 				$originalOrder = array_reverse($originalOrder);
 				foreach ($ids as $id) {
 					$orderValue = array_pop($originalOrder);
-					$model->updateAll(["`".$orderField."`" => $orderValue["`".$orderField."`"]], [$id]);
+					$model->updateAll([$orderField => $orderValue[$orderField]], [$id]);
 				}
 
 				$event = $model->dispatchEvent('ControllerAction.Model.afterReorder', [$ids], $model);
@@ -98,7 +98,7 @@ class ReorderBehavior extends Behavior {
 					->where($condition)
 					->count();
 			}
-			$entity->{"`".$orderField."`"} = $order + 1;
+			$entity->{$orderField} = $order + 1;
 		}
 	}
 
@@ -132,7 +132,7 @@ class ReorderBehavior extends Behavior {
 		}
 		$counter = 1;
 		foreach ($reorderItems as $key => $item) {
-			$table->updateAll(["`".$orderField."`" => $counter++], ["`".$table->primaryKey()."`" => $key]);
+			$table->updateAll([$orderField => $counter++], [$table->primaryKey() => $key]);
 		}
 	}
 
