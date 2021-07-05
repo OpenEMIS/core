@@ -25,6 +25,9 @@ class TrainingSessionTraineeResultsTable extends AppTable {
             ])
             ->add('certificate_number', 'ruleMaxLength', [
                 'rule' => ['maxLength', 10]
+            ])
+            ->add('practical', 'ruleMaxLength', [
+                'rule' => ['maxLength', 10]
             ])*/;
     }
 
@@ -38,6 +41,7 @@ class TrainingSessionTraineeResultsTable extends AppTable {
             $returnArray[$sessionId][$result['trainee_id']][$result['training_result_type_id']] = $result['result'];
             $returnArray[$sessionId][$result['trainee_id']][$result['training_result_type_id']] = $result['attendance_days'];
             $returnArray[$sessionId][$result['trainee_id']][$result['training_result_type_id']] = $result['certificate_number'];
+            $returnArray[$sessionId][$result['trainee_id']][$result['training_result_type_id']] = $result['practical'];
         }
         return $returnArray;
     }

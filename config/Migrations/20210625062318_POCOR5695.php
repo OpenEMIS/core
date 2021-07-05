@@ -56,7 +56,7 @@ class POCOR5695 extends AbstractMigration
 
         $this->execute("ALTER TABLE `training_courses` ADD INDEX( `training_course_category_id`)"); 
 
-        /*$this->execute("ALTER TABLE `training_session_trainee_results`  ADD `attendance_days` VARCHAR(10) NOT NULL  AFTER `result`,  ADD `certificate_number` VARCHAR(10)  NOT NULL  AFTER `attendance_days`;");*/
+        /*$this->execute("ALTER TABLE `training_session_trainee_results`  ADD `attendance_days` VARCHAR(10) NOT NULL  AFTER `result`,  ADD `certificate_number` VARCHAR(10)  NOT NULL  AFTER `attendance_days`, ADD `practical` VARCHAR(10)  NOT NULL  AFTER `certificate_number`;");*/
         
         // labels
         $this->execute("INSERT INTO labels (id, module, field, module_name, field_name, visible, created_user_id, created) 
@@ -76,6 +76,11 @@ class POCOR5695 extends AbstractMigration
             ],
             [
                 'en' => 'Certificate Number',
+                'created_user_id' => 1,
+                'created' => 'NOW()'
+            ],
+            [
+                'en' => 'Practical',
                 'created_user_id' => 1,
                 'created' => 'NOW()'
             ]
@@ -104,6 +109,7 @@ class POCOR5695 extends AbstractMigration
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Course Category'");
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Attendance Days'");
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Certificate Number'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Practical'");
        
     }
 }
