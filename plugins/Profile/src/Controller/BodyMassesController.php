@@ -14,6 +14,7 @@ class BodyMassesController extends PageController
         $this->loadModel('User.UserBodyMasses');
         $this->Page->loadElementsFromTable($this->UserBodyMasses);
         $this->Page->disable(['search']); // to disable the search function
+        $this->Page->enable(['download']);
     }
 
     public function index()

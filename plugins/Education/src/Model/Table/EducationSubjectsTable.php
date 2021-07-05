@@ -106,6 +106,53 @@ class EducationSubjectsTable extends ControllerActionTable
         $this->field('field_of_studies', ['after' => 'visible', 'entity' => $entity, 'type' => 'custom_field_of_studies']);
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
+
+        // Webhook Education Subject create -- start
+        if($entity->isNew()){
+            $body = array();
+            $body = [
+                'subject_id' =>$entity->id,
+                'subject_name' =>$entity->name,
+                'subject_code' =>$entity->code,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if (!empty($entity->created_user_id)) {
+                $Webhooks->triggerShell('education_subject_create', ['username' => $username], $body);
+            }
+        }
+        // Webhook Education Subject` create -- end
+
+         // Webhook Education Subject update -- start
+         if(!$entity->isNew()){
+            $body = array();
+            $body = [
+                'subject_id' =>$entity->id,
+                'subject_name' =>$entity->name,
+                'subject_code' =>$entity->code,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if (!empty($entity->modified_user_id)) {
+                $Webhooks->triggerShell('education_subject_update', ['username' => $username], $body);
+            }
+        }
+        // Webhook Education Subject` update -- end
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options){
+
+        // Webhook Education Subject Delete -- Start
+        $body = array();
+        $body = [
+            'subject_id' => $entity->id
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('education_subject_delete', ['username' => $username], $body);
+        }
+        // Webhook Education Subject Delete -- End
+    }
+
     public function getFieldOfStudiesOptions()
     {
         $EducationFieldOfStudies = TableRegistry::get('Education.EducationFieldOfStudies');

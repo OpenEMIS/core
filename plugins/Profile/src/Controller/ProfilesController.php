@@ -73,10 +73,11 @@ class ProfilesController extends AppController
         $this->loadComponent('Scholarship.ScholarshipTabs');
         $this->attachAngularModules();
 
-        $this->set('contentHeader', 'Profiles');
+        $this->set('contentHeader', 'Personal');
     }
 
-    public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
+    public function Personal() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
+    // public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
 
     // CAv4
     public function StudentFees()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']); }
@@ -176,14 +177,16 @@ class ProfilesController extends AppController
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        //$events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored'; //POCOR-5312
         return $events;
     }
 
-    public function isActionIgnored(Event $event, $action)
+    //POCOR-5312 starts
+    /*public function isActionIgnored(Event $event, $action)
     {
         return true;
-    }
+    }*/
+    //POCOR-5312 ends
 
     // AngularJS
     public function StudentResults()
@@ -272,7 +275,7 @@ class ProfilesController extends AppController
 
         $loginUserId = $this->Auth->user('id'); // login user
 
-        $this->Navigation->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
+        $this->Navigation->addCrumb('Personal', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Personal', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
         
         $header = '';
 
@@ -289,7 +292,13 @@ class ProfilesController extends AppController
                 
                 if ($action == 'StudentReportCards') {
                     //$student_id = $sId['student_id']; //POCOR-5979
-                    $student_id = $sId['id'];
+                    //$student_id = $sId['id']; //uncomment $student_id for POCOR-6202
+                    //POCOR-6202 start
+                    if(isset($sId['id']) && !empty($sId['id'])){
+                        $student_id = $sId['id'];
+                    }else{
+                        $student_id = $sId['student_id'];
+                    }//POCOR-6202 end
                 }
                 $entity = $this->Profiles->get($student_id);
                 $name = $entity->name;
@@ -319,7 +328,7 @@ class ProfilesController extends AppController
             }
 
             $alias = $model->alias();
-            $excludedModel = ['ScholarshipApplications', 'Leave', 'StudentReportCards'];
+            $excludedModel = ['ScholarshipApplications', 'Leave', 'StudentReportCards', 'Contacts'];
 
             if (!in_array($alias, $excludedModel)) {
                 $model->toggle('add', false);
@@ -357,17 +366,45 @@ class ProfilesController extends AppController
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
         $action = $this->request->params['action'];
-        if ($session->read('Auth.User.is_guardian') == 1) {
-            $studentId = $session->read('Student.ExaminationResults.student_id');
-        }else {
+        if($action == 'Profiles'){
+            $action = __('Personal');
+        }
+        if ($session->read('Auth.User.is_guardian') == 1) { 
+            //$studentId = $session->read('Student.ExaminationResults.student_id');//POCOR-6202 uncomment $studentId 
+            //POCOR-6202 start
+            if($action == 'Personal'){ //for gaurdian personal page
+                $studentId = $session->read('Profile.StudentUser.primaryKey.id'); 
+            }else{ //for Profile Student User page
+                $studentData = $this->ControllerAction->paramsDecode($session->read('Student.ExaminationResults.student_id'));
+                $studentId = $studentData['id'];
+            } //POCOR-6202 ends
+        }else { 
             $studentId = $this->request->params['pass'][1];
         }
-        if (!empty($studentId)) {
-             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards' || $action == 'StudentAssociations') {
-				$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
-                $entity = $this->Profiles->get($studentId);
+
+        if (!empty($studentId)) { 
+             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards' || $action == 'StudentAssociations' || $action == 'Personal') { 
+                //POCOR-6202 starts
+                if ($session->read('Auth.User.is_guardian') == 1) { 
+                    //$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];//POCOR-6202 uncomment $studentId
+                    if($action == 'Personal'){
+                       $studentId = $this->ControllerAction->paramsDecode($this->request->params['pass'][1]);
+                    }
+                }else{
+                    if(isset($this->ControllerAction->paramsDecode($studentId)['id'])){
+
+                        $studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
+                    }else{
+                        $studentId = $this->ControllerAction->paramsDecode($studentId)['student_id'];
+                    }
+                }//POCOR-6202 ends
+				$entity = $this->Profiles->get($studentId);
+
                 $name = $entity->name;
                 $header = $name;
+                if($alias == 'Profiles'){
+                    $alias = __('Personal');
+                }
                 $header = $header . ' - ' . $model->getHeader($alias);
             }
         } else {
@@ -380,69 +417,71 @@ class ProfilesController extends AppController
        //POCOR-5675
      $this->set('contentHeader', $header);
 
+
      if ($model->hasField('security_user_id')) { 
+
         $model->fields['security_user_id']['type'] = 'hidden';
         $model->fields['security_user_id']['value'] = $userId;
 
-        if (count($this->request->pass) > 1) {
-                $modelId = $this->request->pass[1]; // id of the sub model
-                $ids = $this->ControllerAction->paramsDecode($modelId);
-                $idKey = $this->ControllerAction->getIdKeys($model, $ids);
-                $idKey[$model->aliasField('security_user_id')] = $userId;
-                $exists = $model->exists($idKey);
+            if (count($this->request->pass) > 1) { 
+                    $modelId = $this->request->pass[1]; // id of the sub model
+                    $ids = $this->ControllerAction->paramsDecode($modelId);
+                    $idKey = $this->ControllerAction->getIdKeys($model, $ids);
+                    $idKey[$model->aliasField('security_user_id')] = $userId;
+                    $exists = $model->exists($idKey);
 
-                /**
-                 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-                 */
-                if (!$exists) {
-                    $this->Alert->warning('general.notExists');
-                    return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
+                    /**
+                     * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+                     */
+                    if (!$exists) {
+                        $this->Alert->warning('general.notExists');
+                        return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
+                    }
                 }
-            }
-        } else if ($model->hasField('staff_id')) {
-            $model->fields['staff_id']['type'] = 'hidden';
-            $model->fields['staff_id']['value'] = $userId;
+            } else if ($model->hasField('staff_id')) {
+                $model->fields['staff_id']['type'] = 'hidden';
+                $model->fields['staff_id']['value'] = $userId;
 
-            if (count($this->request->pass) > 1) {
-                $modelId = $this->request->pass[1]; // id of the sub model
+                if (count($this->request->pass) > 1) {
+                    $modelId = $this->request->pass[1]; // id of the sub model
 
-                $ids = $this->ControllerAction->paramsDecode($modelId);
-                $idKey = $this->ControllerAction->getIdKeys($model, $ids);
-                $idKey[$model->aliasField('staff_id')] = $userId;
-                $exists = $model->exists($idKey);
+                    $ids = $this->ControllerAction->paramsDecode($modelId);
+                    $idKey = $this->ControllerAction->getIdKeys($model, $ids);
+                    $idKey[$model->aliasField('staff_id')] = $userId;
+                    $exists = $model->exists($idKey);
 
-                /**
-                 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-                 */
-                if (!$exists) {
-                    $this->Alert->warning('general.notExists');
-                    return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
+                    /**
+                     * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+                     */
+                    if (!$exists) {
+                        $this->Alert->warning('general.notExists');
+                        return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
+                    }
                 }
-            }
-        } else if ($model->hasField('student_id')) {
-            $model->fields['student_id']['type'] = 'hidden';
-            $model->fields['student_id']['value'] = $userId;
+            } else if ($model->hasField('student_id')) { 
+                $model->fields['student_id']['type'] = 'hidden';
+                $model->fields['student_id']['value'] = $userId;
 
-            //if (count($this->request->pass) > 1) {
-                //$modelId = $this->request->pass[1]; // id of the sub model
+                //if (count($this->request->pass) > 1) {
+                    //$modelId = $this->request->pass[1]; // id of the sub model
 
-                //$ids = $this->ControllerAction->paramsDecode($modelId);
-                //$idKey = $this->ControllerAction->getIdKeys($model, $ids);
-                //$idKey[$model->aliasField('student_id')] = $userId;
-                //$exists = $model->exists($idKey);
+                    //$ids = $this->ControllerAction->paramsDecode($modelId);
+                    //$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+                    //$idKey[$model->aliasField('student_id')] = $userId;
+                    //$exists = $model->exists($idKey);
 
-               //if (in_array($model->alias(), ['Students'])) {
-                    //$params[$model->aliasField('guardian_id')] = $userId;
-                    //$exists = $model->exists($params);
+                   //if (in_array($model->alias(), ['Students'])) {
+                        //$params[$model->aliasField('guardian_id')] = $userId;
+                        //$exists = $model->exists($params);
+                    //}
+                    /**
+                     * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+                     */
+                    //if (!$exists) {
+                        //$this->Alert->warning('general.notExists');
+                        //return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
+                    //}
                 //}
-                /**
-                 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-                 */
-                //if (!$exists) {
-                    //$this->Alert->warning('general.notExists');
-                    //return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
-                //}
-            //}
             }
         }
 
@@ -451,9 +490,7 @@ class ProfilesController extends AppController
         $loginUserId = $this->Auth->user('id'); // login user
         $action = $this->request->params['action'];
         $session = $this->request->session();
-        
         if ($model->hasField('security_user_id')) {
-            
             $studentId = $session->read('Student.Students.id'); 
             if (!empty($studentId)) {
                 $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
@@ -518,10 +555,10 @@ class ProfilesController extends AppController
 
         foreach ($tabElements as $key => $value) {
             if ($key == $this->name) {
-                $tabElements[$key]['url']['action'] = 'Profiles';
+                $tabElements[$key]['url']['action'] = 'Personal';
                 $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
-            } else if ($key == 'Comments') {
+            } else if ($key == 'Comments' && $this->AccessControl->check(['Profiles', 'ProfileComments'])) {
                 $url = [
                     'plugin' => $plugin,
                     'controller' => 'ProfileComments',
