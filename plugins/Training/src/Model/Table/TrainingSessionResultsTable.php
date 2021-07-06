@@ -70,7 +70,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
     }
 
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
-	{
+	{   
         $process = function($model, $entity) use ($data) {
         	$sessionId = $data[$model->alias()]['training_session_id'];
 			$resultTypeId = $data[$model->alias()]['result_type'];
@@ -333,14 +333,22 @@ class TrainingSessionResultsTable extends ControllerActionTable
                     $this->paramsEncode(['id' => $traineeObj->id])
 				]);
 				$rowData[] = $traineeObj->name;
-				$rowData[] = strlen($traineeResult['result']) ? $traineeResult['result'] : '';
-                $rowData[] = strlen($traineeResult['attendance_days']) ? $traineeResult['attendance_days'] : ''; //5695
-                $rowData[] = strlen($traineeResult['certificate_number']) ? $traineeResult['certificate_number'] : ''; //5695
-                $rowData[] = strlen($traineeResult['practical']) ? $traineeResult['practical'] : ''; //5695
+                //5695 starts
+                $rowData[] = strlen($traineeResult['result']) ? $traineeResult['result'] : '';
+                if(in_array('Practical', $TrainingResultTypesArr)){
+                    $rowData[] = strlen($traineeResult['practical']) ? $traineeResult['practical'] : ''; //5695
+                }
+				if(in_array('Attendance', $TrainingResultTypesArr)){
+                    $rowData[] = strlen($traineeResult['attendance_days']) ? $traineeResult['attendance_days'] : ''; //5695
+                }
+                if(in_array('Certificate', $TrainingResultTypesArr)){
+                    $rowData[] = strlen($traineeResult['certificate_number']) ? $traineeResult['certificate_number'] : ''; //5695
+                }//5695 end
 				$tableCells[] = $rowData;
 			}
 		} else {
             $Form = $event->subject()->Form;
+
 			foreach ($trainees as $i => $obj) {
 				$fieldPrefix = $alias . '.' . $key . '.' . $i;
 				$traineeObj = $obj->_matchingData['Trainees'];
@@ -407,34 +415,36 @@ class TrainingSessionResultsTable extends ControllerActionTable
                     } //5695 ends for Practical  
                 } else {
                     $result = $Form->input("$fieldPrefix.result", ['label' => false, 'value' => $traineeResult['result']]);
+
                     //5695 start 
+                    if(in_array('Practical', $TrainingResultTypesArr)){
+                        $practical = $Form->input("$fieldPrefix.practical", ['label' => false, 'value' => $traineeResult['practical']]);
+                    }
                     if(in_array('Attendance', $TrainingResultTypesArr)){
                         $attendance_days = $Form->input("$fieldPrefix.attendance_days", ['label' => false, 'value' => $traineeResult['attendance_days']]);
                     }
                     if(in_array('Certificate', $TrainingResultTypesArr)){
                         $certificate_number = $Form->input("$fieldPrefix.certificate_number", ['label' => false, 'value' => $traineeResult['certificate_number']]);
                     }
-                    if(in_array('Practical', $TrainingResultTypesArr)){
-                        $practical = $Form->input("$fieldPrefix.practical", ['label' => false, 'value' => $traineeResult['practical']]);
-                    }//5695 end
+                    //5695 end
                 }
 
 				if (isset($traineeResult['id'])) {
 					$result .= $Form->hidden("$fieldPrefix.id", ['value' => $traineeResult['id']]);
-
-				}
+                }
 
 				$rowData[] = $traineeObj->openemis_no;
 				$rowData[] = $name;
 				$rowData[] = $result;
+                
+                if(in_array('Practical', $TrainingResultTypesArr)){
+                    $rowData[] = $practical; //5695
+                }
                 if(in_array('Attendance', $TrainingResultTypesArr)){
                     $rowData[] = $attendance_days; //5695
                 }
                 if(in_array('Certificate', $TrainingResultTypesArr)){
                     $rowData[] = $certificate_number; //5695
-                }
-                if(in_array('Practical', $TrainingResultTypesArr)){
-                    $rowData[] = $practical; //5695
                 }
                 $tableCells[] = $rowData;
 			}
