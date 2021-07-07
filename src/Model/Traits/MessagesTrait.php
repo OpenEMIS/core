@@ -514,6 +514,7 @@ trait MessagesTrait
             'date_of_behaviour' => [
                 'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
             ],
+            'cannotDelete' => 'Behaviour cannot be deleted until after configured days'
         ],
         'StudentPromotion' => [
             'noGrades' => 'No Available Grades',
