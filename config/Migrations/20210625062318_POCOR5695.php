@@ -56,7 +56,10 @@ class POCOR5695 extends AbstractMigration
 
         $this->execute("ALTER TABLE `training_courses` ADD INDEX( `training_course_category_id`)"); 
 
+        //add columns attendance_days, certificate_number, practical
         $this->execute("ALTER TABLE `training_session_trainee_results`  ADD `attendance_days` VARCHAR(10) NOT NULL  AFTER `result`,  ADD `certificate_number` VARCHAR(10)  NOT NULL  AFTER `attendance_days`, ADD `practical` VARCHAR(10)  NOT NULL  AFTER `certificate_number`;");
+
+        $this->execute("ALTER TABLE `training_session_trainee_results` CHANGE `attendance_days` `attendance_days` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL, CHANGE `certificate_number` `certificate_number` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL, CHANGE `practical` `practical` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;");
         
         // labels
         $this->execute("INSERT INTO labels (id, module, field, module_name, field_name, visible, created_user_id, created) 
@@ -110,6 +113,5 @@ class POCOR5695 extends AbstractMigration
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Attendance Days'");
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Certificate Number'");
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Practical'");
-       
     }
 }

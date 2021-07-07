@@ -26,6 +26,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
     public function initialize(array $config)
     {
         parent::initialize($config);
+
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
@@ -37,7 +38,8 @@ class TrainingSessionResultsTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'assignee_id']);
         $this->addBehavior('User.AdvancedNameSearch');
         $this->toggle('add', false);
-	}
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportOutcomeResults']);//5695
+    }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
