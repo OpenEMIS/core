@@ -68,7 +68,6 @@ class NavigationComponent extends Component
         $controller = $this->controller;
         try {
             $navigations = $this->buildNavigation();
-
             $this->checkSelectedLink($navigations);
             $this->checkPermissions($navigations);
             $controller->set('_navigations', $navigations);
@@ -149,6 +148,7 @@ class NavigationComponent extends Component
 
                 // $ignoredAction will be excluded from permission checking
                 if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
+//                    print_r($url);die();
                     if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
                         unset($navigations[$key]);
                     }
@@ -157,11 +157,11 @@ class NavigationComponent extends Component
         }
         // unset the parents if there is no children
         $linkOnly = array_reverse($linkOnly);
-        foreach ($linkOnly as $link) {
-            if (!array_search($link, $this->array_column($navigations, 'parent'))) {
-                unset($navigations[$link]);
+            foreach ($linkOnly as $link) {
+                if (!array_search($link, $this->array_column($navigations, 'parent'))) {
+                    unset($navigations[$link]);
+                }
             }
-        }
     }
 
     public function checkSelectedLink(array &$navigations)
@@ -181,11 +181,11 @@ class NavigationComponent extends Component
         if (!empty($pass[0])) {
             $linkName .= '.'.$pass[0];
         }
-        
+
         if (!in_array($linkName, $navigations)) {
             $selectedArray = $this->array_column($navigations, 'selected');
             foreach ($selectedArray as $k => $selected) {
-                //echo '<pre>'.$linkName.'#####'; print_r($selected); 
+                //echo '<pre>'.$linkName.'#####'; print_r($selected);
                 if (is_array($selected) && (in_array($linkName, $selected) || in_array($controllerActionLink, $selected))) {
                     $linkName = $k;
                     break;
@@ -303,7 +303,7 @@ class NavigationComponent extends Component
             $this->checkClassification($navigations);
         } elseif (($controller->name == 'Directories' && $action != 'index') || in_array($controller->name, $directoryControllers)) {
             $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
-			
+
 			$encodedParam = $this->request->params['pass'][1];
 			if(!empty($encodedParam)) {
 				$securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
@@ -317,7 +317,7 @@ class NavigationComponent extends Component
                 }
                 //POCOR-6202 end
 			}
-			
+
 			$userType = '';
 			if(!empty($userInfo)) {
 				if ($userInfo->is_student && $userInfo->is_staff == 0 && $userInfo->is_guardian == 0) {
@@ -336,7 +336,7 @@ class NavigationComponent extends Component
             $isStudent = $session->read('Directory.Directories.is_student');
             $isStaff = $session->read('Directory.Directories.is_staff');
             $isGuardian = $session->read('Directory.Directories.is_guardian');
-          
+
             if ($userType == 2) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
                 $session->write('Directory.Directories.reload', true);
@@ -387,7 +387,7 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileGuardianNavigation());
 
                 $navigations = $this->appendNavigation('Profiles.ProfileStudents.index', $navigations, $this->getProfileGuardianStudentNavigation());
-                
+
                 $this->checkClassification($navigations);
             }
         }
@@ -528,7 +528,7 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Attachments'],
                 'params' => ['plugin' => 'Institution']
             ],
-			
+
 			'Institutions.Profiles.index' => [
 				'title' => 'Profiles',
 				'parent' => 'Institution.General',
@@ -768,17 +768,17 @@ class NavigationComponent extends Component
             ],
 
             'Institutions.Positions' => [
-                'title' => 'Positions',
+                'title' => 'Positions ',
                 'parent' => 'Institutions.Appointment',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Institutions.Positions', 'Institutions.ImportInstitutionPositions'],
-            ], 
+            ],
             'Institutions.StaffDuties' => [
                 'title' => 'Duties',
                 'parent' => 'Institutions.Appointment',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Institutions.StaffDuties'],
-            ],        
+            ],
 
             'Institution.Finance' => [
                 'title' => 'Finance',
@@ -921,7 +921,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['InfrastructureUtilityTelephones.view', 'InfrastructureUtilityTelephones.add', 'InfrastructureUtilityTelephones.edit', 'InfrastructureUtilityTelephones.delete']
             ],
-			
+
             'InstitutionAssets.index' => [
                 'title' => 'Assets',
                 'parent' => 'Infrastructures',
@@ -1399,18 +1399,18 @@ class NavigationComponent extends Component
     }
 
     public function getProfileGuardianStudentNavigation()
-    {   
+    {
         $sID = $this->request->pass[1];
         $session = $this->request->session();
-        if (!empty($sID)) { 
+        if (!empty($sID)) {
             if ($session->read('Auth.User.is_guardian') == 1) {
                 $session->write('Student.ExaminationResults.student_id', $sID);
-            } 
+            }
             $studentId = $session->read('Student.ExaminationResults.student_id');
         }else {
             //$studentId = $this->request->pass[1];
             $studentId = $session->read('Student.ExaminationResults.student_id');
-        }   
+        }
        // echo '<pre>';print_r($_SESSION);die;
         $navigation = [
             'Profiles.ProfileStudentUser' => [
@@ -1428,7 +1428,7 @@ class NavigationComponent extends Component
             ],
         ];
 
-        return $navigation;   
+        return $navigation;
     }
 
     public function getDirectoryStaffNavigation()
@@ -1766,7 +1766,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Security'],
                 'selected' => ['Securities.Roles', 'Securities.Permissions']
             ],
-			
+
 			'ProfileTemplates' => [
                 'title' => 'Profiles',
                 'parent' => 'Administration',
@@ -1970,7 +1970,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Meal'],
                 'selected' => ['Meals.programme']
             ],
-            
+
             'Workflows.Workflows' => [
                 'title' => 'Workflow',
                 'parent' => 'Administration',
@@ -1998,7 +1998,7 @@ class NavigationComponent extends Component
                 'selected' => ['MoodleApiLog.index'],
                 'params' => ['plugin' => 'MoodleApi', 'controller' => 'MoodleApiLog', 'action' => 'index']
             ],
-            
+
             'Administration.Archive' => [
                 'title' => 'Archive',
                 'parent' => 'Administration',
@@ -2025,5 +2025,5 @@ class NavigationComponent extends Component
         ];
         return $navigation;
     }
-    
+
 }
