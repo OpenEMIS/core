@@ -418,7 +418,8 @@ trait MessagesTrait
         ],
         'StaffBehaviours' => [
             'date_of_behaviour' => 'Date',
-            'time_of_behaviour' => 'Time'
+            'time_of_behaviour' => 'Time',
+            'restrictDelete' => 'Behaviour cannot be deleted until after configured days'
         ],
         'SystemGroups' => [
             'tabTitle' => 'System Groups'
