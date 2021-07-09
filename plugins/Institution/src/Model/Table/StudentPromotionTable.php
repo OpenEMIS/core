@@ -46,6 +46,7 @@ class StudentPromotionTable extends AppTable
             ->requirePresence('next_academic_period_id')
             ->requirePresence('grade_to_promote')
             ->requirePresence('class')
+            ->notEmpty('next_class')
             ->allowEmpty('education_grade_id');
             /*->allowEmpty('education_grade_id', function ($context) {
                 $studentStatusId = (!empty($context['data']['student_status_id']))? $context['data']['student_status_id']: '';
@@ -60,7 +61,8 @@ class StudentPromotionTable extends AppTable
             ->requirePresence('from_academic_period_id', false)
             ->requirePresence('next_academic_period_id', false)
             ->requirePresence('grade_to_promote', false)
-            ->requirePresence('class', false);
+            ->requirePresence('class', false)
+            ->requirePresence('next_class', false);
     }
 
     public function implementedEvents()
@@ -147,7 +149,8 @@ class StudentPromotionTable extends AppTable
 
         $this->ControllerAction->field('next_class', [
             'attr' => [
-                'label' => 'Next Class'
+                'label' => 'Next Class',
+                'required' => true
             ],
             'entity' => $entity
         ]);
@@ -354,8 +357,8 @@ class StudentPromotionTable extends AppTable
                                     $GradeStudents->aliasField('student_status_id') => $statuses['CURRENT']
                                 ])
                                 ->count();
-                                
-                            return $gradeStudentsCounter; 
+
+                            return $gradeStudentsCounter;
                         }
                     ]);
 
@@ -371,8 +374,8 @@ class StudentPromotionTable extends AppTable
                                 ->count();
                         $counter += $gradeStudentsCounter;
                     }
-                    if ($counter == 0) { 
-                    $attr['attr']['value'] = ""; 
+                    if ($counter == 0) {
+                    $attr['attr']['value'] = "";
                  }
                 }
 
@@ -440,7 +443,7 @@ class StudentPromotionTable extends AppTable
                         } else if (in_array($studentStatusId, [$statuses['REPEATED']])) {
                             $nextClasses = $InstitutionClassesTable->getClassOptions($selectedNextPeriod, $institutionId, $selectedGrade);
                         }
-                    } 
+                    }
                     /*POCOR-5733 Starts*/
                     else {
                         $InstitutionClassesTable = TableRegistry::get('Institution.InstitutionClasses');
@@ -765,7 +768,7 @@ class StudentPromotionTable extends AppTable
                         $this->aliasField('student_status_id') => $studentStatuses['CURRENT']
                     ])
                     ->count();
-                    
+
                     if ($studentsPeriod == 0) {
                         $this->Alert->warning($this->aliasField('noData'));
                     }
@@ -1042,7 +1045,7 @@ class StudentPromotionTable extends AppTable
                         if ($saveAsDraft) {
                             // only save draft if current object is not graduating and next_institution_class_id is selected
                             //POCOR-5037
-                            //if($statusToUpdate != $studentStatuses['GRADUATED']) { 
+                            //if($statusToUpdate != $studentStatuses['GRADUATED']) {
                                 $classStudents = TableRegistry::get('Institution.InstitutionClassStudents');
                                 $classStudents
                                     ->query()
