@@ -38,7 +38,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'assignee_id']);
         $this->addBehavior('User.AdvancedNameSearch');
         $this->toggle('add', false);
-        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportOutcomeResults']);//5695
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportTrainingSessionTraineeResults']);//5695
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
