@@ -9,8 +9,9 @@ use Cake\Utility\Text;
 use App\Model\Table\AppTable;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
+use App\Model\Table\ControllerActionTable;
 
-class InfrastructureWashSanitationsTable extends AppTable {
+class InfrastructureWashSanitationsTable extends ControllerActionTable {
 
     public function initialize(array $config)
     {
@@ -23,12 +24,19 @@ class InfrastructureWashSanitationsTable extends AppTable {
         $this->belongsTo('InfrastructureWashSanitationQualities',   ['className' => 'Institution.InfrastructureWashSanitationQualities', 'foreign_key' => 'infrastructure_wash_sanitation_quality_id']);
         $this->belongsTo('InfrastructureWashSanitationAccessibilities',   ['className' => 'Institution.InfrastructureWashSanitationAccessibilities', 'foreign_key' => 'infrastructure_wash_sanitation_accessibility_id']);
         $this->hasMany('InfrastructureWashSanitationQuantities', ['className' => 'Institution.InfrastructureWashSanitationQuantities', 'foreign_key' => 'infrastructure_wash_sanitation_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+        $this->toggle('search', false);
+
+        $this->addBehavior('Excel',[
+            'excludes' => ['academic_period_id', 'institution_id'],
+            'pages' => ['index'],
+        ]);
     }
 
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        
+
         $validator
             ->add('infrastructure_wash_sanitation_male_functional', [
                 'rulePositive' => [
@@ -36,36 +44,42 @@ class InfrastructureWashSanitationsTable extends AppTable {
                     'message' => 'This field must be a positive number'
                 ]
             ])
+            ->allowEmpty('infrastructure_wash_sanitation_male_functional')
             ->add('infrastructure_wash_sanitation_male_nonfunctional', [
                 'rulePositive' => [
                     'rule' => ['naturalNumber', true],
                     'message' => 'This field must be a positive number'
                 ]
             ])
+            ->allowEmpty('infrastructure_wash_sanitation_male_nonfunctional')
             ->add('infrastructure_wash_sanitation_female_functional', [
                 'rulePositive' => [
                     'rule' => ['naturalNumber', true],
                     'message' => 'This field must be a positive number'
                 ]
             ])
+            ->allowEmpty('infrastructure_wash_sanitation_female_functional')
             ->add('infrastructure_wash_sanitation_female_nonfunctional', [
                 'rulePositive' => [
                     'rule' => ['naturalNumber', true],
                     'message' => 'This field must be a positive number'
                 ]
             ])
+            ->allowEmpty('infrastructure_wash_sanitation_female_nonfunctional')
             ->add('infrastructure_wash_sanitation_mixed_functional', [
                 'rulePositive' => [
                     'rule' => ['naturalNumber', true],
                     'message' => 'This field must be a positive number'
                 ]
             ])
+            ->allowEmpty('infrastructure_wash_sanitation_mixed_functional')
             ->add('infrastructure_wash_sanitation_mixed_nonfunctional', [
                 'rulePositive' => [
                     'rule' => ['naturalNumber', true],
                     'message' => 'This field must be a positive number'
                 ]
             ])
+            ->allowEmpty('infrastructure_wash_sanitation_mixed_nonfunctional')
             ;
 
         return $validator;
@@ -73,10 +87,10 @@ class InfrastructureWashSanitationsTable extends AppTable {
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $total_male = $entity->infrastructure_wash_sanitation_male_functional + $entity->infrastructure_wash_sanitation_male_nonfunctional;
+        echo $total_male = $entity->infrastructure_wash_sanitation_male_functional + $entity->infrastructure_wash_sanitation_male_nonfunctional;
         $total_female = $entity->infrastructure_wash_sanitation_female_functional + $entity->infrastructure_wash_sanitation_female_nonfunctional;
         $total_mixed = $entity->infrastructure_wash_sanitation_mixed_functional + $entity->infrastructure_wash_sanitation_mixed_nonfunctional;
-        
+
         $entity->infrastructure_wash_sanitation_total_male = $total_male;
         $entity->infrastructure_wash_sanitation_total_female = $total_female;
         $entity->infrastructure_wash_sanitation_total_mixed = $total_mixed;
@@ -85,8 +99,8 @@ class InfrastructureWashSanitationsTable extends AppTable {
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
         $SanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
-        $SanitationQuantitiesTable->deleteAll(['infrastructure_wash_sanitation_id' => $entity->id]);    
-        
+        $SanitationQuantitiesTable->deleteAll(['infrastructure_wash_sanitation_id' => $entity->id]);
+
         $data1 = $SanitationQuantitiesTable->newEntity();
         $data1->gender_id = 1;
         $data1->functional = 1;
@@ -141,4 +155,117 @@ class InfrastructureWashSanitationsTable extends AppTable {
         $query->contain(['InfrastructureWashSanitationQuantities']);
         return $query;
     }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $modelAlias = 'InfrastructureWashSanitations';
+        $userType = '';
+        $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('infrastructure_wash_sanitation_type_id');
+        $this->field('infrastructure_wash_sanitation_use_id');
+        $this->field('infrastructure_wash_sanitation_total_male');
+        $this->field('infrastructure_wash_sanitation_total_female');
+        $this->field('infrastructure_wash_sanitation_total_mixed');
+        $this->field('infrastructure_wash_sanitation_quality_id');
+        $this->field('infrastructure_wash_sanitation_accessibility_id');
+        $this->field('academic_period_id', ['visible' => false]);
+
+
+        // element control
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $requestQuery = $this->request->query;
+
+        $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+
+        $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
+
+        $extra['elements']['control'] = [
+            'name' => 'Risks/controls',
+            'data' => [
+                'academicPeriodOptions'=>$academicPeriodOptions,
+                'selectedAcademicPeriod'=>$selectedAcademicPeriodId
+            ],
+            'options' => [],
+            'order' => 3
+        ];
+        // end element control
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        switch ($field) {
+            case 'infrastructure_wash_sanitation_type_id':
+                return __('Type');
+            case 'infrastructure_wash_sanitation_use_id':
+                return __('Use');
+            case 'infrastructure_wash_sanitation_total_male':
+                return __('Total Male');
+            case 'infrastructure_wash_sanitation_total_female':
+                return __('Total Female');
+            case 'infrastructure_wash_sanitation_total_mixed':
+                return __('Total Mixed');
+            case 'infrastructure_wash_sanitation_quality_id':
+                return __('Quality');
+            case 'infrastructure_wash_sanitation_accessibility_id':
+                return __('Accessibility');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
+        ->orderDesc($this->aliasField('created'));
+    }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        //echo "pre"; print_r($event); exit;
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $SanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
+
+        $this->fields['academic_period_id']['type'] = 'select';
+        $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
+        $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
+
+        $this->fields['infrastructure_wash_sanitation_type_id']['type'] = 'select';
+        $this->field('infrastructure_wash_sanitation_type_id', ['attr' => ['label' => __('Type')]]);
+
+        $this->fields['infrastructure_wash_sanitation_use_id']['type'] = 'select';
+        $this->field('infrastructure_wash_sanitation_use_id', ['attr' => ['label' => __('Use')]]);
+
+        $this->field('infrastructure_wash_sanitation_male_functional', ['type' => 'integer','attr' => ['label' => __('Male (Functional)'), 'value' => 0]]);
+
+        $this->field('infrastructure_wash_sanitation_male_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Male (Non-functional)'), 'value' => 0]]);
+
+        $this->field('infrastructure_wash_sanitation_female_functional', ['type' => 'integer','attr' => ['label' => __('Female (Functional)'), 'value' => 0]]);
+
+        $this->field('infrastructure_wash_sanitation_female_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Female (Non-functional)'), 'value' => 0]]);
+
+        $this->field('infrastructure_wash_sanitation_mixed_functional', ['type' => 'integer','attr' => ['label' => __('Mixed (Functional)'), 'value' => 0]]);
+
+        $this->field('infrastructure_wash_sanitation_mixed_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Mixed (Non-functional)'), 'value' => 0]]);
+
+        $this->field('infrastructure_wash_sanitation_total_male', ['visible' => false]);
+        $this->field('infrastructure_wash_sanitation_total_female', ['visible' => false]);
+        $this->field('infrastructure_wash_sanitation_total_mixed', ['visible' => false]);
+
+        $this->fields['infrastructure_wash_sanitation_quality_id']['type'] = 'select';
+        $this->field('infrastructure_wash_sanitation_quality_id', ['attr' => ['label' => __('Quality')]]);
+
+        $this->fields['infrastructure_wash_sanitation_accessibility_id']['type'] = 'select';
+        $this->field('infrastructure_wash_sanitation_accessibility_id', ['attr' => ['label' => __('Accessibility')]]);
+    }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra){
+        $this->field('infrastructure_wash_sanitation_total_male', ['visible' => false]);
+        $this->field('infrastructure_wash_sanitation_total_female', ['visible' => false]);
+        $this->field('infrastructure_wash_sanitation_total_mixed', ['visible' => false]);
+    }
+
 }
