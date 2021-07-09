@@ -1,7 +1,7 @@
 <?php
 return [
         'Datasources' => [
-        'test' => [
+        'default' => [
             'className' => 'Cake\Database\Connection',
             'driver' => 'Cake\Database\Driver\Mysql',
             'persistent' => false,
