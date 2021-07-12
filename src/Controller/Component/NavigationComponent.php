@@ -988,11 +988,11 @@ class NavigationComponent extends Component
                 'selected' => ['InstitutionTransportProviders.add', 'InstitutionTransportProviders.edit', 'InstitutionTransportProviders.view', 'InstitutionTransportProviders.delete']
             ],
 
-            'InstitutionBuses.index' => [
+            'Institutions.InstitutionBuses.index' => [
                 'title' => 'Buses',
                 'parent' => 'Institutions.Transport',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionBuses.add', 'InstitutionBuses.edit', 'InstitutionBuses.view', 'InstitutionBuses.delete']
+                'selected' => ['Institutions.InstitutionBuses.add', 'Institutions.InstitutionBuses.edit', 'Institutions.InstitutionBuses.view', 'Institutions.InstitutionBuses.delete']
             ],
 
             'InstitutionTrips.index' => [
