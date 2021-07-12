@@ -24,6 +24,7 @@ class VisitRequestsTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
+       
         $this->table('institution_visit_requests');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -50,6 +51,7 @@ class VisitRequestsTable extends ControllerActionTable
             'actions.download.show',
             true
         );
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function validationDefault(Validator $validator)
@@ -227,4 +229,67 @@ class VisitRequestsTable extends ControllerActionTable
 
         return $query;
     }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+        $assignees = TableRegistry::get('security_users');
+		$query
+		->select(['assignee' => $assignees->find()->func()->concat([
+            'first_name' => 'literal',
+            " ",
+            'last_name' => 'literal'
+        ]),
+        'academic_period' => 'AcademicPeriods.name',
+        'date_of_visit' => 'VisitRequests.date_of_visit',
+        'quality_visit_type' => 'QualityVisitTypes.name'])
+
+		->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+			$this->AcademicPeriods->aliasField('id').' = ' . 'VisitRequests.academic_period_id'
+		])
+        
+		->LeftJoin([$this->Assignees->alias() => $this->Assignees->table()],[
+			$this->Assignees->aliasField('id').' = ' . 'VisitRequests.assignee_id'
+		])
+
+		->LeftJoin([$this->QualityVisitTypes->alias() => $this->QualityVisitTypes->table()],[
+			$this->QualityVisitTypes->aliasField('id').' = ' . 'VisitRequests.quality_visit_type_id'
+		])
+        ->where(['VisitRequests.institution_id' =>  $institutionId]);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+     
+        $extraField[] = [
+            'key' => 'Assignees.assignee',
+            'field' => 'assignee',
+            'type' => 'string',
+            'label' => __('Assignee')
+        ];
+
+        $extraField[] = [
+            'key' => 'AcademicPeriods.name',
+            'field' => 'academic_period',
+            'type' => 'integer',
+            'label' => __('Academic Period')
+        ];
+
+        $extraField[] = [
+            'key' => 'VisitRequests.date_of_visit',
+            'field' => 'date_of_visit',
+            'type' => 'date',
+            'label' => __('Date Of Visit')
+        ];
+
+        $extraField[] = [
+            'key' => 'QualityVisitTypes.name',
+            'field' => 'quality_visit_type',
+            'type' => 'string',
+            'label' => __('Quality Visit Type')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
 }
