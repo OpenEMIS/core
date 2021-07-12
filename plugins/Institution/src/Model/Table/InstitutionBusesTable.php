@@ -1,12 +1,17 @@
 <?php
 namespace Institution\Model\Table;
 
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use Transport\Model\Table\TransportStatusesTable as TransportStatuses;
 
-class InstitutionBusesTable extends AppTable
+class InstitutionBusesTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -28,6 +33,11 @@ class InstitutionBusesTable extends AppTable
 		]);
 
         $this->displayField('plate_number');
+        $this->addBehavior('Excel', [
+            'excludes' => ['comment', 'institution_id'],
+            'pages' => ['index'],
+            'autoFields' => false
+        ]);
     }
 
 	public function validationDefault(Validator $validator)
@@ -70,4 +80,31 @@ class InstitutionBusesTable extends AppTable
 
         return parent::findOptionList($query, $options);
     }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('comment',['visible' => false]);
+        
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $modelAlias = 'InstitutionBuses';
+        $userType = '';
+        $this->controller->changePageHeader($this, $modelAlias, $userType);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+         
+         switch ($field) {
+            case 'institution_transport_provider_id':
+                return __('Provider');
+            case 'transport_status_id': 
+                return __('Status');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }
