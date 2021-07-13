@@ -495,11 +495,11 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution', 0 => $institutionId]
             ],
 
-            'InstitutionCalendars.index' => [
+            'Institutions.InstitutionCalendars.index' => [
                 'title' => 'Calendar',
                 'parent' => 'Institution.General',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionCalendars.view', 'InstitutionCalendars.add', 'InstitutionCalendars.edit', 'InstitutionCalendars.delete']
+                'selected' => ['Institutions.InstitutionCalendars.view', 'Institutions.InstitutionCalendars.add', 'Institutions.InstitutionCalendars.edit', 'Institutions.InstitutionCalendars.delete']
             ],
 
             'Contacts' => [
