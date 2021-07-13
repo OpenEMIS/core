@@ -36,6 +36,8 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
+
+        $this->addBehavior('Excel', ['excludes' => ['date', 'file_name', 'file_content', 'comment', 'security_user_id'],'pages' => ['index']]);
     }
 
     public function validationDefault(Validator $validator)
@@ -146,5 +148,17 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->field('comment', ['type' => 'text']);
 
         $this->setFieldOrder(['date', 'special_need_type_id', 'special_need_difficulty_id', 'file_name', 'file_content', 'comment']);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
+
+
+        $query
+        ->where([
+            'security_user_id =' .$studentUserId,
+        ]);
     }
 }
