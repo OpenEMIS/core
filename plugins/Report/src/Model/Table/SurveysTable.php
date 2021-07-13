@@ -49,8 +49,8 @@ class SurveysTable extends AppTable
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
+        $this->ControllerAction->field('academic_period_id', ['type' => 'select']);
         $this->ControllerAction->field('survey_form', ['type' => 'hidden']);
-        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_status');
         $this->ControllerAction->field('status', ['type' => 'hidden']);
     }
@@ -466,13 +466,36 @@ class SurveysTable extends AppTable
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
+                $academicPeriodId = $this->request->data['Surveys']['academic_period_id'];
+                $todayDate = date('Y-m-d');
+                $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == $this->registryAlias()) {
+                    $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
                     $surveyFormOptions = $this->SurveyForms
-                        ->find('list')
-                        ->toArray();
-                    $attr['options'] = $surveyFormOptions;
-                    $attr['onChangeReload'] = true;
-                    $attr['type'] = 'select';
+                                        ->find('list')
+                                        ->leftJoin([$SurveyStatusTable->alias() => $SurveyStatusTable->table()], [
+                                            $SurveyStatusTable->aliasField('survey_form_id = ') . $this->SurveyForms->aliasField('id'),
+                                        ])
+                                        ->leftJoin([$SurveyStatusTable->SurveyStatusPeriods->alias() => $SurveyStatusTable->SurveyStatusPeriods->table()], [
+                                            $SurveyStatusTable->SurveyStatusPeriods->aliasField('survey_status_id = ') . $SurveyStatusTable->aliasField('id'),
+                                        ])
+                                        ->where([
+                                            $SurveyStatusTable->SurveyStatusPeriods->aliasField('academic_period_id') => $academicPeriodId,
+                                            $SurveyStatusTable->aliasField('date_enabled <=') => $todayTimestamp,
+                                            $SurveyStatusTable->aliasField('date_disabled >=') => $todayTimestamp
+                                        ])
+                                        ->toArray();
+                    if (!empty($surveyFormOptions)) {
+                        $attr['options'] = $surveyFormOptions;
+                        $attr['onChangeReload'] = true;
+                        $attr['type'] = 'select';
+                    } else {
+                        $surveyFormOptions = ['' => $this->getMessage('general.select.noOptions')];
+                        $attr['type'] = 'select';
+                        $attr['options'] = $surveyFormOptions;
+                        $attr['attr']['required'] = true;
+                    }
+                    
                     if (empty($this->request->data[$this->alias()]['survey_form'])) {
                         $option = $attr['options'];
                         reset($option);
@@ -487,10 +510,8 @@ class SurveysTable extends AppTable
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            if (isset($this->request->data[$this->alias()]['feature']) && isset($this->request->data[$this->alias()]['survey_form'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
                 $surveyForm = $this->request->data[$this->alias()]['survey_form'];
-                if ($feature == $this->registryAlias() && !empty($surveyForm)) {
                     $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
                     $academicPeriodOptions = $SurveyStatusTable
                         ->find('list', [
@@ -499,9 +520,6 @@ class SurveysTable extends AppTable
                         ])
                         ->matching('AcademicPeriods')
                         ->select(['academic_id' => 'AcademicPeriods.id', 'academic_name' => 'AcademicPeriods.name'])
-                        ->where([
-                            $SurveyStatusTable->aliasField('survey_form_id') => $surveyForm,
-                        ])
                         ->order(['AcademicPeriods.order'])
                         ->toArray();
                     $attr['options'] = $academicPeriodOptions;
@@ -513,9 +531,7 @@ class SurveysTable extends AppTable
                         $this->request->data[$this->alias()]['academic_period_id'] = key($option);
                     }
                     return $attr;
-                }
             }
-        }
     }
 
     public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
