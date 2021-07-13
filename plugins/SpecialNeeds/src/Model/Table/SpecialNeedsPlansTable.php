@@ -30,6 +30,8 @@ class SpecialNeedsPlansTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+
+        $this->addBehavior('Excel', ['excludes' => ['comment', 'file_name', 'file_content', 'security_user_id'],'pages' => ['index']]);
     }
 
     public function validationDefault(Validator $validator)
@@ -74,5 +76,16 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         $this->field('file_content', ['null' => false, 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
 
         $this->setFieldOrder(['plan_name', 'file_name', 'file_content', 'comment']);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
+
+        $query
+        ->where([
+            'security_user_id =' .$studentUserId,
+        ]);
     }
 }
