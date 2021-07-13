@@ -364,7 +364,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 return $arrResults;
             });
     }
-    //6198 starts 
+    //6198 starts
     public function findBySubjectsInClass(Query $query, array $options)
     {
         $classId = $options['institution_class_id'];
@@ -380,10 +380,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
             })
             ->contain(['EducationSubjects'])
             ->leftJoin([$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()], [
-                
+
                 $this->aliasField('id = ') . $InstitutionSubjectStudents->aliasField('institution_subject_id'),
                 $this->aliasField('institution_id = ') . $InstitutionSubjectStudents->aliasField('institution_id'),
-                $this->aliasField('education_grade_id = ') . $InstitutionSubjectStudents->aliasField('education_grade_id'), 
+                $this->aliasField('education_grade_id = ') . $InstitutionSubjectStudents->aliasField('education_grade_id'),
                 $this->aliasField('academic_period_id = ') . $InstitutionSubjectStudents->aliasField('academic_period_id')
             ])
             ->where([
@@ -394,7 +394,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ])
             ->order('EducationSubjects.order');
     }
-    //6198 ends 
+    //6198 ends
 
     public function findSubjectDetails(Query $query, array $options)
     {
@@ -1821,7 +1821,15 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $requestQuery = $this->request->query;
+        $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $query
-        ->select(['total_male_students' => 'InstitutionSubjects.total_male_students','total_female_students' => 'InstitutionSubjects.total_female_students']);
+        ->select(['total_male_students' => 'InstitutionSubjects.total_male_students','total_female_students' => 'InstitutionSubjects.total_female_students'])
+        ->where([
+            $this->aliasField('academic_period_id = ').$selectedAcademicPeriodId,
+            $this->aliasField('institution_id = ').$institutionId,
+        ]);
     }
 }
