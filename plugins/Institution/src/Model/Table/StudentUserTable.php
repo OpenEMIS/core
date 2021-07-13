@@ -94,7 +94,7 @@ class StudentUserTable extends ControllerActionTable
         $model->hasMany('Awards', ['className' => 'User.Awards',            'foreignKey' => 'security_user_id', 'dependent' => true]);
 
         $model->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments',    'foreignKey' => 'security_user_id', 'dependent' => true]);
-        
+
         $model->belongsToMany('SecurityRoles', [
             'className' => 'Security.SecurityRoles',
             'foreignKey' => 'security_role_id',
@@ -171,7 +171,7 @@ class StudentUserTable extends ControllerActionTable
             ->allowEmpty('class')
             ->add('class', 'ruleClassMaxLimit', [
                 'rule' => ['checkInstitutionClassMaxLimit'],
-                'on' => function ($context) {  
+                'on' => function ($context) {
                     return (!empty($context['data']['class']) && $context['newRecord']);
                 }
             ])
@@ -257,11 +257,11 @@ class StudentUserTable extends ControllerActionTable
         ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])->all();
-        
+
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -290,14 +290,14 @@ class StudentUserTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -306,7 +306,7 @@ class StudentUserTable extends ControllerActionTable
                     array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
-            
+
             if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
                 return $entity->identity_number = $nationality_based_ids[0]['number'];
@@ -330,7 +330,7 @@ class StudentUserTable extends ControllerActionTable
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number', 'identity_type_id'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -365,14 +365,14 @@ class StudentUserTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -711,7 +711,11 @@ class StudentUserTable extends ControllerActionTable
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
-        foreach ($fields as $key => $field) {
+        $EducationGrades = TableRegistry::get('FieldOption.EducationGrades');
+
+
+
+        /* foreach ($fields as $key => $field) {
             //get the value from the table, but change the label to become default identity type.
             if ($field['field'] == 'identity_number') {
                 $fields[$key] = [
@@ -722,7 +726,114 @@ class StudentUserTable extends ControllerActionTable
                 ];
                 break;
             }
+        } */
+
+        $cloneFields = $fields->getArrayCopy();
+        $newFields = [];
+        foreach ($cloneFields as $key => $value) {
+            $newFields[] = $value;
+            if ($value['field'] == 'identity_number') {
+                $newFields[] = [
+                    'key' => 'StudentUser.identity_number',
+                    'field' => 'identity_number',
+                    'type' => 'string',
+                    'label' => __($identity->name)
+                ];
+
+
+                $newFields[] = [
+                    'key' => 'EducationGrades.name',
+                    'field' => 'education_grade',
+                    'type' => 'string',
+                    'label' => 'Education Grade'
+                ];
+
+                $newFields[] = [
+                    'key' => 'InstitutionClasses.name',
+                    'field' => 'class_name',
+                    'type' => 'string',
+                    'label' => 'Class Name'
+                ];
+
+                $newFields[] = [
+                    'key' => '',
+                    'field' => 'total_absences',
+                    'type' => 'string',
+                    'label' => 'Total Absences'
+                ];
+
+                $newFields[] = [
+                    'key' => 'InstitutionSubjects.name',
+                    'field' => 'subject_name',
+                    'type' => 'string',
+                    'label' => 'Subject Name'
+                ];
+
+                $newFields[] = [
+                    'key' => 'InstitutionSubjectStudents.total_mark',
+                    'field' => 'total_marks',
+                    'type' => 'string',
+                    'label' => 'Total Marks'
+                ];
+            }
         }
+        $fields->exchangeArray($newFields);
+    }
+
+    //POCOR-6130
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+        $InstitutionStudents = TableRegistry::get('User.InstitutionStudents');
+        $EducationGrades = TableRegistry::get('EducationGrades');
+        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $studentAbsenceDays = TableRegistry::get('InstitutionStudentAbsenceDays');
+        $Subjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $Assessments = TableRegistry::get('Assessments');
+        $institutionStudentId = $settings['id'];
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $periodId = $this->request->query['academic_period_id'];
+        $currDateTime = date("Y-m-d");
+
+        $query
+        ->select([
+            'education_grade' => 'EducationGrades.name',
+            'class_name' => 'InstitutionClasses.name',
+            'assessment_name' => 'Assessments.name',
+            'subject_name' => 'InstitutionSubjects.name',
+            'total_marks' => 'InstitutionSubjectStudents.total_mark',
+            'total_absences' => "(SELECT SUM(absent_days) FROM ".$studentAbsenceDays->table()." WHERE student_id =".$institutionStudentId.")",
+            ])
+        ->leftJoin([$InstitutionStudents->alias() => $InstitutionStudents->table()],[
+            $this->aliasField('id = ').$InstitutionStudents->aliasField('student_id')
+        ])
+        ->leftJoin([$EducationGrades->alias() => $EducationGrades->table()],[
+            $this->InstitutionStudents->aliasField('education_grade_id = ').$EducationGrades->aliasField('id')
+        ])
+        ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()],[
+            $this->InstitutionStudents->aliasField('student_id = ').$ClassStudents->aliasField('student_id')
+        ])
+        ->leftJoin([$Classes->alias() => $Classes->table()],[
+            $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
+        ])
+        ->leftJoin([$SubjectStudents->alias() => $SubjectStudents->table()],[
+            $this->InstitutionStudents->aliasField('student_id = ').$SubjectStudents->aliasField('student_id')
+        ])
+        ->leftJoin([$Subjects->alias() => $Subjects->table()],[
+            $Subjects->aliasField('id = ') . $SubjectStudents->aliasField('institution_subject_id')
+        ])
+        ->leftJoin([$Assessments->alias() => $Assessments->table()],[
+            $Assessments->aliasField('education_grade_id = ') . $EducationGrades->aliasField('id')
+        ])
+        ->where([
+            $InstitutionStudents->aliasField('student_id =').$institutionStudentId,
+            $EducationGrades->aliasField('id =').$this->InstitutionStudents->aliasField('education_grade_id'),
+        ])
+        ->group([
+            $EducationGrades->aliasField('name'),
+            $Subjects->aliasField('name'),
+        ]);
+
     }
 
     public function getAcademicTabElements($options = [])
