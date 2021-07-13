@@ -513,6 +513,7 @@ class StudentsTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
+
     // public function onExcelRenderIdentities(Event $event, Entity $entity, array $attr) {
     //     $str = '';
     //     if(!empty($entity['user']['identities'])) {
