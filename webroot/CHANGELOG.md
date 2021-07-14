@@ -1,3 +1,9 @@
+### [3.67.1] - 2021-07-09
+- Bug Fixed: Add default identity, staff position and add date range filter to Reports > Institution > Staff leave
+- Bug Fixed: Institution > Attendance > Students: Student has Enrolled status but is not appearing on Attendance page
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure System - Update
+- Bug Fixed: Add Export button function - Institutions > General > Contacts > People
+
 ### [3.67.0] - 2021-07-02
 - Bug Fixed: Administration > Survey > Forms > Questions tab > Edit > Delete: Options from Questions was deleted but was not removed
 - Bug Fixed: Administration > System Setup > Education Structure: Encountered 404 error when copying data on Systems tab
