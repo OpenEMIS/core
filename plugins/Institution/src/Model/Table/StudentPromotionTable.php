@@ -261,7 +261,9 @@ class StudentPromotionTable extends AppTable
 
     public function onUpdateFieldNextGrade(Event $event, array $attr, $action, Request $request)
     {
+//        echo 'test';die();
         // used for reconfirm
+        $entity = $attr['entity'];
         if ($action == 'reconfirm') {
             $sessionKey = $this->registryAlias() . '.confirm';
             if ($this->Session->check($sessionKey)) {
@@ -274,6 +276,7 @@ class StudentPromotionTable extends AppTable
                     ->where([$this->EducationGrades->aliasField($this->EducationGrades->primaryKey()) => $currentData->education_grade_id])
                     ->select([$this->EducationGrades->aliasField('education_programme_id'), $this->EducationGrades->aliasField('name')])
                     ->first();
+//                print_r($gradeData);die();
                 $gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: $this->getMessage($this->aliasField('noAvailableGrades'));
 
                 // to get the notEnrolled message for the reconfirm page
@@ -281,7 +284,7 @@ class StudentPromotionTable extends AppTable
 
                 // list of grades available in the institution
                 $institutionId = $this->institutionId;
-                $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId);
+                $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId,$entity);
 
                 if ($currentData->student_status_id == $this->statuses['GRADUATED'] && array_key_exists(key($nextGrades), $listOfInstitutionGrades)) {
                     $gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: $this->getMessage($this->aliasField('notEnrolled'));
@@ -656,7 +659,9 @@ class StudentPromotionTable extends AppTable
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
     {
+
         $entity = $attr['entity'];
+       $nextAcademi  = $entity->next_academic_period_id;
         $studentStatusId = $entity->has('student_status_id') ? $entity->student_status_id : null;
 
         if (!empty($studentStatusId)) {
@@ -682,8 +687,8 @@ class StudentPromotionTable extends AppTable
                 }
 
                 // list of grades available in the institution
-                $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId);
-
+                $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId,$entity);
+//                print_r($educationGradeId);die();
                 // Only display the options that are available in the institution and also linked to the current programme
                 $gradeOptions = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
 
@@ -1222,31 +1227,30 @@ class StudentPromotionTable extends AppTable
         }
     }
 
-    public function getListOfInstitutionGrades($institutionId)
+    public function getListOfInstitutionGrades($institutionId,$options =[])
     {
         // list of grades available in the institution
         $today = date('Y-m-d');
+//        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+//
+//        $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
+        $selectedAcademicPeriod = $options['next_academic_period_id'];
+
         $listOfInstitutionGrades = $this->InstitutionGrades
         ->find('list', [
             'keyField' => 'education_grade_id',
             'valueField' => 'education_grade.programme_grade_name'])
-        ->contain(['EducationGrades.EducationProgrammes'])
+            ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
         ->where([
-            $this->InstitutionGrades->aliasField('institution_id') => $institutionId,
-            'OR' => [
-                [
-                    $this->InstitutionGrades->aliasField('end_date IS NULL'),
-                    $this->InstitutionGrades->aliasField('start_date <= ') => $today
-                ],
-                [
-                    $this->InstitutionGrades->aliasField('end_date IS NOT NULL'),
-                    $this->InstitutionGrades->aliasField('start_date <= ') => $today,
-                    $this->InstitutionGrades->aliasField('end_date >= ') => $today
-                ]
-            ]
+            $this->InstitutionGrades->aliasField('institution_id') => $institutionId
         ])
-        ->order(['EducationProgrammes.order', 'EducationGrades.order'])
-        ->toArray();
+            ->where(['EducationSystems.academic_period_id' => $selectedAcademicPeriod])
+            ->group('education_grade_id')
+            ->toArray();
+//        ->order(['EducationProgrammes.order', 'EducationGrades.order'])
+//        ->toArray();
+
+//        print_r($listOfInstitutionGrades);die();
 
         return $listOfInstitutionGrades;
     }
