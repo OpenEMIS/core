@@ -61,6 +61,63 @@ class SecurityRolesTable extends ControllerActionTable
         ]);
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    {
+      
+        // webhook create role starts
+         if($entity->isNew()) {
+          
+            $body = array();
+            $createRole = [
+                'role_id' =>$entity->id,
+                'role_name' =>$entity->name,
+               
+            ];
+          
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('role_create', [], $createRole);
+            }
+        }
+
+        // webhook create role ends
+
+        // webhook update role starts
+         if(!$entity->isNew()) {
+          
+           
+            $updateRole = [
+                'role_id' =>$entity->id,
+                'role_name' =>$entity->name,
+               
+            ];
+          
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('role_update', [], $updateRole);
+            }
+        }
+
+        // webhook update role ends
+
+      
+
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // Webhook role delete -- Start
+       
+        $deleteBody = [
+            'role_id' => $entity->id
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('role_delete', [], $deleteBody);
+        }
+        // Webhook role delete -- Ends
+    }
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);

@@ -1,3 +1,40 @@
+### [3.67.1] - 2021-07-09
+- Bug Fixed: Add default identity, staff position and add date range filter to Reports > Institution > Staff leave
+- Bug Fixed: Institution > Attendance > Students: Student has Enrolled status but is not appearing on Attendance page
+- Bug Fixed: OpenEMIS Core: Webhook Education Structure System - Update
+- Bug Fixed: Add Export button function - Institutions > General > Contacts > People
+
+### [3.67.0] - 2021-07-02
+- Bug Fixed: Administration > Survey > Forms > Questions tab > Edit > Delete: Options from Questions was deleted but was not removed
+- Bug Fixed: Administration > System Setup > Education Structure: Encountered 404 error when copying data on Systems tab
+
+### [3.66.5] - 2021-06-29
+- Bug Fixed: Administration > Performance > Assessment > Assessment Period > Add: Encountered 404 error upon saving
+- Bug Fixed: Administration > Security > Permission > Personal tab: To enable Execute function for Report Cards
+
+### [3.66.4] - 2021-06-23
+- Bug Fixed: Add a function to attach multiple files under the student and staff health feature
+- Bug Fixed: Change password reset request email subject to application name
+- Bug Fixed: Institutions > School > Students > Students Transfer Out: Auto Assignee in student transfer showing as unassigned
+- Bug Fixed: Workflow Rule was not configured but it is processing
+- Bug Fixed: Assessment Mark Placeholders in Report Cards
+- Bug Fixed: Administration > Security > Roles > Permission: Unable to save record
+- Bug Fixed: Institution > Performance > Outcomes: User is able to mark Outcomes for student who is not taking the Subject selected
+- Bug Fixed: Administration > Security > Groups > Edit: Encountered 404 error when adding a new use
+
+### [3.66.3] - 2021-06-18
+- Bug Fixed: Institution > Students > Promote: There is no option to select for Next Class field
+- Bug Fixed: Directory: User who is a Student and a Staff has only 1 record in Directory page
+- Bug Fixed: Institution> Academic > Feeders > Outgoing: User is given security permission to delete record but is unable to do so
+- Bug Fixed: Update Export button function - Institutions > General > Overview (include custom fields contacts and shifts)
+- Bug Fixed: Administration > Security > Roles > Permission: Permission missing for Finance > Income, Budget and Expenditure
+- Bug Fixed: Administration > System Setup > Academic Period: Start Date changes when student is successfully Transferred to a new Institution
+- Bug Fixed: Institution > Bulk Transfer: To allow user to select the same Grade that student is currently in for the Next Institution
+- Bug Fixed: Administration > System Setup > Localization > Translations: Word/ phrases not created
+- Bug Fixed: Institutions > General > Map > Export
+- Bug Fixed: Administration > System Setup > Administrative Boundaries > Areas (Administrative) tab: Encountered 404 error
+- Bug Fixed: Institution > Staff > Transfer: To make Position End Date and Start Date fields mandatory fields
+
 ### [3.66.2] - 2021-06-12
 - Bug Fixed: Reports>Institutions:Progress Loading bar image is different between RTL and LTR
 - Bug Fixed: Administration > Security Groups : Allow the adding of Multiple Roles for the same user in User Groups
