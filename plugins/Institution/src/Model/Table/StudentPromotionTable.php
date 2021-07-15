@@ -46,7 +46,7 @@ class StudentPromotionTable extends AppTable
             ->requirePresence('next_academic_period_id')
             ->requirePresence('grade_to_promote')
             ->requirePresence('class')
-            ->notEmpty('next_class')
+//            ->notEmpty('next_class')
             ->allowEmpty('education_grade_id');
             /*->allowEmpty('education_grade_id', function ($context) {
                 $studentStatusId = (!empty($context['data']['student_status_id']))? $context['data']['student_status_id']: '';
@@ -61,8 +61,8 @@ class StudentPromotionTable extends AppTable
             ->requirePresence('from_academic_period_id', false)
             ->requirePresence('next_academic_period_id', false)
             ->requirePresence('grade_to_promote', false)
-            ->requirePresence('class', false)
-            ->requirePresence('next_class', false);
+            ->requirePresence('class', false);
+//            ->requirePresence('next_class', false);
     }
 
     public function implementedEvents()
@@ -150,7 +150,7 @@ class StudentPromotionTable extends AppTable
         $this->ControllerAction->field('next_class', [
             'attr' => [
                 'label' => 'Next Class',
-                'required' => true
+//                'required' => true
             ],
             'entity' => $entity
         ]);
