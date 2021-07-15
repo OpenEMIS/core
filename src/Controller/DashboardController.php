@@ -19,7 +19,11 @@ class DashboardController extends AppController
         // $this->loadComponent('Paginator');
 
         $this->attachAngularModules();
-        $this->triggerUnmarkedAttendanceShell();
+        $this->loadModel('Workflow.WorkflowRules');
+        $workflowRules = $this->WorkflowRules->find()->where(['feature' => 'StudentUnmarkedAttendances'])->hydrate(false)->toArray();
+        if(!empty($workflowRules)){
+            $this->triggerUnmarkedAttendanceShell();
+        }
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
 		

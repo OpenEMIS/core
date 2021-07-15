@@ -205,21 +205,20 @@ class UsersController extends AppController
                         'action' => 'resetPassword',
                         'token' => $checksum
                     ], true);
-                    /*
-                    Subject: OpenEMIS - Password Reset Request
-                    Message Body:
-                        Dear <name>,
-
-                        We received a password reset request for your account.
-                        If you didn’t request a password reset, kindly ignore this email and your password will not be changed.
-
-                        To reset your password, please click the link below:
-                        <url link>
-
-                        Thank you.
-                    */
+                    /*POCOR-5284 Starts*/
+                    $Themes = TableRegistry::get('Theme.Themes');
+                    $getData = $Themes->find()
+                                ->where([$Themes->aliasField('name') => 'Application Name'])
+                                ->first();
+                    if (!empty($getData) && !is_null($getData->value) && !empty($getData->value)) {
+                        $emailSubject = $getData->value;
+                    } else {
+                        $emailSubject = $getData->default_value;
+                    }
+                   /*POCOR-5284 Ends*/
                     $email = new Email('openemis');
-                    $emailSubject = __('OpenEMIS - Password Reset Request');
+                    $emailSubject = $emailSubject. '- Password Reset Request';
+                    //$emailSubject = __('OpenEMIS - Password Reset Request');
                     $emailMessage = "Dear " . $name . ",\n\nWe received a password reset request for your account.\nIf you didn’t request a password reset, kindly ignore this email and your password will not be changed.\n\nTo reset your password, please click the link below:\n" . $url . "\n\nThank you.";
                     $email
                         ->to($userEmail)
