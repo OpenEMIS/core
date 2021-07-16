@@ -950,12 +950,7 @@ class WorkflowBehavior extends Behavior
         }
 
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        //POCOR-6231 starts
-        $modelParam = null;
-        if(!empty($request->params['action'])){
-            $modelParam = 'StaffPositionProfiles';
-        }
-        $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params, $modelParam);//POCOR-6231 ends
+        $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
         return $assigneeOptions;
     }
 
