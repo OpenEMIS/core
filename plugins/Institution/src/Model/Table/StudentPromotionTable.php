@@ -21,6 +21,7 @@ class StudentPromotionTable extends AppTable
     private $institutionId = null;
     private $currentPeriod = null;
     private $statuses = []; // Student Status
+    public $checkGrade =null;
 
     public function initialize(array $config)
     {
@@ -40,14 +41,24 @@ class StudentPromotionTable extends AppTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
+//        print_r($this->checkGrade);die();
+//        if (isset($this->institutionId)) {
+//            $institutionId = $this->institutionId;
+//        print_r($entity->next_academic_period_id);die();
+//
+//            $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId, $entity);
+//        }
+//        if ($this->checkGrade > 0) {
+//            $validator->notEmpty('education_grade_id');
+//        }
 
         return $validator
             ->requirePresence('from_academic_period_id')
             ->requirePresence('next_academic_period_id')
             ->requirePresence('grade_to_promote')
-            ->requirePresence('class')
+            ->requirePresence('class');
 //            ->notEmpty('next_class')
-            ->allowEmpty('education_grade_id');
+//            ->allowEmpty('education_grade_id');
             /*->allowEmpty('education_grade_id', function ($context) {
                 $studentStatusId = (!empty($context['data']['student_status_id']))? $context['data']['student_status_id']: '';
                 return ($studentStatusId != $this->statuses['PROMOTED']);
@@ -56,7 +67,10 @@ class StudentPromotionTable extends AppTable
 
     public function validationRemoveStudentPromotionValidation(Validator $validator)
     {
+
         $validator = $this->validationDefault($validator);
+//        dd($validator);
+
         return $validator
             ->requirePresence('from_academic_period_id', false)
             ->requirePresence('next_academic_period_id', false)
@@ -142,7 +156,8 @@ class StudentPromotionTable extends AppTable
         ]);
         $this->ControllerAction->field('education_grade_id', [
             'attr' => [
-                'label' => $this->getMessage($this->aliasField('toGrade'))
+                'label' => $this->getMessage($this->aliasField('toGrade')),
+                'required' => false
             ],
             'entity' => $entity
         ]);
@@ -688,7 +703,9 @@ class StudentPromotionTable extends AppTable
 
                 // list of grades available in the institution
                 $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId,$entity);
-//                print_r($educationGradeId);die();
+                $this->checkGrade = count($listOfInstitutionGrades);
+
+//                print_r(count($listOfInstitutionGrades));die();
                 // Only display the options that are available in the institution and also linked to the current programme
                 $gradeOptions = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
 
@@ -697,6 +714,7 @@ class StudentPromotionTable extends AppTable
                     $attr['select'] = false;
                     $options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
                 } else {
+
                     // to cater for graduate
                     if (in_array($studentStatusId, [$statuses['GRADUATED']])) {
                         $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $gradeOptions;
@@ -940,7 +958,13 @@ class StudentPromotionTable extends AppTable
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
-        $this->validator()->remove('education_grade_id', 'required');
+        $institutionId = $this->institutionId;
+//        print_r($entity->next_academic_period_id);die();
+
+        $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId,$entity);
+        if (count($listOfInstitutionGrades) > 0) {
+            $this->validator()->notEmpty('education_grade_id');
+        }
 
         $process = function ($model, $entity) use ($event, $data) {
             // Removal of some fields that are not in use in the table validation
