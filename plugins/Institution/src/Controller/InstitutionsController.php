@@ -623,6 +623,13 @@ class InstitutionsController extends AppController
     }
     //POCOR-5182 added StaffSalaries
 
+    //POCOR-6148 add Export button on Institutions > Infrastructures > WASH > Waste
+    public function InfrastructureWashWastes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashWastes']);
+    }
+    //POCOR-6148
+
     // AngularJS
     public function ScheduleTimetable($action = 'view')
     {
