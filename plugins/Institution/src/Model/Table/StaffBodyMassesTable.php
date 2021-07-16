@@ -11,19 +11,19 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 class StaffBodyMassesTable extends AppTable
 {
-    
+
     public function initialize(array $config)
     {
         $this->table('user_body_masses');
         parent::initialize($config);
 
-     
+
         $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['file_name' => 'file_content'],
             'size' => '2MB'
-        ]);             
+        ]);
     }
-     
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();

@@ -88,8 +88,8 @@ class HealthBehavior extends Behavior
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
 
-            $tabElements['BodyMasses'] = [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StudentBodyMasses', 'action' => 'index'],
+            $tabElements['StudentBodyMasses'] = [
+                'url' => ['plugin' => 'Student', 'institutionId' => $params, 'controller' => 'Students', 'action' => 'StudentBodyMasses'],
                 'text' => __('Body Mass')
             ];
         } elseif ($name == 'Staff' && $controller->AccessControl->check(['StaffBodyMasses', 'index'])) {
@@ -118,8 +118,8 @@ class HealthBehavior extends Behavior
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
 
-            $tabElements['Insurances'] = [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StudentInsurances', 'action' => 'index'],
+            $tabElements['StudentInsurances'] = [
+                'url' => ['plugin' => 'Student', 'institutionId' => $params, 'controller' => 'Students', 'action' => 'StudentInsurances'],
                 'text' => __('Insurances')
             ];
         } elseif ($name == 'Staff' && $controller->AccessControl->check(['StaffInsurances', 'index'])) {
