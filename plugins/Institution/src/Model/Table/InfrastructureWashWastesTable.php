@@ -29,6 +29,13 @@ class InfrastructureWashWastesTable extends ControllerActionTable
         ]);
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $modelAlias = 'InfrastructureWashWastes';
+        $userType = '';
+        $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('infrastructure_wash_waste_type_id', ['attr' => ['label' => __('Type')]]);
