@@ -87,7 +87,7 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        echo $total_male = $entity->infrastructure_wash_sanitation_male_functional + $entity->infrastructure_wash_sanitation_male_nonfunctional;
+        $total_male = $entity->infrastructure_wash_sanitation_male_functional + $entity->infrastructure_wash_sanitation_male_nonfunctional;
         $total_female = $entity->infrastructure_wash_sanitation_female_functional + $entity->infrastructure_wash_sanitation_female_nonfunctional;
         $total_mixed = $entity->infrastructure_wash_sanitation_mixed_functional + $entity->infrastructure_wash_sanitation_mixed_nonfunctional;
 
@@ -266,6 +266,48 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         $this->field('infrastructure_wash_sanitation_total_male', ['visible' => false]);
         $this->field('infrastructure_wash_sanitation_total_female', ['visible' => false]);
         $this->field('infrastructure_wash_sanitation_total_mixed', ['visible' => false]);
+        //$this->fields['quantities']['type'] = 'table';
+        $this->field('quantities', [
+            'type' => 'table',
+            'headers' => [__('Gender'), __('Functional'),__('Non-functional')],
+            //'cells' => $cells,
+            'attr' => ['label' =>  __('Quantity')]
+        ]);
+
+    }
+
+    private function getSanitationQuantity(Entity $entity)
+    {
+        $rows = [];
+        if ($entity->has('infrastructure_wash_sanitation_quantities')) {
+            foreach ($entity->infrastructure_wash_sanitation_quantities as $obj) {
+
+                if ($obj->gender_id == 1 && $obj->functional == 1 ) {
+                    $male_functional = $obj->value;
+                }
+                elseif ($obj->gender_id == 1 && $obj->functional == 0 ) {
+                    $male_nonfunctional = $obj->value;
+                }
+                elseif ($obj->gender_id == 2 && $obj->functional == 1 ) {
+                    $female_functional = $obj->value;
+                }
+                if ($obj->gender_id == 2 && $obj->functional == 0 ) {
+                    $female_nonfunctional = $obj->value;
+                }
+                if ($obj->gender_id == 3 && $obj->functional == 1 ) {
+                    $mixed_functional = $obj->value;
+                }
+                if ($obj->gender_id == 3 && $obj->functional == 0 ) {
+                    $mixed_nonfunctional = $obj->value;
+                }
+            }
+        }
+
+        $rows[] = ['gender' => 'Male', 'functional' => $male_functional, 'nonfunctional' => $male_nonfunctional];
+        $rows[] = ['gender' => 'Female', 'functional' => $female_functional, 'nonfunctional' => $female_nonfunctional];
+        $rows[] = ['gender' => 'Mixed', 'functional' => $mixed_functional, 'nonfunctional' => $mixed_nonfunctional];
+        print_r($rows); exit;
+        return $rows;
     }
 
 }
