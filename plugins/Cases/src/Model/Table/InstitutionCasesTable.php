@@ -38,6 +38,8 @@ class InstitutionCasesTable extends ControllerActionTable
 
         $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
         $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
+
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function implementedEvents()
@@ -96,12 +98,12 @@ class InstitutionCasesTable extends ControllerActionTable
         //Order to follow what is defined at OptionsTrait
         foreach($this->getSelectOptions("WorkflowRules.features") as $key => $value) {
             if(array_key_exists($key, $featureOptions)) {
-                $newFeatureOption[$key] = $featureOptions[$key]; 
+                $newFeatureOption[$key] = $featureOptions[$key];
             }
         }
 
         $featureOptions = $newFeatureOption;
-        
+
         if (!is_null($this->request->query('feature')) && array_key_exists($this->request->query('feature'), $featureOptions)) {
             $selectedFeature = $this->request->query('feature');
         } else {
@@ -142,7 +144,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $username = $session->read('Auth.User');
         if(strtolower($username['username']) == 'superrole' || strtolower($username['username']) == 'admin' || strtolower($username['username']) == 'administrator')
         {
-            $userId = 0;  
+            $userId = 0;
         }else{
             $userId = $session->read('Auth.User.id');
         }
@@ -177,7 +179,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ->where([$this->aliasField('assignee_id') => $userId])
             ->group($this->aliasField('id'));
 
-        
+
         $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
     }
 
@@ -468,4 +470,82 @@ class InstitutionCasesTable extends ControllerActionTable
 
         return $query;
     }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+        $assignee = TableRegistry::get('security_users');
+		$query
+		->select(['status' => 'Statuses.name',
+        'assignee' => $assignee->find()->func()->concat([
+            'first_name' => 'literal',
+            " ",
+            'last_name' => 'literal'
+        ]),
+        'case_number' => 'InstitutionCases.case_number',
+        'title' =>'InstitutionCases.title',
+        'description' =>'InstitutionCases.description',
+        'created_on' =>'InstitutionCases.created'
+        ])
+
+		->LeftJoin([$this->Assignees->alias() => $this->Assignees->table()],[
+			$this->Assignees->aliasField('id').' = ' . 'InstitutionCases.assignee_id'
+		])
+
+        ->LeftJoin([$this->Statuses->alias() => $this->Statuses->table()],[
+			$this->Statuses->aliasField('id').' = ' . 'InstitutionCases.status_id'
+		])
+
+
+        ->where(['InstitutionCases.institution_id' =>  $institutionId]);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+
+        $extraField[] = [
+            'key' => 'Statuses.name',
+            'field' => 'status',
+            'type' => 'string',
+            'label' => __('Status')
+        ];
+
+        $extraField[] = [
+            'key' => 'Assignees.assignee',
+            'field' => 'assignee',
+            'type' => 'string',
+            'label' => __('Assignee')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionCases.case_number',
+            'field' => 'case_number',
+            'type' => 'string',
+            'label' => __('Case Number')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionCases.title',
+            'field' => 'title',
+            'type' => 'string',
+            'label' => __('Title')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionCases.description',
+            'field' => 'description',
+            'type' => 'string',
+            'label' => __('Description')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionCases.created',
+            'field' => 'created_on',
+            'type' => 'date',
+            'label' => __('Created On')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
 }
