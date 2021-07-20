@@ -17,7 +17,7 @@ class TrainingsController extends AppController
         $this->loadModel('Training.TrainingSessionTraineeResults');//5695
         $this->ControllerAction->models = [
             'ImportTrainees'    => ['className' => 'Training.ImportTrainees', 'actions' => ['add']],
-            'ImportTrainingSessionTraineeResults'    => ['className' => 'Training.ImportTrainingSessionTraineeResults', 'actions' => ['add']] //5695
+            'ImportTrainingSessionTraineeResults' => ['className' => 'Training.ImportTrainingSessionTraineeResults', 'actions' => ['add']] //5695
         ];
     }
 

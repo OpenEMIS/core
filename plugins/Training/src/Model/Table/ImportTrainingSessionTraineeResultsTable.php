@@ -1,172 +1,327 @@
 <?php
 namespace Training\Model\Table;
 
+use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 use ArrayObject;
+use Cake\I18n\Date;
+use Cake\Collection\Collection;
+use Cake\Controller\Component;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Validation\Validator;
+use Cake\Network\Request;
+use DateTime;
 use PHPExcel_Worksheet;
-
-use App\Model\Table\AppTable;
+use Cake\Utility\Inflector;
 
 class ImportTrainingSessionTraineeResultsTable extends AppTable
 {
-    public function initialize(array $config)
-    {   
+    private $institutionId = false;
+
+    public function initialize(array $config) {
         $this->table('import_mapping');
         parent::initialize($config);
-
-        /*$this->addBehavior('Import.ImportTrainingSessionTraineeResults', [
-            'plugin' => 'Training',
-            'model' => 'TrainingSessionTraineeResults',
-            'backUrl' => ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'TrainingSessionResults']
-        ]);*/
-
-        $this->addBehavior('Import.Import');
-
-        
+        //$this->addBehavior('Import.ImportTrainingSessionTraineeResults', [
+        $this->addBehavior('Import.Import', [
+            'plugin'=>'Training', 
+            'model'=>'TrainingSessionTraineeResults',
+            //'backUrl' => ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'Assessments']
+        ]);
+       // $this->addBehavior('Import.Import');
         // register table once
-        /*$this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-        $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $this->StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $this->EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-        $this->OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
-        $this->OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
-        $this->OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
-        $this->OutcomeGradingTypes = TableRegistry::get('Outcome.OutcomeGradingTypes');*/
+        $this->Users = TableRegistry::get('User.Users');
+        $this->TrainingSessionTraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
     }
 
-    public function implementedEvents()
-    {
+    public function beforeAction($event) {
+        $session = $this->request->session();
+        /*if ($session->check('Institution.Institutions.id')) {
+            $this->institutionId = $session->read('Institution.Institutions.id');
+        }*/
+        $this->systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
+    }
+
+    public function implementedEvents() { 
         $events = parent::implementedEvents();
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
             'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
-            'Model.import.onImportGetClassificationId' => 'onImportGetClassificationId',
-            'Model.import.onImportPopulateAreasData' => 'onImportPopulateAreasData',
-            'Model.import.onImportPopulateAreaAdministrativesData' => 'onImportPopulateAreaAdministrativesData',
-            'Model.import.onImportPopulateClassificationData' => 'onImportPopulateClassificationData',
-            'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
-            'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons'
+            /*'Model.import.onImportPopulateAssessmentPeriodsData' => 'onImportPopulateAssessmentPeriodsData',
+            'Model.import.onImportPopulateEducationSubjectsData' => 'onImportPopulateEducationSubjectsData',*/
+            'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',
+            'Model.import.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
+            'Model.import.onImportPopulateResultType' => 'onImportPopulateResultType',//5695
+            //'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
+            'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
         ];
         $events = array_merge($events, $newEvent);
         return $events;
     }
 
+    /*public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
+        $crumbTitle = $this->getHeader($this->alias());
+        $url = ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'TrainingSessionTraineeResults'];
+        $Navigation->substituteCrumb($crumbTitle, 'TrainingSessionTraineeResults', $url);
+        $Navigation->addCrumb($crumbTitle);
+    }*/
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) { 
+        $crumbTitle = $this->getHeader($this->alias());
+        $Navigation->substituteCrumb($crumbTitle, 'Results', $crumbTitle);
+    }
+
+    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
+        $tempRow['entity'] = $this->TrainingSessionTraineeResults->newEntity();   
+    }
+
+    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
+
+    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    {   
+        if (isset($buttons[1])) {
+            $buttons[1]['url'] = $this->ControllerAction->url('Results');
+            $buttons[1]['url']['action'] = 'TrainingSessionTraineeResults';
+        }
+        $request = $this->request;
+        if (empty($request->query('training_courses'))) {
+            unset($buttons[0]);
+            unset($buttons[1]);
+        }
+    }
+
+    public function addOnInitialize(Event $event, Entity $entity)
+    { 
+        $request = $this->request;
+        unset($request->query['training_courses']);
+    }
+
+    public function addAfterAction(Event $event, Entity $entity)
+    {  
+        $this->dependency = [];
+        $this->dependency["training_courses"] = ["select_file"];
+
+        $this->ControllerAction->field('training_courses', ['type' => 'select']);
+        $this->ControllerAction->field('select_file', ['visible' => false]);
+        $this->ControllerAction->setFieldOrder(['training_courses', 'select_file']);
+
+        //Assumption - onChangeReload must be named in this format: change<field_name>. E.g changeClass
+        $currentFieldName = strtolower(str_replace("change", "", $entity->submit));
+
+        if (isset($this->request->data[$this->alias()])) {
+
+            $unsetFlag = false;
+            $aryRequestData = $this->request->data[$this->alias()];
+
+            foreach ($aryRequestData as $requestData => $value) {
+                if (isset($this->dependency[$requestData]) && $value) {
+                    $aryDependencies = $this->dependency[$requestData];
+                    foreach ($aryDependencies as $dependency) {
+                        $this->request->query = $this->request->data[$this->alias()];
+                        $this->ControllerAction->field($dependency, ['visible' => true]);
+                    }
+                }
+            }
+        }
+    }
+
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
-    {
-        $toolbarButtons['back']['url'][0] = $toolbarButtons['back']['url']['action'];
-        $toolbarButtons['back']['url']['action'] = 'Results';
-    }
-
-    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
-    {
-        $columns = new Collection($columns);
-        $filtered = $columns->filter(function ($value, $key, $iterator) {
-            return $value == 'code';
-        });
-        $codeIndex = key($filtered->toArray());
-        $code = $sheet->getCellByColumnAndRow($codeIndex, $row)->getValue();
-
-        if (in_array($code, $importedUniqueCodes->getArrayCopy())) {
-            $rowInvalidCodeCols['code'] = $this->getExcelLabel('Import', 'duplicate_unique_key');
-            return false;
-        }
-
-        $institution = $this->Institutions->find()->where(['code'=>$code])->first();
-        if (!$institution) {
-            $tempRow['entity'] = $this->Institutions->newEntity();
-        } else {
-            $tempRow['entity'] = $institution;
+    { 
+       if (isset($toolbarButtons['back'])) {
+            $toolbarButtons['back']['url'] = $this->ControllerAction->url('Results');
+            //$toolbarButtons['back']['url']['action'] = 'Assessments';
         }
     }
 
-    public function onImportGetClassificationId(Event $event, $cellValue)
-    {
-        $options = $this->getSelectOptions('Institutions.classifications');
-        foreach ($options as $key => $value) {
-            if ($cellValue == $key) {
-                return $cellValue;
+    public function onUpdateFieldTrainingCourses(Event $event, array $attr, $action, Request $request) { 
+        if ($action == 'add') {
+            $TrainingCourses =  TableRegistry::get('training_courses');
+            $training_courses_options = $TrainingCourses->find('list', [
+                                        'keyField' => 'id',
+                                        'valueField' => 'name'
+                                    ])
+                                    ->toArray();
+                
+            $attr['options'] = $training_courses_options;
+            $attr['onChangeReload'] = 'changeTrainingCourses';
+        }
+        return $attr;
+    }
+
+    /*public function onImportGetUsersId(Event $event, $cellValue)
+    {  
+        $record = $this->Users->find()->select([$this->Users->aliasField('id')])->where([$this->Users->aliasField('openemis_no') => $cellValue])->first();
+        
+        $userId = $record->id;
+        return $userId;
+    }
+
+    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
+    {   
+        $training_courses = $this->request->query['training_courses'];
+        $TrainingSession = TableRegistry::get('training_sessions');
+        $TrainingSessionData = $TrainingSession->find()
+                                ->where([
+                                    $TrainingSession->aliasField('code') => $training_courses,
+                                ])->toArray();     
+        
+        if(!empty($TrainingSessionData)){
+            $TrainingSessionsTrainees = TableRegistry::get('training_sessions_trainees');
+            $traineeData = $TrainingSessionsTrainees->find()
+                            ->where([
+                                $TrainingSessionsTrainees->aliasField('training_session_id') => $TrainingSessionData['training_sessions']['id'],
+                            ])->toArray();
+            $traineeIds = [];
+            if (!empty($traineeData)) {
+                foreach ($traineeData as $value) {
+                   $traineeIds[] = $value->trainee_id;
+                }
+
+                $UsersData = $Users->find()
+                            ->select([
+                                $Users->aliasField('id'),
+                                $Users->aliasField('first_name'),
+                                $Users->aliasField('middle_name'),
+                                $Users->aliasField('third_name'),
+                                $Users->aliasField('last_name'),
+                                $Users->aliasField('openemis_no')
+                            ])
+                            ->where([$Users->aliasField('id IN') => $traineeIds]);
+
+                $translatedReadableCol = $this->getExcelLabel($UsersData, 'Name');
+
+                $data[$columnOrder]['lookupColumn'] = 2;
+                $data[$columnOrder]['data'][] = ['Name', $translatedCol];
+                
+                $modelData = $UsersData->find('all')
+                ->select([ 
+                    'first_name', 
+                    'middle_name', 
+                    'third_name', 
+                    'last_name',
+                    'openemis_no'
+                ]);
+
+                if (!empty($modelData)) {
+                    foreach($modelData->toArray() as $row) {
+                        //$name = $row->first_name.' '.$row->middle_name.' '.$row->third_name.' '.$row->last_name; 
+                        $data[$columnOrder]['data'][] = [
+                            //$name,
+                            $row->openemis_no
+                        ];
+                    }
+                }
             }
-        }
-        return null;
-    }    
+        }                        
+    }*/
 
-    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
+    public function onImportPopulateTrainingResultTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {
-        $importedUniqueCodes[] = $entity->code;
-    }
+        $training_courses = $this->request->query['training_courses'];
 
-    public function onImportPopulateAreasData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
+        $TrainingResultTypes = TableRegistry::get('training_result_types');
+        $TrainingCoursesResultTypes = TableRegistry::get('training_courses_result_types');
+        $TrainingCoursesResultTypesData = $TrainingCoursesResultTypes->find()
+                                        ->select([
+                                            $TrainingCoursesResultTypes->aliasField('training_course_id'),
+                                            $TrainingCoursesResultTypes->aliasField('training_result_type_id'),
+                                            $TrainingResultTypes->aliasField('id'),
+                                            $TrainingResultTypes->aliasField('name')
+                                        ])
+                                        ->leftJoin([$TrainingResultTypes->alias() => $TrainingResultTypes->table()], [
+                                            $TrainingResultTypes->aliasField('id = ') . $TrainingCoursesResultTypes->aliasField('training_result_type_id')
+                                        ])
+                                        ->where([
+                                            $TrainingCoursesResultTypes->aliasField('training_course_id') => $training_courses,
+                                        ]);   
 
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $selectFields = ['name', $lookupColumn];
-        $modelData = $lookedUpTable->find('all')
-                                ->select($selectFields)
-                                ->order($order)
-                                ;
+        if (!empty($TrainingCoursesResultTypesData)) {
 
-        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
-        if (!empty($modelData)) {
-            foreach ($modelData->toArray() as $row) {
+            $translatedReadableCol = $this->getExcelLabel($TrainingCoursesResultTypesData, 'Name');
+
+            $data[$columnOrder]['lookupColumn'] = 2;
+            $data[$columnOrder]['data'][] = ['Name', $translatedCol];
+
+            $modelData = $TrainingCoursesResultTypesData->find('all')
+            ->select([
+                $TrainingResultTypes->aliasField('name')
+            ]); 
+
+            foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
-                    $row->name,
-                    $row->{$lookupColumn}
+                    $row->training_result_types['name']
                 ];
             }
         }
+
     }
 
-    public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $order = [$lookupModel.'.area_administrative_level_id', $lookupModel.'.order'];
+    public function onImportPopulateTrainingSessionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
+    {   
+        $training_courses = $this->request->query['id'];
+        $TrainingCourses = TableRegistry::get('training_courses');
+        $TrainingCoursesData = $TrainingCourses->find()
+                                ->where([
+                                    $TrainingCourses->aliasField('code') => $training_courses,
+                                ])->first();    
 
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $selectFields = ['name', $lookupColumn];
-        $modelData = $lookedUpTable->find('all')
-                                ->select($selectFields)
-                                ->order($order)
-                                ;
+        if(!empty($TrainingCoursesData)){
+            $TrainingSession = TableRegistry::get('training_sessions');
+            $TrainingSessionData = $TrainingSession->find()
+                                    ->where([
+                                        $TrainingSession->aliasField('training_course_id') => $TrainingCoursesData->id,
+                                    ]);
 
-        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
-        if (!empty($modelData)) {
-            foreach ($modelData->toArray() as $row) {
-                $data[$columnOrder]['data'][] = [
-                    $row->name,
-                    $row->{$lookupColumn}
-                ];
+            $translatedReadableCol = $this->getExcelLabel($TrainingSessionData, 'Name');
+
+            $data[$columnOrder]['lookupColumn'] = 2;
+            $data[$columnOrder]['data'][] = ['Name', $translatedCol];
+
+            $modelData = $TrainingSessionData->find('all')
+            ->select([
+                'name',
+                'code'
+            ]);  
+                                  
+            if (!empty($modelData)) {
+                foreach($modelData->toArray() as $row) {
+                    $data[$columnOrder]['data'][] = [
+                        $row->code,
+                        $row->name
+                    ];
+                }
             }
-        }
+        }                        
     }
+                        
 
-    public function onImportPopulateClassificationData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $translatedReadableCol = $this->getExcelLabel('Classification', 'name');
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
-
-        $options = $this->getSelectOptions('Institutions.classifications');
-        foreach ($options as $key => $value) {
-            $data[$columnOrder]['data'][] = [
-                $value,
-                $key
-            ];
-        }
-    }
-
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
-    {
+    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
         return true;
     }
+             
+        
+        
+    /*public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+       
+        $educationGradeId = $this->request->query['education_grade'];
+        $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $tempRow['institution_id'] = $institutionId;
+        $tempRow['academic_period_id'] = $academicPeriodId;
+        $classId = $this->request->query['class_name'];
+        $educationData = $this->InstitutionClassGrades->find()
+                        ->select([$this->InstitutionClassGrades->aliasField('education_grade_id')])
+                        ->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId])
+                        ->first();
+        $educationGradeId = $educationData->education_grade_id;
+        $tempRow['education_grade_id'] = $educationGradeId;
+        $assessment = $this->AssessmentPeriods->find()
+                        ->select([$this->AssessmentPeriods->aliasField('assessment_id')])
+                        ->where([$this->AssessmentPeriods->aliasField('id') => $tempRow['assessment_period_id']])
+                        ->first();
+        $tempRow['assessment_id'] = $assessment->assessment_id;
+        $tempRow['institution_classes_id'] = $tempRow['class_id'];
+        
+        return true;
+    }*/
 }
-
