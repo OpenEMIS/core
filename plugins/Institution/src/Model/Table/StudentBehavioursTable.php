@@ -29,7 +29,7 @@ class StudentBehavioursTable extends AppTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->hasMany('StudentBehaviourAttachments', [
-            'className' => 'Institutions.StudentBehaviourAttachments', 
+            'className' => 'Institutions.StudentBehaviourAttachments',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
@@ -42,6 +42,10 @@ class StudentBehavioursTable extends AppTable
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
+
+        //if ($this->AccessControl->check(['Institutions', 'StudentBehaviours', 'Excel'])) { // to check execute permission
+            $this->addBehavior('Excel', ['pages' => ['index']]);
+            ///}
     }
 
     public function implementedEvents()
@@ -301,7 +305,7 @@ class StudentBehavioursTable extends AppTable
         if ($action == 'add') {
             $entity = $attr['entity'];
             $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
-            
+
             if ($entity->has('academic_period_id')) {
                 $selectedPeriod = $entity->academic_period_id;
             } else {
@@ -402,7 +406,7 @@ class StudentBehavioursTable extends AppTable
 
             if ($action == 'add') {
                 $todayDate = Date::now();
-                
+
                 if (!empty($request->data[$this->alias()]['date_of_behaviour'])) {
                     $inputDate = Date::createfromformat('d-m-Y', $request->data[$this->alias()]['date_of_behaviour']); //string to date object
 
@@ -594,4 +598,76 @@ class StudentBehavioursTable extends AppTable
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+
+        $extraField[] = [
+            'key' => 'Students.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+
+        $extraField[] = [
+            'key' => 'Students.student_name',
+            'field' => 'student_name',
+            'type' => 'string',
+            'label' => __('Student')
+        ];
+
+        $extraField[] = [
+            'key' => 'StudentBehaviour.date_of_behaviour',
+            'field' => 'date_of_behaviour',
+            'type' => 'date',
+            'label' => __('Date Of Behaviour')
+        ];
+
+        $extraField[] = [
+            'key' => 'StudentBehaviour.title',
+            'field' => 'title',
+            'type' => 'string',
+            'label' => __('Title')
+        ];
+
+        $extraField[] = [
+            'key' => 'StudentBehaviourCategories.name',
+            'field' => 'category_name',
+            'type' => 'string',
+            'label' => __('Student Behaviour Category')
+        ];
+
+
+        $fields->exchangeArray($extraField);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $academicPeriod = $this->request->query['academic_period_id'];
+        $User = TableRegistry::get('security_users');
+            $query
+            ->select(['title' => 'StudentBehaviours.title','category_name' => 'StudentBehaviourCategories.name','date_of_behaviour' => 'StudentBehaviours.date_of_behaviour', 'openemis_no' => 'Students.openemis_no', 'student_name' => $User->find()->func()->concat([
+                'first_name' => 'literal',
+                " ",
+                'last_name' => 'literal'
+            ])])
+            ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+                $this->AcademicPeriods->aliasField('id').' = ' . 'StudentBehaviours.academic_period_id'
+            ])
+            ->LeftJoin([$this->Students->alias() => $this->Students->table()],[
+                $this->Students->aliasField('id').' = ' . 'StudentBehaviours.student_id'
+            ])
+            ->LeftJoin([$this->Institutions->alias() => $this->Institutions->table()],[
+                $this->Institutions->aliasField('id').' = ' . 'StudentBehaviours.institution_id'
+            ])
+            ->LeftJoin([$this->StudentBehaviourCategories->alias() => $this->StudentBehaviourCategories->table()],[
+                $this->StudentBehaviourCategories->aliasField('id').' = ' . 'StudentBehaviours.student_behaviour_category_id'
+            ])
+            ->where(['StudentBehaviours.academic_period_id' =>  $academicPeriod])
+            ->where(['StudentBehaviours.institution_id' =>  $institutionId]);
+
+    }
+
 }
+
+
