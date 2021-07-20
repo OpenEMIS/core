@@ -29,11 +29,11 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('BehaviourClassifications', ['className' => 'Student.BehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
         $this->hasMany('StaffBehaviourAttachments', [
-            'className' => 'Institutions.StaffBehaviourAttachments', 
+            'className' => 'Institutions.StaffBehaviourAttachments',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-        
+
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Institution.Case');
@@ -42,6 +42,8 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->addBehavior('Institution.StaffProfile');
 
         $this->setDeleteStrategy('restrict');
+
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function implementedEvents()
@@ -247,7 +249,7 @@ class StaffBehavioursTable extends ControllerActionTable
                     }
                 }
             }
-      
+
             $attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
             $attr['date_options']['todayBtn'] = false;
         }
@@ -370,10 +372,10 @@ class StaffBehavioursTable extends ControllerActionTable
                 'third_name' =>'Staff.third_name',
                 'last_name' =>'Staff.last_name',
                 'preferred_name' =>'Staff.preferred_name'
-         
+
              ])
             ->innerJoinWith('InstitutionCaseRecords.StaffBehaviours.Staff');
-        
+
         return $query;
     }
 
@@ -386,7 +388,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : [];
         $studentBehaviourId = $ids['id'];
         $queryString = $this->encode(['staff_behaviour_id' => $studentBehaviourId]);
-       
+
         $tabElements = [
             'StaffBehaviours' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours', 'view', $paramPass[1]],
@@ -398,5 +400,74 @@ class StaffBehavioursTable extends ControllerActionTable
             ]
         ];
         return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+
+        $extraField[] = [
+            'key' => 'Students.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+
+        $extraField[] = [
+            'key' => 'Students.student_name',
+            'field' => 'student_name',
+            'type' => 'string',
+            'label' => __('Staff')
+        ];
+
+        $extraField[] = [
+            'key' => 'StudentBehaviour.date_of_behaviour',
+            'field' => 'date_of_behaviour',
+            'type' => 'date',
+            'label' => __('Date Of Behaviour')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffBehaviourCategories.name',
+            'field' => 'category',
+            'type' => 'string',
+            'label' => __('Category')
+        ];
+
+        $extraField[] = [
+            'key' => 'BehaviourClassifications.name',
+            'field' => 'behaviour_classification',
+            'type' => 'string',
+            'label' => __('Behaviour Classification')
+        ];
+
+
+        $fields->exchangeArray($extraField);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $academicPeriod = $this->request->query['academic_period_id'];
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $User = TableRegistry::get('security_users');
+            $query
+            ->select(['date' => 'StaffBehaviours.date_of_behaviour','category' => 'StaffBehaviourCategories.name','behaviour_classification' => 'BehaviourClassifications.name', 'openemis_no' => 'Staff.openemis_no', 'student_name' => $User->find()->func()->concat([
+                'first_name' => 'literal',
+                " ",
+                'last_name' => 'literal'
+            ])])
+
+            ->LeftJoin([$this->Staff->alias() => $this->Staff->table()],[
+                $this->Staff->aliasField('id').' = ' . 'StaffBehaviours.staff_id'
+            ])
+
+            ->LeftJoin([$this->StaffBehaviourCategories->alias() => $this->StaffBehaviourCategories->table()],[
+                $this->StaffBehaviourCategories->aliasField('id').' = ' . 'StaffBehaviours.staff_behaviour_category_id'
+            ])
+
+            ->LeftJoin([$this->BehaviourClassifications->alias() => $this->BehaviourClassifications->table()],[
+                $this->BehaviourClassifications->aliasField('id').' = ' . 'StaffBehaviours.behaviour_classification_id'
+            ])
+            ->where(['StaffBehaviours.academic_period_id' =>  $academicPeriod])
+            ->where(['StaffBehaviours.institution_id' =>  $institutionId]);
     }
 }
