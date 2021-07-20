@@ -9,6 +9,7 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\ORM\TableRegistry;
 
 class InstitutionBankAccountsTable extends AppTable {
 	use OptionsTrait;
@@ -27,6 +28,7 @@ class InstitutionBankAccountsTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('BankBranches', ['className' => 'FieldOption.BankBranches']);
 
+        $this->addBehavior('Excel', ['pages' => ['index']]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -174,4 +176,70 @@ class InstitutionBankAccountsTable extends AppTable {
 			->order(['order'])
 			->toArray();
 	}
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+
+		$banks = TableRegistry::get('Banks');
+		$branches = TableRegistry::get('BankBranches');
+		$query
+		->select(['active' => 'InstitutionBankAccounts.active','account_name' => 'InstitutionBankAccounts.account_name','account_number' => 'InstitutionBankAccounts.account_number', 'bank' => 'Banks.name', 'bank_branch' => 'BankBranches.name'])
+
+		->LeftJoin([$this->BankBranches->alias() => $this->BankBranches->table()],[
+			$this->BankBranches->aliasField('id').' = ' . 'InstitutionBankAccounts.bank_branch_id'
+		])
+
+		->LeftJoin([$banks->alias() => $banks->table()],[
+			$banks->aliasField('id').' = ' . 'BankBranches.bank_id'
+		])
+        ->where([
+            $this->aliasField('institution_id = ') . $institutionId
+        ]);
+    }
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+
+        $extraField[] = [
+            'key' => 'InstitutionBankAccounts.active',
+            'field' => 'active',
+            'type' => 'string',
+            'label' => __('Active')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionBankAccounts.account_name',
+            'field' => 'account_name',
+            'type' => 'string',
+            'label' => __('Name')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionBankAccounts.account_number',
+            'field' => 'account_number',
+            'type' => 'integer',
+            'label' => __('Account Number')
+        ];
+
+        $extraField[] = [
+            'key' => 'Banks.name',
+            'field' => 'bank',
+            'type' => 'string',
+            'label' => __('Bank')
+        ];
+
+        $extraField[] = [
+            'key' => 'BankBranches.name',
+            'field' => 'bank_branch',
+            'type' => 'string',
+            'label' => __('Bank Branch')
+        ];
+
+
+        $fields->exchangeArray($extraField);
+    }
+
+
 }
