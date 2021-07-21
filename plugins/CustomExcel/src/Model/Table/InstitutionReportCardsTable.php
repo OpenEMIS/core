@@ -58,6 +58,7 @@ class InstitutionReportCardsTable extends AppTable
                 'StaffQualificationSubjects',
                 'StudentTeacherRatio',
                 'TotalStaffs',
+                'TotalStudents',
                 'StaffQualificationDuties',
                 'StaffQualificationPositions',
                 'StaffQualificationStaffType',
@@ -102,6 +103,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationSubjects'] = 'onExcelTemplateInitialiseStaffQualificationSubjects';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentTeacherRatio'] = 'onExcelTemplateInitialiseStudentTeacherRatio';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseTotalStaffs'] = 'onExcelTemplateInitialiseTotalStaffs';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseTotalStudents'] = 'onExcelTemplateInitialiseTotalStudents';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationDuties'] = 'onExcelTemplateInitialiseStaffQualificationDuties';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationPositions'] = 'onExcelTemplateInitialiseStaffQualificationPositions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationStaffType'] = 'onExcelTemplateInitialiseStaffQualificationStaffType';
@@ -218,8 +220,17 @@ class InstitutionReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params)) {
             $Institutions = TableRegistry::get('Institution.Institutions');
-            $entity = $Institutions->get($params['institution_id'], ['contain' => ['AreaAdministratives', 'Types']]);
-            return $entity;
+            $entity = $Institutions->get($params['institution_id'], ['contain' => ['AreaAdministratives', 'Types', 'Genders', 'Sectors', 'Providers']]);
+            
+			$shift_types = [1=>'Single Shift Owner',
+							2=>'Single Shift Occupier',
+							3=>'Multiple Shift Owner',
+							4=>'Multiple Shift Occupier'
+							];
+			if($shift_types[$entity->shift_type]) {
+				$entity->shift_type_name = $shift_types[$entity->shift_type];
+			}
+			return $entity;
         }
     }
 	
@@ -581,6 +592,24 @@ class InstitutionReportCardsTable extends AppTable
 				->contain('Users')
 				->where([$InstitutionStaffs->aliasField('institution_id') => $params['institution_id']])
 				->group($InstitutionStaffs->aliasField('staff_id'))
+				->count()
+			;
+			return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseTotalStudents(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+			$entity = $InstitutionStudents
+				->find()
+				->contain('Users')
+				->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+				->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
+				->where([$InstitutionStudents->aliasField('student_status_id') => 1])
+				->where(['Users.status' => 1])
+				->group($InstitutionStudents->aliasField('student_id'))
 				->count()
 			;
 			return $entity;
