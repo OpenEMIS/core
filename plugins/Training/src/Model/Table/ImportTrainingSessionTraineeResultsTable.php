@@ -22,13 +22,12 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
     public function initialize(array $config) {
         $this->table('import_mapping');
         parent::initialize($config);
-        //$this->addBehavior('Import.ImportTrainingSessionTraineeResults', [
         $this->addBehavior('Import.Import', [
             'plugin'=>'Training', 
             'model'=>'TrainingSessionTraineeResults',
-            //'backUrl' => ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'Assessments']
+            'backUrl' => ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'Results']
         ]);
-       // $this->addBehavior('Import.Import');
+        // $this->addBehavior('Import.Import');
         // register table once
         $this->Users = TableRegistry::get('User.Users');
         $this->TrainingSessionTraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
@@ -47,28 +46,22 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
             'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
-            /*'Model.import.onImportPopulateAssessmentPeriodsData' => 'onImportPopulateAssessmentPeriodsData',
-            'Model.import.onImportPopulateEducationSubjectsData' => 'onImportPopulateEducationSubjectsData',*/
-            'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',
+            'Model.import.onImportPopulateTrainingResultTypesData' => 'onImportPopulateTrainingResultTypesData',
+            'Model.import.onImportPopulateTrainingSessionsData' => 'onImportPopulateTrainingSessionsData',
             'Model.import.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
-            'Model.import.onImportPopulateResultType' => 'onImportPopulateResultType',//5695
-            //'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
+            'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
         ];
         $events = array_merge($events, $newEvent);
         return $events;
     }
 
-    /*public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
         $crumbTitle = $this->getHeader($this->alias());
         $url = ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'TrainingSessionTraineeResults'];
+
         $Navigation->substituteCrumb($crumbTitle, 'TrainingSessionTraineeResults', $url);
         $Navigation->addCrumb($crumbTitle);
-    }*/
-
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) { 
-        $crumbTitle = $this->getHeader($this->alias());
-        $Navigation->substituteCrumb($crumbTitle, 'Results', $crumbTitle);
     }
 
     public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
@@ -126,8 +119,8 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
-    { 
-       if (isset($toolbarButtons['back'])) {
+    {  
+        if (isset($toolbarButtons['back'])) {
             $toolbarButtons['back']['url'] = $this->ControllerAction->url('Results');
             //$toolbarButtons['back']['url']['action'] = 'Assessments';
         }
@@ -237,10 +230,10 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
 
         if (!empty($TrainingCoursesResultTypesData)) {
 
-            $translatedReadableCol = $this->getExcelLabel($TrainingCoursesResultTypesData, 'Name');
+            //$translatedReadableCol = $this->getExcelLabel($TrainingCoursesResultTypesData, '');
 
-            $data[$columnOrder]['lookupColumn'] = 2;
-            $data[$columnOrder]['data'][] = ['Name', $translatedCol];
+            $data[$columnOrder]['lookupColumn'] = 1;
+            $data[$columnOrder]['data'][] = ['Result Type'];
 
             $modelData = $TrainingCoursesResultTypesData->find('all')
             ->select([
@@ -258,44 +251,39 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
 
     public function onImportPopulateTrainingSessionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {   
-        $training_courses = $this->request->query['id'];
-        $TrainingCourses = TableRegistry::get('training_courses');
-        $TrainingCoursesData = $TrainingCourses->find()
+        $training_courses = $this->request->query['training_courses'];
+        
+        $TrainingSession = TableRegistry::get('training_sessions');
+        $TrainingSessionData = $TrainingSession->find()
                                 ->where([
-                                    $TrainingCourses->aliasField('code') => $training_courses,
-                                ])->first();    
+                                    $TrainingSession->aliasField('training_course_id') => $training_courses,
+                                ]);
 
-        if(!empty($TrainingCoursesData)){
-            $TrainingSession = TableRegistry::get('training_sessions');
-            $TrainingSessionData = $TrainingSession->find()
-                                    ->where([
-                                        $TrainingSession->aliasField('training_course_id') => $TrainingCoursesData->id,
-                                    ]);
+        $translatedReadableCol = $this->getExcelLabel($TrainingSessionData, '');
 
-            $translatedReadableCol = $this->getExcelLabel($TrainingSessionData, 'Name');
+        $data[$columnOrder]['lookupColumn'] = 1;
+        $data[$columnOrder]['data'][] = [$translatedCol, 'Name'];
 
-            $data[$columnOrder]['lookupColumn'] = 2;
-            $data[$columnOrder]['data'][] = ['Name', $translatedCol];
-
-            $modelData = $TrainingSessionData->find('all')
-            ->select([
-                'name',
-                'code'
-            ]);  
-                                  
-            if (!empty($modelData)) {
-                foreach($modelData->toArray() as $row) {
-                    $data[$columnOrder]['data'][] = [
-                        $row->code,
-                        $row->name
-                    ];
-                }
+        $modelData = $TrainingSessionData->find('all')
+        ->select([
+            'code',
+            'name'
+        ]);  
+                              
+        if (!empty($modelData)) {
+            foreach($modelData->toArray() as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->code,
+                    $row->name
+                ];
             }
-        }                        
+        }
     }
                         
-
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+        echo "<pre>"; print_r($tempRow);die;
+
+
         return true;
     }
              

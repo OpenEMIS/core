@@ -423,7 +423,7 @@ class ImportBehavior extends Behavior
                     $tempRow['action_type'] = 'imported';
                     $activeModel->patchEntity($tableEntity, $tempRow);
                 }
-
+                    
                 $errors = $tableEntity->errors();
                 $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
 
@@ -541,14 +541,32 @@ class ImportBehavior extends Behavior
         $folder = $this->prepareDownload();
         $modelName = $this->config('model');
         $modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
-        // Do not lcalize file name as certain non-latin characters might cause issue
-        $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelName);
+        //5695 starts
+        if($modelName == 'Training_Session_Trainee_Results'){
+            $modelNameforTemplate = 'Training_Results';
+            $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelNameforTemplate);
+        }else{
+            // Do not lcalize file name as certain non-latin characters might cause issue
+            $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelName);
+        }//5695 ends
         $excelPath = $folder . DS . $excelFile;
 
         $mapping = $this->getMapping();
         $header = $this->getHeader($mapping);
+        //5695 starts
+        if($modelName == 'Training_Session_Trainee_Results'){
+            $newheader = [];
+            foreach ($header as $key => $value) {
+                if($value == 'Training Session'){
+                    $value = 'Training Session Code';
+                }else if($value == 'Training Result Type'){
+                    $value = 'Result Types';
+                }
+                $newheader[$key] = $value;
+            }
+            $header = $newheader;
+        }//5695 ends
         $dataSheetName = $this->getExcelLabel('general', 'data');
-
         $objPHPExcel = new \PHPExcel();
 
         $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $header, '');
@@ -620,6 +638,10 @@ class ImportBehavior extends Behavior
     {
         if (empty($title)) {
             $title = $dataSheetName;
+        }else{//5695 starts   
+            if($title == 'Import Training Session Trainee Results Data'){
+                $title = 'Import Training Results Data';
+            }//5695 ends   
         }
         $activeSheet = $objPHPExcel->getActiveSheet();
         $activeSheet->setTitle($dataSheetName);
@@ -936,6 +958,20 @@ class ImportBehavior extends Behavior
      */
     public function isCorrectTemplate($header, $sheet, $totalColumns, $row)
     {
+        //5695 starts
+        $model = $this->_table;
+        if($model->alias == 'ImportTrainingSessionTraineeResults'){
+            $newheader = [];
+            foreach ($header as $key => $value) {
+                if($value == 'Training Session'){
+                    $value = 'Training Session Code';
+                }else if($value == 'Training Result Type'){
+                    $value = 'Result Types';
+                }
+                $newheader[$key] = $value;
+            }
+            $header = $newheader;
+        }//5695 ends
         $cellsValue = [];
         for ($col=0; $col < $totalColumns; $col++) {
             $cell = $sheet->getCellByColumnAndRow($col, $row);
