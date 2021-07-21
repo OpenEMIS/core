@@ -125,7 +125,9 @@ class StudentOutcomesTable extends ControllerActionTable
             $session = $this->request->session();
             //POCOR-6215 starts
             $authUser = $session->read('Auth.User');
-            if($authUser['is_student'] == 1){
+            if($authUser['is_student'] == 1 && $authUser['is_guardian'] == 1){
+                $studentId = $session->read('Profile.StudentUser.primaryKey.id');
+            }else if($authUser['is_student'] == 1 && $authUser['is_guardian'] != 1){
                 $studentId = $session->read('Auth.User.id');
             }else{
                 $studentId = $session->read('Student.Students.id');
