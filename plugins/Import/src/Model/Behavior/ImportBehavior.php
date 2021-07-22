@@ -1488,7 +1488,6 @@ class ImportBehavior extends Behavior
                 $isOptional = substr_count($columnDescription, 'not required');
             }
 
-
             if ($foreignKey == self::FIELD_OPTION) {
                 if (!empty($cellValue)) {
                     if (array_key_exists($cellValue, $lookup[$col])) {
