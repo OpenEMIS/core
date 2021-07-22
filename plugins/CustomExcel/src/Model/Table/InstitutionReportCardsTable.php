@@ -59,6 +59,7 @@ class InstitutionReportCardsTable extends AppTable
                 'StudentTeacherRatio',
                 'TotalStaffs',
                 'TotalStudents',
+                'StudentTotalAbsences',
                 'StaffQualificationDuties',
                 'StaffQualificationPositions',
                 'StaffQualificationStaffType',
@@ -104,6 +105,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentTeacherRatio'] = 'onExcelTemplateInitialiseStudentTeacherRatio';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseTotalStaffs'] = 'onExcelTemplateInitialiseTotalStaffs';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseTotalStudents'] = 'onExcelTemplateInitialiseTotalStudents';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentTotalAbsences'] = 'onExcelTemplateInitialiseStudentTotalAbsences';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationDuties'] = 'onExcelTemplateInitialiseStaffQualificationDuties';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationPositions'] = 'onExcelTemplateInitialiseStaffQualificationPositions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationStaffType'] = 'onExcelTemplateInitialiseStaffQualificationStaffType';
@@ -613,6 +615,26 @@ class InstitutionReportCardsTable extends AppTable
 				->count()
 			;
 			return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStudentTotalAbsences(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionStudentAbsences = TableRegistry::get('institution_student_absences');
+			
+            $entity = $InstitutionStudentAbsences
+				->find()
+				->where([
+                    $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
+                ])
+				->where([
+                    $InstitutionStudentAbsences->aliasField('absence_type_id IN') => [1,2,3],
+                ])
+				->count();
+			
+            return $entity;
         }
     }
 	
