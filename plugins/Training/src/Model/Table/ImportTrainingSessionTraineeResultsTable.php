@@ -30,6 +30,7 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
         // $this->addBehavior('Import.Import');
         // register table once
         $this->Users = TableRegistry::get('User.Users');
+        $this->TrainingSessions = TableRegistry::get('training_sessions');
         $this->TrainingSessionTraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
     }
 
@@ -208,6 +209,11 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
         }                        
     }*/
 
+    public function onImportGetTrainingResultTypesId(Event $event, $cellValue)
+    {  
+        return $cellValue;
+    }
+
     public function onImportPopulateTrainingResultTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {
         $training_courses = $this->request->query['training_courses'];
@@ -247,6 +253,14 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
             }
         }
 
+    }
+
+    public function onImportGetTrainingSessionsId(Event $event, $cellValue)
+    {  
+        $record = $this->TrainingSessions->find()->select([$this->TrainingSessions->aliasField('id')])->where([$this->TrainingSessions->aliasField('code') => $cellValue])->first();
+        
+        $trainingSessionsId = $record->id;
+        return $trainingSessionsId;
     }
 
     public function onImportPopulateTrainingSessionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
