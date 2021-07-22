@@ -346,7 +346,7 @@ class StudentMealsTable extends ControllerActionTable
         ->where($conditions)
         ->first();
         if (isset($benefit)) {
-            $benefit = "Null";
+            $benefit = "";
 
         }
         else{
