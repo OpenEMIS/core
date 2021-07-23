@@ -862,6 +862,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $attr['value'] = $startDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($startDate);
         } else {
+            $attr['value'] = $startDate->format('Y-m-d');
+            $attr['attr']['value'] = $this->formatDate($startDate);
             $attr['type'] = 'hidden';
         }
 
