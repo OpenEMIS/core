@@ -209,7 +209,7 @@ class InstitutionsTable extends AppTable
     }//POCOR-5762 ends
 
     public function beforeAction(Event $event)
-    { 
+    {   
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
@@ -254,7 +254,7 @@ class InstitutionsTable extends AppTable
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {    
+    {
         if ($data[$this->alias()]['feature'] == 'Report.InstitutionSubjectsClasses') {
             $options['validate'] = 'subjectsClasses';
         } 
@@ -313,8 +313,18 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'infrastructure_level';
                     $fieldsOrder[] = 'format';
-                    break;                
-                
+                    break;
+                /*POCOR-5047 starts*/ 
+                case 'Report.StaffLeave':
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'position';
+                    $fieldsOrder[] = 'leave_type';
+                    $fieldsOrder[] = 'workflow_status';
+                    $fieldsOrder[] = 'format';
+                    break;
+                /*POCOR-5047 ends*/
                 default:
                     break;
             }
@@ -594,7 +604,7 @@ class InstitutionsTable extends AppTable
                          ['Report.InstitutionStudents',
                           'Report.InstitutionSubjectsClasses',
                           'Report.StudentAbsences', 
-                          'Report.StaffLeave', 
+                          //'Report.StaffLeave', 
                           'Report.InstitutionCases', 
                           'Report.ClassAttendanceNotMarkedRecords', 
                           'Report.InstitutionSubjects', 
@@ -984,6 +994,14 @@ class InstitutionsTable extends AppTable
                         $attr['value'] = $selectedPeriod->start_date;
                     }
                 }
+            } elseif (in_array($feature, ['Report.StaffLeave'])) {
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $academicPeriodId = $AcademicPeriods->getCurrent();
+                $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
+                $attr['type'] = 'date';
+                $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                $attr['value'] = $selectedPeriod->start_date;
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -1042,7 +1060,27 @@ class InstitutionsTable extends AppTable
                     $attr['value'] = Time::now();
                 }
                 $attr['value'] = $reportEndDate;
-            } else {
+            } elseif (in_array($feature, ['Report.StaffLeave'])) {
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $academicPeriodId = $AcademicPeriods->getCurrent();
+                $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
+
+                $attr['type'] = 'date';
+                $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                if ($academicPeriodId != $AcademicPeriods->getCurrent()) {
+                    $attr['value'] = $selectedPeriod->end_date;
+                } 
+                else {
+                    $attr['value'] = Time::now();
+                }
+                //POCOR-5907[START]
+                $attr['value'] = $selectedPeriod->end_date;
+                //POCOR-5907[END]
+            } 
+
+
+            else {
                 $attr['value'] = self::NO_FILTER;
             }
             
