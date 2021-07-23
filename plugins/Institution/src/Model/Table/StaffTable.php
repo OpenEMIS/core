@@ -1788,7 +1788,7 @@ class StaffTable extends ControllerActionTable
                     return $q->where(['Positions.is_homeroom' => 1]);
                 })
                 ->find('byInstitution', ['Institutions.id' => $institutionId])
-                ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+                //->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
                 ->where([
                     $this->aliasField('start_date <= ') => $todayDate,
                     'OR' => [
