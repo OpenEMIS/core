@@ -518,7 +518,7 @@ class NavigationComponent extends Component
             'Institutions.InstitutionContactPersons.index' => [
                 'title' => 'People',
                 'parent' => 'Contacts',
-                'selected' => ['Institutions.InstitutionContactPersons.view', 'Institutions.InstitutionContactPersons.add', 'Institutions.InstitutionContactPersons.edit', 'Institutions.InstitutionContactPersons.delete'],
+                'selected' => ['Institutions.InstitutionContactPersons', 'Institutions.InstitutionContactPersons.view', 'Institutions.InstitutionContactPersons.add', 'Institutions.InstitutionContactPersons.edit', 'Institutions.InstitutionContactPersons.delete'],
                 'params' => ['plugin' => 'Institution', 0 => $institutionId]
             ],
 
