@@ -1,3 +1,14 @@
+### [3.67.2] - 2021-07-23
+- Bug Fixed: Institution > Academic > Associations: Unable to add new record
+- Bug Fixed: Add Export button function - Institutions > Staff > Staff1 > Career > Positions (include institutions position type start end and status)
+- Bug Fixed: Add Export button function - Institutions > Finances > Budget
+- Bug Fixed: Add Export button function - Institutions > Finances > Expenditure
+- Bug Fixed: Institution > Survey > Forms: Date Enabled was set to a future date, but user is still able to view Survey Form
+- Bug Fixed: Institution > Staff > Career: Staff End of Assignment: Assignee section combines different users in one group
+- Bug Fixed: Reports>Surveys: Academic Period should be before Survey Form
+- Bug Fixed: Institution:404 error when creating a new institution when there are no institutions and deleting it
+- Bug Fixed: Administration>Security>Roles: Page is stuck after trying to grant permission
+
 ### [3.67.1] - 2021-07-09
 - Bug Fixed: Add default identity, staff position and add date range filter to Reports > Institution > Staff leave
 - Bug Fixed: Institution > Attendance > Students: Student has Enrolled status but is not appearing on Attendance page
