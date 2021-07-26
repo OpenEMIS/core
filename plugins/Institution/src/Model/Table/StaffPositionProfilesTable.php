@@ -859,9 +859,20 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $attr['visible'] = false;
         }
         else if($request->data[$this->alias()]['staff_change_type_id'] == '' || ($request->data[$this->alias()]['staff_change_type_id'] == 4)){
+            $attr['type'] = 'date';
             $attr['value'] = $startDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($startDate);
         } else {
+            $getStaffStartData = TableRegistry::get('institution_staff');
+            $getStaffStartDateData = $getStaffStartData->find()
+            ->where([
+                $getStaffStartData->aliasField('staff_id') => $entity->staff_id,
+                $getStaffStartData->aliasField('institution_id') => $entity->institution_id
+            ])
+            ->order([$getStaffStartData->aliasField('start_date') => 'DESC'])
+            ->first();
+            $startDate = $getStaffStartDateData->start_date;
+
             $attr['value'] = $startDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($startDate);
             $attr['type'] = 'hidden';
