@@ -14,7 +14,6 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     public function initialize(array $config) {
         $this->table('institution_classes');
         parent::initialize($config);
-
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
@@ -90,6 +89,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
+//        print_r($extra);die();
         $this->field('class_number', ['visible' => false]);
         $this->field('staff_id', ['visible' => false]);
         $this->field('institution_shift_id', ['visible' => false]);
@@ -125,7 +125,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                     'title' => __('Archive')
                 ]
             ];
-    
+
             foreach ($extraButtons as $key => $attr) {
                 if ($this->AccessControl->check($attr['permission'])) {
                     $button = [
@@ -136,7 +136,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                     $button['url']['action'] = $attr['action'];
                     $button['attr']['title'] = $attr['title'];
                     $button['label'] = $attr['icon'];
-    
+
                     $extra['toolbarButtons'][$key] = $button;
                 }
             }
@@ -144,29 +144,40 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
-
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+//        print_r($query);die();
+//        echo $quer    y;die();
 
         $query
             ->select([
                 'institution_class_id' => $ClassGrades->aliasField('institution_class_id'),
                 'education_grade_id' => $Assessments->aliasField('education_grade_id'),
                 'assessment_id' => $Assessments->aliasField('id'),
+//                'education_id' => $Classes->aliasField('education_grade_id'),
                 'assessment' => $query->func()->concat([
                     $Assessments->aliasField('code') => 'literal',
                     " - ",
-                    $Assessments->aliasField('name') => 'literal'
-                ])
+                    $Assessments->aliasField('name') => 'literal',
+
+                ]),
+//                'total_absences' => "(SELECT SUM(absent_days) FROM ".$studentAbsenceDays->table()." WHERE student_id =".$institutionStudentId.")",
+//            ])
+
             ])
+//            ->distinct()
             ->innerJoin(
                 [$ClassGrades->alias() => $ClassGrades->table()],
                 [$ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')]
+//                    $ClassGrades->aliasField('education_grade_id = ') . $Classes->aliasField('education_grade_id')]
+
+
             )
             ->innerJoin(
                 [$Assessments->alias() => $Assessments->table()],
@@ -185,10 +196,15 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             )
             ->group([
                 $ClassGrades->aliasField('institution_class_id'),
-                $Assessments->aliasField('id')
+//                $ClassGrades->aliasField('education_grade_id'),
+                $Assessments->aliasField('id'),
+//                $Classes->aliasField('id'),
             ])
+
             ->autoFields(true)
-            ;
+        ;
+//        echo $query;die();
+//        echo '<pre>';print_r($query->toArray());die();
 
         $extra['options']['order'] = [
             $EducationProgrammes->aliasField('order') => 'asc',
@@ -215,7 +231,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 {
                     $query
                         ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
-                        'InstitutionClasses.id = '.$ClassGrades->aliasField('institution_class_id'),
+                            'InstitutionClasses.id = '.$ClassGrades->aliasField('institution_class_id'),
                         ])
                         ->leftJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
                             'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
@@ -223,12 +239,12 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
                     // If only class permission is available but no subject permission available
                     if ($classPermission && !$subjectPermission) {
-                          $query->where([
-                                'OR' => [
-                                    ['InstitutionClasses.staff_id' => $userId],
-                                    ['ClassesSecondaryStaff.secondary_staff_id' => $userId]
-                                ]
-                            ]);
+                        $query->where([
+                            'OR' => [
+                                ['InstitutionClasses.staff_id' => $userId],
+                                ['ClassesSecondaryStaff.secondary_staff_id' => $userId]
+                            ]
+                        ]);
                     } else {
                         $query
                             ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
@@ -292,7 +308,6 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         ]);
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         // End
-
         if (!empty($selectedPeriod)) {
             $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
 
@@ -317,9 +332,12 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                                 $ClassGrades->aliasField('education_grade_id') => $selectedGrade
                             ]
                         )
+                        ->distinct()
                         ->where([
                             $Classes->aliasField('institution_id') => $institutionId,
-                            $Classes->aliasField('academic_period_id') => $selectedPeriod
+                            $Classes->aliasField('academic_period_id') => $selectedPeriod,
+                            $ClassGrades->aliasField('education_grade_id') => $selectedGrade
+
                         ])
                         ->count();
                 }
@@ -349,6 +367,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+//        echo $field;die();
         if ($field == 'name') {
             return __('Class Name');
         } else if ($field == 'total_male_students') {
@@ -361,10 +380,71 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     }
 
     public function onGetEducationGrade(Event $event, Entity $entity) {
+//        print_r($entity);die();
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $grade = $EducationGrades->get($entity->education_grade_id);
 
         return $grade->programme_grade_name;
+    }
+
+    public function onGetTotalMaleStudents(Event $event, Entity $entity) {
+
+        $studentClasses =TableRegistry::get('Institution.institutionClassStudents');
+        $users =TableRegistry::get('User.SecurityUsers');
+
+        $students = $studentClasses->find()
+//            ->select(['count(student_id) as totalstudent'])
+            ->where([$studentClasses->aliasField('institution_class_id') => $entity->institution_class_id,$studentClasses->aliasField('education_grade_id')=>$entity->education_grade_id])
+            ->toArray();
+//        $academicQuery = $studentClasses->query();
+        $totalMale =$i =0;
+//        print_r($entity);die();
+        foreach ($students as $student)
+        {
+            $studenId = $student->student_id;
+//            print_r($i);
+            $studentAvailble = $users->find()
+                ->where([$users->aliasField('id') => $studenId,$users->aliasField('gender_id')=>'1'])
+                ->first();
+            if ($studentAvailble)
+            {
+                $i = $i +1;
+                $totalMale = $totalMale + 1;
+            }
+        }
+        $entity->total_male_students =$totalMale;
+
+//        return $entity;
+    }
+
+    public function onGetTotalFemaleStudents(Event $event, Entity $entity) {
+
+        $studentClasses =TableRegistry::get('Institution.institutionClassStudents');
+        $users =TableRegistry::get('User.SecurityUsers');
+
+        $students = $studentClasses->find()
+//            ->select(['count(student_id) as totalstudent'])
+            ->where([$studentClasses->aliasField('institution_class_id') => $entity->institution_class_id,$studentClasses->aliasField('education_grade_id')=>$entity->education_grade_id])
+            ->toArray();
+//        $academicQuery = $studentClasses->query();
+        $totalMale =$i =0;
+//        print_r($entity);die();
+        foreach ($students as $student)
+        {
+            $studenId = $student->student_id;
+//            print_r($i);
+            $studentAvailble = $users->find()
+                ->where([$users->aliasField('id') => $studenId,$users->aliasField('gender_id')=>'2'])
+                ->first();
+            if ($studentAvailble)
+            {
+                $i = $i +1;
+                $totalMale = $totalMale + 1;
+            }
+        }
+        $entity->total_female_students =$totalMale;
+
+//        return $entity;
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
