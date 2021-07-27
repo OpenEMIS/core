@@ -27,7 +27,6 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
             'model'=>'TrainingSessionTraineeResults',
             'backUrl' => ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'Results']
         ]);
-        // $this->addBehavior('Import.Import');
         // register table once
         $this->Users = TableRegistry::get('User.Users');
         $this->TrainingSessions = TableRegistry::get('training_sessions');
@@ -36,9 +35,6 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
 
     public function beforeAction($event) {
         $session = $this->request->session();
-        /*if ($session->check('Institution.Institutions.id')) {
-            $this->institutionId = $session->read('Institution.Institutions.id');
-        }*/
         $this->systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
     }
 
@@ -66,7 +62,7 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
     }
 
     public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
-        $tempRow['entity'] = $this->TrainingSessionTraineeResults->newEntity();   
+        $tempRow['entity'] = $this->TrainingSessionTraineeResults->newEntity();  
     }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
@@ -123,7 +119,6 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
     {  
         if (isset($toolbarButtons['back'])) {
             $toolbarButtons['back']['url'] = $this->ControllerAction->url('Results');
-            //$toolbarButtons['back']['url']['action'] = 'Assessments';
         }
     }
 
@@ -141,73 +136,6 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
         }
         return $attr;
     }
-
-    /*public function onImportGetUsersId(Event $event, $cellValue)
-    {  
-        $record = $this->Users->find()->select([$this->Users->aliasField('id')])->where([$this->Users->aliasField('openemis_no') => $cellValue])->first();
-        
-        $userId = $record->id;
-        return $userId;
-    }
-
-    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
-    {   
-        $training_courses = $this->request->query['training_courses'];
-        $TrainingSession = TableRegistry::get('training_sessions');
-        $TrainingSessionData = $TrainingSession->find()
-                                ->where([
-                                    $TrainingSession->aliasField('code') => $training_courses,
-                                ])->toArray();     
-        
-        if(!empty($TrainingSessionData)){
-            $TrainingSessionsTrainees = TableRegistry::get('training_sessions_trainees');
-            $traineeData = $TrainingSessionsTrainees->find()
-                            ->where([
-                                $TrainingSessionsTrainees->aliasField('training_session_id') => $TrainingSessionData['training_sessions']['id'],
-                            ])->toArray();
-            $traineeIds = [];
-            if (!empty($traineeData)) {
-                foreach ($traineeData as $value) {
-                   $traineeIds[] = $value->trainee_id;
-                }
-
-                $UsersData = $Users->find()
-                            ->select([
-                                $Users->aliasField('id'),
-                                $Users->aliasField('first_name'),
-                                $Users->aliasField('middle_name'),
-                                $Users->aliasField('third_name'),
-                                $Users->aliasField('last_name'),
-                                $Users->aliasField('openemis_no')
-                            ])
-                            ->where([$Users->aliasField('id IN') => $traineeIds]);
-
-                $translatedReadableCol = $this->getExcelLabel($UsersData, 'Name');
-
-                $data[$columnOrder]['lookupColumn'] = 2;
-                $data[$columnOrder]['data'][] = ['Name', $translatedCol];
-                
-                $modelData = $UsersData->find('all')
-                ->select([ 
-                    'first_name', 
-                    'middle_name', 
-                    'third_name', 
-                    'last_name',
-                    'openemis_no'
-                ]);
-
-                if (!empty($modelData)) {
-                    foreach($modelData->toArray() as $row) {
-                        //$name = $row->first_name.' '.$row->middle_name.' '.$row->third_name.' '.$row->last_name; 
-                        $data[$columnOrder]['data'][] = [
-                            //$name,
-                            $row->openemis_no
-                        ];
-                    }
-                }
-            }
-        }                        
-    }*/
 
     public function onImportGetTrainingResultTypesId(Event $event, $cellValue)
     {  
@@ -235,8 +163,6 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
                                         ]);   
 
         if (!empty($TrainingCoursesResultTypesData)) {
-
-            //$translatedReadableCol = $this->getExcelLabel($TrainingCoursesResultTypesData, '');
 
             $data[$columnOrder]['lookupColumn'] = 1;
             $data[$columnOrder]['data'][] = ['Result Type'];
@@ -295,35 +221,36 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
     }
                         
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-        echo "<pre>"; print_r($tempRow);die;
+        $openemis_no = $tempRow['OpenEMIS_ID'];
+        $training_session_id = $tempRow['training_session'];
+        $tempRow['training_session_id'] = $training_session_id;
+        $Users = TableRegistry::get('security_users');
+        $userData = $Users->find()
+                        ->where([$Users->aliasField('openemis_no') => $openemis_no])
+                        ->first();
+        if(!empty($userData)){
+            $tempRow['trainee_id'] = $userData->id;
+        }
 
+        $TrainingSessionTraineeResults = TableRegistry::get('training_session_trainee_results');
+        $TraineeData = $TrainingSessionTraineeResults->find()
+                        ->where([$TrainingSessionTraineeResults->aliasField('trainee_id') => $userData->id,  $TrainingSessionTraineeResults->aliasField('training_session_id') => $training_session_id])
+                        ->first();
 
+        if(!empty($TraineeData)){
+            $tempRow['id'] = $TraineeData->id;
+
+            if($tempRow['result_types'] == 'Attendance'){
+                $tempRow['attendance_days'] = $tempRow['results'];
+            }else if($tempRow['result_types'] == 'Practical'){
+                $tempRow['practical'] = $tempRow['results'];
+            }else if($tempRow['result_types'] == 'Certificate'){
+                $tempRow['certificate_number'] = $tempRow['results'];
+            }else{ //Exam
+                $tempRow['result'] = $tempRow['results'];
+            }
+        }     
+        $tempRow['training_result_type_id'] = 0;          
         return true;
     }
-             
-        
-        
-    /*public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-       
-        $educationGradeId = $this->request->query['education_grade'];
-        $academicPeriodId = $this->AcademicPeriods->getCurrent();
-        $institutionId = $this->request->session()->read('Institution.Institutions.id');
-        $tempRow['institution_id'] = $institutionId;
-        $tempRow['academic_period_id'] = $academicPeriodId;
-        $classId = $this->request->query['class_name'];
-        $educationData = $this->InstitutionClassGrades->find()
-                        ->select([$this->InstitutionClassGrades->aliasField('education_grade_id')])
-                        ->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId])
-                        ->first();
-        $educationGradeId = $educationData->education_grade_id;
-        $tempRow['education_grade_id'] = $educationGradeId;
-        $assessment = $this->AssessmentPeriods->find()
-                        ->select([$this->AssessmentPeriods->aliasField('assessment_id')])
-                        ->where([$this->AssessmentPeriods->aliasField('id') => $tempRow['assessment_period_id']])
-                        ->first();
-        $tempRow['assessment_id'] = $assessment->assessment_id;
-        $tempRow['institution_classes_id'] = $tempRow['class_id'];
-        
-        return true;
-    }*/
 }
