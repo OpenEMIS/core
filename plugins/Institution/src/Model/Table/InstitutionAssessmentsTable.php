@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
+use Cake\Datasource\ResultSetInterface;
 
 class InstitutionAssessmentsTable extends ControllerActionTable {
     public function initialize(array $config) {
@@ -186,7 +187,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 $ClassGrades->aliasField('institution_class_id'),
                 $Assessments->aliasField('id')
             ])
-            //->autoFields(false)
+            ->autoFields(true)
             ;
 
         $extra['options']['order'] = [
@@ -338,6 +339,13 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 unset($extra['toolbarButtons']['export']);
             }
         }
+
+        $query
+            ->formatResults(function (ResultSetInterface $results) {
+                return $results->map(function ($row) {
+                    return $row;
+                });
+            });
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
@@ -439,26 +447,6 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 ])->count();
         
         return $count;
-    }
-
-    /**
-     * Function to calculate total subject - POCOR-6183
-     * @param Entity $entity and Event $event
-     * @return integer 
-     */
-    public function onGetSubjects(Event $event, Entity $entity)
-    {
-        $grade = $entity->education_grade_id;
-        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
-        $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-        $count = $EducationGradesSubjects->find()
-                    ->leftJoin([$EducationSubjects->alias() => $EducationSubjects->table()], [
-                        $EducationSubjects->aliasField('id').' = ' . $EducationGradesSubjects->aliasField('education_subject_id')
-                    ])
-                    ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $grade])
-                    ->count();
-
-        return $count;   
     }
 
     /**
