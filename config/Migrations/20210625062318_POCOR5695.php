@@ -29,6 +29,9 @@ class POCOR5695 extends AbstractMigration
         $this->execute('CREATE TABLE `z_5695_labels` LIKE `labels`');
         $this->execute('INSERT INTO `z_5695_labels` SELECT * FROM `labels`');
 
+        $this->execute('CREATE TABLE `zz_5695_import_mapping` LIKE `import_mapping`');
+        $this->execute('INSERT INTO `zz_5695_import_mapping` SELECT * FROM `import_mapping`');
+
         //enable add button in Profile > Staff > Training 
         $this->execute("UPDATE security_functions SET _add = 'TrainingNeeds.add' WHERE name = 'Training Needs' AND controller = 'Profiles' AND module = 'Personal' AND category = 'Staff - Training'");
 
@@ -91,7 +94,61 @@ class POCOR5695 extends AbstractMigration
 
         $this->insert('locale_contents', $localeContent);
 
-        /*SELECT *  FROM `phinxlog` WHERE `migration_name` LIKE '%POCOR5695%'*/
+        //import_mapping for import training
+        $data = [
+            [
+                'model' => 'Training.TrainingSessionTraineeResults',
+                'column_name' => 'result_types',
+                'description' => '',
+                'order' => 67,
+                'is_optional' => 0,
+                'foreign_key' => 3,
+                'lookup_plugin' => '',
+                'lookup_model' => 'TrainingResultTypes',
+                'lookup_column' => 'name'
+            ],
+            [
+                'model' => 'Training.TrainingSessionTraineeResults',
+                'column_name' => 'training_session',
+                'description' => '',
+                'order' => 32,
+                'is_optional' => 0,
+                'foreign_key' => 3,
+                'lookup_plugin' => '',
+                'lookup_model' => 'TrainingSessions',
+                'lookup_column' => 'code'
+            ],
+            [
+                'model' => 'Training.TrainingSessionTraineeResults',
+                'column_name' => 'OpenEMIS_ID',
+                'description' => '',
+                'order' => 27,
+                'is_optional' => 0,
+                'foreign_key' => 0,
+                'lookup_plugin' => '',
+                'lookup_model' => '',
+                'lookup_column' => ''
+            ],
+            [
+                'model' => 'Training.TrainingSessionTraineeResults',
+                'column_name' => 'results',
+                'description' => '',
+                'order' => 90,
+                'is_optional' => 0,
+                'foreign_key' => 0,
+                'lookup_plugin' => '',
+                'lookup_model' => '',
+                'lookup_column' => ''
+            ]
+        ];
+
+        $this->insert('import_mapping', $data);  
+        //update security function for permission
+        $importTrainingSql = "UPDATE security_functions
+                                SET `_execute` = 'ImportTrainingSessionTraineeResults.add|ImportTrainingSessionTraineeResults.template|ImportTrainingSessionTraineeResults.results|ImportTrainingSessionTraineeResults.downloadFailed|ImportTrainingSessionTraineeResults.downloadPassed'
+                                WHERE `id` = 5041 AND module ='Administration' AND category ='Trainings'";
+
+        $this->execute($importTrainingSql);
     }
 
     //rollback
@@ -108,6 +165,9 @@ class POCOR5695 extends AbstractMigration
 
         $this->execute('DROP TABLE IF EXISTS `training_session_trainee_results`');
         $this->execute('RENAME TABLE `z_5695_training_session_trainee_results` TO `training_session_trainee_results`');
+
+        $this->execute('DROP TABLE IF EXISTS `import_mapping`');
+        $this->execute('RENAME TABLE `z_5695_import_mapping` TO `import_mapping`');
 
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Course Category'");
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Attendance Days'");
