@@ -515,10 +515,10 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution', 0 => $institutionId]
             ],
 
-            'InstitutionContactPersons.index' => [
+            'Institutions.InstitutionContactPersons.index' => [
                 'title' => 'People',
                 'parent' => 'Contacts',
-                'selected' => ['InstitutionContactPersons.view', 'InstitutionContactPersons.add', 'InstitutionContactPersons.edit', 'InstitutionContactPersons.delete'],
+                'selected' => ['Institutions.InstitutionContactPersons.view', 'Institutions.InstitutionContactPersons.add', 'Institutions.InstitutionContactPersons.edit', 'Institutions.InstitutionContactPersons.delete'],
                 'params' => ['plugin' => 'Institution', 0 => $institutionId]
             ],
 
