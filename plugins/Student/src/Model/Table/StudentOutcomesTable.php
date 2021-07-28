@@ -123,7 +123,15 @@ class StudentOutcomesTable extends ControllerActionTable
         $subjectOptions = [];
         if (!empty($selectedTemplate)){
             $session = $this->request->session();
-            $studentId = $session->read('Student.Students.id');
+            //POCOR-6215 starts
+            $authUser = $session->read('Auth.User');
+            if($authUser['is_student'] == 1 && $authUser['is_guardian'] == 1){
+                $studentId = $session->read('Profile.StudentUser.primaryKey.id');
+            }else if($authUser['is_student'] == 1 && $authUser['is_guardian'] != 1){
+                $studentId = $session->read('Auth.User.id');
+            }else{
+                $studentId = $session->read('Student.Students.id');
+            }//POCOR-6215 ends
             $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
