@@ -60,6 +60,7 @@ class InstitutionReportCardsTable extends AppTable
                 'TotalStaffs',
                 'TotalStudents',
                 'StudentTotalAbsences',
+                'StaffTotalAbsences',
                 'StaffQualificationDuties',
                 'StaffQualificationPositions',
                 'StaffQualificationStaffType',
@@ -106,6 +107,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseTotalStaffs'] = 'onExcelTemplateInitialiseTotalStaffs';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseTotalStudents'] = 'onExcelTemplateInitialiseTotalStudents';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentTotalAbsences'] = 'onExcelTemplateInitialiseStudentTotalAbsences';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffTotalAbsences'] = 'onExcelTemplateInitialiseStaffTotalAbsences';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationDuties'] = 'onExcelTemplateInitialiseStaffQualificationDuties';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationPositions'] = 'onExcelTemplateInitialiseStaffQualificationPositions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationStaffType'] = 'onExcelTemplateInitialiseStaffQualificationStaffType';
@@ -633,6 +635,32 @@ class InstitutionReportCardsTable extends AppTable
                     $InstitutionStudentAbsences->aliasField('absence_type_id IN') => [1,2,3],
                 ])
 				->count();
+			
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffTotalAbsences(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionStaff = TableRegistry::get('Institution.Staff');
+            $InstitutionStaffAttendances = TableRegistry::get('institution_staff_attendances');
+
+            $totalStaff = $InstitutionStaff
+				->find()
+				->where([
+                    $InstitutionStaff->aliasField('institution_id') => $params['institution_id'],
+                ])
+				->count();
+				
+            $staffPresent = $InstitutionStaffAttendances
+				->find()
+				->where([
+                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InstitutionStaffAttendances->aliasField('institution_id') => $params['institution_id'],
+                ])
+				->count();
+			$entity = $totalStaff - $staffPresent;
 			
             return $entity;
         }
