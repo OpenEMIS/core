@@ -65,6 +65,7 @@ class InstitutionReportCardsTable extends AppTable
                 'StaffQualificationPositions',
                 'StaffQualificationStaffType',
                 'InstitutionCommittees',
+                'InstitutionClassRooms',
             ]
         ]);
     }
@@ -112,6 +113,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationPositions'] = 'onExcelTemplateInitialiseStaffQualificationPositions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationStaffType'] = 'onExcelTemplateInitialiseStaffQualificationStaffType';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionCommittees'] = 'onExcelTemplateInitialiseInstitutionCommittees';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClassRooms'] = 'onExcelTemplateInitialiseInstitutionClassRooms';
 		return $events;
     }
 
@@ -1610,6 +1612,24 @@ class InstitutionReportCardsTable extends AppTable
 				->hydrate(false)
 				->first()
 			;
+            return $entity;
+        }
+    }	
+	
+	public function onExcelTemplateInitialiseInstitutionClassRooms(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
+			$entity = $InstitutionRooms
+				->find()
+				->contain('RoomTypes')
+				->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])
+				->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])
+				->where('RoomTypes.classification = 1')
+				->group($InstitutionRooms->aliasField('room_type_id'))
+				->count()
+			;
+			
             return $entity;
         }
     }
