@@ -180,6 +180,7 @@ class AcademicPeriodsTable extends AppTable
                 'end_date' =>$entity->end_date,
                 'current' =>$entity->start_date,
                 'academic_period_id' =>'',
+                'parent_id' => $entity->parent_id,
             ];
           
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
@@ -199,6 +200,7 @@ class AcademicPeriodsTable extends AppTable
                 'end_date' =>$entity->end_date,
                 'current' =>$entity->start_date,
                 'academic_period_id' =>$entity->id,
+                'parent_id' => $entity->parent_id,
             ];
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
