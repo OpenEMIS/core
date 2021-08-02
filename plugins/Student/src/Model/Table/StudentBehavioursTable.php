@@ -28,7 +28,7 @@ class StudentBehavioursTable extends AppTable {
         
 	public function beforeFind( Event $event, Query $query )
 	{   
-		if ($this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
+		if (isset($this->controller->name) && $this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
 			if ($this->Session->read('Auth.User.is_guardian') == 1) {
 				$sId = $this->Session->read('Student.ExaminationResults.student_id'); 
 				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
