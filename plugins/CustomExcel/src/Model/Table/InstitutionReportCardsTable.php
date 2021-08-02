@@ -66,6 +66,7 @@ class InstitutionReportCardsTable extends AppTable
                 'StaffQualificationStaffType',
                 'InstitutionCommittees',
                 'InstitutionClassRooms',
+                'TeachingStaffTotalStaffRatio',
             ]
         ]);
     }
@@ -114,6 +115,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationStaffType'] = 'onExcelTemplateInitialiseStaffQualificationStaffType';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionCommittees'] = 'onExcelTemplateInitialiseInstitutionCommittees';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClassRooms'] = 'onExcelTemplateInitialiseInstitutionClassRooms';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseTeachingStaffTotalStaffRatio'] = 'onExcelTemplateInitialiseTeachingStaffTotalStaffRatio';
 		return $events;
     }
 
@@ -1629,6 +1631,36 @@ class InstitutionReportCardsTable extends AppTable
 				->group($InstitutionRooms->aliasField('room_type_id'))
 				->count()
 			;
+			
+            return $entity;
+        }
+    }	
+	
+	public function onExcelTemplateInitialiseTeachingStaffTotalStaffRatio(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionStaff = TableRegistry::get('Institution.Staff');
+			$teachingStaff = $InstitutionStaff
+				->find()
+				->contain('Positions.StaffPositionTitles')
+				->where([$InstitutionStaff->aliasField('institution_id') => $params['institution_id']])
+				->where('StaffPositionTitles.type = 1')
+				->count()
+			;
+			
+			$totalStaffs = $InstitutionStaff
+				->find()
+				->contain('Users')
+				->where([$InstitutionStaff->aliasField('institution_id') => $params['institution_id']])
+				->count()
+			;
+			
+			if(!empty($teachingStaff) && !empty($totalStaffs)) {
+				$entity = $teachingStaff/$totalStaffs;
+				$entity = number_format((float)$entity, 2, '.', '');
+			} else{
+				$entity = 0;
+			}
 			
             return $entity;
         }
