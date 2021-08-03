@@ -169,9 +169,7 @@ class POCOR5695 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `import_mapping`');
         $this->execute('RENAME TABLE `z_5695_import_mapping` TO `import_mapping`');
 
-        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Course Category'");
-        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Attendance Days'");
-        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Certificate Number'");
-        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Practical'");
+        $this->execute('DROP TABLE IF EXISTS `locale_contents`');
+        $this->execute('RENAME TABLE `z_5695_locale_contents` TO `locale_contents`');
     }
 }
