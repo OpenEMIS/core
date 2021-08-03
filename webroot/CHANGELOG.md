@@ -1,3 +1,14 @@
+### [3.67.3] - 2021-08-03
+- Bug Fixed: Administration > System Setup > Localization > Translations: Remove Nursery from Translation
+- Bug Fixed: Administration> Examinations > Centres > Add: Exam Centre was not created when selecting All Institutions
+- Bug Fixed: Institution > Performance > Assessment: Student from a Multigrade class is appearing in both grades in Assessment page
+- Bug Fixed: Personal>Student>Academic>Outcomes tab: User cannot see all subjects
+- Bug Fixed: Institutions>Meals>Students: Display the Meals Received section wrongly,Displays "None" instead of "Meal Received"
+- Bug Fixed: Institution > Academic > Classes: Students who are promoted without selecting next class will not be found in class
+- Bug Fixed: Institutions > Staff > Edit : Issues with editing staff's employment
+- Bug Fixed: Administration > System Setup > Field Options: 404 error when he is trying to delete a Student Absence Reason
+- Bug Fixed: Institutions>Academic>Subjects-Cannot remove extra subjects
+
 ### [3.67.2] - 2021-07-23
 - Bug Fixed: Institution > Academic > Associations: Unable to add new record
 - Bug Fixed: Add Export button function - Institutions > Staff > Staff1 > Career > Positions (include institutions position type start end and status)
