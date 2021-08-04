@@ -378,6 +378,10 @@ class InstitutionFeesTable extends ControllerActionTable
     {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
         $academicPeriod = $this->request->query['academic_period_id'];
+
+        if (empty($academicPeriod)) {
+            $academicPeriod = $this->request->data['InstitutionFees']['academic_period_id'];
+        }
 		$educationProgrammes = TableRegistry::get('EducationProgrammes');
 		$query
 		->select(['total_fee' => 'InstitutionFees.total','education_grade' => 'EducationGrades.name','education_programme' => 'EducationProgrammes.name'])
