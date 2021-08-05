@@ -332,4 +332,51 @@ class InfrastructureWashHygienesTable extends ControllerActionTable {
         ]);
     }
 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+
+        $extraField[] = [
+            'key'   => 'infrastructure_wash_hygiene_type_id',
+            'field' => 'infrastructure_wash_hygiene_type_id',
+            'type'  => 'string',
+            'label' => __('Type')
+        ];
+
+        $extraField[] = [
+            'key'   => 'infrastructure_wash_hygiene_soapash_availability_id',
+            'field' => 'infrastructure_wash_hygiene_soapash_availability_id',
+            'type'  => 'string',
+            'label' => __('Soap/Ash Availability')
+        ];
+
+        $extraField[] = [
+            'key'   => 'infrastructure_wash_hygiene_education_id',
+            'field' => 'infrastructure_wash_hygiene_education_id',
+            'type'  => 'string',
+            'label' => __('Hygiene Education')
+        ];
+
+        $extraField[] = [
+            'key'   => 'infrastructure_wash_hygiene_total_male',
+            'field' => 'infrastructure_wash_hygiene_total_male',
+            'type'  => 'integer',
+            'label' => __('Total Male')
+        ];
+
+        $extraField[] = [
+            'key'   => 'infrastructure_wash_hygiene_total_female',
+            'field' => 'infrastructure_wash_hygiene_total_female',
+            'type'  => 'integer',
+            'label' => __('Total Female')
+        ];
+
+        $extraField[] = [
+            'key'   => 'infrastructure_wash_hygiene_total_mixed',
+            'field' => 'infrastructure_wash_hygiene_total_mixed',
+            'type'  => 'integer',
+            'label' => __('Total Mixed')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
 }
