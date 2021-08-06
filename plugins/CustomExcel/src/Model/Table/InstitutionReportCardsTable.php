@@ -67,6 +67,7 @@ class InstitutionReportCardsTable extends AppTable
                 'InstitutionCommittees',
                 'InstitutionClassRooms',
                 'TeachingStaffTotalStaffRatio',
+                'StudentFromEducationGrade',
             ]
         ]);
     }
@@ -116,6 +117,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionCommittees'] = 'onExcelTemplateInitialiseInstitutionCommittees';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClassRooms'] = 'onExcelTemplateInitialiseInstitutionClassRooms';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseTeachingStaffTotalStaffRatio'] = 'onExcelTemplateInitialiseTeachingStaffTotalStaffRatio';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentFromEducationGrade'] = 'onExcelTemplateInitialiseStudentFromEducationGrade';
 		return $events;
     }
 
@@ -1662,6 +1664,74 @@ class InstitutionReportCardsTable extends AppTable
 				$entity = 0;
 			}
 			
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStudentFromEducationGrade(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionStudents = TableRegistry::get('institution_students');
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+
+            $EducationGradesData = $InstitutionGrades->find()
+				->select([
+					'id' => 'EducationGrades.id',
+					'name' => 'EducationGrades.name'
+				])
+				->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+				->where([
+					'EducationSystems.academic_period_id' => $params['academic_period_id']
+				])
+				->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])	
+				->hydrate(false)
+				->toArray()
+			;
+			//echo '<pre>';print_r($EducationGradesData);die;
+			$enrolledStudentsData = 0;
+			foreach ($EducationGradesData as $value) {
+				$enrolledStudentsData = $InstitutionStudents->find()
+					->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
+					->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
+					->where([$InstitutionStudents->aliasField('student_status_id') => 1])
+					->hydrate(false)
+					->count()
+				;
+				$dropoutStudentsData = $InstitutionStudents->find()
+					->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
+					->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
+					->where([$InstitutionStudents->aliasField('student_status_id') => 4])
+					->hydrate(false)
+					->count()
+				;
+				$repeatedStudentsData = $InstitutionStudents->find()
+					->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
+					->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
+					->where([$InstitutionStudents->aliasField('student_status_id') => 8])
+					->hydrate(false)
+					->count()
+				$institutionClassesData = $InstitutionClasses->find()
+					->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
+					->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
+					->where([$InstitutionStudents->aliasField('student_status_id') => 8])
+					->hydrate(false)
+					->count()
+				;
+				$entity[] = [
+					'education_grade_name' => (!empty($value['name']) ? $value['name'] : ''),
+					'education_grade_id' => (!empty($value['id']) ? $value['id'] : 0),
+					'student_enrolment' => $enrolledStudentsData,
+					'student_repetition' => $repeatedStudentsData,
+					'student_dropout' => $dropoutStudentsData,
+					'total_student' => $enrolledStudentsData + $repeatedStudentsData + $dropoutStudentsData,
+				];	
+			}
+			//echo '<pre>';print_r($entity);die;
             return $entity;
         }
     }
