@@ -429,10 +429,10 @@ class StaffBehavioursTable extends ControllerActionTable
         if (!empty($compareDate) && $compareDate->value != 0) {
             $addDays = $compareDate->value;
             $getRecord = $this->find()
-                            ->select([$this->aliasField('created')])
+                            ->select([$this->aliasField('date_of_behaviour')])
                             ->where([$this->aliasField('id') => $entity->id])
                             ->first();
-            $date = date('Y-m-d', strtotime($getRecord->created));
+            $date = date('Y-m-d', strtotime($getRecord->date_of_behaviour));
             $newDate = date('Y-m-d', strtotime($date. ' + '. $addDays .' days'));
             $today = new Date();
             $todayDate = date('Y-m-d', strtotime($today));
@@ -445,7 +445,7 @@ class StaffBehavioursTable extends ControllerActionTable
     }
     
 
-    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    /*public function deleteBeforeAction(Event $event, ArrayObject $extra)
     {   
         $id = $this->request->data['primaryKey'];
         $jsonData = base64_decode($id);
@@ -476,6 +476,6 @@ class StaffBehavioursTable extends ControllerActionTable
                 return $this->controller->redirect($action);
             }
         }
-    }
+    }*/
     /*POCOR-5177 ends*/
 }
