@@ -73,22 +73,22 @@ class POCOR5695 extends AbstractMigration
             [
                 'en' => 'Course Category',
                 'created_user_id' => 1,
-                'created' => 'NOW()'
+                'created' => NOW()
             ],
             [
                 'en' => 'Attendance Days',
                 'created_user_id' => 1,
-                'created' => 'NOW()'
+                'created' => NOW()
             ],
             [
                 'en' => 'Certificate Number',
                 'created_user_id' => 1,
-                'created' => 'NOW()'
+                'created' => NOW()
             ],
             [
                 'en' => 'Practical',
                 'created_user_id' => 1,
-                'created' => 'NOW()'
+                'created' => NOW()
             ]
         ];
 
