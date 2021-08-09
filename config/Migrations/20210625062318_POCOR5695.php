@@ -69,26 +69,27 @@ class POCOR5695 extends AbstractMigration
           values (uuid(), 'TrainingCourses', 'training_course_category_id', 'Administration -> Training -> Course', 'Course Category', 1, 1, NOW())");
 
         //locale conversion
+        $now = date('Y-m-d H:i:s');
         $localeContent = [
             [
                 'en' => 'Course Category',
                 'created_user_id' => 1,
-                'created' => NOW()
+                'created' => $now
             ],
             [
                 'en' => 'Attendance Days',
                 'created_user_id' => 1,
-                'created' => NOW()
+                'created' => $now
             ],
             [
                 'en' => 'Certificate Number',
                 'created_user_id' => 1,
-                'created' => NOW()
+                'created' => $now
             ],
             [
                 'en' => 'Practical',
                 'created_user_id' => 1,
-                'created' => NOW()
+                'created' => $now
             ]
         ];
 
