@@ -106,9 +106,9 @@ class AbsencesTable extends ControllerActionTable
     }
 
     public function onGetSubjects(Event $event, Entity $entity)
-    {    
-        $EducationSubject = TableRegistry::get('Education.EducationSubjects');
-        $result = $EducationSubject
+    {   
+        $InstitutionSubjects = TableRegistry::get('institution_subjects');
+        $result = $InstitutionSubjects
             ->find()
             ->select(['name'])
             ->where(['id' => $entity->subjects])
