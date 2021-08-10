@@ -179,7 +179,7 @@ class AcademicPeriodsTable extends AppTable
                 'start_date' =>$entity->start_date,
                 'end_date' =>$entity->end_date,
                 'current' =>$entity->current,
-                'academic_period_id' =>'',
+                'academic_period_id' =>$entity->id,
                 'parent_id' => $entity->parent_id,
             ];
           
