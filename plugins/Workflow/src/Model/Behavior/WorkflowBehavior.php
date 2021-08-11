@@ -538,43 +538,56 @@ class WorkflowBehavior extends Behavior
                     });
             }
         }
-        //echo "<pre>"; print_r($this->_table); die;
+        
         //POCOR-5695 starts
-        if ($filterConfig['area']) {
-            $selectedArea = $this->_table->ControllerAction->getVar('selectedArea');
-            if (!is_null($selectedArea) && $selectedArea != -1) {
-                $query->where(['area_id' => $selectedArea]);
-            }
-        }
-
-        if ($filterConfig['period'] && $filterConfig['month']) { 
-            $selectedPeriods = $this->_table->ControllerAction->getVar('selectedPeriods');
-            $selectedMonth = $this->_table->ControllerAction->getVar('selectedMonth');
-            $checkFlag = 0;
-            if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && ($selectedMonth == -1)) {
-                
-                $compare_start_date = $selectedPeriods .'-01-01';
-                $compare_end_date = $selectedPeriods .'-12-31';   
-                $checkFlag =1;
-            }else if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && (!is_null($selectedMonth) && $selectedMonth != -1)) {
-
-                $cal_date_in_month = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedPeriods); //calcualte days in given month in given year
-                $compare_start_date = $selectedPeriods .'-'. $selectedMonth.'-'.'01';
-                $compare_end_date = $selectedPeriods .'-'. $selectedMonth.'-'.$cal_date_in_month;   
-                $checkFlag =1;
-            }
-            if($checkFlag == 1){
-                $query->where([
-                    'OR'=>[
-                            ['start_date >=' => $compare_start_date, 'end_date <=' => $compare_end_date],
-                            ['start_date >=' => $compare_start_date, 'start_date <=' => $compare_end_date],
-                            ['end_date >=' => $compare_start_date, 'end_date <=' => $compare_end_date]
-                        ]
+        if($this->_table->alias != 'TrainingNeeds'){
+            $TrainingSessions = TableRegistry::get('training_sessions');
+            $query->leftJoin(
+                    [$TrainingSessions->alias() => $TrainingSessions->table()],
+                    [
+                        $this->_table->aliasField('training_session_id = ') . $TrainingSessions->aliasField('id'),
                     ]
                 );
-            }
-        }//POCOR-5695 ends
         
+            if ($filterConfig['area']) {
+                $selectedArea = $this->_table->ControllerAction->getVar('selectedArea');
+                if (!is_null($selectedArea) && $selectedArea != -1) {
+                    $query->where([$TrainingSessions->aliasField('area_id') => $selectedArea]);
+                }
+            }
+
+            if ($filterConfig['period'] && $filterConfig['month']) { 
+                $selectedPeriods = $this->_table->ControllerAction->getVar('selectedPeriods');
+                $selectedMonth = $this->_table->ControllerAction->getVar('selectedMonth');
+                $checkFlag = 0;
+
+                
+                if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && ($selectedMonth == -1)) {
+                    $compare_start_date = $selectedPeriods .'-01-01';
+                    $compare_end_date = $selectedPeriods .'-12-31';   
+                    $checkFlag =1;
+                }else if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && (!is_null($selectedMonth) && $selectedMonth != -1)) {
+
+                    $cal_date_in_month = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedPeriods); //calcualte days in given month in given year
+                    $compare_start_date = $selectedPeriods .'-'. $selectedMonth.'-'.'01';
+                    $compare_end_date = $selectedPeriods .'-'. $selectedMonth.'-'.$cal_date_in_month;   
+                    $checkFlag =1;
+                }
+                if($checkFlag == 1){
+
+                    $query->where([
+                        'OR'=>[
+                                [$TrainingSessions->aliasField('start_date >=') => $compare_start_date, $TrainingSessions->aliasField('end_date <=') => $compare_end_date],
+                                [$TrainingSessions->aliasField('start_date >=') => $compare_start_date, $TrainingSessions->aliasField('start_date <=') => $compare_end_date],
+                                [$TrainingSessions->aliasField('end_date >=') => $compare_start_date, $TrainingSessions->aliasField('end_date <=') => $compare_end_date]
+                            ]
+                        ]
+                    );
+                }
+
+            }//POCOR-5695 ends
+        }
+
         if ($this->isCAv4()) {
             $extra['options'] = $options;
         }
