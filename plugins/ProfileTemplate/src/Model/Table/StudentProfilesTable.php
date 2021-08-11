@@ -1016,6 +1016,7 @@ class StudentProfilesTable extends ControllerActionTable
         $where = [];
         $where[$institutionClassStudents->aliasField('education_grade_id')] = $educationGradeId;
         $where[$institutionClassStudents->aliasField('academic_period_id')] = $academicPeriodId;
+        $where[$institutionClassStudents->aliasField('institution_id')] = $institutionId;
         if (!is_null($studentId)) {
             $where[$institutionClassStudents->aliasField('student_id')] = $studentId;
         }
