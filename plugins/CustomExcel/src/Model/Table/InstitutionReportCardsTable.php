@@ -1671,9 +1671,10 @@ class InstitutionReportCardsTable extends AppTable
 	public function onExcelTemplateInitialiseStudentFromEducationGrade(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionStudents = TableRegistry::get('institution_students');
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
 
             $EducationGradesData = $InstitutionGrades->find()
 				->select([
@@ -1688,50 +1689,124 @@ class InstitutionReportCardsTable extends AppTable
 				->hydrate(false)
 				->toArray()
 			;
-			//echo '<pre>';print_r($EducationGradesData);die;
 			$enrolledStudentsData = 0;
 			foreach ($EducationGradesData as $value) {
-				$enrolledStudentsData = $InstitutionStudents->find()
+				$enrolledMaleStudentsData = $InstitutionStudents->find()
+					->contain('Users')
 					->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
 					->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
 					->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
 					->where([$InstitutionStudents->aliasField('student_status_id') => 1])
+					->where([$InstitutionStudents->Users->aliasField('gender_id') => 1])
 					->hydrate(false)
 					->count()
 				;
-				$dropoutStudentsData = $InstitutionStudents->find()
+				$enrolledFemaleStudentsData = $InstitutionStudents->find()
+					->contain('Users')
+					->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
+					->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
+					->where([$InstitutionStudents->aliasField('student_status_id') => 1])
+					->where([$InstitutionStudents->Users->aliasField('gender_id') => 2])
+					->hydrate(false)
+					->count()
+				;
+				$enrolledStudentsData = $enrolledMaleStudentsData + $enrolledFemaleStudentsData;
+
+				$dropoutMaleStudentsData = $InstitutionStudents->find()
+					->contain('Users')
 					->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
 					->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
 					->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
 					->where([$InstitutionStudents->aliasField('student_status_id') => 4])
+					->where([$InstitutionStudents->Users->aliasField('gender_id') => 1])
 					->hydrate(false)
 					->count()
 				;
-				$repeatedStudentsData = $InstitutionStudents->find()
+				$dropoutFemaleStudentsData = $InstitutionStudents->find()
+					->contain('Users')
 					->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
 					->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
 					->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
-					->where([$InstitutionStudents->aliasField('student_status_id') => 8])
+					->where([$InstitutionStudents->aliasField('student_status_id') => 4])
+					->where([$InstitutionStudents->Users->aliasField('gender_id') => 2])
 					->hydrate(false)
 					->count()
-				$institutionClassesData = $InstitutionClasses->find()
+				;
+				$dropoutStudentsData = $dropoutMaleStudentsData + $dropoutFemaleStudentsData;
+
+				$repeatedMaleStudentsData = $InstitutionStudents->find()
+					->contain('Users')
 					->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
 					->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
 					->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
 					->where([$InstitutionStudents->aliasField('student_status_id') => 8])
+					->where([$InstitutionStudents->Users->aliasField('gender_id') => 1])
+					->hydrate(false)
+					->count()
+				;
+				$repeatedFemaleStudentsData = $InstitutionStudents->find()
+					->contain('Users')
+					->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
+					->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
+					->where([$InstitutionStudents->aliasField('student_status_id') => 8])
+					->where([$InstitutionStudents->Users->aliasField('gender_id') => 2])
+					->hydrate(false)
+					->count()
+				;
+				$repeatedStudentsData = $repeatedMaleStudentsData + $repeatedFemaleStudentsData;
+				
+				$institutionStaffData = $InstitutionSubjects->find()
+					->innerJoin(
+					['SubjectStaff' => ' institution_subject_staff'],
+					[
+						'SubjectStaff.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
+					]
+					)
+					->where([$InstitutionSubjects->aliasField('education_grade_id') => $value['id']])
+					->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
+					->hydrate(false)
+					->count()
+				;
+				$secondaryTeacherData = $InstitutionClasses->find()
+					->innerJoin(
+					['InstitutionClassGrades' => ' institution_class_grades'],
+					[
+						'InstitutionClassGrades.institution_class_id = '. $InstitutionClasses->aliasField('id')
+					]
+					)
+					->innerJoin(
+					['InstitutionClassGradesSecondaryStaff' => ' institution_classes_secondary_staff'],
+					[
+						'InstitutionClassGradesSecondaryStaff.institution_class_id = '. $InstitutionClasses->aliasField('id')
+					]
+					)
+					->where(['InstitutionClassGrades.education_grade_id' => $value['id']])
+					->where([$InstitutionClasses->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionClasses->aliasField('academic_period_id') => $params['academic_period_id']])
 					->hydrate(false)
 					->count()
 				;
 				$entity[] = [
 					'education_grade_name' => (!empty($value['name']) ? $value['name'] : ''),
 					'education_grade_id' => (!empty($value['id']) ? $value['id'] : 0),
-					'student_enrolment' => $enrolledStudentsData,
-					'student_repetition' => $repeatedStudentsData,
-					'student_dropout' => $dropoutStudentsData,
+					'male_student_enrolment' => $enrolledMaleStudentsData,
+					'female_student_enrolment' => $enrolledFemaleStudentsData,
+					'total_student_enrolment' => $enrolledStudentsData,
+					'male_student_repetition' => $repeatedMaleStudentsData,
+					'female_student_repetition' => $repeatedFemaleStudentsData,
+					'total_student_repetition' => $repeatedStudentsData,
+					'male_student_dropout' => $dropoutMaleStudentsData,
+					'female_student_dropout' => $dropoutFemaleStudentsData,
+					'total_student_dropout' => $dropoutStudentsData,
 					'total_student' => $enrolledStudentsData + $repeatedStudentsData + $dropoutStudentsData,
+					'subject_staff' => $institutionStaffData,
+					'secondary_teacher' => $secondaryTeacherData,
 				];	
 			}
-			//echo '<pre>';print_r($entity);die;
+			echo '<pre>';print_r($entity);die;
             return $entity;
         }
     }
