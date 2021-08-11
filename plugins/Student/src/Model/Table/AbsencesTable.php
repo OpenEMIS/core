@@ -231,7 +231,7 @@ class AbsencesTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         parent::onUpdateActionButtons($event, $entity, $buttons);
-        
+        unset($buttons['edit']);
         if (array_key_exists('view', $buttons)) {
             $institutionId = $entity->institution->id;
             $url = [
