@@ -274,7 +274,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
             $tableHeaders[] = __('Attendance Days');
         }
         if(in_array('Certificate', $TrainingResultTypesArr)){
-            $tableHeaders[] = __('Certificate Number'); //5695
+            $tableHeaders[] = __('Certificate'); //5695
         }
         //5695 ends       
 		$tableCells = [];
