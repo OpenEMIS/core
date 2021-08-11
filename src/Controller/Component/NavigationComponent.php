@@ -433,6 +433,13 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Profile', 'action' => 'Personal', 0 => 'view', $userId]
             ],
 
+            'Guardians.Guardians.index' => [
+                'title' => 'Guardian',
+                'icon' => '<span><i class="fa  fa-users"></i></span>',
+                'params' => ['plugin' => 'Guardian']
+                //'selected' => ['Guardians.Students.index']
+            ],
+
             'Institutions.Institutions.index' => [
                 'title' => 'Institutions',
                 'icon' => '<span><i class="fa kd-institutions"></i></span>',
