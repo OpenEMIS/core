@@ -286,8 +286,10 @@ class StudentPromotionTable extends AppTable
                 // end of getting the notEnrolled message
 
             } else if ($currentData->student_status_id == $this->statuses['REPEATED']) {
-                $gradeData = $this->EducationGrades->get($currentData->grade_to_promote);
-                $gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: $this->getMessage($this->aliasField('noAvailableGrades'));
+				$academicPeriodId = $currentData->next_academic_period_id ? $currentData->next_academic_period_id : null;
+
+				$gradeData = $this->EducationGrades->getNextAvailableEducationGradesForRepeated($currentData->grade_to_promote, $academicPeriodId);
+                $gradeName = (!empty($gradeData))? ($gradeData->programme. ' - ' . $gradeData->grade_name): $this->getMessage($this->aliasField('noAvailableGrades'));
             }
 
             $attr['type'] = 'readonly';
@@ -323,16 +325,20 @@ class StudentPromotionTable extends AppTable
                 $selectedPeriod = $entity->has('from_academic_period_id') ? $entity->from_academic_period_id : null;
                 $InstitutionTable = $this->Institutions;
                 $InstitutionGradesTable = $this->InstitutionGrades;
-
+				//echo $selectedPeriod;die;
                 $gradeOptions = [];
                 if (!empty($selectedPeriod) && $selectedPeriod != -1) {
                     $institutionId = $this->institutionId;
                     $statuses = $this->statuses;
                     $gradeOptions = $InstitutionGradesTable
                         ->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
-                        ->contain(['EducationGrades.EducationProgrammes', 'EducationGrades.EducationStages'])
+                        //->contain(['EducationGrades.EducationProgrammes', 'EducationGrades.EducationStages'])
+						->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems', 'EducationGrades.EducationStages'])
+						->where([
+							'EducationSystems.academic_period_id' => $selectedPeriod
+						])
                         ->where([$InstitutionGradesTable->aliasField('institution_id') => $institutionId])
-                        ->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
+                        //->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
                         ->order(['EducationStages.order', 'EducationGrades.order'])
                         ->toArray();
 
@@ -655,8 +661,10 @@ class StudentPromotionTable extends AppTable
     {
         $entity = $attr['entity'];
         $studentStatusId = $entity->has('student_status_id') ? $entity->student_status_id : null;
+        $academicPeriodId = $entity->has('next_academic_period_id') ? $entity->next_academic_period_id : null;
 
         if (!empty($studentStatusId)) {
+			
             $statuses = $this->statuses;
             $educationGradeId = $entity->has('grade_to_promote') ? $entity->grade_to_promote : null;
 
@@ -668,11 +676,11 @@ class StudentPromotionTable extends AppTable
                     // list of next first grades from all next programme available to promote to
                     // 'true' means get all the grades of the next programmes plus the current programme grades
                     // 'true' means get first grade only from all available next programme
-                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, true, true);
+                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGradesForPromoted($educationGradeId, $academicPeriodId, true, true);
                 } else {
                     // list of grades available to promote to
                     // 'false' means only displayed the next level within the same grade level.
-                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, false);
+                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGradesForPromoted($educationGradeId, $academicPeriodId, false);
 
                     // if is not last grade, listOfGrades show the next grade of the current grade only
                     $listOfGrades = [key($listOfGrades) => current($listOfGrades)];
@@ -689,6 +697,7 @@ class StudentPromotionTable extends AppTable
                     $attr['select'] = false;
                     $options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
                 } else {
+
                     // to cater for graduate
                     if (in_array($studentStatusId, [$statuses['GRADUATED']])) {
                         $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $gradeOptions;
@@ -697,14 +706,13 @@ class StudentPromotionTable extends AppTable
                         $options = $gradeOptions;
                     }
                 }
-
+				
                 $attr['type'] = 'select';
                 $attr['options'] = $options;
                 $attr['onChangeReload'] = 'changeToNextGrade';
             } else {
-                $gradeData = $this->EducationGrades->get($educationGradeId);
-                $gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: '';
-
+                $gradeData = $this->EducationGrades->getNextAvailableEducationGradesForRepeated($educationGradeId, $academicPeriodId);
+                $gradeName = (!empty($gradeData))? ($gradeData->programme. ' - ' . $gradeData->grade_name): '';
                 $attr['type'] = 'readonly';
                 $attr['attr']['value'] = $gradeName;
             }
@@ -932,7 +940,7 @@ class StudentPromotionTable extends AppTable
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
-        $this->validator()->remove('education_grade_id', 'required');
+        //$this->validator()->remove('education_grade_id', 'required');
 
         $process = function ($model, $entity) use ($event, $data) {
             // Removal of some fields that are not in use in the table validation

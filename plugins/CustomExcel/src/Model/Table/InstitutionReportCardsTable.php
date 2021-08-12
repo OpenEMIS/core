@@ -1675,6 +1675,7 @@ class InstitutionReportCardsTable extends AppTable
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            $SpecialNeedsServices = TableRegistry::get('SpecialNeeds.SpecialNeedsServices');
 
             $EducationGradesData = $InstitutionGrades->find()
 				->select([
@@ -1789,6 +1790,42 @@ class InstitutionReportCardsTable extends AppTable
 					->hydrate(false)
 					->count()
 				;
+				$maleSpecialNeedData = $InstitutionStudents
+				->find()
+				->contain('Users')
+				->innerJoin(
+				['SpecialNeed' => 'user_special_needs_assessments'],
+				[
+					'SpecialNeed.security_user_id = '. $InstitutionStudents->aliasField('student_id')
+				]
+				)
+				->group([
+					'Users.id'
+				])
+				->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
+				->where([$InstitutionStudents->Users->aliasField('gender_id') => 1])
+				->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+				->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
+				->count()
+				;
+				$femaleSpecialNeedData = $InstitutionStudents
+				->find()
+				->contain('Users')
+				->innerJoin(
+				['SpecialNeed' => 'user_special_needs_assessments'],
+				[
+					'SpecialNeed.security_user_id = '. $InstitutionStudents->aliasField('student_id')
+				]
+				)
+				->group([
+					'Users.id'
+				])
+				->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
+				->where([$InstitutionStudents->Users->aliasField('gender_id') => 2])
+				->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+				->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
+				->count()
+				;
 				$entity[] = [
 					'education_grade_name' => (!empty($value['name']) ? $value['name'] : ''),
 					'education_grade_id' => (!empty($value['id']) ? $value['id'] : 0),
@@ -1804,9 +1841,11 @@ class InstitutionReportCardsTable extends AppTable
 					'total_student' => $enrolledStudentsData + $repeatedStudentsData + $dropoutStudentsData,
 					'subject_staff' => $institutionStaffData,
 					'secondary_teacher' => $secondaryTeacherData,
+					'male_student_special_need' => $maleSpecialNeedData,
+					'female_student_special_need' => $femaleSpecialNeedData,
+					'total_student_special_need' => $maleSpecialNeedData + $femaleSpecialNeedData,
 				];	
 			}
-			echo '<pre>';print_r($entity);die;
             return $entity;
         }
     }
