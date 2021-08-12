@@ -676,7 +676,24 @@ class StudentPromotionTable extends AppTable
                     // list of next first grades from all next programme available to promote to
                     // 'true' means get all the grades of the next programmes plus the current programme grades
                     // 'true' means get first grade only from all available next programme
-                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, $academicPeriodId, true, true); //POCOR-6257
+                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, true, true);
+                    //POCOR-6257 when status is Graduated getting To grade option on to academic preiod and next program 
+                    $grades = TableRegistry::get('Institution.InstitutionGrades');
+                    $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                    $periodGrades = $EducationGrades->find('list', ['keyField' => 'id', 
+                                    'valueField' => 'programme_grade_name'])
+                                    ->find('visible')
+                                    ->find('order')
+                                    ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                                    ->LeftJoin([$grades->alias() => $grades->table()],[
+                                            $EducationGrades->aliasField('id').' = ' . $grades->aliasField('education_grade_id')
+                                    ])
+                                    ->where([
+                                        'EducationSystems.academic_period_id' => $academicPeriodId,
+                                        $grades->aliasField('institution_id') => $institutionId
+                                    ])->toArray();
+                    $toGradeOption = array_intersect($listOfGrades, $periodGrades);
+                    //echo "<pre>";print_r($toGradeOption);die();
                 } else {
                     // list of grades available to promote to
                     // 'false' means only displayed the next level within the same grade level.
@@ -701,8 +718,8 @@ class StudentPromotionTable extends AppTable
 
                     // to cater for graduate
                     //POCOR-6257
-                    if (in_array($studentStatusId, [$statuses['GRADUATED']]) && $isLastGrade) {
-                        $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $listOfGrades;
+                    if (in_array($studentStatusId, [$statuses['GRADUATED']]) && $isLastGrade) { 
+                        $options = $toGradeOption;
                     }
                     elseif (in_array($studentStatusId, [$statuses['GRADUATED']]) && !$isLastGrade) {
                         $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $gradeOptions;
