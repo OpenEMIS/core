@@ -64,6 +64,11 @@ class GuardiansController extends AppController
     public function Demographic()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);
+    }
+
+    public function Students()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Guardian.Students']);
     }    
 
     public function beforeFilter(Event $event)
@@ -71,23 +76,26 @@ class GuardiansController extends AppController
         parent::beforeFilter($event);
         $User = TableRegistry::get('User.Users');
 
-        /*$session = $this->request->session();
+        $session = $this->request->session();
         $institutionName = $session->read('Institution.Institutions.name');
         $institutionId = $session->read('Institution.Institutions.id');
         $studentId = $session->read('Student.Students.id');
+        if (!empty($studentId)) {
+            $entity = $User->get($studentId);
+        } else {
+            $this->Navigation->addCrumb('Guardian', ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Guardians', 'index']);
+        }
         
-        $entity = $User->get($studentId);
         $name = $entity->name;  
 
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
         $this->Navigation->addCrumb('Students', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']);
-        $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);*/
-        $this->Navigation->addCrumb('Guardians', ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Guardians', 'index']);
+        $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
     } 
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
-    {
+    { 
         $session = $this->request->session();
         $guardianName = $session->read('Guardian.Guardians.name');
         $alias = $model->alias;

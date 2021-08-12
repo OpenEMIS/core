@@ -1906,7 +1906,7 @@ class InstitutionsController extends AppController
             } else {
                  $header .= ' - ' . $model->getHeader($alias);
             }
-
+           
             $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
             $event = $model->eventManager()->dispatch($event);
 
