@@ -690,16 +690,21 @@ class StudentPromotionTable extends AppTable
                 $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId);
 
                 // Only display the options that are available in the institution and also linked to the current programme
+                
                 $gradeOptions = array_intersect($listOfInstitutionGrades, $listOfGrades); //POCOR-6257
 
                 // if no grade option or the next grade is not available in the institution
-                if (count($gradeOptions) == 0) {
+                if (count($gradeOptions) == 0 && !empty($gradeOptions)) {
                     $attr['select'] = false;
                     $options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
                 } else {
 
                     // to cater for graduate
-                    if (in_array($studentStatusId, [$statuses['GRADUATED']])) {
+                    //POCOR-6257
+                    if (in_array($studentStatusId, [$statuses['GRADUATED']]) && $isLastGrade) {
+                        $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $listOfGrades;
+                    }
+                    elseif (in_array($studentStatusId, [$statuses['GRADUATED']]) && !$isLastGrade) {
                         $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $gradeOptions;
                     } else {
                         // to cater for promote
