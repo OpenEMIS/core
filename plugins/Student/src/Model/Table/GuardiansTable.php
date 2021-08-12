@@ -110,6 +110,8 @@ class GuardiansTable extends ControllerActionTable
     {
         if ($this->controller->name == 'Directories') {
             $studentId = $this->Session->read('Directory.Directories.id');
+        } elseif ($this->controller->name == 'Guardians') {
+            $studentId = $this->Session->read('Auth.User.id');
         } else {
             $studentId = $this->Session->read('Student.Students.id');
         }
