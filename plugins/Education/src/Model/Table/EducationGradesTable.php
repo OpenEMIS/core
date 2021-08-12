@@ -188,7 +188,7 @@ class EducationGradesTable extends ControllerActionTable
     *                                           grades of the next programme. If set to false it will get all
     *                                           the grades of the next programmes plus the current programme grades
     */
-    public function getNextAvailableEducationGrades($gradeId, $getNextProgrammeGrades = true, $firstGradeOnly = false) {
+    public function getNextAvailableEducationGrades($gradeId, $getNextProgrammeGrades = false, $firstGradeOnly = false) {
         if (!empty($gradeId)) {
             $gradeObj = $this->get($gradeId);
             $programmeId = $gradeObj->education_programme_id;
