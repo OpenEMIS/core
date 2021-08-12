@@ -282,7 +282,7 @@ class NavigationComponent extends Component
 
         $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipsDirectory', 'ProfileApplicationInstitutionChoices', 'ProfileApplicationAttachments'];
         $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments', 'DirectoryInsurances'];
-
+        $guardianControllers = ['StudentGuardians'];
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
             && $action != 'index'
@@ -390,7 +390,9 @@ class NavigationComponent extends Component
 
                 $this->checkClassification($navigations);
             }
-        }
+        } /*elseif (($controller->name == 'Guardians' && $action == 'index') || in_array($controller->name, $guardiansControllers)) {
+            $navigations = $this->appendNavigation('Guardians.Guardians.index', $navigations, $this->getGuardianNavigation());
+        }*/
 
         $navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
         $navigations = $this->appendNavigation('Administration', $navigations, $this->getAdministrationNavigation());
@@ -436,8 +438,8 @@ class NavigationComponent extends Component
             'Guardians.Guardians.index' => [
                 'title' => 'Guardian',
                 'icon' => '<span><i class="fa  fa-users"></i></span>',
-                'params' => ['plugin' => 'Guardian']
-                //'selected' => ['Guardians.Students.index']
+                'params' => ['plugin' => 'Guardian'],
+                'selected' => ['Guardians.Guardians']
             ],
 
             'Institutions.Institutions.index' => [
@@ -2032,5 +2034,17 @@ class NavigationComponent extends Component
         ];
         return $navigation;
     }
+
+    /*public function getGuardianNavigation()
+    {
+        $navigation = [
+            'Guardians.Guardians.index' => [
+                'title' => 'Guardian',
+                //'selected' => ['Institutions.dashboard'],
+                'params' => ['plugin' => 'Guardian']
+            ],
+        ];
+        return $navigation;
+    }*/
 
 }
