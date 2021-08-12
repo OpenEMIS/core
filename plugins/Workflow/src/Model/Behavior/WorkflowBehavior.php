@@ -893,7 +893,6 @@ class WorkflowBehavior extends Behavior
                     $assigneeOptions = ['' => $model->getMessage('general.select.noOptions')];
                 }
             }
-
             if ($assignToSelf) {
                 // if no security roles is set to the workflow open status, assign to self
                 $userId = $model->Auth->user('id');
@@ -902,10 +901,14 @@ class WorkflowBehavior extends Behavior
                 $attr['type'] = 'readonly';
                 $attr['value'] = $userEntity->id;
                 $attr['attr']['value'] = $userEntity->name_with_id;
-            } else {
+            } 
+            else if($request->data['StaffPositionProfiles']['staff_change_type_id'] == 1 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 2 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 3 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 4){
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;
+            }
+            else {
+                $attr['type'] = 'hidden';
             }
         } elseif ($action == 'edit') {
             $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;

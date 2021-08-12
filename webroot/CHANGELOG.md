@@ -1,3 +1,25 @@
+### [3.67.3] - 2021-08-03
+- Bug Fixed: Administration > System Setup > Localization > Translations: Remove Nursery from Translation
+- Bug Fixed: Administration> Examinations > Centres > Add: Exam Centre was not created when selecting All Institutions
+- Bug Fixed: Institution > Performance > Assessment: Student from a Multigrade class is appearing in both grades in Assessment page
+- Bug Fixed: Personal>Student>Academic>Outcomes tab: User cannot see all subjects
+- Bug Fixed: Institutions>Meals>Students: Display the Meals Received section wrongly,Displays "None" instead of "Meal Received"
+- Bug Fixed: Institution > Academic > Classes: Students who are promoted without selecting next class will not be found in class
+- Bug Fixed: Institutions > Staff > Edit : Issues with editing staff's employment
+- Bug Fixed: Administration > System Setup > Field Options: 404 error when he is trying to delete a Student Absence Reason
+- Bug Fixed: Institutions>Academic>Subjects-Cannot remove extra subjects
+
+### [3.67.2] - 2021-07-23
+- Bug Fixed: Institution > Academic > Associations: Unable to add new record
+- Bug Fixed: Add Export button function - Institutions > Staff > Staff1 > Career > Positions (include institutions position type start end and status)
+- Bug Fixed: Add Export button function - Institutions > Finances > Budget
+- Bug Fixed: Add Export button function - Institutions > Finances > Expenditure
+- Bug Fixed: Institution > Survey > Forms: Date Enabled was set to a future date, but user is still able to view Survey Form
+- Bug Fixed: Institution > Staff > Career: Staff End of Assignment: Assignee section combines different users in one group
+- Bug Fixed: Reports>Surveys: Academic Period should be before Survey Form
+- Bug Fixed: Institution:404 error when creating a new institution when there are no institutions and deleting it
+- Bug Fixed: Administration>Security>Roles: Page is stuck after trying to grant permission
+
 ### [3.67.1] - 2021-07-09
 - Bug Fixed: Add default identity, staff position and add date range filter to Reports > Institution > Staff leave
 - Bug Fixed: Institution > Attendance > Students: Student has Enrolled status but is not appearing on Attendance page
