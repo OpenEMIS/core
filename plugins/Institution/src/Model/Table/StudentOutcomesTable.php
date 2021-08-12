@@ -272,7 +272,8 @@ class StudentOutcomesTable extends ControllerActionTable
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('id') => $classId,
-                'OR' => [['StudentStatuses.code' => 'CURRENT'], ['StudentStatuses.code' => 'PROMOTED']]
+                'OR' => [['StudentStatuses.code' => 'CURRENT'], ['StudentStatuses.code' => 'PROMOTED'],
+                            ['StudentStatuses.code' => 'TRANSFERRED'],['StudentStatuses.code' => 'GRADUATED']]
             ])
             ->formatResults(function(ResultSetInterface $results) use ($allOutcomeResults, $studentEntityList) {
                 return $results->map(function ($row) use ($allOutcomeResults, $studentEntityList) {
