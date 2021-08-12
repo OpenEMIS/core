@@ -676,7 +676,7 @@ class StudentPromotionTable extends AppTable
                     // list of next first grades from all next programme available to promote to
                     // 'true' means get all the grades of the next programmes plus the current programme grades
                     // 'true' means get first grade only from all available next programme
-                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGradesForPromoted($educationGradeId, $academicPeriodId, true, true);
+                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, $academicPeriodId, true, true); //POCOR-6257
                 } else {
                     // list of grades available to promote to
                     // 'false' means only displayed the next level within the same grade level.
@@ -690,7 +690,7 @@ class StudentPromotionTable extends AppTable
                 $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId);
 
                 // Only display the options that are available in the institution and also linked to the current programme
-                $gradeOptions = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
+                $gradeOptions = array_intersect($listOfInstitutionGrades, $listOfGrades); //POCOR-6257
 
                 // if no grade option or the next grade is not available in the institution
                 if (count($gradeOptions) == 0) {
