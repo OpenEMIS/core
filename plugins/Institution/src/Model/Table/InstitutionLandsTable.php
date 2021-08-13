@@ -1293,8 +1293,10 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-
-        $academicPeriodId = $this->AcademicPeriods->getCurrent();
+         if (is_null($this->request->query('period_id'))) {
+            $this->request->query['period_id'] = $this->AcademicPeriods->getCurrent();
+        }
+        $academicPeriodId = $this->request->query['period_id'];
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
         $institutionLands = TableRegistry::get('Institution.InstitutionLands');
@@ -1319,6 +1321,7 @@ class InstitutionLandsTable extends ControllerActionTable
         if ($landType->name == 'Land') {
             if (!empty($institutionId)) {
                 $conditions[$this->aliasField('institution_id')] = $institutionId;
+                $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
             }
             $query
                 ->select([
