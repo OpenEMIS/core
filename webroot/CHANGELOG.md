@@ -1,5 +1,3 @@
-Testing
-
 ### [3.68.0] - 2021-08-11
 - Bug Fixed: 2.02 Develop a function to delete behaviours
 - Bug Fixed: Administration > System Setup > Labels: To create navigations for the word "Requester"
