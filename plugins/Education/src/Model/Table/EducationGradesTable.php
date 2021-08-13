@@ -224,7 +224,7 @@ class EducationGradesTable extends ControllerActionTable
     }
 	
 	public function getNextAvailableEducationGradesForPromoted($gradeId, $academicPeriodId, $getNextProgrammeGrades = true, $firstGradeOnly = false) {
-   
+        
 		if (!empty($gradeId)) {
             $gradeOptionsData = $this
 				->find()
@@ -819,4 +819,25 @@ class EducationGradesTable extends ControllerActionTable
             );
         }
     }
+
+    /**/
+    public function getEducationGradesByPeriod($academicPeriodId, $institutionId)
+    {
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $gradeOptions = $this->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'programme_grade_name'
+            ])
+            ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()],[
+                    $this->aliasField('id').' = ' . $InstitutionGrades->aliasField('education_grade_id')
+            ])
+            ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+            ->where([
+                'EducationSystems.academic_period_id' => $academicPeriodId,
+                $InstitutionGrades->aliasField('institution_id') => $institutionId
+            ])->toArray();
+
+        return $gradeOptions;
+    }
+    /**/
 }
