@@ -143,7 +143,7 @@ class StudentOutcomesTable extends ControllerActionTable
                                 ->innerJoin([$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()], [
                                    $InstitutionSubjectStudents->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id')
                                 ])
-                                ->where([$InstitutionSubjectStudents->aliasField('student_id') => $studentId ])
+                                ->where([$InstitutionSubjectStudents->aliasField('student_id') => $studentId, $InstitutionSubjects->aliasField('academic_period_id') => $selectedAcademicPeriod ])//6004 add academic_period_id condition
                                 ->toArray(); 
              
             $subjectOptions = ['0' => __('All Subjects')] + $subjectOptions;
