@@ -864,8 +864,8 @@ class StudentPromotionTable extends AppTable
             if (!empty($selectedGrade)) {
                 $studentStatuses = $this->statuses;
                 $selectedClass = $entity->has('class') ? $entity->class : null;
-
-                if (!is_null($selectedStudentStatusId) && $selectedClass != -1) {
+                //POCOR-6279 - removed selectedClass != -1 condition as per task requirement and suggested by client
+                if (!is_null($selectedStudentStatusId)) {
                     $showNextClass = in_array($selectedStudentStatusId, [$studentStatuses['PROMOTED'], $studentStatuses['REPEATED'], $studentStatuses['GRADUATED']]);
 
                     if ($selectedStudentStatusId == $studentStatuses['REPEATED']) {
@@ -942,6 +942,20 @@ class StudentPromotionTable extends AppTable
                                                 $EducationGrades->aliasField('order') => $order + 1,
                                                 $EducationGrades->aliasField('education_programme_id') => $programmeId,
                                                 $InstitutionClassesTable->aliasField('academic_period_id') => $selectedPeriod
+                                                ])->toArray();
+                                } else {
+                                    $nextClasses = $InstitutionClassesTable
+                                                ->find('list')
+                                                ->select([
+                                                    $InstitutionClassesTable->aliasField('id'),
+                                                    $InstitutionClassesTable->aliasField('name')
+                                                ])
+                                                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
+                                                  $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionClassesTable->aliasField('id')
+                                                ])
+                                                ->where([
+                                                $InstitutionClassesTable->aliasField('institution_id') => $institutionId,
+                                                $InstitutionClassGrades->aliasField('education_grade_id') => $selectedNextGrade
                                                 ])->toArray();
                                 }
                         } else {
