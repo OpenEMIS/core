@@ -1,3 +1,9 @@
+### [3.68.1] - 2021-08-16
+- Bug Fixed: Add additional filters and columns to the Absence list view
+- Bug Fixed: Institution > Student > Academic > Outcome: Subjects listed for student do not tally with the Subjects student is taking
+- Bug Fixed: Institutions>Students: No Available Grades for Graduation in the new year
+- Bug Fixed: Optimise the migration script created in POCOR-5947 and Writing an SQL statement to count the records
+
 ### [3.68.0] - 2021-08-11
 - Bug Fixed: 2.02 Develop a function to delete behaviours
 - Bug Fixed: Administration > System Setup > Labels: To create navigations for the word "Requester"
