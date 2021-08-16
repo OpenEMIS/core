@@ -17,6 +17,10 @@ class POCOR5947 extends AbstractMigration
 
         $this->execute('ALTER TABLE `assessment_item_results` ADD `institution_classes_id` INT(11) NOT NULL AFTER `institution_id`');
 
+        $this->execute("ALTER TABLE `assessment_item_results` ADD INDEX `created` (`created`);");
+        $this->execute("ALTER TABLE `institution_subject_students` ADD INDEX `created` (`created`);");
+        $this->execute("ALTER TABLE `institution_subject_students` ADD INDEX `modified` (`modified`);");
+
         $this->execute("ALTER TABLE `assessment_item_results` DROP PRIMARY KEY, ADD primary key (`student_id`,`assessment_id`,`education_subject_id`,`education_grade_id`,`academic_period_id`,`assessment_period_id`,`institution_classes_id`), ADD UNIQUE INDEX (`student_id`,`assessment_id`,`education_subject_id`,`education_grade_id`,`academic_period_id`,`assessment_period_id`,`institution_classes_id`)");
 
         $institutionSubjectStudents = $this->fetchAll('SELECT * FROM `institution_subject_students` WHERE (`modified` IS NOT NULL AND `student_status_id` != 1) Group By `student_id` ');
@@ -72,7 +76,7 @@ class POCOR5947 extends AbstractMigration
 
             }
         }
-
+    
     }
 
     // rollback
