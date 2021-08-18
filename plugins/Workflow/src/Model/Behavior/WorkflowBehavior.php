@@ -540,7 +540,7 @@ class WorkflowBehavior extends Behavior
         }
         
         //POCOR-5695 starts
-        if($this->_table->alias != 'TrainingNeeds'){
+        if($this->_table->alias == 'Results'){
             $TrainingSessions = TableRegistry::get('training_sessions');
             $query->leftJoin(
                     [$TrainingSessions->alias() => $TrainingSessions->table()],
