@@ -71,7 +71,7 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
     {   
         if (isset($buttons[1])) {
             $buttons[1]['url'] = $this->ControllerAction->url('Results');
-            $buttons[1]['url']['action'] = 'TrainingSessionTraineeResults';
+            //$buttons[1]['url']['action'] = 'TrainingSessionTraineeResults';
         }
         $request = $this->request;
         if (empty($request->query('training_courses'))) {
