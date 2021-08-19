@@ -1,3 +1,14 @@
+### [3.68.0] - 2021-08-11
+- Bug Fixed: 2.02 Develop a function to delete behaviours
+- Bug Fixed: Administration > System Setup > Labels: To create navigations for the word "Requester"
+- Bug Fixed: Add Export button function - Institutions > Infrastructures > WASH > Hygiene
+- Bug Fixed: Add a function to delete reports
+- Bug Fixed: Administration>Security>Roles: Not able to edit Permission
+- Bug Fixed: Administration > System Setup > System Configuration > Webhooks: Academic Period webhook does not include the parent academic period id
+- Bug Fixed: Migration Script:Update the migration script for POCOR3804 to cater for special characters.
+- Bug Fixed: Institutions>Academic>Programmes: 404 Error when deleting a programme
+- Bug Fixed: Administration > Profiles > Students: Other grades from other institutions added to the queue and cannot generate profiles for last year students
+
 ### [3.67.3] - 2021-08-03
 - Bug Fixed: Administration > System Setup > Localization > Translations: Remove Nursery from Translation
 - Bug Fixed: Administration> Examinations > Centres > Add: Exam Centre was not created when selecting All Institutions
