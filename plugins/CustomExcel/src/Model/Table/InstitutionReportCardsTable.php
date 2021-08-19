@@ -1630,7 +1630,6 @@ class InstitutionReportCardsTable extends AppTable
 				->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])
 				->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])
 				->where('RoomTypes.classification = 1')
-				->group($InstitutionRooms->aliasField('room_type_id'))
 				->count()
 			;
 			
