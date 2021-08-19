@@ -623,6 +623,57 @@ class InstitutionsController extends AppController
     }
     //POCOR-5182 added StaffSalaries
 
+    //PCOOR-6146 add export button in Institutions > Infrastructures > WASH > Hygiene
+    public function InfrastructureWashHygienes(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashHygienes']);
+    }
+
+    public function changeUtilitiesHeader($model, $modelAlias, $userType)
+    {
+        $session = $this->request->session();
+        $institutionId = 0;
+        if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        if (!empty($institutionId)) {
+            if($this->request->param('action') == 'InfrastructureUtilityElectricities') {
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Electricity');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Electricity'));
+                $this->set('contentHeader', $header);
+
+            } else if($this->request->param('action') == 'InfrastructureUtilityInternets'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Internet');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Internet'));
+                $this->set('contentHeader', $header);
+            } else if($this->request->param('action') == 'InfrastructureWashWaters'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Water');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Water'));
+                $this->set('contentHeader', $header);
+            } else if($this->request->param('action') == 'InfrastructureWashSanitations'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Sanitation');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Sanitation'));
+                $this->set('contentHeader', $header);
+            } else if($this->request->param('action') == 'InfrastructureWashHygienes'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Hygiene');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Hygiene'));
+                $this->set('contentHeader', $header);
+            }
+        }
+
+    }
+
+    //PCOOR-6146 add export button in Institutions > Infrastructures > WASH > Hygiene
+
     // AngularJS
     public function ScheduleTimetable($action = 'view')
     {
