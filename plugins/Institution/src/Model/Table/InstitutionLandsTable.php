@@ -1380,6 +1380,7 @@ class InstitutionLandsTable extends ControllerActionTable
             if($landType->name == 'Room') { $level = "Rooms"; $type ='room'; }
             if (!empty($institutionId)) {
                 $conditions['Institution'.$level.'.'.'institution_id'] = $institutionId;
+                $conditions['Institution'.$level.'.'.'academic_period_id'] = $academicPeriodId;
             }
             $query
                 ->select(['land_infrastructure_code'=>'Institution'.$level.'.'.'code',
