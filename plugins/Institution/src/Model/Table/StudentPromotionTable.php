@@ -143,6 +143,7 @@ class StudentPromotionTable extends AppTable
                 'label' => $this->getMessage($this->aliasField('toGrade'))
             ],
             'entity' => $entity
+            //'type' => 'readonly'
         ]);
 
         $this->ControllerAction->field('next_class', [
@@ -155,6 +156,11 @@ class StudentPromotionTable extends AppTable
         $this->ControllerAction->field('students', [
            'entity' => $entity
         ]);
+
+        $this->ControllerAction->field('grade_id', [
+           'type' => 'hidden',
+           'entity' => $entity
+        ]);
         // end
 
         $this->ControllerAction->setFieldOrder([
@@ -165,7 +171,8 @@ class StudentPromotionTable extends AppTable
             'student_status_id',
             'education_grade_id',
             'next_class',
-            'students'
+            'students',
+            'grade_id'
         ]);
     }
 
@@ -325,7 +332,7 @@ class StudentPromotionTable extends AppTable
                 $selectedPeriod = $entity->has('from_academic_period_id') ? $entity->from_academic_period_id : null;
                 $InstitutionTable = $this->Institutions;
                 $InstitutionGradesTable = $this->InstitutionGrades;
-				//echo $selectedPeriod;die;
+				
                 $gradeOptions = [];
                 if (!empty($selectedPeriod) && $selectedPeriod != -1) {
                     $institutionId = $this->institutionId;
@@ -428,10 +435,9 @@ class StudentPromotionTable extends AppTable
                 $selectedNextPeriod = $entity->has('next_academic_period_id') ? $entity->next_academic_period_id : null;
                 $selectedPeriod = $request->data['StudentPromotion']['from_academic_period_id'];
                 $selectedGrade = $entity->has('grade_to_promote') ? $entity->grade_to_promote : null;
-                $selectedNextGrade = $entity->has('education_grade_id') ? $entity->education_grade_id : null;
+                $selectedNextGrade = $entity->has('education_grade_id') ? $entity->education_grade_id : $this->Session->read('grade_id');
                 $selectedClass = $entity->has('class') ? $entity->class : null;
                 $studentStatusId = $entity->has('student_status_id') ? $entity->student_status_id : null;
-
                 $requestData = $request->data;
                 $institutionId = $this->institutionId;
                 $statuses = $this->statuses;
@@ -442,67 +448,7 @@ class StudentPromotionTable extends AppTable
                         $InstitutionClassesTable = TableRegistry::get('Institution.InstitutionClasses');
 
                         //Get back classes base on status of promoted or graduated or repeated
-                        if (in_array($studentStatusId, [$statuses['PROMOTED'], $statuses['GRADUATED']])) {
-                            if (!is_null($selectedNextGrade)) {
-                                $EducationGrades = TableRegistry::get('Education.EducationGrades');
-                                $getGrade = $EducationGrades->find()
-                                            ->where([$EducationGrades->aliasField('id') => $selectedGrade])->first();
-                                $order = $getGrade->order;
-                                $programmeId = $getGrade->education_programme_id;
-                                $listOfGrades = $this->EducationGrades->getNextAvailableEducationGradesForPromoted($selectedGrade, $selectedNextPeriod, false);
-                                $getToAcademicPeriodGrade = $this->EducationGrades->getEducationGradesByPeriod($selectedPeriod, $institutionId);
-                                $toGradeOptionPromoted = array_intersect($listOfGrades, $getToAcademicPeriodGrade);
-                                if (!empty($toGradeOptionPromoted) && $statuses['PROMOTED']) {
-                                    $nextClasses = $InstitutionClassesTable
-                                                ->find('list')
-                                                ->select([
-                                                    $InstitutionClassesTable->aliasField('id'),
-                                                    $InstitutionClassesTable->aliasField('name')
-                                                ])
-                                                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
-                                                  $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionClassesTable->aliasField('id')
-                                                ])
-                                                ->leftJoin([$EducationGrades->alias() => $EducationGrades->table()],[
-                                                  $EducationGrades->aliasField('id = ') . $InstitutionClassGrades->aliasField('education_grade_id')
-                                                ])
-                                                ->where([
-                                                $InstitutionClassesTable->aliasField('institution_id') => $institutionId,
-                                                $EducationGrades->aliasField('order') => $order + 1,
-                                                $EducationGrades->aliasField('education_programme_id') => $programmeId,
-                                                $InstitutionClassesTable->aliasField('academic_period_id') => $selectedPeriod
-                                                ])->toArray();
-                                } else {
-                                    $nextClasses = $InstitutionClassesTable
-                                                ->find('list')
-                                                ->select([
-                                                    $InstitutionClassesTable->aliasField('id'),
-                                                    $InstitutionClassesTable->aliasField('name')
-                                                ])
-                                                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
-                                                  $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionClassesTable->aliasField('id')
-                                                ])
-                                                ->where([
-                                                $InstitutionClassesTable->aliasField('institution_id') => $institutionId,
-                                                $InstitutionClassGrades->aliasField('education_grade_id') => $selectedNextGrade
-                                                ])->toArray();
-                                }
-                            }
-                        } else if (in_array($studentStatusId, [$statuses['REPEATED']])) {
-                            $nextClasses = $InstitutionClassesTable
-                                                ->find('list')
-                                                ->select([
-                                                    $InstitutionClassesTable->aliasField('id'),
-                                                    $InstitutionClassesTable->aliasField('name')
-                                                ])
-                                                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
-                                                  $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionClassesTable->aliasField('id')
-                                               ])
-                                               ->where([
-                                                $InstitutionClassesTable->aliasField('institution_id') => $institutionId,
-                                                $InstitutionClassesTable->aliasField('academic_period_id') => $selectedPeriod,
-                                                $InstitutionClassGrades->aliasField('education_grade_id') => $selectedGrade
-                                            ])->toArray();
-                        }
+                        $nextClasses = $InstitutionClassesTable->getClassOptions($selectedNextPeriod, $institutionId, $selectedNextGrade);
                     } 
                     /*POCOR-5733 Starts*/
                     else {
@@ -792,8 +738,11 @@ class StudentPromotionTable extends AppTable
             } else {
                 $gradeData = $this->EducationGrades->getNextAvailableEducationGradesForRepeated($educationGradeId, $academicPeriodId);
                 $gradeName = (!empty($gradeData))? ($gradeData->programme. ' - ' . $gradeData->grade_name): '';
+                $gradeId = (!empty($gradeData)) ? $gradeData->id : '';
                 $attr['type'] = 'readonly';
+                $attr['onChangeReload'] = 'changeToNextGrade';
                 $attr['attr']['value'] = $gradeName;
+                $this->Session->write('grade_id', $gradeId);
             }
         } else {
             $attr['type'] = 'readonly';
@@ -914,64 +863,11 @@ class StudentPromotionTable extends AppTable
                 if ($students->count() > 0) {
                     if (!is_null($selectedNextPeriod) && !is_null($selectedNextGrade)) {
                         $InstitutionClassesTable = TableRegistry::get('Institution.InstitutionClasses');
-                        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-                        if ($selectedStudentStatusId == $studentStatuses['PROMOTED']) {
-                            $EducationGrades = TableRegistry::get('Education.EducationGrades');
-                                $getGrade = $EducationGrades->find()
-                                            ->where([$EducationGrades->aliasField('id') => $selectedGrade])->first();
-                                $order = $getGrade->order;
-                                $programmeId = $getGrade->education_programme_id;
-                                $listOfGrades = $this->EducationGrades->getNextAvailableEducationGradesForPromoted($selectedGrade, $selectedNextPeriod, false);
-                                $getToAcademicPeriodGrade = $this->EducationGrades->getEducationGradesByPeriod($selectedPeriod, $institutionId);
-                                $toGradeOptionPromoted = array_intersect($listOfGrades, $getToAcademicPeriodGrade);
-                            if (!empty($toGradeOptionPromoted)) {
-                                    $nextClasses = $InstitutionClassesTable
-                                                ->find('list')
-                                                ->select([
-                                                    $InstitutionClassesTable->aliasField('id'),
-                                                    $InstitutionClassesTable->aliasField('name')
-                                                ])
-                                                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
-                                                  $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionClassesTable->aliasField('id')
-                                                ])
-                                                ->leftJoin([$EducationGrades->alias() => $EducationGrades->table()],[
-                                                  $EducationGrades->aliasField('id = ') . $InstitutionClassGrades->aliasField('education_grade_id')
-                                                ])
-                                                ->where([
-                                                $InstitutionClassesTable->aliasField('institution_id') => $institutionId,
-                                                $EducationGrades->aliasField('order') => $order + 1,
-                                                $EducationGrades->aliasField('education_programme_id') => $programmeId,
-                                                $InstitutionClassesTable->aliasField('academic_period_id') => $selectedPeriod
-                                                ])->toArray();
-                                } else {
-                                    $nextClasses = $InstitutionClassesTable
-                                                ->find('list')
-                                                ->select([
-                                                    $InstitutionClassesTable->aliasField('id'),
-                                                    $InstitutionClassesTable->aliasField('name')
-                                                ])
-                                                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
-                                                  $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionClassesTable->aliasField('id')
-                                                ])
-                                                ->where([
-                                                $InstitutionClassesTable->aliasField('institution_id') => $institutionId,
-                                                $InstitutionClassGrades->aliasField('education_grade_id') => $selectedNextGrade
-                                                ])->toArray();
-                                }
+                        $gradeId = $this->Session->read('grade_id');
+                        if (!in_array($studentStatusId, [$statuses['REPEATED']])) {die("in");
+                            $nextClasses = $InstitutionClassesTable->getClassOptions($selectedNextPeriod, $institutionId, $selectedNextGrade);
                         } else {
-                            $nextClasses = $InstitutionClassesTable
-                                                ->find('list')
-                                                ->select([
-                                                    $InstitutionClassesTable->aliasField('id'),
-                                                    $InstitutionClassesTable->aliasField('name')
-                                                ])
-                                                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
-                                                  $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionClassesTable->aliasField('id')
-                                                ])
-                                                ->where([
-                                                $InstitutionClassesTable->aliasField('institution_id') => $institutionId,
-                                                $InstitutionClassGrades->aliasField('education_grade_id') => $selectedNextGrade
-                                                ])->toArray();
+                            $nextClasses = $InstitutionClassesTable->getClassOptions($selectedNextPeriod, $institutionId, $gradeId);
                         }
                     }
 
@@ -1433,5 +1329,10 @@ class StudentPromotionTable extends AppTable
             }
         }
         return false;
+    }
+
+    public function gradeId($gradeId)
+    { 
+        return $gradeId;
     }
 }
