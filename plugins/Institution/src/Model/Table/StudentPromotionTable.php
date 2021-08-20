@@ -444,7 +444,7 @@ class StudentPromotionTable extends AppTable
                         //Get back classes base on status of promoted or graduated or repeated
                         if (in_array($studentStatusId, [$statuses['PROMOTED'], $statuses['GRADUATED']])) {
                             if (!is_null($selectedNextGrade)) {
-                                if ($statuses['PROMOTED'] && !$statuses['GRADUATED']) {
+                                if (in_array($studentStatusId, [$statuses['PROMOTED']])) {
                                     $nextClasses = $InstitutionClassesTable->getClassOptions($selectedNextPeriod, $institutionId, $selectedNextGrade);
                                 } else {
                                     $nextClasses = $InstitutionClassesTable->find('list')
