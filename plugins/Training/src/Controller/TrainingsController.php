@@ -14,9 +14,10 @@ class TrainingsController extends AppController
         parent::initialize();
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
-
+        $this->loadModel('Training.TrainingSessionTraineeResults');//5695
         $this->ControllerAction->models = [
             'ImportTrainees'    => ['className' => 'Training.ImportTrainees', 'actions' => ['add']],
+            'ImportTrainingSessionTraineeResults' => ['className' => 'Training.ImportTrainingSessionTraineeResults', 'actions' => ['add']] //5695
         ];
     }
 
