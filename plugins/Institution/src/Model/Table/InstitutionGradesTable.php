@@ -93,7 +93,7 @@ class InstitutionGradesTable extends ControllerActionTable
                 'end_date','education_subject_id'
             ]);
         }
-    }
+    }      
 
 
 /******************************************************************************************************************
