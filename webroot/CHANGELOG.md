@@ -1,3 +1,19 @@
+### [3.68.2] - 2021-08-20
+- Bug Fixed: Improvement of the Professional Development Training Module interface
+- Bug Fixed: Development of School Report Cards
+- Bug Fixed: Reports > Institution > Infrastructure > View: Data is not reflecting correctly on the view page
+- Bug Fixed: Institution > Performance > Outcome > Export: Export file is empty when exporting Outcome for past Academic Period
+- Bug Fixed: Add Export button function - Institutions > General > Contacts > Institution
+- Bug Fixed: Add Export button function - Institutions > Examinations > Exams
+- Bug Fixed: Institution > Performance > Outcome: Outcomes not listing the correct Grade
+- Bug Fixed: Administration>System Setup>Field Options: Delete Training Achievement Types
+- Bug Fixed: Institutions>Academic>Programmes: Extra Subjects Assigned to Each Grade
+- Bug Fixed: Administration > System Setup > Field Options: Increase Character Limit for Student Behavior and Character Classification
+- Bug Fixed: Institutions>Infrastructure>Overview: Data should be related to the academic year chosen on the main page when exporting.
+- Bug Fixed: Institutions>Infrastructure>Overview: The infrastructure Area should be listed in the report (Land Area, Building Area, Floor Area, and Room Area)
+- Bug Fixed: Institution > Staff: Email field in Staff is greyed out and cannot be edited
+- Bug Fixed: Institutions>Students: Class dropdown is not populated when selecting class
+
 ### [3.68.1] - 2021-08-16
 - Bug Fixed: Add additional filters and columns to the Absence list view
 - Bug Fixed: Institution > Student > Academic > Outcome: Subjects listed for student do not tally with the Subjects student is taking
