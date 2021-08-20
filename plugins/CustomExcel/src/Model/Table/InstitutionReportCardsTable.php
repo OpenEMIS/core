@@ -1757,6 +1757,20 @@ class InstitutionReportCardsTable extends AppTable
 				;
 				$repeatedStudentsData = $repeatedMaleStudentsData + $repeatedFemaleStudentsData;
 				
+				$institutionFemaleStaffData = $InstitutionSubjects->find()
+					->innerJoin(
+					['SubjectStaff' => ' institution_subject_staff'],
+					[
+						'SubjectStaff.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
+					]
+					)
+					->where([$InstitutionSubjects->aliasField('education_grade_id') => $value['id']])
+					->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
+					->hydrate(false)
+					->first()
+				;
+				
 				$institutionStaffData = $InstitutionSubjects->find()
 					->innerJoin(
 					['SubjectStaff' => ' institution_subject_staff'],
@@ -1862,6 +1876,7 @@ class InstitutionReportCardsTable extends AppTable
 					'female_student_dropout' => $dropoutFemaleStudentsData,
 					'total_student_dropout' => $dropoutStudentsData,
 					'total_student' => $enrolledStudentsData + $repeatedStudentsData + $dropoutStudentsData,
+					'female_subject_staff' => !empty($institutionFemaleStaffData->total_female_students) ? $institutionFemaleStaffData->total_female_students : 0,
 					'subject_staff' => $institutionStaffData,
 					'secondary_teacher' => $secondaryTeacherData,
 					'male_student_special_need' => $maleSpecialNeedData,
