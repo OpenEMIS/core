@@ -553,10 +553,33 @@ class WorkflowBehavior extends Behavior
             if ($filterConfig['area']) {
                 $selectedArea = $this->_table->ControllerAction->getVar('selectedArea');
                 if (!is_null($selectedArea) && $selectedArea != -1) {
+                    $areaIds= []; 
+                    $Areas = TableRegistry::get('Area.Areas');
+                    $AreasOptions = $Areas
+                                    ->find()
+                                    ->where([$Areas->aliasField('parent_id') => $selectedArea])
+                                    ->all();    
+                    $areaIds[] =  $selectedArea;              
+                    if(!empty($AreasOptions)){
+                        foreach ($AreasOptions as $AreasOption) {
+                            $areaIds[] = $AreasOption->id;
+
+                            $AreasOptions1 =$Areas
+                                    ->find()
+                                    ->where([$Areas->aliasField('parent_id') => $AreasOption->id])
+                                    ->all();
+                            if(!empty($AreasOptions1)){
+                                foreach ($AreasOptions1 as $AreasOption1) {
+                                    $areaIds[] = $AreasOption1->id;
+                                }
+                            }
+                        }
+                    }
+                    $selectedArea = $areaIds;      
                     if($this->_table->alias == 'Results'){
-                        $query->where([$TrainingSessions->aliasField('area_id') => $selectedArea]);
+                        $query->where([$TrainingSessions->aliasField('area_id IN') => $selectedArea]);
                     }else{
-                        $query->where([$this->_table->aliasField('area_id') => $selectedArea]);
+                        $query->where([$this->_table->aliasField('area_id IN') => $selectedArea]);
                     }
                 }
             }
