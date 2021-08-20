@@ -809,9 +809,12 @@ public function onGetProgramme(Event $event, Entity $entity)
 public function onGetEducationSubjectId(Event $event, Entity $entity)
 {  
     $gradeId = $entity->education_grade_id;
+    $institution_id = $entity->institution['id'];
     $EducationGradesSubjects = TableRegistry::get('institution_program_grade_subjects');
     $subjectCount = $EducationGradesSubjects->find()
-                    ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId])->toArray();
+    ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId,
+    $EducationGradesSubjects->aliasField('institution_id') => $institution_id])
+                    ->toArray();
     $count = 0;
     if (!empty($subjectCount)) {
        return $count = count($subjectCount);
