@@ -101,6 +101,7 @@ class FieldOptionComponent extends Component
         'TrainingRequirements' => ['className' => 'Training.TrainingRequirements', 'parent' => 'Training'],
         'TrainingResultTypes' => ['className' => 'Training.TrainingResultTypes', 'parent' => 'Training'],
         'TrainingSpecialisations' => ['className' => 'Training.TrainingSpecialisations', 'parent' => 'Training'],
+        'TrainingCourseCategories' => ['className' => 'Training.TrainingCourseCategories', 'parent' => 'Training'],//POCOR-5695 add Training Courses Categories
 
     // Others
         'ContactTypes' => ['className' => 'User.ContactTypes', 'parent' => 'Others'],
