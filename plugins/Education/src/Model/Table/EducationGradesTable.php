@@ -820,7 +820,7 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 
-    /**/
+    /*POCOR-6257 Starts*/
     public function getEducationGradesByPeriod($academicPeriodId, $institutionId)
     {
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
@@ -839,5 +839,5 @@ class EducationGradesTable extends ControllerActionTable
 
         return $gradeOptions;
     }
-    /**/
+    /*POCOR-6257 ends*/
 }
