@@ -1825,6 +1825,30 @@ class InstitutionReportCardsTable extends AppTable
 				->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
 				->count()
 				;
+				$syrianStudents = $InstitutionStudents
+				->find()
+				->innerJoin(
+				['Users' => 'security_users'],
+				[
+					'Users.id = '. $InstitutionStudents->aliasField('student_id')
+				]
+				)
+				->innerJoin(
+				['Nationalities' => 'nationalities'],
+				[
+					'Nationalities.id = Users.nationality_id'
+				]
+				)
+				->group([
+					'Users.id'
+				])
+				->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
+				->where(['Nationalities.national_code' => 'syria'])
+				->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+				->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
+				->count()
+				;
+				
 				$entity[] = [
 					'education_grade_name' => (!empty($value['name']) ? $value['name'] : ''),
 					'education_grade_id' => (!empty($value['id']) ? $value['id'] : 0),
@@ -1843,6 +1867,7 @@ class InstitutionReportCardsTable extends AppTable
 					'male_student_special_need' => $maleSpecialNeedData,
 					'female_student_special_need' => $femaleSpecialNeedData,
 					'total_student_special_need' => $maleSpecialNeedData + $femaleSpecialNeedData,
+					'syrian_students' => $syrianStudents,
 				];	
 			}
             return $entity;
