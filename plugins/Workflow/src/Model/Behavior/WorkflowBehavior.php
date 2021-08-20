@@ -540,28 +540,30 @@ class WorkflowBehavior extends Behavior
         }
         
         //POCOR-5695 starts
-        if($this->_table->alias == 'Results'){
+        if(($this->_table->alias == 'Results') || ($this->_table->alias == 'Sessions')){
             $TrainingSessions = TableRegistry::get('training_sessions');
-            $query->leftJoin(
-                    [$TrainingSessions->alias() => $TrainingSessions->table()],
-                    [
-                        $this->_table->aliasField('training_session_id = ') . $TrainingSessions->aliasField('id'),
-                    ]
-                );
-        
+            if($this->_table->alias == 'Results'){
+                $query->leftJoin(
+                        [$TrainingSessions->alias() => $TrainingSessions->table()],
+                        [
+                            $this->_table->aliasField('training_session_id = ') . $TrainingSessions->aliasField('id'),
+                        ]
+                    );
+            }
             if ($filterConfig['area']) {
                 $selectedArea = $this->_table->ControllerAction->getVar('selectedArea');
                 if (!is_null($selectedArea) && $selectedArea != -1) {
-                    $query->where([$TrainingSessions->aliasField('area_id') => $selectedArea]);
+                    if($this->_table->alias == 'Results'){
+                        $query->where([$TrainingSessions->aliasField('area_id') => $selectedArea]);
+                    }else{
+                        $query->where([$this->_table->aliasField('area_id') => $selectedArea]);
+                    }
                 }
             }
-
             if ($filterConfig['period'] && $filterConfig['month']) { 
                 $selectedPeriods = $this->_table->ControllerAction->getVar('selectedPeriods');
                 $selectedMonth = $this->_table->ControllerAction->getVar('selectedMonth');
                 $checkFlag = 0;
-
-                
                 if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && ($selectedMonth == -1)) {
                     $compare_start_date = $selectedPeriods .'-01-01';
                     $compare_end_date = $selectedPeriods .'-12-31';   
@@ -574,15 +576,25 @@ class WorkflowBehavior extends Behavior
                     $checkFlag =1;
                 }
                 if($checkFlag == 1){
-
-                    $query->where([
-                        'OR'=>[
-                                [$TrainingSessions->aliasField('start_date >=') => $compare_start_date, $TrainingSessions->aliasField('end_date <=') => $compare_end_date],
-                                [$TrainingSessions->aliasField('start_date >=') => $compare_start_date, $TrainingSessions->aliasField('start_date <=') => $compare_end_date],
-                                [$TrainingSessions->aliasField('end_date >=') => $compare_start_date, $TrainingSessions->aliasField('end_date <=') => $compare_end_date]
+                    if($this->_table->alias == 'Results'){
+                        $query->where([
+                            'OR'=>[
+                                    [$TrainingSessions->aliasField('start_date >=') => $compare_start_date, $TrainingSessions->aliasField('end_date <=') => $compare_end_date],
+                                    [$TrainingSessions->aliasField('start_date >=') => $compare_start_date, $TrainingSessions->aliasField('start_date <=') => $compare_end_date],
+                                    [$TrainingSessions->aliasField('end_date >=') => $compare_start_date, $TrainingSessions->aliasField('end_date <=') => $compare_end_date]
+                                ]
                             ]
-                        ]
-                    );
+                        );
+                    }else{
+                        $query->where([
+                            'OR'=>[
+                                    [$this->_table->aliasField('start_date >=') => $compare_start_date, $this->_table->aliasField('end_date <=') => $compare_end_date],
+                                    [$this->_table->aliasField('start_date >=') => $compare_start_date, $this->_table->aliasField('start_date <=') => $compare_end_date],
+                                    [$this->_table->aliasField('end_date >=') => $compare_start_date, $this->_table->aliasField('end_date <=') => $compare_end_date]
+                                ]
+                            ]
+                        );
+                    }
                 }
 
             }//POCOR-5695 ends
