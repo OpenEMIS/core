@@ -282,7 +282,7 @@ class NavigationComponent extends Component
 
         $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipsDirectory', 'ProfileApplicationInstitutionChoices', 'ProfileApplicationAttachments'];
         $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments', 'DirectoryInsurances'];
-        $guardianControllers = ['StudentGuardians'];
+        $guardianControllers = ['Guardians'];
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
             && $action != 'index'
@@ -390,9 +390,9 @@ class NavigationComponent extends Component
 
                 $this->checkClassification($navigations);
             }
-        } /*elseif (($controller->name == 'Guardians' && $action == 'index') || in_array($controller->name, $guardiansControllers)) {
+        } elseif (($controller->name == 'Guardians' && $action != 'index') || in_array($controller->name, $guardiansControllers)) {
             $navigations = $this->appendNavigation('Guardians.Guardians.index', $navigations, $this->getGuardianNavigation());
-        }*/
+        }
 
         $navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
         $navigations = $this->appendNavigation('Administration', $navigations, $this->getAdministrationNavigation());
@@ -435,11 +435,17 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Profile', 'action' => 'Personal', 0 => 'view', $userId]
             ],
 
-            'Guardians.Guardians.index' => [
+            /*'Guardians.Guardians.index' => [
                 'title' => 'Guardian',
                 'icon' => '<span><i class="fa  fa-users"></i></span>',
                 'params' => ['plugin' => 'Guardian'],
-                'selected' => ['Guardians.Guardians']
+                'selected' => ['Guardians.Guardians.add', 'Guardians.ImportUsers.add', 'Guardians.ImportUsers.results', 'Guardians.index']
+            ],*/
+            'Profiles.ProfileStudents.index' => [
+                'title' => 'Guardian',
+                'icon' => '<span><i class="fa  fa-users"></i></span>',
+                'params' => ['plugin' => 'Profile'],
+                'selected' => ['Profiles.ProfileStudents']
             ],
 
             'Institutions.Institutions.index' => [
@@ -468,7 +474,7 @@ class NavigationComponent extends Component
                 'link' => false
             ],
         ];
-
+        //echo "<pre>";print_r($navigation);die();
         return $navigation;
     }
 
@@ -914,7 +920,7 @@ class NavigationComponent extends Component
                 'title' => 'Electricity',
                 'parent' => 'Utilities',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InfrastructureUtilityElectricities.view', 'InfrastructureUtilityElectricities.add', 'InfrastructureUtilityElectricities.edit', 'InfrastructureUtilityElectricities.delete']
+                'selected' => ['InfrastructureUtilityElectricities.index', 'InfrastructureUtilityElectricities.view', 'InfrastructureUtilityElectricities.add', 'InfrastructureUtilityElectricities.edit', 'InfrastructureUtilityElectricities.delete']
             ],
 
             'InfrastructureUtilityInternets.index' => [
@@ -1030,7 +1036,7 @@ class NavigationComponent extends Component
                 $n['params']['institutionId'] = $institutionId;
             }
         }
-
+        
         return $navigation;
     }
 
@@ -2035,16 +2041,19 @@ class NavigationComponent extends Component
         return $navigation;
     }
 
-    /*public function getGuardianNavigation()
+    public function getGuardianNavigation()
     {
+        $session = $this->request->session();
+        $stdId = $this->controller->paramsEncode(['id' => $session->read('Student.Students.id')]);
+        
         $navigation = [
-            'Guardians.Guardians.index' => [
-                'title' => 'Guardian',
-                //'selected' => ['Institutions.dashboard'],
-                'params' => ['plugin' => 'Guardian']
-            ],
+            'Guardians.Guardians.view' => [
+                'title' => 'General',
+                'parent' => 'Guardians.Guardians.index',
+                'params' => ['plugin' => 'Guardian', 'action' => 'Guardians', 0=> $stdId],
+                'selected' => ['Guardians.Guardians.view']
+            ]
         ];
         return $navigation;
-    }*/
-
+    }
 }
