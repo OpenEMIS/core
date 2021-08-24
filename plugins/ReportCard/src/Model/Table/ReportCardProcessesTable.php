@@ -28,6 +28,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->toggle('add', false);
         $this->toggle('edit', false);
+        $this->toggle('search', false);
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
