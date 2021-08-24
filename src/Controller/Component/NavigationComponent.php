@@ -1893,7 +1893,7 @@ class NavigationComponent extends Component
                 'title' => 'Report Cards',
                 'parent' => 'Administration.Performance',
                 'params' => ['plugin' => 'ReportCard'],
-                'selected' => ['ReportCards.Templates', 'ReportCards.ReportCardEmail']
+                'selected' => ['ReportCards.Templates', 'ReportCards.ReportCardEmail', 'ReportCards.Process']
             ],
 
             'StaffAppraisals.Criterias.index' => [
