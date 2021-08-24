@@ -30,6 +30,25 @@ class ReportCardProcessesTable extends ControllerActionTable
         $this->toggle('edit', false);
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'institution_class_id') {
+            return __('Class');
+        } else if($field == 'student_id'){
+            return __('OpenEMIS ID');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function onGetStudentID(Event $event, Entity $entity)
+    {
+        if (isset($entity->student->openemis_no) && !empty($entity->student->openemis_no)) {
+            return $entity->student->openemis_no;
+        }
+        return ' - ';
+    }
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         /*
@@ -60,10 +79,10 @@ class ReportCardProcessesTable extends ControllerActionTable
     public function onGetStatus(Event $event, Entity $entity)
     {
         $status = [
-            1  => "New Process",
-            2  => 'Running',
-            3  => 'Completed',
-            -1 => 'Error'
+            '1'  => "New Process",
+            '2'  => 'Running',
+            '3'  => 'Completed',
+            '-1' => 'Error'
         ];
         if (isset($status[$entity->status])) {
             return $status[$entity->status];
@@ -100,6 +119,6 @@ class ReportCardProcessesTable extends ControllerActionTable
     {
         $tabElements = $this->controller->getReportTabElements();
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Process');
+        $this->controller->set('selectedAction', 'Processes');
     }
 }
