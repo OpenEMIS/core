@@ -375,11 +375,12 @@ class ProfilesController extends AppController
             if($action == 'Personal'){ //for gaurdian personal page
                 $studentId = $session->read('Profile.StudentUser.primaryKey.id'); 
             }else{ //for Profile Student User page
-                $studentData = $this->ControllerAction->paramsDecode($session->read('Student.ExaminationResults.student_id'));
-                $studentId = $studentData['id'];
+                //$studentData = $this->ControllerAction->paramsDecode($session->read('Student.ExaminationResults.student_id'));
+                $studentId = $this->ControllerAction->paramsEncode(['id' => $session->read('Auth.User.id')]);;
             } //POCOR-6202 ends
         }else { 
-            $studentId = $this->request->params['pass'][1];
+            //$studentId = $this->request->params['pass'][1];
+            $studentId = $this->ControllerAction->paramsEncode(['id' => $session->read('Auth.User.id')]);
         }
 
         if (!empty($studentId)) { 
