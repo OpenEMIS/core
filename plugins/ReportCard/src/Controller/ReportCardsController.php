@@ -20,7 +20,7 @@ class ReportCardsController extends AppController
 
     public function ReportCardEmail() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ReportCard.ReportCardEmail']); }
 
-    public function Process() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ReportCard.ReportCardProcesses']); }
+    public function Processes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ReportCard.ReportCardProcesses']); }
     // End
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
@@ -55,7 +55,7 @@ class ReportCardsController extends AppController
         $sessionUrl = ['plugin' => 'ReportCard', 'controller' => 'ReportCards'];
         $sessionTabElements = [
             'Templates' => ['text' => __('Overview')],
-            'Process' => ['text' => __('Process')]
+            'Processes' => ['text' => __('Processes')]
         ];
 
         $tabElements = array_merge($tabElements, $sessionTabElements);
