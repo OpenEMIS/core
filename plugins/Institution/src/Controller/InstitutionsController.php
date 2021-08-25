@@ -199,6 +199,7 @@ class InstitutionsController extends AppController
         $this->loadComponent('Training.Training');
         $this->loadComponent('Institution.CreateUsers');
         $this->attachAngularModules();
+        $this->loadModel('Institution.StaffBodyMasses');
     }
 
     // CAv4

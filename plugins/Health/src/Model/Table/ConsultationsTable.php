@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-
+use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
 
 class ConsultationsTable extends ControllerActionTable
@@ -26,6 +26,10 @@ class ConsultationsTable extends ControllerActionTable
             'contentEditable' => true,
             'allowable_file_types' => 'all',
             'useDefaultName' => true
+        ]);
+        $this->addBehavior('Excel',[
+            'excludes' => [],
+            'pages' => ['index'],
         ]);
     }
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -51,5 +55,15 @@ class ConsultationsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator->allowEmpty('file_content');
         return $validator;
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+        $session = $this->request->session();
+        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+
+        $query
+        ->where([
+            $this->aliasField('security_user_id = ').$staffUserId
+        ]);
     }
 }
