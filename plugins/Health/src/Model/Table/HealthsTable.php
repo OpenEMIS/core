@@ -33,6 +33,10 @@ class HealthsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+        $this->addBehavior('Excel',[
+            'excludes' => [],
+            'pages' => ['view'],
+        ]);
     }
 
     public function onGetBloodType(Event $event, Entity $entity)
