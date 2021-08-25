@@ -628,6 +628,12 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashHygienes']);
     }
 
+    //POCOR-6144 added Export button in Infratucture > Utilitie > Internet
+    public function InfrastructureUtilityInternets()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureUtilityInternets']);
+    }
+
     public function changeUtilitiesHeader($model, $modelAlias, $userType)
     {
         $session = $this->request->session();
