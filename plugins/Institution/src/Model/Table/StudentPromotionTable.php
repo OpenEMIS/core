@@ -457,6 +457,7 @@ class StudentPromotionTable extends AppTable
                                                 ])
                                                 ->where([
                                                 $InstitutionClassesTable->aliasField('institution_id') => $institutionId,
+                                                $InstitutionClassesTable->aliasField('academic_period_id') => $selectedNextPeriod,
                                                 $InstitutionClassGrades->aliasField('education_grade_id') => $selectedNextGrade
                                                 ])->toArray();
                                 }
@@ -709,7 +710,7 @@ class StudentPromotionTable extends AppTable
                                         'EducationSystems.academic_period_id' => $academicPeriodId,
                                         $grades->aliasField('institution_id') => $institutionId
                                     ])->toArray();
-                    $toGradeOption = array_intersect($listOfGrades, $periodGrades);
+                    $toGradeOption = array_intersect($periodGrades, $listOfGrades);
                 } else {
                     // list of grades available to promote to
                     // 'false' means only displayed the next level within the same grade level.
