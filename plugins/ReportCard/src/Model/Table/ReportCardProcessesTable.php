@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 
 class ReportCardProcessesTable extends ControllerActionTable
 {
@@ -16,13 +17,10 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
-        $this->table('report_card_processes');
-
         parent::initialize($config);
 
-        $this->belongsTo('ReportCards', ['className' => 'ReportCard.ReportCards']);
-        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
-        $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -33,9 +31,9 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'institution_class_id') {
+        if ($field == 'class_name') {
             return __('Class');
-        } else if($field == 'student_id'){
+        } else if($field == 'student_id') {
             return __('OpenEMIS ID');
         }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
@@ -52,29 +50,12 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        /*
-        $query
-        ->leftJoin(
-            [$this->InstitutionClasses->alias() => $this->InstitutionClasses->table()],
-            [$this->InstitutionClasses->aliasField('id = ') . $this->aliasField('institution_class_id')]
-        )
-        ->leftJoin(
-            [$this->Institutions->alias() => $this->Institutions->table()],
-            [$this->Institutions->aliasField('id = ') . $this->aliasField('institution_id')]
-        )
-        ->leftJoin(
-            [$this->Students->alias() => $this->Students->table()],
-            [$this->Students->aliasField('id = ') . $this->aliasField('student_id')]
-        )
-        ->select([
-            'status' => $this->aliasField('status'),
-            'institution_class_id' => $this->InstitutionClasses->aliasField('name'),
-            'institution_id' => $this->Institutions->aliasField('name'),
-            'student_id' => $this->Students->aliasField('openemis_no'),
-        ]);
-        */
-        $query->order([$this->aliasField('status DESC')]);
-        return $query;
+
+        $sortList = ['status', 'Users.openemis_no', 'InstitutionClasses.name', 'Institutions.name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
     }
 
     public function onGetStatus(Event $event, Entity $entity)
@@ -105,14 +86,18 @@ class ReportCardProcessesTable extends ControllerActionTable
 
         $this->setFieldOrder([
             'institution_id',
-            'institution_class_id',
-            'student_id',
+            'class_name',
+            'openemis_no',
             'status'
         ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+        $this->field('class_name', ['sort' => ['field' => 'InstitutionClasses.name']]);
+        $this->field('institution_id', ['sort' => ['field' => 'Institutions.name']]);
+        $this->field('status', ['sort' => ['field' => 'status']]);
         $this->setupNewTabElements();
     }
 
@@ -121,5 +106,41 @@ class ReportCardProcessesTable extends ControllerActionTable
         $tabElements = $this->controller->getReportTabElements();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Processes');
+    }
+
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {
+        if ($entity->has('user')) {
+            return $entity->user->openemis_no;
+        }
+        return ' - ';
+    }
+
+    public function onGetClassName(Event $event, Entity $entity)
+    {
+        if ($entity->has('institution_class')) {
+            return $entity->institution_class->name;
+        }
+        return ' - ';
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        # Update the status of student process
+        $StudentsReportCards->query()->update()
+            ->set([
+                'status' => self::NEW_PROCESS,
+                'started_on' => null,
+                'completed_on' => null
+            ])
+            ->where([
+                'report_card_id' => $entity->report_card_id,
+                'student_id' => $entity->student_id,
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'education_grade_id' => $entity->education_grade_id,
+                'institution_class_id' => $entity->institution_class_id
+            ])->execute();
     }
 }
