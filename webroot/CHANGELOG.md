@@ -1,3 +1,8 @@
+### [3.69.0] - 2021-08-26
+- Bug Fixed: OpenEMIS Core: Webhook Education Area - Update
+- Bug Fixed: Add Export button function - Institutions > Infrastructures > Utilities > Internet
+- Bug Fixed: Institutions>Students: No Classes Available for Graduation in the new year
+
 ### [3.68.2] - 2021-08-20
 - Bug Fixed: Improvement of the Professional Development Training Module interface
 - Bug Fixed: Development of School Report Cards
