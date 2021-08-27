@@ -83,6 +83,39 @@ class ImmunizationsTable extends ControllerActionTable
         return $validator;
     }
 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'date',
+            'field' => 'date',
+            'type'  => 'date',
+            'label' => __('Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'health_immunization_type_id',
+            'field' => 'health_immunization_type_id',
+            'type'  => 'string',
+            'label' => __('Vaccination Type')
+        ];
+
+        $extraField[] = [
+            'key'   => 'comment',
+            'field' => 'comment',
+            'type'  => 'string',
+            'label' => __('Comment')
+        ];
+
+        $extraField[] = [
+            'key'   => 'file_name',
+            'field' => 'file_name',
+            'type'  => 'string',
+            'label' => __('File Name')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');

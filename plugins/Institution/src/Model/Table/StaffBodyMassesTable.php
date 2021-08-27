@@ -117,4 +117,45 @@ class StaffBodyMassesTable extends ControllerActionTable
         $body_mass_index = ($weight / $height);
         $entity['body_mass_index'] = $body_mass_index;
     }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'academic_period_id',
+            'field' => 'academic_period_id',
+            'type'  => 'string',
+            'label' => __('Academic Period')
+        ];
+
+        $extraField[] = [
+            'key'   => 'date',
+            'field' => 'date',
+            'type'  => 'date',
+            'label' => __('Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'height',
+            'field' => 'height',
+            'type'  => 'string',
+            'label' => __('Height')
+        ];
+
+        $extraField[] = [
+            'key'   => 'weight',
+            'field' => 'weight',
+            'type'  => 'string',
+            'label' => __('Weight')
+        ];
+
+        $extraField[] = [
+            'key'   => 'body_mass_index',
+            'field' => 'body_mass_index',
+            'type'  => 'integer',
+            'label' => __('Body Mass Index
+            ')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
 }

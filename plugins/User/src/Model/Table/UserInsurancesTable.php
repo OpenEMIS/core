@@ -79,6 +79,39 @@ class UserInsurancesTable extends ControllerActionTable
         ->orderDesc($this->aliasField('created'));
     }
 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'start_date',
+            'field' => 'start_date',
+            'type'  => 'date',
+            'label' => __('Start Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'end_date',
+            'field' => 'end_date',
+            'type'  => 'date',
+            'label' => __('End Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'insurance_provider_id',
+            'field' => 'insurance_provider_id',
+            'type'  => 'string',
+            'label' => __('Provider')
+        ];
+
+        $extraField[] = [
+            'key'   => 'insurance_type_id',
+            'field' => 'insurance_type_id',
+            'type'  => 'string',
+            'label' => __('Type')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
 
