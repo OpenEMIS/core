@@ -178,8 +178,9 @@ class AcademicPeriodsTable extends AppTable
                 'name' =>$entity->name,
                 'start_date' =>$entity->start_date,
                 'end_date' =>$entity->end_date,
-                'current' =>$entity->start_date,
-                'academic_period_id' =>'',
+                'current' =>$entity->current,
+                'academic_period_id' =>$entity->id,
+                'parent_id' => $entity->parent_id,
             ];
           
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
@@ -197,8 +198,9 @@ class AcademicPeriodsTable extends AppTable
                 'name' =>$entity->name,
                 'start_date' =>$entity->start_date,
                 'end_date' =>$entity->end_date,
-                'current' =>$entity->start_date,
+                'current' =>$entity->current,
                 'academic_period_id' =>$entity->id,
+                'parent_id' => $entity->parent_id,
             ];
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
@@ -777,6 +779,43 @@ class AcademicPeriodsTable extends AppTable
                 $endDate = $period->end_date;
             }
             $weeks[$weekIndex++] = [$startDate, $endDate];
+            $startDate = $endDate->copy();
+            $startDate->addDay();
+        } while ($endDate->lt($period->end_date));
+
+        return $weeks;
+    }
+
+    public function getDateFrom($id)
+    {
+        $period = $this->findById($id)->first();
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
+
+        // If First of week is sunday changed the value to 7, because sunday with the '0' value unable to be displayed
+        if ($firstDayOfWeek == 0) {
+            $firstDayOfWeek = 7;
+        }
+
+        $daysPerWeek = $ConfigItems->value('days_per_week');
+
+        // If last day index is '0'-valued-sunday it will change the value to '7' so it will be displayed.
+        $lastDayIndex = ($firstDayOfWeek - 1);// last day index always 1 day before the starting date.
+        if ($lastDayIndex == 0) {
+            $lastDayIndex = 7;
+        }
+
+        $startDate = $period->start_date;
+
+        $weekIndex = 1;
+        $weeks = [];
+
+        do {
+            $endDate = $startDate->copy();
+            if ($endDate->gt($period->end_date)) {
+                $endDate = $period->end_date;
+            }
+            $weeks[$weekIndex++] = [$startDate];
             $startDate = $endDate->copy();
             $startDate->addDay();
         } while ($endDate->lt($period->end_date));
