@@ -84,6 +84,39 @@ class HistoriesTable extends ControllerActionTable
         return $validator;
     }
 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'current',
+            'field' => 'current',
+            'type'  => 'string',
+            'label' => __('Current')
+        ];
+
+        $extraField[] = [
+            'key'   => 'comment',
+            'field' => 'comment',
+            'type'  => 'string',
+            'label' => __('Comment')
+        ];
+
+        $extraField[] = [
+            'key'   => 'health_condition_id',
+            'field' => 'health_condition_id',
+            'type'  => 'string',
+            'label' => __('Health Condition')
+        ];
+
+        $extraField[] = [
+            'key'   => 'file_name',
+            'field' => 'file_name',
+            'type'  => 'string',
+            'label' => __('File Name')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');

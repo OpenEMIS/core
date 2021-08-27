@@ -62,6 +62,46 @@ class TestsTable extends ControllerActionTable
         return $validator;
     }
 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'date',
+            'field' => 'date',
+            'type'  => 'date',
+            'label' => __('Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'result',
+            'field' => 'result',
+            'type'  => 'string',
+            'label' => __('Result')
+        ];
+
+        $extraField[] = [
+            'key'   => 'comment',
+            'field' => 'comment',
+            'type'  => 'string',
+            'label' => __('Comment')
+        ];
+
+        $extraField[] = [
+            'key'   => 'health_test_type_id',
+            'field' => 'health_test_type_id',
+            'type'  => 'string',
+            'label' => __('Health Test Type')
+        ];
+
+        $extraField[] = [
+            'key'   => 'file_name',
+            'field' => 'file_name',
+            'type'  => 'string',
+            'label' => __('File Name')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');

@@ -64,6 +64,46 @@ class MedicationsTable extends ControllerActionTable
         $this->field('file_content', ['after' => 'end_date','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'name',
+            'field' => 'name',
+            'type'  => 'string',
+            'label' => __('Name')
+        ];
+
+        $extraField[] = [
+            'key'   => 'dosage',
+            'field' => 'dosage',
+            'type'  => 'string',
+            'label' => __('Dosage')
+        ];
+
+        $extraField[] = [
+            'key'   => 'start_date',
+            'field' => 'start_date',
+            'type'  => 'date',
+            'label' => __('Start Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'end_date',
+            'field' => 'end_date',
+            'type'  => 'date',
+            'label' => __('End Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'file_name',
+            'field' => 'file_name',
+            'type'  => 'string',
+            'label' => __('File Name')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
