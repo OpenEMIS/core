@@ -26,7 +26,7 @@ class InstitutionGradesTable extends ControllerActionTable
         $this->belongsTo('Institutions',                ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
 
-        $this->hasMany('InstitutionGrades', ['className' => 'Institution.InstitutionGrades', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
+        //$this->hasMany('InstitutionGrades', ['className' => 'Institution.InstitutionGrades', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);//POCOR-6268 commented due to - unnecessary association
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -93,7 +93,7 @@ class InstitutionGradesTable extends ControllerActionTable
                 'end_date','education_subject_id'
             ]);
         }
-    }
+    }      
 
 
 /******************************************************************************************************************
@@ -809,9 +809,12 @@ public function onGetProgramme(Event $event, Entity $entity)
 public function onGetEducationSubjectId(Event $event, Entity $entity)
 {  
     $gradeId = $entity->education_grade_id;
+    $institution_id = $entity->institution['id'];
     $EducationGradesSubjects = TableRegistry::get('institution_program_grade_subjects');
     $subjectCount = $EducationGradesSubjects->find()
-                    ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId])->toArray();
+    ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId,
+    $EducationGradesSubjects->aliasField('institution_id') => $institution_id])
+                    ->toArray();
     $count = 0;
     if (!empty($subjectCount)) {
        return $count = count($subjectCount);

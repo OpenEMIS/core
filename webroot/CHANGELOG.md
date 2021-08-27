@@ -1,3 +1,63 @@
+### [3.69.0] - 2021-08-26
+- Bug Fixed: OpenEMIS Core: Webhook Education Area - Update
+- Bug Fixed: Add Export button function - Institutions > Infrastructures > Utilities > Internet
+- Bug Fixed: Institutions>Students: No Classes Available for Graduation in the new year
+
+### [3.68.2] - 2021-08-20
+- Bug Fixed: Improvement of the Professional Development Training Module interface
+- Bug Fixed: Development of School Report Cards
+- Bug Fixed: Reports > Institution > Infrastructure > View: Data is not reflecting correctly on the view page
+- Bug Fixed: Institution > Performance > Outcome > Export: Export file is empty when exporting Outcome for past Academic Period
+- Bug Fixed: Add Export button function - Institutions > General > Contacts > Institution
+- Bug Fixed: Add Export button function - Institutions > Examinations > Exams
+- Bug Fixed: Institution > Performance > Outcome: Outcomes not listing the correct Grade
+- Bug Fixed: Administration>System Setup>Field Options: Delete Training Achievement Types
+- Bug Fixed: Institutions>Academic>Programmes: Extra Subjects Assigned to Each Grade
+- Bug Fixed: Administration > System Setup > Field Options: Increase Character Limit for Student Behavior and Character Classification
+- Bug Fixed: Institutions>Infrastructure>Overview: Data should be related to the academic year chosen on the main page when exporting.
+- Bug Fixed: Institutions>Infrastructure>Overview: The infrastructure Area should be listed in the report (Land Area, Building Area, Floor Area, and Room Area)
+- Bug Fixed: Institution > Staff: Email field in Staff is greyed out and cannot be edited
+- Bug Fixed: Institutions>Students: Class dropdown is not populated when selecting class
+
+### [3.68.1] - 2021-08-16
+- Bug Fixed: Add additional filters and columns to the Absence list view
+- Bug Fixed: Institution > Student > Academic > Outcome: Subjects listed for student do not tally with the Subjects student is taking
+- Bug Fixed: Institutions>Students: No Available Grades for Graduation in the new year
+- Bug Fixed: Optimise the migration script created in POCOR-5947 and Writing an SQL statement to count the records
+
+### [3.68.0] - 2021-08-11
+- Bug Fixed: 2.02 Develop a function to delete behaviours
+- Bug Fixed: Administration > System Setup > Labels: To create navigations for the word "Requester"
+- Bug Fixed: Add Export button function - Institutions > Infrastructures > WASH > Hygiene
+- Bug Fixed: Add a function to delete reports
+- Bug Fixed: Administration>Security>Roles: Not able to edit Permission
+- Bug Fixed: Administration > System Setup > System Configuration > Webhooks: Academic Period webhook does not include the parent academic period id
+- Bug Fixed: Migration Script:Update the migration script for POCOR3804 to cater for special characters.
+- Bug Fixed: Institutions>Academic>Programmes: 404 Error when deleting a programme
+- Bug Fixed: Administration > Profiles > Students: Other grades from other institutions added to the queue and cannot generate profiles for last year students
+
+### [3.67.3] - 2021-08-03
+- Bug Fixed: Administration > System Setup > Localization > Translations: Remove Nursery from Translation
+- Bug Fixed: Administration> Examinations > Centres > Add: Exam Centre was not created when selecting All Institutions
+- Bug Fixed: Institution > Performance > Assessment: Student from a Multigrade class is appearing in both grades in Assessment page
+- Bug Fixed: Personal>Student>Academic>Outcomes tab: User cannot see all subjects
+- Bug Fixed: Institutions>Meals>Students: Display the Meals Received section wrongly,Displays "None" instead of "Meal Received"
+- Bug Fixed: Institution > Academic > Classes: Students who are promoted without selecting next class will not be found in class
+- Bug Fixed: Institutions > Staff > Edit : Issues with editing staff's employment
+- Bug Fixed: Administration > System Setup > Field Options: 404 error when he is trying to delete a Student Absence Reason
+- Bug Fixed: Institutions>Academic>Subjects-Cannot remove extra subjects
+
+### [3.67.2] - 2021-07-23
+- Bug Fixed: Institution > Academic > Associations: Unable to add new record
+- Bug Fixed: Add Export button function - Institutions > Staff > Staff1 > Career > Positions (include institutions position type start end and status)
+- Bug Fixed: Add Export button function - Institutions > Finances > Budget
+- Bug Fixed: Add Export button function - Institutions > Finances > Expenditure
+- Bug Fixed: Institution > Survey > Forms: Date Enabled was set to a future date, but user is still able to view Survey Form
+- Bug Fixed: Institution > Staff > Career: Staff End of Assignment: Assignee section combines different users in one group
+- Bug Fixed: Reports>Surveys: Academic Period should be before Survey Form
+- Bug Fixed: Institution:404 error when creating a new institution when there are no institutions and deleting it
+- Bug Fixed: Administration>Security>Roles: Page is stuck after trying to grant permission
+
 ### [3.67.1] - 2021-07-09
 - Bug Fixed: Add default identity, staff position and add date range filter to Reports > Institution > Staff leave
 - Bug Fixed: Institution > Attendance > Students: Student has Enrolled status but is not appearing on Attendance page

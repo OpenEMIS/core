@@ -301,7 +301,7 @@ class StudentProfilesTable extends ControllerActionTable
 			->toArray();
        
 
-        $reportCardOptions = ['-1' => '-- '.__('Select Staff Template').' --'] + $reportCardOptions;
+        $reportCardOptions = ['-1' => '-- '.__('Select Student Template').' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->query('student_profile_template_id')) ? $this->request->query('student_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//End	
@@ -1016,6 +1016,7 @@ class StudentProfilesTable extends ControllerActionTable
         $where = [];
         $where[$institutionClassStudents->aliasField('education_grade_id')] = $educationGradeId;
         $where[$institutionClassStudents->aliasField('academic_period_id')] = $academicPeriodId;
+        $where[$institutionClassStudents->aliasField('institution_id')] = $institutionId;
         if (!is_null($studentId)) {
             $where[$institutionClassStudents->aliasField('student_id')] = $studentId;
         }
