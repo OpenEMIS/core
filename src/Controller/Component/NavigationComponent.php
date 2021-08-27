@@ -901,11 +901,11 @@ class NavigationComponent extends Component
                 'parent' => 'Infrastructures',
                 'link' => false
             ],
-            'InfrastructureUtilityElectricities.index' => [
+            'Institutions.InfrastructureUtilityElectricities.index' => [
                 'title' => 'Electricity',
                 'parent' => 'Utilities',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InfrastructureUtilityElectricities.view', 'InfrastructureUtilityElectricities.add', 'InfrastructureUtilityElectricities.edit', 'InfrastructureUtilityElectricities.delete']
+                'selected' => ['Institutions.InfrastructureUtilityElectricities.view', 'Institutions.InfrastructureUtilityElectricities.add', 'Institutions.InfrastructureUtilityElectricities.edit', 'Institutions.InfrastructureUtilityElectricities.delete']
             ],
 
             'Institutions.InfrastructureUtilityInternets.index' => [
