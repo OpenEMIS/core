@@ -52,8 +52,8 @@ class ConfigItemsTable extends AppTable
 
         $this->ControllerAction->field('name', ['visible' => ['index'=>true]]);
         $this->ControllerAction->field('default_value', ['visible' => ['view'=>true]]);
-        
-        if ($this->request->query['type'] == 9) {
+        //POCOR-6248 change type 10 for Coordinates
+        if ($this->request->query['type'] == 10 && $this->request->query['type_value'] == 'Coordinates') {
           $this->ControllerAction->field('default_value', ['visible' => ['index'=>true]]);
         }
 
@@ -366,6 +366,12 @@ class ConfigItemsTable extends AppTable
                 } else {
                  return __('Enabled');
                 }               
+            } else if ($entity->type == 'Columns for Student List Page') { //POCOR-6248 start
+                if ($entity->{$valueField} == 0) {
+                 return __('Disabled');
+                } else {
+                 return __('Enabled');
+                }   //POCOR-6248 end            
             } else if ($entity->type == 'User Completeness') {
                 if ($entity->{$valueField} == 0) {
                  return __('Disabled');
