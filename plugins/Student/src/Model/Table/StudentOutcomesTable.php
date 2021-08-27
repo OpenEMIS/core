@@ -123,7 +123,15 @@ class StudentOutcomesTable extends ControllerActionTable
         $subjectOptions = [];
         if (!empty($selectedTemplate)){
             $session = $this->request->session();
-            $studentId = $session->read('Student.Students.id');
+            //POCOR-6215 starts
+            $authUser = $session->read('Auth.User');
+            if($authUser['is_student'] == 1 && $authUser['is_guardian'] == 1){
+                $studentId = $session->read('Profile.StudentUser.primaryKey.id');
+            }else if($authUser['is_student'] == 1 && $authUser['is_guardian'] != 1){
+                $studentId = $session->read('Auth.User.id');
+            }else{
+                $studentId = $session->read('Student.Students.id');
+            }//POCOR-6215 ends
             $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
@@ -135,7 +143,7 @@ class StudentOutcomesTable extends ControllerActionTable
                                 ->innerJoin([$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()], [
                                    $InstitutionSubjectStudents->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id')
                                 ])
-                                ->where([$InstitutionSubjectStudents->aliasField('student_id') => $studentId ])
+                                ->where([$InstitutionSubjectStudents->aliasField('student_id') => $studentId, $InstitutionSubjects->aliasField('academic_period_id') => $selectedAcademicPeriod ])//6004 add academic_period_id condition
                                 ->toArray(); 
              
             $subjectOptions = ['0' => __('All Subjects')] + $subjectOptions;
