@@ -87,8 +87,8 @@ class HistoriesTable extends ControllerActionTable
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
-            'key'   => 'current',
-            'field' => 'current',
+            'key'   => 'current_new',
+            'field' => 'current_new',
             'type'  => 'string',
             'label' => __('Current')
         ];
@@ -122,6 +122,10 @@ class HistoriesTable extends ControllerActionTable
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
 
         $query
+        ->select([
+            'current_new' => "(CASE WHEN current = 1 THEN 'Yes'
+            ELSE 'No' END)"
+        ])
         ->where([
             $this->aliasField('security_user_id = ').$staffUserId
         ]);
