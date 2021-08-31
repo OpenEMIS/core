@@ -204,15 +204,7 @@ class PermissionsTable extends ControllerActionTable
                 'url' => array_merge($url, ['module' => $module]),
                 'text' => __($module)
             ];
-
-            /*if ($module == 'Profile') {
-                $tabElements[$module] = [
-                    'url' => array_merge($url, ['module' => $module]),
-                    'text' => __('Personal')
-                ];
-            }*/
         }
-        //echo "<pre>";print_r($tabElements);die;
         $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
         $controller->set('tabElements', $tabElements);
     }
