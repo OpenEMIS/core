@@ -142,8 +142,8 @@ class HealthsTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key'   => 'health_insurance',
-            'field' => 'health_insurance',
+            'key'   => 'health_insurance_new',
+            'field' => 'health_insurance_new',
             'type'  => 'integer',
             'label' => __('Health Insurance')
         ];
@@ -163,6 +163,10 @@ class HealthsTable extends ControllerActionTable
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
 
         $query
+        ->select([
+            'health_insurance_new' => "(CASE WHEN health_insurance = 1 THEN 'Yes'
+            ELSE 'No' END)"
+        ])
         ->where([
             $this->aliasField('security_user_id = ').$staffUserId
         ]);

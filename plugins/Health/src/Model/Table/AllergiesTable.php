@@ -93,8 +93,8 @@ class AllergiesTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key'   => 'severe',
-            'field' => 'severe',
+            'key'   => 'severe_new',
+            'field' => 'severe_new',
             'type'  => 'integer',
             'label' => __('Severe')
         ];
@@ -128,6 +128,10 @@ class AllergiesTable extends ControllerActionTable
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
 
         $query
+        ->select([
+            'severe_new' => "(CASE WHEN severe = 1 THEN 'Yes'
+            ELSE 'No' END)"
+        ])
         ->where([
             $this->aliasField('security_user_id = ').$staffUserId
         ]);
