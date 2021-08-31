@@ -282,7 +282,7 @@ class NavigationComponent extends Component
 
         $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipsDirectory', 'ProfileApplicationInstitutionChoices', 'ProfileApplicationAttachments'];
         $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments', 'DirectoryInsurances'];
-        $guardianControllers = ['Guardians'];
+        $guardianNavsControllers = [];
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
             && $action != 'index'
@@ -390,8 +390,10 @@ class NavigationComponent extends Component
 
                 $this->checkClassification($navigations);
             }
-        } elseif (($controller->name == 'Guardians' && $action != 'index') || in_array($controller->name, $guardiansControllers)) {
-            $navigations = $this->appendNavigation('Guardians.Guardians.index', $navigations, $this->getGuardianNavigation());
+        } elseif (($controller->name == 'GuardianNavs' && $action != 'index')) {
+            $navigations = $this->appendNavigation('GuardianNavs.StudentUser.view', $navigations, $this->getGuardianNavGuardianNavigation());
+
+            $this->checkClassification($navigations);
         }
 
         $navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
@@ -435,17 +437,10 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Profile', 'action' => 'Personal', 0 => 'view', $userId]
             ],
 
-            /*'Guardians.Guardians.index' => [
+            'GuardianNavs.GuardianNavs.index' => [
                 'title' => 'Guardian',
                 'icon' => '<span><i class="fa  fa-users"></i></span>',
-                'params' => ['plugin' => 'Guardian'],
-                'selected' => ['Guardians.Guardians.add', 'Guardians.ImportUsers.add', 'Guardians.ImportUsers.results', 'Guardians.index']
-            ],*/
-            'Profiles.ProfileStudents.index' => [
-                'title' => 'Guardian',
-                'icon' => '<span><i class="fa  fa-users"></i></span>',
-                'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.ProfileStudents']
+                'params' => ['plugin' => 'GuardianNav']
             ],
 
             'Institutions.Institutions.index' => [
@@ -2041,19 +2036,112 @@ class NavigationComponent extends Component
         return $navigation;
     }
 
-    public function getGuardianNavigation()
+    public function getGuardianNavGuardianNavigation()
     {
         $session = $this->request->session();
-        $stdId = $this->controller->paramsEncode(['id' => $session->read('Student.Students.id')]);
-        
+        $studentId = $session->read('Student.Students.id');
         $navigation = [
-            'Guardians.Guardians.view' => [
+            'GuardianNavs.StudentUser.view' => [
                 'title' => 'General',
-                'parent' => 'Guardians.Guardians.index',
-                'params' => ['plugin' => 'Guardian', 'action' => 'Guardians', 0=> $stdId],
-                'selected' => ['Guardians.Guardians.view']
-            ]
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'GuardianNav','controller' => 'GuardianNavs', 'action' => 'StudentUser', 0 => 'view',  $this->controller->paramsEncode(['id' => $studentId])],
+                'selected' => [
+                    'GuardianNavs.StudentUser.edit',
+                    'GuardianNavs.StudentAccount.view',
+                    'GuardianNavs.StudentAccount.edit',
+                    'GuardianNavs.StudentSurveys',
+                    'GuardianNavs.StudentSurveys.edit',
+                    'GuardianNavs.IndividualPromotion',
+                    'Students.Identities',
+                    'Students.Nationalities',
+                    'Students.Contacts',
+                    'Students.Guardians',
+                    'Students.Languages',
+                    'Students.Attachments',
+                    'Students.Comments',
+                    'Students.History',
+                    'Students.GuardianUser',
+                    'GuardianNavs.StudentUser.pull',
+                    'StudentComments.index',
+                    'StudentComments.view',
+                    'StudentComments.add',
+                    'StudentComments.edit',
+                    'StudentComments.delete',
+                    'Students.StudentTransport',
+                    'Students.Demographic',
+                    'Guardians.Accounts',
+                    'Guardians.Demographic',
+                    'Guardians.Identities',
+                    'Guardians.Nationalities',
+                    'Guardians.Contacts',
+                    'Guardians.Languages',
+                    'Guardians.Attachments',
+                    'GuardianComments.index',
+                    'GuardianComments.view',
+                    'GuardianComments.add',
+                    'GuardianComments.edit',
+                    'GuardianComments.delete'
+                ]
+            ],
+            'GuardianNavs.StudentProgrammes.index' => [
+                'title' => 'Academic',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'GuardianNav'],
+                'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
+                'Students.Extracurriculars', 'GuardianNavs.StudentTextbooks', 'GuardianNavs.Students.view', 'GuardianNavs.Students.edit', 'GuardianNavs.StudentRisks', 'Students.Outcomes', 'GuardianNavs.StudentProgrammes.view', 'Institutions.StudentProgrammes.edit',
+                'Students.Competencies', 'Students.AssessmentItemResultsArchived', 'Students.InstitutionStudentAbsencesArchived', 'GuardianNavs.StudentTransition', 'GuardianNavs.Associations','GuardianNavs.StudentAssociations']
+            ],
+            'Students.StudentScheduleTimetable' => [
+                'title' => 'Timetables',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'selected' => ['Students.StudentScheduleTimetable'],
+                'params' => ['plugin' => 'Student']
+            ],
+            /*'Counsellings.index' => [
+                'title' => 'Counselling',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'GuardianNav'],
+                'selected' => ['Counsellings.add', 'Counsellings.edit', 'Counsellings.view', 'Counsellings.delete']
+            ],*/
+            'Students.BankAccounts' => [
+                'title' => 'Finance',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'Student'],
+                'selected' => ['Students.StudentFees']
+            ],
+            'Students.Healths' => [
+                'title' => 'Health',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'Student'],
+                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
+            ],
+            'Students.SpecialNeedsReferrals' => [
+                'title' => 'Special Needs',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'Student'],
+                'selected' => ['Students.SpecialNeedsReferrals', 'Students.SpecialNeedsAssessments', 'Students.SpecialNeedsServices', 'Students.SpecialNeedsDevices', 'Students.SpecialNeedsPlans']
+            ],
+            'Students.StudentVisitRequests' => [
+                'title' => 'Visits',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'Student'],
+                'selected' => ['Students.StudentVisitRequests', 'Students.StudentVisits']
+            ],
+            'Students.Meals' => [
+                'title' => 'Meals',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'Student'],
+                'selected' => ['Students.Meals']
+            ],
+            'Students.Profiles' => [
+                'title' => 'Profiles',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'Student'],
+                'selected' => ['Students.Profiles']
+            ],
+
         ];
+        //echo "<pre>";print_r($navigation);die();
         return $navigation;
     }
 }
