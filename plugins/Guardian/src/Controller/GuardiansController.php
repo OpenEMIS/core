@@ -7,7 +7,8 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-
+use Cake\Utility\Inflector;
+use Cake\Routing\Router;
 use App\Controller\AppController;
 
 class GuardiansController extends AppController
@@ -83,7 +84,7 @@ class GuardiansController extends AppController
         if (!empty($studentId)) {
             $entity = $User->get($studentId);
         } else {
-            $this->Navigation->addCrumb('Guardian', ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Guardians', 'index']);
+            $this->Navigation->addCrumb('Guardian', ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Guardians']);
         }
         
         $name = $entity->name;  
