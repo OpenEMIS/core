@@ -126,7 +126,7 @@
 - Bug Fixed: Add Export button function - Institutions > General > Map
 
 ### [3.66.1] - 2021-06-04
-- Bug Fixed: Profiles > Contacts tab : Allow user to add contact information
+- Implemented: Profiles > Contacts tab : Allow user to add contact information
 - Bug Fixed: Institution > Infrastructure : Unable to delete infrastructure
 - Bug Fixed: Reports > Institution > Students/Staff: To add Sector and Locality columns in the reports
 - Bug Fixed: Institutions > Staff > Professional > License > Edit : Allow user to edit the License Type dropdown
@@ -158,11 +158,12 @@
 - Bug Fixed: Institution > Attendance > Student: All Week page is not reflecting the attendance
 
 ### [3.65.4] - 2021-05-24
+- Implemented: Changes to Data Archiving feature in OpenEMIS Core - Part II
+- Implemented: Remove default date for student / staff actions
 - Bug Fixed: Institution > Student > Transfer: Start Date and End Date is reflected incorrectly
-- Bug Fixed: Changes to Data Archiving feature in OpenEMIS Core - Part II
-- Bug Fixed: Remove default date for student / staff actions
 
 ### [3.65.3] - 2021-05-21
+- Implemented: Add area filter to the staff and student profile feature
 - Bug Fixed: Institution > Performance > Assessment: Student who had Withdrawn/Transferred Status in 1 class and Enrolled Status in another class from the same Institution has Enrolled Status for both class in Assessment page
 - Bug Fixed: Administration > System Setup > Education Structure > Programme > Add: Upon adding a new record, the record is not reflected on the List page
 - Bug Fixed: Report > Institution > Student Attendance Summary report: Education Grade and Report End Date are not correct
@@ -172,7 +173,6 @@
 - Bug Fixed: Institution > Attendance > Student: Attendance marked on Fridays disappeared
 - Bug Fixed: Directory > Add: Encountered error while adding users with Users Type
 - Bug Fixed: Administration > System Setup > Risk: 504 error encountered when generating risk for all Institutions	
-- Bug Fixed: Add area filter to the staff and student profile feature
 - Bug Fixed: Institution > Attendance > Students: Unable to view students Attendance even though the students are assigned to a class
 - Bug Fixed: Institution > Survey > Forms: Repeater Question is not saving the Date of Birth correctly
 - Bug Fixed: Reports > Institutions > Student Body Mass report: Changes to the report
@@ -182,9 +182,10 @@
 - Bug Fixed: Institution > Performance > Assessments: Sys Admin unable to edit Assessment. Edit button is missing.
 
 ### [3.65.2] - 2021-05-12
+- Bug Fixed: Reports > Survey: Encountered 404 error when generating report
 - Bug Fixed: Installer creates database without tables
 - Bug Fixed: Institution > Student > Transfer: Student's Start Date and End Date upon approval did no match with the Academic Period
-- Bug Fixed: Report > Students > Student Out of School Report: add / remove columns
+- Implemented: Report > Students > Student Out of School Report: add / remove columns
 
 ### [3.65.1] - 2021-05-07
 - Bug Fixed: Institution > Survey > Forms: Edited record disappeared
