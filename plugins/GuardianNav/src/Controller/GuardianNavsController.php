@@ -27,13 +27,14 @@ class GuardianNavsController extends AppController
     private $features = [
         'Students',
         'StudentUser',
+        'StudentAccount'
     ];
 
     public function initialize(){
         parent::initialize();
         $this->ControllerAction->models = [
             // Users
-            'Accounts'              => ['className' => 'GuardianNav.Accounts', 'actions' => ['view', 'edit']],
+            'StudentAccount'    => ['className' => 'GuardianNav.StudentAccount', 'actions' => ['view', 'edit']],
         ];
     }
 
@@ -147,7 +148,7 @@ class GuardianNavsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-     public function getUserTabElements($options = [])
+    public function getUserTabElements($options = [])
     {
         if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
             $id = $this->ControllerAction->getQueryString('security_user_id');
@@ -180,7 +181,7 @@ class GuardianNavsController extends AppController
             } else if ($key == 'Accounts') {
                 $tabElements[$key]['url']['plugin'] = $plugin;
                 $tabElements[$key]['url']['controller'] = 'GuardianNavs';
-                $tabElements[$key]['url']['action'] = 'Accounts';
+                $tabElements[$key]['url']['action'] = 'StudentAccount';
                 $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
             } else if ($key == 'Comments') {
