@@ -530,7 +530,7 @@ class StudentsController extends AppController
     // }
 
     public function getUserTabElements($options = [])
-    {
+    {   
         $session = $this->request->session();
         $tabElements = $session->read('Institution.Students.tabElements');
 
