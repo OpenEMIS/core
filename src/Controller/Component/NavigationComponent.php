@@ -1879,7 +1879,7 @@ class NavigationComponent extends Component
                 'title' => 'Outcomes',
                 'parent' => 'Administration.Performance',
                 'params' => ['plugin' => 'Outcome'],
-                'selected' => ['Outcomes.Templates', 'Outcomes.Criterias', 'Outcomes.Periods', 'Outcomes.GradingTypes']
+                'selected' => ['Outcomes.Templates', 'Outcomes.Criterias', 'Outcomes.Periods', 'Outcomes.GradingTypes', 'Outcomes.ImportOutcomeTemplates']
             ],
 
             'Assessments.Assessments' => [
