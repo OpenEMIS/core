@@ -314,16 +314,14 @@ class StudentsTable extends AppTable
                     $institutionList = $institutionQuery->toArray();
                 } else {
                    $institutionQuery = $InstitutionsTable
-                   ->find()
-                   ->select([
-                       'id' => $InstitutionsTable->aliasField('id'),
-                       'code' => $InstitutionsTable->aliasField('code'),
-                       'name' => $InstitutionsTable->aliasField('name')
-                   ])
-                   ->order([
-                       $InstitutionsTable->aliasField('code') => 'ASC',
-                       $InstitutionsTable->aliasField('name') => 'ASC'
-                   ]);
+                                       ->find('list', [
+                                                'keyField' => 'id',
+                                                'valueField' => 'code_name'
+                                            ])
+                                       ->order([
+                                           $InstitutionsTable->aliasField('code') => 'ASC',
+                                           $InstitutionsTable->aliasField('name') => 'ASC'
+                                       ]);
 
                    $superAdmin = $this->Auth->user('super_admin');
                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
@@ -332,10 +330,6 @@ class StudentsTable extends AppTable
                    }
 
                    $institutionList = $institutionQuery->toArray();
-                   foreach($institutionList AS $institutionListData){
-                    $institutionListArr[] = array($institutionListData['id'] => $institutionListData['code']. ' - ' .$institutionListData['name']);
-                   }
-                   $institutionList = $this->array_flatten($institutionListArr);
                 }
 
                 if (empty($institutionList)) {
@@ -363,7 +357,7 @@ class StudentsTable extends AppTable
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
                     }
-
+                   
                     $attr['type'] = 'chosenSelect';
                     $attr['onChangeReload'] = true;
                     $attr['attr']['multiple'] = false;
