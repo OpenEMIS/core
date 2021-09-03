@@ -138,6 +138,7 @@ class POCOR5009 extends AbstractMigration
 	public function down()
        {
        		$this->execute('DROP TABLE IF EXISTS `security_users_20200827`');//POCOR-6299
+       		$this->execute('DROP TABLE IF EXISTS `temp_security_users`');//POCOR-6299
 
 	    	$this->execute('DROP TABLE IF EXISTS `security_users`');
             $this->execute('RENAME TABLE `z_5009_org_security_users` TO `security_users`');
