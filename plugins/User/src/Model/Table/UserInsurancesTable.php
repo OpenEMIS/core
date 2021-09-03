@@ -4,8 +4,7 @@ namespace User\Model\Table;
 use ArrayObject;
 
 use Cake\Validation\Validator;
-
-use Cake\Event\Event;
+use Cake\Event\Event;//POCOR-6255 
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -21,12 +20,32 @@ class UserInsurancesTable extends ControllerActionTable
         $this->belongsTo('InsuranceTypes', ['className' => 'Health.InsuranceTypes', 'foreignKey' => 'insurance_type_id']);
 
         $this->addBehavior('Health.Health');
-        
         $this->addBehavior('Excel',[
             'excludes' => ['comment, security_user_id'],
             'pages' => ['index'],
         ]);
+        //POCOR-6255 start
+        $this->addBehavior('Page.FileUpload', [
+            'fieldMap' => ['file_name' => 'file_content'],
+            'size' => '2MB'
+        ]);//POCOR-6255 end
     }
+    //POCOR-6255 start
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
+        return $events;
+    }
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'download' || $action == 'image') {
+            // check for the user permission to download here
+            $event->stopPropagation();
+            return true;
+        }
+    }//POCOR-6255 end
 
     public function validationDefault(Validator $validator)
     {
@@ -114,9 +133,6 @@ class UserInsurancesTable extends ControllerActionTable
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-
-
-
         $this->field('start_date',['attr' => ['label' => __('Start Date')]]);
         $this->field('end_date',['attr' => ['label' => __('End Date')]]);
 
@@ -125,7 +141,5 @@ class UserInsurancesTable extends ControllerActionTable
 
         $this->fields['insurance_type_id']['type'] = 'select';
         $this->field('insurance_type_id', ['attr' => ['label' => __('Type')]]);
-
-
     }
 }
