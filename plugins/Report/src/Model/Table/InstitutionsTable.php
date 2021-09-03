@@ -1223,7 +1223,13 @@ class InstitutionsTable extends AppTable
                     $attr['attr']['required'] = true;
                 } else {
                     if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentWithdrawalReport','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports','Report.InstitutionInfrastructures', 'Report.StudentAttendanceSummary'])) {
-                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                        /*POCOR-6304 Starts*/
+                        if (count($institutionList) > 1) {
+                           $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                        } else {
+                            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                        }
+                        /*POCOR-6304 Ends*/
                     } else {
                         /*POCOR-6304 Starts*/
                         if (count($institutionList) > 1) {
