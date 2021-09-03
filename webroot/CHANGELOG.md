@@ -1,3 +1,14 @@
+### [3.69.1] - 2021-09-03
+- Implemented: Add Export button function - Institutions > Academic > Shifts
+- Implemented: Add Export button function - Institutions > Staff > Staff1 > Health (include all tabs)
+- Implemented: Add Export button function - Institutions > Infrastructures > Utilities > Electricity
+- Implemented: Develop a function view and clear the student report card queue
+- Bug Fixed: Administration>Security>Groups: 404 error when adding an user group
+- Bug Fixed: Institutions>Cases: User with AbsenceCases role is unable to view the student absences and absences raised to him or her
+- Bug Fixed: Institutions>Students>Health: Attachment field was not added to the Body Mass and Insurance tabs
+- Bug Fixed: Administration > Training > Sessions/Results:Filter records by FDs and training dates
+- Bug Fixed: Report>Institution: Add Academic Period, Area Level, Area Name and Institution Name filters to all reports
+
 ### [3.69.0] - 2021-08-26
 - Implemented: OpenEMIS Core: Webhook Education Area - Update
 - Implemented: Add Export button function - Institutions > Infrastructures > Utilities > Internet
