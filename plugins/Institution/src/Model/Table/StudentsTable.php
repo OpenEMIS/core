@@ -830,15 +830,71 @@ class StudentsTable extends ControllerActionTable
                 $extra['toolbarButtons'][$key] = $button;
             }
         }
+
         //POCOR-6248 starts    
-        $this->field('photo_name', ['visible' => false]);
-        $this->field('photo_content', ['visible' => true, 'before' => 'openemis_no']);
-        $this->field('openemis_no', ['visible' => true, 'before' => 'student_id']);
-        $this->field('student_id', ['visible' => true, 'before' => 'education_grade_id']);
-        $this->field('education_grade_id', ['visible' => true, 'before' => 'class']);
-        $this->field('class', ['visible' => true, 'before' => 'student_status_id']);
-        $this->field('student_status_id', ['visible' => true, 'after' => 'class']);
-        //POCOR-6248 ends
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemTable
+                            ->find()
+                            ->where([
+                                $ConfigItemTable->aliasField('type') => 'Columns for Student List Page'
+                            ])
+                            ->all();
+        /*echo "<pre>"; print_r($ConfigItem);
+        die;*/    
+        foreach ($ConfigItem as $item) {
+            if($item->code == 'student_photo'){
+                $this->field('photo_name', ['visible' => false]);
+                if($item->value == 1){
+                    $this->field('photo_content', ['visible' => true]);
+                }else{
+                    $this->field('photo_content', ['visible' => false]);
+                }
+            }
+
+            if($item->code == 'student_openEMIS_ID'){
+                if($item->value == 1){
+                    $this->field('openemis_no', ['visible' => true, 'before' => 'student_id']);
+                }else{
+                    $this->field('openemis_no', ['visible' => false, 'before' => 'student_id']);
+                }
+            }
+
+            if($item->code == 'student_identity_number'){
+                
+            }
+
+            if($item->code == 'student_name'){
+                if($item->value == 1){
+                    $this->field('student_id', ['visible' => true, 'before' => 'education_grade_id']);
+                }else{
+                    $this->field('student_id', ['visible' => false, 'before' => 'education_grade_id']);
+                } 
+            }
+
+            if($item->code == 'student_education_code'){
+                if($item->value == 1){
+                    $this->field('education_grade_id', ['visible' => true, 'before' => 'class']);
+                }else{
+                    $this->field('education_grade_id', ['visible' => false, 'before' => 'class']);
+                } 
+            }
+
+            if($item->code == 'student_class'){
+                if($item->value == 1){
+                    $this->field('class', ['visible' => true, 'before' => 'student_status_id']);
+                }else{
+                    $this->field('class', ['visible' => false, 'before' => 'student_status_id']);
+                } 
+            }
+
+            if($item->code == 'student_status'){
+                if($item->value == 1){
+                    $this->field('student_status_id', ['visible' => true, 'after' => 'class']);
+                }else{
+                    $this->field('student_status_id', ['visible' => false, 'after' => 'class']);
+                } 
+            }
+        }//POCOR-6248 ends
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
