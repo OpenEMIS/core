@@ -533,6 +533,7 @@ class StaffUserTable extends ControllerActionTable
                     $postalCode = $value->user->postal_code;
                     $addressArea = $value->user->address_area->name;
                     $birthplaceArea = $value->user->birthplace_area->name;
+                    $role = $value->user->is_staff;
                     
                     $contactValue = [];
                     $contactType = [];
@@ -618,7 +619,8 @@ class StaffUserTable extends ControllerActionTable
                 'staff_position_titles_type'=>!empty($class) ? $class : NULL,
                 'staff_position_titles_name'=>!empty($staff_position_titles_name) ? $staff_position_titles_name : NULL,
                 'staff_types_name'=>!empty($staff_types_name) ? $staff_types_name : NULL,
-                'shift_options_name' => !empty($shiftName) ? $shiftName : NULL
+                'shift_options_name' => !empty($shiftName) ? $shiftName : NULL,
+                'role' => ($role == 1) ? 'staff' : NULL
             ];
               $Webhooks = TableRegistry::get('Webhook.Webhooks');
               $Webhooks->triggerShell('staff_update', ['username' => ''], $body);
