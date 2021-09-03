@@ -830,6 +830,15 @@ class StudentsTable extends ControllerActionTable
                 $extra['toolbarButtons'][$key] = $button;
             }
         }
+        //POCOR-6248 starts    
+        $this->field('photo_name', ['visible' => false]);
+        $this->field('photo_content', ['visible' => true, 'before' => 'openemis_no']);
+        $this->field('openemis_no', ['visible' => true, 'before' => 'student_id']);
+        $this->field('student_id', ['visible' => true, 'before' => 'education_grade_id']);
+        $this->field('education_grade_id', ['visible' => true, 'before' => 'class']);
+        $this->field('class', ['visible' => true, 'before' => 'student_status_id']);
+        $this->field('student_status_id', ['visible' => true, 'after' => 'class']);
+        //POCOR-6248 ends
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)

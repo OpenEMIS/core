@@ -60,6 +60,18 @@ class ConfigItemsTable extends AppTable
         $this->ControllerAction->field('type', ['visible' => ['view'=>true, 'edit'=>true]]);
         $this->ControllerAction->field('label', ['visible' => ['view'=>true, 'edit'=>true]]);
         $this->ControllerAction->field('value', ['visible' => true]);
+        //POCOR-6248 start
+        $this->ControllerAction->field('value_selection', ['visible' => false]);
+        if ($this->request->query['type'] == 9 && $this->request->query['type_value'] == 'Columns for Student List Page') {
+            $pass = $this->request->param('pass');
+            if (is_array($pass) && !empty($pass)) {
+                $id = $this->paramsDecode($pass[0]);
+                $entity = $this->get($id);
+                if($entity->code == 'student_identity_number'){
+                    $this->ControllerAction->field('value_selection', ['visible' => ['view'=>true,'edit' => true], 'after'=>'value']);
+                }
+            }
+        }//POCOR-6248 end
     }
 
     public function implementedEvents()
@@ -120,6 +132,21 @@ class ConfigItemsTable extends AppTable
             $entity = $this->get($id);
         }
         if (isset($entity)) {
+            //POCOR-6248 starts
+            if($this->request->query('type') == 9 && $this->request->query('type_value') == 'Columns for Student List Page' && $entity->name == 'Identity Number'){
+                $this->fields['value']['attr']['label'] = 'Identity Number';
+                $this->fields['value']['attr']['required']= false;
+
+                $identity_types = TableRegistry::get('identity_types');
+                $option_types = $identity_types->find('list', [
+                                    'keyField' => 'id',
+                                    'valueField' => 'name'
+                                ]);
+                $this->fields['value_selection']['attr'] = ['required' => true];
+                $this->fields['value_selection']['options'] = $option_types;
+                $this->fields['value_selection']['attr']['label'] = 'Identity Type';
+                $this->fields['value_selection']['attr']['after'] = 'value';
+            }//POCOR-6248 ends
             /**
              * grab validation rules by either record code or record type
              */
@@ -157,7 +184,6 @@ class ConfigItemsTable extends AppTable
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
     {
-
         if ($entity->code == 'language') {
             if ($entity->value != 'en') {
                 $entity = $this->find()
@@ -172,7 +198,26 @@ class ConfigItemsTable extends AppTable
             $this->deleteLanguageCacheFile();
         } else if ($entity->code == 'language_menu') {
             $this->deleteLanguageCacheFile();
-        }
+        } /*else if ($entity->code == 'student_identity_number') {
+            //echo "<pre>"; print_r($entity); die;
+            $value_selection = 0;
+            if($entity->value == 1){
+                $value_selection=$entity->value_selection;
+            }
+            
+            $entity = $this->find()
+                    ->where([
+                        $this->aliasField('id') => $entity->id
+                    ])->first();
+
+            if($entity->type == 'Columns for Student List Page' && $entity->name == 'Identity Number'){
+                    $entity->value = $value_selection;
+                }
+            //echo "<pre>"; print_r($entity); die;
+    
+            //$entity->value = 0;
+            $this->save($entity);
+        }*/
     }
 
     private function deleteLanguageCacheFile()
@@ -196,8 +241,6 @@ class ConfigItemsTable extends AppTable
             if (!empty($pass)) {
                 $ids = $this->paramsDecode($pass[0]);
                 $entity = $this->get($ids);
-
-                // pr($entity);
                 if ($entity->field_type == 'Dropdown') {
                     $exp = explode(':', $entity->option_type);
                     /**
@@ -313,6 +356,22 @@ class ConfigItemsTable extends AppTable
         }
         return $value;
     }
+    //POCOR-6248 starts
+    public function onGetValueSelection(Event $event, Entity $entity)
+    {
+        $this->ControllerAction->field('value_selection', ['visible' => ['view'=>true], 'after'=>'value']);
+
+        $identity_types = TableRegistry::get('identity_types');
+        $option_types = $identity_types
+                            ->find()
+                            ->where(['id' => $entity->value_selection])
+                            ->first();
+        $value_selection ='';
+        if(!empty($option_types)){
+            $value_selection = $option_types->name;
+        }
+        return $value_selection;
+    }//POCOR-6248 ends
 
     public function onGetDefaultValue(Event $event, Entity $entity)
     {
@@ -367,6 +426,11 @@ class ConfigItemsTable extends AppTable
                  return __('Enabled');
                 }               
             } else if ($entity->type == 'Columns for Student List Page') { //POCOR-6248 start
+                if($entity->code == 'student_identity_number'){
+                    if($entity->{$valueField} != 0){
+                        $entity->{$valueField} = 1;
+                    }
+                }
                 if ($entity->{$valueField} == 0) {
                  return __('Disabled');
                 } else {
