@@ -199,6 +199,7 @@ class InstitutionsController extends AppController
         $this->loadComponent('Training.Training');
         $this->loadComponent('Institution.CreateUsers');
         $this->attachAngularModules();
+        $this->loadModel('Institution.StaffBodyMasses');
     }
 
     // CAv4
@@ -633,6 +634,13 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureUtilityInternets']);
     }
+
+    //POCOR-6143 added Export button in Infratucture > Utilitie > Electricity
+    public function InfrastructureUtilityElectricities()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureUtilityElectricities']);
+    }
+    //POCOR-6143 added Export button in Infratucture > Utilitie > Electricity
 
     public function changeUtilitiesHeader($model, $modelAlias, $userType)
     {
