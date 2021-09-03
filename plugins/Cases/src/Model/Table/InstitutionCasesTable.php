@@ -175,7 +175,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
                 ]
             )
-            ->where([$this->aliasField('assignee_id') => $userId])
+            //->where([$this->aliasField('assignee_id') => $userId])
             ->group($this->aliasField('id'));
 
         
