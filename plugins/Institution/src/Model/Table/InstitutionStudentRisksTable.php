@@ -509,6 +509,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 					$postalCode = $value->user->postal_code;
 					$addressArea = $value->user->address_area->name;
 					$birthplaceArea = $value->user->birthplace_area->name;
+                    $role = $value->user->is_student;
 					
 					$contactValue = [];
 					$contactType = [];
@@ -581,7 +582,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 				'education_grade_name' => !empty($educationGrade) ? $educationGrade : NULL,
 				'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
 				'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
-				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,	
+				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
+                'role' => ($role == 1) ? 'student' : NULL	
 			];
 			
 			if (!$afterSaveOrDeleteEntity->isNew()) {
