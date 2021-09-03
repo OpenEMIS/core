@@ -901,11 +901,11 @@ class NavigationComponent extends Component
                 'parent' => 'Infrastructures',
                 'link' => false
             ],
-            'InfrastructureUtilityElectricities.index' => [
+            'Institutions.InfrastructureUtilityElectricities.index' => [
                 'title' => 'Electricity',
                 'parent' => 'Utilities',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InfrastructureUtilityElectricities.view', 'InfrastructureUtilityElectricities.add', 'InfrastructureUtilityElectricities.edit', 'InfrastructureUtilityElectricities.delete']
+                'selected' => ['Institutions.InfrastructureUtilityElectricities.view', 'Institutions.InfrastructureUtilityElectricities.add', 'Institutions.InfrastructureUtilityElectricities.edit', 'Institutions.InfrastructureUtilityElectricities.delete']
             ],
 
             'Institutions.InfrastructureUtilityInternets.index' => [
@@ -1196,7 +1196,7 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests', 'StaffBodyMasses.index', 'StaffBodyMasses.add', 'StaffBodyMasses.edit', 'StaffBodyMasses.view', 'StaffBodyMasses.delete', 'StaffInsurances.index', 'StaffInsurances.add', 'StaffInsurances.edit', 'StaffInsurances.view', 'StaffInsurances.delete']
+                'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests', 'Institutions.StaffBodyMasses.index', 'Institutions.StaffBodyMasses.add', 'Institutions.StaffBodyMasses.edit', 'Institutions.StaffBodyMasses.view', 'Staff.StaffBodyMasses.delete', 'Staff.StaffInsurances.index', 'Staff.StaffInsurances.add', 'Staff.StaffInsurances.edit', 'Staff.StaffInsurances.view', 'Staff.StaffInsurances.delete']
             ],
             'Staff.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
@@ -1893,7 +1893,7 @@ class NavigationComponent extends Component
                 'title' => 'Report Cards',
                 'parent' => 'Administration.Performance',
                 'params' => ['plugin' => 'ReportCard'],
-                'selected' => ['ReportCards.Templates', 'ReportCards.ReportCardEmail']
+                'selected' => ['ReportCards.Templates', 'ReportCards.ReportCardEmail', 'ReportCards.Processes']
             ],
 
             'StaffAppraisals.Criterias.index' => [

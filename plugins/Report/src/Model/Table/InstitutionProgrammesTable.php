@@ -32,9 +32,22 @@ class InstitutionProgrammesTable extends AppTable  {
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
 	{
+		$requestData = json_decode($settings['process']['params']);
+        $institution_id = $requestData->institution_id;
+        $periodId = $requestData->academic_period_id;
+        $areaId = $requestData->area_education_id;
+        $where = [];
+        if ($institution_id != 0) {
+            $where[$this->aliasField('institution_id')] = $institution_id;
+        }
+        if ($areaId != -1) {
+            $where['Institutions.area_id'] = $areaId;
+        }
+
 		$query
 			->contain(['Institutions.Areas', 'Institutions.AreaAdministratives','EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems.AcademicPeriods'])
-			->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name','programmes' => 'EducationProgrammes.name','academic_period' => 'AcademicPeriods.name']);
+			->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name','programmes' => 'EducationProgrammes.name','academic_period' => 'AcademicPeriods.name'])
+			->where(['AcademicPeriods.id' => $periodId, $where]);
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {

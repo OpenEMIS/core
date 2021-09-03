@@ -60,7 +60,6 @@
                     }
                     echo $this->Form->input('category', $inputOptions);
                 }
-
                 //POCOR-5695 starts
                 if($this->request->params['action'] == 'Sessions' || $this->request->params['action'] == 'Results'){
                     if (!empty($areaOptions)) {
