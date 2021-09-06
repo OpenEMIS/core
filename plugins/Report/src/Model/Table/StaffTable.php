@@ -22,6 +22,7 @@ class StaffTable extends AppTable  {
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
+        $this->belongsTo('InstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'id']);
         $this->addBehavior('Excel', [
             'excludes' => ['is_student', 'is_staff', 'is_guardian', 'photo_name', 'super_admin', 'status'],
             'pages' => false
@@ -279,7 +280,23 @@ class StaffTable extends AppTable  {
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-        $query->where([$this->aliasField('is_staff') => 1]);
+        /*POCOR-6295 Start*/
+        $requestData = json_decode($settings['process']['params']);
+        $areaId = $requestData->area_education_id;
+        $institutionId = $requestData->institution_id;
+        $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $conditions = [];
+        if (!empty($institutionId) && $institutionId > 0) {
+            $conditions['InstitutionStaff.institution_id'] = $institutionId; 
+        }
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId; 
+        }
+        $query
+            ->contain(['InstitutionStaff', 'InstitutionStaff.Institutions'])
+            ->where([$this->aliasField('is_staff') => 1, $conditions]);
+        /*POCOR-6295 Ends*/
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
