@@ -180,11 +180,11 @@ class ImportOutcomeTemplatesTable extends AppTable {
     public function getEducationGrade($querystringGrade, $withOptions = false)
     {
         $educationGrades = $this->EducationGrades->getEducationGrades();
-        $firstKey = array_key_first($educationGrades);
+        // $firstKey = array_key_first($educationGrades);
         if ($querystringGrade) {
             $selectedGrade = $querystringGrade;
         } else {
-            $selectedGrade = $educationGrades[$firstKey];
+            $selectedGrade = '';//$educationGrades[$firstKey];
         }
         if ($withOptions){
             $gradeOptions = $educationGrades;
