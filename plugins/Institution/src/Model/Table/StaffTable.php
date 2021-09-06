@@ -481,6 +481,79 @@ class StaffTable extends ControllerActionTable
                 ]);
                 break;
         }
+
+        //POCOR-6248 starts    
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemTable
+                            ->find()
+                            ->where([
+                                $ConfigItemTable->aliasField('type') => 'Columns for Staff List Page'
+                            ])
+                            ->all();
+        /*echo "<pre>"; print_r($ConfigItem);
+        die;*/    
+        foreach ($ConfigItem as $item) {
+            if($item->code == 'staff_photo'){
+                $this->field('photo_name', ['visible' => false]);
+                if($item->value == 1){
+                    $this->field('photo_content', ['visible' => true]);
+                }else{
+                    $this->field('photo_content', ['visible' => false]);
+                }
+            }
+
+            if($item->code == 'staff_openEMIS_ID'){
+                if($item->value == 1){
+                    $this->field('openemis_no', ['visible' => true, 'before' => 'staff_id']);
+                }else{
+                    $this->field('openemis_no', ['visible' => false, 'before' => 'staff_id']);
+                }
+            }
+
+            if($item->code == 'staff_identity_number'){
+                
+            }
+
+            if($item->code == 'staff_name'){
+                if($item->value == 1){
+                    $this->field('staff_id', ['visible' => true, 'before' => 'institution_position_id']);
+                }else{
+                    $this->field('staff_id', ['visible' => false, 'before' => 'institution_position_id']);
+                } 
+            }
+
+            if($item->code == 'staff_position'){
+                if($item->value == 1){
+                    $this->field('institution_position_id', ['visible' => true, 'before' => 'start_date']);
+                }else{
+                    $this->field('institution_position_id', ['visible' => false, 'before' => 'start_date']);
+                } 
+            }
+
+            if($item->code == 'staff_start_date'){
+                if($item->value == 1){
+                    $this->field('start_date', ['visible' => true, 'before' => 'end_date']);
+                }else{
+                    $this->field('start_date', ['visible' => false, 'before' => 'end_date']);
+                } 
+            }
+
+            if($item->code == 'staff_end_date'){
+                if($item->value == 1){
+                    $this->field('end_date', ['visible' => true, 'before' => 'staff_status_id']);
+                }else{
+                    $this->field('end_date', ['visible' => false, 'before' => 'staff_status_id']);
+                } 
+            }
+
+            if($item->code == 'staff_status'){
+                if($item->value == 1){
+                    $this->field('staff_status_id', ['visible' => true, 'after' => 'end_date']);
+                }else{
+                    $this->field('staff_status_id', ['visible' => false, 'after' => 'end_date']);
+                } 
+            }
+        }//POCOR-6248 ends
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
