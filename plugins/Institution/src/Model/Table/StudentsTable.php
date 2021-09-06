@@ -783,6 +783,7 @@ class StudentsTable extends ControllerActionTable
             $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId])];
             $url['action'] = $pendingStatuses[$selectedStatus];
             $event->stopPropagation();
+            return $this->controller->redirec);
             return $this->controller->redirect($url);
         }
 
@@ -859,10 +860,6 @@ class StudentsTable extends ControllerActionTable
                 }
             }
 
-            if($item->code == 'student_identity_number'){
-                
-            }
-
             if($item->code == 'student_name'){
                 if($item->value == 1){
                     $this->field('student_id', ['visible' => true, 'before' => 'education_grade_id']);
@@ -893,6 +890,14 @@ class StudentsTable extends ControllerActionTable
                 }else{
                     $this->field('student_status_id', ['visible' => false, 'after' => 'class']);
                 } 
+            }
+
+            if($item->code == 'student_identity_number'){
+                if($item->value == 1){
+                    $this->field('student_identity_number', ['label'=>'Passport','visible' => true, 'after' => 'student_status_id']);
+                }else{
+                    $this->field('student_identity_number', ['label'=>'Passport','visible' => false, 'after' => 'student_status_id']);
+                }
             }
         }//POCOR-6248 ends
     }
