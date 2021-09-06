@@ -27,7 +27,7 @@ class GuardianNavsController extends AppController
     private $features = [
         'Students',
         'StudentUser',
-        'StudentAccount'
+        'Accounts'
     ];
 
     public function initialize(){
@@ -149,8 +149,8 @@ class GuardianNavsController extends AppController
     }
 
     public function getUserTabElements($options = [])
-    {
-                if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
+    { 
+        if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
             $id = $this->ControllerAction->getQueryString('security_user_id');
         }
 
@@ -182,16 +182,16 @@ class GuardianNavsController extends AppController
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')]
         ];
-
+        //$userId = $session->read('Student.Students.id');
         foreach ($tabElements as $key => $value) {
             if ($key == $this->name) {
                 $tabElements[$key]['url']['action'] = 'GuardianNavs';
                 $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $options['userId']]);
             } else if ($key == 'Accounts') {
                 $tabElements[$key]['url']['action'] = 'Accounts';
                 $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $options['userId']]);
             } else if ($key == 'Comments') {
                 $url = [
                     'plugin' => $plugin,
