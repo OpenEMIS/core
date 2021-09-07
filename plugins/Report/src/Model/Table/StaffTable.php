@@ -22,7 +22,6 @@ class StaffTable extends AppTable  {
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
-        $this->belongsTo('InstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'id']);
         $this->addBehavior('Excel', [
             'excludes' => ['is_student', 'is_staff', 'is_guardian', 'photo_name', 'super_admin', 'status'],
             'pages' => false
@@ -280,23 +279,56 @@ class StaffTable extends AppTable  {
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-        /*POCOR-6295 Start*/
         $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
         $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $periodEntity = $AcademicPeriods->get($academicPeriodId);
+        $startDate = $periodEntity->start_date->format('Y-m-d');
+        $endDate = $periodEntity->end_date->format('Y-m-d');
         $conditions = [];
+        if (!empty($academicPeriodId)) {
+                $conditions['OR'] = [
+                    'OR' => [
+                        [
+                            'InstitutionStaff.end_date' . ' IS NOT NULL',
+                            'InstitutionStaff.start_date' . ' <=' => $startDate,
+                            'InstitutionStaff.end_date' . ' >=' => $startDate
+                        ],
+                        [
+                            'InstitutionStaff.end_date' . ' IS NOT NULL',
+                            'InstitutionStaff.start_date' . ' <=' => $endDate,
+                            'InstitutionStaff.end_date' . ' >=' => $endDate
+                        ],
+                        [
+                            'InstitutionStaff.end_date' . ' IS NOT NULL',
+                            'InstitutionStaff.start_date' . ' >=' => $startDate,
+                            'InstitutionStaff.end_date' . ' <=' => $endDate
+                        ]
+                    ],
+                    [
+                        'InstitutionStaff.end_date' . ' IS NULL',
+                        'InstitutionStaff.start_date' . ' <=' => $endDate
+                    ]
+                ];
+        }
         if (!empty($institutionId) && $institutionId > 0) {
-            $conditions['InstitutionStaff.institution_id'] = $institutionId; 
+            $conditions['InstitutionStaff.institution_id'] = $institutionId;
         }
         if (!empty($areaId) && $areaId != -1) {
-            $conditions['Institutions.area_id'] = $areaId; 
+            $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId; 
         }
         $query
-            ->contain(['InstitutionStaff', 'InstitutionStaff.Institutions'])
+            ->innerJoin(['InstitutionStaff' => 'institution_staff'], [
+                'InstitutionStaff.staff_id = ' . $this->aliasField('id')
+            ])
+            ->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
+                $InstitutionsTable->aliasField('id = ') . 'InstitutionStaff.institution_id'
+            ])
             ->where([$this->aliasField('is_staff') => 1, $conditions]);
-        /*POCOR-6295 Ends*/
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
@@ -350,8 +382,7 @@ class StaffTable extends AppTable  {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 
-            if (in_array($feature, ['Report.StaffPositions', 'Report.StaffHealthReports',
-                                    'Report.StaffLeaveReport',
+            if (in_array($feature, ['Report.StaffPositions', 'Report.StaffHealthReports','Report.StaffLeaveReport',
                 'Report.StaffDuties',
                 'Report.PositionSummary',
                 'Report.Staff','Report.StaffPhoto',
@@ -423,11 +454,13 @@ class StaffTable extends AppTable  {
                         'Report.StaffTrainingReports',
                         'Report.StaffExtracurriculars'
                     ])) {
-                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
-                    }elseif (in_array($feature, ['Report.StaffHealthReports'])) {
-                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions'),'-1' => __('No Institutions')] + $institutionList;
-                    }
-                    else {
+                        if (!empty($institutionList) && count($institutionList) > 1) {
+                           $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                        } else {
+                            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                        }
+                        
+                    } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
                     }
 
