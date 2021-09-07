@@ -783,7 +783,6 @@ class StudentsTable extends ControllerActionTable
             $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId])];
             $url['action'] = $pendingStatuses[$selectedStatus];
             $event->stopPropagation();
-            return $this->controller->redirec);
             return $this->controller->redirect($url);
         }
 
@@ -840,66 +839,71 @@ class StudentsTable extends ControllerActionTable
                                 $ConfigItemTable->aliasField('type') => 'Columns for Student List Page'
                             ])
                             ->all();
-        /*echo "<pre>"; print_r($ConfigItem);
-        die;*/    
-        foreach ($ConfigItem as $item) {
-            if($item->code == 'student_photo'){
-                $this->field('photo_name', ['visible' => false]);
-                if($item->value == 1){
-                    $this->field('photo_content', ['visible' => true]);
-                }else{
-                    $this->field('photo_content', ['visible' => false]);
+        if(!empty($ConfigItem)){
+            foreach ($ConfigItem as $item) {
+                if($item->code == 'student_photo'){
+                    $this->field('photo_name', ['visible' => false]);
+                    if($item->value == 1){
+                        $this->field('photo_content', ['visible' => true]);
+                    }else{
+                        $this->field('photo_content', ['visible' => false]);
+                    }
                 }
-            }
 
-            if($item->code == 'student_openEMIS_ID'){
-                if($item->value == 1){
-                    $this->field('openemis_no', ['visible' => true, 'before' => 'student_id']);
-                }else{
-                    $this->field('openemis_no', ['visible' => false, 'before' => 'student_id']);
+                if($item->code == 'student_openEMIS_ID'){
+                    if($item->value == 1){
+                        $this->field('openemis_no', ['visible' => true, 'before' => 'student_id']);
+                    }else{
+                        $this->field('openemis_no', ['visible' => false, 'before' => 'student_id']);
+                    }
                 }
-            }
 
-            if($item->code == 'student_name'){
-                if($item->value == 1){
-                    $this->field('student_id', ['visible' => true, 'before' => 'education_grade_id']);
-                }else{
-                    $this->field('student_id', ['visible' => false, 'before' => 'education_grade_id']);
-                } 
-            }
-
-            if($item->code == 'student_education_code'){
-                if($item->value == 1){
-                    $this->field('education_grade_id', ['visible' => true, 'before' => 'class']);
-                }else{
-                    $this->field('education_grade_id', ['visible' => false, 'before' => 'class']);
-                } 
-            }
-
-            if($item->code == 'student_class'){
-                if($item->value == 1){
-                    $this->field('class', ['visible' => true, 'before' => 'student_status_id']);
-                }else{
-                    $this->field('class', ['visible' => false, 'before' => 'student_status_id']);
-                } 
-            }
-
-            if($item->code == 'student_status'){
-                if($item->value == 1){
-                    $this->field('student_status_id', ['visible' => true, 'after' => 'class']);
-                }else{
-                    $this->field('student_status_id', ['visible' => false, 'after' => 'class']);
-                } 
-            }
-
-            if($item->code == 'student_identity_number'){
-                if($item->value == 1){
-                    $this->field('student_identity_number', ['label'=>'Passport','visible' => true, 'after' => 'student_status_id']);
-                }else{
-                    $this->field('student_identity_number', ['label'=>'Passport','visible' => false, 'after' => 'student_status_id']);
+                if($item->code == 'student_name'){
+                    if($item->value == 1){
+                        $this->field('student_id', ['visible' => true, 'before' => 'education_grade_id']);
+                    }else{
+                        $this->field('student_id', ['visible' => false, 'before' => 'education_grade_id']);
+                    } 
                 }
-            }
-        }//POCOR-6248 ends
+
+                if($item->code == 'student_education_code'){
+                    if($item->value == 1){
+                        $this->field('education_grade_id', ['visible' => true, 'before' => 'class']);
+                    }else{
+                        $this->field('education_grade_id', ['visible' => false, 'before' => 'class']);
+                    } 
+                }
+
+                if($item->code == 'student_class'){
+                    if($item->value == 1){
+                        $this->field('class', ['visible' => true, 'before' => 'student_status_id']);
+                    }else{
+                        $this->field('class', ['visible' => false, 'before' => 'student_status_id']);
+                    } 
+                }
+
+                if($item->code == 'student_status'){
+                    if($item->value == 1){
+                        $this->field('student_status_id', ['visible' => true, 'after' => 'class']);
+                    }else{
+                        $this->field('student_status_id', ['visible' => false, 'after' => 'class']);
+                    } 
+                }
+
+                if($item->code == 'student_identity_number'){
+                    if($item->value == 1){
+                        if(!empty($item->value_selection)){
+                            //get data from Identity Type table 
+                            $typesIdentity = $this->getIdentityTypeData($item->value_selection);
+                            $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'student_status_id']);
+                        }
+                    }else{
+                        $this->field($typesIdentity->identity_type, ['visible' => false, 'after' => 'student_status_id']);
+                    }
+                }
+            }    
+        }   
+        //POCOR-6248 ends
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -1011,7 +1015,54 @@ class StudentsTable extends ControllerActionTable
 
         //select specific field that is used on the page, photo_content is generated by LazyEagerLoader (javascript)
         //the rest of fields are called by onGet function.
-        $query->select([
+        //POCOR-6248 starts
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $UserIdentities = TableRegistry::get('User.Identities');
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemTable
+                            ->find()
+                            ->where([
+                                $ConfigItemTable->aliasField('code') => 'student_identity_number',
+                                $ConfigItemTable->aliasField('value') => 1
+                            ])
+                            ->first();
+
+        if(!empty($ConfigItem)){
+            //value_selection
+            //get data from Identity Type table 
+            $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
+            if(!empty($typesIdentity)){                
+                $query
+                    ->select([
+                        $this->aliasField('id'),
+                        'Users.id',
+                        'Users.openemis_no',
+                        'Users.first_name',
+                        'Users.middle_name',
+                        'Users.third_name',
+                        'Users.last_name',
+                        'Users.preferred_name',
+                        'student_status_id',
+                        'identity_type' => $IdentityTypes->aliasField('name'),
+                        $typesIdentity->identity_type => $UserIdentities->aliasField('number')
+                    ])
+                    ->leftJoin(
+                                [$UserIdentities->alias() => $UserIdentities->table()],
+                                [
+                                    $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('student_id'),
+                                    $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
+                                ]
+                            )
+                    ->leftJoin(
+                        [$IdentityTypes->alias() => $IdentityTypes->table()],
+                        [
+                            $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
+                            $IdentityTypes->aliasField('id = ') . $typesIdentity->id
+                        ]
+                    );
+            }
+        }else{
+            $query->select([
                 $this->aliasField('id'),
                 'Users.id',
                 'Users.openemis_no',
@@ -1022,7 +1073,8 @@ class StudentsTable extends ControllerActionTable
                 'Users.preferred_name',
                 'student_status_id'
             ]);
-
+        }//POCOR-6248 ends
+  
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
         $query->group([$this->aliasField('student_id'), $this->aliasField('academic_period_id'), $this->aliasField('institution_id'), $this->aliasField('education_grade_id'), $this->aliasField('student_status_id')]);
 
@@ -1033,6 +1085,22 @@ class StudentsTable extends ControllerActionTable
 
         $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
     }
+    //POCOR-6248 starts
+    public function getIdentityTypeData($value_selection)
+    {
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $typesIdentity =   $IdentityTypes
+                            ->find()
+                            ->select([
+                                'id' => $IdentityTypes->aliasField('id'),
+                                'identity_type' => $IdentityTypes->aliasField('name')
+                            ])
+                            ->where([
+                                $IdentityTypes->aliasField('id') => $value_selection
+                            ])
+                            ->first();
+        return  $typesIdentity;
+    }//POCOR-6248 ends
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
     {
