@@ -52,8 +52,8 @@ class ConfigItemsTable extends AppTable
 
         $this->ControllerAction->field('name', ['visible' => ['index'=>true]]);
         $this->ControllerAction->field('default_value', ['visible' => ['view'=>true]]);
-        //POCOR-6248 change type 10 for Coordinates
-        if ($this->request->query['type'] == 11 && $this->request->query['type_value'] == 'Coordinates') {
+        //POCOR-6248 change type 12 for Coordinates
+        if ($this->request->query['type'] == 12 && $this->request->query['type_value'] == 'Coordinates') {
           $this->ControllerAction->field('default_value', ['visible' => ['index'=>true]]);
         }
 
@@ -62,7 +62,7 @@ class ConfigItemsTable extends AppTable
         $this->ControllerAction->field('value', ['visible' => true]);
         //POCOR-6248 start
         $this->ControllerAction->field('value_selection', ['visible' => false]);
-        if ($this->request->query['type'] == 10 && $this->request->query['type_value'] == 'Columns for Student List Page') {
+        if ($this->request->query['type'] == 11 && $this->request->query['type_value'] == 'Columns for Student List Page') {
             $pass = $this->request->param('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
@@ -72,12 +72,22 @@ class ConfigItemsTable extends AppTable
                 }
             }
         }
-        if ($this->request->query['type'] == 9 && $this->request->query['type_value'] == 'Columns for Staff List Page') {
+        if ($this->request->query['type'] == 10 && $this->request->query['type_value'] == 'Columns for Staff List Page') {
             $pass = $this->request->param('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
                 $entity = $this->get($id);
                 if($entity->code == 'staff_identity_number'){
+                    $this->ControllerAction->field('value_selection', ['visible' => ['view'=>true,'edit' => true], 'after'=>'value']);
+                }
+            }
+        }
+        if ($this->request->query['type'] == 9 && $this->request->query['type_value'] == 'Columns for Directory List Page') {
+            $pass = $this->request->param('pass');
+            if (is_array($pass) && !empty($pass)) {
+                $id = $this->paramsDecode($pass[0]);
+                $entity = $this->get($id);
+                if($entity->code == 'directory_identity_number'){
                     $this->ControllerAction->field('value_selection', ['visible' => ['view'=>true,'edit' => true], 'after'=>'value']);
                 }
             }
@@ -144,7 +154,7 @@ class ConfigItemsTable extends AppTable
         }
         if (isset($entity)) {
             //POCOR-6248 starts
-            if($this->request->query('type') == 10 && $this->request->query('type_value') == 'Columns for Student List Page' && $entity->name == 'Identity Number'){
+            if((($this->request->query('type') == 11 && $this->request->query('type_value') == 'Columns for Student List Page') || ($this->request->query('type') == 10 && $this->request->query('type_value') == 'Columns for Staff List Page') || ($this->request->query('type') == 9 && $this->request->query('type_value') == 'Columns for Directory List Page')) && $entity->name == 'Identity Number'){
                 $this->fields['value']['attr']['label'] = 'Identity Number';
                 $this->fields['value']['attr']['required']= false;
 
@@ -158,20 +168,7 @@ class ConfigItemsTable extends AppTable
                 $this->fields['value_selection']['attr']['label'] = 'Identity Type';
                 $this->fields['value_selection']['attr']['after'] = 'value';
             }
-            if($this->request->query('type') == 9 && $this->request->query('type_value') == 'Columns for Staff List Page' && $entity->name == 'Identity Number'){
-                $this->fields['value']['attr']['label'] = 'Identity Number';
-                $this->fields['value']['attr']['required']= false;
-
-                $identity_types = TableRegistry::get('identity_types');
-                $option_types = $identity_types->find('list', [
-                                    'keyField' => 'id',
-                                    'valueField' => 'name'
-                                ]);
-                $this->fields['value_selection']['attr'] = ['required' => true];
-                $this->fields['value_selection']['options'] = $option_types;
-                $this->fields['value_selection']['attr']['label'] = 'Identity Type';
-                $this->fields['value_selection']['attr']['after'] = 'value';
-            }//POCOR-6248 ends
+            ///POCOR-6248 ends
             /**
              * grab validation rules by either record code or record type
              */
@@ -223,26 +220,7 @@ class ConfigItemsTable extends AppTable
             $this->deleteLanguageCacheFile();
         } else if ($entity->code == 'language_menu') {
             $this->deleteLanguageCacheFile();
-        } /*else if ($entity->code == 'student_identity_number') {
-            //echo "<pre>"; print_r($entity); die;
-            $value_selection = 0;
-            if($entity->value == 1){
-                $value_selection=$entity->value_selection;
-            }
-            
-            $entity = $this->find()
-                    ->where([
-                        $this->aliasField('id') => $entity->id
-                    ])->first();
-
-            if($entity->type == 'Columns for Student List Page' && $entity->name == 'Identity Number'){
-                    $entity->value = $value_selection;
-                }
-            //echo "<pre>"; print_r($entity); die;
-    
-            //$entity->value = 0;
-            $this->save($entity);
-        }*/
+        } 
     }
 
     private function deleteLanguageCacheFile()
@@ -463,6 +441,17 @@ class ConfigItemsTable extends AppTable
                 }   //POCOR-6248 end            
             } else if ($entity->type == 'Columns for Staff List Page') { //POCOR-6248 start
                 if($entity->code == 'staff_identity_number'){
+                    if($entity->{$valueField} != 0){
+                        $entity->{$valueField} = 1;
+                    }
+                }
+                if ($entity->{$valueField} == 0) {
+                 return __('Disabled');
+                } else {
+                 return __('Enabled');
+                }   //POCOR-6248 end            
+            }else if ($entity->type == 'Columns for Directory List Page') { //POCOR-6248 start
+                if($entity->code == 'directory_identity_number'){
                     if($entity->{$valueField} != 0){
                         $entity->{$valueField} = 1;
                     }
