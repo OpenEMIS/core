@@ -129,7 +129,8 @@ class HealthBehavior extends Behavior
 
             $tabElements['StaffInsurances'] = [
                 'url' => ['plugin' => 'Staff', 'institutionId' => $params, 'controller' => 'Staff', 'action' => 'StaffInsurances'],
-                'text' => __('Insurances')
+                'text' => __('Insurances'),
+                'class' => 'tab-active'
             ];
         } elseif ($name == 'Directories' && $controller->AccessControl->check(['DirectoryInsurances', 'index'])) {
             $tabElements['Insurances'] = [
@@ -142,8 +143,14 @@ class HealthBehavior extends Behavior
                'text' => __('Insurances')
             ];
         }
+        /*POCOR-6307 Starts*/
+        $modelName = $model->alias();
+        if($model->alias() == 'UserInsurances'){
+            $modelName = 'StaffInsurances';
+        }
+        /*POCOR-6307 Ends*/
         $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
         $controller->set('tabElements', $tabElements);
-        $controller->set('selectedAction', $model->alias());
+        $controller->set('selectedAction', $modelName);
     }
 }
