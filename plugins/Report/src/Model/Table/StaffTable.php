@@ -289,6 +289,22 @@ class StaffTable extends AppTable  {
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
+        $userId = $requestData->user_id;
+        $superAdmin = $requestData->super_admin;
+        $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->order([
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+        if (!$superAdmin) { // if user is not super admin, the list will be filtered
+            $institutionQuery->find('byAccess', ['userId' => $userId]);
+        }
+        $institutionList = $institutionQuery->toArray();
         $conditions = [];
         if (!empty($academicPeriodId)) {
                 $conditions['OR'] = [
@@ -314,6 +330,9 @@ class StaffTable extends AppTable  {
                         'InstitutionStaff.start_date' . ' <=' => $endDate
                     ]
                 ];
+        }
+        if ($institutionId == 0 && !$superAdmin) {
+            $conditions['InstitutionStaff.institution_id IN'] = array_keys($institutionList);
         }
         if (!empty($institutionId) && $institutionId > 0) {
             $conditions['InstitutionStaff.institution_id'] = $institutionId;
