@@ -188,7 +188,7 @@ class EducationGradesTable extends ControllerActionTable
     *                                           grades of the next programme. If set to false it will get all
     *                                           the grades of the next programmes plus the current programme grades
     */
-    public function getNextAvailableEducationGrades($gradeId, $getNextProgrammeGrades = true, $firstGradeOnly = false) {
+    public function getNextAvailableEducationGrades($gradeId, $getNextProgrammeGrades = false, $firstGradeOnly = false) {
         if (!empty($gradeId)) {
             $gradeObj = $this->get($gradeId);
             $programmeId = $gradeObj->education_programme_id;
@@ -224,7 +224,7 @@ class EducationGradesTable extends ControllerActionTable
     }
 	
 	public function getNextAvailableEducationGradesForPromoted($gradeId, $academicPeriodId, $getNextProgrammeGrades = true, $firstGradeOnly = false) {
-   
+        
 		if (!empty($gradeId)) {
             $gradeOptionsData = $this
 				->find()
@@ -819,4 +819,25 @@ class EducationGradesTable extends ControllerActionTable
             );
         }
     }
+
+    /*POCOR-6257 Starts*/
+    public function getEducationGradesByPeriod($academicPeriodId, $institutionId)
+    {
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $gradeOptions = $this->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'programme_grade_name'
+            ])
+            ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()],[
+                    $this->aliasField('id').' = ' . $InstitutionGrades->aliasField('education_grade_id')
+            ])
+            ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+            ->where([
+                'EducationSystems.academic_period_id' => $academicPeriodId,
+                $InstitutionGrades->aliasField('institution_id') => $institutionId
+            ])->toArray();
+
+        return $gradeOptions;
+    }
+    /*POCOR-6257 ends*/
 }

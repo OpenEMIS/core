@@ -487,6 +487,9 @@ class StaffUserTable extends ControllerActionTable
 
         $this->fields['identity_type_id']['type'] = 'readonly';
         $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
+        /*POCOR-6265 starts - make email editable*/
+        $this->fields['email']['type'] = 'string';
+        /*POCOR-6265 ends*/
     }
 
     public function editAfterSave(Event $event, Entity $entity)
