@@ -999,26 +999,21 @@ class DirectoriesTable extends ControllerActionTable
                             $this->field('date_of_birth', ['visible' => false, 'before' => 'student_status']);
                         } 
                     }
-                    if($userType == self::STUDENT && $item->code == 'directory_student_status'){
-                        if($item->value == 1){
-                            $this->field('student_status', ['visible' => true, 'after' => 'date_of_birth']);
-                        }else{
-                            $this->field('student_status', ['visible' => false, 'after' => 'date_of_birth']);
-                        } 
-                    }
                     if($item->code == 'directory_identity_number'){
                         if($item->value == 1){
                             if(!empty($item->value_selection)){
                                 //get data from Identity Type table 
                                 $typesIdentity = $this->getIdentityTypeData($item->value_selection);
-                                $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'student_status']);
+                                $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'date_of_birth']);
                             }
                         }else{
-                            $this->field($typesIdentity->identity_type, ['visible' => false, 'after' => 'student_status']);
+                            $this->field($typesIdentity->identity_type, ['visible' => false, 'after' => 'date_of_birth']);
                         }
                     }
                 }
-            }//POCOR-6248 ends    
+            }
+            $this->field('student_status', ['visible' => false]);
+            //POCOR-6248 ends    
 
             switch ($userType) {
                 case self::ALL:
