@@ -1196,7 +1196,7 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests', 'Institutions.StaffBodyMasses.index', 'Institutions.StaffBodyMasses.add', 'Institutions.StaffBodyMasses.edit', 'Institutions.StaffBodyMasses.view', 'Staff.StaffBodyMasses.delete', 'Staff.StaffInsurances.index', 'Staff.StaffInsurances.add', 'Staff.StaffInsurances.edit', 'Staff.StaffInsurances.view', 'Staff.StaffInsurances.delete']
+                'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests', 'Staff.StaffBodyMasses', 'Staff.StaffInsurances']
             ],
             'Staff.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
