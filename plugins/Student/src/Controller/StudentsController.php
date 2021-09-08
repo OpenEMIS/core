@@ -64,7 +64,7 @@ class StudentsController extends AppController
         $this->ControllerAction->models = [
             'Accounts'          => ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
             'Nationalities'     => ['className' => 'User.Nationalities'],
-            'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
+            // 'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
             'Behaviours'        => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'Extracurriculars'  => ['className' => 'Student.Extracurriculars',  'actions' => ['index', 'add', 'edit', 'remove','view']],
             'History'           => ['className' => 'User.UserActivities', 'actions' => ['index']],
@@ -152,6 +152,11 @@ class StudentsController extends AppController
         }else{
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
         }        
+    }
+
+    public function Absences()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
     }
 
     public function Meals()
