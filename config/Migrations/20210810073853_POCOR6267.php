@@ -38,7 +38,7 @@ class POCOR6267 extends AbstractMigration
               'name' => 'Accounts', 'controller' => 'GuardianNavs', 'module' => 'Guardian', 'category' => 'General', 'parent_id' => $parentId, '_view' => 'Accounts.view', '_edit' => 'Accounts.edit', '_add' => NULL, '_delete' => 'Accounts.remove', '_execute' => NULL, 'order' => 489, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ],
             [
-              'name' => 'Demographic', 'controller' => 'GuardianNavs', 'module' => 'Guardian', 'category' => 'General', 'parent_id' => $parentId, '_view' => 'Demographic.view', '_edit' => 'Demographic.edit', '_add' => 'Demographic.add', '_delete' => 'Demographic.remove', '_execute' => NULL, 'order' => 490, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+              'name' => 'Demographic', 'controller' => 'GuardianNavs', 'module' => 'Guardian', 'category' => 'General', 'parent_id' => $parentId, '_view' => 'Demographic.index|Demographic.view', '_edit' => 'Demographic.edit', '_add' => 'Demographic.add', '_delete' => 'Demographic.remove', '_execute' => NULL, 'order' => 490, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ],
             [
               'name' => 'Identities', 'controller' => 'GuardianNavs', 'module' => 'Guardian', 'category' => 'General', 'parent_id' => $parentId, '_view' => 'Identities.index|Identities.view', '_edit' => 'Identities.edit', '_add' => 'Identities.add', '_delete' => 'Identities.remove', '_execute' => NULL, 'order' => 491, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
@@ -60,6 +60,8 @@ class POCOR6267 extends AbstractMigration
             ],
             [
               'name' => 'History', 'controller' => 'GuardianNavs', 'module' => 'Guardian', 'category' => 'General', 'parent_id' => $parentId, '_view' => 'History.index|History.view', '_edit' => 'History.edit', '_add' => 'History.add', '_delete' => 'History.remove', '_execute' => NULL, 'order' => 497, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ],[
+              'name' => 'Transport', 'controller' => 'GuardianNavs', 'module' => 'Guardian', 'category' => 'General', 'parent_id' => $parentId, '_view' => 'StudentTransport.index|StudentTransport.view', '_edit' => 'StudentTransport.edit', '_add' => 'StudentTransport.add', '_delete' => 'StudentTransport.remove', '_execute' => NULL, 'order' => 536, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ],[
               'name' => 'Programmes', 'controller' => 'GuardianNavs', 'module' => 'Guardian', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentProgrammes.index|StudentProgrammes.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 498, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ],[
