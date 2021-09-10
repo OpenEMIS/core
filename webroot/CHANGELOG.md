@@ -1,3 +1,19 @@
+### [3.69.2] - 2021-09-10
+- Implemented: Add Export button function - Institutions > Academic > Programs (include number of grades and classes)
+- Implemented: Add Export button function - Institutions > Staff > Staff1 > Professional > Qualifications
+- Implemented: Add Export button function - Institutions > Appointments > Duties
+- Implemented: Add default identity number to the student and staff list pages in institution and directory
+- Bug Fixed: Students > Academic > Classes,Subjects,Absences,Outcomes,Report Cards,Risks: Receive 404 error when logging in from a Absencerole and ESQID profile
+- Bug Fixed: Administration>System Setup>System Configuration>Webhooks: Education_level_id and education_cycle_id point to the same column for Cycle Create/Update webhooks
+- Bug Fixed: Administrations > Profiles > Templates : Remove the validation for Generate Start and End date against Academic Period
+- Bug Fixed: Institutions>Students>General: Individual Promotion/Repeat cannot promote Students
+- Bug Fixed: Reports>Students:Add Academic Period, Area Level, Area Name and Institution Name filters to all reports
+- Bug Fixed: Reports>Staff:Add Academic Period, Area Level, Area Name and Institution Name filters to all reports
+- Bug Fixed: Migration Script : Update Migration Script 20190919164802_POCOR5009.php with latest SQL QUERY
+- Bug Fixed: Administration>Survey>Forms:Unable to set default value for DropDown
+- Bug Fixed: Institutions>Students: Imported Student assigned to wrong Grade and cannot assign to class
+- Bug Fixed: Institutions > Staff > Staff1 > Health(Body Mass/Insurance)-Insurance tab not active and additional file type and file content for Body Mass and Insurance
+
 ### [3.69.1] - 2021-09-03
 - Implemented: Add Export button function - Institutions > Academic > Shifts
 - Implemented: Add Export button function - Institutions > Staff > Staff1 > Health (include all tabs)
