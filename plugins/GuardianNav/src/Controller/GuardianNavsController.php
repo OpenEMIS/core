@@ -25,16 +25,15 @@ class GuardianNavsController extends AppController
     use OptionsTrait;
     use UtilityTrait;
     private $features = [
-        'Students',
-        'StudentUser',
-        'Accounts'
+        'GuardianNavs',
+        'StudentUser'
     ];
 
     public function initialize(){
         parent::initialize();
         $this->ControllerAction->models = [
             // Users
-            'Accounts'              => ['className' => 'GuardianNav.Accounts', 'actions' => ['view', 'edit']],
+            //'Accounts'              => ['className' => 'GuardianNav.Accounts', 'actions' => ['view', 'edit']],
         ];
     }
 
@@ -56,34 +55,6 @@ class GuardianNavsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']);
     }
-
-    public function Demographic()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);
-    }
-
-    public function Identities()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']);
-    }
-
-    public function Nationalities()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']);
-    }
-
-    public function Contacts()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']);
-    }
-    public function Languages()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']);
-    }
-    public function Attachments()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']);
-    }
     // Visits
     public function StudentVisitRequests()
     {
@@ -94,11 +65,6 @@ class GuardianNavsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentVisits']);
     }
     // Visits - END
-    
-    public function StudentTransport()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentTransport']);
-    }
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -122,9 +88,8 @@ class GuardianNavsController extends AppController
                 $studentId = $session->read('Student.Students.id');
 
                 // Breadcrumb
-               // $this->Navigation->addCrumb('GuardianNavs', ['plugin' => $this->plugin, 'controller' => 'GuardianNavs', 'action' => 'GuardianNavs']);
                 $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'GuardianNavs', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
-                //$this->Navigation->addCrumb($studentModels[$alias]);
+                
                 // header name
                 $header = $studentName;
             }
@@ -145,9 +110,7 @@ class GuardianNavsController extends AppController
         }
         // this is to cater for back links
         $query = $this->request->query;
-        /*if ($action == 'StudentUser') {
-            $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
-        } */
+
         $this->set('contentHeader', $header);
     }
 
@@ -175,16 +138,7 @@ class GuardianNavsController extends AppController
         }
 
         $tabElements = [
-            $name => ['text' => __('Overview')],
-            'Accounts' => ['text' => __('Account')],
-            'Demographic' => ['text' => __('Demographic')],
-            'Identities' => ['text' => __('Identities')],
-            'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
-            'Contacts' => ['text' => __('Contacts')],
-            'Languages' => ['text' => __('Languages')],
-            'Attachments' => ['text' => __('Attachments')],
-            'Comments' => ['text' => __('Comments')],
-            'StudentTransport' => ['text' => __('Transport')]
+            'StudentUser' => ['text' => __('Overview')]
         ];
 
         $studentTabElements = [
@@ -192,30 +146,28 @@ class GuardianNavsController extends AppController
         ];
         $tabElements = array_merge($tabElements, $studentTabElements);
         //$userId = $session->read('Student.Students.id');
+
         foreach ($tabElements as $key => $value) {
             $session = $this->request->session();
             $studentId = $session->read('Student.Students.id');
+
+            if($key == 'StudentUser'){
+                $key = 'GuardianNavs'; //this is done because of tab-active on Overview tab
+            }
         
             if ($key == $this->name) {
-                $tabElements[$key]['url']['action'] = 'GuardianNavs';
-                $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $studentId]);
-            } else if ($key == 'Accounts') {
-                $tabElements[$key]['url']['action'] = 'Accounts';
-                $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $studentId]);
-            } else if ($key == 'Comments') {
-                $url = [
-                    'plugin' => $plugin,
-                    'controller' => 'GuardianNavComments',
-                    'action' => 'index'
-                ];
-                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $studentId]);
-            } else {
-                $actionURL = $key;
-                if ($key == 'UserNationalities') {
-                    $actionURL = 'Nationalities';
+                if($key == 'GuardianNavs'){
+                    $key = 'StudentUser'; //this is done because of tab-active on Overview tab
                 }
+                $tabElements[$key]['url']['action'] = 'StudentUser';
+                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $studentId]);
+
+            } else {
+                /*if($key == 'GuardianNavs'){
+                    $actionURL = 'GuardianNavs';
+                }*/
+                $actionURL = $key;
                 $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
                                                 'plugin' => $plugin,
                                                 'controller' => $name,
@@ -225,7 +177,6 @@ class GuardianNavsController extends AppController
                                             );
             }
         }
-        
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 

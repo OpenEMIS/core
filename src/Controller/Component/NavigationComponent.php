@@ -2054,8 +2054,8 @@ class NavigationComponent extends Component
             'GuardianNavs.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
-                'params' => ['plugin' => 'GuardianNav'],
-                'selected' => ['GuardianNavs.StudentUser','GuardianNavs.Accounts', 'GuardianNavs.Identities', 'GuardianNavs.Nationalities', 'GuardianNavs.Languages', 'GuardianNavComments.index', 'GuardianNavComments.view', 'GuardianNavComments.add', 'GuardianNavComments.edit', ' GuardianNavComments.delete', 'GuardianNavs.Attachments', 'GuardianNavs.Contacts', 'GuardianNavs.Demographic', 'GuardianNavs.StudentTransport',]
+                'params' => ['plugin' => 'GuardianNav', '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
+                'selected' => ['GuardianNavs.StudentUser']
             ],
             'GuardianNavs.StudentProgrammes.index' => [
                 'title' => 'Academic',
