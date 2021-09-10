@@ -318,7 +318,7 @@ class IndividualPromotionTable extends ControllerActionTable
                             'OR' => [
                                 [
                                     $InstitutionGrades->aliasField('end_date IS NULL'),
-                                    $InstitutionGrades->aliasField('start_date <= ') => $today
+                                    // $InstitutionGrades->aliasField('start_date <= ') => $today
                                 ],
                                 [
                                     $InstitutionGrades->aliasField('end_date IS NOT NULL'),
@@ -587,7 +587,7 @@ class IndividualPromotionTable extends ControllerActionTable
         
         // InstitutionStudents: Insert new record
         $studentObj = [];
-        $studentObj['student_status_id'] = $studentStatusId;
+        $studentObj['student_status_id'] = 1;
         $studentObj['student_id'] = $entity->student_id;
         $studentObj['education_grade_id'] = $entity->education_grade_id;
         $studentObj['academic_period_id'] = $entity->academic_period_id;
