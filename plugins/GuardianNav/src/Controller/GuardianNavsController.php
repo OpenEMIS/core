@@ -65,6 +65,10 @@ class GuardianNavsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentVisits']);
     }
     // Visits - END
+    public function StudentClasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']);
+    }
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -145,8 +149,7 @@ class GuardianNavsController extends AppController
             'Guardians' => ['text' => __('Guardians')]
         ];
         $tabElements = array_merge($tabElements, $studentTabElements);
-        //$userId = $session->read('Student.Students.id');
-
+        $queryString = $this->request->query('queryString');
         foreach ($tabElements as $key => $value) {
             $session = $this->request->session();
             $studentId = $session->read('Student.Students.id');
@@ -162,12 +165,12 @@ class GuardianNavsController extends AppController
                 $tabElements[$key]['url']['action'] = 'StudentUser';
                 $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $studentId]);
-
+                $tabElements[$key]['url']['queryString'] = $queryString;
             } else {
-                /*if($key == 'GuardianNavs'){
-                    $actionURL = 'GuardianNavs';
-                }*/
                 $actionURL = $key;
+                if ($key == 'UserNationalities') {
+                    $actionURL = 'Nationalities';
+                }
                 $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
                                                 'plugin' => $plugin,
                                                 'controller' => $name,
@@ -184,8 +187,8 @@ class GuardianNavsController extends AppController
     {
         $id = (array_key_exists('id', $options))? $options['id']: 0;
         $type = (array_key_exists('type', $options))? $options['type']: null;
-
         $tabElements = [];
+        $studentUrl = ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs'];
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],
             'Classes' => ['text' => __('Classes')],
@@ -206,17 +209,10 @@ class GuardianNavsController extends AppController
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
-        // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
-            if (in_array($key, ['Programmes', 'Textbooks', 'Risks','Associations'])) {
-                $studentUrl = ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
-            } else {
-                $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
-            }
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
         }
-        //echo '<pre>';print_r($tabElements);die;
+
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 

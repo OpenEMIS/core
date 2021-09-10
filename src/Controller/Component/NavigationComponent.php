@@ -2061,7 +2061,7 @@ class NavigationComponent extends Component
                 'title' => 'Academic',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
                 'params' => ['plugin' => 'GuardianNav'],
-                'selected' => ['GuardianNavs.Classes', 'GuardianNavs.Subjects', 'GuardianNavs.Absences', 'GuardianNavs.Behaviours', 'GuardianNavs.Results', 'GuardianNavs.ExaminationResults', 'GuardianNavs.ReportCards', 'GuardianNavs.Awards',
+                'selected' => ['GuardianNavs.StudentClasses', 'GuardianNavs.Subjects', 'GuardianNavs.Absences', 'GuardianNavs.Behaviours', 'GuardianNavs.Results', 'GuardianNavs.ExaminationResults', 'GuardianNavs.ReportCards', 'GuardianNavs.Awards',
                 'GuardianNavs.Extracurriculars', 'GuardianNavs.StudentTextbooks', 'GuardianNavs.GuardianNavs.view', 'GuardianNavs.GuardianNavs.edit', 'GuardianNavs.StudentRisks', 'GuardianNavs.Outcomes', 'GuardianNavs.StudentProgrammes.view', 'Institutions.StudentProgrammes.edit',
                 'GuardianNavs.Competencies', 'GuardianNavs.AssessmentItemResultsArchived', 'GuardianNavs.InstitutionStudentAbsencesArchived', 'GuardianNavs.StudentTransition', 'GuardianNavs.Associations','GuardianNavs.StudentAssociations']
             ]
@@ -2114,6 +2114,11 @@ class NavigationComponent extends Component
                 'selected' => ['Students.Profiles']
             ],*/
         ];
+        foreach ($navigation as &$n) {
+            if (isset($n['params'])) {
+                $n['params']['studentId'] = $this->controller->paramsEncode($studentId);
+            }
+        }
         return $navigation;
     }
 }
