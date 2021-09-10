@@ -25,7 +25,7 @@ class GuardianNavsController extends AppController
     use OptionsTrait;
     use UtilityTrait;
     private $features = [
-        'GuardianNavs',
+        'Students',
         'StudentUser'
     ];
 
@@ -75,24 +75,24 @@ class GuardianNavsController extends AppController
 		$header = 'Students';    
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
 
-        $studentModels = [
-                'StudentProgrammes' => __('Programmes'),
-                'StudentRisks' => __('Risks'),
-                'StudentTextbooks' => __('Textbox'),
-                'StudentAssociations' => __('Associations')
-            ];
-            // add Students and student name
-            $session = $this->request->session();
-            if ($session->check('Student.Students.name')) {
+        // add Students and student name
+        $session = $this->request->session();
+        if ($session->check('Student.Students.name')) {
+            if ($this->request->action== 'GuardianNavs') {
+                $studentName = $session->read('Auth.User.name');
+                $studentId = $session->read('Auth.User.id');
+            } else {
                 $studentName = $session->read('Student.Students.name');
                 $studentId = $session->read('Student.Students.id');
-
-                // Breadcrumb
-                $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'GuardianNavs', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
-                
-                // header name
-                $header = $studentName;
             }
+            
+            // Breadcrumb
+            $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'GuardianNavs', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
+                
+            // header name
+            $header = $studentName;
+        }
+
         $this->set('contentHeader', $header); 
     }
 

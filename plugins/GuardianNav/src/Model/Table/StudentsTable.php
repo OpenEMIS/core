@@ -92,41 +92,6 @@ class StudentsTable extends ControllerActionTable
             ]
         ]);
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStudentAdmission']);
-
-        /**
-         * Advance Search Types.
-         * AdvanceSearchBehavior must be included first before adding other types of advance search.
-         * If no "belongsTo" relation from the main model is needed, include its foreign key name in AdvanceSearch->exclude options.
-         */
-        $advancedSearchFieldOrder = [
-            'first_name', 'middle_name', 'third_name', 'last_name',
-            'contact_number', 'identity_type', 'identity_number'
-        ];
-
-        $this->addBehavior('AdvanceSearch', [
-            'exclude' => [
-                'student_id',
-                'institution_id',
-                'education_grade_id',
-                'academic_period_id',
-                'student_status_id',
-                'previous_institution_student_id'
-            ],
-            'order' => $advancedSearchFieldOrder
-        ]);
-
-        $this->addBehavior('User.AdvancedIdentitySearch', [
-            'associatedKey' => $this->aliasField('student_id')
-        ]);
-        $this->addBehavior('User.AdvancedContactNumberSearch', [
-            'associatedKey' => $this->aliasField('student_id')
-        ]);
-        $this->addBehavior('User.AdvancedSpecificNameTypeSearch', [
-            'modelToSearch' => $this->Users
-        ]);
-        /**
-         * End Advance Search Types
-         */
         $this->addBehavior('ControllerAction.Image'); // To be verified
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
@@ -357,6 +322,10 @@ class StudentsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        if (array_key_exists('add', $extra['toolbarButtons'])) {
+            //echo "<pre>";print_r($extra);die(); 
+            $extra['toolbarButtons']['add']['type'] = 'hidden';      
+        }
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('education_grade_id', ['visible' => false]);
         $this->field('institution_id', ['visible' => false]);
@@ -521,25 +490,7 @@ class StudentsTable extends ControllerActionTable
             $indexElements = (isset($this->controller->viewVars['indexElements']))?$this->controller->viewVars['indexElements'] :[] ;
 
             $indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 0];
-
-            if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
-                $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                $currentYearId = $AcademicPeriod->getCurrent();
-                $periodId = $this->request->query['academic_period_id'];
-                if ($currentYearId == $periodId) {
-                $indexElements[] = [
-                    'name' => $indexDashboard,
-                    'data' => [
-                        'model' => 'students',
-                        'modelCount' => $studentCount,
-                        'modelArray' => $InstitutionArray,
-                    ],
-                    'options' => [],
-                    'order' => 2
-                ];
-                }
-            }
-
+    
             foreach ($indexElements as $key => $value) {
                 if ($value['name']=='OpenEmis.ControllerAction/index') {
                     $indexElements[$key]['order'] = 3;
@@ -549,7 +500,6 @@ class StudentsTable extends ControllerActionTable
             }
 
             $extra['elements'] = array_merge($extra['elements'], $indexElements);
-            //echo '<pre>';print_r($indexElements);die;
         }
     }
 
