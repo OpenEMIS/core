@@ -318,7 +318,7 @@ class IndividualPromotionTable extends ControllerActionTable
                             'OR' => [
                                 [
                                     $InstitutionGrades->aliasField('end_date IS NULL'),
-                                    $InstitutionGrades->aliasField('start_date <= ') => $today
+                                    // $InstitutionGrades->aliasField('start_date <= ') => $today
                                 ],
                                 [
                                     $InstitutionGrades->aliasField('end_date IS NOT NULL'),
