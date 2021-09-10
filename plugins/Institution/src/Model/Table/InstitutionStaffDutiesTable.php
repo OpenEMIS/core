@@ -20,6 +20,11 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
+
+        $this->addBehavior('Excel',[
+            'excludes' => ['institution_id'],
+            'pages' => ['index'],
+        ]);
     }
 
     public function implementedEvents()
@@ -128,4 +133,48 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
             return $staffOptions;
     }
 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+     
+        $extraField[] = [
+            'key'   => 'academic_period_id',
+            'field' => 'academic_period_id',
+            'type'  => 'integer',
+            'label' => __('Academic Period')
+        ];
+
+        $extraField[] = [
+            'key'   => 'staff_duties_id',
+            'field' => 'staff_duties_id',
+            'type'  => 'string',
+            'label' => __('Duty Type')
+        ];
+
+        $extraField[] = [
+            'key'   => 'staff_id',
+            'field' => 'staff_id',
+            'type'  => 'string',
+            'label' => __('Staff')
+        ];
+
+        $extraField[] = [
+            'key'   => 'comment',
+            'field' => 'comment',
+            'type'  => 'string',
+            'label' => __('Comment')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
+    public function onExcelGetStaffId(Event $event, Entity $entity)
+    {
+        $Users = TableRegistry::get('User.Users');
+        $result = $Users
+            ->find()
+            ->select(['first_name','last_name'])
+            ->where(['id' => $entity->staff_id])
+            ->first();
+        return $entity->staff_id = $entity->staff_id = $entity['staff']->openemis_no .' - '.$result->first_name.' '.$result->last_name;
+    }
 }
