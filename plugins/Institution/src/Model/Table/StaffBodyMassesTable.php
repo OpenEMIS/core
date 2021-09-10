@@ -10,6 +10,7 @@ use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
+
 class StaffBodyMassesTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -65,6 +66,10 @@ class StaffBodyMassesTable extends ControllerActionTable
         $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
         $this->field('comment',['visible' => false]);
         $this->field('security_user_id',['visible' => false]);
+        /*POCOR-6307 Starts*/
+        $this->field('file_name',['visible' => false]);
+        $this->field('file_content',['visible' => false]);
+        /*POCOR-6307 Ends*/
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)

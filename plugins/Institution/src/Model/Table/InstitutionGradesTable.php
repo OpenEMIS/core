@@ -26,7 +26,7 @@ class InstitutionGradesTable extends ControllerActionTable
         $this->belongsTo('Institutions',                ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
 
-        //$this->hasMany('InstitutionGrades', ['className' => 'Institution.InstitutionGrades', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);//POCOR-6268 commented due to - unnecessary association
+        $this->hasMany('InstitutionGrades', ['className' => 'Institution.InstitutionGrades', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);//POCOR-6268 commented due to - unnecessary association
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -1297,42 +1297,34 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-        $cloneFields = $fields->getArrayCopy();
-        //print_r($cloneFields); exit;
-        $newFields = [];
-        foreach ($cloneFields as $key => $value) {
-            $newFields[] = $value;
+        $newFields[] = [
+            'key'   => 'grade_name',
+            'field' => 'grade_name',
+            'type'  => 'string',
+            'label' => 'Education Grade'
+        ];
 
-            $newFields[] = [
-                'key' => 'EducationCycles.name',
-                'field' => 'educaton_cycle_name',
-                'type' => 'string',
-                'label' => 'Education Cycle Name'
-            ];
+        $newFields[] = [
+            'key'   => 'programme_name',
+            'field' => 'programme_name',
+            'type'  => 'integer',
+            'label' => 'Programme'
+        ];
 
-            $newFields[] = [
-                'key' => 'EducationGrades.name',
-                'field' => 'programme_name',
-                'type' => 'string',
-                'label' => 'Programme Name'
-            ];
+        $newFields[] = [
+            'key'   => 'education_level_name',
+            'field' => 'education_level_name',
+            'type'  => 'string',
+            'label' => 'Level'
+        ];
 
-            $newFields[] = [
-                'key' => 'EducationLevels.name',
-                'field' => 'education_level_name',
-                'type' => 'string',
-                'label' => 'Education Level Name'
-            ];
+        $newFields[] = [
+            'key'   => 'education_subject_id',
+            'field' => 'education_subject_id',
+            'type'  => 'integer',
+            'label' => 'Education Subjects'
+        ];
 
-            $newFields[] = [
-                'key' => 'EducationSystems.name',
-                'field' => 'education_system_name',
-                'type' => 'string',
-                'label' => 'Education System Name'
-            ];
-
-
-        }
         $fields->exchangeArray($newFields);
     }
 
@@ -1342,7 +1334,15 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
         $query
-        ->select(['grade_name' => 'EducationGrades.name', 'programme_name' => 'EducationProgrammes.name', 'educaton_cycle_name' => 'EducationCycles.name', 'education_level_name' => 'EducationLevels.name', 'education_system_name' => 'EducationSystems.name'])
+        ->select(['grade_name' => 'EducationGrades.name', 'programme_name' => $query->func()->concat([
+            'EducationCycles.name' => 'literal',
+            " - ",
+            'EducationProgrammes.name' => 'literal'
+        ]), 'education_level_name' => $query->func()->concat([
+            'EducationSystems.name' => 'literal',
+            " - ",
+            'EducationLevels.name' => 'literal'
+        ])])
         ->LeftJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()],[
             $this->EducationGrades->aliasField('id').' = ' . $this->InstitutionGrades->aliasField('education_grade_id')
         ])
@@ -1360,8 +1360,26 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         ])
         ->where([
             $this->aliasField('institution_id') => $institutionId,
-           //'EducationSystems.academic_period_id' => $selectedAcademicPeriod
+           'EducationSystems.academic_period_id' => $selectedAcademicPeriod
 
         ]);
+    }
+
+    public function onExcelGetEducationSubjectId(Event $event, Entity $entity)
+    {
+        $gradeId = $entity->education_grade_id;
+        $institution_id = $entity->institution_id;
+
+        $EducationGradesSubjects = TableRegistry::get('institution_program_grade_subjects');
+        $subjectCount = $EducationGradesSubjects->find()
+        ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId,
+        $EducationGradesSubjects->aliasField('institution_id') => $institution_id])
+                        ->toArray();
+        $count = 0;
+        if (!empty($subjectCount)) {
+        return $count = count($subjectCount);
+        } else {
+        return $count;
+        }
     }
 }
