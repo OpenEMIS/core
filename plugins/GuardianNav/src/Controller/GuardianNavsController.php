@@ -94,6 +94,11 @@ class GuardianNavsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentVisits']);
     }
     // Visits - END
+    
+    public function StudentTransport()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentTransport']);
+    }
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -110,20 +115,18 @@ class GuardianNavsController extends AppController
                 'StudentTextbooks' => __('Textbox'),
                 'StudentAssociations' => __('Associations')
             ];
-            if (array_key_exists($alias, $studentModels)) {
-                // add Students and student name
-                if ($session->check('Student.Students.name')) {
-                    $studentName = $session->read('Student.Students.name');
-                    $studentId = $session->read('Student.Students.id');
+            // add Students and student name
+            $session = $this->request->session();
+            if ($session->check('Student.Students.name')) {
+                $studentName = $session->read('Student.Students.name');
+                $studentId = $session->read('Student.Students.id');
 
-                    // Breadcrumb
-                    $this->Navigation->addCrumb('GuardianNavs', ['plugin' => $this->plugin, 'controller' => 'GuardianNavs', 'action' => 'Students']);
-                    $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'GuardianNavs', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
-                    $this->Navigation->addCrumb($studentModels[$alias]);
-
-                    // header name
-                    $header = $studentName;
-                }
+                // Breadcrumb
+               // $this->Navigation->addCrumb('GuardianNavs', ['plugin' => $this->plugin, 'controller' => 'GuardianNavs', 'action' => 'GuardianNavs']);
+                $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'GuardianNavs', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
+                //$this->Navigation->addCrumb($studentModels[$alias]);
+                // header name
+                $header = $studentName;
             }
         $this->set('contentHeader', $header); 
     }
@@ -172,7 +175,7 @@ class GuardianNavsController extends AppController
         }
 
         $tabElements = [
-            $this->name => ['text' => __('Overview')],
+            $name => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
             'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
@@ -180,25 +183,34 @@ class GuardianNavsController extends AppController
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
             'Attachments' => ['text' => __('Attachments')],
-            'Comments' => ['text' => __('Comments')]
+            'Comments' => ['text' => __('Comments')],
+            'StudentTransport' => ['text' => __('Transport')]
         ];
+
+        $studentTabElements = [
+            'Guardians' => ['text' => __('Guardians')]
+        ];
+        $tabElements = array_merge($tabElements, $studentTabElements);
         //$userId = $session->read('Student.Students.id');
         foreach ($tabElements as $key => $value) {
+            $session = $this->request->session();
+            $studentId = $session->read('Student.Students.id');
+        
             if ($key == $this->name) {
                 $tabElements[$key]['url']['action'] = 'GuardianNavs';
                 $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $options['userId']]);
+                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $studentId]);
             } else if ($key == 'Accounts') {
                 $tabElements[$key]['url']['action'] = 'Accounts';
                 $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $options['userId']]);
+                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $studentId]);
             } else if ($key == 'Comments') {
                 $url = [
                     'plugin' => $plugin,
                     'controller' => 'GuardianNavComments',
                     'action' => 'index'
                 ];
-                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $studentId]);
             } else {
                 $actionURL = $key;
                 if ($key == 'UserNationalities') {
@@ -209,7 +221,7 @@ class GuardianNavsController extends AppController
                                                 'controller' => $name,
                                                 'action' => $actionURL,
                                                 'index'],
-                                                ['security_user_id' => $id]
+                                                ['security_user_id' => $studentId]
                                             );
             }
         }
