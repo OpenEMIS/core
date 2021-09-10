@@ -27,14 +27,16 @@ class StaffDutiesTable extends AppTable  {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
-       
+        $areaId = $requestData->area_education_id;
         $conditions = [];
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        
-        if (!empty($institutionId)) {
+        if (!empty($institutionId) && $institutionId > 0) {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
+        }
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId; 
         }
         
 		$staffDuties = TableRegistry::get('staff_duties');

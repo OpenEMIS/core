@@ -73,6 +73,10 @@ class UserInsurancesTable extends ControllerActionTable
         $this->field('insurance_provider_id', ['attr' => ['label' => __('Provider')]]);
         $this->field('insurance_type_id', ['attr' => ['label' => __('Type')]]);
         $this->field('comment',['visible' => false]);
+        /*POCOR-6307 Starts*/
+        $this->field('file_name',['visible' => false]);
+        $this->field('file_content',['visible' => false]);
+        /*POCOR-6307 Ends*/
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
