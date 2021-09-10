@@ -167,7 +167,10 @@ class StudentOutcomesTable extends ControllerActionTable
 		$userData = $this->Session->read();
         if ($userData['Auth']['User']['is_guardian'] == 1) { 
             $sId = $userData['Student']['ExaminationResults']['student_id'];
-            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+            if ($sId) {
+                $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+            }
+            $studentId = $userData['Student']['Students']['id'];
         } else {
             $studentId = $userData['Auth']['User']['id'];
         }
