@@ -156,7 +156,7 @@ class StudentRisksTable extends ControllerActionTable
         if ($session->read('Auth.User.is_guardian') == 1) {
 
             $sId = $session->read('Student.ExaminationResults.student_id');
-            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+            $studentId = $session->read('Student.Students.id');
 
         } else {
             $studentId = $session->read('Student.Students.id');
