@@ -441,13 +441,15 @@ class NavigationComponent extends Component
             }
         }
         
-        $navigation = [
+        $PersonalNavigation = [
             'Profiles.Personal' => [
                 'title' => 'Personal',
                 'icon' => '<span><i class="fa kd-role"></i></span>',
                 'params' => ['plugin' => 'Profile', 'action' => 'Personal', 0 => 'view', $userId]
-            ],
+            ]
+        ];
 
+        $navigation = [
             'Institutions.Institutions.index' => [
                 'title' => 'Institutions',
                 'icon' => '<span><i class="fa kd-institutions"></i></span>',
@@ -476,7 +478,7 @@ class NavigationComponent extends Component
         ];
       
         if (isset($newNavigation)) {
-            $navigation = array_merge($newNavigation, $navigation);
+            $navigation = array_merge($PersonalNavigation, $newNavigation, $navigation);
         }
        
         return $navigation;
@@ -2050,6 +2052,11 @@ class NavigationComponent extends Component
         $session = $this->request->session();
         $studentId = $session->read('Student.Students.id');
         $queryString = $this->request->query('queryString');
+        if($queryString != ''){
+            $session->write('queryString', $queryString);
+        }else{
+            $queryString = $session->read('queryString');
+        }
         $navigation = [
             'GuardianNavs.StudentUser.view' => [
                 'title' => 'General',
@@ -2061,58 +2068,9 @@ class NavigationComponent extends Component
                 'title' => 'Academic',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
                 'params' => ['plugin' => 'GuardianNav'],
-                'selected' => ['GuardianNavs.StudentClasses', 'GuardianNavs.Subjects', 'GuardianNavs.Absences', 'GuardianNavs.Behaviours', 'GuardianNavs.Results', 'GuardianNavs.ExaminationResults', 'GuardianNavs.ReportCards', 'GuardianNavs.Awards',
-                'GuardianNavs.Extracurriculars', 'GuardianNavs.StudentTextbooks', 'GuardianNavs.GuardianNavs.view', 'GuardianNavs.GuardianNavs.edit', 'GuardianNavs.StudentRisks', 'GuardianNavs.Outcomes', 'GuardianNavs.StudentProgrammes.view', 'Institutions.StudentProgrammes.edit',
-                'GuardianNavs.Competencies', 'GuardianNavs.AssessmentItemResultsArchived', 'GuardianNavs.InstitutionStudentAbsencesArchived', 'GuardianNavs.StudentTransition', 'GuardianNavs.Associations','GuardianNavs.StudentAssociations']
+                'selected' => ['GuardianNavs.StudentClasses', 'GuardianNavs.StudentSubjects', 'GuardianNavs.StudentAbsences', 'GuardianNavs.StudentBehaviours', 'GuardianNavs.StudentOutcomes', 'GuardianNavs.StudentCompetencies', 'GuardianNavs.StudentResults', 'GuardianNavs.StudentExaminationResults', 'GuardianNavs.StudentReportCards', 'GuardianNavs.StudentAwards', 'GuardianNavs.StudentExtracurriculars', 'GuardianNavs.StudentTextbooks', 'GuardianNavs.StudentRisks',
+                    'GuardianNavs.StudentAssociations']
             ]
-            /*'GuardianNavs.StudentScheduleTimetable' => [
-                'title' => 'Timetables',
-                'parent' => 'GuardianNavs.GuardianNavs.index',
-                'selected' => ['GuardianNavs.StudentScheduleTimetable'],
-                'params' => ['plugin' => 'GuardianNav']
-            ],
-            'Counsellings.index' => [
-                'title' => 'Counselling',
-                'parent' => 'GuardianNavs.GuardianNavs.index',
-                'params' => ['plugin' => 'GuardianNav'],
-                'selected' => ['Counsellings.add', 'Counsellings.edit', 'Counsellings.view', 'Counsellings.delete']
-            ],
-            'Students.BankAccounts' => [
-                'title' => 'Finance',
-                'parent' => 'GuardianNavs.GuardianNavs.index',
-                'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.StudentFees']
-            ],
-            'Students.Healths' => [
-                'title' => 'Health',
-                'parent' => 'GuardianNavs.GuardianNavs.index',
-                'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
-            ],
-            'Students.SpecialNeedsReferrals' => [
-                'title' => 'Special Needs',
-                'parent' => 'GuardianNavs.GuardianNavs.index',
-                'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.SpecialNeedsReferrals', 'Students.SpecialNeedsAssessments', 'Students.SpecialNeedsServices', 'Students.SpecialNeedsDevices', 'Students.SpecialNeedsPlans']
-            ],
-            'Students.StudentVisitRequests' => [
-                'title' => 'Visits',
-                'parent' => 'GuardianNavs.GuardianNavs.index',
-                'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.StudentVisitRequests', 'Students.StudentVisits']
-            ],
-            'Students.Meals' => [
-                'title' => 'Meals',
-                'parent' => 'GuardianNavs.GuardianNavs.index',
-                'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.Meals']
-            ],
-            'Students.Profiles' => [
-                'title' => 'Profiles',
-                'parent' => 'GuardianNavs.GuardianNavs.index',
-                'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.Profiles']
-            ],*/
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
