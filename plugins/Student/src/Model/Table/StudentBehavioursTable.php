@@ -35,9 +35,16 @@ class StudentBehavioursTable extends AppTable {
 			} else {
 				$studentId = $this->Session->read('Auth.User.id');
 			}
-			$conditions[$this->aliasField('student_id')] = $studentId;
-			$query->where($conditions, [], true);
-		}            
+		} 
+
+		/*POCOR-6267 starts*/
+	    if (isset($this->controller->name) && $this->controller->name == 'GuardianNavs') {
+	    	$session = $this->request->session();
+	        $studentId = $session->read('Student.Students.id');
+	    }/*POCOR-6267 ends*/ 
+
+	    $conditions[$this->aliasField('student_id')] = $studentId;
+		$query->where($conditions, [], true);          
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
