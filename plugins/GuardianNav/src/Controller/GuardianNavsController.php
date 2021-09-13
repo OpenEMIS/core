@@ -29,12 +29,30 @@ class GuardianNavsController extends AppController
         'StudentUser'
     ];
 
+    private $redirectedViewFeature = [
+        // student academic
+        'Programmes',
+        'StudentClasses',
+        'StudentSubjects',
+        'Textbooks',
+        'StudentRisks',
+        'StudentBehaviours',
+        'StudentExtracurriculars'
+    ];
+
     public function initialize(){
         parent::initialize();
         $this->ControllerAction->models = [
-            // Users
-            //'Accounts'              => ['className' => 'GuardianNav.Accounts', 'actions' => ['view', 'edit']],
+            // Student
+            'StudentAbsences'       => ['className' => 'GuardianNav.Absences', 'actions' => ['index']],
+            'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+            'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
         ];
+        $this->loadComponent('Training.Training');
+        $this->loadComponent('User.Image');
+        $this->attachAngularModules();
+
+        $this->set('contentHeader', 'Guardian');
     }
 
     public function GuardianNavs() {
@@ -50,11 +68,6 @@ class GuardianNavsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']);
     }
-
-    public function Classes()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']);
-    }
     // Visits
     public function StudentVisitRequests()
     {
@@ -69,6 +82,23 @@ class GuardianNavsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']);
     }
+    public function StudentSubjects()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
+    public function StudentOutcomes()         { 
+        $comment = $this->request->query['comment'];
+        if(!empty($comment) && $comment == 1){ 
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
+
+        }else{
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
+        }         
+        
+    }
+    public function StudentCompetencies()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCompetencies']); }
+    public function StudentAwards()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
+    public function StudentTextbooks()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
+    public function StudentAssociations()    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionAssociationStudent']);}
+    public function StudentRisks() {  $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentRisks']);}
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -79,6 +109,16 @@ class GuardianNavsController extends AppController
 		$header = 'Students';    
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
 
+        if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
+            $alias = $model->alias();
+            // redirected view feature is to cater for the link that redirected to institution
+            if (in_array($alias, $this->redirectedViewFeature)) {
+                $model->toggle('view', false);
+            }
+        } elseif ($model instanceof \App\Model\Table\AppTable) {// CAv3
+            // CAv3 hide button and redirect when user change the Url
+                    $model->addBehavior('ControllerAction.HideButton');
+        }
         // add Students and student name
         $session = $this->request->session();
         if ($session->check('Student.Students.name')) {
@@ -96,7 +136,21 @@ class GuardianNavsController extends AppController
             // header name
             $header = $studentName;
         }
-
+        $persona = false;
+        if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
+                $header = $persona->name . ' - ' . $model->getHeader($alias);
+                $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
+            }  elseif ($model->alias() == 'StudentRisks') {
+                $header .= ' - '. __('Risks');
+            } elseif ($model->alias() == 'InstitutionStudentRisks') {
+                $header .= ' - '. __('Institution Student Risks');
+                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
+            }elseif ($model->alias() == 'InstitutionAssociationStudent') {
+                $header .= ' - '. __('Associations');
+            } else {
+                 $header .= ' - ' . $model->getHeader($alias);
+        }
+    
         $this->set('contentHeader', $header); 
     }
 
@@ -112,9 +166,17 @@ class GuardianNavsController extends AppController
             $session->delete('Guardian.Guardians.id');
             $session->delete('Guardian.Guardians.name');
         }
+        if($session->check('Student.Students.name')){
+            $name = $session->read('Student.Students.name');
+        }
+        $sub_header = '';
+        if($action == 'StudentResults'){
+            $sub_header = 'Assessments';
+        }
+        $header = $name .' - '. $sub_header;
         // this is to cater for back links
         $query = $this->request->query;
-
+        
         $this->set('contentHeader', $header);
     }
 
@@ -168,9 +230,6 @@ class GuardianNavsController extends AppController
                 $tabElements[$key]['url']['queryString'] = $queryString;
             } else {
                 $actionURL = $key;
-                if ($key == 'UserNationalities') {
-                    $actionURL = 'Nationalities';
-                }
                 $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
                                                 'plugin' => $plugin,
                                                 'controller' => $name,
@@ -189,6 +248,8 @@ class GuardianNavsController extends AppController
         $type = (array_key_exists('type', $options))? $options['type']: null;
         $tabElements = [];
         $studentUrl = ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs'];
+        //$session = $this->request->session();
+        //$studentId = $session->read('Student.Students.id');
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],
             'Classes' => ['text' => __('Classes')],
@@ -263,4 +324,79 @@ class GuardianNavsController extends AppController
         $this->set('institutionDefaultId', $institutionId);
         $this->set('ngController', 'StudentTimetableCtrl as $ctrl');
     }
+
+    // AngularJS
+    public function StudentResults()
+    {
+        $session = $this->request->session();
+        //$studentId = $this->Auth->user('id');
+        $sId = $this->request->pass[1];
+
+        // tabs
+        $options['type'] = 'student';
+        $tabElements = $this->getAcademicTabElements($options);
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', 'Results');
+        // End
+
+        $this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
+    }
+
+    private function attachAngularModules() {
+        $action = $this->request->action;
+
+        switch ($action) {
+            case 'StudentResults':
+            $this->Angular->addModules([
+                'alert.svc',
+                'student.results.ctrl',
+                'student.results.svc'
+            ]);
+            break;
+            case 'StudentExaminationResults':
+            $this->Angular->addModules([
+                'alert.svc',
+                'student.examination_results.ctrl',
+                'student.examination_results.svc'
+            ]);
+            break;
+            case 'StaffAttendances':
+            $this->Angular->addModules([
+                'staff.attendances.ctrl',
+                'staff.attendances.svc'
+            ]);
+            break;
+            case 'ScheduleTimetable':
+            $this->Angular->addModules([
+                'timetable.ctrl',
+                'timetable.svc'
+            ]);
+            break;
+            case 'StudentScheduleTimetable':
+            $this->Angular->addModules([
+                'studenttimetable.ctrl',
+                'studenttimetable.svc'
+            ]);
+            break;
+        }
+    }
+
+    public function StudentExaminationResults()
+    {
+        $session = $this->request->session();
+        $studentId = $session->read('Student.Students.id');
+        $session->write('Student.ExaminationResults.student_id', $studentId);
+
+        // tabs
+        $options['type'] = 'student';
+        $tabElements = $this->getAcademicTabElements($options);
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', 'ExaminationResults');
+        // End
+
+        $this->set('ngController', 'StudentExaminationResultsCtrl as StudentExaminationResultsController');
+    }
+    // End
+
+    public function StudentReportCards()      { $this->ControllerAction->process(['alias' => _FUNCTION_, 'className' => 'Student.StudentReportCards']); }
 }

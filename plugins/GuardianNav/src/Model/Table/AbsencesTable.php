@@ -1,5 +1,5 @@
 <?php
-namespace Student\Model\Table;
+namespace GuardianNav\Model\Table;
 
 use ArrayObject;
 use Cake\Validation\Validator;
@@ -9,9 +9,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query; 
 use Cake\ORM\TableRegistry;
 
-use App\Model\Table\ControllerActionTable;
-
-class AbsencesTable extends ControllerActionTable
+class AbsencesTable extends AppTable
 {
     public function initialize(array $config)
     {
@@ -33,31 +31,8 @@ class AbsencesTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $newEvent = [
-            'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons'
-
-
-        ];
-        $events = array_merge($events, $newEvent);
         return $events;
     }
-
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-        switch ($action) {
-			case 'index':
-                    $toolbarButtons['edit'] = $buttons['index'];
-                    $toolbarButtons['edit']['url'][0] = 'index';
-                    $toolbarButtons['edit']['action'] = 'abc';
-                    $toolbarButtons['edit']['type'] = 'button';
-                    $toolbarButtons['edit']['label'] = '<i class="fa fa-folder"></i>';
-                    $toolbarButtons['edit']['attr'] = $attr;
-                    $toolbarButtons['edit']['attr']['title'] = __('Archive');
-                    if($toolbarButtons['edit']['url']['action'] == 'Absences'){
-                        $toolbarButtons['edit']['url']['action'] = 'InstitutionStudentAbsencesArchived';
-                    }
-				break;
-		}
-	}
 
     public function beforeAction($event)
     {
@@ -80,18 +55,6 @@ class AbsencesTable extends ControllerActionTable
             $this->Alert->success('StudentAbsence.deleteRecord', ['reset'=>true]);
             return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
         }
-    }
-
-    public function indexBeforeAction(Event $event, ArrayObject $settings)
-    {  
-        $this->fields['academic_period_id']['visible'] = false;
-        $this->fields['institution_id']['visible'] = false;
-        $this->fields['education_grade_id']['visible'] = false;
-        $this->fields['date']['visible'] = true;
-
-        $this->field('periods', ['visible' => true]);
-        $this->field('subjects', ['visible' => true]);
-        $this->setFieldOrder('date');
     }
 
     public function onGetPeriods(Event $event, Entity $entity)
@@ -288,9 +251,14 @@ class AbsencesTable extends ControllerActionTable
     public function beforeFind( Event $event, Query $query )
     {
 		$userData = $this->Session->read();
+        $session = $this->request->session();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) { 
             $sId = $userData['Student']['ExaminationResults']['student_id']; 
-            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+            if (!empty($sId)) {
+                $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+            } else {
+                $studentId = $session->read('Student.Students.id');
+            }
         } else {
             $studentId = $userData['Auth']['User']['id'];
         }
