@@ -42,6 +42,18 @@ class POCOR5947 extends AbstractMigration
             SET assessment_item_results.institution_classes_id = institution_class_students.institution_class_id 
             WHERE institution_class_students.modified IS NULL 
             OR (institution_class_students.modified IS NOT NULL AND assessment_item_results.institution_classes_id = 0)");   
+
+
+        // For institution_classes that are not updated from previous queries
+        $this->execute("UPDATE assessment_item_results INNER JOIN institution_class_students 
+            ON institution_class_students.student_id = assessment_item_results.student_id
+            AND institution_class_students.education_grade_id = assessment_item_results.education_grade_id
+            AND institution_class_students.academic_period_id = assessment_item_results.academic_period_id
+            AND institution_class_students.institution_id = assessment_item_results.institution_id
+            SET assessment_item_results.institution_classes_id = institution_class_students.institution_class_id 
+            WHERE assessment_item_results.institution_classes_id = 0");   
+
+
     }
 
     // rollback
