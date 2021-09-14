@@ -20,7 +20,28 @@ class UserBodyMassesTable extends AppTable
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
+        //POCOR-6255 start
+        $this->addBehavior('Page.FileUpload', [
+            'fieldMap' => ['file_name' => 'file_content'],
+            'size' => '2MB'
+        ]);//POCOR-6255 end
     }
+    //POCOR-6255 start
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
+        return $events;
+    }
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'download' || $action == 'image') {
+            // check for the user permission to download here
+            $event->stopPropagation();
+            return true;
+        }
+    }//POCOR-6255 end
 
     public function validationDefault(Validator $validator)
     {

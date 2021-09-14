@@ -53,6 +53,7 @@ class SpecialNeedsTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $academic_period_id = $requestData->academic_period_id;
         $institution_id = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
         $Users = TableRegistry::get('User.Users');
         $Genders = TableRegistry::get('User.Genders');
         $SpecialNeedsAssessments = TableRegistry::get('SpecialNeeds.SpecialNeedsAssessments');
@@ -69,6 +70,11 @@ class SpecialNeedsTable extends AppTable
         $UserSpecialNeedsReferrals = TableRegistry::get('user_special_needs_referrals');
         if ($institution_id != 0) {
             $where = [$this->aliasField('institution_id') => $institution_id];
+        } else {
+            $where = [];
+        }
+        if ($areaId != -1) {
+            $where = [$this->aliasField('Institutions.area_id') => $areaId];
         } else {
             $where = [];
         }
