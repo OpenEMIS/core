@@ -150,7 +150,6 @@ class GuardianNavsController extends AppController
             } else {
                 $header .= ' - ' . $model->getHeader($alias);
         }
-        
         $this->set('contentHeader', $header); 
     }
 
@@ -179,7 +178,6 @@ class GuardianNavsController extends AppController
         $header = $name .' - '. $sub_header;
         // this is to cater for back links
         $query = $this->request->query;
-        
         $this->set('contentHeader', $header);
     }
 
