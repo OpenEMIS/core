@@ -323,7 +323,6 @@ class StudentsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         if (array_key_exists('add', $extra['toolbarButtons'])) {
-            //echo "<pre>";print_r($extra);die(); 
             $extra['toolbarButtons']['add']['type'] = 'hidden';      
         }
         $this->field('academic_period_id', ['visible' => false]);
@@ -354,11 +353,11 @@ class StudentsTable extends ControllerActionTable
                 'Users.third_name',
                 'Users.last_name'
             ])
-            ->leftJoin([$StudentGuardians->alias() => $StudentGuardians->table()], [
+            ->innerJoin([$StudentGuardians->alias() => $StudentGuardians->table()], [
                 $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
             ])
-            ->where($conditions, [], true);
-
+            ->where($conditions, [], true)
+            ->group([$StudentGuardians->aliasField('student_id')]);
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
