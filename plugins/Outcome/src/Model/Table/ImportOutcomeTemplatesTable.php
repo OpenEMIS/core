@@ -15,6 +15,8 @@ use PHPExcel_Worksheet;
 
 class ImportOutcomeTemplatesTable extends AppTable {
 
+    private $_currentData = null;
+
     public function initialize(array $config) {
 
         $this->table('import_mapping');
@@ -31,17 +33,41 @@ class ImportOutcomeTemplatesTable extends AppTable {
 
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $this->competencyTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
     }
     
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $newEvent = [
+            'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
+            'Model.import.onImportPopulateEducationSubjectCodeData' => 'onImportPopulateEducationSubjectCodeData',
+            'Model.import.onImportPopulateOutcomeGradingTypesData' => 'onImportPopulateOutcomeGradingTypesData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation'
         ];
         $events = array_merge($events, $newEvent);
         return $events;
     }
 
+    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    {
+        $selectedPeriod = $this->getAcademicPeriod($this->request->query('period'));
+        $columns = new Collection($columns);
+        $extractedOutcomeTemplateCode = $columns->filter(function ($value, $key, $iterator) {
+            return $value == 'outcome_template_code';
+        });
+        $outcomeTemplateCodeIndex = key($extractedOutcomeTemplateCode->toArray());
+        $outcomeTemplateCode = $sheet->getCellByColumnAndRow($outcomeTemplateCodeIndex, $row)->getValue();
+        $CompetencyTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+        $competencyTemplatesObject = $CompetencyTemplates->find()->where([
+            'code' => $outcomeTemplateCode,
+            'academic_period_id' => $selectedPeriod
+        ])->first();
+        if ($competencyTemplatesObject) {
+            $tempRow['entity'] = $competencyTemplatesObject;
+        } else {
+            $tempRow['entity'] = $this->competencyTemplates->newEntity();
+        }
+    }
     
     public function addAfterAction(Event $event, Entity $entity)
     {
@@ -194,10 +220,102 @@ class ImportOutcomeTemplatesTable extends AppTable {
         }
     }
 
+    public function onImportPopulateEducationProgrammesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];        
+        $modelData = $lookedUpTable->find('visible')
+                            ->select(['code', 'name'])
+                            ->order([$lookupModel.'.order']);
+        if (!empty($modelData)) {
+            foreach($modelData->toArray() as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->code,
+                    $row->name
+                ];
+            }
+        }        
+    }
+
+    public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        $gradeId = (int) $this->request->query('grade');
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+        $modelData = $lookedUpTable->find('visible')->select(['code', 'name']);
+        if ($gradeId > 0) {
+            $modelData->innerJoinWith('EducationGrades', function ($q) use ($gradeId) {
+                return $q->where(['EducationGrades.id' => $gradeId]);
+            });
+        }
+        $modelData->order([$lookupModel.'.order']);
+        if (!empty($modelData)) {
+            foreach($modelData->toArray() as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->code,
+                    $row->code
+                ];
+            }
+        }
+    }
+
+    public function onImportPopulateOutcomeGradingTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'code');
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+        $modelData = $lookedUpTable->find()
+            ->select(['code', 'name'])
+            ->order([$lookupModel.'.code']);
+        if (!empty($modelData)) {
+            foreach($modelData->toArray() as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->code,
+                    $row->code
+                ];
+            }
+        }
+    }
+
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    {
+        foreach ($this->_currentData AS $criteriaData) {
+            $competencyTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+            $latest = $competencyTemplates->find()->where([
+                'code' => $criteriaData['outcome_template_code'],
+                'academic_period_id' => $criteriaData['academic_period_id']
+            ])->order($competencyTemplates->aliasField('id') . ' DESC')->first();
+
+            if ($latest) {
+                $competencyTemplateInsertedId = $latest->id;
+                $ContactTable = TableRegistry::get('Outcome.OutcomeCriterias');
+                $data = [
+                    'code' => $criteriaData['criteria_code'],
+                    'name' => $criteriaData['criteria_name'],
+                    'academic_period_id' => $criteriaData['academic_period_id'],
+                    'outcome_template_id' => $competencyTemplateInsertedId,
+                    'education_grade_id' =>$criteriaData['education_grade_id'],
+                    'education_subject_id' => $criteriaData['education_subject_code'],
+                    'outcome_grading_type_id' => $criteriaData['outcome_grading_type'],
+                ];
+                $contactEntity = $ContactTable->newEntity($data);
+                $ContactTable->save($contactEntity);
+            }
+        }  
+    }
+
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
+        $CompetencyTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
         $selectedPeriod = $this->getAcademicPeriod($this->request->query('period'));
         $selectedGrade = $this->getEducationGrade($this->request->query('grade'));
+        $tempRow['code'] = $tempRow['outcome_template_code'];
+        $tempRow['name'] = $tempRow['outcome_template_name'];
 
         if ($selectedPeriod) {
             $tempRow['academic_period_id'] = $selectedPeriod;
@@ -207,6 +325,16 @@ class ImportOutcomeTemplatesTable extends AppTable {
             $tempRow['education_grade_id'] = $selectedGrade;
         }
 
+        if ($tempRow['code'] == '' || empty($tempRow['code'])) {
+            $rowInvalidCodeCols['outcome_template_code'] = __('Outcome Template Code should not be empty');
+            return false;
+        }
+
+        if ($tempRow['name'] == '' || empty($tempRow['name'])) {
+            $rowInvalidCodeCols['outcome_template_name'] = __('Outcome Template Name should not be empty');
+            return false;
+        }
+        
         if (!isset($tempRow['academic_period_id']) || empty($tempRow['academic_period_id'])) {
             $rowInvalidCodeCols['academic_period_id'] = __('Academic Period should not be empty');
             return false;
@@ -217,22 +345,93 @@ class ImportOutcomeTemplatesTable extends AppTable {
             return false;
         }
 
-        $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
+        /** START: Criteria Validations */
+        if (empty($tempRow['criteria_code'])) {
+            $rowInvalidCodeCols['criteria_code'] = __('Criteria Code should not be empty');
+            return false;
+        }
 
+        if (empty($tempRow['criteria_name'])) {
+            $rowInvalidCodeCols['criteria_name'] = __('Criteria Name should not be empty');
+            return false;
+        }
+
+        if ($tempRow['education_subject_code'] < 1) {
+            $rowInvalidCodeCols['education_subject_code'] = __('Education Subject should not be empty');
+            return false;
+        }
+
+        if ($tempRow['outcome_grading_type'] < 1) {
+            $rowInvalidCodeCols['outcome_grading_type'] = __('Outcome Grading Type should not be empty');
+            return false;
+        }
+
+        $outcomeCriteriaCount = 1;
+        $CompetencyTemplatesCriteria = $CompetencyTemplates->find()->where([
+            'code' => $tempRow['code'],
+            'academic_period_id' => $selectedPeriod
+        ])->first();
+        
+        if ($CompetencyTemplatesCriteria) {
+            $outcomeCriteria = TableRegistry::get('Outcome.OutcomeCriterias');
+            $outcomeCriteriaCount = $outcomeCriteria->find()->where([
+                'code' => $tempRow['criteria_code'],
+                'academic_period_id' => $selectedPeriod,
+                'education_grade_id' => $selectedGrade,
+                'education_subject_id' => $tempRow['education_subject_code'],
+                'outcome_template_id' => $CompetencyTemplatesCriteria->id,
+            ])->count();
+            
+            if ($outcomeCriteriaCount > 0) {
+                $rowInvalidCodeCols['criteria_code'] = __('This criteria code already exists');
+                return false;
+            }
+        }
+        /** END: Criteria Validations */
+
+
+        /** START: Outcome template validations */
         $CompetencyTemplates = $CompetencyTemplates->find()
             ->where([
                 'code' => $tempRow['code'],
                 'academic_period_id' => $tempRow['academic_period_id']
             ])->count();
 
-        if ($CompetencyTemplates > 0 && (isset($tempRow['academic_period_id']) && !empty($tempRow['academic_period_id']))) {
-            $rowInvalidCodeCols['code'] = __('This code already exists');
+        if ($outcomeCriteriaCount > 0 && $CompetencyTemplates > 0 && (isset($tempRow['academic_period_id']) && !empty($tempRow['academic_period_id']))) {
+            $rowInvalidCodeCols['outcome_template_code'] = __('This code already exists');
             return false;
         }
         if (empty($tempRow['name'])) {
-            $rowInvalidCodeCols['name'] = __('Name should not be empty');
+            $rowInvalidCodeCols['outcome_template_name'] = __('Name should not be empty');
             return false;
         }
+        /** END: Outcome template validations */
+
+
+        /** START: Insert the Outcome criterias */
+        /*
+        $competencyTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+        $latest = $competencyTemplates->find()->order($competencyTemplates->aliasField('id') . ' DESC')->first();
+        $competencyTemplateInsertedId = $latest->id + 1;
+        if ($CompetencyTemplatesCriteria) {
+            $competencyTemplateInsertedId = $CompetencyTemplatesCriteria->id;
+        }
+        $ContactTable = TableRegistry::get('Outcome.OutcomeCriterias');
+        $creatable = [
+            'code' => $tempRow['criteria_code'],
+            'name' => $tempRow['criteria_name'],
+            'academic_period_id' => $selectedPeriod,
+            'outcome_template_id' => $competencyTemplateInsertedId,
+            'education_grade_id' => $selectedGrade,
+            'education_subject_id' => $tempRow['education_subject_code'],
+            'outcome_grading_type_id' => $tempRow['outcome_grading_type'],
+        ];
+        $contactEntity = $ContactTable->newEntity($creatable);
+        $ContactTable->save($contactEntity);
+        */
+        /** END: Insert Outcome criterias */
+
+        $this->_currentData[] = $tempRow;
         return true;
     }
 }
