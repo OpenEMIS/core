@@ -126,12 +126,17 @@ class HealthBehavior extends Behavior
             $session = $this->_table->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
-
-            $tabElements['StaffInsurances'] = [
+            /*$tabElements['StaffInsurances'] = [
                 'url' => ['plugin' => 'Staff', 'institutionId' => $params, 'controller' => 'Staff', 'action' => 'StaffInsurances'],
                 'text' => __('Insurances'),
                 'class' => 'tab-active'
+            ];*/
+            /*POCOR-6311 Starts*/
+            $tabElements['Insurances'] = [
+                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StaffInsurances', 'action' => 'index'],
+                'text' => __('Insurances')
             ];
+            /*POCOR-6311 Ends*/
         } elseif ($name == 'Directories' && $controller->AccessControl->check(['DirectoryInsurances', 'index'])) {
             $tabElements['Insurances'] = [
                 'url' => ['plugin' => 'Directory', 'controller' => 'DirectoryInsurances', 'action' => 'index'],
