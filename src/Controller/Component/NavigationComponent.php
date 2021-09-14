@@ -2000,9 +2000,15 @@ class NavigationComponent extends Component
             ],
 
             'Administration.Archive' => [
-                'title' => 'Archive',
+                'title' => 'Data Management',
                 'parent' => 'Administration',
                 'link' => false,
+            ],
+            'Archive.Copy' => [
+                'title' => 'Copy',
+                'parent' => 'Administration.Archive',
+                'selected' => ['Archives.CopyData'],
+                'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'CopyData'],
             ],
             'Archive.Backup' => [
                 'title' => 'Backup',
@@ -2011,7 +2017,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'BackupLog'],
             ],
             'Archive.Transfer' => [
-                'title' => 'Transfer',
+                'title' => 'Archive',
                 'parent' => 'Administration.Archive',
                 'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Transfer'],
                 'selected' => ['Archives.Transfer'],

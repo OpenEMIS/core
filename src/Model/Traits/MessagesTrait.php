@@ -2501,6 +2501,9 @@ trait MessagesTrait
             'transferConnectionFail' => 'Please configure connection to Archive Database.',
             'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.'
         ],
+        'CopyData' => [
+            'genralerror' => 'Please select diffrent academic period'
+        ],
         'UserNationalities' => [
             'ValidateNumberSuccess' => 'Identity number validate successfully.',
             'ValidateNumberFail' => 'Please enter correct identity number.',
