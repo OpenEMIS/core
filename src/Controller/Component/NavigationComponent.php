@@ -1192,11 +1192,12 @@ class NavigationComponent extends Component
                 'selected' => ['Staff.ScheduleTimetable'],
                 'params' => ['plugin' => 'Staff']
             ],
+            /*POCOR-6311 Starts added StaffInsurances functions for Staff Health nav*/
             'Staff.Healths' => [
                 'title' => 'Health',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests', 'Staff.StaffBodyMasses', 'Staff.StaffInsurances']
+                'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests', 'Staff.StaffBodyMasses', 'Staff.StaffInsurances', 'StaffInsurances.add', 'StaffInsurances.view', 'StaffInsurances.edit', 'StaffInsurances.delete', 'StaffInsurances.index']
             ],
             'Staff.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
