@@ -425,6 +425,7 @@ class NavigationComponent extends Component
 
     public function getMainNavigation()
     {
+        /*POCOR-6267 Starts*/
         $session = $this->request->session();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
@@ -448,7 +449,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Profile', 'action' => 'Personal', 0 => 'view', $userId]
             ]
         ];
-
+        /*POCOR-6267 Ends*/
         $navigation = [
             'Institutions.Institutions.index' => [
                 'title' => 'Institutions',
@@ -476,11 +477,13 @@ class NavigationComponent extends Component
                 'link' => false
             ],
         ];
-      
+        /*POCOR-6267 Starts*/
         if (isset($newNavigation)) {
             $navigation = array_merge($PersonalNavigation, $newNavigation, $navigation);
+        } else {
+            $navigation = array_merge($PersonalNavigation, $navigation);
         }
-       
+        /*POCOR-6267 Ends*/
         return $navigation;
     }
 
