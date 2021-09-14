@@ -77,7 +77,6 @@ class POCOR6267 extends AbstractMigration
     public function down()
     {
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
-        $this->execute('RENAME TABLE `zz_6267_security_functions` TO `security_functions`');
-        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 486');   
+        $this->execute('RENAME TABLE `zz_6267_security_functions` TO `security_functions`');   
     }
 }
