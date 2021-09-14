@@ -253,11 +253,16 @@ class AbsencesTable extends AppTable
 		$userData = $this->Session->read();
         $session = $this->request->session();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) { 
-            $sId = $userData['Student']['ExaminationResults']['student_id']; 
-            if (!empty($sId)) {
-                $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
-            } else {
+            /*POCOR-6267 starts*/
+            if ($this->request->controller == 'GuardianNavs') {
                 $studentId = $session->read('Student.Students.id');
+            }/*POCOR-6267 ends*/ else {
+                $sId = $userData['Student']['ExaminationResults']['student_id']; 
+                if (!empty($sId)) {
+                    $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+                } else {
+                    $studentId = $session->read('Student.Students.id');
+                }
             }
         } else {
             $studentId = $userData['Auth']['User']['id'];

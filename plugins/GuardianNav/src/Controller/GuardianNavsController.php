@@ -148,9 +148,9 @@ class GuardianNavsController extends AppController
             }elseif ($model->alias() == 'InstitutionAssociationStudent') {
                 $header .= ' - '. __('Associations');
             } else {
-                 $header .= ' - ' . $model->getHeader($alias);
+                $header .= ' - ' . $model->getHeader($alias);
         }
-    
+        
         $this->set('contentHeader', $header); 
     }
 
@@ -170,8 +170,11 @@ class GuardianNavsController extends AppController
             $name = $session->read('Student.Students.name');
         }
         $sub_header = '';
+        //echo $action;die();
         if($action == 'StudentResults'){
             $sub_header = 'Assessments';
+        } elseif ($action == 'StudentExaminationResults') {
+            $sub_header = 'Overview';
         }
         $header = $name .' - '. $sub_header;
         // this is to cater for back links
