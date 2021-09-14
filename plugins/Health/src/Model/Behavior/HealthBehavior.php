@@ -92,13 +92,13 @@ class HealthBehavior extends Behavior
                 'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StudentBodyMasses', 'action' => 'index'],
                 'text' => __('Body Mass')
             ];
-        } elseif ($name == 'Staff' && $controller->AccessControl->check(['StaffBodyMasses', 'index'])) {
+        } elseif ($name == 'Staff' && $controller->AccessControl->check([$name, 'StaffBodyMasses', 'index'])) {
             $session = $this->_table->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
 
-            $tabElements['BodyMasses'] = [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StaffBodyMasses', 'action' => 'index'],
+            $tabElements['StaffBodyMasses'] = [
+                'url' => ['plugin' => 'Staff', 'institutionId' => $params, 'controller' => 'Staff', 'action' => 'StaffBodyMasses'],
                 'text' => __('Body Mass')
             ];
         } elseif ($name == 'Directories' && $controller->AccessControl->check(['DirectoryBodyMasses', 'index'])) {
@@ -122,14 +122,15 @@ class HealthBehavior extends Behavior
                 'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StudentInsurances', 'action' => 'index'],
                 'text' => __('Insurances')
             ];
-        } elseif ($name == 'Staff' && $controller->AccessControl->check(['StaffInsurances', 'index'])) {
+        } elseif ($name == 'Staff' && $controller->AccessControl->check([$name, 'StaffInsurances', 'index'])) {
             $session = $this->_table->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
 
-            $tabElements['Insurances'] = [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StaffInsurances', 'action' => 'index'],
-                'text' => __('Insurances')
+            $tabElements['StaffInsurances'] = [
+                'url' => ['plugin' => 'Staff', 'institutionId' => $params, 'controller' => 'Staff', 'action' => 'StaffInsurances'],
+                'text' => __('Insurances'),
+                'class' => 'tab-active'
             ];
         } elseif ($name == 'Directories' && $controller->AccessControl->check(['DirectoryInsurances', 'index'])) {
             $tabElements['Insurances'] = [
@@ -142,8 +143,14 @@ class HealthBehavior extends Behavior
                'text' => __('Insurances')
             ];
         }
+        /*POCOR-6307 Starts*/
+        $modelName = $model->alias();
+        if($model->alias() == 'UserInsurances'){
+            $modelName = 'StaffInsurances';
+        }
+        /*POCOR-6307 Ends*/
         $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
         $controller->set('tabElements', $tabElements);
-        $controller->set('selectedAction', $model->alias());
+        $controller->set('selectedAction', $modelName);
     }
 }
