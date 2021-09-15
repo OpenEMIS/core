@@ -487,6 +487,7 @@ class StudentPromotionTable extends AppTable
                                             ])->toArray();
                             }
                         } else if (in_array($studentStatusId, [$statuses['REPEATED']])) {
+                            $gradeId = $this->Session->read('grade_id');
                             $nextClasses = $InstitutionClassesTable
                                                 ->find('list')
                                                 ->select([
@@ -499,7 +500,7 @@ class StudentPromotionTable extends AppTable
                                                ->where([
                                                 $InstitutionClassesTable->aliasField('institution_id') => $institutionId,
                                                 $InstitutionClassesTable->aliasField('academic_period_id') => $selectedNextPeriod,
-                                                $InstitutionClassGrades->aliasField('education_grade_id') => $selectedGrade
+                                                $InstitutionClassGrades->aliasField('education_grade_id') => $gradeId
                                             ])->toArray();
                         }
                     }
@@ -753,12 +754,39 @@ class StudentPromotionTable extends AppTable
                 $attr['options'] = $options;
                 $attr['onChangeReload'] = 'changeToNextGrade';
             } else {
+                /*POCOR-6319 starts Repeated status than To Grade will be*/
                 $gradeData = $this->EducationGrades->getNextAvailableEducationGradesForRepeated($educationGradeId, $academicPeriodId);
                 $gradeName = (!empty($gradeData))? ($gradeData->programme. ' - ' . $gradeData->grade_name): '';
                 $gradeId = (!empty($gradeData)) ? $gradeData->id : '';
+                $gradeOrder = $this->EducationGrades->get($gradeId)->order;
+                $institutionId = $this->institutionId;
+                $grades = TableRegistry::get('Institution.InstitutionGrades');
+                $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                $periodGrades = $EducationGrades->find()
+                                    ->select([
+                                        'id' => $EducationGrades->aliasField('id'),
+                                        'grade_name' => $EducationGrades->aliasField('name'),
+                                        'programme' => 'EducationProgrammes.name'
+                                    ])
+                                    ->find('visible')
+                                    ->find('order')
+                                    ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                                    ->LeftJoin([$grades->alias() => $grades->table()],[
+                                            $EducationGrades->aliasField('id').' = ' . $grades->aliasField('education_grade_id')
+                                    ])
+                                    ->where([
+                                        'EducationSystems.academic_period_id' => $academicPeriodId,
+                                        $grades->aliasField('institution_id') => $institutionId,
+                                        $EducationGrades->aliasField('order') => $gradeOrder
+                                    ])->first();
+                if (!empty($periodGrades)) {
+                    $gradeValue = $periodGrades->programme . ' - ' . $periodGrades->grade_name;
+                }
+                $gId = $periodGrades->id;
                 $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $gradeName;
-                $this->Session->write('grade_id', $gradeId);
+                $attr['attr']['value'] = $gradeValue;
+                $this->Session->write('grade_id', $gId);
+                /*POCOR-6319 ends*/
             }
         } else {
             $attr['type'] = 'readonly';
@@ -837,6 +865,11 @@ class StudentPromotionTable extends AppTable
                         $selectedNextGrade = $selectedGrade;
                     }
                 }
+                /*POCOR-6319 starts*/
+                elseif (!is_null($selectedStudentStatusId) && $selectedClass == -1) {
+                    $showNextClass = in_array($selectedStudentStatusId, [$studentStatuses['PROMOTED'], $studentStatuses['REPEATED']]);
+                }
+                /*POCOR-6319 ends*/
                 // to retain next class selection when validation failed
                 $studentNextClassData = [];
                 if (array_key_exists('students', $requestData[$this->alias()])) {
