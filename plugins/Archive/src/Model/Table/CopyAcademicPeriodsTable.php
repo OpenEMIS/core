@@ -82,7 +82,7 @@ class CopyAcademicPeriodsTable extends ControllerActionTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"];
+        $condition = [];
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
         $this->field('from_academic_period', ['type' => 'select', 'options' => $academicPeriodOptions]);
         $this->field('to_academic_period', ['type' => 'select', 'options' => $academicPeriodOptions]);
@@ -99,17 +99,18 @@ class CopyAcademicPeriodsTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
-        echo "<pre>";print_r($entity);die;
+
+        
+
         $this->log('=======>Before triggerCopyDataShell', 'debug');
-        $this->triggerCopyDataShell('CopyData',$entity->from_academic_period, $entity->to_academic_period);
+        $this->triggerCopyDataShell('CopyData',$entity->to_academic_period);
         $this->log(' <<<<<<<<<<======== After triggerCopyDataShell', 'debug');
     }
 
-    public function triggerCopyDataShell($shellName,$fromAcademicPeriod = null, $toAcademicPeriod = null)
+    public function triggerCopyDataShell($shellName,$academicPeriodId = null)
     {
         $args = '';
-        $args .= !is_null($fromAcademicPeriod) ? ' '.$fromAcademicPeriod : '';
-        $args .= !is_null($toAcademicPeriod) ? ' '.$toAcademicPeriod : '';
+        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
