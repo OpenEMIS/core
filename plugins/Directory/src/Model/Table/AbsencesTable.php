@@ -1,5 +1,5 @@
 <?php
-namespace Student\Model\Table;
+namespace Directory\Model\Table;
 
 use ArrayObject;
 use Cake\Validation\Validator;
@@ -11,7 +11,7 @@ use Cake\ORM\TableRegistry;
 
 use App\Model\Table\ControllerActionTable;
 
-class DirectoryAbsencesTable extends AppTable
+class AbsencesTable extends AppTable
 {
     public function initialize(array $config)
     {
