@@ -99,12 +99,55 @@ class CopyAcademicPeriodsTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
-
+        $connection = ConnectionManager::get('default');
+        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $EducationLevels = TableRegistry::get('Education.EducationLevels');
+        $EducationCycles = TableRegistry::get('Education.EducationCycles');
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
         
+        $statement = $connection->prepare("SELECT education_systems.academic_period_id AS academic_period_id ,correct_grade.id AS correct_grade_id,institution_grades.* FROM `institution_grades`
+        INNER JOIN education_grades wrong_grade ON wrong_grade.id = institution_grades.education_grade_id
+        INNER JOIN education_grades correct_grade ON correct_grade.code = wrong_grade.code
+        INNER JOIN education_programmes ON correct_grade.education_programme_id = education_programmes.id
+        INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+        INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+        INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+        LEFT JOIN academic_periods ON institution_grades.start_date BETWEEN academic_periods.start_date AND academic_periods.end_date
+        AND academic_periods.academic_period_level_id != -1
+        AND education_systems.academic_period_id = academic_periods.id
+        WHERE correct_grade.id != institution_grades.education_grade_id");
 
-        $this->log('=======>Before triggerCopyDataShell', 'debug');
-        $this->triggerCopyDataShell('CopyData',$entity->to_academic_period);
-        $this->log(' <<<<<<<<<<======== After triggerCopyDataShell', 'debug');
+        $statement->execute();
+        $row = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        foreach($row AS $rowData){
+            $InstitutionGradesdata = $InstitutionGrades
+                ->find()
+                ->select(['start_date'])
+                ->where(['education_grade_id' => $rowData['education_grade_id'],
+                        'institution_id' => $rowData['institution_id']])
+                ->first();
+                if(!empty($InstitutionGradesdata)){
+                    $AcademicPeriodsData = $AcademicPeriods
+                    ->find()
+                    ->select(['start_date', 'start_year'])
+                    ->where(['id' => $rowData['academic_period_id']])
+                    ->first();
+                    $startDate = $AcademicPeriodsData['start_date']->format('Y-m-d');
+
+                    $InstitutionGrades->updateAll(
+                        ['start_date' => $AcademicPeriodsData['start_date'], 'start_year' => $AcademicPeriodsData['start_year']],    //field
+                        ['education_grade_id' => $rowData['education_grade_id'], 'institution_id'=> $rowData['institution_id']] //condition
+                    );
+                }
+        }
+
+        // $this->log('=======>Before triggerCopyDataShell', 'debug');
+        // $this->triggerCopyDataShell('CopyData',$entity->to_academic_period);
+        // $this->log(' <<<<<<<<<<======== After triggerCopyDataShell', 'debug');
     }
 
     public function triggerCopyDataShell($shellName,$academicPeriodId = null)
