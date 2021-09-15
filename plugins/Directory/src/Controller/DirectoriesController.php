@@ -21,7 +21,8 @@ class DirectoriesController extends AppController
             'Accounts'              => ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 
             // Student
-            'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
+            'StudentAbsences'       => ['className' => 'Student.DirectoryAbsences', 'actions' => ['index', 'view']],
+            // 'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
             'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
 
