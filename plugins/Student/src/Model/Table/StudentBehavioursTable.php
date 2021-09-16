@@ -44,7 +44,7 @@ class StudentBehavioursTable extends AppTable {
 	    }/*POCOR-6267 ends*/ 
 
 	    $conditions[$this->aliasField('student_id')] = $studentId;
-		$query->where($conditions, [], true);          
+		$query->where($conditions, [], true);        
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {

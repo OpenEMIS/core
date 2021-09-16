@@ -8,8 +8,9 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\ORM\Query; 
 use Cake\ORM\TableRegistry;
+use App\Model\Table\ControllerActionTable;
 
-class AbsencesTable extends AppTable
+class AbsencesTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -55,6 +56,18 @@ class AbsencesTable extends AppTable
             $this->Alert->success('StudentAbsence.deleteRecord', ['reset'=>true]);
             return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
         }
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $settings)
+    {  
+        $this->fields['academic_period_id']['visible'] = false;
+        $this->fields['institution_id']['visible'] = false;
+        $this->fields['education_grade_id']['visible'] = false;
+        $this->fields['date']['visible'] = true;
+
+        $this->field('periods', ['visible' => true]);
+        $this->field('subjects', ['visible' => true]);
+        $this->setFieldOrder('date');
     }
 
     public function onGetPeriods(Event $event, Entity $entity)
@@ -136,7 +149,7 @@ class AbsencesTable extends AppTable
             $dateToOptions = ['-1' => __('Select Date To')] + $dateToOptions;
             $conditions = [
                 $this->aliasField('academic_period_id') => $selectedPeriod,
-                $this->aliasField('institution_id') => $institutionId,
+                //$this->aliasField('institution_id') => $institutionId,
                 ];
             if(!empty($this->request->query('dateFrom')) && $this->request->query('dateFrom') != '-1'){
                 $academicPeriodObj = $AcademicPeriod->get($selectedPeriod);
@@ -173,7 +186,7 @@ class AbsencesTable extends AppTable
             }else{
                 $conditions = [
                     $this->aliasField('academic_period_id') => $selectedPeriod,
-                    $this->aliasField('institution_id') => $institutionId,
+                    //$this->aliasField('institution_id') => $institutionId,
                     ];
             }
 
@@ -187,7 +200,7 @@ class AbsencesTable extends AppTable
             $query
                 ->find('all')
                 ->where($conditions);
-                $extra['elements']['controls'] = ['name' => 'Student.Absences/controls', 'data' => [], 'options' => [], 'order' => 1];
+                $extra['elements']['controls'] = ['name' => 'GuardianNav.Absences/controls', 'data' => [], 'options' => [], 'order' => 1];
         }
     }
     
@@ -268,13 +281,17 @@ class AbsencesTable extends AppTable
             $studentId = $userData['Auth']['User']['id'];
         }
 
-		if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
-            $where[$this->aliasField('student_id')] = $userData['Student']['Students']['id'];
-		} else {
-			if (!empty($studentId)) {
-				$where[$this->aliasField('student_id')] = $studentId;
-			}
-		}
+        if ($this->request->controller == 'GuardianNavs') {
+            $where[$this->aliasField('student_id')] = $studentId;
+        } else {
+            if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
+                $where[$this->aliasField('student_id')] = $userData['Student']['Students']['id'];
+            } else {
+                if (!empty($studentId)) {
+                    $where[$this->aliasField('student_id')] = $studentId;
+                }
+            }
+        }
 		
         $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
         $query
