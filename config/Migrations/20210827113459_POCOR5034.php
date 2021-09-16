@@ -15,9 +15,13 @@ class POCOR5034 extends AbstractMigration
         // Update permission
         $this->execute("UPDATE `security_functions` SET `_execute` = 'ImportOutcomeTemplates.add|ImportOutcomeTemplates.template|ImportOutcomeTemplates.results|ImportOutcomeTemplates.downloadFailed|ImportOutcomeTemplates.downloadPassed' WHERE `name` = 'Outcome Setup' AND `controller` = 'Outcomes' AND `module` = 'Administration' AND `category` = 'Learning Outcomes'");
 
-        $this->execute("INSERT into `import_mapping` (`model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) values('Outcome.OutcomeTemplates','code','','1','0','0',NULL,NULL,NULL)");
-		$this->execute("INSERT into `import_mapping` (`model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) values('Outcome.OutcomeTemplates','name','','2','0','0',NULL,NULL,NULL)");
-		$this->execute("INSERT into `import_mapping` (`model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) values('Outcome.OutcomeTemplates','description','','3','0','0',NULL,NULL,NULL)");
+        $this->execute("INSERT into `import_mapping` (`model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) values('Outcome.OutcomeTemplates','outcome_template_code','','1','0','0',NULL,NULL,NULL)");
+        $this->execute("INSERT into `import_mapping` (`model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) values('Outcome.OutcomeTemplates','outcome_template_name','','2','0','0',NULL,NULL,NULL)");
+        $this->execute("INSERT into `import_mapping` (`model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) values('Outcome.OutcomeTemplates','description','','3','0','0',NULL,NULL,NULL)");
+        $this->execute("INSERT into `import_mapping` (`model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) values('Outcome.OutcomeTemplates','criteria_name','','4','0','0',NULL,NULL,NULL)");
+        $this->execute("INSERT into `import_mapping` (`model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) values('Outcome.OutcomeTemplates','criteria_code','','5','0','0',NULL,NULL,NULL)");
+        $this->execute("INSERT into `import_mapping` (`model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) values('Outcome.OutcomeTemplates','education_subject_code','','6','0','2','Education','EducationSubjects','code')");
+        $this->execute("INSERT into `import_mapping` (`model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) values('Outcome.OutcomeTemplates','outcome_grading_type','','7','0','2','Outcome','OutcomeGradingTypes','code')");
     }
 
     // rollback
