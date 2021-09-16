@@ -37,14 +37,16 @@ class GuardianNavsController extends AppController
         'Textbooks',
         'StudentRisks',
         'StudentBehaviours',
-        'StudentExtracurriculars'
+        'StudentExtracurriculars',
+        'StudentAbsences',
+        'Absences'
     ];
 
     public function initialize(){
         parent::initialize();
         $this->ControllerAction->models = [
             // Student
-            'StudentAbsences'       => ['className' => 'GuardianNav.Absences', 'actions' => ['index']],
+            //'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index']],
             'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
         ];
@@ -98,6 +100,10 @@ class GuardianNavsController extends AppController
     public function StudentTextbooks()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
     public function StudentAssociations()    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionAssociationStudent']);}
     public function StudentRisks() {  $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentRisks']);}
+    public function StudentAbsences()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'GuardianNav.Absences']);
+    }
 
     public function implementedEvents()
     {
@@ -247,6 +253,7 @@ class GuardianNavsController extends AppController
     {
         $id = (array_key_exists('id', $options))? $options['id']: 0;
         $type = (array_key_exists('type', $options))? $options['type']: null;
+        $period = (array_key_exists('academic_period', $options))? $options['academic_period']: null;
         $tabElements = [];
         $studentUrl = ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs'];
         //$session = $this->request->session();
@@ -272,7 +279,11 @@ class GuardianNavsController extends AppController
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+            if(!empty($period) && $key == 'Absences') {
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'academic_period' => $period]);
+            } else {
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+            }
         }
 
         return $this->TabPermission->checkTabPermission($tabElements);
