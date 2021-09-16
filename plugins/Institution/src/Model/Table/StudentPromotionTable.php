@@ -471,36 +471,14 @@ class StudentPromotionTable extends AppTable
                     else {
                         if (in_array($studentStatusId, [$statuses['PROMOTED'], $statuses['GRADUATED']])) {
                             if (!is_null($selectedNextGrade)) {
-                                $nextClasses = $InstitutionClassesTable
-                                                ->find('list')
-                                                ->select([
-                                                    $InstitutionClassesTable->aliasField('id'),
-                                                    $InstitutionClassesTable->aliasField('name')
-                                                ])
-                                                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
-                                                  $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionClassesTable->aliasField('id')
-                                               ])
-                                               ->where([
-                                                $InstitutionClassesTable->aliasField('institution_id') => $institutionId,
-                                                $InstitutionClassesTable->aliasField('academic_period_id') => $selectedNextPeriod,
-                                                $InstitutionClassGrades->aliasField('education_grade_id') => $selectedNextGrade
-                                            ])->toArray();
+                                /*POCOR-6312 starts*/
+                                $nextClasses = $InstitutionClassesTable->getClassOptions($selectedNextPeriod, $institutionId, $selectedNextGrade);
+                                /*POCOR-6312 ends*/
                             }
-                        } else if (in_array($studentStatusId, [$statuses['REPEATED']])) {
-                            $nextClasses = $InstitutionClassesTable
-                                                ->find('list')
-                                                ->select([
-                                                    $InstitutionClassesTable->aliasField('id'),
-                                                    $InstitutionClassesTable->aliasField('name')
-                                                ])
-                                                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
-                                                  $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionClassesTable->aliasField('id')
-                                               ])
-                                               ->where([
-                                                $InstitutionClassesTable->aliasField('institution_id') => $institutionId,
-                                                $InstitutionClassesTable->aliasField('academic_period_id') => $selectedNextPeriod,
-                                                $InstitutionClassGrades->aliasField('education_grade_id') => $selectedGrade
-                                            ])->toArray();
+                        } elseif (in_array($studentStatusId, [$statuses['REPEATED']])) {
+                            /*POCOR-6312 starts*/
+                            $nextClasses = $InstitutionClassesTable->getClassOptions($selectedNextPeriod, $institutionId, $selectedGrade);
+                            /*POCOR-6312 ends*/
                         }
                     }
                     /*POCOR-5733 Ends*/
@@ -829,14 +807,18 @@ class StudentPromotionTable extends AppTable
             if (!empty($selectedGrade)) {
                 $studentStatuses = $this->statuses;
                 $selectedClass = $entity->has('class') ? $entity->class : null;
-
+                
                 if (!is_null($selectedStudentStatusId) && $selectedClass != -1) {
                     $showNextClass = in_array($selectedStudentStatusId, [$studentStatuses['PROMOTED'], $studentStatuses['REPEATED'], $studentStatuses['GRADUATED']]);
 
                     if ($selectedStudentStatusId == $studentStatuses['REPEATED']) {
                         $selectedNextGrade = $selectedGrade;
                     }
+                }/*POCOR-6312 Starts*/
+                elseif ($selectedStudentStatusId == $studentStatuses['GRADUATED'] && $selectedClass == -1 ) {
+                    $showNextClass = in_array($selectedStudentStatusId, [$studentStatuses['GRADUATED']]);
                 }
+                /*POCOR-6312 Ends*/
                 // to retain next class selection when validation failed
                 $studentNextClassData = [];
                 if (array_key_exists('students', $requestData[$this->alias()])) {
