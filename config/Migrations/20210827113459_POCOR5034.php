@@ -12,7 +12,7 @@ class POCOR5034 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_5034_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `zz_5034_security_functions` SELECT * FROM `security_functions`');
 
-        ## Update permission
+        // Update permission
         $this->execute("UPDATE `security_functions` SET `_execute` = 'ImportOutcomeTemplates.add|ImportOutcomeTemplates.template|ImportOutcomeTemplates.results|ImportOutcomeTemplates.downloadFailed|ImportOutcomeTemplates.downloadPassed' WHERE `name` = 'Outcome Setup' AND `controller` = 'Outcomes' AND `module` = 'Administration' AND `category` = 'Learning Outcomes'");
 
         $this->execute("INSERT into `import_mapping` (`model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) values('Outcome.OutcomeTemplates','code','','1','0','0',NULL,NULL,NULL)");
