@@ -2502,7 +2502,8 @@ trait MessagesTrait
             'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.'
         ],
         'CopyData' => [
-            'genralerror' => 'Please select diffrent academic period'
+            'genralerror' => 'To and from academic period can not be same.',
+            'alreadyexist' => 'Data Already exist for this academic period.'
         ],
         'UserNationalities' => [
             'ValidateNumberSuccess' => 'Identity number validate successfully.',
