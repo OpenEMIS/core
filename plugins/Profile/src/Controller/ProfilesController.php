@@ -28,7 +28,7 @@ class ProfilesController extends AppController
         'StaffClasses',
         'StaffSubjects',
         'StaffBehaviours',
-        'Licenses',
+        // 'Licenses',
         'StaffAttendances',
     ];
 
@@ -331,9 +331,17 @@ class ProfilesController extends AppController
             $excludedModel = ['ScholarshipApplications', 'Leave', 'StudentReportCards', 'Contacts', 'TrainingNeeds']; //POCOR-5695 add TrainingNeeds
 
             if (!in_array($alias, $excludedModel)) {
-                $model->toggle('add', false);
-                $model->toggle('edit', false);
-                $model->toggle('remove', false);
+                ## Enabled in POCOR-6314
+                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications'];
+                if (in_array($alias, $enabledCrudOperation)) {
+                    $model->toggle('add', true);
+                    $model->toggle('edit', true);
+                    $model->toggle('remove', true);
+                } else {
+                    $model->toggle('add', false);
+                    $model->toggle('edit', false);
+                    $model->toggle('remove', false);
+                }
 
                 // redirected view feature is to cater for the link that redirected to institution
                 if (in_array($alias, $this->redirectedViewFeature)) {
@@ -342,7 +350,7 @@ class ProfilesController extends AppController
             }
         } else if ($model instanceof \App\Model\Table\AppTable) { // CAv3
             $alias = $model->alias();
-            $excludedModel = ['Accounts'];
+            $excludedModel = ['Accounts', 'Extracurriculars'];
 
             if (!in_array($alias, $excludedModel)) {
                 $model->addBehavior('ControllerAction.HideButton');
