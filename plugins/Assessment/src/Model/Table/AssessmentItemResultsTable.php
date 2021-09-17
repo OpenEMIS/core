@@ -95,9 +95,15 @@ class AssessmentItemResultsTable extends AppTable
 
         
         $studentId = -1;
-        if ($session->check('Student.Results.student_id')) {
-            $studentId = $session->read('Student.Results.student_id');
+        // if ($session->check('Student.Results.student_id')) {
+        //     $studentId = $session->read('Student.Results.student_id');
+        // }
+
+        //POCOR-6317[START]
+        if ($session->check('Profile.StudentUser.primaryKey.id')) {
+            $studentId = $session->read('Profile.StudentUser.primaryKey.id');
         }
+        //POCOR-6317[END]
 
        if ($options['user']['is_student'] == 1) {
              $studentId = $options['user']['id'];
