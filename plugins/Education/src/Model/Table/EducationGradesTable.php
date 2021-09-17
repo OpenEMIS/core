@@ -745,6 +745,17 @@ class EducationGradesTable extends ControllerActionTable
         return $gradeOptions;
     }
 
+    public function getEducationGrades()
+    {
+        $gradeOptions = $this
+                        ->find('list')
+                        ->find('visible')
+                        ->order([$this->aliasField('name') => 'ASC'])
+                        ->toArray();
+
+        return $gradeOptions;
+    }
+
     public function findGradeSubjectsByProgramme(Query $query, $options)
     {
         $educationProgrammeId = $options['education_programme_id'];
