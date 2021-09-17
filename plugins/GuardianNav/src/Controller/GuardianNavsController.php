@@ -42,6 +42,10 @@ class GuardianNavsController extends AppController
         'Absences'
     ];
 
+    private $studentViewFeature = [
+        'Students'
+    ];
+
     public function initialize(){
         parent::initialize();
         $this->ControllerAction->models = [
@@ -112,9 +116,12 @@ class GuardianNavsController extends AppController
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
-		$header = 'Students';    
-        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
-
+		$header = 'Students'; 
+        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GuardianNavs']);
+        $viewPermission = $this->AccessControl->check(['StudentUser']);
+        if ($viewPermission == 0) {
+            $this->redirectedViewFeature = array_merge($this->redirectedViewFeature, $this->studentViewFeature);
+        }
         if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
             $alias = $model->alias();
             // redirected view feature is to cater for the link that redirected to institution
@@ -137,7 +144,7 @@ class GuardianNavsController extends AppController
             }
             
             // Breadcrumb
-            $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'GuardianNavs', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
+            $this->Navigation->addCrumb($studentName);
                 
             // header name
             $header = $studentName;
