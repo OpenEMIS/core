@@ -21,7 +21,7 @@ class POCOR6267 extends AbstractMigration
         //insert 
          $record = [
             [
-            'name' => 'Guardian', 'controller' => 'GuardianNavs', 'module' => 'Guardian', 'category' => 'Students', 'parent_id' => -1, '_view' => 'GuardianNavs.index|GuardianNavs.view', '_edit' => 'GuardianNavs.edit', '_add' => 'GuardianNavs.add', '_delete' => 'GuardianNavs.remove', '_execute' => NULL, 'order' => 487, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s')
+            'name' => 'Guardian', 'controller' => 'GuardianNavs', 'module' => 'Guardian', 'category' => 'Students', 'parent_id' => -1, '_view' => 'GuardianNavs.index|GuardianNavs.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 487, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s')
             ]
         ];
 
@@ -32,7 +32,7 @@ class POCOR6267 extends AbstractMigration
 
         $data = [
             [
-            'name' => 'Overview', 'controller' => 'GuardianNavs', 'module' => 'Guardian', 'category' => 'General', 'parent_id' => $parentId, '_view' => 'StudentUser.index|StudentUser.view', '_edit' => 'StudentUser.edit', '_add' => 'StudentUser.add', '_delete' => 'StudentUser.remove', '_execute' => NULL, 'order' => 488, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s')
+            'name' => 'Overview', 'controller' => 'GuardianNavs', 'module' => 'Guardian', 'category' => 'General', 'parent_id' => $parentId, '_view' => 'StudentUser.index|StudentUser.view', '_edit' => 'StudentUser.edit', '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 488, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s')
             ],
             [
               'name' => 'Programmes', 'controller' => 'GuardianNavs', 'module' => 'Guardian', 'category' => 'Students - Academic', 'parent_id' => $parentId, '_view' => 'StudentProgrammes.index|StudentProgrammes.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 489, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
