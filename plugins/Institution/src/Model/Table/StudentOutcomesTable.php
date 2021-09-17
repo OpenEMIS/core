@@ -568,6 +568,77 @@ class StudentOutcomesTable extends ControllerActionTable
         }
     }
 
+        //POCOR-6280 starts
+    public function onGetTotalMaleStudents(Event $event, Entity $entity) {
+        
+        if($this->action == 'view'){
+            $grade = $this->getQueryString('education_grade_id');
+            $period = $this->getQueryString('academic_period_id');
+            $class = $this->getQueryString('class_id');
+            $institutionId = $entity->institution->id;
+        }else{
+            $institutionId = $entity->institution->id;
+            $grade = $entity->education_grade_id;
+            $class = $entity->institution_class_id;
+            $period = $entity->academic_period->id;
+        }
+        
+        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Users = TableRegistry::get('Security.Users');
+        $Genders = TableRegistry::get('User.Genders');
+        $count = $InstitutionClassStudentsTable->find()
+                ->leftJoin([$Users->alias() => $Users->table()], [
+                    $Users->aliasField('id').' = ' . $InstitutionClassStudentsTable->aliasField('student_id')
+                ])
+                ->leftJoin([$Genders->alias() => $Genders->table()], [
+                    $Genders->aliasField('id').' = ' . $Users->aliasField('gender_id')
+                ])
+                ->where([
+                    $InstitutionClassStudentsTable->aliasField('institution_class_id') => $class,
+                    $InstitutionClassStudentsTable->aliasField('education_grade_id') => $grade,
+                    $InstitutionClassStudentsTable->aliasField('academic_period_id') => $period,
+                    $InstitutionClassStudentsTable->aliasField('institution_id') => $institutionId,
+                    $Genders->aliasField('code') => 'M'
+                ])->count();
+        
+        return $count;
+    }
+
+    public function onGetTotalFemaleStudents(Event $event, Entity $entity) {
+        
+        if($this->action == 'view'){
+            $grade = $this->getQueryString('education_grade_id');
+            $period = $this->getQueryString('academic_period_id');
+            $class = $this->getQueryString('class_id');
+            $institutionId = $entity->institution->id;
+        }else{
+            $institutionId = $entity->institution->id;
+            $grade = $entity->education_grade_id;
+            $class = $entity->institution_class_id;
+            $period = $entity->academic_period->id;
+        }
+
+        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Users = TableRegistry::get('Security.Users');
+        $Genders = TableRegistry::get('User.Genders');
+        $count = $InstitutionClassStudentsTable->find()
+                ->leftJoin([$Users->alias() => $Users->table()], [
+                    $Users->aliasField('id').' = ' . $InstitutionClassStudentsTable->aliasField('student_id')
+                ])
+                ->leftJoin([$Genders->alias() => $Genders->table()], [
+                    $Genders->aliasField('id').' = ' . $Users->aliasField('gender_id')
+                ])
+                ->where([
+                    $InstitutionClassStudentsTable->aliasField('institution_class_id') => $class,
+                    $InstitutionClassStudentsTable->aliasField('education_grade_id') => $grade,
+                    $InstitutionClassStudentsTable->aliasField('academic_period_id') => $period,
+                    $InstitutionClassStudentsTable->aliasField('institution_id') => $institutionId,
+                    $Genders->aliasField('code') => 'F'
+                ])->count();
+        return $count;
+    }
+    //POCOR-6280 ends
+
     public function onGetEducationGrade(Event $event, Entity $entity)
     {
         $grade = $this->EducationGrades->get($entity->education_grade_id);
