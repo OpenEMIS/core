@@ -26,7 +26,7 @@ class InstitutionGradesTable extends ControllerActionTable
         $this->belongsTo('Institutions',                ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
 
-        $this->hasMany('InstitutionGrades', ['className' => 'Institution.InstitutionGrades', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);//POCOR-6268 commented due to - unnecessary association
+        //$this->hasMany('InstitutionGrades', ['className' => 'Institution.InstitutionGrades', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);//POCOR-6268 commented due to - unnecessary association
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -62,9 +62,9 @@ class InstitutionGradesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra) {
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $this->institutionId = $this->Session->read('Institution.Institutions.id');
-        $this->field('start_date', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>false],'onChangeReload' => true,'sort' => ['field' => 'InstitutionGrades.start_date']]);
-        $this->field('end_date', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>false],'onChangeReload' => true,'sort' => ['field' => 'InstitutionGrades.end_date']]);
-        $this->field('academic_period_id', ['visible' => ['index'=>false, 'view'=>false, 'add'=>true, 'edit'=>true],'onChangeReload' => true,'sort' => ['field' => 'InstitutionGrades.end_date']]);
+        $this->field('start_date', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>false],'onChangeReload' => true,'sort' => ['field' => $this->aliasField('start_date')]]);
+        $this->field('end_date', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>false],'onChangeReload' => true,'sort' => ['field' => $this->aliasField('end_date')]]);
+        $this->field('academic_period_id', ['visible' => ['index'=>false, 'view'=>false, 'add'=>true, 'edit'=>true],'onChangeReload' => true,'sort' => ['field' => $this->aliasField('end_date')]]);
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -114,7 +114,7 @@ public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     ->where([
 		'EducationSystems.academic_period_id' => $selectedAcademicPeriod
 	]);
-	$sortList = ['InstitutionGrades.start_date','InstitutionGrades.end_date'];
+	$sortList = [$this->aliasField('start_date'), $this->aliasField('end_date')];
 
     if (array_key_exists('sortWhitelist', $extra['options'])) {
         $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
@@ -128,8 +128,8 @@ public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 
     if (!$sortable) {
         $query->order([
-            'InstitutionGrades.start_date',
-            'InstitutionGrades.end_date'
+           $this->aliasField('start_date'),
+           $this->aliasField('end_date')
         ]);
     }
 }
@@ -965,10 +965,9 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
         if (!empty($programmeId)) {
 
             $institutionId = $this->Session->read('Institution.Institutions.id');
-            $institutionGrade = TableRegistry::get('InstitutionGrades')
-            ->find()
-            ->where(['InstitutionGrades.id' => $programmeId,
-                'InstitutionGrades.institution_id' => $institutionId
+            $institutionGrade = $this->find()
+            ->where([$this->aliasField('id') => $programmeId,
+                $this->aliasField('institution_id') => $institutionId
             ])
             ->first();
 
@@ -1018,10 +1017,10 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
         if (!empty($programmeId)) {
 
             $institutionId = $this->Session->read('Institution.Institutions.id');
-            $institutionGrade = TableRegistry::get('InstitutionGrades')
+            $institutionGrade = $this
             ->find()
-            ->where(['InstitutionGrades.id' => $programmeId,
-                'InstitutionGrades.institution_id' => $institutionId
+            ->where([$this->aliasField('id') => $programmeId,
+                $this->aliasField('institution_id') => $institutionId
             ])
             ->first();
 
@@ -1105,7 +1104,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
 		$query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
 		->where([
 			'EducationSystems.academic_period_id' => $academicPeriodId,
-			'InstitutionGrades.institution_id' => $institutionsId
+			$this->aliasField('institution_id') => $institutionsId
 		])
         ->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
         $data = $query->toArray();
@@ -1344,7 +1343,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
             'EducationLevels.name' => 'literal'
         ])])
         ->LeftJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()],[
-            $this->EducationGrades->aliasField('id').' = ' . $this->InstitutionGrades->aliasField('education_grade_id')
+            $this->EducationGrades->aliasField('id').' = ' . $this->aliasField('education_grade_id')
         ])
         ->LeftJoin(['EducationProgrammes' => 'education_programmes'],[
             'EducationProgrammes.id = '.$this->EducationGrades->aliasField('education_programme_id')
