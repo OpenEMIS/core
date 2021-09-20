@@ -398,7 +398,9 @@ class ProfilesController extends AppController
                     //$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];//POCOR-6202 uncomment $studentId
                     if($action == 'Personal'){
                        $studentId = $this->ControllerAction->paramsDecode($this->request->params['pass'][1]);
-                    }
+                    } /*POCOR-6324 starts*/else {
+                       $studentId = $this->Auth->user('id');
+                    } /*POCOR-6324 ends*/
                 }else{
                     if(isset($this->ControllerAction->paramsDecode($studentId)['id'])){
 
