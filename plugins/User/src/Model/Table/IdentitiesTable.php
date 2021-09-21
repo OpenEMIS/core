@@ -94,6 +94,21 @@ class IdentitiesTable extends ControllerActionTable
 		$this->fields['comments']['visible'] = 'false';
 	}
 
+	/*POCOR-6267 Starts*/
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+    	$session = $this->request->session();
+        $queryString = $this->getQueryString();
+    	if (!empty($queryString['security_user_id'])) {
+    		$userId = $queryString['security_user_id'];
+    	} else {
+    		$userId = $session->read('Student.Students.id');
+    	}
+
+    	$query->where([$this->aliasField('security_user_id') => $userId]);
+    }
+	/*POCOR-6267 Ends*/
+
 	public function editOnInitialize(Event $event, Entity $entity)
 	{
 		// set the defaultDate to false on initialize, for the empty date.
