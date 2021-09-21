@@ -14,6 +14,7 @@
 - Bug Fixed: Institutions>Students: Promoted and repeated student who are not assigned to any class will not be linked to the selected class for the next academic period
 - Bug Fixed: Institutions>Academic>Programmes: 404 Error when deleting a programme
 - Bug Fixed: Personal: 404 Error when added as a Guardian going to Personal/General/Account or History Tab and Training/Training Results
+- Bug Fixed: Institutions > Performance > Report Cards: Reports are stuck in Progress and OpenEMIS number is not displayed when we are trying to generate the report card from this module
 
 ### [3.69.2] - 2021-09-10
 - Implemented: Add Export button function - Institutions > Academic > Programs (include number of grades and classes)
