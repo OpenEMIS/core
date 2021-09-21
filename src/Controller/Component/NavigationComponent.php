@@ -282,7 +282,7 @@ class NavigationComponent extends Component
 
         $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipsDirectory', 'ProfileApplicationInstitutionChoices', 'ProfileApplicationAttachments'];
         $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments', 'DirectoryInsurances'];
-
+        $guardianNavsControllers = [];
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
             && $action != 'index'
@@ -304,11 +304,11 @@ class NavigationComponent extends Component
         } elseif (($controller->name == 'Directories' && $action != 'index') || in_array($controller->name, $directoryControllers)) {
             $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
 
-			$encodedParam = $this->request->params['pass'][1];
-			if(!empty($encodedParam)) {
-				$securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
+            $encodedParam = $this->request->params['pass'][1];
+            if(!empty($encodedParam)) {
+                $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
             }
-			if(!empty($encodedParam)) {
+            if(!empty($encodedParam)) {
                 //POCOR-6202 start
                 if($action == 'GuardianStudents'){
                     $userInfo = TableRegistry::get('student_guardians')->get($securityUserId);
@@ -316,23 +316,23 @@ class NavigationComponent extends Component
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
                 }
                 //POCOR-6202 end
-			}
+            }
 
-			$userType = '';
-			if(!empty($userInfo)) {
-				if ($userInfo->is_student && $userInfo->is_staff == 0 && $userInfo->is_guardian == 0) {
-					$userType = 1;
-				} elseif ($userInfo->is_staff && $userInfo->is_student == 0 && $userInfo->is_guardian == 0) {
-					$userType = 2;
-				} elseif ($userInfo->is_guardian && $userInfo->is_staff == 0 && $userInfo->is_student == 0) {
-					$userType = 3;
-				} elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
+            $userType = '';
+            if(!empty($userInfo)) {
+                if ($userInfo->is_student && $userInfo->is_staff == 0 && $userInfo->is_guardian == 0) {
+                    $userType = 1;
+                } elseif ($userInfo->is_staff && $userInfo->is_student == 0 && $userInfo->is_guardian == 0) {
+                    $userType = 2;
+                } elseif ($userInfo->is_guardian && $userInfo->is_staff == 0 && $userInfo->is_student == 0) {
+                    $userType = 3;
+                } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
                    $userType = 4; //superrole user
                 } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 0) {
                    $userType = 5;
                 }
-			}
-			$session = $this->request->session();
+            }
+            $session = $this->request->session();
             $isStudent = $session->read('Directory.Directories.is_student');
             $isStaff = $session->read('Directory.Directories.is_staff');
             $isGuardian = $session->read('Directory.Directories.is_guardian');
@@ -390,11 +390,13 @@ class NavigationComponent extends Component
 
                 $this->checkClassification($navigations);
             }
+        } elseif (($controller->name == 'GuardianNavs' && $action != 'index')) {
+            $navigations = $this->appendNavigation('GuardianNavs.GuardianNavs.index', $navigations, $this->getGuardianNavNavigation());
+            $this->checkClassification($navigations);
         }
 
         $navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
         $navigations = $this->appendNavigation('Administration', $navigations, $this->getAdministrationNavigation());
-
         return $navigations;
     }
 
@@ -423,16 +425,32 @@ class NavigationComponent extends Component
 
     public function getMainNavigation()
     {
+        /*POCOR-6267 Starts*/
         $session = $this->request->session();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
-
-        $navigation = [
+        $uId = $this->controller->paramsDecode($userId)['id'];
+        if (isset($uId)) {
+            $userInfo = TableRegistry::get('security_users')->get($uId);
+            if (!empty($userInfo) && $userInfo->is_guardian == 1) {
+                $newNavigation = [
+                'GuardianNavs.GuardianNavs.index' => [
+                        'title' => 'Guardian',
+                        'icon' => '<span><i class="fa fa-users"></i></span>',
+                        'params' => ['plugin' => 'GuardianNav']
+                    ],
+                ];
+            }
+        }
+        
+        $PersonalNavigation = [
             'Profiles.Personal' => [
                 'title' => 'Personal',
                 'icon' => '<span><i class="fa kd-role"></i></span>',
                 'params' => ['plugin' => 'Profile', 'action' => 'Personal', 0 => 'view', $userId]
-            ],
-
+            ]
+        ];
+        /*POCOR-6267 Ends*/
+        $navigation = [
             'Institutions.Institutions.index' => [
                 'title' => 'Institutions',
                 'icon' => '<span><i class="fa kd-institutions"></i></span>',
@@ -459,7 +477,13 @@ class NavigationComponent extends Component
                 'link' => false
             ],
         ];
-
+        /*POCOR-6267 Starts*/
+        if (isset($newNavigation)) {
+            $navigation = array_merge($PersonalNavigation, $newNavigation, $navigation);
+        } else {
+            $navigation = array_merge($PersonalNavigation, $navigation);
+        }
+        /*POCOR-6267 Ends*/
         return $navigation;
     }
 
@@ -529,12 +553,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution']
             ],
 
-			'Institutions.Profiles.index' => [
-				'title' => 'Profiles',
-				'parent' => 'Institution.General',
-				'selected' => ['Institutions.Profiles'],
-				'params' => ['plugin' => 'Institution']
-			],
+            'Institutions.Profiles.index' => [
+                'title' => 'Profiles',
+                'parent' => 'Institution.General',
+                'selected' => ['Institutions.Profiles'],
+                'params' => ['plugin' => 'Institution']
+            ],
 
             'Institution.Academic' => [
                 'title' => 'Academic',
@@ -1021,7 +1045,7 @@ class NavigationComponent extends Component
                 $n['params']['institutionId'] = $institutionId;
             }
         }
-
+        
         return $navigation;
     }
 
@@ -1192,11 +1216,12 @@ class NavigationComponent extends Component
                 'selected' => ['Staff.ScheduleTimetable'],
                 'params' => ['plugin' => 'Staff']
             ],
+            /*POCOR-6311 Starts added StaffInsurances functions for Staff Health nav*/
             'Staff.Healths' => [
                 'title' => 'Health',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests', 'Staff.StaffBodyMasses', 'Staff.StaffInsurances']
+                'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests', 'Staff.StaffBodyMasses', 'Staff.StaffInsurances', 'StaffInsurances.add', 'StaffInsurances.view', 'StaffInsurances.edit', 'StaffInsurances.delete', 'StaffInsurances.index']
             ],
             'Staff.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
@@ -1204,12 +1229,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Staff'],
                 'selected' => ['Staff.SpecialNeedsReferrals', 'Staff.SpecialNeedsAssessments', 'Staff.SpecialNeedsServices', 'Staff.SpecialNeedsDevices', 'Staff.SpecialNeedsPlans']
             ],
-			'Staff.Profiles.index' => [
-				'title' => 'Profiles',
-				'parent' => 'Institutions.Staff.index',
-				'selected' => ['Staff.Profiles'],
-				'params' => ['plugin' => 'Staff']
-			],
+            'Staff.Profiles.index' => [
+                'title' => 'Profiles',
+                'parent' => 'Institutions.Staff.index',
+                'selected' => ['Staff.Profiles'],
+                'params' => ['plugin' => 'Staff']
+            ],
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
@@ -1767,7 +1792,7 @@ class NavigationComponent extends Component
                 'selected' => ['Securities.Roles', 'Securities.Permissions']
             ],
 
-			'ProfileTemplates' => [
+            'ProfileTemplates' => [
                 'title' => 'Profiles',
                 'parent' => 'Administration',
                 'link' => false
@@ -1879,7 +1904,7 @@ class NavigationComponent extends Component
                 'title' => 'Outcomes',
                 'parent' => 'Administration.Performance',
                 'params' => ['plugin' => 'Outcome'],
-                'selected' => ['Outcomes.Templates', 'Outcomes.Criterias', 'Outcomes.Periods', 'Outcomes.GradingTypes']
+                'selected' => ['Outcomes.Templates', 'Outcomes.Criterias', 'Outcomes.Periods', 'Outcomes.GradingTypes', 'Outcomes.ImportOutcomeTemplates']
             ],
 
             'Assessments.Assessments' => [
@@ -2026,4 +2051,36 @@ class NavigationComponent extends Component
         return $navigation;
     }
 
+    public function getGuardianNavNavigation()
+    {
+        $session = $this->request->session();
+        $studentId = $session->read('Student.Students.id');
+        $queryString = $this->request->query('queryString');
+        if($queryString != ''){
+            $session->write('queryString', $queryString);
+        }else{
+            $queryString = $session->read('queryString');
+        }
+        $navigation = [
+            'GuardianNavs.StudentUser.view' => [
+                'title' => 'General',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'GuardianNav', '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
+                'selected' => ['GuardianNavs.StudentUser']
+            ],
+            'GuardianNavs.StudentProgrammes.index' => [
+                'title' => 'Academic',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'GuardianNav'],
+                'selected' => ['GuardianNavs.StudentClasses', 'GuardianNavs.StudentSubjects', 'GuardianNavs.StudentAbsences', 'GuardianNavs.StudentBehaviours', 'GuardianNavs.StudentOutcomes', 'GuardianNavs.StudentCompetencies', 'GuardianNavs.StudentResults', 'GuardianNavs.StudentExaminationResults', 'GuardianNavs.StudentReportCards', 'GuardianNavs.StudentAwards', 'GuardianNavs.StudentExtracurriculars', 'GuardianNavs.StudentTextbooks', 'GuardianNavs.StudentRisks',
+                    'GuardianNavs.StudentAssociations']
+            ]
+        ];
+        foreach ($navigation as &$n) {
+            if (isset($n['params'])) {
+                $n['params']['studentId'] = $this->controller->paramsEncode($studentId);
+            }
+        }
+        return $navigation;
+    }
 }

@@ -7,7 +7,8 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-
+use Cake\Utility\Inflector;
+use Cake\Routing\Router;
 use App\Controller\AppController;
 
 class GuardiansController extends AppController
@@ -64,6 +65,11 @@ class GuardiansController extends AppController
     public function Demographic()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);
+    }
+
+    public function Students()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Guardian.Students']);
     }    
 
     public function beforeFilter(Event $event)
@@ -75,8 +81,12 @@ class GuardiansController extends AppController
         $institutionName = $session->read('Institution.Institutions.name');
         $institutionId = $session->read('Institution.Institutions.id');
         $studentId = $session->read('Student.Students.id');
+        if (!empty($studentId)) {
+            $entity = $User->get($studentId);
+        } else {
+            $this->Navigation->addCrumb('Guardian', ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Guardians']);
+        }
         
-        $entity = $User->get($studentId);
         $name = $entity->name;  
 
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
@@ -86,7 +96,7 @@ class GuardiansController extends AppController
     } 
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
-    {
+    { 
         $session = $this->request->session();
         $guardianName = $session->read('Guardian.Guardians.name');
         $alias = $model->alias;
@@ -191,6 +201,101 @@ class GuardiansController extends AppController
                     ['security_user_id' => $id]
                 );
             }
+        }
+
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public function getUserTabElements($options = [])
+    {
+        if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
+            $id = $this->ControllerAction->getQueryString('security_user_id');
+        }
+
+        $plugin = $this->plugin;
+        $name = $this->name;
+
+        $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($plugin.'.'.$name.'.id');
+
+        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
+            $session = $this->request->session();
+            $session->write('Guardian.Guardians.name', $options['entity']->user->name);
+            $session->write('Guardian.Guardians.id', $options['entity']->user->id);
+            $session->write('Directory.Directories.studentToGuardian', 'studentToGuardian');
+        } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students' && array_key_exists('entity', $options)) {
+            $session = $this->request->session();
+            $session->write('Student.Students.name', $options['entity']->user->name);
+            $session->write('Student.Students.id', $options['entity']->user->id);
+            $session->write('Directory.Directories.guardianToStudent', 'guardianToStudent');
+        }
+
+        $tabElements = [
+            $this->name => ['text' => __('Overview')],
+            'Accounts' => ['text' => __('Account')],
+            'Demographic' => ['text' => __('Demographic')],
+            'Identities' => ['text' => __('Identities')],
+            'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
+            'Contacts' => ['text' => __('Contacts')],
+            'Languages' => ['text' => __('Languages')],
+            'Attachments' => ['text' => __('Attachments')],
+            'Comments' => ['text' => __('Comments')]
+        ];
+
+        foreach ($tabElements as $key => $value) {
+            if ($key == $this->name) {
+                $tabElements[$key]['url']['action'] = 'Directories';
+                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+            } else if ($key == 'Accounts') {
+                $tabElements[$key]['url']['action'] = 'Accounts';
+                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+            } else if ($key == 'Comments') {
+                $url = [
+                    'plugin' => $plugin,
+                    'controller' => 'DirectoryComments',
+                    'action' => 'index'
+                ];
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
+            } else {
+                $actionURL = $key;
+                if ($key == 'UserNationalities') {
+                    $actionURL = 'Nationalities';
+                }
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
+                                                'plugin' => $plugin,
+                                                'controller' => $name,
+                                                'action' => $actionURL,
+                                                'index'],
+                                                ['security_user_id' => $id]
+                                            );
+            }
+        }
+
+        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians') {
+            $session = $this->request->session();
+            $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
+            $relationTabElements = [
+                'Guardians' => ['text' => __('Relation')],
+                'GuardianUser' => ['text' => __('Overview')]
+            ];
+            $url = ['plugin' => 'Directory', 'controller' => 'Directories'];
+            $relationTabElements['Guardians']['url'] = array_merge($url, ['action' => 'StudentGuardians', 'view', $this->paramsEncode(['id' => $StudentGuardianId])]);
+            $relationTabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'StudentGuardianUser', 'view', $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])]);
+            $tabElements = array_merge($relationTabElements, $tabElements);
+            unset($tabElements[$this->name]);
+        } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students') {
+            $session = $this->request->session();
+            $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
+            $relationTabElements = [
+                'Students' => ['text' => __('Relation')],
+                'StudentUser' => ['text' => __('Overview')]
+            ];
+            $url = ['plugin' => 'Directory', 'controller' => 'Directories'];
+            $relationTabElements['Students']['url'] = array_merge($url, ['action' => 'GuardianStudents', 'view', $this->paramsEncode(['id' => $StudentGuardianId])]);
+            $relationTabElements['StudentUser']['url'] = array_merge($url, ['action' => 'GuardianStudentUser', 'view', $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])]);
+            $tabElements = array_merge($relationTabElements, $tabElements);
+            unset($tabElements[$this->name]);
         }
 
         return $this->TabPermission->checkTabPermission($tabElements);
