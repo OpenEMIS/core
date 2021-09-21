@@ -1,3 +1,20 @@
+### [3.69.3] - 2021-09-21
+- Implemented: Develop a function to import Outcomes
+- Bug Fixed: System allows user to view JSON when access is not granted in API Module
+- Bug Fixed: Administrations > Workflow > Rules > Student Unmarked Attendances : Many users get generic emails from unmarked classes rule
+- Bug Fixed: Institution > Staff > Transfer: Cannot transfer the staff from one Institution to another
+- Bug Fixed: Guardians Module : Ability to configure permissions for Guardians to view Students information
+- Bug Fixed: Institution > Performance > Outcome: Number of male and female students showing wrongly when there is multigrade class of two classes
+- Bug Fixed: Institutions > Staff > Staff1 > Health(Insurance)-404 Error when adding insurance
+- Bug Fixed: Institutions>Students: Graduated student who are not assigned to any class will not be linked to the selected class for the next academic period
+- Bug Fixed: Administration>Security>Roles: Personal Tab(Professional)-Qualifications,Awards,Extracurricular,Memberships,Licenses,Import Staff Qualifications
+- Bug Fixed: Directory>Student1>Academic>Absences: User with AbsenceCases role is unable to view the student absences and absences in Directory raised to him or her
+- Bug Fixed: Personal>Students>Academic>Assessment: Assessment Marks are missing
+- Bug Fixed: CLONE - Optimise the migration script created in POCOR-5947 and Writing an SQL statement to count the records
+- Bug Fixed: Institutions>Students: Promoted and repeated student who are not assigned to any class will not be linked to the selected class for the next academic period
+- Bug Fixed: Institutions>Academic>Programmes: 404 Error when deleting a programme
+- Bug Fixed: Personal: 404 Error when added as a Guardian going to Personal/General/Account or History Tab and Training/Training Results
+
 ### [3.69.2] - 2021-09-10
 - Implemented: Add Export button function - Institutions > Academic > Programs (include number of grades and classes)
 - Implemented: Add Export button function - Institutions > Staff > Staff1 > Professional > Qualifications
