@@ -323,7 +323,8 @@ class StudentProfilesTable extends ControllerActionTable
 		$institutionOptions = [];
 		$institutionOptions = $Institutions->find('list')
 								->where([
-									$Institutions->aliasField('area_id') => $selectedArea
+									$Institutions->aliasField('area_id') => $selectedArea,
+                                    $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
 								])
 								->toArray();
        
