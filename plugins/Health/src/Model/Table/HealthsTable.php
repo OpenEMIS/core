@@ -24,7 +24,10 @@ class HealthsTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
+        $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
+        
         $this->addBehavior('Health.Health');
+
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
@@ -33,6 +36,7 @@ class HealthsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+
     }
 
     public function onGetBloodType(Event $event, Entity $entity)

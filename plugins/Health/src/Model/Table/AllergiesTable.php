@@ -32,6 +32,8 @@ class AllergiesTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+
+        $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
     }
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -78,4 +80,41 @@ class AllergiesTable extends ControllerActionTable
         $validator->allowEmpty('file_content');
         return $validator;
     }
+
+
+    // cod pocor-6131
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+        $cloneFields = $fields->getArrayCopy();
+        $newFields = [];
+        foreach ($cloneFields as $key => $value) {
+            $newFields[] = $value;
+            if($value['field'] == 'homeroom_teacher'){
+
+                $newFields[] = [
+                    'key' => 'InstitutionClasses.total_male_students',
+                    'field' => 'total_male_students',
+                    'type' => 'string',
+                    'label' => 'Total Male Student'
+                ];
+
+                $newFields[] = [
+                    'key' => 'InstitutionClasses.total_female_students',
+                    'field' => 'total_female_students',
+                    'type' => 'string',
+                    'label' => 'Total Female Student'
+                ];
+            }
+
+        }
+        //print_r($newFields); exit;
+        $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
+    {
+        $query
+        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students']);
+    }
+    // end POCOR-6131
 }
