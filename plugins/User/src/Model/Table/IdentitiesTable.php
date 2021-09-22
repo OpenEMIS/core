@@ -183,7 +183,21 @@ class IdentitiesTable extends ControllerActionTable
                     $userDetail->identity_number = $entity->number;
                     $user->save($userDetail);  
                 }      
-            }
+            }try{
+				$Users = TableRegistry::get('User.Users');
+				$result = $Users
+						->find()
+						->select(['identity_number','identity_type_id'])
+						->where(['id' => $entity->security_user_id])
+						->first();
+				if((($result['identity_number'] == null || $result['identity_number'] == '') && ($result['identity_type_id'] == null || $result['identity_type_id'] == '') )){
+					$Users->updateAll(
+						['identity_number' => $entity->number, 'identity_type_id' => $entity->identity_type_id],    //field
+						['id' => $entity->security_user_id] //condition
+					);
+				}
+			}catch (\Exception $e) {
+			}
             
             $listeners = [
                 TableRegistry::get('User.Users')
