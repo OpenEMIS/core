@@ -27,6 +27,9 @@ class ImmunizationsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+        // POCOR-6131
+        $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
+        // POCOR-6131
     }
 
     //POCOR-5890 starts remain work

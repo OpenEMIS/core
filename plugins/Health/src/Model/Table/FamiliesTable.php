@@ -33,6 +33,9 @@ class FamiliesTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+         // POCOR-6131
+         $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
+         // POCOR-6131
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
