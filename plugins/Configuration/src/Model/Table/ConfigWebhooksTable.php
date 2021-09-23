@@ -40,6 +40,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         'security_user_delete' => 'Delete Security User',
         'academic_period_create' => 'Academic Period Create',
         'academic_period_update' => 'Academic Period Update',
+        'academic_period_delete' => 'Academic Period Delete',
         'education_cycle_create' => 'Education Structure Cycle Create',
         'education_cycle_update' => 'Education Structure Cycle Update',
         'education_cycle_delete' => 'Education Structure Cycle Delete',
@@ -60,8 +61,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         'area_education_delete' => 'Area Education Delete',
         'education_level_create' => 'Education Structure Level Create',
         'education_level_update' => 'Education Structure Level Update',
-        'education_level_delete' => 'Education Structure Level Delete',
-        'education_structure_system_update' => 'Education Structure System Update',
+        'education_level_delete' => 'Education Structure Level Delete'
     ];
 
 
