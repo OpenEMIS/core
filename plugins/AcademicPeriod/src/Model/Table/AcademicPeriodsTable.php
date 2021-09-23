@@ -137,6 +137,22 @@ class AcademicPeriodsTable extends AppTable
         }
     }
 
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {   
+        // Webhook Academic Period Delete -- Start
+        $body = array();
+        $body = [
+            'academic_period_id' => $entity->id,
+            'parent_id' => $entity->parent_id
+        ];
+
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('academic_period_delete', [], $body);
+        }
+        // Webhook Academic Period Delete -- End
+    }
+
     public function onBeforeDelete(Event $event, ArrayObject $options, $ids)
     {
         $entity = $this->find()->select(['current'])->where($ids)->first();
@@ -178,9 +194,8 @@ class AcademicPeriodsTable extends AppTable
                 'name' =>$entity->name,
                 'start_date' =>$entity->start_date,
                 'end_date' =>$entity->end_date,
-                'current' =>$entity->current,
-                'academic_period_id' =>$entity->id,
-                'parent_id' => $entity->parent_id,
+                'current' =>$entity->start_date,
+                'academic_period_id' =>'',
             ];
           
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
@@ -198,9 +213,8 @@ class AcademicPeriodsTable extends AppTable
                 'name' =>$entity->name,
                 'start_date' =>$entity->start_date,
                 'end_date' =>$entity->end_date,
-                'current' =>$entity->current,
+                'current' =>$entity->start_date,
                 'academic_period_id' =>$entity->id,
-                'parent_id' => $entity->parent_id,
             ];
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
@@ -210,7 +224,12 @@ class AcademicPeriodsTable extends AppTable
 
         // webhook academic period update ends
 
+
+      
+
     }
+    
+
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
       
@@ -786,43 +805,6 @@ class AcademicPeriodsTable extends AppTable
         return $weeks;
     }
 
-    public function getDateFrom($id)
-    {
-        $period = $this->findById($id)->first();
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
-
-        // If First of week is sunday changed the value to 7, because sunday with the '0' value unable to be displayed
-        if ($firstDayOfWeek == 0) {
-            $firstDayOfWeek = 7;
-        }
-
-        $daysPerWeek = $ConfigItems->value('days_per_week');
-
-        // If last day index is '0'-valued-sunday it will change the value to '7' so it will be displayed.
-        $lastDayIndex = ($firstDayOfWeek - 1);// last day index always 1 day before the starting date.
-        if ($lastDayIndex == 0) {
-            $lastDayIndex = 7;
-        }
-
-        $startDate = $period->start_date;
-
-        $weekIndex = 1;
-        $weeks = [];
-
-        do {
-            $endDate = $startDate->copy();
-            if ($endDate->gt($period->end_date)) {
-                $endDate = $period->end_date;
-            }
-            $weeks[$weekIndex++] = [$startDate];
-            $startDate = $endDate->copy();
-            $startDate->addDay();
-        } while ($endDate->lt($period->end_date));
-
-        return $weeks;
-    }
-
     public function getEditable($academicPeriodId)
     {
         try {
@@ -843,27 +825,6 @@ class AcademicPeriodsTable extends AppTable
                         $this->aliasField('editable') => 1,
                         $this->aliasField('visible') . ' >' => 0,
                         $this->aliasField('parent_id') . ' >' => 0
-                    ])
-                    ->order($this->aliasField('name') . ' ' . $order);
-        if ($result) {
-            return $result->toArray();
-        } else {
-            return false;
-        }
-    }
-
-    public function getAvailableAcademicPeriodsById($id, $list = true, $order='DESC')
-    {
-        if ($list) {
-            $query = $this->find('list', ['keyField' => 'id', 'valueField' => 'name']);
-        } else {
-            $query = $this->find();
-        }
-        $result = $query->where([
-                        $this->aliasField('editable') => 1,
-                        $this->aliasField('visible') . ' >' => 0,
-                        $this->aliasField('parent_id') . ' >' => 0,
-                        $this->aliasField('id') => $id
                     ])
                     ->order($this->aliasField('name') . ' ' . $order);
         if ($result) {
