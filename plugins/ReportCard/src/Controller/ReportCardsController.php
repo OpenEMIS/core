@@ -19,6 +19,8 @@ class ReportCardsController extends AppController
     public function Templates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ReportCard.ReportCards']); }
 
     public function ReportCardEmail() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ReportCard.ReportCardEmail']); }
+
+    public function Processes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ReportCard.ReportCardProcesses']); }
     // End
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
@@ -45,5 +47,22 @@ class ReportCardsController extends AppController
         ];
 
         return $tabElements;
+    }
+
+    public function getReportTabElements($options = [])
+    {
+        $tabElements = [];
+        $sessionUrl = ['plugin' => 'ReportCard', 'controller' => 'ReportCards'];
+        $sessionTabElements = [
+            'Templates' => ['text' => __('Overview')],
+            'Processes' => ['text' => __('Processes')]
+        ];
+
+        $tabElements = array_merge($tabElements, $sessionTabElements);
+
+        foreach ($sessionTabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($sessionUrl, ['action' => $key, 'index']);
+        }
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 }

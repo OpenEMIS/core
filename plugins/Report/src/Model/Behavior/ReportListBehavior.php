@@ -42,6 +42,48 @@ class ReportListBehavior extends Behavior {
 	public function afterAction(Event $event, $config) {
 		
 		if ($this->_table->action == 'index') {
+			/*POCOR-6208 starts*/
+			if ($this->_table->Auth->user()['super_admin'] == 0) {
+				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+	        	$SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+	        	$securityFunctions = TableRegistry::get('SecurityFunctions');
+	        	$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+	        	$userRole = $SecurityGroupUsers->find()->select([
+	                        	$SecurityGroupUsers->aliasField('security_role_id'),
+	                        	$SecurityRoles->aliasField('name')
+	                    	])->leftJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
+	                       		'security_role_id = ' . $SecurityRoles->aliasField('id')
+	                    	])->where(['security_user_id' => $this->_table->Auth->user()['id']])
+	                    	->toArray(); 
+	        	if (!empty($userRole )) { 
+		            $roles = [];
+		            foreach ($userRole as $key => $value) {
+		                $roles[] = $value->security_role_id;
+		            }
+	        	} 
+	        	$function = $securityFunctions->find()
+	        				->select([$securityFunctions->aliasField('id')])
+	        				->where([
+	        					$securityFunctions->aliasField('module') => 'Reports',
+	        					$securityFunctions->aliasField('_delete') => $this->_table->alias() .'.'.'delete'
+	        				])->first();
+	        	if (!empty($function)) {
+	        		$functionId = $function->id;
+	        		$data = $SecurityRoleFunctions->find()
+	        					->select([$SecurityRoleFunctions->aliasField('_delete')])
+				                ->where([
+				                    $SecurityRoleFunctions->aliasField('security_role_id IN') => $roles,
+				                    $SecurityRoleFunctions->aliasField('security_function_id') => $functionId
+				                ])->first();
+				    if (!empty($data)) {
+				    	$check = $data->_delete;	
+				    }
+	        	}
+			}
+			$user = $this->_table->Auth->user();
+			$this->_table->controller->set('UsersCheck', $user);
+			$this->_table->controller->set('AccessCheck', $check);
+			/*POCOR-6208 ENDS*/
 			$this->_table->controller->set('ControllerAction', $config);
 			$this->_table->ControllerAction->renderView('/Reports/index');
 		}
@@ -360,4 +402,20 @@ class ReportListBehavior extends Behavior {
 			return $this->_table->controller->redirect($url);
         }
     }
+
+    /*POCOR-6208 starts*/
+    public function removeReport($id)
+    {
+    	$entity = $this->ReportProgress->get($id);
+    	$file = $entity->file_path;
+    	unlink($file);
+        $this->ReportProgress->delete($entity);
+		$controller = $this->_table->controller->name;
+		$table = $this->_table->alias();
+		$this->_table->Alert->success('general.delete.success');
+		$url = ['controller' => $controller, 'action' => $table, 'index'];
+		
+		return $this->_table->controller->redirect($url);
+    }
+    /*POCOR-6208 ends*/
 }

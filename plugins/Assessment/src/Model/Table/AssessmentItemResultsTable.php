@@ -97,6 +97,8 @@ class AssessmentItemResultsTable extends AppTable
         $studentId = -1;
         if ($session->check('Student.Results.student_id')) {
             $studentId = $session->read('Student.Results.student_id');
+        }else{
+            $studentId = $session->read('Profile.StudentUser.primaryKey.id');
         }
 
        if ($options['user']['is_student'] == 1) {
