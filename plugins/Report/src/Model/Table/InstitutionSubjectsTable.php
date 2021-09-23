@@ -10,42 +10,44 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 
 class InstitutionSubjectsTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('institution_subjects');
-		parent::initialize($config);
+    public function initialize(array $config) {
+        $this->table('institution_subjects');
+        parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         
-	$this->addBehavior('Excel', [
+    $this->addBehavior('Excel', [
             'autoFields' => false
         ]);
-		$this->addBehavior('Report.ReportList');
-		$this->addBehavior('Report.InstitutionSecurity');
-	}
+        $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity');
+    }
 
-	public function beforeAction(Event $event) {
-		$this->fields = [];
-		$this->ControllerAction->field('feature');
-		$this->ControllerAction->field('format');
-	}
+    public function beforeAction(Event $event) {
+        $this->fields = [];
+        $this->ControllerAction->field('feature');
+        $this->ControllerAction->field('format');
+    }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
-        
+        $areaId = $requestData->area_education_id;
         $conditions = [];
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        if (!empty($institutionId)) {
+        if (!empty($institutionId) && $institutionId > 0) {
             $conditions['Institutions.id'] = $institutionId;
         }
-        
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
+        }
         if (!empty($requestData->education_subject_id)) {
             $conditions[$this->aliasField('education_subject_id')] = $requestData->education_subject_id;
         }
