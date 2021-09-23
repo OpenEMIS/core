@@ -1900,6 +1900,12 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
+        $query
+        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students']);
+    }
+
+    /*public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
+    {
         $requestQuery = $this->request->query;
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $query
@@ -1907,7 +1913,7 @@ class InstitutionClassesTable extends ControllerActionTable
         ->where([
             $this->aliasField('academic_period_id ='). $selectedAcademicPeriodId
         ]);
-    }
+    }*/
 
 
 }
