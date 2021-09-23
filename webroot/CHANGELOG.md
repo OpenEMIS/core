@@ -1,3 +1,11 @@
+### [3.69.4] - 2021-09-23
+- Implemented: OpenEMIS Core: Webhook Education Structure System - Delete
+- Bug Fixed: Administrations > Security > Roles > Permission: To grant access for Import Extracurricular to users
+- Bug Fixed: Institutions>Report Cards>Comments:Earliest Assignment End Date get pushed
+- Bug Fixed: Administration > Profiles > Students: Add Area Level Filter before Area Filter
+- Bug Fixed: Institution > Academic > Classes: Students' names do not have the ID number included
+- Bug Fixed: Institution>Students>Student1>Academic>Assessment: Assessment Marks are missing
+
 ### [3.69.3] - 2021-09-21
 - Implemented: Develop a function to import Outcomes
 - Bug Fixed: System allows user to view JSON when access is not granted in API Module
