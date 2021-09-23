@@ -913,6 +913,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     }
 
                     $attr['date_options']['startDate'] = $earliestEndDate->format('d-m-Y');
+                    if(isset($entity->end_date)){
+                        $attr['value'] = $entity->end_date;
+                    }
                 }
             } else {
                 $attr['type'] = 'hidden';
