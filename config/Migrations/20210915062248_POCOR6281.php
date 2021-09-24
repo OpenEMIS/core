@@ -20,6 +20,17 @@ class POCOR6281 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_6281_institution_grades` LIKE `institution_grades`');
         $this->execute('INSERT INTO `zz_6281_institution_grades` SELECT * FROM `institution_grades`');
 
+        // Create tables
+        $this->execute("CREATE TABLE IF NOT EXISTS `copy_academic_periods` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `from_academic_period` int(11),
+            `to_academic_period` int(11) ,
+            `features` varchar(200) COLLATE utf8mb4_unicode_ci ,
+            `created_user_id` int(11),
+            `created` date ,
+            PRIMARY KEY (`id`)
+          )");
+
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $EducationLevels = TableRegistry::get('Education.EducationLevels');
         $EducationCycles = TableRegistry::get('Education.EducationCycles');
