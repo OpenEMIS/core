@@ -558,7 +558,7 @@ class InstitutionsController extends AppController
     }
 
     public function StaffRelease()
-
+    {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffRelease']);
     }
 
