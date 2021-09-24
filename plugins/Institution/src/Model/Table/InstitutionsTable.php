@@ -76,7 +76,7 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
-        $this->hasMany('ShiftOptions', ['className' => 'InstitutionShifts.ShiftOptions', 'foreignKey' => 'shift_option_id']);
+        //$this->hasMany('ShiftOptions', ['className' => 'InstitutionShifts.ShiftOptions', 'foreignKey' => 'shift_option_id']);
         $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->hasMany('InstitutionCustomFieldValues', ['className' => 'Institution.InstitutionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']);
@@ -1543,10 +1543,12 @@ class InstitutionsTable extends ControllerActionTable
     {
         $isActive = true;
 
-        $institutionEntity = $this->get($institutionId, ['contain' => 'Statuses']);
-        if ($institutionEntity->has('status') && $institutionEntity->status->has('code')) {
-            if ($institutionEntity->status->code == 'INACTIVE') {
-                $isActive = false;
+        if (!empty($institutionId)) {
+            $institutionEntity = $this->get($institutionId, ['contain' => 'Statuses']);
+            if ($institutionEntity->has('status') && $institutionEntity->status->has('code')) {
+                if ($institutionEntity->status->code == 'INACTIVE') {
+                    $isActive = false;
+                }
             }
         }
 

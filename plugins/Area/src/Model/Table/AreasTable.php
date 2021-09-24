@@ -194,14 +194,14 @@ class AreasTable extends ControllerActionTable
                     'area_parent_id' =>$entity->parent_id,
                     'area_level_id' =>$entity->area_level_id
                 ];
-            }
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('area_education_create', ['username' => $username], $body);
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                if ($this->Auth->user()) {
+                    $Webhooks->triggerShell('area_education_create', ['username' => $username], $body);
+                }
             }
             // Webhook Education Area create -- end
 
-            //webhook Education Cycle update -- start
+            //webhook Education Area update -- start
             if(!$entity->isNew()){
                 $body = array();
                 $body = [
@@ -216,7 +216,7 @@ class AreasTable extends ControllerActionTable
                     $Webhooks->triggerShell('area_education_update', ['username' => $username], $body);
                 }
             }
-            //webhook Education Cycle update -- end
+            //webhook Education Area update -- end
         }
 
     }
