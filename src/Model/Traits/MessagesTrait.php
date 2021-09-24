@@ -2503,7 +2503,9 @@ trait MessagesTrait
         ],
         'CopyData' => [
             'genralerror' => 'To and from academic period can not be same.',
-            'alreadyexist' => 'Data Already exist for this academic period.'
+            'alreadyexist' => 'There are existing data in the selected To Academic Period.',
+            'nodataexist' => 'Data does not exist for seleceted from academic period.',
+            'nodataexisteducationsystem' => 'Data does not exist in education system for seleceted to academic period.'
         ],
         'UserNationalities' => [
             'ValidateNumberSuccess' => 'Identity number validate successfully.',
