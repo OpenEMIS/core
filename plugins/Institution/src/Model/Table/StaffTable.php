@@ -481,6 +481,87 @@ class StaffTable extends ControllerActionTable
                 ]);
                 break;
         }
+
+        //POCOR-6248 starts    
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemTable
+                            ->find()
+                            ->where([
+                                $ConfigItemTable->aliasField('type') => 'Columns for Staff List Page'
+                            ])
+                            ->all();
+        /*echo "<pre>"; print_r($ConfigItem);
+        die;*/    
+        foreach ($ConfigItem as $item) {
+            if($item->code == 'staff_photo'){
+                $this->field('photo_name', ['visible' => false]);
+                if($item->value == 1){
+                    $this->field('photo_content', ['visible' => true]);
+                }else{
+                    $this->field('photo_content', ['visible' => false]);
+                }
+            }
+
+            if($item->code == 'staff_openEMIS_ID'){
+                if($item->value == 1){
+                    $this->field('openemis_no', ['visible' => true, 'before' => 'staff_id']);
+                }else{
+                    $this->field('openemis_no', ['visible' => false, 'before' => 'staff_id']);
+                }
+            }
+
+            if($item->code == 'staff_name'){
+                if($item->value == 1){
+                    $this->field('staff_id', ['visible' => true, 'before' => 'institution_position_id']);
+                }else{
+                    $this->field('staff_id', ['visible' => false, 'before' => 'institution_position_id']);
+                } 
+            }
+
+            if($item->code == 'staff_position'){
+                if($item->value == 1){
+                    $this->field('institution_position_id', ['visible' => true, 'before' => 'start_date']);
+                }else{
+                    $this->field('institution_position_id', ['visible' => false, 'before' => 'start_date']);
+                } 
+            }
+
+            if($item->code == 'staff_start_date'){
+                if($item->value == 1){
+                    $this->field('start_date', ['visible' => true, 'before' => 'end_date']);
+                }else{
+                    $this->field('start_date', ['visible' => false, 'before' => 'end_date']);
+                } 
+            }
+
+            if($item->code == 'staff_end_date'){
+                if($item->value == 1){
+                    $this->field('end_date', ['visible' => true, 'before' => 'staff_status_id']);
+                }else{
+                    $this->field('end_date', ['visible' => false, 'before' => 'staff_status_id']);
+                } 
+            }
+
+            if($item->code == 'staff_status'){
+                if($item->value == 1){
+                    $this->field('staff_status_id', ['visible' => true, 'after' => 'end_date']);
+                }else{
+                    $this->field('staff_status_id', ['visible' => false, 'after' => 'end_date']);
+                } 
+            }
+
+            if($item->code == 'staff_identity_number'){
+                if($item->value == 1){
+                    if(!empty($item->value_selection)){
+                        //get data from Identity Type table 
+                        $typesIdentity = $this->getIdentityTypeData($item->value_selection);
+                        $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'staff_status_id']);
+                    }
+                }else{
+                    $this->field($typesIdentity->identity_type, ['visible' => false, 'after' => 'staff_status_id']);
+                }
+            }
+        }//POCOR-6248 ends
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -615,9 +696,91 @@ class StaffTable extends ControllerActionTable
         if (!isset($request->query['sort'])) {
             $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
         }
-
+        //POCOR-6248 starts
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $UserIdentities = TableRegistry::get('User.Identities');
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemTable
+                            ->find()
+                            ->where([
+                                $ConfigItemTable->aliasField('code') => 'staff_identity_number',
+                                $ConfigItemTable->aliasField('value') => 1
+                            ])
+                            ->first();
+        if(!empty($ConfigItem)){
+            //value_selection
+            //get data from Identity Type table 
+            $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
+            if(!empty($typesIdentity)){                
+                $query
+                    ->select([
+                        'Staff.id',
+                        'Staff.FTE',
+                        'Staff.start_year',
+                        'Staff.start_date',
+                        'Staff.end_year',
+                        'Staff.end_date',
+                        'Staff.staff_id',
+                        'Staff.staff_type_id',
+                        'Staff.staff_status_id',
+                        'Staff.institution_id',
+                        'Staff.institution_position_id',
+                        'Staff.security_group_user_id',
+                        'Positions.id',
+                        'Positions.status_id',
+                        'Positions.position_no',
+                        'Positions.staff_position_title_id',
+                        'Positions.staff_position_grade_id',
+                        'Positions.position_no',
+                        'Positions.institution_id',
+                        'Positions.assignee_id',
+                        'Positions.is_homeroom',
+                        'Users.id',
+                        'Users.username',
+                        'Users.openemis_no',
+                        'Users.first_name',
+                        'Users.middle_name',
+                        'Users.third_name',
+                        'Users.last_name',
+                        'Users.preferred_name',
+                        'identity_type' => $IdentityTypes->aliasField('name'),
+                        $typesIdentity->identity_type => $UserIdentities->aliasField('number')
+                    ])
+                    ->leftJoin(
+                                [$UserIdentities->alias() => $UserIdentities->table()],
+                                [
+                                    $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
+                                    $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
+                                ]
+                            )
+                    ->leftJoin(
+                        [$IdentityTypes->alias() => $IdentityTypes->table()],
+                        [
+                            $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
+                            $IdentityTypes->aliasField('id = ') . $typesIdentity->id
+                        ]
+                    );
+            }
+        }  //POCOR-6248 ends                  
         $this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
     }
+
+    //POCOR-6248 starts
+    public function getIdentityTypeData($value_selection)
+    {
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $typesIdentity =   $IdentityTypes
+                            ->find()
+                            ->select([
+                                'id' => $IdentityTypes->aliasField('id'),
+                                'identity_type' => $IdentityTypes->aliasField('name')
+                            ])
+                            ->where([
+                                $IdentityTypes->aliasField('id') => $value_selection
+                            ])
+                            ->first();
+        return  $typesIdentity;
+    }//POCOR-6248 ends
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
     {
@@ -1788,7 +1951,7 @@ class StaffTable extends ControllerActionTable
                     return $q->where(['Positions.is_homeroom' => 1]);
                 })
                 ->find('byInstitution', ['Institutions.id' => $institutionId])
-                ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+                //->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
                 ->where([
                     $this->aliasField('start_date <= ') => $todayDate,
                     'OR' => [
