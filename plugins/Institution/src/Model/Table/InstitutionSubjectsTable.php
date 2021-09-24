@@ -1039,11 +1039,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
+        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects'); //POCOR-6242
         $extra['excludedModels'] = [
             $this->ClassSubjects->alias(),
             $this->SubjectStudents->alias(),
             $this->SubjectStaff->alias(),
-            $this->Classes->alias()
+            $this->Classes->alias(),
+            $InstitutionClassSubjects->alias() //POCOR-6242
         ];
 
         //check textbook

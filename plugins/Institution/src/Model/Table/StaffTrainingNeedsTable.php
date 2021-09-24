@@ -9,7 +9,7 @@ use Staff\Model\Table\TrainingNeedsAppTable;
 class StaffTrainingNeedsTable extends TrainingNeedsAppTable
 {
     public function initialize(array $config)
-    {
+    { 
         parent::initialize($config);
         $this->addBehavior('Workflow.Workflow');
     }

@@ -70,4 +70,33 @@ class SurveyQuestionsTable extends CustomFieldsTable
             return $attr;
         }
     }
+
+    /*POCOR-6187 starts*/
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+       $surveyQuestionId = $requestData['SurveyQuestions']['id'];
+        if (!empty($requestData['SurveyQuestions']['custom_field_options'])) {
+            $data = $requestData['SurveyQuestions']['custom_field_options'];
+            $removeData = $this->CustomFieldOptions->deleteAll([
+                                'survey_question_id' => $surveyQuestionId
+                            ]);
+            foreach ($data as $key => $value) {
+                if ($value['visible'] == 1) {
+                    $newRecords = $this->CustomFieldOptions->newEntity();
+                    $newRecords->name = $value['name'];
+                    $newRecords->visible = 1;
+                    $newRecords->is_default = $entity->custom_field_options[$key]->is_default;
+                    $newRecords->survey_question_id = $surveyQuestionId;
+                    $newRecords->created_user_id = 2;
+                    $newRecords->created = date('Y-m-d H:i:s');
+                    $this->CustomFieldOptions->save($newRecords); 
+                } else {
+                    $removeData = $this->CustomFieldOptions->deleteAll([
+                                'survey_question_id' => $surveyQuestionId
+                    ]);
+                }
+            }
+        }
+    }
+    /*POCOR-6187 ends*/
 }
