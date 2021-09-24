@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
-
+use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
@@ -32,8 +32,10 @@ class AllergiesTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
-
-        $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
+        $this->addBehavior('Excel',[
+            'excludes' => [],
+            'pages' => ['index'],
+        ]);
     }
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -81,40 +83,61 @@ class AllergiesTable extends ControllerActionTable
         return $validator;
     }
 
-
-    // cod pocor-6131
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-        $cloneFields = $fields->getArrayCopy();
-        $newFields = [];
-        foreach ($cloneFields as $key => $value) {
-            $newFields[] = $value;
-            if($value['field'] == 'homeroom_teacher'){
+        $extraField[] = [
+            'key'   => 'description',
+            'field' => 'description',
+            'type'  => 'string',
+            'label' => __('Description')
+        ];
 
-                $newFields[] = [
-                    'key' => 'InstitutionClasses.total_male_students',
-                    'field' => 'total_male_students',
-                    'type' => 'string',
-                    'label' => 'Total Male Student'
-                ];
+        $extraField[] = [
+            'key'   => 'severe_new',
+            'field' => 'severe_new',
+            'type'  => 'integer',
+            'label' => __('Severe')
+        ];
 
-                $newFields[] = [
-                    'key' => 'InstitutionClasses.total_female_students',
-                    'field' => 'total_female_students',
-                    'type' => 'string',
-                    'label' => 'Total Female Student'
-                ];
-            }
+        $extraField[] = [
+            'key'   => 'comment',
+            'field' => 'comment',
+            'type'  => 'string',
+            'label' => __('Comment')
+        ];
 
-        }
-        //print_r($newFields); exit;
-        $fields->exchangeArray($newFields);
+        $extraField[] = [
+            'key'   => 'health_allergy_type_id',
+            'field' => 'health_allergy_type_id',
+            'type'  => 'string',
+            'label' => __('Health Allergy Type')
+        ];
+
+        $extraField[] = [
+            'key'   => 'file_name',
+            'field' => 'file_name',
+            'type'  => 'string',
+            'label' => __('File Name')
+        ];
+
+        $fields->exchangeArray($extraField);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
-    {
+    //POCOR-6131
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+        $session = $this->request->session();
+        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        $studentUserId = $session->read('Student.Students.id');
+
+        // dump($_SESSION); die;
         $query
-        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students']);
+        ->select([
+            'severe_new' => "(CASE WHEN severe = 1 THEN 'Yes'
+            ELSE 'No' END)"
+        ])
+        ->where([
+            // $this->aliasField('security_user_id = ').$staffUserId
+            $this->aliasField('security_user_id') => $studentUserId
+        ]);
     }
-    // end POCOR-6131
 }

@@ -307,7 +307,6 @@ class ImportBehavior extends Behavior
         ini_set('max_execution_time', 3600);
         /**
          */
-
         return function ($model, $entity) {
             $errors = $entity->errors();
             if (!empty($errors)) {
@@ -363,7 +362,7 @@ class ImportBehavior extends Behavior
                 $entity->errors('select_file', [$this->getExcelLabel('Import', 'no_answers')], true);
                 return false;
             }
-
+            
             ($this->isCustomText()) ? $startCheck = 3 : $startCheck = 2;
 
             for ($row = $startCheck; $row <= $highestRow; ++$row) {
@@ -379,13 +378,13 @@ class ImportBehavior extends Behavior
                         break;
                     }
                 }
-
+                
                 // check for unique record
                 $tempRow = new ArrayObject;
                 $rowInvalidCodeCols = new ArrayObject;
                 $params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes, $rowInvalidCodeCols];
                 $this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
-
+                
                 // for each columns
                 $references = [
                     'sheet'=>$sheet,
@@ -410,6 +409,7 @@ class ImportBehavior extends Behavior
                 }
 
                 $tempRow = $tempRow->getArrayCopy();
+
                 // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
                 if (!isset($tempRow['entity'])) {
                     $tableEntity = $activeModel->newEntity();
@@ -423,13 +423,13 @@ class ImportBehavior extends Behavior
                     $tempRow['action_type'] = 'imported';
                     $activeModel->patchEntity($tableEntity, $tempRow);
                 }
-
+                    
                 $errors = $tableEntity->errors();
                 $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
 
                 // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
                 $isNew = $tableEntity->isNew();
-
+                
                 if ($extra['entityValidate'] == true) {
                     // POCOR-4258 - shifted saving model before updating errors to implement try-catch to catch database errors
                     try {
@@ -541,14 +541,32 @@ class ImportBehavior extends Behavior
         $folder = $this->prepareDownload();
         $modelName = $this->config('model');
         $modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
-        // Do not lcalize file name as certain non-latin characters might cause issue
-        $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelName);
+        //5695 starts
+        if($modelName == 'Training_Session_Trainee_Results'){
+            $modelNameforTemplate = 'Training_Results';
+            $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelNameforTemplate);
+        }else{
+            // Do not lcalize file name as certain non-latin characters might cause issue
+            $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelName);
+        }//5695 ends
         $excelPath = $folder . DS . $excelFile;
 
         $mapping = $this->getMapping();
         $header = $this->getHeader($mapping);
+        //5695 starts
+        if($modelName == 'Training_Session_Trainee_Results'){
+            $newheader = [];
+            foreach ($header as $key => $value) {
+                if($value == 'Training Session'){
+                    $value = 'Training Session Code';
+                }else if($value == 'Training Result Type'){
+                    $value = 'Result Types';
+                }
+                $newheader[$key] = $value;
+            }
+            $header = $newheader;
+        }//5695 ends
         $dataSheetName = $this->getExcelLabel('general', 'data');
-
         $objPHPExcel = new \PHPExcel();
 
         $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $header, '');
@@ -620,6 +638,10 @@ class ImportBehavior extends Behavior
     {
         if (empty($title)) {
             $title = $dataSheetName;
+        }else{//5695 starts   
+            if($title == 'Import Training Session Trainee Results Data'){
+                $title = 'Import Training Results Data';
+            }//5695 ends   
         }
         $activeSheet = $objPHPExcel->getActiveSheet();
         $activeSheet->setTitle($dataSheetName);
@@ -936,6 +958,20 @@ class ImportBehavior extends Behavior
      */
     public function isCorrectTemplate($header, $sheet, $totalColumns, $row)
     {
+        //5695 starts
+        $model = $this->_table;
+        if($model->alias == 'ImportTrainingSessionTraineeResults'){
+            $newheader = [];
+            foreach ($header as $key => $value) {
+                if($value == 'Training Session'){
+                    $value = 'Training Session Code';
+                }else if($value == 'Training Result Type'){
+                    $value = 'Result Types';
+                }
+                $newheader[$key] = $value;
+            }
+            $header = $newheader;
+        }//5695 ends
         $cellsValue = [];
         for ($col=0; $col < $totalColumns; $col++) {
             $cell = $sheet->getCellByColumnAndRow($col, $row);
@@ -1387,6 +1423,16 @@ class ImportBehavior extends Behavior
                     $cellValue = $securityUser->id;
                 }
                 //POCOR-5913 ends
+            }else if($mappingModel == 'Training.TrainingSessionTraineeResults'  && $lookupColumnName == 'OpenEMIS_ID'){ //POCOR-5695 starts
+                $columnName = 'OpenEMIS_ID';
+                $securityUser = TableRegistry::get('User.Users')->find()->where(['openemis_no' => $originalValue])->first();
+                if(!$securityUser) {
+                    $rowInvalidCodeCols[$columnName] = __('OpenEMIS ID is not valid');
+                    $rowPass = false;
+                    $extra['entityValidate'] = false;
+                }
+                $originalRow[$col] = $originalValue;
+                $cellValue = $originalValue;//POCOR-5695 ends
             }else{
                 $columnName = $columns[$col];
                 $originalRow[$col] = $originalValue;
@@ -1451,7 +1497,6 @@ class ImportBehavior extends Behavior
             if (!$isOptional) {
                 $isOptional = substr_count($columnDescription, 'not required');
             }
-
 
             if ($foreignKey == self::FIELD_OPTION) {
                 if (!empty($cellValue)) {

@@ -41,21 +41,100 @@ class ImportStudentAdmissionTable extends AppTable {
         $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $this->Students = TableRegistry::get('Security.Users');
         $this->Workflows = TableRegistry::get('Workflow.Workflows'); 
+        $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    }
+
+    public function addAfterAction(Event $event, Entity $entity)
+    {
+        $this->ControllerAction->field('academic_period_id', [
+            'type' => 'select',
+            'select' => false,
+            'entity' => $entity,
+            // 'before' => 'select_file',
+            'after' => 'feature'
+        ]);
+    }
+
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriod($this->request->query('period'), true));
+        if ($action == 'add') {
+            # $attr['default'] = $selectedPeriod;
+            $attr['options'] = $periodOptions;
+            $attr['onChangeReload'] = 'changeAcademicPeriod';
+        }
+        return $attr;
+    }
+
+    public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $request = $this->request;
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
+                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+                    $this->gradesInInstitution = $this->getCustomInstitudeGradeIds($request->query['period']);
+                }
+            }
+        }
+    }
+
+    public function getAcademicPeriod($querystringPeriod, $withOptions = false)
+    {
+        if ($querystringPeriod) {
+            $selectedPeriod = $querystringPeriod;
+        } else {
+            $selectedPeriod = $this->AcademicPeriods->getCurrent();
+        }
+        if ($withOptions){
+            $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+            return compact('periodOptions', 'selectedPeriod');
+        } else {
+            return $selectedPeriod;
+        }
+    }
+
+    private function getCustomInstitudeGradeIds($acedamicId)
+    {
+        return $this->InstitutionGrades->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'education_grade_id'
+                    ])
+                    ->LeftJoin(['EducationGrades' => 'education_grades'],[
+                        'EducationGrades.id = '.$this->InstitutionGrades->aliasField('education_grade_id')
+                    ])
+                    ->LeftJoin(['EducationProgrammes' => 'education_programmes'],[
+                        'EducationProgrammes.id = EducationGrades.education_programme_id'
+                    ])
+                    ->LeftJoin(['EducationCycles' => 'education_cycles'],[
+                        'EducationCycles.id = EducationProgrammes.education_cycle_id'
+                    ])
+                    ->LeftJoin(['EducationLevels' => 'education_levels'],[
+                        'EducationLevels.id = EducationCycles.education_level_id'
+                    ])
+                    ->LeftJoin(['EducationSystems' => 'education_systems'],[
+                        'EducationSystems.id = EducationLevels.education_system_id'
+                    ])
+                    ->LeftJoin(['AcademicPeriods' => 'academic_periods'],[
+                        'AcademicPeriods.id = EducationSystems.academic_period_id'
+                    ])
+                    ->where([
+                        $this->InstitutionGrades->aliasField('institution_id') => $this->institutionId,
+                        'AcademicPeriods.id' => $acedamicId
+                    ])
+                    ->toArray();
     }
 
     public function beforeAction($event) {
         $session = $this->request->session();
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
-            $this->gradesInInstitution = $this->InstitutionGrades
-                    ->find('list', [
-                        'keyField' => 'id',
-                        'valueField' => 'education_grade_id'
-                    ])
-                    ->where([
-                        $this->InstitutionGrades->aliasField('institution_id') => $this->institutionId
-                    ])
-                    ->toArray();
+            $acedemicId = $this->AcademicPeriods->getCurrent();
+            if (isset($this->request->query['period']) && !empty($this->request->query['period'])) {
+                $acedemicId = $this->request->query['period'];
+            }
+            $this->gradesInInstitution = $this->getCustomInstitudeGradeIds($acedemicId);
         } else {
             $this->institutionId = false;
             $this->gradesInInstitution = [];
@@ -106,7 +185,11 @@ class ImportStudentAdmissionTable extends AppTable {
 
     public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $modelData = $lookedUpTable->getAvailableAcademicPeriods(false);
+        $acedemicId = $this->AcademicPeriods->getCurrent();
+        if (isset($this->request->query['period']) && !empty($this->request->query['period'])) {
+            $acedemicId = $this->request->query['period'];
+        }
+        $modelData = $lookedUpTable->getAvailableAcademicPeriodsById($acedemicId, false);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $startDateLabel = $this->getExcelLabel($lookedUpTable, 'start_date');
         $endDateLabel = $this->getExcelLabel($lookedUpTable, 'end_date');
@@ -252,8 +335,42 @@ class ImportStudentAdmissionTable extends AppTable {
         }
     }
 
+    private function getCustomEducationGradeIdByEducationGrade($acedemicPeriodId, $educationGradeCode, $educationGradeId)
+    {
+        $result = $this->EducationGrades->find('all')
+        ->LeftJoin(['EducationProgrammes' => 'education_programmes'],[
+            'EducationProgrammes.id = '.$this->EducationGrades->aliasField('education_programme_id')
+        ])
+        ->LeftJoin(['EducationCycles' => 'education_cycles'],[
+            'EducationCycles.id = EducationProgrammes.education_cycle_id'
+        ])
+        ->LeftJoin(['EducationLevels' => 'education_levels'],[
+            'EducationLevels.id = EducationCycles.education_level_id'
+        ])
+        ->LeftJoin(['EducationSystems' => 'education_systems'],[
+            'EducationSystems.id = EducationLevels.education_system_id'
+        ])
+        ->select(['id'])
+        ->where([
+            $this->EducationGrades->aliasField('visible') =>'1',
+            $this->EducationGrades->aliasField('code') => $educationGradeCode,
+            'EducationSystems.academic_period_id' => $acedemicPeriodId
+        ])->toArray();
+        if (count($result) > 0 && isset($result[0]->id)) {
+            return $result[0]->id;
+        }
+        return $educationGradeId;
+    }
+
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) 
     {
+        $originalEducationGradeCode = '';
+        if (isset($originalRow[1])) {
+            $originalEducationGradeCode = $originalRow[1];
+        }
+        $educationGradeId = $this->getCustomEducationGradeIdByEducationGrade($tempRow['academic_period_id'], $originalEducationGradeCode, $tempRow['education_grade_id']);
+        $tempRow['education_grade_id'] = $educationGradeId;
+
         if (empty($tempRow['student_id'])) {
             return false;
         }
