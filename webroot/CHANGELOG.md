@@ -1,10 +1,134 @@
+### [3.69.4] - 2021-09-23
+- Implemented: OpenEMIS Core: Webhook Education Structure System - Delete
+- Bug Fixed: Administrations > Security > Roles > Permission: To grant access for Import Extracurricular to users
+- Bug Fixed: Institutions>Report Cards>Comments:Earliest Assignment End Date get pushed
+- Bug Fixed: Administration > Profiles > Students: Add Area Level Filter before Area Filter
+- Bug Fixed: Institution > Academic > Classes: Students' names do not have the ID number included
+- Bug Fixed: Institution>Students>Student1>Academic>Assessment: Assessment Marks are missing
+
+### [3.69.3] - 2021-09-21
+- Implemented: Develop a function to import Outcomes
+- Bug Fixed: System allows user to view JSON when access is not granted in API Module
+- Bug Fixed: Administrations > Workflow > Rules > Student Unmarked Attendances : Many users get generic emails from unmarked classes rule
+- Bug Fixed: Institution > Staff > Transfer: Cannot transfer the staff from one Institution to another
+- Bug Fixed: Guardians Module : Ability to configure permissions for Guardians to view Students information
+- Bug Fixed: Institution > Performance > Outcome: Number of male and female students showing wrongly when there is multigrade class of two classes
+- Bug Fixed: Institutions > Staff > Staff1 > Health(Insurance)-404 Error when adding insurance
+- Bug Fixed: Institutions>Students: Graduated student who are not assigned to any class will not be linked to the selected class for the next academic period
+- Bug Fixed: Administration>Security>Roles: Personal Tab(Professional)-Qualifications,Awards,Extracurricular,Memberships,Licenses,Import Staff Qualifications
+- Bug Fixed: Directory>Student1>Academic>Absences: User with AbsenceCases role is unable to view the student absences and absences in Directory raised to him or her
+- Bug Fixed: Personal>Students>Academic>Assessment: Assessment Marks are missing
+- Bug Fixed: CLONE - Optimise the migration script created in POCOR-5947 and Writing an SQL statement to count the records
+- Bug Fixed: Institutions>Students: Promoted and repeated student who are not assigned to any class will not be linked to the selected class for the next academic period
+- Bug Fixed: Institutions>Academic>Programmes: 404 Error when deleting a programme
+- Bug Fixed: Personal: 404 Error when added as a Guardian going to Personal/General/Account or History Tab and Training/Training Results
+- Bug Fixed: Institutions > Performance > Report Cards: Reports are stuck in Progress and OpenEMIS number is not displayed when we are trying to generate the report card from this module
+
+### [3.69.2] - 2021-09-10
+- Implemented: Add Export button function - Institutions > Academic > Programs (include number of grades and classes)
+- Implemented: Add Export button function - Institutions > Staff > Staff1 > Professional > Qualifications
+- Implemented: Add Export button function - Institutions > Appointments > Duties
+- Implemented: Add default identity number to the student and staff list pages in institution and directory
+- Bug Fixed: Students > Academic > Classes,Subjects,Absences,Outcomes,Report Cards,Risks: Receive 404 error when logging in from a Absencerole and ESQID profile
+- Bug Fixed: Administration>System Setup>System Configuration>Webhooks: Education_level_id and education_cycle_id point to the same column for Cycle Create/Update webhooks
+- Bug Fixed: Administrations > Profiles > Templates : Remove the validation for Generate Start and End date against Academic Period
+- Bug Fixed: Institutions>Students>General: Individual Promotion/Repeat cannot promote Students
+- Bug Fixed: Reports>Students:Add Academic Period, Area Level, Area Name and Institution Name filters to all reports
+- Bug Fixed: Reports>Staff:Add Academic Period, Area Level, Area Name and Institution Name filters to all reports
+- Bug Fixed: Migration Script : Update Migration Script 20190919164802_POCOR5009.php with latest SQL QUERY
+- Bug Fixed: Administration>Survey>Forms:Unable to set default value for DropDown
+- Bug Fixed: Institutions>Students: Imported Student assigned to wrong Grade and cannot assign to class
+- Bug Fixed: Institutions > Staff > Staff1 > Health(Body Mass/Insurance)-Insurance tab not active and additional file type and file content for Body Mass and Insurance
+
+### [3.69.1] - 2021-09-03
+- Implemented: Add Export button function - Institutions > Academic > Shifts
+- Implemented: Add Export button function - Institutions > Staff > Staff1 > Health (include all tabs)
+- Implemented: Add Export button function - Institutions > Infrastructures > Utilities > Electricity
+- Implemented: Develop a function view and clear the student report card queue
+- Bug Fixed: Administration>Security>Groups: 404 error when adding an user group
+- Bug Fixed: Institutions>Cases: User with AbsenceCases role is unable to view the student absences and absences raised to him or her
+- Bug Fixed: Institutions>Students>Health: Attachment field was not added to the Body Mass and Insurance tabs
+- Bug Fixed: Administration > Training > Sessions/Results:Filter records by FDs and training dates
+- Bug Fixed: Report>Institution: Add Academic Period, Area Level, Area Name and Institution Name filters to all reports
+
+### [3.69.0] - 2021-08-26
+- Implemented: OpenEMIS Core: Webhook Education Area - Update
+- Implemented: Add Export button function - Institutions > Infrastructures > Utilities > Internet
+- Bug Fixed: Institutions>Students: No Classes Available for Graduation in the new year
+
+### [3.68.2] - 2021-08-20
+- Implemented: Improvement of the Professional Development Training Module interface
+- Implemented: Development of School Report Cards
+- Bug Fixed: Reports > Institution > Infrastructure > View: Data is not reflecting correctly on the view page
+- Bug Fixed: Institution > Performance > Outcome > Export: Export file is empty when exporting Outcome for past Academic Period
+- Implemented: Add Export button function - Institutions > General > Contacts > Institution
+- Implemented: Add Export button function - Institutions > Examinations > Exams
+- Bug Fixed: Institution > Performance > Outcome: Outcomes not listing the correct Grade
+- Bug Fixed: Administration>System Setup>Field Options: Delete Training Achievement Types
+- Bug Fixed: Institutions>Academic>Programmes: Extra Subjects Assigned to Each Grade
+- Bug Fixed: Administration > System Setup > Field Options: Increase Character Limit for Student Behavior and Character Classification
+- Bug Fixed: Institutions>Infrastructure>Overview: Data should be related to the academic year chosen on the main page when exporting.
+- Bug Fixed: Institutions>Infrastructure>Overview: The infrastructure Area should be listed in the report (Land Area, Building Area, Floor Area, and Room Area)
+- Bug Fixed: Institution > Staff: Email field in Staff is greyed out and cannot be edited
+- Bug Fixed: Institutions>Students: Class dropdown is not populated when selecting class
+
+### [3.68.1] - 2021-08-16
+- Implemented: Add additional filters and columns to the Absence list view
+- Bug Fixed: Institution > Student > Academic > Outcome: Subjects listed for student do not tally with the Subjects student is taking
+- Bug Fixed: Institutions>Students: No Available Grades for Graduation in the new year
+- Bug Fixed: Optimise the migration script created in POCOR-5947 and Writing an SQL statement to count the records
+
+### [3.68.0] - 2021-08-11
+- Implemented: Develop a function to delete behaviours
+- Bug Fixed: Administration > System Setup > Labels: To create navigations for the word "Requester"
+- Implemented: Add Export button function - Institutions > Infrastructures > WASH > Hygiene
+- Implemented: Add a function to delete reports
+- Bug Fixed: Administration>Security>Roles: Not able to edit Permission
+- Bug Fixed: Administration > System Setup > System Configuration > Webhooks: Academic Period webhook does not include the parent academic period id
+- Bug Fixed: Migration Script:Update the migration script for POCOR3804 to cater for special characters.
+- Bug Fixed: Institutions>Academic>Programmes: 404 Error when deleting a programme
+- Bug Fixed: Administration > Profiles > Students: Other grades from other institutions added to the queue and cannot generate profiles for last year students
+
+### [3.67.3] - 2021-08-03
+- Bug Fixed: Administration > System Setup > Localization > Translations: Remove Nursery from Translation
+- Bug Fixed: Administration> Examinations > Centres > Add: Exam Centre was not created when selecting All Institutions
+- Bug Fixed: Institution > Performance > Assessment: Student from a Multigrade class is appearing in both grades in Assessment page
+- Bug Fixed: Personal>Student>Academic>Outcomes tab: User cannot see all subjects
+- Bug Fixed: Institutions>Meals>Students: Display the Meals Received section wrongly,Displays "None" instead of "Meal Received"
+- Bug Fixed: Institution > Academic > Classes: Students who are promoted without selecting next class will not be found in class
+- Bug Fixed: Institutions > Staff > Edit : Issues with editing staff's employment
+- Bug Fixed: Administration > System Setup > Field Options: 404 error when he is trying to delete a Student Absence Reason
+- Bug Fixed: Institutions>Academic>Subjects-Cannot remove extra subjects
+
+### [3.67.2] - 2021-07-23
+- Bug Fixed: Institution > Academic > Associations: Unable to add new record
+- Implemented: Add Export button function - Institutions > Staff > Staff1 > Career > Positions (include institutions position type start end and status)
+- Implemented: Add Export button function - Institutions > Finances > Budget
+- Implemented: Add Export button function - Institutions > Finances > Expenditure
+- Bug Fixed: Institution > Survey > Forms: Date Enabled was set to a future date, but user is still able to view Survey Form
+- Bug Fixed: Institution > Staff > Career: Staff End of Assignment: Assignee section combines different users in one group
+- Bug Fixed: Reports>Surveys: Academic Period should be before Survey Form
+- Bug Fixed: Institution:404 error when creating a new institution when there are no institutions and deleting it
+- Bug Fixed: Administration>Security>Roles: Page is stuck after trying to grant permission
+
+### [3.67.1] - 2021-07-09
+- Implemented: Add default identity, staff position and add date range filter to Reports > Institution > Staff leave
+- Bug Fixed: Institution > Attendance > Students: Student has Enrolled status but is not appearing on Attendance page
+- Implemented: OpenEMIS Core: Webhook Education Structure System - Update
+- Implemented: Add Export button function - Institutions > General > Contacts > People
+
+### [3.67.0] - 2021-07-02
+- Bug Fixed: Administration > Survey > Forms > Questions tab > Edit > Delete: Options from Questions was deleted but was not removed
+- Bug Fixed: Administration > System Setup > Education Structure: Encountered 404 error when copying data on Systems tab
+
 ### [3.66.5] - 2021-06-29
 - Bug Fixed: Administration > Performance > Assessment > Assessment Period > Add: Encountered 404 error upon saving
 - Bug Fixed: Administration > Security > Permission > Personal tab: To enable Execute function for Report Cards
 
 ### [3.66.4] - 2021-06-23
-- Bug Fixed: Add a function to attach multiple files under the student and staff health feature
-- Bug Fixed: Change password reset request email subject to application name
+- Implemented: Add a function to attach multiple files under the student and staff health feature
+- Implemented: Change password reset request email subject to application name
+- Implemented: Add Export button function - Institutions > Staff > Appointments > Positions
 - Bug Fixed: Institutions > School > Students > Students Transfer Out: Auto Assignee in student transfer showing as unassigned
 - Bug Fixed: Workflow Rule was not configured but it is processing
 - Bug Fixed: Assessment Mark Placeholders in Report Cards
@@ -16,7 +140,7 @@
 - Bug Fixed: Institution > Students > Promote: There is no option to select for Next Class field
 - Bug Fixed: Directory: User who is a Student and a Staff has only 1 record in Directory page
 - Bug Fixed: Institution> Academic > Feeders > Outgoing: User is given security permission to delete record but is unable to do so
-- Bug Fixed: Update Export button function - Institutions > General > Overview (include custom fields contacts and shifts)
+- Implemented: Update Export button function - Institutions > General > Overview (include custom fields contacts and shifts)
 - Bug Fixed: Administration > Security > Roles > Permission: Permission missing for Finance > Income, Budget and Expenditure
 - Bug Fixed: Administration > System Setup > Academic Period: Start Date changes when student is successfully Transferred to a new Institution
 - Bug Fixed: Institution > Bulk Transfer: To allow user to select the same Grade that student is currently in for the Next Institution
@@ -40,20 +164,20 @@
 - Bug Fixed: Reports > Students > Student Health Report : Page Loading Issue
 - Bug Fixed: Administrations > System Setup > Localizations > Translations: Missing Translations
 - Bug Fixed: Reports > Students > Student Health Report > Overview: Transferred student still appear in the Institution which student was Transferred Out from
-- Bug Fixed: OpenEMIS Core: Webhook Education Area - Create
-- Bug Fixed: OpenEMIS Core: Webhook Education Area - Delete
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Level - Create
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Level - Update
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Level - Delete
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Subject - Update
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Subject - Delete
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade Subject - Create
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade Subject - Update
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade Subject - Delete
+- Implemented: OpenEMIS Core: Webhook Education Area - Create
+- Implemented: OpenEMIS Core: Webhook Education Area - Delete
+- Implemented: OpenEMIS Core: Webhook Education Structure Level - Create
+- Implemented: OpenEMIS Core: Webhook Education Structure Level - Update
+- Implemented: OpenEMIS Core: Webhook Education Structure Level - Delete
+- Implemented: OpenEMIS Core: Webhook Education Structure Subject - Update
+- Implemented: OpenEMIS Core: Webhook Education Structure Subject - Delete
+- Implemented: OpenEMIS Core: Webhook Education Structure Grade Subject - Create
+- Implemented: OpenEMIS Core: Webhook Education Structure Grade Subject - Update
+- Implemented: OpenEMIS Core: Webhook Education Structure Grade Subject - Delete
 - Bug Fixed: Report > Institution > Student Attendance Summary report: Education Grade listed not correct
 - Bug Fixed: Administration > System Setup > Academic Period > Delete: Encountered 404 error upon deleting the record
 - Bug Fixed: Institution > Appointment: To add "s" at the end of Appointment
-- Bug Fixed: Add Export button function - Institutions > General > Map
+- Implemented: Add Export button function - Institutions > General > Map
 
 ### [3.66.1] - 2021-06-04
 - Bug Fixed: Profiles > Contacts tab : Allow user to add contact information
@@ -64,20 +188,20 @@
 - Bug Fixed: Rename Profile module to Personal
 - Bug Fixed: Administration > System Setup > Education Structure > Programmes: Next Programme was not copied when user copied from the current Academic Period to next Academic Period
 - Bug Fixed: Reports > Students > Student Health Report > Overview: Student without Middle and Third Name has a big gap in between the First and Last Name
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Cycle - Create
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Cycle - Update
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Cycle - Delete
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Programme - Create
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Programme - Update
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Programme - Delete
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade - Create
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade - Update
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade - Delete
-- Bug Fixed: OpenEMIS Core: Webhook Education Structure Subject - Create
-- Bug Fixed: OpenEMIS Core: Webhook Academic Period - Create
-- Bug Fixed: OpenEMIS Core: Webhook Academic Period - Update
+- Implemented: OpenEMIS Core: Webhook Education Structure Cycle - Create
+- Implemented: OpenEMIS Core: Webhook Education Structure Cycle - Update
+- Implemented: OpenEMIS Core: Webhook Education Structure Cycle - Delete
+- Implemented: OpenEMIS Core: Webhook Education Structure Programme - Create
+- Implemented: OpenEMIS Core: Webhook Education Structure Programme - Update
+- Implemented: OpenEMIS Core: Webhook Education Structure Programme - Delete
+- Implemented: Bug Fixed: OpenEMIS Core: Webhook Education Structure Grade - Create
+- Implemented: OpenEMIS Core: Webhook Education Structure Grade - Update
+- Implemented: OpenEMIS Core: Webhook Education Structure Grade - Delete
+- Implemented: OpenEMIS Core: Webhook Education Structure Subject - Create
+- Implemented: OpenEMIS Core: Webhook Academic Period - Create
+- Implemented: OpenEMIS Core: Webhook Academic Period - Update
 - Bug Fixed: Institution > Performance > Assessment > Import: Add Education Subject field on the Import Summary page
-- Bug Fixed: Institutions > Infrastructure > Overview > Rooms : Add a new field called area
+- Implemented: Institutions > Infrastructure > Overview > Rooms : Add a new field called area
 
 ### [3.66.0] - 2021-05-28
 - Bug Fixed: Institutions > Performance > Report Cards: Report Cards remained In-Progress
@@ -89,8 +213,8 @@
 
 ### [3.65.4] - 2021-05-24
 - Bug Fixed: Institution > Student > Transfer: Start Date and End Date is reflected incorrectly
-- Bug Fixed: Changes to Data Archiving feature in OpenEMIS Core - Part II
-- Bug Fixed: Remove default date for student / staff actions
+- Implemented: Changes to Data Archiving feature in OpenEMIS Core - Part II
+- Implemented: Remove default date for student / staff actions
 
 ### [3.65.3] - 2021-05-21
 - Bug Fixed: Institution > Performance > Assessment: Student who had Withdrawn/Transferred Status in 1 class and Enrolled Status in another class from the same Institution has Enrolled Status for both class in Assessment page
@@ -102,7 +226,7 @@
 - Bug Fixed: Institution > Attendance > Student: Attendance marked on Fridays disappeared
 - Bug Fixed: Directory > Add: Encountered error while adding users with Users Type
 - Bug Fixed: Administration > System Setup > Risk: 504 error encountered when generating risk for all Institutions	
-- Bug Fixed: Add area filter to the staff and student profile feature
+- Implemented: Add area filter to the staff and student profile feature
 - Bug Fixed: Institution > Attendance > Students: Unable to view students Attendance even though the students are assigned to a class
 - Bug Fixed: Institution > Survey > Forms: Repeater Question is not saving the Date of Birth correctly
 - Bug Fixed: Reports > Institutions > Student Body Mass report: Changes to the report
@@ -114,7 +238,7 @@
 ### [3.65.2] - 2021-05-12
 - Bug Fixed: Installer creates database without tables
 - Bug Fixed: Institution > Student > Transfer: Student's Start Date and End Date upon approval did no match with the Academic Period
-- Bug Fixed: Report > Students > Student Out of School Report: add / remove columns
+- Implemented: Report > Students > Student Out of School Report: add / remove columns
 
 ### [3.65.1] - 2021-05-07
 - Bug Fixed: Institution > Survey > Forms: Edited record disappeared
@@ -1680,4 +1804,3 @@
 ### [3.2.6] - 2015-10-19
 - Added workflows to institution's survey
 - Added workflow statuses mapping so that customised statuses of survey can be mapped to workflow's steps for reporting purposes
-

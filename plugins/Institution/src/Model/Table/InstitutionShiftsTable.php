@@ -806,64 +806,60 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-        $cloneFields = $fields->getArrayCopy();
-        //print_r($cloneFields); exit;
-        $newFields = [];
-        foreach ($cloneFields as $key => $value) {
-            $newFields[] = $value;
+        $newFields[] = [
+            'key'   => 'AcademicPeriods.name',
+            'field' => 'academic_period',
+            'type'  => 'string',
+            'label' => 'Academic Period'
+        ];
 
+        $newFields[] = [
+            'key'   => 'shift_option_id',
+            'field' => 'shift_option_id',
+            'type'  => 'string',
+            'label' => 'Shift'
+        ];
 
-            $newFields[] = [
-                'key' => 'AcademicPeriods.name',
-                'field' => 'academic_period',
-                'type' => 'string',
-                'label' => 'Academic Period'
-            ];
+        $newFields[] = [
+            'key'   => 'InstitutionShifts.start_time',
+            'field' => 'shift_start_time',
+            'type'  => 'string',
+            'label' => 'Start Time'
+        ];
 
-            $newFields[] = [
-                'key' => 'ShiftOptions.name',
-                'field' => 'shift_name',
-                'type' => 'string',
-                'label' => 'Shift Name'
-            ];
+        $newFields[] = [
+            'key'   => 'InstitutionShifts.end_time',
+            'field' => 'shift_end_time',
+            'type'  => 'string',
+            'label' => 'End Time'
+        ];
 
-            $newFields[] = [
-                'key' => 'InstitutionShifts.start_time',
-                'field' => 'shift_start_time',
-                'type' => 'string',
-                'label' => 'Start Time      '
-            ];
+        $newFields[] = [
+            'key'   => 'Institutions.name',
+            'field' => 'Owner',
+            'type'  => 'string',
+            'label' => 'Owner'
+        ];
 
-            $newFields[] = [
-                'key' => 'InstitutionShifts.end_time',
-                'field' => 'shift_end_time',
-                'type' => 'string',
-                'label' => 'End Time'
-            ];
-
-            $newFields[] = [
-                'key' => 'Institutions.name',
-                'field' => 'Owner',
-                'type' => 'string',
-                'label' => 'Owner'
-            ];
-
-            $newFields[] = [
-                'key' => 'Institutions.name',
-                'field' => 'Occupier',
-                'type' => 'string',
-                'label' => 'Occupier'
-            ];
-
-        }
-        print_r($newFields); exit;
+        $newFields[] = [
+            'key'   => 'Institutions.name',
+            'field' => 'Occupier',
+            'type'  => 'string',
+            'label' => 'Occupier'
+        ];
+                
         $fields->exchangeArray($newFields);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
-        $academicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
+        $academicPeriod = $this->request->query['period'];
         $institutionId = $this->Session->read('Institution.Institutions.id');
+
+        if (empty($academicPeriod)) {
+            $academicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
+        }
+
         if($academicPeriod != ''){
             $query
             ->select(['academic_period' => 'AcademicPeriods.name', 'shift_name' => 'ShiftOptions.name','shift_start_time' => 'InstitutionShifts.start_time','shift_end_time' => 'InstitutionShifts.end_time','Owner' => 'Institutions.name','Occupier' => 'Institutions.name' ])

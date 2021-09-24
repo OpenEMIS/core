@@ -86,9 +86,15 @@ class ExtracurricularsTable extends AppTable {
 				} else {
 					$studentId = $this->Session->read('Auth.User.id');
 				}
-				$conditions[$this->aliasField('security_user_id')] = $studentId;
-				$query->where($conditions, [], true);
-			}            
+			} 
+			/*POCOR-6267 starts*/
+			if ($this->controller->name == 'GuardianNavs') {
+				$session = $this->request->session();//POCOR-6267
+				$studentId = $session->read('Student.Students.id');
+			}
+			/*POCOR-6267 ends*/
+			$conditions[$this->aliasField('security_user_id')] = $studentId;
+			$query->where($conditions, [], true);           
 		}
 	}
 }

@@ -101,20 +101,36 @@ class StudentClassesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
 		$userData = $this->Session->read();
-        if ($userData['Auth']['User']['is_guardian'] == 1) {
-            $sId = $userData['Student']['ExaminationResults']['student_id'];
-            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+        $session = $this->request->session();//POCOR-6267
+        if ($userData['Auth']['User']['is_guardian'] == 1) { 
+            /*POCOR-6267 starts*/
+            if ($this->request->controller == 'GuardianNavs') {
+                $studentId = $session->read('Student.Students.id');
+            }/*POCOR-6267 ends*/ else {
+                $sId = $userData['Student']['ExaminationResults']['student_id'];
+                if ($sId) {
+                    $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+                } else {
+                    $studentId = $session->read('Student.Students.id');
+                }
+            }
         } else {
             $studentId = $userData['Auth']['User']['id'];
         }
-		$condition = [];
-		if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
-			$condition = [];
-		} else {
-			if (!empty($studentId)) {
-				$conditions[$this->aliasField('student_id')] = $studentId;
-			}
-		}
+
+		$conditions = [];
+        /*POCOR-6267 starts*/
+        if ($this->request->controller == 'GuardianNavs') {
+            $conditions[$this->aliasField('student_id')] = $studentId;
+        }/*POCOR-6267 ends*/ else {
+            if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
+                $conditions = [];
+            } else {
+                if (!empty($studentId)) {
+                    $conditions[$this->aliasField('student_id')] = $studentId;
+                }
+            }
+        }
 		
         $query->contain([
             'InstitutionClasses',
