@@ -46,10 +46,10 @@ class StaffLeaveTable extends AppTable {
         $workflowStatus = $requestData->workflow_status;
         $reportStartDate = $requestData->report_start_date;
         $reportEndDate = $requestData->report_end_date;
-        
+        $areaId = $requestData->area_education_id;
         $condition = [];
 
-        if(isset($institutionId) && !empty($institutionId)){
+        if(isset($institutionId) && !empty($institutionId) && $institutionId > 0){
             $conditions[$this->aliasfield('institution_id')] = $institutionId;
         }
         if(isset($position) && !empty($position)){
@@ -73,37 +73,40 @@ class StaffLeaveTable extends AppTable {
                     ]
                 ];
         }
+        if ($areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
+        }
 
         $query
             ->select(['openemis_no' => 'Users.openemis_no',
-					'staff_id' => $this->aliasfield('staff_id'),
+                    'staff_id' => $this->aliasfield('staff_id'),
                     'code' => 'Institutions.code', 
                     'area_name' => 'Areas.name',
                     'area_code' => 'Areas.code',
                     //'area_administrative_code' => 'AreaAdministratives.code',//POCOR-5762 
                     //'area_administrative_name' => 'AreaAdministratives.name',//POCOR-5762
-					'position_title' =>  $query->func()->concat([
-						'InstitutionPositions.position_no' => 'literal',
-						" - ",
-						'StaffPositionTitles.name' => 'literal'
-					])
-					//'identity_type' => 'IdentityTypes.name',//POCOR-5762
-					//'identity_number' => 'UserIdentity.number',//POCOR-5762
+                    'position_title' =>  $query->func()->concat([
+                        'InstitutionPositions.position_no' => 'literal',
+                        " - ",
+                        'StaffPositionTitles.name' => 'literal'
+                    ])
+                    //'identity_type' => 'IdentityTypes.name',//POCOR-5762
+                    //'identity_number' => 'UserIdentity.number',//POCOR-5762
             ])
             ->contain(['Users', 'Institutions', 'Institutions.Areas', 'Institutions.AreaAdministratives'])
             ->leftJoin(['InstitutionStaffs' => 'institution_staff'], [
-				'InstitutionStaffs.staff_id = ' . $this->aliasfield('staff_id'),
-			])
-			->leftJoin(['InstitutionPositions' => 'institution_positions'], [
-				'InstitutionPositions.id = InstitutionStaffs.institution_position_id',
-			])
-			->leftJoin(['StaffPositionTitles' => 'staff_position_titles'], [
-				'StaffPositionTitles.id = InstitutionPositions.staff_position_title_id',
-			]);
+                'InstitutionStaffs.staff_id = ' . $this->aliasfield('staff_id'),
+            ])
+            ->leftJoin(['InstitutionPositions' => 'institution_positions'], [
+                'InstitutionPositions.id = InstitutionStaffs.institution_position_id',
+            ])
+            ->leftJoin(['StaffPositionTitles' => 'staff_position_titles'], [
+                'StaffPositionTitles.id = InstitutionPositions.staff_position_title_id',
+            ]);
             if(!empty($conditions)){
                 $query->where($conditions);
             }
-			$query->order([$this->aliasField('date_from')]);
+            $query->order([$this->aliasField('date_from')]);
            
             //POCOR-5762 starts
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
@@ -162,52 +165,52 @@ class StaffLeaveTable extends AppTable {
                 });
             });
             //POCOR-5762 ends
-			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-				return $results->map(function ($row) {
-					
-					$StaffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
-					
-					$customFieldData = $StaffCustomFieldValues->find()
-						->select([
-							'custom_field_id' => 'StaffCustomFields.id',
-							'staff_custom_field_values.text_value',
-							'staff_custom_field_values.number_value',
-							'staff_custom_field_values.decimal_value',
-							'staff_custom_field_values.textarea_value',
-							'staff_custom_field_values.date_value'
-						])
-						->innerJoin(
-							['StaffCustomFields' => 'staff_custom_fields'],
-							[
-								'StaffCustomFields.id = staff_custom_field_values.staff_custom_field_id'
-							]
-						)
-						->where(['staff_custom_field_values.staff_id' => $row['staff_id']])
-						->toArray();
-					
-					foreach($customFieldData as $data) {
-						if(!empty($data->text_value)) {
-							$row[$data->custom_field_id] = $data->text_value;
-						} 
-						if(!empty($data->number_value)) {
-							$row[$data->custom_field_id] = $data->number_value;
-						}
-						if(!empty($data->decimal_value)) {
-							$row[$data->custom_field_id] = $data->decimal_value;
-						}
-						if(!empty($data->textarea_value)) {
-							$row[$data->custom_field_id] = $data->textarea_value;
-						}
-						if(!empty($data->date_value)) {
-							$row[$data->custom_field_id] = $data->date_value;
-							
-						}
-						
-					}
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+                    
+                    $StaffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
+                    
+                    $customFieldData = $StaffCustomFieldValues->find()
+                        ->select([
+                            'custom_field_id' => 'StaffCustomFields.id',
+                            'staff_custom_field_values.text_value',
+                            'staff_custom_field_values.number_value',
+                            'staff_custom_field_values.decimal_value',
+                            'staff_custom_field_values.textarea_value',
+                            'staff_custom_field_values.date_value'
+                        ])
+                        ->innerJoin(
+                            ['StaffCustomFields' => 'staff_custom_fields'],
+                            [
+                                'StaffCustomFields.id = staff_custom_field_values.staff_custom_field_id'
+                            ]
+                        )
+                        ->where(['staff_custom_field_values.staff_id' => $row['staff_id']])
+                        ->toArray();
+                    
+                    foreach($customFieldData as $data) {
+                        if(!empty($data->text_value)) {
+                            $row[$data->custom_field_id] = $data->text_value;
+                        } 
+                        if(!empty($data->number_value)) {
+                            $row[$data->custom_field_id] = $data->number_value;
+                        }
+                        if(!empty($data->decimal_value)) {
+                            $row[$data->custom_field_id] = $data->decimal_value;
+                        }
+                        if(!empty($data->textarea_value)) {
+                            $row[$data->custom_field_id] = $data->textarea_value;
+                        }
+                        if(!empty($data->date_value)) {
+                            $row[$data->custom_field_id] = $data->date_value;
+                            
+                        }
+                        
+                    }
                     //echo "<pre>";print_r($row);die();
-					return $row;
-				});
-			});
+                    return $row;
+                });
+            });
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -338,7 +341,7 @@ class StaffLeaveTable extends AppTable {
             'type' => 'string',
             'label' => ''
         ];
-		
-		$fields->exchangeArray($newFields);
+        
+        $fields->exchangeArray($newFields);
     }
 }

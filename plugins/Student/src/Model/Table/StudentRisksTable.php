@@ -154,19 +154,16 @@ class StudentRisksTable extends ControllerActionTable
 
         $session = $this->request->session();
         if ($session->read('Auth.User.is_guardian') == 1) {
-
-            $sId = $session->read('Student.ExaminationResults.student_id');
-            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
-
+            /*POCOR-6267 starts*/
+            if ($this->request->controller == 'GuardianNavs') {
+                $studentId = $session->read('Student.Students.id');
+            }/*POCOR-6267 ends*/ else{
+                $sId = $session->read('Student.ExaminationResults.student_id');
+                $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+            }
         } else {
             $studentId = $session->read('Student.Students.id');
         }
-
-/*
-        if ($this->controller->name == 'Profiles' && $this->action == 'index') {
-            $session = $this->request->session();
-            $studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
-        }*/
          
         if ($user['is_student'] == 1 && $user['is_guardian'] == 0) {
             $query = $query

@@ -123,7 +123,15 @@ class StudentOutcomesTable extends ControllerActionTable
         $subjectOptions = [];
         if (!empty($selectedTemplate)){
             $session = $this->request->session();
-            $studentId = $session->read('Student.Students.id');
+            //POCOR-6215 starts
+            $authUser = $session->read('Auth.User');
+            if($authUser['is_student'] == 1 && $authUser['is_guardian'] == 1){
+                $studentId = $session->read('Profile.StudentUser.primaryKey.id');
+            }else if($authUser['is_student'] == 1 && $authUser['is_guardian'] != 1){
+                $studentId = $session->read('Auth.User.id');
+            }else{
+                $studentId = $session->read('Student.Students.id');
+            }//POCOR-6215 ends
             $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
@@ -135,7 +143,7 @@ class StudentOutcomesTable extends ControllerActionTable
                                 ->innerJoin([$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()], [
                                    $InstitutionSubjectStudents->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id')
                                 ])
-                                ->where([$InstitutionSubjectStudents->aliasField('student_id') => $studentId ])
+                                ->where([$InstitutionSubjectStudents->aliasField('student_id') => $studentId, $InstitutionSubjects->aliasField('academic_period_id') => $selectedAcademicPeriod ])//6004 add academic_period_id condition
                                 ->toArray(); 
              
             $subjectOptions = ['0' => __('All Subjects')] + $subjectOptions;
@@ -157,21 +165,32 @@ class StudentOutcomesTable extends ControllerActionTable
         ];
 
 		$userData = $this->Session->read();
-        if ($userData['Auth']['User']['is_guardian'] == 1) { 
-            $sId = $userData['Student']['ExaminationResults']['student_id'];
-            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+        $session = $this->request->session();//POCOR-6267
+        if ($userData['Auth']['User']['is_guardian'] == 1) {
+            /*POCOR-6267 starts*/
+            if ($this->request->controller == 'GuardianNavs') {
+                $studentId = $session->read('Student.Students.id');
+            }/*POCOR-6267 ends*/else {
+                $sId = $userData['Student']['ExaminationResults']['student_id'];
+                $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+            }
         } else {
             $studentId = $userData['Auth']['User']['id'];
         }
 		
-		if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
+        /*POCOR-6267 starts*/
+        if ($this->request->controller == 'GuardianNavs') {
+            $conditions[$this->aliasField('student_id')] = $studentId;
+        }/*POCOR-6267 ends*/ else {
+            if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
 
-		} else {
-			if (!empty($studentId)) {
-				$conditions[$this->aliasField('student_id')] = $studentId;
-			}
-		}
-
+            } else {
+                if (!empty($studentId)) {
+                    $conditions[$this->aliasField('student_id')] = $studentId;
+                }
+            }
+        }
+		
         $query->where($conditions);
     }
 
