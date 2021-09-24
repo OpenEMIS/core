@@ -33,6 +33,10 @@ class HealthsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+        $this->addBehavior('Excel',[
+            'excludes' => [],
+            'pages' => ['view'],
+        ]);
     }
 
     public function onGetBloodType(Event $event, Entity $entity)
@@ -105,5 +109,66 @@ class HealthsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator->allowEmpty('file_content');
         return $validator;
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'blood_type',
+            'field' => 'blood_type',
+            'type'  => 'string',
+            'label' => __('Blood Type')
+        ];
+
+        $extraField[] = [
+            'key'   => 'doctor_name',
+            'field' => 'doctor_name',
+            'type'  => 'string',
+            'label' => __('Doctor Name')
+        ];
+
+        $extraField[] = [
+            'key'   => 'doctor_contact',
+            'field' => 'doctor_contact',
+            'type'  => 'string',
+            'label' => __('Doctor Contact')
+        ];
+
+        $extraField[] = [
+            'key'   => 'medical_facility',
+            'field' => 'medical_facility',
+            'type'  => 'string',
+            'label' => __('Medical Facility')
+        ];
+
+        $extraField[] = [
+            'key'   => 'health_insurance_new',
+            'field' => 'health_insurance_new',
+            'type'  => 'integer',
+            'label' => __('Health Insurance')
+        ];
+
+        $extraField[] = [
+            'key'   => 'file_name',
+            'field' => 'file_name',
+            'type'  => 'string',
+            'label' => __('File Name')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+        $session = $this->request->session();
+        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+
+        $query
+        ->select([
+            'health_insurance_new' => "(CASE WHEN health_insurance = 1 THEN 'Yes'
+            ELSE 'No' END)"
+        ])
+        ->where([
+            $this->aliasField('security_user_id = ').$staffUserId
+        ]);
     }
 }

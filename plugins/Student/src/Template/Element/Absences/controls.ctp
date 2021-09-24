@@ -29,6 +29,30 @@
 				));
 			}
 
+			if (!empty($dateFromOptions)) {
+				echo $this->Form->input('academic_period_', array(
+					'class' => 'form-control',
+					'label' => false,
+					'options' => $dateFromOptions,
+					'url' => $baseUrl,
+					'default' => $selectedDateFrom,
+					'data-named-key' => 'dateFrom',
+					'data-named-group' => 'academic_period',
+				));
+			}
+
+			if (!empty($dateToOptions)) {
+				echo $this->Form->input('academic_period_', array(
+					'class' => 'form-control',
+					'label' => false,
+					'options' => $dateToOptions,
+					'url' => $baseUrl,
+					'default' => $selectedDateTo,
+					'data-named-key' => 'dateTo',
+					'data-named-group' => 'academic_period,dateFrom',
+				));
+			}
+
 		?>
 	</div>
 </div>

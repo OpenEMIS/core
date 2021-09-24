@@ -10,42 +10,41 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 
 class IncomeTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('institution_incomes');
-		parent::initialize($config);
+    public function initialize(array $config) {
+        $this->table('institution_incomes');
+        parent::initialize($config);
 
-		$this->addBehavior('Excel', [
+        $this->addBehavior('Excel', [
             'autoFields' => false
         ]);
-		$this->addBehavior('Report.ReportList');
-		$this->addBehavior('Report.InstitutionSecurity');
-	}
+        $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity');
+    }
 
-	public function beforeAction(Event $event) {
-		$this->fields = [];
-		$this->ControllerAction->field('feature');
-		$this->ControllerAction->field('format');
-	}
+    public function beforeAction(Event $event) {
+        $this->fields = [];
+        $this->ControllerAction->field('feature');
+        $this->ControllerAction->field('format');
+    }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
-
-
+        $areaId = $requestData->area_education_id;
         $startDate = (!empty($requestData->from_date))? date('Y-m-d',strtotime($requestData->from_date)): null;
         $endDate = (!empty($requestData->to_date))? date('Y-m-d',strtotime($requestData->to_date)): null;
-      
-        
         $conditions = [];
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        if (!empty($institutionId)) {
+        if (!empty($institutionId) && $institutionId > 0) {
             $conditions['Institutions.id'] = $institutionId;
         }
-
+        if ($areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
+        }
         $query
             ->select([
                 'institution_code' => 'Institutions.code',
@@ -65,7 +64,7 @@ class IncomeTable extends AppTable  {
             ->innerJoin(['IncomeSources' => 'income_sources'], [
                 'IncomeSources.id =' . $this->aliasField('income_source_id')
             ])
-			->innerJoin(['AcademicPeriods' => 'academic_periods'], [
+            ->innerJoin(['AcademicPeriods' => 'academic_periods'], [
                 'AcademicPeriods.id =' . $this->aliasField('academic_period_id')
             ])
             ->where($conditions)
@@ -74,7 +73,7 @@ class IncomeTable extends AppTable  {
                
     }
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
 
@@ -91,8 +90,8 @@ class IncomeTable extends AppTable  {
             'type' => 'string',
             'label' => __('Institution Name')
         ];
-		
-		$newFields[] = [
+        
+        $newFields[] = [
             'key' => 'AcademicPeriods.name',
             'field' => 'academic_period',
             'type' => 'string',
@@ -105,21 +104,21 @@ class IncomeTable extends AppTable  {
             'type' => 'date',
             'label' => __('Date')
         ];
-		
+        
         $newFields[] = [
             'key' => 'IncomeSources.name',
             'field' => 'source',
             'type' => 'string',
             'label' => __('Source')
         ];
-		
+        
         $newFields[] = [
             'key' => 'IncomeTypes.name',
             'field' => 'income_type',
             'type' => 'string',
             'label' => __('Type')
         ];
-		
+        
         $newFields[] = [
             'key' => 'InstitutionIncomes.amount',
             'field' => 'amount',
@@ -129,5 +128,5 @@ class IncomeTable extends AppTable  {
 
         $fields->exchangeArray($newFields);
     }
-	
+    
 }
