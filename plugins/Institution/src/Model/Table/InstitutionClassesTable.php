@@ -1902,6 +1902,8 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         $query
         ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students']);
+
+        $query->group(['InstitutionClasses.id']);
     }
 
     /*public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
