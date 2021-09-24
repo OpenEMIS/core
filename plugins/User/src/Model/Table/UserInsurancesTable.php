@@ -28,8 +28,28 @@ class UserInsurancesTable extends ControllerActionTable
             'excludes' => ['comment, security_user_id'],
             'pages' => ['index'],
         ]);
-
+        //POCOR-6255 start
+        /* $this->addBehavior('Page.FileUpload', [
+            'fieldMap' => ['file_name' => 'file_content'],
+            'size' => '2MB'
+        ]); *///POCOR-6255 end
     }
+    //POCOR-6255 start
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
+        return $events;
+    }
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'download' || $action == 'image') {
+            // check for the user permission to download here
+            $event->stopPropagation();
+            return true;
+        }
+    }//POCOR-6255 end
 
     public function validationDefault(Validator $validator)
     {
@@ -57,6 +77,10 @@ class UserInsurancesTable extends ControllerActionTable
         $this->field('insurance_provider_id', ['attr' => ['label' => __('Provider')]]);
         $this->field('insurance_type_id', ['attr' => ['label' => __('Type')]]);
         $this->field('comment',['visible' => false]);
+        /*POCOR-6307 Starts*/
+        $this->field('file_name',['visible' => false]);
+        $this->field('file_content',['visible' => false]);
+        /*POCOR-6307 Ends*/
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
@@ -86,6 +110,39 @@ class UserInsurancesTable extends ControllerActionTable
         ->orderDesc($this->aliasField('created'));
     }
 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'start_date',
+            'field' => 'start_date',
+            'type'  => 'date',
+            'label' => __('Start Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'end_date',
+            'field' => 'end_date',
+            'type'  => 'date',
+            'label' => __('End Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'insurance_provider_id',
+            'field' => 'insurance_provider_id',
+            'type'  => 'string',
+            'label' => __('Provider')
+        ];
+
+        $extraField[] = [
+            'key'   => 'insurance_type_id',
+            'field' => 'insurance_type_id',
+            'type'  => 'string',
+            'label' => __('Type')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('start_date',['attr' => ['label' => __('Start Date')]]);
@@ -96,7 +153,5 @@ class UserInsurancesTable extends ControllerActionTable
 
         $this->fields['insurance_type_id']['type'] = 'select';
         $this->field('insurance_type_id', ['attr' => ['label' => __('Type')]]);
-
-
     }
 }

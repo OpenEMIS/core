@@ -23,7 +23,7 @@ class UserBodyMassesTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
-
+        
         $this->addBehavior('Health.Health');
 
         $this->toggle('search', false);
@@ -32,7 +32,28 @@ class UserBodyMassesTable extends ControllerActionTable
             'excludes' => ['comment, security_user_id'],
             'pages' => ['index'],
         ]);
+        //POCOR-6255 start
+        // $this->addBehavior('Page.FileUpload', [
+        //     'fieldMap' => ['file_name' => 'file_content'],
+        //     'size' => '2MB'
+        // ]);//POCOR-6255 end
     }
+    //POCOR-6255 start
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
+        return $events;
+    }
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'download' || $action == 'image') {
+            // check for the user permission to download here
+            $event->stopPropagation();
+            return true;
+        }
+    }//POCOR-6255 end
 
     public function validationDefault(Validator $validator)
     {
@@ -195,5 +216,46 @@ class UserBodyMassesTable extends ControllerActionTable
 
         $body_mass_index = ($weight / $height);
         $entity['body_mass_index'] = $body_mass_index;
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'academic_period_id',
+            'field' => 'academic_period_id',
+            'type'  => 'string',
+            'label' => __('Academic Period')
+        ];
+
+        $extraField[] = [
+            'key'   => 'date',
+            'field' => 'date',
+            'type'  => 'date',
+            'label' => __('Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'height',
+            'field' => 'height',
+            'type'  => 'string',
+            'label' => __('Height')
+        ];
+
+        $extraField[] = [
+            'key'   => 'weight',
+            'field' => 'weight',
+            'type'  => 'string',
+            'label' => __('Weight')
+        ];
+
+        $extraField[] = [
+            'key'   => 'body_mass_index',
+            'field' => 'body_mass_index',
+            'type'  => 'integer',
+            'label' => __('Body Mass Index
+            ')
+        ];
+
+        $fields->exchangeArray($extraField);
     }
 }
