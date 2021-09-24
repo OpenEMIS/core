@@ -32,16 +32,19 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
     public function main()
     {  
 		$academicPeriodId = $this->AcademicPeriods->getCurrent();
-		
 		$workflowRules = $this->WorkflowRules->find()->where(['feature' => 'StudentUnmarkedAttendances'])->hydrate(false)->toArray();
-					
+		
 		$getWorkingDaysOfWeek = $this->AcademicPeriods->getWorkingDaysOfWeek();
+		$year = date('Y'); //6023 task
 		$month = date('n');
 		$day = date('d');
 		
 		foreach($workflowRules as $workflowRule){
 			$rule = json_decode($workflowRule['rule'], true);	
-
+			//6023 starts get workflow name
+			$Workflows = TableRegistry::get('Workflows');
+			$workflows = $Workflows->find()->where(['id' => $workflowRule['workflow_id']])->first();
+			//6023 ends
 			$daysUnmarked = $rule['where']['days_unmarked'];
 			$conditions['ClassAttendanceRecords.academic_period_id'] = $academicPeriodId;
 			$conditions['ClassAttendanceRecords.month'] = $month;
@@ -58,8 +61,48 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 					->hydrate(false)
 					->toArray();
 				
+				$mailed_data = []; //6023 task
 				foreach($classAttendanceRecords as $classAttendanceRecord){
+					//6023 starts 
+					$studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
+					$studentRecords = $studentAttendanceMarkedRecords
+									->find()
+									->where([
+										'institution_id' => $classAttendanceRecord['institution_class']['institution']['id'], 
+										'academic_period_id' => $academicPeriodId,
+										'institution_class_id' => $classAttendanceRecord['institution_class']['id']
+									])->all();
+					if(!empty($studentRecords)){
+						$getDay =[];
+						foreach ($studentRecords as $studentRecord) {
+							//get dates of current month
+							if(date('m') == date('m', strtotime($studentRecord['date']))){
+								$getDay[] = date('d', strtotime($studentRecord['date']));
+							}
+						}
+						//get unmarked dates for month
+						$unmarked_dates_arr= [];
+						for($j = 1; $j<= $daysUnmarked; $j++){
+							$working_day = $day - $j;
+							if(!in_array($working_day, $getDay)){
+								$unmarked_dates_arr[] = $working_day.'-'.date('m').'-'.$year;
+							}
+						}
+						$get_unmarked_dates = implode(',',$unmarked_dates_arr);
+						//count unmarked dates for month
+						$number_of_unmarked_day_in_month = $daysUnmarked;
+					}
 					
+					$mailed_data = [
+						'class_name' => $classAttendanceRecord['institution_class']['name'],
+						'institution_name' => $classAttendanceRecord['institution_class']['institution']['name'],
+						'workflow_name' => $workflows['name'],
+						'date_of_unmarked_attendances' => $get_unmarked_dates,
+						'number_of_days_that_are_unmarked' => $number_of_unmarked_day_in_month
+					];
+					unset($getDay);
+					unset($unmarked_dates_arr);
+					//6023 ends
 					$title = $classAttendanceRecord['institution_class']['name'] . ' ' . $classAttendanceRecord['institution_class']['institution']['code'] . ' - ' . $classAttendanceRecord['institution_class']['institution']['name'] . ' with ' . $daysUnmarked . ' day Student Unmarked Attendances';
 					
 					$institutionId = $classAttendanceRecord['institution_class']['institution']['id'];
@@ -95,7 +138,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 					$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->newEntity();
 					$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->patchEntity($newEntityInstitutionCaseRecord, $linkedRecords, $patchOptions);
 					$this->InstitutionCaseRecords->save($newEntityInstitutionCaseRecord);
-					$this->sendEmail($rule['where']['security_role_id'], $institutionId, $daysUnmarked);
+					$this->sendEmail($rule['where']['security_role_id'], $institutionId, $daysUnmarked,$mailed_data);//6023 add param $mailed_data  
 					echo "saved";
 				}
 			}
@@ -103,23 +146,27 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
     }
 	
 	
-	public function sendEmail($securityRoleId, $institutionId, $daysUnmarked){
+	public function sendEmail($securityRoleId, $institutionId, $daysUnmarked, $mailed_data=array()){
 		
 		if (!empty($securityRoleId) && !empty($institutionId)) { //check if the alertRule have security role and institution id
 			$emailList = $this->getEmailList($securityRoleId, $institutionId);
-			
 			$email = !empty($emailList) ? implode(', ', $emailList) : ' ';
-
 			// subject and message for alert email
 			$feature = 'StudentUnmarkedAttendances';
 			$subject = '[Class Unmarked Student Attendance] (To Do) System Administrator';
 			
 			$defaultMessage = __('Your action is required for [Class Unmarked Student Attendance].');
 			$defaultMessage .= "\n"; // line break
+			//6023 starts 
 			$defaultMessage .= "\n" . __('Status')      . ': ' . "\t \t"    . 'To Do' ;
 			$defaultMessage .= "\n" . __('Sent By')     . ': ' . "\t \t"    . 'System Administrator' ;
 			$defaultMessage .= "\n" . __('Title')    . ': ' . "\t"    . $daysUnmarked.' days unmarked attendance' ;
-
+			$defaultMessage .= "\n" . __('Workflow Name')    . ': ' . "\t"    . $mailed_data['workflow_name'];
+			$defaultMessage .= "\n" . __('Institution Name')    . ': ' . "\t"    . $mailed_data['institution_name'];
+			$defaultMessage .= "\n" . __('Class Name')    . ': ' . "\t"    . $mailed_data['class_name'];
+			$defaultMessage .= "\n" . __('Date of Unmarked Attendances')    . ': ' . "\t"    . $mailed_data['date_of_unmarked_attendances'];
+			$defaultMessage .= "\n" . __('Number of days that are unmarked')    . ': ' . "\t"    . $mailed_data['number_of_days_that_are_unmarked'];
+			//6023 ends 
 			// insert record to  the alertLog
 			$this->AlertLogs->insertAlertLog('Email', $feature, $email, $subject, $defaultMessage);
 		}
@@ -141,8 +188,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
             // all staff within securityRole and institution
             $emailListResult = $this->SecurityGroupUsers
                 ->find('emailList', $options)
-                ->toArray()
-            ;
+                ->toArray();
 			
             // combine all email to the email list
             if (!empty($emailListResult)) {

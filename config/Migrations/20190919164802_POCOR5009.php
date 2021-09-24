@@ -17,6 +17,11 @@ class POCOR5009 extends AbstractMigration
 		
 		$this->execute('CREATE TABLE `z_5009_security_users` LIKE `security_users`');
 		$this->execute('INSERT INTO `z_5009_security_users` SELECT * FROM `security_users`');
+		//for POCOR-6299 starts
+		$this->execute('CREATE TABLE IF NOT EXISTS `security_users_20200827` LIKE `security_users`');
+        $this->execute('TRUNCATE TABLE `security_users_20200827`');
+        //for POCOR-6299 ends
+
 		$sql = "SELECT z_5009_security_users.* FROM z_5009_security_users GROUP BY openemis_no HAVING COUNT(openemis_no) > 1";
 		$query = $this->fetchAll($sql);
 		
@@ -83,9 +88,13 @@ class POCOR5009 extends AbstractMigration
 		if ($userName == null) {
 			$this->execute('UPDATE `z_5009_security_users` SET username = openemis_no WHERE openemis_no = "'.$userName.'" AND username = ""');
 		}
-		
-		$this->execute('UPDATE `z_5009_security_users` SET username = openemis_no WHERE username = "'.$userName.'" AND username != openemis_no');
-		
+		//for POCOR-6299 starts
+		$this->execute('INSERT INTO `security_users_20200827` SELECT security_users.* FROM security_users WHERE username != openemis_no AND username IN (SELECT subq.username from (SELECT count(security_users.id) dups, security_users.id, security_users.username FROM `security_users` GROUP BY security_users.username) AS subq WHERE subq.dups > 1) ORDER BY username ASC');
+
+        $this->execute('UPDATE security_users_20200827 SET username = openemis_no');
+
+        $this->execute('UPDATE security_users INNER JOIN security_users_20200827 ON security_users_20200827.id = security_users.id SET security_users.username = security_users_20200827.username');
+		//for POCOR-6299 ends
 	}
 	
 	public function getUniqueOpenemisId($flag)
@@ -128,6 +137,9 @@ class POCOR5009 extends AbstractMigration
 		
 	public function down()
        {
+       		$this->execute('DROP TABLE IF EXISTS `security_users_20200827`');//POCOR-6299
+       		$this->execute('DROP TABLE IF EXISTS `temp_security_users`');//POCOR-6299
+
 	    	$this->execute('DROP TABLE IF EXISTS `security_users`');
             $this->execute('RENAME TABLE `z_5009_org_security_users` TO `security_users`');
        }
