@@ -89,8 +89,7 @@ class BodyMassStatusReportsTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
-
-        
+        $areaId = $requestData->area_education_id;
         $startDate = (!empty($requestData->start_date))? date('Y-m-d',strtotime($requestData->start_date)): null;
         $endDate = (!empty($requestData->end_date))? date('Y-m-d',strtotime($requestData->end_date)): null;
 
@@ -101,7 +100,9 @@ class BodyMassStatusReportsTable extends AppTable
         if (!empty($institutionId)) {
             $conditions['Institutions.id'] = $institutionId;
         }
-       
+        if ($areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
+        }
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
         
         $Class = TableRegistry::get('Institution.InstitutionClasses');

@@ -78,6 +78,7 @@ class User extends Entity {
                     ])
                     ->order([$SecurityRoles->aliasField('id') => 'ASC'])
                     ->where(['security_user_id' => $this->id])
+                    ->group([$SecurityRoles->aliasField('id')]) //POCOR-6231
                     ->toArray(); 
         
         if (!empty($userRole )) { 

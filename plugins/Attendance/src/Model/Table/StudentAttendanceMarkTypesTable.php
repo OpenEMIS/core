@@ -215,8 +215,8 @@ class StudentAttendanceMarkTypesTable extends AppTable
                                         $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
                                         $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
                                     ])
-                                ->order(['order'=>'asc'])
-                                ->all()
+                                //->order(['order'=>'asc']) //POCOR-6059
+                                //->all()//POCOR-6059
                                 ->toArray();
 
                 $options = [];
