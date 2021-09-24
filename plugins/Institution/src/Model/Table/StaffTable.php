@@ -1203,6 +1203,14 @@ class StaffTable extends ControllerActionTable
         $this->fields['FTE']['order'] = $i++;
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $session = $this->request->session();
+        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $assignedStudentToInstitution = $this->find()->where(['institution_id'=>$institutionId])->count();
+        $session->write('is_any_student', $assignedStudentToInstitution);
+    }
+
     public function editBeforeQuery(Event $event, Query $query)
     {
         $query->contain(['Users', 'Positions', 'StaffTypes', 'StaffStatuses']);
