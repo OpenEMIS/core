@@ -152,6 +152,18 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'special_needs_service_type_id', 'description', 'organization', 'file_name', 'file_content', 'comment']);
     }
 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'special_needs_service_type_id',
+            'field' => 'special_needs_service_type_id',
+            'type'  => 'string',
+            'label' => __('Service Name')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->session();
