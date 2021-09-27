@@ -8,8 +8,6 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use App\Model\Table\AppTable;
-use DateTime;
-use Cake\I18n\Time;
 
 class InstitutionReportCardsTable extends AppTable
 {
@@ -70,15 +68,6 @@ class InstitutionReportCardsTable extends AppTable
                 'InstitutionClassRooms',
                 'TeachingStaffTotalStaffRatio',
                 'StudentFromEducationGrade',
-                'InfrastructureLandAccessibile',
-                'InfrastructureBuildingsAccessibile',
-                'InfrastructureFloorsAccessibile',
-                'InfrastructureRoomsAccessibile',
-                'InfrastructureLandNotAccessibile',
-                'InfrastructureBuildingsNotAccessibile',
-                'InfrastructureFloorsNotAccessibile',
-                'InfrastructureRoomsNotAccessibile',
-                
             ]
         ]);
     }
@@ -129,15 +118,6 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClassRooms'] = 'onExcelTemplateInitialiseInstitutionClassRooms';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseTeachingStaffTotalStaffRatio'] = 'onExcelTemplateInitialiseTeachingStaffTotalStaffRatio';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentFromEducationGrade'] = 'onExcelTemplateInitialiseStudentFromEducationGrade';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureLandAccessibile'] = 'onExcelTemplateInitialiseInfrastructureLandAccessibile';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureBuildingsAccessibile'] = 'onExcelTemplateInitialiseInfrastructureBuildingsAccessibile';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureFloorsAccessibile'] = 'onExcelTemplateInitialiseInfrastructureFloorsAccessibile';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureRoomsAccessibile'] = 'onExcelTemplateInitialiseInfrastructureRoomsAccessibile';
-
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureLandNotAccessibile'] = 'onExcelTemplateInitialiseInfrastructureLandNotAccessibile';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureBuildingsNotAccessibile'] = 'onExcelTemplateInitialiseInfrastructureBuildingsNotAccessibile';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureFloorsNotAccessibile'] = 'onExcelTemplateInitialiseInfrastructureFloorsNotAccessibile';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureRoomsNotAccessibile'] = 'onExcelTemplateInitialiseInfrastructureRoomsNotAccessibile';
 		return $events;
     }
 
@@ -250,7 +230,7 @@ class InstitutionReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params)) {
             $Institutions = TableRegistry::get('Institution.Institutions');
-            $entity = $Institutions->get($params['institution_id'], ['contain' => ['AreaAdministratives', 'Types', 'Genders', 'Sectors', 'Providers','Ownerships','Areas','InstitutionLands']]);
+            $entity = $Institutions->get($params['institution_id'], ['contain' => ['AreaAdministratives', 'Types', 'Genders', 'Sectors', 'Providers']]);
             
 			$shift_types = [1=>'Single Shift Owner',
 							2=>'Single Shift Occupier',
@@ -260,147 +240,7 @@ class InstitutionReportCardsTable extends AppTable
 			if($shift_types[$entity->shift_type]) {
 				$entity->shift_type_name = $shift_types[$entity->shift_type];
 			}
-            
-            $entity->date_opened = $entity->date_opened->format('Y-m-d');
-            return $entity;
-        }
-    }
-
-    public function onExcelTemplateInitialiseInfrastructureLandAccessibile(Event $event, array $params, ArrayObject $extra)
-    {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
-            $entity = $InstitutionLands
-                ->find()
-                ->where([
-                    $InstitutionLands->aliasField('institution_id') => $params['institution_id'],
-                    $InstitutionLands->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $InstitutionLands->aliasField('accessibility') => 1
-                ])
-                ->count();
-            return $entity;
-        }
-    }
-
-    public function onExcelTemplateInitialiseInfrastructureBuildingsAccessibile(Event $event, array $params, ArrayObject $extra)
-    {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
-            $entity = $InstitutionBuildings
-                ->find()
-                ->where([
-                    $InstitutionBuildings->aliasField('institution_id') => $params['institution_id'],
-                    $InstitutionBuildings->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $InstitutionBuildings->aliasField('accessibility') => 1
-                ])
-                ->count();
-            return $entity;
-        }
-    }
-    public function onExcelTemplateInitialiseInfrastructureFloorsAccessibile(Event $event, array $params, ArrayObject $extra)
-    {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
-            $entity = $InstitutionFloors
-                ->find()
-                ->where([
-                    $InstitutionFloors->aliasField('institution_id') => $params['institution_id'],
-                    $InstitutionFloors->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $InstitutionFloors->aliasField('accessibility') => 1
-                ])
-                ->count();
-            return $entity;
-        }
-    }
-
-    public function onExcelTemplateInitialiseInfrastructureRoomsAccessibile(Event $event, array $params, ArrayObject $extra)
-    {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-            $entity = $InstitutionRooms
-                ->find()
-                ->where([
-                    $InstitutionRooms->aliasField('institution_id') => $params['institution_id'],
-                    $InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $InstitutionRooms->aliasField('accessibility') => 1
-                ])
-                ->count();
-            return $entity;
-        }
-    }
-
-    public function onExcelTemplateInitialiseInfrastructureLandNotAccessibile(Event $event, array $params, ArrayObject $extra)
-    {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
-            $entity = $InstitutionLands
-                ->find()
-                ->where([
-                    $InstitutionLands->aliasField('institution_id') => $params['institution_id'],
-                    $InstitutionLands->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $InstitutionLands->aliasField('accessibility') => 0
-                ])
-                ->count();
-            if($entity == ''){
-                $entity = '0 ';
-            }
-            return $entity;
-        }
-    }
-
-    public function onExcelTemplateInitialiseInfrastructureBuildingsNotAccessibile(Event $event, array $params, ArrayObject $extra)
-    {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
-            $entity = $InstitutionBuildings
-                ->find()
-                ->where([
-                    $InstitutionBuildings->aliasField('institution_id') => $params['institution_id'],
-                    $InstitutionBuildings->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $InstitutionBuildings->aliasField('accessibility') => 0
-                ])
-                ->count();
-            if($entity == ''){
-                $entity = '0 ';
-            }
-            return $entity;
-        }
-    }
-    public function onExcelTemplateInitialiseInfrastructureFloorsNotAccessibile(Event $event, array $params, ArrayObject $extra)
-    {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
-            $entity = $InstitutionFloors
-                ->find()
-                ->where([
-                    $InstitutionFloors->aliasField('institution_id') => $params['institution_id'],
-                    $InstitutionFloors->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $InstitutionFloors->aliasField('accessibility') => 0
-                ])
-                ->count();
-            if($entity == ''){
-                $entity = '0 ';
-            }
-            return $entity;
-        }
-    }
-
-    public function onExcelTemplateInitialiseInfrastructureRoomsNotAccessibile(Event $event, array $params, ArrayObject $extra)
-    {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-            $entity = $InstitutionRooms
-                ->find()
-                ->where([
-                    $InstitutionRooms->aliasField('institution_id') => $params['institution_id'],
-                    $InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $InstitutionRooms->aliasField('accessibility') => 0
-                ])
-                ->count();
-            if($entity == ''){
-                $entity = '0 ';
-            }
-            return $entity;
+			return $entity;
         }
     }
 	
@@ -418,9 +258,6 @@ class InstitutionReportCardsTable extends AppTable
                     $InstitutionLands->aliasField('academic_period_id') => $params['academic_period_id'],
                 ])
                 ->first();
-            if($entity == ''){
-                $entity = '0 ';
-            }
             return $entity;
         }
     }
@@ -440,9 +277,6 @@ class InstitutionReportCardsTable extends AppTable
                     $InfrastructureUtilityInternets->aliasField('academic_period_id') => $params['academic_period_id'],
                 ])
                 ->first();
-            if($entity == ''){
-                $entity = '0 ';
-            }
             return $entity;
         }
     }
