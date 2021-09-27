@@ -13,5 +13,10 @@ class InfrastructureWashSewagesTable extends AppTable
         $this->belongsTo('AcademicPeriods',   ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);
         $this->belongsTo('InfrastructureWashSewageTypes',   ['className' => 'Institution.InfrastructureWashSewageTypes', 'foreign_key' => 'infrastructure_wash_sewage_type_id']);
         $this->belongsTo('InfrastructureWashSewageFunctionalities',   ['className' => 'Institution.InfrastructureWashSewageFunctionalities', 'foreign_key' => 'infrastructure_wash_sewage_functionality_id']);
+    
+        $this->addBehavior('Excel',[
+            'excludes' => ['academic_period_id', 'institution_id'],
+            'pages' => ['index'],
+        ]);
     }
 }
