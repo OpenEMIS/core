@@ -199,6 +199,7 @@ class InstitutionsController extends AppController
         $this->loadComponent('Training.Training');
         $this->loadComponent('Institution.CreateUsers');
         $this->attachAngularModules();
+        $this->loadModel('Institution.StaffBodyMasses');
     }
 
     // CAv4
@@ -318,6 +319,10 @@ class InstitutionsController extends AppController
     public function Contacts()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']);
+    }
+    public function InstitutionContactPersons()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContactPersons']);
     }
     public function IndividualPromotion()
     {
@@ -624,6 +629,23 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashSanitations']);
     }
+    //PCOOR-6146 add export button in Institutions > Infrastructures > WASH > Hygiene
+    public function InfrastructureWashHygienes(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashHygienes']);
+    }
+
+    //POCOR-6144 added Export button in Infratucture > Utilitie > Internet
+    public function InfrastructureUtilityInternets()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureUtilityInternets']);
+    }
+
+    //POCOR-6143 added Export button in Infratucture > Utilitie > Electricity
+    public function InfrastructureUtilityElectricities()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureUtilityElectricities']);
+    }
+    //POCOR-6143 added Export button in Infratucture > Utilitie > Electricity
 
     public function changeUtilitiesHeader($model, $modelAlias, $userType)
     {
@@ -658,11 +680,18 @@ class InstitutionsController extends AppController
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
                 $this->Navigation->addCrumb(__('Sanitation'));
                 $this->set('contentHeader', $header);
+            } else if($this->request->param('action') == 'InfrastructureWashHygienes'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Hygiene');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Hygiene'));
+                $this->set('contentHeader', $header);
             }
         }
-    }
-    //POCOR-6146 added Export button in Infratucture > Wash > Sanitation
 
+    }
+
+    //PCOOR-6146 add export button in Institutions > Infrastructures > WASH > Hygiene
 
     // AngularJS
     public function ScheduleTimetable($action = 'view')
@@ -1947,7 +1976,7 @@ class InstitutionsController extends AppController
             } else {
                  $header .= ' - ' . $model->getHeader($alias);
             }
-
+           
             $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
             $event = $model->eventManager()->dispatch($event);
 

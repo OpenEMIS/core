@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
@@ -36,6 +37,28 @@ class StudentIdentitiesTable extends AppTable  {
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+        $areaId = $requestData->area_education_id;
+        $institutionId = $requestData->institution_id;
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $Users = TableRegistry::get('Security.Users');
+        $InstitutionTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+        $enrolled = $StudentStatuses->getIdByCode('CURRENT');
+        $conditions = [];
+        if ($areaId != -1) {
+            $conditions[$InstitutionTable->aliasField('area_id')] = $areaId;
+        }
+        if (!empty($academicPeriodId)) {
+            $conditions[$InstitutionStudentsTable->aliasField('academic_period_id')] = $academicPeriodId;
+        }
+        if (!empty($institutionId) && $institutionId > 0) {
+            $conditions[$InstitutionTable->aliasField('id')] = $institutionId;
+        }
+        if (!empty($enrolled)) {
+            $conditions[$InstitutionStudentsTable->aliasField('student_status_id')] = $enrolled;
+        }
 		$query
             ->select([
                 'identity_type' => 'IdentityTypes.name',
@@ -50,7 +73,16 @@ class StudentIdentitiesTable extends AppTable  {
                 'student_last_name' => 'Users.last_name'
             ])
             ->contain(['IdentityTypes', 'Users'])
-			->where(['Users.is_student' => 1]);
+            ->leftJoin([$Users->alias() => $Users->table()], [
+                $Users->aliasField('id = ') . $this->aliasField('security_user_id')
+            ])
+            ->leftJoin([$InstitutionStudentsTable->alias() => $InstitutionStudentsTable->table()], [
+                $InstitutionStudentsTable->aliasField('student_id = ') . $Users->aliasField('id')
+            ])
+            ->leftJoin([$InstitutionTable->alias() => $InstitutionTable->table()], [
+                $InstitutionTable->aliasField('id = ') . $InstitutionStudentsTable->aliasField('institution_id')
+            ])
+			->where(['Users.is_student' => 1, $conditions]);
 	}
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 

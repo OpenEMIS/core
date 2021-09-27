@@ -15,11 +15,13 @@ use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
 use Page\Traits\EncodingTrait;
+use App\Model\Traits\MessagesTrait;
 
 class StaffBehavioursTable extends ControllerActionTable
 {
     use OptionsTrait;
     use EncodingTrait;
+    use MessagesTrait;
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -176,7 +178,18 @@ class StaffBehavioursTable extends ControllerActionTable
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
-    {
+    {   
+        /*POCOR-starts*/
+        list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
+
+        if (!$isDeletable) {
+            $this->Alert->warning('StaffBehaviours.restrictDelete');
+            $urlParams = $this->url('index');
+            $event->stopPropagation();
+            return $this->controller->redirect($urlParams);
+        }
+        /*POCOR-ends*/
+
         $entity->showDeletedValueAs = $entity->description;
     }
 
@@ -399,4 +412,70 @@ class StaffBehavioursTable extends ControllerActionTable
         ];
         return $this->TabPermission->checkTabPermission($tabElements);
     }
+
+    /*POCOR-5177 starts*/
+    private function checkIfCanEditOrDelete($entity) {
+        $isEditable = true;
+        $isDeletable = true;
+
+        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $compareDate = $ConfigItemsTable->find()
+                        ->select([$ConfigItemsTable->aliasField('value')])
+                        ->where([
+                            $ConfigItemsTable->aliasField('name') => 'Staff Behavior',
+                            $ConfigItemsTable->aliasField('code') => 'staff_behavior',
+                            $ConfigItemsTable->aliasField('label') => 'Staff Behavior'
+                        ])->first();
+        if (!empty($compareDate) && $compareDate->value != 0) {
+            $addDays = $compareDate->value;
+            $getRecord = $this->find()
+                            ->select([$this->aliasField('date_of_behaviour')])
+                            ->where([$this->aliasField('id') => $entity->id])
+                            ->first();
+            $date = date('Y-m-d', strtotime($getRecord->date_of_behaviour));
+            $newDate = date('Y-m-d', strtotime($date. ' + '. $addDays .' days'));
+            $today = new Date();
+            $todayDate = date('Y-m-d', strtotime($today));
+            if ($newDate > $todayDate) {
+                $isDeletable = false;
+            }
+        }
+
+        return compact('isEditable', 'isDeletable');
+    }
+    
+
+    /*public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    {   
+        $id = $this->request->data['primaryKey'];
+        $jsonData = base64_decode($id);
+        preg_match_all('/{(.*?)}/', $jsonData, $matches);
+        $requestData = json_decode($matches[0][0]);
+        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $compareDate = $ConfigItemsTable->find()
+                        ->select([$ConfigItemsTable->aliasField('value')])
+                        ->where([
+                            $ConfigItemsTable->aliasField('name') => 'Student Behavior',
+                            $ConfigItemsTable->aliasField('code') => 'student_behavior',
+                            $ConfigItemsTable->aliasField('label') => 'Student Behavior'
+                        ])->first();
+        if (!empty($compareDate) && $compareDate->value != 0) {
+            $addDays = $compareDate->value;
+            $getRecord = $this->find()
+                            ->select([$this->aliasField('created')])
+                            ->where([$this->aliasField('id') => $requestData->id])
+                            ->first();
+            $date = date('Y-m-d', strtotime($getRecord->created));
+            $newDate = date('Y-m-d', strtotime($date. ' + '. $addDays .' days'));
+            $today = new Date();
+            $todayDate = date('Y-m-d', strtotime($today));
+            if ($newDate > $todayDate) {
+                $event->stopPropagation();
+                $this->Alert->warning('StudentBehaviours.cannotDelete');
+                $action = $this->ControllerAction->url('index');
+                return $this->controller->redirect($action);
+            }
+        }
+    }*/
+    /*POCOR-5177 ends*/
 }

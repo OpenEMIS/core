@@ -58,6 +58,7 @@ class DemographicTable extends ControllerActionTable
         $gradeOptions = $this->getIndigenousOptions();
         $this->fields['indigenous']['type'] = 'select';
         $this->fields['indigenous']['options'] = $gradeOptions;
+        $this->fields['security_user_id']['visible'] = false;
     }
 
     public function getIndigenousOptions() {

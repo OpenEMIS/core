@@ -350,7 +350,6 @@ class SecurityComponent extends Component
     protected function _validToken(Controller $controller)
     {
         $check = $controller->request->data;
-
         $message = '\'%s\' was not found in request data.';
         if (!isset($check['_Token'])) {
             throw new AuthSecurityException(sprintf($message, '_Token'));

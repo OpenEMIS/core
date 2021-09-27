@@ -26,9 +26,22 @@ class StaffExtracurricularsTable extends AppTable  {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
-		
+		$areaId = $requestData->area_education_id;
+        $institutionId = $requestData->institution_id;
+        $academicPeriodId = $requestData->academic_period_id;
 		$Staff = TableRegistry::get('Security.Users');
-		
+        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+		$conditions = [];
+        if (!empty($academicPeriodId)) {
+            $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;     
+        }
+        if (!empty($institutionId) && $institutionId > 0) {
+            $conditions[$Institutions->aliasField('id')] = $institutionId;     
+        }
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions[$Institutions->aliasField('area_id')] = $areaId;
+        }
          $query
             ->select([
                 'name' =>  $this->aliasfield('name'),
@@ -56,15 +69,17 @@ class StaffExtracurricularsTable extends AppTable  {
                     ]
                 ]
 			])
-			->leftJoin(
-				[$Staff->alias() => $Staff->table()],
-				[
-					$Staff->aliasField('id = ') . $this->aliasField('staff_id')
-				]
-			)
-			;
-			 
-    }
+			->leftJoin([$Staff->alias() => $Staff->table()], [
+				$Staff->aliasField('id = ') . $this->aliasField('staff_id')
+			])
+            ->leftJoin([$InstitutionStaff->alias() => $InstitutionStaff->table()], [
+                $InstitutionStaff->aliasField('staff_id = ') . $this->aliasField('staff_id')
+            ])
+            ->leftJoin([$Institutions->alias() => $Institutions->table()], [
+                $Institutions->aliasField('id = ') . $InstitutionStaff->aliasField('institution_id')
+            ])
+            ->where([$conditions]);
+	}
 	
 	public function onExcelRenderStartDate(Event $event, Entity $entity, $attr)
     {
