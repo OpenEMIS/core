@@ -49,6 +49,21 @@ class RubricsReportBehavior extends Behavior {
         if (!empty($areaId) && $areaId != -1) {
             $newCondition[$this->_table->Institutions->aliasField('area_id')] = $areaId;
         }
+        $superAdmin = $requestData->super_admin;
+        $userId = $requestData->user_id;
+        $institutionIds = [];
+        if (!$superAdmin) {
+            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $instituitionData = $InstitutionsTable->find('byAccess', ['userId' => $userId])->toArray();
+            if (isset($instituitionData)) {
+                foreach ($instituitionData as $key => $value) {
+                    $institutionIds[] = $value->id;
+                }
+            }
+        }
+        if ($institutionId == 0) {
+            $newCondition['Institutions.id IN'] = $institutionIds;
+        }
         /*POCOR-6296 ends*/
 		$condition = [
 			$this->_table->aliasField('rubric_template_id') => $templateId,
