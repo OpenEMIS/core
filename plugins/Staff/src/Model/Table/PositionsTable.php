@@ -59,13 +59,14 @@ class PositionsTable extends ControllerActionTable {
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        if ($this->controller->name !== 'Directories') {
-            $this->removeBehavior('Excel');
+        // Commet this code for Add export button (POCOR-6135)
 
+        /* if ($this->controller->name !== 'Directories') {
+            $this->removeBehavior('Excel');
             if (array_key_exists('export', $extra['toolbarButtons'])) {
                 unset($extra['toolbarButtons']['export']);
             }
-        }
+        } */
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -176,7 +177,7 @@ class PositionsTable extends ControllerActionTable {
         return $rowEntity->name;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['start_year']['visible'] = false;
         $this->fields['end_year']['visible'] = false;
@@ -335,7 +336,7 @@ class PositionsTable extends ControllerActionTable {
         $this->controller->set('selectedAction', $this->alias());
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity) 
+    public function onGetInstitutionId(Event $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
         return $rowEntity->code_name;
