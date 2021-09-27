@@ -90,9 +90,26 @@ class WorkflowReportBehavior extends Behavior
         if ($areaId != 0) {
             $conditions['Institutions.area_id'] = $areaId;
         }
-        if (!empty($institution_id) && $institution_id > 0) {
+        if ($institution_id > 0) {
             $conditions['Institutions.id'] = $institution_id;
         }
+        $superAdmin = $requestData->super_admin;
+        $userId = $requestData->user_id;
+        $institutionIds = [];
+        if (!$superAdmin) {
+            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $instituitionData = $InstitutionsTable->find('byAccess', ['userId' => $userId])->toArray();
+            if (isset($instituitionData)) {
+                foreach ($instituitionData as $key => $value) {
+                    $institutionIds[] = $value->id;
+                }
+            }
+        }
+        if ($institution_id == 0) {
+            $conditions['Institutions.id IN'] = $institutionIds;
+        }   
+
+        //echo "<pre>";print_r($conditions);die();  
         /*POCOR-6296 ends*/
         if($requestData->model == 'Report.WorkflowStudentTransferIn' || $requestData->model == 'Report.WorkflowStudentTransferOut'){
             $category = $requestData->category;
