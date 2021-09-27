@@ -77,6 +77,18 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
         $this->setFieldOrder(['special_needs_device_type_id', 'comment']);
     }
 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'special_needs_device_type_id',
+            'field' => 'special_needs_device_type_id',
+            'type'  => 'string',
+            'label' => __('Device Name')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->session();

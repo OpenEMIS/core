@@ -266,6 +266,39 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'referrer_id', 'special_needs_referrer_type_id', 'date', 'reason_type_id', 'comment', 'file_name', 'file_content']);
     }
 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'referrer_id',
+            'field' => 'referrer_id',
+            'type'  => 'string',
+            'label' => __('Referrer Name')
+        ];
+
+        $extraField[] = [
+            'key'   => 'date',
+            'field' => 'date',
+            'type'  => 'date',
+            'label' => __('Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'special_needs_referrer_type_id',
+            'field' => 'special_needs_referrer_type_id',
+            'type'  => 'string',
+            'label' => __('Referrer Type')
+        ];
+
+        $extraField[] = [
+            'key'   => 'reason_type_id',
+            'field' => 'reason_type_id',
+            'type'  => 'string',
+            'label' => __('Reason')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->session();
