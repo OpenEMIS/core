@@ -74,6 +74,24 @@ class InstitutionTextbooksTable extends AppTable  {
             ]);
         }
 
+        $superAdmin = $requestData->super_admin;
+        $userId = $requestData->user_id;
+        $institutionIds = [];
+        if (!$superAdmin) {
+            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $instituitionData = $InstitutionsTable->find('byAccess', ['userId' => $userId])->toArray();
+            if (isset($instituitionData)) {
+                foreach ($instituitionData as $key => $value) {
+                    $institutionIds[] = $value->id;
+                }
+            }
+        }
+        if ($institutionId == 0) {
+            $query->where([
+                $this->aliasField('institution_id IN') => $institutionIds
+            ]);
+        }
+
         $query->contain('Textbooks', 'Institutions');
         pr($query);
     }
