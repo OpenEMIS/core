@@ -79,6 +79,7 @@ class InstitutionReportCardsTable extends AppTable
                 'InfrastructureBuildingsNotAccessibile',
                 'InfrastructureFloorsNotAccessibile',
                 'InfrastructureRoomsNotAccessibile',
+                'EducationProgrammes',
                 //POCOR-6328 ends
             ]
         ]);
@@ -140,6 +141,8 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureBuildingsNotAccessibile'] = 'onExcelTemplateInitialiseInfrastructureBuildingsNotAccessibile';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureFloorsNotAccessibile'] = 'onExcelTemplateInitialiseInfrastructureFloorsNotAccessibile';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureRoomsNotAccessibile'] = 'onExcelTemplateInitialiseInfrastructureRoomsNotAccessibile';
+
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationProgrammes'] = 'onExcelTemplateInitialiseEducationProgrammes';
         //POCOR-6328 ends
 		return $events;
     }
@@ -405,6 +408,44 @@ class InstitutionReportCardsTable extends AppTable
             if($entity == ''){
                $entity = '0 ';
             }
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseEducationProgrammes(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionGrades = TableRegistry::get('institution_grades');
+            $EducationProgrammes = TableRegistry::get('education_programmes');
+
+            $entity = $InstitutionGrades->find()
+                ->select([
+                    'id' => 'EducationGrades.id',
+                    'name' => 'EducationProgrammes.name',
+                ])
+                ->innerJoin(
+                ['EducationGrades' => 'education_grades'],
+                [
+                    'EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')
+                ]
+                )
+                ->innerJoin(
+                ['EducationProgrammes' => 'education_programmes'],
+                [
+                    'EducationProgrammes.id = '. 'EducationGrades.education_programme_id'
+                ]
+                )
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])    
+                ->hydrate(false)
+                ->toArray()
+            ;
+            
+            $totalArray = [];
+            $totalArray = [
+                'id' => count($entity) + 1,
+                'name' => 'Total',
+            ];
+            $entity[] = $totalArray;
             return $entity;
         }
     }
@@ -1047,7 +1088,7 @@ class InstitutionReportCardsTable extends AppTable
 			$totalArray = [];
 			$totalArray = [
 				'id' => count($entity) + 1,
-				'name' => 'Total',
+				'name' => '',
 			];
 			$entity[] = $totalArray;
             return $entity;
@@ -1861,6 +1902,11 @@ class InstitutionReportCardsTable extends AppTable
 				->toArray()
 			;
 			$enrolledStudentsData = 0;
+            //POCOR-6328 start
+            if(empty($EducationGradesData)){
+                $entity = [];
+                return $entity;
+            }//POCOR-6328 ends
 			foreach ($EducationGradesData as $value) {
 				$enrolledMaleStudentsData = $InstitutionStudents->find()
 					->contain('Users')
@@ -2033,7 +2079,130 @@ class InstitutionReportCardsTable extends AppTable
 				->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
 				->count()
 				;
-				
+                //POCOR-6328 starts
+                /*Subject Staff Temporary*/
+                $InstitutionSubjectStaff = TableRegistry::get('institution_subject_staff');
+                $InstitutionStaff = TableRegistry::get('institution_staff');
+                $StaffTypes = TableRegistry::get('staff_types');
+                $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+                $EducationGrades = TableRegistry::get('education_grades');
+                
+                $subjectStaffData = $InstitutionSubjectStaff->find()
+                    ->innerJoin(
+                    ['InstitutionStaff' => 'institution_staff'],
+                    [
+                        'InstitutionStaff.staff_id = '. $InstitutionSubjectStaff->aliasField('staff_id')
+                    ]
+                    )
+                    ->innerJoin(
+                    ['StaffTypes' => 'staff_types'],
+                    [
+                        'StaffTypes.id = InstitutionStaff.staff_type_id',
+                    ]
+                    )
+                    ->innerJoin(
+                    ['InstitutionSubjects' => 'institution_subjects'],
+                    [
+                        'InstitutionSubjects.id = '. $InstitutionSubjectStaff->aliasField('institution_subject_id')
+                    ]
+                    )
+                    ->innerJoin(
+                    ['EducationGrades' => 'education_grades'],
+                    [
+                        'EducationGrades.id = '. $InstitutionSubjects->aliasField('education_grade_id')
+                    ]
+                    )
+                    ->where(['StaffTypes.international_code' => 'temporary'])
+                    ->where([$InstitutionSubjects->aliasField('education_grade_id') => $value['id']])
+                    ->where([$InstitutionSubjectStaff->aliasField('institution_id') => $params['institution_id']])
+                    ->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
+                    ->hydrate(false)
+                    ->count()
+                ;
+
+                /*Secondary Staff Temporary*/
+                $InstitutionStaff = TableRegistry::get('institution_staff');
+                $StaffTypes = TableRegistry::get('staff_types');
+                $EducationGrades = TableRegistry::get('education_grades');
+                $institutionClassesSecondaryStaff = TableRegistry::get('institution_classes_secondary_staff');
+                $institutionClassGrades  = TableRegistry::get('institution_class_grades');
+                $institutionClasses  = TableRegistry::get('institution_classes');
+                
+                $secondaryStaffData = $institutionClassesSecondaryStaff->find()
+                    ->innerJoin(
+                    ['InstitutionStaff' => 'institution_staff'],
+                    [
+                        'InstitutionStaff.staff_id = '. $institutionClassesSecondaryStaff->aliasField('secondary_staff_id')
+                    ]
+                    )
+                    ->innerJoin(
+                    ['StaffTypes' => 'staff_types'],
+                    [
+                        'StaffTypes.id = InstitutionStaff.staff_type_id',
+                    ]
+                    )
+                    ->innerJoin(
+                    ['InstitutionClassGrades' => 'institution_class_grades'],
+                    [
+                        'InstitutionClassGrades.institution_class_id = '. $institutionClassesSecondaryStaff->aliasField('institution_class_id')
+                    ]
+                    )
+                    ->innerJoin(
+                    ['EducationGrades' => 'education_grades'],
+                    [
+                        'EducationGrades.id = InstitutionClassGrades.education_grade_id'
+                    ]
+                    )
+                    ->innerJoin(
+                    ['institutionClasses' => 'institution_classes'],
+                    [
+                        'institutionClasses.id = InstitutionClassGrades.institution_class_id'
+                    ]
+                    )
+                    ->where(['StaffTypes.international_code' => 'temporary'])
+                    ->where(['InstitutionClassGrades.education_grade_id' => $value['id']])
+                    ->where(['institutionClasses.institution_id' => $params['institution_id']])
+                    ->where(['institutionClasses.academic_period_id' => $params['academic_period_id']])
+                    ->hydrate(false)
+                    ->count()
+                ;
+
+                /*Homeroom Staff Temporary*/
+                $homeroomStaffData = $institutionClasses->find()
+                    ->innerJoin(
+                    ['InstitutionStaff' => 'institution_staff'],
+                    [
+                        'InstitutionStaff.staff_id = '. $institutionClasses->aliasField('staff_id ')
+                    ]
+                    )
+                    ->innerJoin(
+                    ['StaffTypes' => 'staff_types'],
+                    [
+                        'StaffTypes.id = InstitutionStaff.staff_type_id',
+                    ]
+                    )
+                    ->innerJoin(
+                    ['InstitutionClassGrades' => 'institution_class_grades'],
+                    [
+                        'InstitutionClassGrades.institution_class_id = '. $institutionClasses->aliasField('id')
+                    ]
+                    )
+                    ->innerJoin(
+                    ['EducationGrades' => 'education_grades'],
+                    [
+                        'EducationGrades.id = InstitutionClassGrades.education_grade_id'
+                    ]
+                    )
+                    ->where(['StaffTypes.international_code' => 'temporary'])
+                    ->where(['InstitutionClassGrades.education_grade_id' => $value['id']])
+                    ->where([$institutionClasses->aliasField('id') => $params['institution_id']])
+                    ->where([$institutionClasses->aliasField('academic_period_id') => $params['academic_period_id']])
+                    ->hydrate(false)
+                    ->count()
+                ;
+
+                $temporary_staff = $secondaryStaffData + $homeroomStaffData;
+                //POCOR-6328 ends
 				$entity[] = [
 					'education_grade_name' => (!empty($value['name']) ? $value['name'] : ''),
 					'education_grade_id' => (!empty($value['id']) ? $value['id'] : 0),
@@ -2049,10 +2218,12 @@ class InstitutionReportCardsTable extends AppTable
 					'total_student' => $enrolledStudentsData + $repeatedStudentsData + $dropoutStudentsData,
 					'female_subject_staff' => !empty($institutionFemaleStaffData->total_female_students) ? $institutionFemaleStaffData->total_female_students : 0,
 					'subject_staff' => $institutionStaffData,
-					'secondary_teacher' => $secondaryTeacherData,
+                    'subject_staff_type_temporary' => $subjectStaffData,
+					'secondary_teacher' => $secondaryTeacherData,//POCOR-6328
 					'male_student_special_need' => $maleSpecialNeedData,
 					'female_student_special_need' => $femaleSpecialNeedData,
 					'total_student_special_need' => $maleSpecialNeedData + $femaleSpecialNeedData,
+                    'staff_type_temporary' => $temporary_staff,//POCOR-6328
 					'syrian_students' => $syrianStudents,
 				];	
 			}
