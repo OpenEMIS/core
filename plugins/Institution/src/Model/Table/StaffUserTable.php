@@ -675,7 +675,7 @@ class StaffUserTable extends ControllerActionTable
                     'label' => __($identity->name)
                 ];
 
-                $newFields[] = [
+                /* $newFields[] = [
                     'key' => 'IdentityTypes.name',
                     'field' => 'identity_type',
                     'type' => 'string',
@@ -729,7 +729,7 @@ class StaffUserTable extends ControllerActionTable
                     'field' => 'description',
                     'type' => 'string',
                     'label' => 'Description'
-                ];
+                ]; */
 
                 $newFields[] = [
                     'key' => 'InstitutionClasses.name',
