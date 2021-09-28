@@ -37,20 +37,50 @@ class PositionSummaryTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $area_id = $requestData->area_id;
-        $institution_id = $requestData->institution_id;
-
-        if ($institution_id != 0) {
-            $where = ['Institutions.id' => $institution_id];
-        } else {
-            $where = [];
-        }
+        $areaId = $requestData->area_education_id;
+        $institutionId = $requestData->institution_id;
+        $academicPeriodId = $requestData->academic_period_id;
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $periodEntity = $AcademicPeriods->get($academicPeriodId);
+        $startDate = $periodEntity->start_date->format('Y-m-d');
+        $endDate = $periodEntity->end_date->format('Y-m-d');
         $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $Staff = TableRegistry::get('Security.Users');
         $Genders = TableRegistry::get('User.Genders');
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $UserIdentities = TableRegistry::get('User.Identities');
-        
+        $conditions = [];
+        if (!empty($academicPeriodId)) {
+                $conditions['OR'] = [
+                    'OR' => [
+                        [
+                            $InstitutionStaff->aliasField('end_date') . ' IS NOT NULL',
+                            $InstitutionStaff->aliasField('start_date') . ' <=' => $startDate,
+                            $InstitutionStaff->aliasField('end_date') . ' >=' => $startDate
+                        ],
+                        [
+                            $InstitutionStaff->aliasField('end_date') . ' IS NOT NULL',
+                            $InstitutionStaff->aliasField('start_date') . ' <=' => $endDate,
+                            $InstitutionStaff->aliasField('end_date') . ' >=' => $endDate
+                        ],
+                        [
+                            $InstitutionStaff->aliasField('end_date') . ' IS NOT NULL',
+                            $InstitutionStaff->aliasField('start_date') . ' >=' => $startDate,
+                            $InstitutionStaff->aliasField('end_date') . ' <=' => $endDate
+                        ]
+                    ],
+                    [
+                        $InstitutionStaff->aliasField('end_date') . ' IS NULL',
+                        $InstitutionStaff->aliasField('start_date') . ' <=' => $endDate
+                    ]
+                ];
+        }
+        if (!empty($institutionId) && $institutionId > 0) {
+            $conditions['Institutions.id'] = $institutionId; 
+        }
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId; 
+        }
 		$query
 			->select([
 				$this->aliasField('id'),
@@ -83,7 +113,14 @@ class PositionSummaryTable extends AppTable
                     ]
                 ]
             ])
-			->where([$where])
+            ->leftJoin(
+                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
+                    [
+                        $InstitutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id'),
+                        $InstitutionStaff->aliasField('institution_id = ') . $this->aliasField('institution_id')
+                    ]
+                )
+			->where([$conditions])
 			->group(['institution_id',$this->aliasField('staff_position_title_id')])
 			->order(['institution_name']);
 			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {

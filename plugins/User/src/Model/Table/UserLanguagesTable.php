@@ -1,8 +1,10 @@
 <?php
 namespace User\Model\Table;
 
+use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
 
 class UserLanguagesTable extends ControllerActionTable {
@@ -59,4 +61,19 @@ class UserLanguagesTable extends ControllerActionTable {
 			])
 		;
 	}
+
+	/*POCOR-6267 Starts*/
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $session = $this->request->session();
+        $queryString = $this->getQueryString();
+        if (!empty($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
+        } else {
+            $userId = $session->read('Student.Students.id');
+        }
+
+        $query->where([$this->aliasField('security_user_id') => $userId]);
+    }
+    /*POCOR-6267 Ends*/
 }
