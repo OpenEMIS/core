@@ -510,6 +510,13 @@ class StudentsTable extends ControllerActionTable
             'label' => __('Contact Number')
         ];
 
+        $extraField[] = [
+            'key' => 'StudentCustomFields.name',
+            'field' => 'custom_field_values',
+            'type' => 'string',
+            'label' => __('Mother Is Deceased')
+        ]; 
+
         $fields->exchangeArray($extraField);
     }
 
