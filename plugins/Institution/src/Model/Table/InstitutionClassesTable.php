@@ -1898,24 +1898,26 @@ class InstitutionClassesTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
+    /* public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
         $query
         ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students']);
 
         $query->group(['InstitutionClasses.id']);
-    }
+    } */
 
-    /*public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
+    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
         $requestQuery = $this->request->query;
+        $institutionID = $_SESSION['Institution']['Institutions']['id'];
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        
         $query
         ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'])
         ->where([
-            $this->aliasField('academic_period_id ='). $selectedAcademicPeriodId
-        ]);
-    }*/
-
-
+            $this->aliasField('academic_period_id ='). $selectedAcademicPeriodId,
+            $this->aliasField('Institutions.id ='). $institutionID,
+        ])
+        ->group(['InstitutionClasses.id']);
+    }
 }
