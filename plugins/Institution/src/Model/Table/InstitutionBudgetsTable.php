@@ -35,6 +35,8 @@ class InstitutionBudgetsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+
     }
 
     public function beforeAction($event) {
@@ -56,8 +58,8 @@ class InstitutionBudgetsTable extends ControllerActionTable
         $entity->institution_id = $this->request->session()->read('Institution.Institutions.id');
     }
 
-    public function indexBeforeAction($event) { 
-        
+    public function indexBeforeAction($event) {
+
         unset($this->fields['academic_period_id']);
         unset($this->fields['description']);
 
@@ -98,6 +100,49 @@ class InstitutionBudgetsTable extends ControllerActionTable
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->setFieldOrder(['academic_period_id', 'budget_type_id', 'amount','file_name', 'file_content', 'description']);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $academyPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+
+        $query
+		->select(['amount' => 'InstitutionBudgets.amount','type' => 'BudgetTypes.name'])
+
+        ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+            $this->AcademicPeriods->aliasField('id').' = ' . 'InstitutionBudgets.academic_period_id'
+        ])
+
+		->LeftJoin([$this->BudgetTypes->alias() => $this->BudgetTypes->table()],[
+			$this->BudgetTypes->aliasField('id').' = ' . 'InstitutionBudgets.budget_type_id'
+        ])
+        ->where([
+            $this->aliasField('academic_period_id = ') . $academyPeriodId,
+            $this->aliasField('institution_id = ') . $institutionId,
+        ]);
+
+    }
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+
+        $extraField[] = [
+            'key' => 'BudgetTypes.name',
+            'field' => 'type',
+            'type' => 'string',
+            'label' => __('Type')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionBudgets.amount',
+            'field' => 'amount',
+            'type' => 'integer',
+            'label' => __('Amount')
+        ];
+
+        $fields->exchangeArray($extraField);
     }
 
 }
