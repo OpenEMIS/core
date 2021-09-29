@@ -37,7 +37,8 @@ class InstitutionBusesTable extends ControllerActionTable
             'excludes' => ['comment', 'institution_id'],
             'pages' => ['index'],
             'autoFields' => false
-        ]);
+        ]); 
+        
     }
 
 	public function validationDefault(Validator $validator)
