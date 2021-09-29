@@ -1185,7 +1185,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
     }
 
-    /*POCOR-6332 commented due to this function some error was occuring*/
+
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $isSet = $this->setSessionAfterAction($event, $entity);
