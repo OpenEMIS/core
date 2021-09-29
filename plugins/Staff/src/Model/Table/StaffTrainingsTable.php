@@ -30,6 +30,10 @@ class StaffTrainingsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+        $this->addBehavior('Excel',[
+            'excludes' => ['description','file_name','staff_id'],
+            'pages' => ['index'],
+        ]);
     }
 
     public function validationDefault(Validator $validator)
