@@ -32,6 +32,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function validationDefault(Validator $validator)
@@ -149,4 +150,18 @@ class SpecialNeedsServicesTable extends ControllerActionTable
 
         $this->setFieldOrder(['academic_period_id', 'special_needs_service_type_id', 'description', 'organization', 'file_name', 'file_content', 'comment']);
     }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
+        $academicPeriodId = $this->request->query['academic_period_id'];
+
+        $query
+        ->where([
+            'academic_period_id =' .$academicPeriodId,
+            'security_user_id =' .$studentUserId,
+        ]);
+    }
+
 }

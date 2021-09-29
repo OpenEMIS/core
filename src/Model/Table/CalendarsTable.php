@@ -7,8 +7,9 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use App\Model\Table\ControllerActionTable;
 
-class CalendarsTable extends AppTable
+class CalendarsTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -20,6 +21,8 @@ class CalendarsTable extends AppTable
         $this->belongsTo('CalendarTypes', ['className' => 'CalendarTypes', 'foreignKey' => 'calendar_type_id']);
 
         $this->hasMany('CalendarEventDates', ['className' => 'CalendarEventDates', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function validationDefault(Validator $validator)
@@ -116,5 +119,16 @@ class CalendarsTable extends AppTable
         $query->contain(['CalendarEventDates', 'CalendarTypes']);
 
         return $query;
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $institutionId  = $session->read('Institution.Institutions.id');
+
+        $query
+        ->where([
+            'institution_id =' .$institutionId
+        ]);
     }
 }

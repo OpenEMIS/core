@@ -38,7 +38,6 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->addBehavior('Excel',[
             'pages' => ['index'],
         ]);
-        
         $this->toggle('edit', false);
     }
 
@@ -439,7 +438,6 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
     }
-    
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $cloneFields = $fields->getArrayCopy();
