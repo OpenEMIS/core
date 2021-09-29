@@ -25,7 +25,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
 		$this->toggle('search', false);
 
         $this->addBehavior('Excel',[
-            'excludes' => ['trainee_id'],
+            'excludes' => ['trainee_id','attendance_days','certificate_number','practical'],
             'pages' => ['index'],
         ]);
 	}
@@ -183,7 +183,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
         $trainingSessionResults = TableRegistry::get('TrainingSessionResults');
         $workflowSteps = TableRegistry::get('WorkflowSteps');
 
-        $query
+		$query
         ->select([
             'course_name' => 'TrainingCourses.name',
             'training_provider_name' => 'TrainingProviders.name',
