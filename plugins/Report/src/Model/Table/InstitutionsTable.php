@@ -64,7 +64,7 @@ class InstitutionsTable extends AppTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        
+
         // validation for attendance marked record feature
         $validator
             ->add('report_start_date', [
@@ -105,14 +105,7 @@ class InstitutionsTable extends AppTable
                     'message' => __('Date range should be one month only')
                 ]
             ]);
-        /*POCOR-6332 starts*/
-        $feature = $this->request->data[$this->alias()]['feature'];
-        if (in_array($feature, ['Report.Institutions'])) {
-            $validator = $validator
-                    ->notEmpty('area_level_id')
-                    ->notEmpty('area_education_id');
-        }
-        /*POCOR-6332 ends*/
+
         return $validator;
     }
 
@@ -834,7 +827,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            $areaLevelId = $this->request->data[$this->alias()]['area_level_id'];//POCOR-6332
+
             if ((in_array($feature,
                 [
                     'Report.Institutions',
@@ -867,26 +860,16 @@ class InstitutionsTable extends AppTable
                 ]))) {
                 $Areas = TableRegistry::get('Area.Areas');
                 $entity = $attr['entity'];
+
                 if ($action == 'add') {
-                    $where = [];
-                    if ($areaLevelId != -1) {
-                        $where[$Areas->aliasField('area_level_id')] = $areaLevelId;
-                    }
-                    $areas = $Areas
+                    $areaOptions = $Areas
                         ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-                        ->where([$where])
                         ->order([$Areas->aliasField('order')]);
-                    $areaOptions = $areas->toArray();
+
                     $attr['type'] = 'chosenSelect';
                     $attr['attr']['multiple'] = false;
                     $attr['select'] = true;
-                    /*POCOR-6332 starts*/
-                    if (count($areaOptions) > 1) {
-                        $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions;
-                    } else {
-                        $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions;
-                    }
-                    /*POCOR-6332 ends*/
+                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions->toArray();
                     $attr['onChangeReload'] = true;
                 } else {
                     $attr['type'] = 'hidden';
