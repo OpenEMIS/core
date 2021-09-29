@@ -304,9 +304,9 @@ class NavigationComponent extends Component
         } elseif (($controller->name == 'Directories' && $action != 'index') || in_array($controller->name, $directoryControllers)) {
             $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
 
-            $encodedParam = $this->request->params['pass'][1];
-            if(!empty($encodedParam)) {
-                $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
+			$encodedParam = $this->request->params['pass'][1];
+			if(!empty($encodedParam)) {
+				$securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
             }
             if(!empty($encodedParam)) {
                 //POCOR-6202 start
@@ -332,7 +332,18 @@ class NavigationComponent extends Component
                    $userType = 5;
                 }
             }
-            $session = $this->request->session();
+
+			$userType = '';
+			if(!empty($userInfo)) {
+				if ($userInfo->is_student) {
+					$userType = 1;
+				} elseif ($userInfo->is_staff) {
+					$userType = 2;
+				} elseif ($userInfo->is_guardian) {
+					$userType = 3;
+				}
+			}
+			$session = $this->request->session();
             $isStudent = $session->read('Directory.Directories.is_student');
             $isStaff = $session->read('Directory.Directories.is_staff');
             $isGuardian = $session->read('Directory.Directories.is_guardian');
@@ -519,11 +530,11 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution', 0 => $institutionId]
             ],
 
-            'InstitutionCalendars.index' => [
+            'Institutions.InstitutionCalendars.index' => [
                 'title' => 'Calendar',
                 'parent' => 'Institution.General',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionCalendars.view', 'InstitutionCalendars.add', 'InstitutionCalendars.edit', 'InstitutionCalendars.delete']
+                'selected' => ['Institutions.InstitutionCalendars.view', 'Institutions.InstitutionCalendars.add', 'Institutions.InstitutionCalendars.edit', 'Institutions.InstitutionCalendars.delete']
             ],
 
             'Contacts' => [
@@ -553,12 +564,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution']
             ],
 
-            'Institutions.Profiles.index' => [
-                'title' => 'Profiles',
-                'parent' => 'Institution.General',
-                'selected' => ['Institutions.Profiles'],
-                'params' => ['plugin' => 'Institution']
-            ],
+			'Institutions.Profiles.index' => [
+				'title' => 'Profiles',
+				'parent' => 'Institution.General',
+				'selected' => ['Institutions.Profiles'],
+				'params' => ['plugin' => 'Institution']
+			],
 
             'Institution.Academic' => [
                 'title' => 'Academic',
@@ -1792,7 +1803,7 @@ class NavigationComponent extends Component
                 'selected' => ['Securities.Roles', 'Securities.Permissions']
             ],
 
-            'ProfileTemplates' => [
+			'ProfileTemplates' => [
                 'title' => 'Profiles',
                 'parent' => 'Administration',
                 'link' => false

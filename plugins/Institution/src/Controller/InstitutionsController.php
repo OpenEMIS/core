@@ -154,6 +154,10 @@ class InstitutionsController extends AppController
         // End
 
         parent::initialize();
+
+       $data =  $this->loadModel('Calendars');
+
+
         // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
