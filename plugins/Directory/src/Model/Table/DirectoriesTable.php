@@ -1185,10 +1185,10 @@ class DirectoriesTable extends ControllerActionTable
         $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
     }
 
-
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $isSet = $this->setSessionAfterAction($event, $entity);
+        //POCOR-6332 commented due to this function some error was occuring
+        /*$isSet = $this->setSessionAfterAction($event, $entity);
         if ($isSet) {
             $reload = $this->Session->read('Directory.Directories.reload');
             if (!isset($reload)) {
@@ -1196,7 +1196,7 @@ class DirectoriesTable extends ControllerActionTable
                 $event->stopPropagation();
                 return $this->controller->redirect($urlParams);
             }
-        }
+        }*/
 
         $this->setupTabElements($entity);
     }
