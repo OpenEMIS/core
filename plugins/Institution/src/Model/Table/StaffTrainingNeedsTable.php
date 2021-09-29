@@ -12,6 +12,10 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
     { 
         parent::initialize($config);
         $this->addBehavior('Workflow.Workflow');
+        $this->addBehavior('Excel',[
+            'excludes' => ['reason','training_need_competency_id','training_need_sub_standard_id','training_priority_id'],
+            'pages' => ['index'],
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
