@@ -834,7 +834,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            $areaLevelId = $this->request->data[$this->alias()]['area_level_id'];
+            $areaLevelId = $this->request->data[$this->alias()]['area_level_id'];//POCOR-6332
             if ((in_array($feature,
                 [
                     'Report.Institutions',
