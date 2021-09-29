@@ -369,18 +369,6 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
-            /*POCOR-6332 starts*/
-            if ($userType == 6) {//when uer is both is_student and is_guardian
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
-                $session->write('Directory.Directories.reload', true);
-            }
-            if ($userType == 7) {//when uer is both is_staff and is_guardian
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
-                $session->write('Directory.Directories.reload', true);
-            }
-            /*POCOR-6332 ends*/
         } elseif (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
             $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
             $navigations = $this->appendNavigation('Profiles.Personal', $navigations, $this->getProfileNavigation());
