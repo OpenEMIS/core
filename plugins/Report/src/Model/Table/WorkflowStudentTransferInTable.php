@@ -45,14 +45,11 @@ class WorkflowStudentTransferInTable extends AppTable
         $reportEndDate = $requestData->report_end_date;
         if ($institutionId == 0) {
             $query
-            ->orWhere([
+             ->orWhere([
                 $this->aliasField('institution_id !=') => $institutionId,
-                // $this->aliasField('start_date =') => $reportStartDate,
-                // $this->aliasField('end_date !=') => $reportEndDate,
-            ])->where([
                     $this->aliasField('start_date >= "') . $reportStartDate . '"',
                     $this->aliasField('end_date <= "') . $reportEndDate . '"'
-                 ]);
+            ]);
         }
     }
 }

@@ -47,10 +47,9 @@ class WorkflowStudentTransferOutTable extends AppTable
             $query
             ->orWhere([
                 $this->aliasField('institution_id !=') => $institutionId,
-            ])->where([
                     $this->aliasField('start_date >= "') . $reportStartDate . '"',
                     $this->aliasField('end_date <= "') . $reportEndDate . '"'
-                 ]);
+            ]);
         }
     }
 }
