@@ -226,6 +226,21 @@ class CalendarsTable extends ControllerActionTable
     
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
+
+        $extra['elements']['control'] = [
+            'name' => 'Institution.Calendar/controls',
+            'data' => [
+                'periodOptions'=> $academicPeriodOptions,
+                'selectedPeriod'=> $extra['selectedAcademicPeriodOptions']
+            ],
+            'order' => 3
+        ];
+
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+
         $this->field('type', ['visible' => true, 'attr' => ['label' => __('Type')]]);
         $this->field('name', ['visible' => true, 'attr' => ['label' => __('Name')]]);
         $this->field('start_date', ['type' => 'date','attr' => ['label' => __('Start Date')]]);
@@ -236,8 +251,31 @@ class CalendarsTable extends ControllerActionTable
         //$this->setFieldOrder(['generated_on', 'generated_by']);
     }
 
+    private function getSelectedAcademicPeriod($request)
+    {
+        $selectedAcademicPeriod = '';
+
+        if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
+            if (isset($request->query) && array_key_exists('period', $request->query)) {
+                $selectedAcademicPeriod = $request->query['period'];
+            } else {
+                $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+            }
+        } elseif ($this->action == 'add') {
+            $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        }
+
+        return $selectedAcademicPeriod;
+    } 
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+            $query->where([
+                        $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
+                    ], [], true); //this parameter will remove all where before this and replace it with new where.
+        }
+
         $session = $this->request->session();
         $institutionId  = $session->read('Institution.Institutions.id');
 
