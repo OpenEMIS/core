@@ -79,7 +79,7 @@ class ArchivesController extends AppController
 
     //POCOR-6281[START]
     public function CopyData(){
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.CopyAcademicPeriods']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.DataManagementCopy']);
     }
     //POCOR-6281[END]
 

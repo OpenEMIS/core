@@ -29,7 +29,7 @@ use Cake\I18n\Date;
  * @method \Archive\Model\Entity\DeletedLog[] patchEntities($entities, array $data, array $options = [])
  * @method \Archive\Model\Entity\DeletedLog findOrCreate($search, callable $callback = null, $options = [])
  */
-class CopyAcademicPeriodsTable extends ControllerActionTable
+class DataManagementCopyTable extends ControllerActionTable
 {
     use MessagesTrait;
 
@@ -43,7 +43,7 @@ class CopyAcademicPeriodsTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->table('copy_academic_periods');
+        $this->table('data_management_copy');
         $this->displayField('id');
         $this->primaryKey('id');
 
@@ -58,15 +58,18 @@ class CopyAcademicPeriodsTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    // public function validationDefault(Validator $validator)
-    // {
-    //     $validator->integer('id')->allowEmpty('id', 'create');
-    //     // $validator->allowEmpty('name', 'create');
-    //     // $validator->allowEmpty('path', 'create');
-    //     // $validator->dateTime('generated_on')->allowEmpty('generated_on', 'create');
-    //     // $validator->allowEmpty('generated_by', 'create');
-    //     return $validator;
-    // }
+    public function validationDefault(Validator $validator)
+    {
+        $validator->integer('id')->allowEmpty('id', 'create');
+        $validator->requirePresence('from_academic_period', 'create')->notEmpty('from_academic_period');
+        $validator->requirePresence('to_academic_period', 'create')->notEmpty('from_academic_period');
+        $validator->requirePresence('features', 'create')->notEmpty('from_academic_period');
+        // $validator->allowEmpty('name', 'create');
+        // $validator->allowEmpty('path', 'create');
+        // $validator->dateTime('generated_on')->allowEmpty('generated_on', 'create');
+        // $validator->allowEmpty('generated_by', 'create');
+        return $validator;
+    }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -103,7 +106,7 @@ class CopyAcademicPeriodsTable extends ControllerActionTable
 
     public function onUpdateFieldToAcademicPeriod(Event $event, array $attr, $action, Request $request)
     {
-        $condition = [$this->AcademicPeriods->aliasField('id').' <> ' => $request['data']['CopyAcademicPeriods']['from_academic_period']];
+        $condition = [$this->AcademicPeriods->aliasField('id').' <> ' => $request['data']['DataManagementCopy']['from_academic_period']];
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
         // list($periodOptions, $selectedPeriod) = array_values($this->AcademicPeriods->getYearList(['conditions' => $condition]));
 
@@ -351,10 +354,6 @@ class CopyAcademicPeriodsTable extends ControllerActionTable
 
 
         //This code is for update the corret academic period in institution_grade table [END]
-
-        // $this->log('=======>Before triggerCopyDataShell', 'debug');
-        // $this->triggerCopyDataShell('CopyData',$entity->to_academic_period);
-        // $this->log(' <<<<<<<<<<======== After triggerCopyDataShell', 'debug');
     }
 
     public function triggerCopyDataShell($shellName,$academicPeriodId = null)
@@ -401,70 +400,6 @@ class CopyAcademicPeriodsTable extends ControllerActionTable
         return $entity->to_academic_period = $result->name;
     }
 
-    // public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons){
-
-    //     $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
-    //     $downloadAccess = $this->AccessControl->check(['download']);
-    //     unset($buttons['view']);
-        
-    //     $params = [
-    //     'id' => $entity->id
-    //     ];
-
-    //     $url = [
-    //         'plugin' => 'Archive',
-    //         'controller' => 'Archives',
-    //         'action' => 'downloadSql',$entity->id,
-    //     ];
-    //     $buttons['downloadSql'] = [
-    //     'label' => '<i class="fa kd-download"></i>'.__('Download'),
-    //     'attr' => ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false],
-    //     'url' => $url,
-    //     ];
-        
-    //     return $buttons;
-    // }
-
-    // public function addBeforeAction(Event $event, ArrayObject $extra)
-    // {
-    //     $this->field('name', ['visible' => false]);
-    //     $this->field('path', ['visible' => false]);
-    //     $this->field('generated_on', ['visible' => false]);
-    //     $this->field('generated_by', ['visible' => false]);
-
-    //     $dbSize = $this->getDbSize();
-
-    //     $available_disksize = $this->getDiskSpace();
-
-    //     $this->field('database_size (GB)', ['attr' => ['value'=> $dbSize], 'type'=>'readonly']);
-    //     $this->field('available_space (GB)', ['attr' => ['value'=> $available_disksize],'type'=>'readonly']);
-    // }
-
-    // public function getDbSize(){
-
-    //     //get database size
-    //     $connection = ConnectionManager::get('default');
-
-    //     $dbConfig = $connection->config();
-    //     $dbname = $dbConfig['database']; 
-        
-    //     $results = $connection->execute("SELECT table_schema AS 'Database',  ROUND(SUM(data_length + index_length) / 1024 / 1024 / 1024, 2) AS 'Size' FROM information_schema.TABLES WHERE table_schema = '$dbname' ORDER BY (data_length + index_length) DESC")->fetch('assoc');
-        
-    //     $dbsize = $results['Size'];
-        
-    //     return $dbsize;
-
-    // }
-
-    // public function getDiskSpace(){
-
-    //     //get available disk size
-    //     $available_disksize = round(disk_free_space('/') / 1024 / 1024 / 1024, 2);
-
-    //     return $available_disksize;
-    // }
-
     public function onGetGeneratedBy(Event $event, Entity $entity)
     {
         $Users = TableRegistry::get('User.Users');
@@ -476,46 +411,5 @@ class CopyAcademicPeriodsTable extends ControllerActionTable
 
         return $entity->generated_by = $result->first_name.' '.$result->last_name;
     }
-
-    // public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
-
-    //     $dbSize = $this->getDbSize();
-    //     $available_disksize = $this->getDiskSpace();
-
-    //     $fileName = 'Backup_SQL_' . time();
-
-    //     $entity->name = $fileName;
-    //     $entity->path = "webroot/export/backup";
-    //     $entity->generated_on = date("Y-m-d H:i:s");
-    //     $entity->generated_by = $this->Session->read('Auth.User.id');
-        
-    //     if($dbsize >= $available_disksize){
-    //         $event->stopPropagation();
-    //         $this->Alert->error('Archive.lessSpace', ['reset' => true]);
-    //     }else{
-
-    //         if (!file_exists(WWW_ROOT .'export/backup')) {
-    //             mkdir(WWW_ROOT .'export/backup', 0777, true);
-    //         }
-       
-    //         $this->log('=======>Before triggerDatabaseSqlDumpShell', 'debug');
-    //         $this->triggerDatabaseSqlDumpShell('DatabaseSqlDump',$fileName);
-    //         $this->log(' <<<<<<<<<<======== After triggerDatabaseSqlDumpShell', 'debug');
-    //     }
-        
-    // }
-
-    // public function triggerDatabaseSqlDumpShell($shellName,$fileName = null)
-    // {
-
-    //     $args = '';
-    //     $args .= !is_null($fileName) ? ' '.$fileName : '';
-
-    //     $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
-    //     $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
-    //     $shellCmd = $cmd . ' >> ' . $logs;
-    //     exec($shellCmd);
-    //     Log::write('debug', $shellCmd);
-    // }
     
 }
