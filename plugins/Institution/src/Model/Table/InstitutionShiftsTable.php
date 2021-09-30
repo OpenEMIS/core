@@ -104,15 +104,15 @@ class InstitutionShiftsTable extends ControllerActionTable
 
         //logic to remove 'add' button if the institution has received shift from other based on the academic period
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        if ($this->isOccupier($institutionId, $this->AcademicPeriods->getCurrent())) { //if occupier, then remove the 'add' button
-            unset($toolbarButtonsArray['add']);
-        }
+        // if ($this->isOccupier($institutionId, $this->AcademicPeriods->getCurrent())) { //if occupier, then remove the 'add' button
+        //     unset($toolbarButtonsArray['add']);
+        // }
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
         //show error when occupier tried to access add/edit page.
-        if (isset($this->request->query['occupier']) && $this->request->query['occupier']) {
-            $this->Alert->error($this->aliasField('noAccessToShift'));
-        }
+        // if (isset($this->request->query['occupier']) && $this->request->query['occupier']) {
+        //     $this->Alert->error($this->aliasField('noAccessToShift'));
+        // }
 
         $this->field('institution_id', ['type' => 'integer']); //this is to show owner (set in label table), by default the default is hidden
         $this->field('previous_shift_id', ['visible' => 'false']);
@@ -140,17 +140,30 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $currentInstitutionId = $this->Session->read('Institution.Institutions.id');
+        $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        //logic that if the owner != occupier then if the active session is the occupier, then remove edit and delete button.
-        if (($entity->institution->id) != ($entity->location_institution->id)) {
-            if (($entity->institution->id) != $currentInstitutionId) {
+        if (!$this->isOccupier($currentInstitutionId, $selectedAcademicPeriod)) { //if occupier, then redirect from trying to access add/edit page
+            if (($entity->institution->id) == ($entity->location_institution->id)) {
+                return $buttons;
+            }else{
                 unset($buttons['remove']);
                 unset($buttons['edit']);
             }
+        }else{
+            return $buttons;
         }
-
         return $buttons;
+
+        //logic that if the owner != occupier then if the active session is the occupier, then remove edit and delete button.
+        // if (($entity->institution->id) != ($entity->location_institution->id)) {
+        //     if (($entity->institution->id) != $currentInstitutionId) {
+        //         unset($buttons['remove']);
+        //         unset($buttons['edit']);
+        //     }
+        // }
+
+        // return $buttons;
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -163,12 +176,12 @@ class InstitutionShiftsTable extends ControllerActionTable
             $selectedAcademicPeriod = $entity->academic_period_id;
         }
 
-        if ($this->isOccupier($institutionId, $selectedAcademicPeriod)) { //if occupier, then redirect from trying to access add/edit page
-            $url = $this->url('index');
-            $url['occupier'] = 1;
-            $event->stopPropagation();
-            return $this->controller->redirect($url);
-        }
+        // if ($this->isOccupier($institutionId, $selectedAcademicPeriod)) { //if occupier, then redirect from trying to access add/edit page
+        //     $url = $this->url('index');
+        //     $url['occupier'] = 1;
+        //     $event->stopPropagation();
+        //     return $this->controller->redirect($url);
+        // }
 
         $this->setupFields($entity);
     }
@@ -226,6 +239,20 @@ class InstitutionShiftsTable extends ControllerActionTable
             $ControllerActionHelper->paramsEncode(['id' => $entity->institution_id])
         ]);
     }
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if($this->request->params['pass'][0] == 'add'){
+            switch ($field) {
+                case 'location_institution_id':
+                    return __('Owner');
+                default:
+                    return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+            }
+        }
+        else{
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 
     public function onGetLocationInstitutionId(Event $event, Entity $entity)
     {
@@ -266,16 +293,32 @@ class InstitutionShiftsTable extends ControllerActionTable
 
         if ($action == 'add') {
             $selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);
-            if (!empty($selectedAcademicPeriod)) {
-                //during add then need to exclude used shifts based on school and academic period
-                $options = $options
-                    ->find('availableShifts', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
-                    ->toArray();
-                $attr['options'] = $options;
-                $attr['onChangeReload'] = 'changeShiftOption';
-
-                if (empty($options)) {
-                    $this->Alert->warning('InstitutionShifts.allShiftsUsed');
+            $checkisOccupier = $this->isOccupier($institutionId, $selectedAcademicPeriod);
+            if($checkisOccupier == 0){
+                if (!empty($selectedAcademicPeriod)) {
+                    //during add then need to exclude used shifts based on school and academic period
+                    $options = $options
+                        ->find('availableShifts', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
+                        ->toArray();
+                    $attr['options'] = $options;
+                    $attr['onChangeReload'] = 'changeShiftOption';
+    
+                    if (empty($options)) {
+                        $this->Alert->warning('InstitutionShifts.allShiftsUsed');
+                    }
+                }
+            }else{
+                if (!empty($selectedAcademicPeriod)) {
+                    //during add then need to exclude used shifts based on school and academic period
+                    $options = $options
+                        ->find('availableShiftsOccupier', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
+                        ->toArray();
+                    $attr['options'] = $options;
+                    $attr['onChangeReload'] = 'changeShiftOption';
+    
+                    if (empty($options)) {
+                        $this->Alert->warning('InstitutionShifts.allShiftsUsed');
+                    }
                 }
             }
         } elseif ($action == 'edit') {
@@ -416,8 +459,11 @@ class InstitutionShiftsTable extends ControllerActionTable
     {
         if ($this->AcademicPeriods->getCurrent() == $entity->academic_period_id) { //if the one that being added / edited is the current academic period
 
-            $owner = $entity->institution_id;
-            $occupier = $entity->location_institution_id;
+            // $owner = $entity->institution_id;
+            // $occupier = $entity->location_institution_id;
+
+            $owner = $entity->location_institution_id;
+            $occupier = $entity->institution_id;
 
             if ($owner == $occupier) {
                 $ownerEqualOccupier = true;
@@ -458,6 +504,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                     $shiftType = InstitutionsTable::SINGLE_OCCUPIER;
                 }
                 $this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $occupier]);
+                $this->updateAll(['institution_id' => $owner, 'location_institution_id' => $occupier], ['id' => $entity->id]);
             }
         }
     }
@@ -691,7 +738,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                     $Institutions->aliasField('name')
                 ])
                 ->where([
-                    'NOT EXISTS ('.
+                    'EXISTS ('.
                         $this->find('list')
                             ->where([
                                 $this->aliasField('institution_id').' = '.$Institutions->aliasField('id'),
@@ -706,7 +753,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                         $Institutions->aliasField('code') . ' LIKE ' => $search,
                         $Institutions->aliasField('name') . ' LIKE ' => $search
                     ],
-                    $Institutions->aliasField('id').' IS NOT ' => $institutionId
+                    // $Institutions->aliasField('id').' IS NOT ' => $institutionId
                 ])
                 ->order([$Institutions->aliasField('name')]);
 
