@@ -598,7 +598,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('information_section', ['type' => 'section', 'title' => __('Information')]);
 
         $this->field('shift_section', ['type' => 'section', 'title' => __('Shifts'), 'visible' => ['view'=>true]]);
-        $this->field('shift_type', ['visible' => ['view' => true]]);
+        $this->field('shift_type', ['visible' => ['view' => false]]);
 
         $this->field('shift_details', [
             'type' => 'element',
