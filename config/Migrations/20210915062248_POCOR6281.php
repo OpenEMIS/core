@@ -21,7 +21,7 @@ class POCOR6281 extends AbstractMigration
         $this->execute('INSERT INTO `zz_6281_institution_grades` SELECT * FROM `institution_grades`');
 
         // Create tables
-        $this->execute("CREATE TABLE IF NOT EXISTS `copy_academic_periods` (
+        $this->execute("CREATE TABLE IF NOT EXISTS `data_management_copy` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
             `from_academic_period` int(11),
             `to_academic_period` int(11) ,
@@ -95,6 +95,7 @@ class POCOR6281 extends AbstractMigration
     {
         $this->execute('DROP TABLE IF EXISTS `institution_grades`');
         $this->execute('RENAME TABLE `zz_6281_institution_grades` TO `institution_grades`');
+        $this->execute('DROP TABLE IF EXISTS `data_management_copy`');
         
     }
 }
