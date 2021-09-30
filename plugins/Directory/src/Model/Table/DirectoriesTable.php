@@ -1188,7 +1188,7 @@ class DirectoriesTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         //POCOR-6332 commented due to this function some error was occuring
-        /*$isSet = $this->setSessionAfterAction($event, $entity);
+        $isSet = $this->setSessionAfterAction($event, $entity);
         if ($isSet) {
             $reload = $this->Session->read('Directory.Directories.reload');
             if (!isset($reload)) {
@@ -1196,7 +1196,7 @@ class DirectoriesTable extends ControllerActionTable
                 $event->stopPropagation();
                 return $this->controller->redirect($urlParams);
             }
-        }*/
+        }
 
         $this->setupTabElements($entity);
     }
