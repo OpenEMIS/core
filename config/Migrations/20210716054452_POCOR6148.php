@@ -28,8 +28,8 @@ class POCOR6148 extends AbstractMigration
     public function change()
     {
         //backup
-        $this->execute('CREATE TABLE `z_6148_security_roles` LIKE `security_roles`');
-        $this->execute('INSERT INTO `z_6148_security_roles` SELECT * FROM `security_roles`');
+        $this->execute('CREATE TABLE `z_6148_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_6148_security_functions` SELECT * FROM `security_functions`');
 
         //Change Contact people Controller
         $this->execute("UPDATE security_functions SET controller = 'Institutions' WHERE name = 'Infrastructure WASH Waste'");
@@ -49,6 +49,6 @@ class POCOR6148 extends AbstractMigration
     public function down()
     {
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
-        $this->execute('RENAME TABLE `z_6148_security_roles` TO `security_roles`');
+        $this->execute('RENAME TABLE `z_6148_security_functions` TO `security_functions`');
     }
 }
