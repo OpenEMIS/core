@@ -38,7 +38,7 @@ class HealthsTable extends ControllerActionTable
         ]);
         $this->addBehavior('Excel',[
             'excludes' => ['security_user_id'],
-            'pages' => ['index'],
+            'pages' => ['index','view'],
         ]);
     }
 
