@@ -109,15 +109,19 @@ class BodyMassesTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
+        $areaId = $requestData->area_education_id;
 
         $conditions = [];
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        if (!empty($institutionId)) {
+        if ($institutionId != 0) {
             $conditions['Institutions.id'] = $institutionId;
         }
-
+        if ($areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
+        }
+        
         $institutions = TableRegistry::get('Institution.Institutions');
         $institutionIds = $institutions->find('list', [
                                                     'keyField' => 'id',
@@ -130,10 +134,7 @@ class BodyMassesTable extends AppTable
             $conditions['BodyMasses.institution_id IN'] = $institutionIds;
         }
         
-
-        
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
-        
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $areas = TableRegistry::get('Area.Areas');
@@ -156,6 +157,8 @@ class BodyMassesTable extends AppTable
                 'bm_comment' => 'UserBodyMasses.comment',
                 'class_name' => 'InstitutionClasses.name',
                 'area_id' => 'Areas.id',
+                'area_code' => 'Areas.code',
+                'area_name' => 'Areas.name'
             ])
             ->contain([
                 'Users' => [
@@ -174,7 +177,7 @@ class BodyMassesTable extends AppTable
                 ],
                 'EducationGrades' => [
                     'fields' => [
-							'education_grade' => 'EducationGrades.name'
+                            'education_grade' => 'EducationGrades.name'
                     ]
                 ],
                 'Users.Genders' => [
@@ -214,9 +217,9 @@ class BodyMassesTable extends AppTable
             ])
 
             ->where($conditions);
-			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            /*$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-				$areaTable = TableRegistry::get('areas');
+                $areaTable = TableRegistry::get('areas');
                 $areasData = $areaTable
                             ->find()
                             ->where([$areaTable->alias('id')=>$row['area_id']])
@@ -256,7 +259,7 @@ class BodyMassesTable extends AppTable
                 }
                 return $row;
             });
-        });
+        });*/
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -285,8 +288,8 @@ class BodyMassesTable extends AppTable
             'type' => 'string',
             'label' => __('Area Name')
         ];
-		
-		$extraFieldsFirst[] = [
+        
+        $extraFieldsFirst[] = [
             'key' => 'area_code',
             'field' => 'area_code',
             'type' => 'string',

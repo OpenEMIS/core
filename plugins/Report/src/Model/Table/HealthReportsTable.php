@@ -96,7 +96,7 @@ class HealthReportsTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $healthReportType = $requestData->health_report_type;
-
+        $areaId = $requestData->area_education_id;
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
 
         $Class = TableRegistry::get('Institution.InstitutionClasses');
@@ -107,14 +107,16 @@ class HealthReportsTable extends AppTable
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
 
-        if (!empty($institutionId) && $institutionId =='-1') {
+        if (!empty($institutionId) && $institutionId == '-1') {
             $conditions[$ClassStudents->aliasField('student_status_id != ')] = '1';
         }
 
-        if (!empty($institutionId) && $institutionId !='-1') {
+        if (!empty($institutionId) && $institutionId != '-1') {
             $conditions['Institutions.id'] = $institutionId;
         }
-
+        if ($areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
+        }
         if($healthReportType == 'Overview'){
             
 			$conditions[$this->aliasField('student_status_id')] = '1';

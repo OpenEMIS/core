@@ -94,6 +94,21 @@ class IdentitiesTable extends ControllerActionTable
 		$this->fields['comments']['visible'] = 'false';
 	}
 
+	/*POCOR-6267 Starts*/
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+    	$session = $this->request->session();
+        $queryString = $this->getQueryString();
+    	if (!empty($queryString['security_user_id'])) {
+    		$userId = $queryString['security_user_id'];
+    	} else {
+    		$userId = $session->read('Student.Students.id');
+    	}
+
+    	$query->where([$this->aliasField('security_user_id') => $userId]);
+    }
+	/*POCOR-6267 Ends*/
+
 	public function editOnInitialize(Event $event, Entity $entity)
 	{
 		// set the defaultDate to false on initialize, for the empty date.
@@ -168,7 +183,21 @@ class IdentitiesTable extends ControllerActionTable
                     $userDetail->identity_number = $entity->number;
                     $user->save($userDetail);  
                 }      
-            }
+            }try{
+				$Users = TableRegistry::get('User.Users');
+				$result = $Users
+						->find()
+						->select(['identity_number','identity_type_id'])
+						->where(['id' => $entity->security_user_id])
+						->first();
+				if((($result['identity_number'] == null || $result['identity_number'] == '') && ($result['identity_type_id'] == null || $result['identity_type_id'] == '') )){
+					$Users->updateAll(
+						['identity_number' => $entity->number, 'identity_type_id' => $entity->identity_type_id],    //field
+						['id' => $entity->security_user_id] //condition
+					);
+				}
+			}catch (\Exception $e) {
+			}
             
             $listeners = [
                 TableRegistry::get('User.Users')

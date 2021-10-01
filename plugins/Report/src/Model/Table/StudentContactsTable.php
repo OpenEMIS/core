@@ -105,6 +105,41 @@ class StudentContactsTable extends AppTable  {
     }
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+        $areaId = $requestData->area_education_id;
+        $institutionId = $requestData->institution_id;
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $enrolled = $StudentStatuses->getIdByCode('CURRENT');
+        $conditions = [];
+        if ($areaId != -1) {
+            $conditions['Institution.area_id'] = $areaId;
+        }
+        if (!empty($academicPeriodId)) {
+            $conditions['InstitutionStudent.academic_period_id'] = $academicPeriodId;
+        }
+        if (!empty($institutionId) && $institutionId > 0) {
+            $conditions['InstitutionStudent.institution_id'] = $institutionId;
+        }
+        if (!empty($enrolled)) {
+            $conditions['InstitutionStudent.student_status_id'] = $enrolled;
+        }
+        $query->join([
+            'InstitutionStudent' => [
+                'type' => 'inner',
+                'table' => 'institution_students', 
+                'conditions' => [
+                    'InstitutionStudent.student_id = '.$this->aliasField('id')
+                ],
+            ],
+            'Institution' => [
+                'type' => 'inner',
+                'table' => 'institutions',
+                'conditions' => [
+                    'Institution.id = InstitutionStudent.institution_id'
+                ]
+            ]
+        ]);
         $query
 			->select([
                 'security_user_id' => $this->aliasField('id'),
@@ -115,7 +150,7 @@ class StudentContactsTable extends AppTable  {
 				]),
             ])
             ->order([$this->aliasField('id') => 'DESC'])
-            ->where([$this->aliasField('is_student') => 1]);
+            ->where([$this->aliasField('is_student') => 1, $conditions]);
 		    $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
 				

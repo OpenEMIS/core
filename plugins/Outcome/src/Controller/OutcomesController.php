@@ -16,6 +16,14 @@ class OutcomesController extends AppController
     public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Outcome.OutcomeGradingTypes']); }
     // End
 
+    public function initialize()
+    {
+        parent::initialize();
+        $this->ControllerAction->models = [
+            'ImportOutcomeTemplates'   => ['className' => 'Outcome.ImportOutcomeTemplates', 'actions' => ['add']]
+        ];
+    }
+
     public function getOutcomeTabs()
     {
         $tabElements = [
