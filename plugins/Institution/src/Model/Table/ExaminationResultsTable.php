@@ -47,6 +47,8 @@ class ExaminationResultsTable extends ControllerActionTable
 
         $this->addBehavior('Examination.RegisteredStudents');
 
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -333,5 +335,108 @@ class ExaminationResultsTable extends ControllerActionTable
                 $examCentreStudentObj->{$fieldName} = $itemResult;
             }
         }
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $institutionId  = $session->read('Institution.Institutions.id');
+        
+        $students = TableRegistry::get('security_users');
+        $IdentityTypes = TableRegistry::get('identity_types');
+        $nationality = TableRegistry::get('nationalities');
+
+        $query->select([
+            $this->aliasField('id') , 
+            $this->aliasField('registration_number') , 
+            'student' => $students->find()->func()->concat([
+                'first_name' => 'literal',
+                " ",
+                'last_name' => 'literal'
+            ]),
+            'openemis_no' => $students->aliasField('openemis_no'),
+			'nationality_id' =>$nationality->aliasField('name'),
+			'identity_type_id' =>$IdentityTypes->aliasField('name'),
+			'identity_number' =>$students->aliasField('identity_number'),
+            $this->aliasField('modified_user_id'),
+            $this->aliasField('modified'), 
+            $this->aliasField('created_user_id'),
+            $this->aliasField('created')
+        ])
+        ->innerJoin([$students->alias() => $students->table()], [
+            [$students->aliasField('id ='). $this->aliasField('student_id')],
+        ])
+        ->LeftJoin([$IdentityTypes->alias() => $IdentityTypes->table()], [
+            [$IdentityTypes->aliasField('id ='). $students->aliasField('identity_type_id')],
+        ])
+        ->LeftJoin([$nationality->alias() => $nationality->table()], [
+            [$nationality->aliasField('id ='). $students->aliasField('nationality_id')],
+        ])
+        ->where([
+            'institution_id =' .$institutionId
+        ]);
+        
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+
+        $extraField[] = [
+            'key' => 'registration_number',
+            'field' => 'registration_number',
+            'type' => 'string',
+            'label' => __('Registration Number')
+        ];
+
+        $extraField[] = [
+            'key' => 'security_users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+
+        $extraField[] = [
+            'key' => 'student',
+            'field' => 'student',
+            'type' => 'string',
+            'label' => __('Student')
+        ];
+
+        $extraField[] = [
+            'key' => 'nationality_id',
+            'field' => 'nationality_id',
+            'type' => 'string',
+            'label' => __('Nationality')
+        ];
+
+        $extraField[] = [
+            'key' => 'identity_type_id',
+            'field' => 'identity_type_id',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];
+
+        $extraField[] = [
+            'key' => 'identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'repeated',
+            'type' => 'date',
+            'label' => __('Repeated')
+        ];
+        
+        $extraField[] = [
+            'key' => 'transferred',
+            'field' => 'transferred',
+            'type' => 'date',
+            'label' => __('Transferred')
+        ];
+
+        $fields->exchangeArray($extraField);
     }
 }
