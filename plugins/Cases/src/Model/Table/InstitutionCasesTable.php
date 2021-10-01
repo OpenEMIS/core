@@ -539,6 +539,13 @@ class InstitutionCasesTable extends ControllerActionTable
         ];
 
         $extraField[] = [
+            'key' => '',
+            'field' => 'linked_records',
+            'type' => 'string',
+            'label' => __('Linked Records')
+        ];
+
+        $extraField[] = [
             'key' => 'InstitutionCases.created',
             'field' => 'created_on',
             'type' => 'date',
