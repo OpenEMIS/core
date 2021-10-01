@@ -106,6 +106,15 @@ class InstitutionsTable extends AppTable
                 ]
             ]);
 
+        /*POCOR-6333 starts*/
+        $feature = $this->request->data[$this->alias()]['feature'];
+        if (in_array($feature, ['Report.Institutions'])) {
+            $validator = $validator
+                    ->notEmpty('area_level_id')
+                    ->notEmpty('area_education_id');
+        }
+        /*POCOR-6333 ends*/
+
         return $validator;
     }
 
@@ -827,7 +836,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-
+            $areaLevelId = $this->request->data[$this->alias()]['area_level_id'];//POCOR-6333
             if ((in_array($feature,
                 [
                     'Report.Institutions',
@@ -862,14 +871,25 @@ class InstitutionsTable extends AppTable
                 $entity = $attr['entity'];
 
                 if ($action == 'add') {
-                    $areaOptions = $Areas
+                    $where = [];
+                    if ($areaLevelId != -1) {
+                        $where[$Areas->aliasField('area_level_id')] = $areaLevelId;
+                    }
+                    $areas = $Areas
                         ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                        ->where([$where])
                         ->order([$Areas->aliasField('order')]);
-
+                    $areaOptions = $areas->toArray();
                     $attr['type'] = 'chosenSelect';
                     $attr['attr']['multiple'] = false;
                     $attr['select'] = true;
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions->toArray();
+                    /*POCOR-6333 starts*/
+                    if (count($areaOptions) > 1) {
+                        $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions;
+                    } else {
+                        $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions;
+                    }
+                    /*POCOR-6333 ends*/
                     $attr['onChangeReload'] = true;
                 } else {
                     $attr['type'] = 'hidden';

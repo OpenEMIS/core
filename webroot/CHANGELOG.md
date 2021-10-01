@@ -1,3 +1,16 @@
+### [3.70.0] - 2021-10-01
+- Implemented: OpenEMIS Core: Webhook Role - Create
+- Implemented: OpenEMIS Core: Webhook Role - Delete
+- Implemented: Update Export button function - Institutions > Academic > Classes (include homeroom teacher and number of students per classes by gender)
+- Implemented: Add Export button function - Institutions > Infrastructures > WASH > Water
+- Bug Fixed: Institution > Academic > Students/Staff: Student or Staff Search 404 Error
+- Bug Fixed: Institutions>Students>Attendance: Imported Student Attendance does not reflect Actual Absence Type
+- Bug Fixed: Reports>Textbooks/Survey/Rubric/Workflow: Add Academic Period, Area Level, Area Name and Institution Name filters to all reports
+- Bug Fixed: Reports-Institutions:Not able to view Reports data
+- Bug Fixed: Administration>Profile>Student: institutions which are currently inactive in MEMIS are shown in the Institution filter
+- Bug Fixed: Reports: Reports that are in progress should be able to be deleted
+- Bug Fixed: Report>Institution: No data generated when Area Level and Area Education not selected and There is no link between the Area Level and Area Education and the Institution filters.
+
 ### [3.69.4] - 2021-09-23
 - Implemented: OpenEMIS Core: Webhook Education Structure System - Delete
 - Bug Fixed: Administrations > Security > Roles > Permission: To grant access for Import Extracurricular to users
