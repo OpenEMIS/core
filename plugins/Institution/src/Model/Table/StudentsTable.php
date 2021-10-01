@@ -704,6 +704,11 @@ class StudentsTable extends ControllerActionTable
     {
         $this->field('previous_institution_student_id', ['type' => 'hidden']);
         $this->triggerAutomatedStudentWithdrawalShell();
+
+        $session = $this->request->session();
+        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $assignedStudentToInstitution = $this->find()->where(['institution_id'=>$institutionId])->count();
+        $session->write('is_any_student', $assignedStudentToInstitution);
     }
 
     public function beforeDelete(Event $event, Entity $entity)
