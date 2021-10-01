@@ -164,6 +164,10 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $areaEducationId = $requestData->area_education_id;
+        $institutionId = $requestData->institution_id;
+        $AcademicPeriods = TableRegistry::get('academic_periods');
+        $Institutions = TableRegistry::get('institutions');
+        $StudentsEnrollmentSummary = TableRegistry::get('institution_students');
         $area_id_array=[];
         if(!empty($areaEducationId)){
             $Areas = TableRegistry::get('Areas');
@@ -195,14 +199,13 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
             }
         }
         $areaEducationId = $area_id_array;    
-        $condArea = array();
+        $conditions = [];
         if($areaEducationId != -1){
-            $condArea = ['Areas.id IN ' =>  $areaEducationId];
+            $conditions['Areas.id IN '] = $areaEducationId;
         }
-
-        $AcademicPeriods = TableRegistry::get('academic_periods');
-        $Institutions = TableRegistry::get('institutions');
-        $StudentsEnrollmentSummary = TableRegistry::get('institution_students');
+        if(!empty($institutionId) && $institutionId > 0){
+            $conditions[$Institutions->aliasfield('id')] = $institutionId;
+        }
         $institutionsList = $Institutions
                                 ->find()
                                 ->select([
@@ -214,7 +217,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ->leftJoin(['Areas' => 'areas'], [
                                     $Institutions->aliasfield('area_id').' = ' . 'Areas.id'
                                 ])
-                                ->where($condArea)
+                                ->where($conditions)
                                 ->toArray();
         $result = [];
         if(!empty($institutionsList)){

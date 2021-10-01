@@ -31,9 +31,26 @@ class WorkflowInstitutionTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        /*POCOR-6296 starts*/
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+        $areaId = $requestData->area;
+        $institutionId = $requestData->institution_id;
+        $where = [];
+        if ($institutionId > 0) {
+            $where[$this->aliasField('institution_id')] = $institutionId;
+        }
+        if (!empty($areaId) && $areaId != -1) {
+            $where[$this->aliasField('Institutions.area_id')] = $areaId;
+        }
+        if ($academicPeriodId != 0) {
+            $where[$this->aliasField('academic_period_id')] = $academicPeriodId;
+        }
+        /*POCOR-6296 ends*/
         $query
             ->where([
-                $this->aliasField('status_id !=') => '-1'
+                $this->aliasField('status_id !=') => '-1',
+                $where //POCOR-6269
             ]);
     }
 }

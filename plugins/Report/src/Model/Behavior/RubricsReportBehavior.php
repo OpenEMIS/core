@@ -39,11 +39,37 @@ class RubricsReportBehavior extends Behavior {
 		$templateId = $requestData->rubric_template_id;
 		$academicPeriodId = $requestData->academic_period_id;
 		$status = $requestData->status;
+		/*POCOR-6296 starts*/
+        $areaId = $requestData->area_education_id;
+        $institutionId = $requestData->institution_id;
+        $newCondition = [];
+        if ($institutionId > 0) {
+            $newCondition[$this->_table->aliasField('institution_id')] = $institutionId;
+        }
+        if (!empty($areaId) && $areaId != -1) {
+            $newCondition[$this->_table->Institutions->aliasField('area_id')] = $areaId;
+        }
+        $superAdmin = $requestData->super_admin;
+        $userId = $requestData->user_id;
+        $institutionIds = [];
+        if (!$superAdmin) {
+            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $instituitionData = $InstitutionsTable->find('byAccess', ['userId' => $userId])->toArray();
+            if (isset($instituitionData)) {
+                foreach ($instituitionData as $key => $value) {
+                    $institutionIds[] = $value->id;
+                }
+            }
+        }
+        if ($institutionId == 0) {
+            $newCondition['Institutions.id IN'] = $institutionIds;
+        }
+        /*POCOR-6296 ends*/
 		$condition = [
 			$this->_table->aliasField('rubric_template_id') => $templateId,
 			$this->_table->aliasField('academic_period_id') => $academicPeriodId,
 		];
-
+		$condtitions = array_merge($condition, $newCondition);//POCOR-6296
 		$statusCondition = [];
 		if ($status == self::COMPLETED) {
 			$statusCondition = [
@@ -54,7 +80,7 @@ class RubricsReportBehavior extends Behavior {
 				$this->_table->aliasField('status').' IS NOT' => self::COMPLETED
 			];
 		}
-		$condition = array_merge($condition, $statusCondition);
+		$condition = array_merge($condtitions, $statusCondition);
 
 		$sheets[] = [
     		'name' => $this->_table->alias(),
