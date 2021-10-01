@@ -1689,6 +1689,33 @@ class InstitutionReportCardsTable extends AppTable
 				->hydrate(false)
 				->toArray()
 			;
+            //POCOR-6330 starts
+            $enrolledStudentsData = 0;
+            if(empty($EducationGradesData)){
+                $entity[] = [
+                    'education_grade_name' =>  '',
+                    'education_grade_id' =>  0,
+                    'male_student_enrolment' => 0,
+                    'female_student_enrolment' => 0,
+                    'total_student_enrolment' => 0,
+                    'male_student_repetition' => 0,
+                    'female_student_repetition' => 0,
+                    'total_student_repetition' => 0,
+                    'male_student_dropout' => 0,
+                    'female_student_dropout' => 0,
+                    'total_student_dropout' => 0,
+                    'total_student' => 0,
+                    'female_subject_staff' => 0,
+                    'subject_staff' => 0,
+                    'secondary_teacher' => 0,
+                    'male_student_special_need' => 0,
+                    'female_student_special_need' => 0,
+                    'total_student_special_need' => 0,
+                    'syrian_students' => 0
+                ];
+
+                return $entity;
+            }//POCOR-6330 ends
 			$enrolledStudentsData = 0;
 			foreach ($EducationGradesData as $value) {
 				$enrolledMaleStudentsData = $InstitutionStudents->find()
