@@ -371,13 +371,9 @@ class NavigationComponent extends Component
             }
             /*POCOR-6332 starts*/
             if ($userType == 6) {
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
             if ($userType == 7) {
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
             /*POCOR-6332 ends*/
