@@ -1074,7 +1074,7 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
-                $attr['options'] = ['' => '-- ' . _('Select') . ' --', '0' => _('All Infrastructure Level')] + $typeOptions;
+                $attr['options'] = ['' => '-- ' . _('Select') . ' --', 0 => _('All')] + $typeOptions;
                 $attr['attr']['required'] = true;
             }
             return $attr;
