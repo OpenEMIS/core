@@ -1902,6 +1902,7 @@ class InstitutionReportCardsTable extends AppTable
 				->toArray()
 			;
 			$enrolledStudentsData = 0;
+            //echo "<pre>"; print_r($EducationGradesData); die;
             //POCOR-6328 start
             if(empty($EducationGradesData)){
                 $entity = [];
@@ -2195,12 +2196,11 @@ class InstitutionReportCardsTable extends AppTable
                     )
                     ->where(['StaffTypes.international_code' => 'temporary'])
                     ->where(['InstitutionClassGrades.education_grade_id' => $value['id']])
-                    ->where([$institutionClasses->aliasField('id') => $params['institution_id']])
+                    ->where([$institutionClasses->aliasField('institution_id') => $params['institution_id']])
                     ->where([$institutionClasses->aliasField('academic_period_id') => $params['academic_period_id']])
                     ->hydrate(false)
                     ->count()
                 ;
-
                 $temporary_staff = $secondaryStaffData + $homeroomStaffData;
                 //POCOR-6328 ends
 				$entity[] = [
