@@ -734,7 +734,7 @@ class StaffUserTable extends ControllerActionTable
                     'label' => 'Description'
                 ]; */
 
-                $newFields[] = [
+                /* $newFields[] = [
                     'key' => 'InstitutionClasses.name',
                     'field' => 'class_name',
                     'type' => 'string',
@@ -753,7 +753,7 @@ class StaffUserTable extends ControllerActionTable
                     'field' => 'total_absence',
                     'type' => 'string',
                     'label' => 'Total Absence'
-                ];
+                ]; */
             }
         }
         $fields->exchangeArray($newFields);
@@ -791,9 +791,9 @@ class StaffUserTable extends ControllerActionTable
                     " - ",
                     'contactOptions.name' => 'literal'
                 ]),
-                'class_name' => 'InstitutionClasses.name',
-                'subject_name' => 'InstitutionSubjects.name',
-                'total_absence' =>  "(SELECT COUNT(id) FROM ".$staffAbsence->table()." WHERE time_in IS NULL AND time_out IS NULL AND staff_id =".$staffUserId.")",
+                // 'class_name' => 'InstitutionClasses.name',
+                // 'subject_name' => 'InstitutionSubjects.name',
+                // 'total_absence' =>  "(SELECT COUNT(id) FROM ".$staffAbsence->table()." WHERE time_in IS NULL AND time_out IS NULL AND staff_id =".$staffUserId.")",
             ])
             ->leftjoin(
                 [$userIdentities->alias() => $userIdentities->table()],
@@ -803,7 +803,7 @@ class StaffUserTable extends ControllerActionTable
                 [$identityType->alias() => $identityType->table()],
                 [$identityType->aliasField('id=').$userIdentities->aliasField('identity_type_id')]
             )
-        ->leftjoin(
+            ->leftjoin(
                 [$nationalities->alias() => $nationalities->table()],
                 [$userIdentities->aliasField('nationality_id=').$nationalities->aliasField('id')]
             )
