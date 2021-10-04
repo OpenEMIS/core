@@ -83,6 +83,14 @@ class UserInsurancesTable extends ControllerActionTable
         /*POCOR-6307 Ends*/
     }
 
+    /* POCOR-6131 */
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    }
+    /* POCOR-6131 */
+
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
@@ -153,5 +161,8 @@ class UserInsurancesTable extends ControllerActionTable
 
         $this->fields['insurance_type_id']['type'] = 'select';
         $this->field('insurance_type_id', ['attr' => ['label' => __('Type')]]);
+        // POCOR-6131
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 }

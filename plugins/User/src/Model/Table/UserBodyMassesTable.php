@@ -165,6 +165,14 @@ class UserBodyMassesTable extends ControllerActionTable
         $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
         $this->field('comment',['visible' => false]);
         $this->field('security_user_id',['visible' => false]);
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['visible' => false]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -199,6 +207,8 @@ class UserBodyMassesTable extends ControllerActionTable
         $this->field('weight', ['attr' => ['label' => __('Weight') . $this->tooltipMessage(__('Within 0 to 500 kilograms'))]]);
 
         $this->field('body_mass_index', ['visible' => false]);
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
     protected function tooltipMessage($message)

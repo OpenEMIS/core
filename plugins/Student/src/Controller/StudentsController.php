@@ -271,12 +271,12 @@ class StudentsController extends AppController
     //POCOR-6131 - Add export Button
     public function StudentBodyMasses()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.UserBodyMasses']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserBodyMasses']);
     }
 
     public function StudentInsurances()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.UserInsurances']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserInsurances']);
     }
 
     public function changeStudentHealthHeader($model, $modelAlias, $userType)
