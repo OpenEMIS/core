@@ -1902,7 +1902,6 @@ class InstitutionReportCardsTable extends AppTable
 				->toArray()
 			;
 			$enrolledStudentsData = 0;
-            //echo "<pre>"; print_r($EducationGradesData); die;
             //POCOR-6328 start
             if(empty($EducationGradesData)){
                 $entity = [];
