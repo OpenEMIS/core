@@ -1026,6 +1026,13 @@ class NavigationComponent extends Component
                 'selected' => ['InstitutionTrips.add', 'InstitutionTrips.edit', 'InstitutionTrips.view', 'InstitutionTrips.delete']
             ],
 
+            /* 'Institutions.InstitutionTrips.index' => [
+                'title' => 'Trips',
+                'parent' => 'Institutions.Transport',
+                'params' => ['plugin' => 'Institution'],
+                'selected' => ['Institutions.InstitutionTrips.add', 'Institutions.InstitutionTrips.edit', 'Institutions.InstitutionTrips.view', 'Institutions.InstitutionTrips.delete']
+            ], */
+
             'Institutions.Cases' => [
                 'title' => 'Cases',
                 'parent' => 'Institutions.Institutions.index',
