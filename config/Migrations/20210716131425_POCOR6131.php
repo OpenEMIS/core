@@ -33,8 +33,8 @@ class POCOR6131 extends AbstractMigration
 
 
         //Change Contact people Controller
-        $this->execute("UPDATE security_functions SET controller = 'Student' WHERE name = 'Student Body Mass'");
-        $this->execute("UPDATE security_functions SET controller = 'Student' WHERE name = 'Student Insurance'");
+        $this->execute("UPDATE security_functions SET controller = 'Students' WHERE name = 'Student Body Mass'");
+        $this->execute("UPDATE security_functions SET controller = 'Students' WHERE name = 'Student Insurance'");
 
         //chnage view,add,edit and delete to controller of Student Body Mass
         $this->execute("UPDATE security_functions SET _view = 'StudentBodyMasses.view|StudentBodyMasses.index' WHERE name = 'Student Body Mass' ");

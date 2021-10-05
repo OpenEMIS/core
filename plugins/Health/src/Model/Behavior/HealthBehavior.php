@@ -83,7 +83,7 @@ class HealthBehavior extends Behavior
             ];
         }
 
-        if ($name == 'Students' && $controller->AccessControl->check(['StudentBodyMasses', 'index'])) {
+        if ($name == 'Students' && $controller->AccessControl->check([$name, 'StudentBodyMasses', 'index'])) {
             $session = $this->_table->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
@@ -113,7 +113,7 @@ class HealthBehavior extends Behavior
             ];
         }
 
-        if ($name == 'Students' && $controller->AccessControl->check(['StudentInsurances', 'index'])) {
+        if ($name == 'Students' && $controller->AccessControl->check([$name, 'StudentInsurances', 'index'])) {
             $session = $this->_table->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
@@ -150,8 +150,14 @@ class HealthBehavior extends Behavior
         }
         /*POCOR-6307 Starts*/
         $modelName = $model->alias();
-        if($model->alias() == 'UserInsurances'){
+        if($name == 'Staff' && $model->alias() == 'UserInsurances'){
             $modelName = 'StaffInsurances';
+        }
+        elseif($name == 'Students' && $model->alias() == 'UserBodyMasses'){
+            $modelName = 'StudentBodyMasses';
+        }
+        elseif($name == 'Students' && $model->alias() == 'UserInsurances'){
+            $modelName = 'StudentInsurances';
         }
         /*POCOR-6307 Ends*/
         $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
