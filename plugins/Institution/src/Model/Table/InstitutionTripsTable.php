@@ -10,9 +10,11 @@ use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
+use Cake\Network\Request;
+use App\Model\Table\ControllerActionTable;
 use App\Model\Table\AppTable;
 
-class InstitutionTripsTable extends AppTable
+class InstitutionTripsTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -26,6 +28,12 @@ class InstitutionTripsTable extends AppTable
 
         $this->hasMany('InstitutionTripDays', ['className' => 'Institution.InstitutionTripDays', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']);
         $this->hasMany('InstitutionTripPassengers', ['className' => 'Institution.InstitutionTripPassengers', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']);
+    
+        $this->addBehavior('Excel', [
+            'excludes' => ['comment', 'institution_id'],
+            'pages' => ['index'],
+            'autoFields' => false
+        ]);
     }
 
 	public function validationDefault(Validator $validator)
@@ -165,5 +173,29 @@ class InstitutionTripsTable extends AppTable
         ];
 
         return $days;
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('comment',['visible' => false]);    
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $modelAlias = 'InstitutionTrips';
+        $userType = '';
+        $this->controller->changePageHeaderTrips($this, $modelAlias, $userType);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    { 
+        switch ($field) {
+            case 'institution_transport_provider_id':
+                return __('Provider');
+            case 'transport_status_id': 
+                return __('Status');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
