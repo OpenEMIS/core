@@ -40,6 +40,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         'security_user_delete' => 'Delete Security User',
         'academic_period_create' => 'Academic Period Create',
         'academic_period_update' => 'Academic Period Update',
+        'academic_period_delete' => 'Academic Period Delete', 
         'education_cycle_create' => 'Education Structure Cycle Create',
         'education_cycle_update' => 'Education Structure Cycle Update',
         'education_cycle_delete' => 'Education Structure Cycle Delete',
