@@ -47,7 +47,9 @@ class ExaminationResultsTable extends ControllerActionTable
 
         $this->addBehavior('Examination.RegisteredStudents');
 
+        // POCOR-6159
         $this->addBehavior('Excel', ['pages' => ['index']]);
+        // POCOR-6159
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
@@ -337,8 +339,11 @@ class ExaminationResultsTable extends ControllerActionTable
         }
     }
 
+    // POCOR-6159 START
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    {
+    {   
+        $academicPeriodId =  ($this->request->query['academic_period_id']) ? $this->request->query['academic_period_id'] : 0 ;
+        $examinationId = ($this->request->query['examination_id']) ? $this->request->query['examination_id'] : 0 ;
         $session = $this->request->session();
         $institutionId  = $session->read('Institution.Institutions.id');
         
@@ -373,8 +378,77 @@ class ExaminationResultsTable extends ControllerActionTable
             [$nationality->aliasField('id ='). $students->aliasField('nationality_id')],
         ])
         ->where([
-            'institution_id =' .$institutionId
+            'institution_id =' .$institutionId,
+            $this->aliasField('academic_period_id =') .$academicPeriodId,
+            $this->aliasField('examination_id =') .$examinationId
         ]);
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+                $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+                $statuses = $StudentStatuses->findCodeList();
+                $repeatedStatus = $statuses['REPEATED'];
+
+                $InstitutionStudentsCurrentData = $InstitutionStudents
+                ->find()
+                ->select([
+                    'InstitutionStudents.id', 
+                    'InstitutionStudents.student_status_id', 
+                    'InstitutionStudents.previous_institution_student_id'
+                ])
+                ->where([
+                    $InstitutionStudents->aliasField('student_id') => $row['student_id']
+                ])
+                ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
+                ->autoFields(true)
+                ->first();
+
+                $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+                $approvedStatuses = $StudentTransfers->getStudentTransferWorkflowStatuses('APPROVED');
+                $institutionStudentTransfer = $StudentTransfers
+                ->find()
+                ->select([
+                    $StudentTransfers->aliasField('id'),
+                    $StudentTransfers->aliasField('student_id'),
+                    $StudentTransfers->aliasField('previous_institution_id'),
+                    $StudentTransfers->aliasField('previous_academic_period_id'),
+                    $StudentTransfers->aliasField('status_id')
+                ])
+                ->where([
+                    $StudentTransfers->aliasField('student_id') => $row['student_id'],
+                    $StudentTransfers->aliasField('previous_institution_id') => $row['institution_id'],
+                    $StudentTransfers->aliasField('previous_academic_period_id') => $row['academic_period_id'],
+                    $StudentTransfers->aliasField('status_id IN') => $approvedStatuses
+                ])
+                ->order([$StudentTransfers->aliasField('status_id') => 'DESC'])
+                ->autoFields(true)
+                ->first();
+
+                /* echo "<pre>";
+                print_r($institutionStudentTransfer); die; */
+
+                if($InstitutionStudentsCurrentData){
+                    if(($InstitutionStudentsCurrentData->student_status_id == $repeatedStatus)){
+                        $student_status = "Yes";
+                    }else{
+                        $student_status = 'No';
+                    }
+                }else{
+                    $student_status = 'No';
+                }
+
+                if ($institutionStudentTransfer) {
+                    $transfer = 'Yes';
+                } else {
+                    $transfer = 'No';
+                }
+
+                $row['repeater_status'] = $student_status;
+                $row['transfer_status'] = $transfer;
+                return $row;
+            });
+        });
         
     }
 
@@ -425,18 +499,19 @@ class ExaminationResultsTable extends ControllerActionTable
 
         $extraField[] = [
             'key' => '',
-            'field' => 'repeated',
-            'type' => 'date',
+            'field' => 'repeater_status',
+            'type' => 'string',
             'label' => __('Repeated')
         ];
         
         $extraField[] = [
-            'key' => 'transferred',
-            'field' => 'transferred',
-            'type' => 'date',
+            'key' => '',
+            'field' => 'transfer_status',
+            'type' => 'string',
             'label' => __('Transferred')
         ];
 
         $fields->exchangeArray($extraField);
     }
+    // POCOR-6159 END
 }
