@@ -279,7 +279,12 @@ class InstitutionInfrastructuresTable extends AppTable
              $conditions['Institution'.$level.'.'.'institution_id IN'] = $institutionIds;
          
         }
-       
+		/*POCOR-6335 starts - applying academic period condition*/
+		if (!empty($academicPeriodId)) {
+             $conditions['Institution'.$level.'.'.'academic_period_id'] = $academicPeriodId;
+         
+        }
+		/*POCOR-633 ends*/	       
 		if ($infrastructureLevel == 1 || $infrastructureLevel == 2) {
 			$query
 					->select(['land_infrastructure_code'=>'Institution'.$level.'.'.'code',
