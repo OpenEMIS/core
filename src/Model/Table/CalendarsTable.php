@@ -162,8 +162,6 @@ class CalendarsTable extends ControllerActionTable
             'label' => __('End Date')
         ];
 
-        // dump($fields); die;
-
         $fields->exchangeArray($extraField);
     }
 
@@ -172,8 +170,6 @@ class CalendarsTable extends ControllerActionTable
     {
         $session = $this->request->session();
         $institutionId  = $session->read('Institution.Institutions.id');
-
-        // $query = 'SELECT `Calendars`.`id` AS `Calendars__id`, `Calendars`.`name` AS `Calendars__name`, `Calendars`.`comment` AS `Calendars__comment`, `Calendars`.`academic_period_id` AS `Calendars__academic_period_id`, `Calendars`.`institution_id` AS `Calendars__institution_id`, MIN(calendar_event_dates.date) AS `start_date`, MAX(calendar_event_dates.date) AS `end_date`, `Calendars`.`calendar_type_id` AS `Calendars__calendar_type_id`, `Calendars`.`modified_user_id` AS `Calendars__modified_user_id`, `Calendars`.`modified` AS `Calendars__modified`, `Calendars`.`created_user_id` AS `Calendars__created_user_id`, `Calendars`.`created` AS `Calendars__created` FROM `calendar_events` `Calendars` INNER JOIN `calendar_event_dates` ON calendar_event_dates.calendar_event_id = Calendars.id GROUP BY Calendars.id';
         
         $calendarEventDates = TableRegistry::get('calendar_event_dates');
         $CalendarTypes = TableRegistry::get('CalendarTypes');
@@ -308,10 +304,6 @@ class CalendarsTable extends ControllerActionTable
         ->innerJoin([$CalendarTypes->alias() => $CalendarTypes->table()], [
             [$CalendarTypes->aliasField('id ='). $this->aliasField('calendar_type_id')],
         ])
-        /* ->innerJoin(
-            ['calendar_event_dates' => 'calendar_event_dates'],
-            ['calendar_event_dates.calendar_event_id = ' . $this->aliasField('id')]
-        ) */
         ->group($this->aliasField('id'))
         ->where([
             'institution_id =' .$institutionId
