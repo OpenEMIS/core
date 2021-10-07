@@ -223,9 +223,10 @@ class CalendarsTable extends ControllerActionTable
         $this->field('end_date', ['type' => 'date','attr' => ['label' => __('End Date')]]);
     }
 
-    
+   
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        // POCOR-6122 start
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
 
@@ -240,6 +241,7 @@ class CalendarsTable extends ControllerActionTable
 
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        // POCOR-6122 end
 
         $this->field('type', ['visible' => true, 'attr' => ['label' => __('Type')]]);
         $this->field('name', ['visible' => true, 'attr' => ['label' => __('Name')]]);
@@ -251,6 +253,7 @@ class CalendarsTable extends ControllerActionTable
         //$this->setFieldOrder(['generated_on', 'generated_by']);
     }
 
+    // POCOR-6122 start
     private function getSelectedAcademicPeriod($request)
     {
         $selectedAcademicPeriod = '';
@@ -267,14 +270,17 @@ class CalendarsTable extends ControllerActionTable
 
         return $selectedAcademicPeriod;
     } 
+    // POCOR-6122 end
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // POCOR-6122 start
         if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
             $query->where([
                         $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
                     ], [], true); //this parameter will remove all where before this and replace it with new where.
         }
+        // POCOR-6122 end
 
         $session = $this->request->session();
         $institutionId  = $session->read('Institution.Institutions.id');
