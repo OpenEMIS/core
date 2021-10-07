@@ -601,6 +601,13 @@ class InstitutionsController extends AppController
     }
     //POCOR-5669 added InstitutionMaps
 
+    //POCOR-6122 add export button in calendar
+    public function InstitutionCalendars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Calendars']);
+    }
+    //POCOR-6122 add export button in calendar
+
     //POCOR-5683 added InstitutionStatusUpdate
     public function InstitutionStatus()
     {
