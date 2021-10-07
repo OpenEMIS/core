@@ -350,6 +350,7 @@ class ExaminationResultsTable extends ControllerActionTable
         $students = TableRegistry::get('security_users');
         $IdentityTypes = TableRegistry::get('identity_types');
         $nationality = TableRegistry::get('nationalities');
+        $examinations = TableRegistry::get('examinations');
 
         $query->select([
             $this->aliasField('id') , 
@@ -363,6 +364,7 @@ class ExaminationResultsTable extends ControllerActionTable
 			'nationality_id' =>$nationality->aliasField('name'),
 			'identity_type_id' =>$IdentityTypes->aliasField('name'),
 			'identity_number' =>$students->aliasField('identity_number'),
+			'education_grade_id' =>$examinations->aliasField('education_grade_id'),
             $this->aliasField('modified_user_id'),
             $this->aliasField('modified'), 
             $this->aliasField('created_user_id'),
@@ -376,6 +378,9 @@ class ExaminationResultsTable extends ControllerActionTable
         ])
         ->LeftJoin([$nationality->alias() => $nationality->table()], [
             [$nationality->aliasField('id ='). $students->aliasField('nationality_id')],
+        ])
+        ->LeftJoin([$examinations->alias() => $examinations->table()], [
+            [$examinations->aliasField('id ='). $this->aliasField('examination_id')],
         ])
         ->where([
             'institution_id =' .$institutionId,
@@ -398,7 +403,9 @@ class ExaminationResultsTable extends ControllerActionTable
                     'InstitutionStudents.previous_institution_student_id'
                 ])
                 ->where([
-                    $InstitutionStudents->aliasField('student_id') => $row['student_id']
+                    $InstitutionStudents->aliasField('student_id') => $row['student_id'],
+                    $InstitutionStudents->aliasField('education_grade_id') => $row['education_grade_id'],
+                    $InstitutionStudents->aliasField('student_status_id') => $repeatedStatus,
                 ])
                 ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
                 ->autoFields(true)
@@ -425,19 +432,12 @@ class ExaminationResultsTable extends ControllerActionTable
                 ->autoFields(true)
                 ->first();
 
-                /* echo "<pre>";
-                print_r($institutionStudentTransfer); die; */
-
                 if($InstitutionStudentsCurrentData){
-                    if(($InstitutionStudentsCurrentData->student_status_id == $repeatedStatus)){
-                        $student_status = "Yes";
-                    }else{
-                        $student_status = 'No';
-                    }
+                    $student_status = "Yes";
                 }else{
                     $student_status = 'No';
                 }
-
+                
                 if ($institutionStudentTransfer) {
                     $transfer = 'Yes';
                 } else {
