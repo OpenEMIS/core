@@ -39,7 +39,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('Excel',[
-            'excludes' => ['date', 'file_name', 'reason_type_id', 'referrer_id'],
+            'excludes' => ['date', 'file_name', 'reason_type_id', 'referrer_id','security_user_id','special_needs_referrer_type_id'],
             'pages' => ['index'],
         ]);
     }
@@ -268,6 +268,37 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
 
         $this->setFieldOrder(['academic_period_id', 'referrer_id', 'special_needs_referrer_type_id', 'date', 'reason_type_id', 'comment', 'file_name', 'file_content']);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+        $extraField[] = [
+            'key' => 'InstitutionClasses.academic_period_id',
+            'field' => 'academic_period_id',
+            'type' => 'string',
+            'label' => 'Academic Period'
+        ];
+        $extraField[] = [
+            'key' => 'InstitutionClasses.special_needs_referrer_type_id',
+            'field' => 'special_needs_referrer_type_id',
+            'type' => 'string',
+            'label' => 'Duty Type'
+        ];
+        $extraField[] = [
+            'key' => 'InstitutionClasses.security_user_id',
+            'field' => 'security_user_id',
+            'type' => 'string',
+            'label' => 'Staff'
+        ];
+        $extraField[] = [
+            'key' => 'InstitutionClasses.comment',
+            'field' => 'comment',
+            'type' => 'string',
+            'label' => 'Comment'
+        ];
+
+        //print_r($newFields); exit;
+        $fields->exchangeArray($extraField);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){

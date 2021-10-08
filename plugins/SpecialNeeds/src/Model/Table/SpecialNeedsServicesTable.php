@@ -34,7 +34,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('Excel',[
-            'excludes' => ['organization', 'description', 'comment', 'file_name', 'academic_period_id'],
+            'excludes' => ['organization', 'description', 'comment', 'file_name', 'academic_period_id','security_user_id'],
             'pages' => ['index'],
         ]);
 

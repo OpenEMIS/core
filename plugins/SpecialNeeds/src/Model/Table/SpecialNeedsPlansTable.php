@@ -32,7 +32,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('Excel',[
-            'excludes' => ['comment', 'file_name'],
+            'excludes' => ['comment', 'file_name','security_user_id'],
             'pages' => ['index'],
         ]);
 
