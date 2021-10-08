@@ -620,7 +620,7 @@ class StaffUserTable extends ControllerActionTable
                 'staff_position_titles_name'=>!empty($staff_position_titles_name) ? $staff_position_titles_name : NULL,
                 'staff_types_name'=>!empty($staff_types_name) ? $staff_types_name : NULL,
                 'shift_options_name' => !empty($shiftName) ? $shiftName : NULL,
-                'role' => ($role == 1) ? 'staff' : NULL
+                'role_name' => ($role == 1) ? 'staff' : NULL
             ];
               $Webhooks = TableRegistry::get('Webhook.Webhooks');
               $Webhooks->triggerShell('staff_update', ['username' => ''], $body);
