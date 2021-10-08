@@ -36,6 +36,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->addBehavior('Workflow.Workflow', ['model' => 'Training.TrainingApplications']);
 
         $this->addBehavior('Excel',[
+            'excludes' => ['staff_id','institution_id','assignee_id'],
             'pages' => ['index'],
         ]);
         $this->toggle('edit', false);

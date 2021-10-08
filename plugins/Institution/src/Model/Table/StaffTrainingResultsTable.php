@@ -151,7 +151,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
                     'key' => 'TrainingCourses.name',
                     'field' => 'course_name',
                     'type' => 'string',
-                    'label' => 'Course'
+                    'label' => 'Training Course'
                 ];
 
                 $newFields[] = [
