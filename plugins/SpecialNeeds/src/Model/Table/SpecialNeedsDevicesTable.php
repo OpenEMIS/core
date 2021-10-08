@@ -25,7 +25,7 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
 
         $this->addBehavior('Excel',[
-            'excludes' => ['comment'],
+            'excludes' => ['comment','security_user_id'],
             'pages' => ['index'],
         ]);
     }
