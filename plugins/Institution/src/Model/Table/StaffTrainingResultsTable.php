@@ -9,6 +9,8 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use App\Model\Table\ControllerActionTable;
+use Cake\I18n\Date;
+use Cake\ORM\TableRegistry;
 
 class StaffTrainingResultsTable extends ControllerActionTable
 {
@@ -44,6 +46,49 @@ class StaffTrainingResultsTable extends ControllerActionTable
 		return '<span class="status highlight">' . $sessionResult->_matchingData['Statuses']->name . '</span>';
 	}
 
+	public function onGetStartDate(Event $event, Entity $entity)
+	{
+		$training_sessions = TableRegistry::get('training_sessions');
+		$attendanceType = $training_sessions
+                              ->find()
+                              ->where([$training_sessions->aliasField('id') => $entity->training_session_id])
+                              ->toArray();
+		return $attendanceType[0]['start_date']->format('F d,Y');
+	}
+	
+
+	public function onGetEndDate(Event $event, Entity $entity)
+	{
+		$training_sessions = TableRegistry::get('training_sessions');
+		$attendanceType = $training_sessions
+                              ->find()
+                              ->where([$training_sessions->aliasField('id') => $entity->training_session_id])
+                              ->toArray();
+		return $attendanceType[0]['end_date']->format('F d,Y');
+	}
+
+	public function onGetCreditHours(Event $event, Entity $entity)
+	{
+		$training_courses = TableRegistry::get('training_courses');
+		$attendanceType = $training_courses
+                              ->find()
+                              ->where([$training_courses->aliasField('id') => $entity['session']['training_course_id']])
+                              ->toArray();
+		return $attendanceType[0]['credit_hours'];
+	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'start_date':
+                return __('Session Start Date');
+            case 'end_date':
+                return __('Session End Date');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 	public function onGetTrainingCourse(Event $event, Entity $entity)
 	{
 		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
@@ -77,7 +122,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
 			$sessionOptions = $this
 				->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 				->matching('Sessions')
-				->select(['id' => 'Sessions.id', 'name' => 'Sessions.name'])
+				->select(['id' => 'Sessions.id', 'name' => 'Sessions.name', 'start_date'=> 'Sessions.start_date', 'Sessions.end_date'])
 				->where([
 					$this->aliasField('trainee_id') => $userId
 				])
@@ -115,9 +160,12 @@ class StaffTrainingResultsTable extends ControllerActionTable
 		]);
 		$this->field('training_course');
 		$this->field('training_provider');
+		$this->field('start_date');
+		$this->field('end_date');
+		$this->field('credit_hours');
 
 		$this->setFieldOrder([
-			'status', 'training_course', 'training_provider', 'training_session_id', 'training_result_type_id', 'result'
+			'status', 'training_course', 'training_provider', 'training_session_id', 'training_result_type_id', 'result', 'start_date', 'end_date', 'credit_hours'
 		]);
 	}
 
