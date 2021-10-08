@@ -1,3 +1,18 @@
+### [3.70.1] - 2021-10-08
+- Implemented: OpenEMIS Core: Webhook Education Structure System - Create
+- Implemented: OpenEMIS Core: Webhook Academic Period - Delete
+- Implemented: OpenEMIS Core: Webhook Role - Update
+- Implemented: Add Export button function - Institutions > Staff > Staff1 (include classes subjects absences)
+- Implemented: Change text in the Updates function
+- Implemented: Add Session Start Date, Session End Date and Credit Hours to Professional Development Results List Page
+- Bug Fixed: Administrations > Profiles > Students : System should display student's latest record based on the filter selected
+- Bug Fixed: Institutions > Performance > Report Cards: Reports are stuck in Progress
+- Bug Fixed: Administration > Profiles > Institutions: Adding of new Placeholders
+- Bug Fixed: Directory>Student: Error when viewing user who is both guardian and student
+- Bug Fixed: Reports > Institution > Infrastructure: Infrastructure Level filter does not have an "All" option" and Academic Period filter is not functioning
+- Bug Fixed: Personal>Student>Academic>Absences: 404 Error
+- Bug Fixed: Institution>Attendance>Students:404 error when trying to access the Archive page for Attendance
+
 ### [3.70.0] - 2021-10-01
 - Implemented: OpenEMIS Core: Webhook Role - Create
 - Implemented: OpenEMIS Core: Webhook Role - Delete
