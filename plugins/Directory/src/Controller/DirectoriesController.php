@@ -42,29 +42,21 @@ class DirectoriesController extends AppController
         $this->loadComponent('Training.Training');
         $this->loadComponent('User.Image');
         $this->attachAngularModules();
-        // $this->attachDirectoriesAngularModules();
 
         $this->set('contentHeader', 'Directories');
     }
 
     public function Directories()
     {
-        // $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Directories']);
-        $this->set('selectedAction', 'Directories');
-        $this->set('ngController', 'DirectoriesCtrl as $ctrl');
+        $action = $this->request->pass[0];
+        if($action == 'add'){
+            $data = "HEllO";
+            $this->set('data', $data);
+            $this->set('ngController', 'DirectoryAddCtrl as $ctrl');
+        }else{
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Directories']);
+        }
     }
-
-    // private function attachDirectoriesAngularModules()
-    // {
-    //     $action = $this->request->action;
-    //     switch ($action) {
-    //         case 'Directories':
-    //             $this->Angular->addModules([
-    //                 'directory.directories.ctrl',
-    //                 'directory.directories.svc'
-    //             ]);
-    //             break;
-    // }
 
     // CAv4
     public function StudentFees()
@@ -393,12 +385,6 @@ class DirectoriesController extends AppController
                 $this->Angular->addModules([
                     'staff.attendances.ctrl',
                     'staff.attendances.svc'
-                ]);
-                break;
-            case 'Directories':
-                $this->Angular->addModules([
-                    'directory.directories.ctrl',
-                    'directory.directories.svc'
                 ]);
                 break;
         }
