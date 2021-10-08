@@ -27,38 +27,23 @@ class POCOR6131 extends AbstractMigration
      */
     public function change()
     {
-        //backup
-        $this->execute('CREATE TABLE `z_6131_security_functions` LIKE `security_functions`');
-        $this->execute('INSERT INTO `z_6131_security_functions` SELECT * FROM `security_functions`');
+        $this->execute('DROP TABLE IF EXISTS `zz_6131_security_functions`');
+        $this->execute('CREATE TABLE `zz_6131_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `zz_6131_security_functions` SELECT * FROM `security_functions`');
 
+        $this->execute("UPDATE `security_functions` SET `controller` = 'Students', `_view` = 'StudentBodyMasses.index|StudentBodyMasses.view', `_edit` = 'StudentBodyMasses.edit', `_add` = 'StudentBodyMasses.add', `_delete` = 'StudentBodyMasses.delete' ,`_execute` = 'StudentBodyMasses.excel' WHERE `name` = 'Student Body Mass' AND `controller` = 'StudentBodyMasses' AND `module` = 'Institutions' AND `category` = 'Students - Health'");
 
-        //Change Contact people Controller
-        $this->execute("UPDATE security_functions SET controller = 'Students' WHERE name = 'Student Body Mass'");
-        $this->execute("UPDATE security_functions SET controller = 'Students' WHERE name = 'Student Insurance'");
-
-        //chnage view,add,edit and delete to controller of Student Body Mass
-        $this->execute("UPDATE security_functions SET _view = 'StudentBodyMasses.view|StudentBodyMasses.index' WHERE name = 'Student Body Mass' ");
-        $this->execute("UPDATE security_functions SET  _edit = 'StudentBodyMasses.edit' WHERE name = 'Student Body Mass' ");
-        $this->execute("UPDATE security_functions SET  _add = 'StudentBodyMasses.add' WHERE name = 'Student Body Mass' ");
-        $this->execute("UPDATE security_functions SET _delete = 'StudentBodyMasses.delete' WHERE name = 'Student Body Mass' ");
-
-        //change view,add,edit and delete to controller of Student Insurance
-        $this->execute("UPDATE security_functions SET _view = 'StudentInsurances.view|StudentInsurances.index' WHERE name = 'Student Insurance' ");
-        $this->execute("UPDATE security_functions SET  _edit = 'StudentInsurances.edit' WHERE name = 'Student Insurance' ");
-        $this->execute("UPDATE security_functions SET  _add = 'StudentInsurances.add' WHERE name = 'Student Insurance' ");
-        $this->execute("UPDATE security_functions SET _delete = 'StudentInsurances.delete' WHERE name = 'Student Insurance' ");
+        $this->execute("UPDATE `security_functions` SET `controller` = 'Students', `_view` = 'StudentInsurances.index|StudentInsurances.view', `_edit` = 'StudentInsurances.edit', `_add` = 'StudentInsurances.add', `_delete` = 'StudentInsurances.delete', `_execute` = 'StudentInsurances.excel' WHERE `name` = 'Student Insurance' AND `controller` = 'StudentInsurances' AND `module` = 'Institutions' AND `category` = 'Students - Health'");
 
         //enable Execute checkbox for export data
-        $this->execute("UPDATE security_functions SET _execute = 'Healths.excel' WHERE name = 'Overview' AND category = 'Students - Health' ");
-        $this->execute("UPDATE security_functions SET _execute = 'HealthAllergies.excel' WHERE name = 'Allergies' AND category = 'Students - Health' ");
-        $this->execute("UPDATE security_functions SET _execute = 'HealthConsultations.excel' WHERE name = 'Consultations' AND category = 'Students - Health' ");
-        $this->execute("UPDATE security_functions SET _execute = 'HealthFamilies.excel' WHERE name = 'Families' AND category = 'Students - Health' ");
-        $this->execute("UPDATE security_functions SET _execute = 'HealthHistories.excel' WHERE name = 'Histories' AND category = 'Students - Health' ");
-        $this->execute("UPDATE security_functions SET _execute = 'HealthImmunizations.excel' WHERE name = 'Vaccinations' AND category = 'Students - Health' ");
-        $this->execute("UPDATE security_functions SET _execute = 'HealthMedications.excel' WHERE name = 'Medications' AND category = 'Students - Health' ");
-        $this->execute("UPDATE security_functions SET _execute = 'HealthTests.excel' WHERE name = 'Tests' AND category = 'Students - Health' ");
-        $this->execute("UPDATE security_functions SET _execute = 'StudentBodyMasses.excel' WHERE name = 'Student Body Mass' AND category = 'Students - Health' ");
-        $this->execute("UPDATE security_functions SET _execute = 'StudentInsurances.excel' WHERE name = 'Student Insurance' AND category = 'Students - Health' ");
+        $this->execute("UPDATE `security_functions` SET `_execute` = 'Healths.excel' WHERE `name` = 'Overview' AND `controller` = 'Students' AND `category` = 'Students - Health' ");
+        $this->execute("UPDATE `security_functions` SET `_execute` = 'HealthAllergies.excel' WHERE `name` = 'Allergies' AND `controller` = 'Students' AND  `category` = 'Students - Health' ");
+        $this->execute("UPDATE `security_functions` SET `_execute` = 'HealthConsultations.excel' WHERE `name` = 'Consultations' AND `controller` = 'Students' AND `category` = 'Students - Health' ");
+        $this->execute("UPDATE `security_functions` SET `_execute` = 'HealthFamilies.excel' WHERE `name` = 'Families' AND `controller` = 'Students' AND `category` = 'Students - Health' ");
+        $this->execute("UPDATE `security_functions` SET `_execute` = 'HealthHistories.excel' WHERE `name` = 'Histories' AND `controller` = 'Students' AND `category` = 'Students - Health' ");
+        $this->execute("UPDATE `security_functions` SET `_execute` = 'HealthImmunizations.excel' WHERE `name` = 'Vaccinations' AND `controller` = 'Students' AND `category` = 'Students - Health' ");
+        $this->execute("UPDATE `security_functions` SET `_execute` = 'HealthMedications.excel' WHERE `name` = 'Medications' AND `controller` = 'Students' AND `category` = 'Students - Health' ");
+        $this->execute("UPDATE `security_functions` SET `_execute` = 'HealthTests.excel' WHERE `name` = 'Tests' AND `controller` = 'Students' AND `category` = 'Students - Health' ");
     }
 
     //rollback
