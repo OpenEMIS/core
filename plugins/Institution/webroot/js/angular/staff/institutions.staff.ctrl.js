@@ -26,7 +26,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.staffTypeOptions = {};
     StaffController.staffShiftsOptions = [];
     StaffController.staffTypeId = {};
-    StaffController.step = 'internal_search';
+    StaffController.step = 'user_details';
     StaffController.showExternalSearchButton = false;
     StaffController.completeDisabled = false;
     StaffController.institutionId = null;
@@ -820,7 +820,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.initNationality();
         StaffController.initIdentityType();
         angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-            step: "createUser"
+            step: "confirmation"
         });
     }
 
@@ -838,7 +838,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 });
             } else if (StaffController.transferStaffError) {
                 angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-                    step: "transferStaff"
+                    step: "summary"
                 });
             }
         }, function(error) {
@@ -1151,7 +1151,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             AlertSvc.error($scope, 'Please review the errors in the form.');
             $scope.$apply();
             angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-                step: 'createUser'
+                step: 'confirmation'
             });
         }
         return remain;
@@ -1202,8 +1202,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {
         StaffController.addStaffButton = false;
-        // Step 1 - Internal search
+
+        // Step 1 - User details
         if (data.step == 1) {
+            StaffController.externalSearch = false;
+            StaffController.createNewStaff = true;
+            StaffController.step = 'user_details';
+            StaffController.getUniqueOpenEmisId();
+            StaffController.generatePassword();
+            InstitutionsStaffSvc.resetExternalVariable();
+        }
+        // Step 2 - Internal search
+        else if (data.step == 2) {
             StaffController.Staff.identity_type_name = StaffController.defaultIdentityTypeName;
             StaffController.Staff.identity_type_id = StaffController.defaultIdentityTypeId;
             delete StaffController.postResponse;
@@ -1212,8 +1222,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.externalSearch = false;
             StaffController.step = 'internal_search';
         }
-        // Step 2 - External search
-        else if (data.step == 2) {
+        // Step 3 - External search
+        else if (data.step == 3) {
             StaffController.Staff.identity_type_name = StaffController.externalIdentityType;
             StaffController.Staff.identity_type_id = StaffController.defaultIdentityTypeId;
             delete StaffController.postResponse;
@@ -1222,17 +1232,17 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.externalSearch = true;
             StaffController.step = 'external_search';
         }
-        // Step 3 - Create user
-        else if (data.step == 3) {
+        // Step 4 - Create user
+        else if (data.step == 4) {
             StaffController.externalSearch = false;
             StaffController.createNewStaff = true;
-            StaffController.step = 'create_user';
+            StaffController.step = 'confirmation';
             StaffController.getUniqueOpenEmisId();
             StaffController.generatePassword();
             InstitutionsStaffSvc.resetExternalVariable();
         }
-        // Step 4 - Add Staff
-        else if (data.step == 4) {
+        // Step 5 - Add Staff
+        else if (data.step == 5) {
             if (StaffController.externalSearch) {
                 StaffController.getUniqueOpenEmisId();
             }
@@ -1240,9 +1250,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.createNewInternalDatasource(StaffController.internalGridOptions, true);
             StaffController.step = 'add_staff';
         }
-        // Step 5 - Transfer Staff
-        else if (data.step == 5) {
-            StaffController.step = 'transfer_staff';
+        // Step 6 - Transfer Staff
+        else if (data.step == 6) {
+            StaffController.step = 'summary';
         }
     });
 

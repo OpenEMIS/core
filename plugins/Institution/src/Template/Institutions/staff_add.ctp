@@ -22,7 +22,7 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
 <div class="wizard" data-initialize="wizard" id="wizard">
     <div class="steps-container">
         <ul class="steps" style="margin-left: 0">
-            <li data-step="1" class="active" data-name="internalSearch">
+            <li data-step="1" class="active" data-name="userDetails">
                 <div class="step-wrapper">
                     <?= __('User Details') ?>
                     <span class="chevron"></span>
@@ -42,12 +42,14 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                     <span class="chevron"></span>
                 </div>
             </li>
+
             <li data-step="4" data-name="confirmation">
                 <div class="step-wrapper">
                     <?= __('Confirmation') ?>
                     <span class="chevron"></span>
                 </div>
             </li>
+
             <li data-step="5" data-name="addStaff">
                 <div class="step-wrapper">
                     <?= __('Add Staff') ?>
@@ -55,6 +57,7 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                     <span class="chevron"></span>
                 </div>
             </li>
+
             <li data-step="6" data-name="summary">
                 <div class="step-wrapper">
                     <?= __('Summary') ?>
@@ -93,7 +96,125 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
         </button>
     </div>
     <div class="step-content">
-        <div class="step-pane sample-pane active" data-step="1" data-name="internalSearch">
+        <div class="step-pane sample-pane active" data-step="1" data-name="userDetails">
+            <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
+                <div class="input string">
+                    <label><?= __('OpenEMIS ID') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.openemis_no" type="string">
+                </div>
+                <div class="input string required">
+                    <label><?= __('First Name') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.first_name" ng-change="InstitutionStaffController.setStaffName()" type="string" ng-init="InstitutionStaffController.selectedStaffData.first_name='';">
+                    <div ng-if="InstitutionStaffController.postResponse.error.first_name" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.first_name">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input string">
+                    <label><?= __('Middle Name') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.middle_name" ng-change="InstitutionStaffController.setStaffName()" type="string">
+                </div>
+                <div class="input string">
+                    <label><?= __('Third Name') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.third_name" ng-change="InstitutionStaffController.setStaffName()" type="string">
+                </div>
+                <div class="input string required">
+                    <label><?= __('Last Name') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.last_name" ng-change="InstitutionStaffController.setStaffName()" type="string" ng-init="InstitutionStaffController.selectedStaffData.last_name='';">
+                    <div ng-if="InstitutionStaffController.postResponse.error.last_name" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.last_name">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input string">
+                    <label><?= __('Preferred Name') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.preferred_name" type="string">
+                </div>
+                <div class="input select required error">
+                    <label><?= __('Gender') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Staff[gender_id]" id="staff-gender_id"
+                            ng-options="option.id as option.name for option in InstitutionStaffController.genderOptions"
+                            ng-model="InstitutionStaffController.selectedStaffData.gender_id"
+                            ng-change="InstitutionStaffController.changeGender()"
+                            ng-init="InstitutionStaffController.selectedStaffData.gender_id='';"
+                            >
+                            <option value="" >-- <?= __('Select') ?> --</option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStaffController.postResponse.error.gender_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.gender_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input date required">
+                    <label for="Staff_date_of_birth"><?= __('Date Of Birth') ?></label>
+                    <div class="input-group date " id="Staff_date_of_birth" style="">
+                        <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.selectedStaffData.date_of_birth" ng-init="InstitutionStaffController.selectedStaffData.date_of_birth='';">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                    </div>
+                    <div ng-if="InstitutionStaffController.postResponse.error.date_of_birth" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.date_of_birth">{{ error }}</p>
+                    </div>
+                </div>
+                <div ng-class="InstitutionStaffController.Staff.nationality_class">
+                    <label><?= __('Nationality') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Staff[nationality_id]" id="staff-nationality_id"
+                            ng-options="option.id as option.name for option in InstitutionStaffController.StaffNationalitiesOptions"
+                            ng-model="InstitutionStaffController.Staff.nationality_id"
+                            ng-change="InstitutionStaffController.changeNationality()"
+                            ng-init="InstitutionStaffController.Staff.nationality_id='';"
+                            >
+                            <option value="" >-- <?= __('Select') ?> --</option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStaffController.postResponse.error.nationalities[0].nationality_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div ng-class="InstitutionStaffController.Staff.identity_type_class">
+                    <label><?= __('Identity Type') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Staff[identities_type_id]" id="staff-identities_type_id"
+                            ng-options="option.id as option.name for option in InstitutionStaffController.StaffIdentitiesOptions"
+                            ng-model="InstitutionStaffController.Staff.identity_type_id"
+                            ng-change="InstitutionStaffController.changeIdentityType()"
+                            >
+                            <option value="" >-- <?= __('Select') ?> --</option>
+                        </select>
+                    </div>
+                </div>
+                <div ng-class="InstitutionStaffController.Staff.identity_class">
+                    <label><?= __('Identity Number') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" ng-init="InstitutionStaffController.selectedStaffData.identity_number='';">
+                    <div ng-if="InstitutionStaffController.postResponse.error.identities[0].number" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].number">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input string">
+                    <label><?= __('Address') ?></label>
+                    <textarea ng-model="InstitutionStaffController.selectedStaffData.address" type="string" ng-init="InstitutionStaffController.selectedStaffData.address='';"></textarea>
+                </div>
+
+                <div class="input string required">
+                    <label><?= __('Username') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.username" type="string" ng-init="InstitutionStaffController.selectedStaffData.username='';">
+                    <div ng-if="InstitutionStaffController.postResponse.error.username" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.username">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div class="input password required">
+                    <label><?=
+                        __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
+                    ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.password" type="string" ng-init="InstitutionStaffController.selectedStaffData.password='';">
+                    <div ng-if="InstitutionStaffController.postResponse.error.password" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.password">{{ error }}</p>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="step-pane sample-pane" data-step="2" data-name="internalSearch">
             <div class="dropdown-filter">
                 <div class="filter-label">
                     <i class="fa fa-filter"></i>
@@ -139,7 +260,8 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 </div>
             </div>
         </div>
-        <div class="step-pane sample-pane active" data-step="2" data-name="externalSearch">
+
+        <div class="step-pane sample-pane" data-step="3" data-name="externalSearch">
             <div class="dropdown-filter">
                 <div class="filter-label">
                     <i class="fa fa-filter"></i>
@@ -173,7 +295,8 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 </div>
             </div>
         </div>
-        <div class="step-pane sample-pane" data-step="3" data-name="createUser">
+
+        <div class="step-pane sample-pane" data-step="4" data-name="confirmation">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                 <div class="input string required">
                     <label><?= __('OpenEMIS ID') ?></label>
@@ -292,7 +415,8 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 </div>
             </form>
         </div>
-        <div class="step-pane sample-pane" data-step="4" data-name="addStaff">
+
+        <div class="step-pane sample-pane" data-step="5" data-name="addStaff">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
                 <div class="input string required">
                     <label><?= __('OpenEMIS ID') ?></label>
@@ -486,7 +610,8 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 </div>
             </form>
         </div>
-        <div class="step-pane sample-pane" data-step="5" data-name="transferStaff" ng-show="InstitutionStaffController.step == 'transfer_staff';">
+
+        <div class="step-pane sample-pane" data-step="6" data-name="summary">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
                 <div class="input string">
                     <label><?= __('OpenEMIS ID') ?></label>
