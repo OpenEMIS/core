@@ -8,6 +8,8 @@ use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use DatePeriod;
+use DateInterval;
 use App\Model\Table\ControllerActionTable;
 
 class CalendarsTable extends ControllerActionTable
@@ -111,6 +113,85 @@ class CalendarsTable extends ControllerActionTable
         return $query;
     }
 
+    // POCOR-6122
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        //for showing start date and end date on edit page
+        $calendarEventId = $entity->id;
+        $query = $this->CalendarEventDates->find();
+
+        if($calendarEventId){
+            $calendarEventDate = $query
+            ->where([
+                $this->CalendarEventDates->aliasField('calendar_event_id') => $calendarEventId
+            ])
+            ->hydrate(false)
+            ->toArray();
+
+            $startDate = min($calendarEventDate)['date'];
+            $endDate = max($calendarEventDate)['date'];
+
+            $startDate = date("Y-m-d", strtotime($startDate));
+            $endDate = date("Y-m-d", strtotime($endDate));
+            $entity['start_date'] = $startDate;
+            $entity['end_date'] = $endDate;
+        }
+
+    }
+
+    // POCOR-6122
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) {
+            $startDate = new Date($entity->start_date);
+            $endDate = new Date($entity->end_date);
+            $endDate = $endDate->modify('+1 day');
+            $interval = new DateInterval('P1D');
+            $calendarEventId = $entity->id;
+    
+            $datePeriod = new DatePeriod($startDate, $interval, $endDate);
+    
+            foreach ($datePeriod as $date) {
+                $dateEntity = $this->CalendarEventDates->newEntity([
+                    'calendar_event_id' => $calendarEventId,
+                    'date' => $date
+                ]);
+                $this->CalendarEventDates->save($dateEntity);
+            }
+        }
+
+        if(!$entity->isNew()){
+            if ($entity->has('start_date') && $entity->has('end_date')) {
+                $startDate = new Date($entity->start_date);
+                $endDate = new Date($entity->end_date);
+            } else {
+                $dateData = $entity->calendar_event_dates;
+                $startDate = min($dateData)['date'];
+                $endDate = max($dateData)['date'];
+            }
+
+            $endDate = $endDate->modify('+1 day');
+            $interval = new DateInterval('P1D');
+            $calendarEventId = $entity->id;
+
+            $datePeriod = new DatePeriod($startDate, $interval, $endDate);
+
+            // delete all the date and re add the date
+            $this->CalendarEventDates->deleteAll([
+                'calendar_event_id' => $calendarEventId
+            ]);
+
+            foreach ($datePeriod as $date) {
+                $dateEntity = $this->CalendarEventDates->newEntity([
+                    'calendar_event_id' => $calendarEventId,
+                    'date' => $date
+                ]);
+                $this->CalendarEventDates->save($dateEntity);
+            }
+        }
+    }
+    // POCOR-6122
+
     public function findEdit(Query $query, array $options)
     {
         $query->contain(['CalendarEventDates', 'CalendarTypes']);
@@ -170,34 +251,38 @@ class CalendarsTable extends ControllerActionTable
     {
         $session = $this->request->session();
         $institutionId  = $session->read('Institution.Institutions.id');
+        $academicPeriod = ($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent() ;
         
         $calendarEventDates = TableRegistry::get('calendar_event_dates');
         $CalendarTypes = TableRegistry::get('CalendarTypes');
 
-        $query->select([
-            $this->aliasField('id') , 
-            $this->aliasField('name'), 
-            $this->aliasField('comment'), 
-            $this->aliasField('academic_period_id'),
-            $this->aliasField('institution_id'),
-            'start_date' => $query->func()->min($calendarEventDates->aliasField('date')),
-			'end_date' => $query->func()->max($calendarEventDates->aliasField('date')),
-            'type' => $CalendarTypes->aliasField('name'),
-            $this->aliasField('modified_user_id'),
-            $this->aliasField('modified'), 
-            $this->aliasField('created_user_id'),
-            $this->aliasField('created')
-        ])
-        ->innerJoin([$calendarEventDates->alias() => $calendarEventDates->table()], [
-            [$calendarEventDates->aliasField('calendar_event_id ='). $this->aliasField('id')],
-        ])
-        ->innerJoin([$CalendarTypes->alias() => $CalendarTypes->table()], [
-            [$CalendarTypes->aliasField('id ='). $this->aliasField('calendar_type_id')],
-        ])
-        ->group($this->aliasField('id'))
-        ->where([
-            'institution_id =' .$institutionId
-        ]);
+        if($academicPeriod != '' && isset($academicPeriod)){
+            $query->select([
+                $this->aliasField('id') , 
+                $this->aliasField('name'), 
+                $this->aliasField('comment'), 
+                $this->aliasField('academic_period_id'),
+                $this->aliasField('institution_id'),
+                'start_date' => $query->func()->min($calendarEventDates->aliasField('date')),
+                'end_date' => $query->func()->max($calendarEventDates->aliasField('date')),
+                'type' => $CalendarTypes->aliasField('name'),
+                $this->aliasField('modified_user_id'),
+                $this->aliasField('modified'), 
+                $this->aliasField('created_user_id'),
+                $this->aliasField('created')
+            ])
+            ->leftJoin([$calendarEventDates->alias() => $calendarEventDates->table()], [
+                [$calendarEventDates->aliasField('calendar_event_id ='). $this->aliasField('id')],
+            ])
+            ->innerJoin([$CalendarTypes->alias() => $CalendarTypes->table()], [
+                [$CalendarTypes->aliasField('id ='). $this->aliasField('calendar_type_id')],
+            ])
+            ->group($this->aliasField('id'))
+            ->where([
+                'institution_id =' .$institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriod
+            ]);
+        }
         
     }
 
@@ -298,7 +383,7 @@ class CalendarsTable extends ControllerActionTable
             $this->aliasField('created_user_id'),
             $this->aliasField('created')
         ])
-        ->innerJoin([$calendarEventDates->alias() => $calendarEventDates->table()], [
+        ->leftJoin([$calendarEventDates->alias() => $calendarEventDates->table()], [
             [$calendarEventDates->aliasField('calendar_event_id ='). $this->aliasField('id')],
         ])
         ->innerJoin([$CalendarTypes->alias() => $CalendarTypes->table()], [
