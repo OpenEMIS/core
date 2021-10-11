@@ -537,6 +537,8 @@ class InstitutionClassesTable extends ControllerActionTable
             $this->Students->alias(),
             $this->InstitutionSubjects->alias()
         ];
+        $homeRoomTeacher = ( isset($entity->staff_id) && $entity->staff_id > 0 ) ? 1 : 0;
+        $extra['associatedRecords'][] = ['model' => 'HomeRoomTeacher', 'count' => $homeRoomTeacher];
     }
 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
