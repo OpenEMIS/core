@@ -6,13 +6,7 @@ DirectoryaddSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc', 'U
 
 function DirectoryaddSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     var service = {
-        init: init,
-        translate: translate,
-        getTranslatedText: getTranslatedText,
-        getAcademicPeriodOptions: getAcademicPeriodOptions,
-        getWeekListOptions: getWeekListOptions,
-        getStaffAttendances: getStaffAttendances,
-        getColumnDefs: getColumnDefs,
+        init: init 
     };
     return service;
     
