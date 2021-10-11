@@ -42,6 +42,7 @@ class DirectoriesController extends AppController
         $this->loadComponent('Training.Training');
         $this->loadComponent('User.Image');
         $this->attachAngularModules();
+        $this->attachAngularModulesForDirectory();
 
         $this->set('contentHeader', 'Directories');
     }
@@ -50,8 +51,7 @@ class DirectoriesController extends AppController
     {
         $action = $this->request->pass[0];
         if($action == 'add'){
-            $data = "HEllO";
-            $this->set('data', $data);
+            $this->attachAngularModulesForDirectory();
             $this->set('ngController', 'DirectoryAddCtrl as $ctrl');
         }else{
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Directories']);
@@ -385,6 +385,19 @@ class DirectoriesController extends AppController
                 $this->Angular->addModules([
                     'staff.attendances.ctrl',
                     'staff.attendances.svc'
+                ]);
+                break;
+        }
+    }
+
+    private function attachAngularModulesForDirectory()
+    {
+        $action = $this->request->pass[0];
+        switch ($action) {
+            case 'add':
+                $this->Angular->addModules([
+                    'directory.directoryadd.ctrl',
+                    'directory.directoryadd.svc'
                 ]);
                 break;
         }
