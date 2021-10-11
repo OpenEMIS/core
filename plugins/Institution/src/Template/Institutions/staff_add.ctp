@@ -24,71 +24,72 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
         <ul class="steps" style="margin-left: 0">
             <li data-step="1" class="active" data-name="internalSearch">
                 <div class="step-wrapper">
+                    <?= __('User Details') ?>
+                    <span class="chevron"></span>
+                </div>
+            </li>
+
+            <li data-step="2" data-name="internalSearch">
+                <div class="step-wrapper">
                     <?= __('Internal Search') ?>
                     <span class="chevron"></span>
                 </div>
             </li>
 
-            <li data-step="2" data-name="externalSearch" ng-show="InstitutionStaffController.hasExternalDataSource">
+            <li data-step="3" data-name="externalSearch">
                 <div class="step-wrapper">
                     <?= __('External Search') ?>
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="3" data-name="createUser" ng-show="InstitutionStaffController.createNewStaff">
+            <li data-step="4" data-name="confirmation">
                 <div class="step-wrapper">
-                    <?= __('New Staff Details') ?>
+                    <?= __('Confirmation') ?>
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="4" data-name="addStaff">
+            <li data-step="5" data-name="addStaff">
                 <div class="step-wrapper">
                     <?= __('Add Staff') ?>
                     <input type="hidden" ng-model="InstitutionStaffController.hasExternalDataSource" ng-init="InstitutionStaffController.hasExternalDataSource = <?php if ($externalDataSource) echo 'true'; else echo 'false'; ?>; InstitutionStaffController.institutionId=<?= $institutionId; ?>; "/>
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="5" data-name="transferStaff" ng-show="InstitutionStaffController.step == 'transfer_staff'">
+            <li data-step="6" data-name="summary">
                 <div class="step-wrapper">
-                    <?= __('Staff Transfer') ?>
+                    <?= __('Summary') ?>
                     <span class="chevron"></span>
                 </div>
             </li>
         </ul>
     </div>
     <div class="actions top">
-        <?php if ($_createNewStaff) : ?>
-        <button
-            ng-if="((!InstitutionStaffController.initialLoad && !InstitutionStaffController.hasExternalDataSource)
-            || (!InstitutionStaffController.initialLoad && InstitutionStaffController.step == 'external_search')
-            ) && (InstitutionStaffController.step == 'external_search' || InstitutionStaffController.step == 'internal_search')"
-            ng-disabled="InstitutionStaffController.selectedStaff"
-            ng-click="InstitutionStaffController.onAddNewStaffClick()"
-            type="button" class="btn btn-default"><?= __('Create New Staff') ?>
+        <button type="button" class="btn" style="border: 1px solid #334C66!important;"
+            ng-if="(InstitutionStaffController.step!=='user_details')"
+            data-last="<?= __('Save') ?>">
+            <?= __('Back') ?>
         </button>
-        <?php endif; ?>
-        <button
-            type="button" class="btn btn-default" ng-click="InstitutionStaffController.onExternalSearchClick()"
-            ng-if="(!InstitutionStaffController.initialLoad && InstitutionStaffController.hasExternalDataSource && InstitutionStaffController.showExternalSearchButton && InstitutionStaffController.step=='internal_search')" ng-disabled="InstitutionStaffController.selectedStaff"><?= __('External Search') ?>
+        <button type="button" class="btn" style="border: 1px solid #334C66!important;"
+            ng-if="(InstitutionStaffController.step=='user_details')"
+            data-last="<?= __('Save') ?>">
+            <?= __('Cancel') ?>
         </button>
         <button
-            ng-if="InstitutionStaffController.rowsThisPage.length > 0 && (InstitutionStaffController.step=='internal_search' || InstitutionStaffController.step=='external_search')"
+            type="button" class="btn"
+            ng-if="(InstitutionStaffController.step=='summary')"
+            data-last="<?= __('Save') ?>">
+            <?= __('Close') ?>
+        </button>
+        <button type="button" class="btn btn-default"
             ng-model="InstitutionStaffController.selectedStaff"
-            ng-click="InstitutionStaffController.onAddStaffClick()"
-            ng-disabled="!InstitutionStaffController.selectedStaff"
-            type="button" class="btn btn-default"><?= __('Add Staff') ?>
+            ng-disabled="InstitutionStaffController.completeDisabled"
+            data-last="<?= __('Save') ?>">
+            <?= __('Next') ?>
         </button>
         <button
             ng-if="(InstitutionStaffController.step=='add_staff')"
             ng-click="InstitutionStaffController.onAddStaffCompleteClick()"
-            type="button" class="btn btn-default"><?= __('Complete') ?>
-        </button>
-        <button type="button" class="btn btn-default btn-next"
-            ng-model="InstitutionStaffController.selectedStaff"
-            ng-disabled="InstitutionStaffController.completeDisabled"
-            ng-show="(InstitutionStaffController.step=='create_user' || InstitutionStaffController.step=='transfer_staff')"
-            data-last="<?= __('Save') ?>">
-            <?= __('Next') ?>
+            type="button" class="btn btn-default"><?= __('Confirm') ?>
         </button>
     </div>
     <div class="step-content">

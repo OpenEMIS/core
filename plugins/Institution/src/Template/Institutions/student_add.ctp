@@ -19,35 +19,41 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 <div class="wizard" data-initialize="wizard" id="wizard">
     <div class="steps-container">
         <ul class="steps" style="margin-left: 0">
-            <li data-step="1" class="active" data-name="internalSearch">
+            <li data-step="1" class="active" data-name="userDetails">
+                <div class="step-wrapper">
+                    <?= __('User Details') ?>
+                    <span class="chevron"></span>
+                </div>
+            </li>
+            <li data-step="2" data-name="internalSearch">
                 <div class="step-wrapper">
                     <?= __('Internal Search') ?>
                     <span class="chevron"></span>
                 </div>
             </li>
 
-            <li data-step="2" data-name="externalSearch" ng-show="InstitutionStudentController.hasExternalDataSource">
+            <li data-step="3" data-name="externalSearch">
                 <div class="step-wrapper">
                     <?= __('External Search') ?>
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="3" data-name="createUser" ng-show="InstitutionStudentController.createNewStudent">
+            <li data-step="4" data-name="confirmation">
                 <div class="step-wrapper">
-                    <?= __('New Student Details') ?>
+                    <?= __('Confirmation') ?>
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="4" data-name="addStudent">
+            <li data-step="5" data-name="addStudent">
                 <div class="step-wrapper">
                     <?= __('Add Student') ?>
                     <input type="hidden" ng-model="InstitutionStudentController.hasExternalDataSource" ng-init="InstitutionStudentController.hasExternalDataSource = <?php if ($externalDataSource) echo 'true'; else echo 'false'; ?>; InstitutionStudentController.institutionId=<?= $institutionId; ?>;"/>
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="5" data-name="transferStudent" ng-show="InstitutionStudentController.studentTransferable">
+            <li data-step="6" data-name="summary">
                 <div class="step-wrapper">
-                    <?= __('Transfer Student') ?>
+                    <?= __('Summary') ?>
                     <span class="chevron"></span>
                 </div>
             </li>
@@ -55,7 +61,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
     </div>
     <div class="actions top">
         <?php if ($_createNewStudent) : ?>
-        <button
+        <!-- <button
             ng-if="((!InstitutionStudentController.initialLoad && !InstitutionStudentController.hasExternalDataSource)
             || (!InstitutionStudentController.initialLoad && InstitutionStudentController.step == 'external_search')
             ) && (InstitutionStudentController.step == 'external_search' || InstitutionStudentController.step == 'internal_search')"
@@ -79,23 +85,175 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             ng-if="(InstitutionStudentController.step=='add_student' && InstitutionStudentController.studentTransferable)"
             ng-click="InstitutionStudentController.onTransferStudentClick()">
             <?= __('Transfer Student') ?>
+        </button> -->
+        
+        <button
+            type="button" class="btn"
+            ng-if="(InstitutionStudentController.step!=='user_details')"
+            data-last="<?= __('Save') ?>" style="border: 1px solid #334C66!important;">
+            <?= __('Back') ?>
         </button>
         <button
-            type="button" class="btn btn-default"
-            ng-if="(InstitutionStudentController.step=='add_student' && !InstitutionStudentController.studentTransferable)"
-            ng-disabled="InstitutionStudentController.existingStudent"
-            ng-click="InstitutionStudentController.onAddStudentCompleteClick()">
-            <?= __('Complete') ?>
+            type="button" class="btn"
+            ng-if="(InstitutionStudentController.step=='user_details')"
+            data-last="<?= __('Save') ?>">
+            <?= __('Cancel') ?>
+        </button>
+        <button
+            type="button" class="btn"
+            ng-if="(InstitutionStudentController.step=='summary')"
+            data-last="<?= __('Save') ?>">
+            <?= __('Close') ?>
         </button>
         <button
             type="button" class="btn btn-default btn-next"
-            ng-show="(InstitutionStudentController.step=='create_user' || InstitutionStudentController.step=='transfer_student')"
+            ng-if="(InstitutionStudentController.step!=='add_student')"
             data-last="<?= __('Save') ?>">
             <?= __('Next') ?>
         </button>
+        <button
+            type="button" class="btn btn-default"
+            ng-if="InstitutionStudentController.step=='add_student'"
+            ng-disabled="InstitutionStudentController.existingStudent"
+            ng-click="InstitutionStudentController.onAddStudentCompleteClick()">
+            <?= __('Confirm') ?>
+        </button>
     </div>
     <div class="step-content">
-        <div class="step-pane sample-pane active" data-step="1" data-name="internalSearch">
+        <div class="step-pane sample-pane" data-step="1" data-name="userDetails">
+            <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
+                <div class="input string">
+                    <label><?= __('OpenEMIS ID') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.openemis_no" type="string">
+                    <div ng-if="InstitutionStudentController.postResponse.error.openemis_no" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.openemis_no">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div class="input string required">
+                    <label><?= __('First Name') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.first_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-init="InstitutionStudentController.selectedStudentData.first_name='';">
+                    <div ng-if="InstitutionStudentController.postResponse.error.first_name" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.first_name">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div class="input string">
+                    <label><?= __('Middle Name') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.middle_name" ng-change="InstitutionStudentController.setStudentName()" type="string">
+                </div>
+
+                <div class="input string">
+                    <label><?= __('Third Name') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.third_name" ng-change="InstitutionStudentController.setStudentName()" type="string">
+                </div>
+
+                <div class="input string required">
+                    <label><?= __('Last Name') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.last_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-init="InstitutionStudentController.selectedStudentData.last_name='';">
+                    <div ng-if="InstitutionStudentController.postResponse.error.last_name" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.last_name">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div class="input string">
+                    <label><?= __('Preferred Name') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.preferred_name" type="string">
+                </div>
+
+                <div class="input select required error">
+                    <label><?= __('Gender') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Students[gender_id]" id="students-gender_id"
+                            ng-options="option.id as option.name for option in InstitutionStudentController.genderOptions"
+                            ng-model="InstitutionStudentController.selectedStudentData.gender_id"
+                            ng-change="InstitutionStudentController.changeGender()"
+                            ng-init="InstitutionStudentController.selectedStudentData.gender_id='';"
+                            >
+                            <option value="" >-- <?= __('Select') ?> --</option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.gender_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.gender_id">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div class="input date required">
+                    <label for="Student_date_of_birth"><?= __('Date Of Birth') ?></label>
+                    <div class="input-group date " id="Student_date_of_birth" style="">
+                        <input type="text" class="form-control " name="Student[date_of_birth]" ng-model="InstitutionStudentController.selectedStudentData.date_of_birth" ng-init="InstitutionStudentController.selectedStudentData.date_of_birth='';">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.date_of_birth" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.date_of_birth">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div ng-class="InstitutionStudentController.Student.nationality_class">
+                    <label><?= __('Nationality') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Students[nationality_id]" id="students-nationality_id"
+                            ng-options="option.id as option.name for option in InstitutionStudentController.StudentNationalitiesOptions"
+                            ng-model="InstitutionStudentController.Student.nationality_id"
+                            ng-change="InstitutionStudentController.changeNationality()"
+                            ng-init="InstitutionStudentController.Student.nationality_id='';"
+                            >
+                            <option value="" >-- <?= __('Select') ?> --</option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.nationalities[0].nationality_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div ng-class="InstitutionStudentController.Student.identity_type_class">
+                    <label><?= __('Identity Type') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Students[identities_type_id]" id="students-identities_type_id"
+                            ng-options="option.id as option.name for option in InstitutionStudentController.StudentIdentitiesOptions"
+                            ng-model="InstitutionStudentController.Student.identity_type_id"
+                            ng-change="InstitutionStudentController.changeIdentityType()"
+                            >
+                            <option value="" >-- <?= __('Select') ?> --</option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.identities[0].identity_type_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.identities[0].identity_type_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div ng-class="InstitutionStudentController.Student.identity_class">
+                    <label><?= __('identity Number') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.identity_number" type="string" ng-init="InstitutionStudentController.selectedStudentData.identity_number='';">
+                    <div ng-if="InstitutionStudentController.postResponse.error.identities[0].number" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.identities[0].number">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div class="input string">
+                    <label><?= __('Address') ?></label>
+                    <textarea ng-model="InstitutionStudentController.selectedStudentData.address" ng-change="InstitutionStudentController.setStudentAddress()" type="string" ng-init="InstitutionStudentController.selectedStudentData.address='';"></textarea>
+                </div>
+
+                <div class="input string required">
+                    <label><?= __('Username') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.username" type="string" ng-init="InstitutionStudentController.selectedStudentData.username='';">
+                    <div ng-if="InstitutionStudentController.postResponse.error.username" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.username">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div class="input password required">
+                    <label><?=
+                        __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
+                    ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.password" type="string" ng-init="InstitutionStudentController.selectedStudentData.password='';">
+                    <div ng-if="InstitutionStudentController.postResponse.error.password" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.password">{{ error }}</p>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="step-pane sample-pane active" data-step="2" data-name="internalSearch">
             <div class="dropdown-filter">
                 <div class="filter-label">
                     <i class="fa fa-filter"></i>
@@ -142,7 +300,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             </div>
         </div>
 
-        <div class="step-pane sample-pane active" data-step="2" data-name="externalSearch">
+        <div class="step-pane sample-pane active" data-step="3" data-name="externalSearch">
             <div class="dropdown-filter">
                 <div class="filter-label">
                     <i class="fa fa-filter"></i>
@@ -177,7 +335,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             </div>
         </div>
 
-        <div class="step-pane sample-pane" data-step="3" data-name="createUser">
+        <div class="step-pane sample-pane" data-step="4" data-name="confirmation">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                 <div class="input string required">
                     <label><?= __('OpenEMIS ID') ?></label>
@@ -296,7 +454,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             </form>
         </div>
 
-        <div class="step-pane sample-pane" data-step="4" data-name="addStudent">
+        <div class="step-pane sample-pane" data-step="5" data-name="addStudent">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
                 <div class="input string required">
                     <label><?= __('OpenEMIS ID') ?></label>
@@ -461,7 +619,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             </form>
         </div>
 
-        <div class="step-pane sample-pane" data-step="5" data-name="transferStudent">
+        <div class="step-pane sample-pane" data-step="6" data-name="summary">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
                 <div class="input string">
                     <label><?= __('OpenEMIS ID') ?></label>
