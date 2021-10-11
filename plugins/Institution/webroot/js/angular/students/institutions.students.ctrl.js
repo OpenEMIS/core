@@ -26,7 +26,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.educationGradeOptions = {};
     StudentController.classOptions = {};
     StudentController.transferReasonOptions = {};
-    StudentController.step = 'internal_search';
+    StudentController.step = 'user_details';
     StudentController.showExternalSearchButton = false;
     StudentController.existingStudent = false;
     StudentController.studentTransferable = false;
@@ -76,6 +76,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.postTransferForm = postTransferForm;
     StudentController.addStudentUser = addStudentUser;
     StudentController.setStudentName = setStudentName;
+    StudentController.setStudentAddress = setStudentAddress;
     StudentController.appendName = appendName;
     StudentController.changeGender = changeGender;
     StudentController.validateNewUser = validateNewUser;
@@ -564,9 +565,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     };
 
     function reloadInternalDatasource(withData) {
-        if (withData !== false) {
-            StudentController.showExternalSearchButton = true;
-        }
         InstitutionsStudentsSvc.resetExternalVariable();
         StudentController.createNewInternalDatasource(StudentController.internalGridOptions, withData);
     };
@@ -916,6 +914,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData = studentData;
     }
 
+    function setStudentAddress() {
+        var studentData = StudentController.selectedStudentData;
+        studentData.name = '';
+
+        if (studentData.hasOwnProperty('address')) {
+            studentData.address = studentData.address.trim();
+        }
+        StudentController.selectedStudentData = studentData;
+    }
+
     function appendName(studentObj, variableName, trim) {
         if (studentObj.hasOwnProperty(variableName)) {
             if (trim === true) {
@@ -1162,7 +1170,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         // To go to add student page if there is a student selected from the internal search
         // or external search
-        if (data.step == 3 && data.direction == 'next') {
+        if (data.step == 5 && data.direction == 'next') {
             if (StudentController.validateNewUser()) {
                 evt.preventDefault();
             };
@@ -1283,8 +1291,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {
         StudentController.addStudentButton = false;
-        // Step 1 - Internal search
+        // Step 1 - User details
         if (data.step == 1) {
+            StudentController.externalSearch = false;
+            StudentController.createNewStudent = true;
+            StudentController.step = 'user_details';
+            StudentController.getUniqueOpenEmisId();
+            StudentController.generatePassword();
+            InstitutionsStudentsSvc.resetExternalVariable();
+        }
+        // Step 2 - Internal search
+        else if (data.step == 2) {
             StudentController.Student.identity_type_name = StudentController.defaultIdentityTypeName;
             StudentController.Student.identity_type_id = StudentController.defaultIdentityTypeId;
             StudentController.educationGradeOptions.selectedOption = '';
@@ -1295,8 +1312,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalSearch = false;
             StudentController.step = 'internal_search';
         }
-        // Step 2 - External search
-        else if (data.step == 2) {
+        // Step 3 - External search
+        else if (data.step == 3) {
             StudentController.Student.identity_type_name = StudentController.externalIdentityType;
             StudentController.Student.identity_type_id = StudentController.defaultIdentityTypeId;
             StudentController.educationGradeOptions.selectedOption = '';
@@ -1307,17 +1324,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalSearch = true;
             StudentController.step = 'external_search';
         }
-        // Step 3 - Create user
-        else if (data.step == 3) {
+        // Step 4 - Confirmation
+        else if (data.step == 4) {
             StudentController.externalSearch = false;
             StudentController.createNewStudent = true;
-            StudentController.step = 'create_user';
+            StudentController.step = 'confirmation';
             StudentController.getUniqueOpenEmisId();
             StudentController.generatePassword();
             InstitutionsStudentsSvc.resetExternalVariable();
         }
-        // Step 4 - Add Student
-        else if (data.step == 4) {
+        // Step 5 - Add Student
+        else if (data.step == 5) {
             if (StudentController.externalSearch) {
                 StudentController.getUniqueOpenEmisId();
             }
@@ -1339,10 +1356,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
             StudentController.step = 'add_student';
         }
-        // Step 5 - Transfer Student
+        // Step 6 - Summary
         else {
             AlertSvc.info($scope, 'By clicking save, a transfer workflow will be initiated for this student');
-            StudentController.step = 'transfer_student';
+            StudentController.step = 'summary';
         }
 
         // to ensure that the StudentController.step is updated

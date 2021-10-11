@@ -1,8 +1,22 @@
 angular.module('directory.directoryadd.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'directory.directoryadd.svc'])
-    .controller('DirectoryAddCtrl', DirectoryAddCtrlController);
+    .controller('DirectoryAddCtrl', DirectoryAddController);
 
-DirectoryAddCtrlController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddSvc'];
+DirectoryAddController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddSvc'];
 
-function DirectoryAddCtrlController($scope, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddSvc) {
+function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddSvc) {
+
+    var vm = this;
+    vm.action = 'view';
+
+    vm.addText="Add button";
     
+    vm.init=function(){
+        alert('Init Ctrl');
+        DirectoryaddSvc.init();
+    }
+    
+    angular.element(document).ready(function () {
+        vm.addText="Add button";
+        vm.init();
+    });
 }

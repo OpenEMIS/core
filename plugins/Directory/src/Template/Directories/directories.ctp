@@ -3,3 +3,8 @@
 <?= $this->Html->script('Directory.angular/directoryadd/directory.directoryadd.ctrl', ['block' => true]); ?>
 <?= $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepicker.min', ['block' => true]); ?>
 <?= $this->Html->css('ControllerAction.../plugins/timepicker/css/bootstrap-timepicker.min', ['block' => true]); ?>
+
+<div>
+    <h1> Add</h1>
+    <h2>{{$ctrl.addText}}</h2>
+</div>
