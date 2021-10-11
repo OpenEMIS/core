@@ -121,7 +121,8 @@ class BodyMassesTable extends AppTable
         if ($areaId != -1) {
             $conditions['Institutions.area_id'] = $areaId;
         }
-            
+        
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;  
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $areas = TableRegistry::get('Area.Areas');
@@ -195,6 +196,7 @@ class BodyMassesTable extends AppTable
             ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                 $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
                 $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                 $ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
             ])
