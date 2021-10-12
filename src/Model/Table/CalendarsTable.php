@@ -117,22 +117,28 @@ class CalendarsTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         //for showing start date and end date on edit page
-        $calendarEventId = $entity->id;
-        $query = $this->CalendarEventDates->find();
-
-        if($calendarEventId){
-            $calendarEventDate = $query
-            ->where([
-                $this->CalendarEventDates->aliasField('calendar_event_id') => $calendarEventId
-            ])
-            ->hydrate(false)
-            ->toArray();
-
-            $startDate = min($calendarEventDate)['date'];
-            $endDate = max($calendarEventDate)['date'];
-
-            $startDate = date("Y-m-d", strtotime($startDate));
-            $endDate = date("Y-m-d", strtotime($endDate));
+        if(!$entity->errors()){
+            $calendarEventId = $entity->id;
+            $query = $this->CalendarEventDates->find();
+    
+            if($calendarEventId){
+                $calendarEventDate = $query
+                ->where([
+                    $this->CalendarEventDates->aliasField('calendar_event_id') => $calendarEventId
+                ])
+                ->hydrate(false)
+                ->toArray();
+    
+                $startDate = min($calendarEventDate)['date'];
+                $endDate = max($calendarEventDate)['date'];
+    
+                $startDate = date("Y-m-d", strtotime($startDate));
+                $endDate = date("Y-m-d", strtotime($endDate));
+            }else{
+                $startDate = date('Y-m-d');
+                $endDate = date('Y-m-d');
+            }
+            
             $entity['start_date'] = $startDate;
             $entity['end_date'] = $endDate;
         }
