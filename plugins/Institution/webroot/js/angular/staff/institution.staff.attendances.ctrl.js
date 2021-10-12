@@ -16,6 +16,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     vm.otherEdit = 0;
     vm.permissionStaffId = 0;
     vm.history = false;
+    vm.schoolClosed = true;
     vm.academicPeriodOptions = [];
     vm.selectedAcademicPeriod = '';
 
@@ -46,6 +47,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
             action: vm.action,
             scope: $scope,
             history: vm.history,
+            schoolClosed: vm.schoolClosed,
         },
         columnDefs: [],
         rowData: [],
@@ -160,6 +162,8 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         var dayObj = vm.dayListOptions.find(obj => obj.id == vm.selectedDay);
         vm.selectedDayDate = dayObj.date;
         vm.selectedFormattedDayDate = dayObj.name;
+        vm.schoolClosed = (angular.isDefined(dayObj.closed) && dayObj.closed) ? true : false;
+        vm.gridOptions.context.schoolClosed = vm.schoolClosed;
         vm.gridOptions.context.date = vm.selectedDay;
         InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams())
         .then(function(allStaffAttendances) {
@@ -236,6 +240,9 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
                    vm.selectedDay = day.id;
                    vm.selectedDayDate = day.date;
                    vm.selectedFormattedDayDate = day.name;
+                   vm.schoolClosed = (angular.isDefined(day.closed) && day.closed) ? true : false;
+                   vm.gridOptions.context.date = vm.selectedDay;
+                   vm.gridOptions.context.schoolClosed = vm.schoolClosed;
                 }
             });
         }
