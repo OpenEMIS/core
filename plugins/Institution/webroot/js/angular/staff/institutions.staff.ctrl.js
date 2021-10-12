@@ -1087,7 +1087,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
         // To go to add student page if there is a student selected from the internal search
         // or external search
-        if (data.step == 3 && data.direction == 'next') {
+        if (data.step == 1 && data.direction == 'next') {
             if (StaffController.validateNewUser()) {
                 evt.preventDefault();
             };
@@ -1202,7 +1202,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {
         StaffController.addStaffButton = false;
-
         // Step 1 - User details
         if (data.step == 1) {
             StaffController.externalSearch = false;
@@ -1237,9 +1236,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.externalSearch = false;
             StaffController.createNewStaff = true;
             StaffController.step = 'confirmation';
-            StaffController.getUniqueOpenEmisId();
-            StaffController.generatePassword();
-            InstitutionsStaffSvc.resetExternalVariable();
         }
         // Step 5 - Add Staff
         else if (data.step == 5) {

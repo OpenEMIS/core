@@ -67,40 +67,59 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
         </ul>
     </div>
     <div class="actions top">
-        <button type="button" class="btn" style="border: 1px solid #334C66!important;"
-            ng-if="(InstitutionStaffController.step!=='user_details')"
-            data-last="<?= __('Save') ?>">
-            <?= __('Back') ?>
-        </button>
-        <button type="button" class="btn" style="border: 1px solid #334C66!important;"
-            ng-if="(InstitutionStaffController.step=='user_details')"
-            data-last="<?= __('Save') ?>">
-            <?= __('Cancel') ?>
+        <!-- <?php if ($_createNewStaff) : ?>
+            <button
+                ng-if="((!InstitutionStaffController.initialLoad && !InstitutionStaffController.hasExternalDataSource)
+                || (!InstitutionStaffController.initialLoad && InstitutionStaffController.step == 'external_search')
+                ) && (InstitutionStaffController.step == 'external_search' || InstitutionStaffController.step == 'internal_search')"
+                ng-disabled="InstitutionStaffController.selectedStaff"
+                ng-click="InstitutionStaffController.onAddNewStaffClick()"
+                type="button" class="btn btn-default"><?= __('Create New Staff') ?>
+            </button>
+        <?php endif; ?> -->
+        <!-- <button
+            type="button" class="btn btn-default" ng-click="InstitutionStaffController.onExternalSearchClick()"
+            ng-if="(!InstitutionStaffContr̉oller.initialLoad && InstitutionStaffController.hasExternalDataSource && InstitutionStaffController.showExternalSearchButton && InstitutionStaffController.step=='internal_search')" ng-disabled="InstitutionStaffController.selectedStaff"><?= __('External Search') ?>
+        </button> -->
+        <!-- <button
+            ng-if="InstitutionStaffController.rowsThisPage.length > 0 && (InstitutionStaffController.step=='internal_search' || InstitutionStaffController.step=='external_search')"
+            ng-model="InstitutionStaffController.selectedStaff"
+            ng-click="InstitutionStaffController.onAddStaffClick()"
+            ng-disabled="!InstitutionStaffController.selectedStaff"
+            type="button" class="btn btn-default"><?= __('Add Staff') ?>
+        </button> -->
+        <button
+            ng-if="(InstitutionStaffController.step=='user_details' || InstitutionStaffController.step=='internal_search')"
+            type="button" class="btn btn-default"><?= __('Cancel') ?>
         </button>
         <button
-            type="button" class="btn"
-            ng-if="(InstitutionStaffController.step=='summary')"
-            data-last="<?= __('Save') ?>">
-            <?= __('Close') ?>
-        </button>
-        <button type="button" class="btn btn-default"
-            ng-model="InstitutionStaffController.selectedStaff"
-            ng-disabled="InstitutionStaffController.completeDisabled"
-            data-last="<?= __('Save') ?>">
-            <?= __('Next') ?>
+            ng-if="(InstitutionStaffController.step!=='user_details' && InstitutionStaffController.step!=='internal_search')"
+            type="button" class="btn btn-default"><?= __('Back') ?>
         </button>
         <button
             ng-if="(InstitutionStaffController.step=='add_staff')"
             ng-click="InstitutionStaffController.onAddStaffCompleteClick()"
             type="button" class="btn btn-default"><?= __('Confirm') ?>
         </button>
+        <button
+            ng-if="(InstitutionStaffController.step=='summary')"
+            type="button" class="btn btn-default"><?= __('Close') ?>
+        </button>
+        <button type="button" class="btn btn-default btn-next"
+            ng-if="InstitutionStaffController.step!=='add_staff'"
+            data-last="<?= __('Save') ?>">
+            <?= __('Next') ?>
+        </button>
     </div>
     <div class="step-content">
         <div class="step-pane sample-pane active" data-step="1" data-name="userDetails">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                <div class="input string">
+                <div class="input string required">
                     <label><?= __('OpenEMIS ID') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.openemis_no" type="string">
+                    <input ng-model="InstitutionStaffController.selectedStaffData.openemis_no" type="string" ng-disabled="true">
+                    <div ng-if="InstitutionStaffController.postResponse.error.openemis_no" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.openemis_no">{{ error }}</p>
+                    </div>
                 </div>
                 <div class="input string required">
                     <label><?= __('First Name') ?></label>
@@ -181,17 +200,16 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                             <option value="" >-- <?= __('Select') ?> --</option>
                         </select>
                     </div>
+                    <div ng-if="InstitutionStaffController.postResponse.error.identities[0].identity_type_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].identity_type_id">{{ error }}</p>
+                    </div>
                 </div>
-                <div ng-class="InstitutionStaffController.Staff.identity_class">
-                    <label><?= __('Identity Number') ?></label>
+                <div ng-class="InstitutionStaffController.Staff.identity_class" ng-show="InstitutionStaffController.StaffIdentities != 2">
+                    <label><?= __('{{InstitutionStaffController.Staff.identity_type_name}}') ?></label>
                     <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" ng-init="InstitutionStaffController.selectedStaffData.identity_number='';">
                     <div ng-if="InstitutionStaffController.postResponse.error.identities[0].number" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].number">{{ error }}</p>
                     </div>
-                </div>
-                <div class="input string">
-                    <label><?= __('Address') ?></label>
-                    <textarea ng-model="InstitutionStaffController.selectedStaffData.address" type="string" ng-init="InstitutionStaffController.selectedStaffData.address='';"></textarea>
                 </div>
 
                 <div class="input string required">
@@ -213,43 +231,7 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 </div>
             </form>
         </div>
-
         <div class="step-pane sample-pane" data-step="2" data-name="internalSearch">
-            <div class="dropdown-filter">
-                <div class="filter-label">
-                    <i class="fa fa-filter"></i>
-                    <label><?= __('Filter') ?></label>
-                </div>
-                <div class="text">
-                    <label><?= __('OpenEMIS ID') ?></label>
-                    <input ng-model="InstitutionStaffController.internalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? InstitutionStaffController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
-                </div>
-                <div class="text">
-                    <label><?= __('First Name') ?></label>
-                    <input ng-model="InstitutionStaffController.internalFilterFirstName" ng-keyup="$event.keyCode == 13 ? InstitutionStaffController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
-                </div>
-                <div class="text">
-                    <label><?= __('Last Name') ?></label>
-                    <input ng-model="InstitutionStaffController.internalFilterLastName" ng-keyup="$event.keyCode == 13 ? InstitutionStaffController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
-                </div>
-                <div class="text">
-                    <label><?= __('Identity Number') ?></label>
-                    <input ng-model="InstitutionStaffController.internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? InstitutionStaffController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
-                </div>
-                <div class="date">
-                    <label for="Staffs_date_of_birth"><?= __('Date Of Birth') ?></label>
-                    <div class="input-group date " id="Staffs_date_of_birth" style="">
-                        <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.internalFilterDateOfBirth" ng-keyup="$event.keyCode == 13 ? InstitutionStaffController.reloadInternalDatasource(true) : null">
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
-                    </div>
-                </div>
-
-                <div class="search-action-btn margin-top-10 margin-bottom-10">
-                    <button class="btn btn-default btn-xs" ng-click="InstitutionStaffController.reloadInternalDatasource(true)"><?= __('Filter') ?></button>
-                    <button class="btn btn-outline btn-xs" ng-click="InstitutionStaffController.clearInternalSearchFilters()" type="reset" value="Clear"><?= __('Clear') ?></button>
-                </div>
-            </div>
-
             <div class="table-wrapper">
                 <div>
                     <div class="scrolltabs">
@@ -260,31 +242,7 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 </div>
             </div>
         </div>
-
         <div class="step-pane sample-pane" data-step="3" data-name="externalSearch">
-            <div class="dropdown-filter">
-                <div class="filter-label">
-                    <i class="fa fa-filter"></i>
-                    <label><?= __('Filter') ?></label>
-                </div>
-                <div class="text">
-                    <label><?= __('First Name') ?></label>
-                    <input ng-model="InstitutionStaffController.internalFilterFirstName" ng-disabled="true" type="text" id="" maxlength="150">
-                </div>
-                <div class="text">
-                    <label><?= __('Last Name') ?></label>
-                    <input ng-model="InstitutionStaffController.internalFilterLastName" ng-disabled="true" type="text" id="" maxlength="150">
-                </div>
-                <div class="text">
-                    <label><?= __('Identity Number') ?></label>
-                    <input ng-model="InstitutionStaffController.internalFilterIdentityNumber" ng-disabled="true" type="text" id="" maxlength="150">
-                </div>
-                <div class="text">
-                    <label for="Staffs_date_of_birth"><?= __('Date Of Birth') ?></label>
-                        <input type="text" class="form-control " name="Staffs[date_of_birth]" ng-model="InstitutionStaffController.internalFilterDateOfBirth" ng-disabled="true">
-                </div>
-            </div>
-
             <div class="table-wrapper">
                 <div>
                     <div class="scrolltabs sticky-content">
@@ -295,7 +253,6 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 </div>
             </div>
         </div>
-
         <div class="step-pane sample-pane" data-step="4" data-name="confirmation">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                 <div class="input string required">
@@ -415,7 +372,6 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 </div>
             </form>
         </div>
-
         <div class="step-pane sample-pane" data-step="5" data-name="addStaff">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
                 <div class="input string required">
@@ -610,7 +566,6 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 </div>
             </form>
         </div>
-
         <div class="step-pane sample-pane" data-step="6" data-name="summary">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
                 <div class="input string">
