@@ -965,4 +965,6 @@ class DirectoriesController extends AppController
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
+
+    public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffProfiles']); }
 }
