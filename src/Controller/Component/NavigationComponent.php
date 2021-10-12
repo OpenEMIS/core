@@ -565,14 +565,41 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Attachments'],
                 'params' => ['plugin' => 'Institution']
             ],
+            /*POCOR-6286 starts*/
+			// 'Institutions.Profiles.index' => [
+			// 	'title' => 'Profiles',
+			// 	'parent' => 'Institution.General',
+			// 	'selected' => ['Institutions.Profiles'],
+			// 	'params' => ['plugin' => 'Institution']
+			// ],
 
-			'Institutions.Profiles.index' => [
-				'title' => 'Profiles',
-				'parent' => 'Institution.General',
-				'selected' => ['Institutions.Profiles'],
-				'params' => ['plugin' => 'Institution']
-			],
+            'Profile' => [
+                'title' => 'Profiles',
+                'parent' => 'Institution.General',
+                'link' => false
+            ],
 
+            'Institutions.InstitutionProfiles' => [
+                'title' => 'Institutions',
+                'parent' => 'Profile',
+                'selected' => ['Institutions.InstitutionProfiles'],
+                'params' => ['plugin' => 'Institution','controller' => 'Institutions', 'action' => 'InstitutionProfiles', 0 => 'index', $institutionId],
+            ],
+
+            'Institutions.StaffProfiles' => [
+                'title' => 'Staff',
+                'parent' => 'Profile',
+                'selected' => ['Institutions.StaffProfiles'],
+                'params' => ['plugin' => 'Institution','controller' => 'Institutions', 'action' => 'StaffProfiles', 0 => 'index', $institutionId],
+            ],
+
+            'Institutions.StudentProfiles' => [
+                'title' => 'Students',
+                'parent' => 'Profile',
+                'selected' => ['Institutions.StudentProfiles'],
+                'params' => ['plugin' => 'Institution','controller' => 'Institutions', 'action' => 'StudentProfiles', 0 => 'index', $institutionId],
+            ],
+            /*POCOR-6286 ends*/
             'Institution.Academic' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Institutions.index',
@@ -1498,6 +1525,13 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.TrainingNeeds', 'Directories.TrainingResults', 'Directories.Courses']
             ],
+
+            'Directories.StaffProfiles' => [
+                'title' => 'Profile',
+                'parent' => 'Directories.Staff',
+                'params' => ['plugin' => 'Directory'],
+                'selected' => ['Directories.StaffProfiles']
+            ]
         ];
         return $navigation;
     }

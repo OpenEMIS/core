@@ -4035,4 +4035,10 @@ class InstitutionsController extends AppController
         return $data;
      }
 
+    /*POCOR-6286 starts*/ 
+    public function InstitutionProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionsProfile']); }
+    public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffProfiles']); }
+    public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentProfiles']); }
+    /*POCOR-6286 ends*/
+
 }
