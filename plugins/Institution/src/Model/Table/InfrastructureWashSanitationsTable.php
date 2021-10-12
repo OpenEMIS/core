@@ -328,6 +328,62 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         return $rows;
     }
 
+    // POCOR-6146 start
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            "key" => "InfrastructureWashSanitations.infrastructure_wash_sanitation_type_id",
+            "field" => "infrastructure_wash_sanitation_type_id",
+            "type" => "integer",
+            "label" => "Type"
+        ];
+
+        $extraField[] = [
+            "key" => "InfrastructureWashSanitations.infrastructure_wash_sanitation_use_id",
+            "field" => "infrastructure_wash_sanitation_use_id",
+            "type" => "integer",
+            "label" => "Use"
+        ];
+
+        $extraField[] = [
+            "key" => "InfrastructureWashSanitations.infrastructure_wash_sanitation_total_male",
+            "field" => "infrastructure_wash_sanitation_total_male",
+            "type" => "integer",
+            "label" => "Total Male"
+        ];
+
+        $extraField[] = [
+            "key" => "InfrastructureWashSanitations.infrastructure_wash_sanitation_total_female",
+            "field" => "infrastructure_wash_sanitation_total_female",
+            "type" => "integer",
+            "label" => "Total Female"
+        ];
+
+        $extraField[] = [
+            "key" => "InfrastructureWashSanitations.infrastructure_wash_sanitation_total_mixed",
+            "field" => "infrastructure_wash_sanitation_total_mixed",
+            "type" => "integer",
+            "label" => "Total Mixed"
+        ];
+        
+        $extraField[] = [
+            "key" => "InfrastructureWashSanitations.infrastructure_wash_sanitation_quality_id",
+            "field" => "infrastructure_wash_sanitation_quality_id",
+            "type" => "integer",
+            "label" => "Quality"
+        ];
+
+        $extraField[] = [
+            "key" => "InfrastructureWashSanitations.infrastructure_wash_sanitation_accessibility_id",
+            "field" => "infrastructure_wash_sanitation_accessibility_id",
+            "type" => "integer",
+            "label" => "Accessibility"
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+    // POCOR-6146 start
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
