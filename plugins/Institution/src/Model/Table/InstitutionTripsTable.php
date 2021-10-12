@@ -32,7 +32,6 @@ class InstitutionTripsTable extends ControllerActionTable
         $this->addBehavior('Excel', [
             'excludes' => ['comment', 'institution_id'],
             'pages' => ['index'],
-            'autoFields' => false
         ]);
     }
 
@@ -177,8 +176,299 @@ class InstitutionTripsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        // POCOR-6169 start
+        // academic period filter
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
+        // academic period filter
+
+        // trips filter
+        $tripTypes = $this->TripTypes
+        ->find('optionList', ['defaultOption' => false])
+        ->toArray();
+
+        $tripTypeOptions = [-1 => __('All Trip Types')] + $tripTypes;
+        $extra['tripTypes'] = $this->request->query('trip_types'); 
+        // trips filter
+
+        $extra['elements']['control'] = [
+            'name' => 'Institution.Trips/controls',
+            'data' => [
+                'periodOptions'=> $academicPeriodOptions,
+                'selectedPeriod'=> $extra['selectedAcademicPeriodOptions'],
+                'tripTypeOptions'=> $tripTypeOptions,
+                'selectedtripTypes'=> $extra['tripTypes']
+            ],
+            'order' => 3
+        ];
+
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+
+        $this->field('academic_period_id', ['visible' => true, 'attr' => ['label' => __('Academic Period')]]);
+        $this->field('name', ['visible' => true, 'attr' => ['label' => __('Name')]]);
+        $this->field('trip_type_id', ['visible' => true, 'attr' => ['label' => __('Trip Type')]]);
+        $this->field('provider', ['visible' => true, 'attr' => ['label' => __('provider')]]);
+        $this->field('bus', ['visible' => true, 'attr' => ['label' => __('Bus')]]);
+        $this->field('repeat', ['visible' => true, 'attr' => ['label' => __('Repeat')]]);
+        $this->field('days', ['visible' => true, 'attr' => ['label' => __('Days')]]);
+        $this->field('institution_transport_provider_id', ['visible' => false]);
+        $this->field('institution_bus_id', ['visible' => false]);
+        // POCOR-6169 end
+
         $this->field('comment',['visible' => false]);    
     }
+
+    // POCOR-6169 start
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $session = $this->request->session();
+        $institutionId  = $session->read('Institution.Institutions.id');
+        $tripTypes = $this->request->query('trip_types');
+
+        $institutionProvider = TableRegistry::get('institution_transport_providers');
+        $institutionBuses = TableRegistry::get('institution_buses');
+
+        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+            $query->where([
+                        $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
+                    ], [], true); //this parameter will remove all where before this and replace it with new where.
+        }
+
+        $query->select([
+            $this->aliasField('id') , 
+            $this->aliasField('name'), 
+            $this->aliasField('repeat'), 
+            $this->aliasField('academic_period_id'),
+            $this->aliasField('trip_type_id'),
+            $this->aliasField('institution_id'),
+            'provider' => $institutionProvider->aliasField('name'),
+            'bus' => $institutionBuses->aliasField('plate_number'),
+            $this->aliasField('modified_user_id'),
+            $this->aliasField('modified'), 
+            $this->aliasField('created_user_id'),
+            $this->aliasField('created')
+        ])
+        ->contain(['InstitutionTripDays'])
+        ->innerJoin([$institutionProvider->alias() => $institutionProvider->table()], [
+            [$institutionProvider->aliasField('id ='). $this->aliasField('institution_transport_provider_id')],
+        ])
+        ->innerJoin([$institutionBuses->alias() => $institutionBuses->table()], [
+            [$institutionBuses->aliasField('id ='). $this->aliasField('institution_bus_id')],
+        ])
+        ->group($this->aliasField('id'))
+        ->where([
+            $this->aliasField('institution_id') => $institutionId
+        ]);
+        if($tripTypes > 0){
+            $query
+            ->where([
+                $this->aliasField('trip_type_id') => $tripTypes 
+            ]);
+        }
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                if($row->repeat == 1){
+                    $row['repeat'] = 'Yes';
+                }else{
+                    $row['repeat'] = 'No';
+                }
+
+                $dayOptions = $this->getDays();
+                $list = [];
+                foreach ($row->institution_trip_days as $obj) {
+                    $list[$obj->day] = $dayOptions[$obj->day];
+                }
+
+                $value = implode(", ", $list);
+
+                $row['days'] = $value;
+                return $row;
+            });
+        });
+    }
+    // POCOR-6169 end
+
+    // POCOR-6169 start
+    private function getSelectedAcademicPeriod($request)
+    {
+        $selectedAcademicPeriod = '';
+
+        if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
+            if (isset($request->query) && array_key_exists('period', $request->query)) {
+                $selectedAcademicPeriod = $request->query['period'];
+            } else {
+                $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+            }
+        } elseif ($this->action == 'add') {
+            $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        }
+
+        return $selectedAcademicPeriod;
+    } 
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $institutionId  = $session->read('Institution.Institutions.id');
+        $tripTypes = $this->request->query('trip_types');
+        $academicPeriod = ($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent() ;
+
+        $institutionProvider = TableRegistry::get('institution_transport_providers');
+        $institutionBuses = TableRegistry::get('institution_buses');
+
+        $query->select([
+            $this->aliasField('id') , 
+            $this->aliasField('name'), 
+            $this->aliasField('repeat'), 
+            $this->aliasField('academic_period_id'),
+            $this->aliasField('trip_type_id'),
+            $this->aliasField('institution_id'),
+            'provider' => $institutionProvider->aliasField('name'),
+            'bus' => $institutionBuses->aliasField('plate_number'),
+            $this->aliasField('modified_user_id'),
+            $this->aliasField('modified'), 
+            $this->aliasField('created_user_id'),
+            $this->aliasField('created')
+        ])
+        ->contain(['InstitutionTripDays'])
+        ->innerJoin([$institutionProvider->alias() => $institutionProvider->table()], [
+            [$institutionProvider->aliasField('id ='). $this->aliasField('institution_transport_provider_id')],
+        ])
+        ->innerJoin([$institutionBuses->alias() => $institutionBuses->table()], [
+            [$institutionBuses->aliasField('id ='). $this->aliasField('institution_bus_id')],
+        ])
+        ->group($this->aliasField('id'))
+        ->where([
+            $this->aliasField('institution_id') => $institutionId,
+            $this->aliasField('academic_period_id') => $academicPeriod
+        ]);
+        if($tripTypes > 0){
+            $query
+            ->where([
+                $this->aliasField('trip_type_id') => $tripTypes 
+            ]);
+        }
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                if($row->repeat == 1){
+                    $row['repeat'] = 'Yes';
+                }else{
+                    $row['repeat'] = 'No';
+                }
+
+                $dayOptions = $this->getDays();
+                $list = [];
+                foreach ($row->institution_trip_days as $obj) {
+                    $list[$obj->day] = $dayOptions[$obj->day];
+                }
+
+                $value = implode(", ", $list);
+
+                $row['days'] = $value;
+                return $row;
+            });
+        });
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'academic_period_id',
+            'field' => 'academic_period_id',
+            'type'  => 'string',
+            'label' => __('Academic Period')
+        ];
+
+        $extraField[] = [
+            'key'   => 'name',
+            'field' => 'name',
+            'type'  => 'string',
+            'label' => __('Name')
+        ];
+
+        $extraField[] = [
+            'key'   => 'trip_type_id',
+            'field' => 'trip_type_id',
+            'type'  => 'string',
+            'label' => __('Trip Type')
+        ];
+        
+        $extraField[] = [
+            'key'   => 'provider',
+            'field' => 'provider',
+            'type'  => 'string',
+            'label' => __('Provider')
+        ];
+
+        $extraField[] = [
+            'key'   => 'bus',
+            'field' => 'bus',
+            'type'  => 'string',
+            'label' => __('Bus')
+        ];
+
+        $extraField[] = [
+            'key'   => 'repeat',
+            'field' => 'repeat',
+            'type'  => 'string',
+            'label' => __('Repeat')
+        ];
+
+        $extraField[] = [
+            'key'   => 'days',
+            'field' => 'days',
+            'type'  => 'string',
+            'label' => __('Days')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $this->fields['academic_period_id']['type'] = 'select';
+        $this->fields['academic_period_id']['default'] = $this->AcademicPeriods->getCurrent();
+        $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
+        $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
+
+        $this->field('name', ['attr' => ['label' => __('Name')]]);
+
+        $this->fields['trip_type_id']['type'] = 'select';
+        $this->field('trip_type_id', ['attr' => ['label' => __('Trip Type')]]);
+
+        $this->fields['institution_transport_provider_id']['type'] = 'select';
+        $this->field('institution_transport_provider_id', ['attr' => ['label' => __('Provider')]]);
+
+        $InstitutionBuses = $this->InstitutionBuses
+        ->find('optionList')
+        ->where([
+            $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $extra->institution_transport_provider_id
+        ])
+        ->toArray();
+        $this->fields['institution_bus_id']['type'] = 'select';
+        $this->fields['institution_bus_id']['options'] = $InstitutionBuses;
+        $this->field('institution_bus_id', ['attr' => ['label' => __('Bus')]]);
+        
+        $repeatOptions = [
+            1 => __('Yes'),
+            0 => __('No')
+        ];
+        $this->fields['repeat']['type'] = 'select';
+        $this->fields['repeat']['default'] = '1';
+        $this->fields['repeat']['options'] = $repeatOptions;
+        $this->fields['repeat']['required'] = true;
+        $this->field('repeat', ['attr' => ['label' => __('Repeat')]]);
+
+        $dayOptions = $this->getDays();
+        $this->fields['days']['type'] = 'select';
+        $this->fields['days']['options'] = $dayOptions;
+        $this->field('days', ['attr' => ['label' => __('Days')]]);
+    }
+    // POCOR-6169 end
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
