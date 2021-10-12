@@ -1066,6 +1066,11 @@ class ReportCardsTable extends AppTable
                 ->group('education_subject_id')
 
                 ->toArray();
+            //POCOR-6327 starts
+            if(empty($AssessmentItemData)){
+                $entity = [];
+                return $entity;
+            }//POCOR-6327 ends
 			foreach ($AssessmentItemData as $value) {
 				$StudentSubjectStaff = TableRegistry::get('institution_subject_staff');
 				$StudentSubjectStaffData = $StudentSubjectStaff->find()
