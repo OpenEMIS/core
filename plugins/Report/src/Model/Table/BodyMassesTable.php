@@ -193,7 +193,7 @@ class BodyMassesTable extends AppTable
                     'UserBodyMasses.academic_period_id = ' . $this->aliasField('academic_period_id')
                 ]
             )
-            ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+            ->innerJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                 $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                 $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
