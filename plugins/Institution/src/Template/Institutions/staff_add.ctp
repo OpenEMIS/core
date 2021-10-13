@@ -255,6 +255,28 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
         </div>
         <div class="step-pane sample-pane" data-step="4" data-name="confirmation">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
+                <div class="row section-header header-space-lg">Information</div>
+                <div class="input string row-content">
+                    <label><?= __('Photo Content') ?></label>
+                    <div>
+                        <div class="table-thumb mb-16">
+                            <div class="profile-image-thumbnail">
+                                <i class="kd-staff"></i>
+                            </div>
+                        </div>
+                        <p class="font-italic mb-0">* Advisable photo dimension 90 by 115</p>
+                        <p class="font-italic">* Format Supported: .jpg, .jpeg, .png, .gif</p>
+                        <div class="d-flex">
+                            <div class="position-relative">
+                                <button class="btn btn-xs btn-default fontSize-16">
+                                    <i class="fa fa-folder"></i>
+                                    <span>Select File</span>
+                                </button>
+                                <input type="file" class="input-hidden">
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="input string required">
                     <label><?= __('OpenEMIS ID') ?></label>
                     <input ng-model="InstitutionStaffController.selectedStaffData.openemis_no" type="string" ng-disabled="true">
@@ -630,6 +652,47 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
 
 //]]>
 </script>
+<style>
+.header-space-lg{
+    margin-bottom: 20px !important
+}
+.mb-16{
+    margin-bottom: 16px;
+}
+.font-italic{
+    font-style: italic;
+}
+.mb-0{
+    margin-bottom: 0;
+}
+.d-felx{
+    display: flex;
+}
+.position-relative{
+    position: relative;
+}
+.fontSize-16{
+    font-size: 16px !important;
+}
+.input-hidden{
+    opacity: 0; 
+    position: absolute; 
+    width: 100%; 
+    height: 100%;
+    left: 0; 
+    top: 0;
+}
+.row-content{
+    margin-bottom: 16px;
+}
+@media (min-width: 800px) {
+    .row-content{
+        display: flex; 
+        align-items: flex-start;
+    }
+}
+
+</style>
 
 
 <?php
