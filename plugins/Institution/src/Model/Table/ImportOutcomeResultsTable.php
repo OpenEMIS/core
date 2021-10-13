@@ -293,7 +293,7 @@ class ImportOutcomeResultsTable extends AppTable
     {
 
         if ($action == 'add') {
-            $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $academicPeriodId = !is_null($request->data('ImportOutcomeResults')['academic_period']) ? $request->data('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
 
             $outcomePeriodOptions = [];
             if (!is_null($request->query('outcome_template'))) {
