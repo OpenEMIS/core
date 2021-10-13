@@ -154,7 +154,12 @@ class WorkflowsTable extends AppTable
         $validator = parent::validationDefault($validator);
         $validator
             ->notEmpty('institution_id');
-
+        if($this->request['data']['Workflows']['institution_id'] ==0){
+            $validator
+            ->notEmpty('report_start_date');
+            $validator
+            ->notEmpty('report_end_date');
+        }
         return $validator;
     }
 
@@ -360,6 +365,7 @@ class WorkflowsTable extends AppTable
     {
         if ($request['data']['Workflows']['institution_id'] == 0) {
             $attr['type'] = 'date';
+            $attr['null'] = false;
             $attr['label'] = __('test');
             return $attr;
         }
@@ -371,6 +377,7 @@ class WorkflowsTable extends AppTable
     {
        if ($request['data']['Workflows']['institution_id'] == 0) {
             $attr['type'] = 'date';
+            $attr['null'] = false;
             return $attr;
         }
     }
