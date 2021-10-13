@@ -100,13 +100,34 @@ class InfrastructureWashWastesTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
-        $academyPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $academicPeriodId = !empty($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
 
         $query
         ->where([
             $this->aliasField('institution_id = ') .  $institutionId,
-            $this->aliasField('academic_period_id = ') .  $academyPeriodId,
+            $this->aliasField('academic_period_id = ') .  $academicPeriodId,
         ])
         ->orderDesc($this->aliasField('id'));
     }
+
+    // POCOR-6148 start
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'InfrastructureWashWastes.infrastructure_wash_waste_type_id',
+            'field' => 'infrastructure_wash_waste_type_id',
+            'type'  => 'string',
+            'label' => __('Type')
+        ];
+
+        $extraField[] = [
+            'key'   => 'InfrastructureWashWastes.infrastructure_wash_waste_functionality_id',
+            'field' => 'infrastructure_wash_waste_functionality_id',
+            'type'  => 'string',
+            'label' => __('Functionality')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+    // POCOR-6148 end
 }
