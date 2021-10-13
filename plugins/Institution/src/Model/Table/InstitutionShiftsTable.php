@@ -344,15 +344,18 @@ class InstitutionShiftsTable extends ControllerActionTable
             $institutionId = $this->Session->read('Institution.Institutions.id');
             $selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);
             $checkisOccupier = $this->isOccupier($institutionId, $selectedAcademicPeriod);
-            if($checkisOccupier == 0){
-                $options = $options
-                        ->find('availableShifts', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
+            // if($checkisOccupier == 0){
+            //     $options = $options
+            //             ->find('availableShifts', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
+            //             ->toArray();
+            // }else{
+            //     $options = $options
+            //             ->find('availableShiftsOccupier', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
+            //             ->toArray();
+            // }
+            $options = $options
+                        ->find('all', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
                         ->toArray();
-            }else{
-                $options = $options
-                        ->find('availableShiftsOccupier', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
-                        ->toArray();
-            }
             $attr['options'] = $options;
             $attr['onChangeReload'] = 'changeShiftOption';
         }
