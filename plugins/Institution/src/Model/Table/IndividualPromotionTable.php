@@ -333,20 +333,21 @@ class IndividualPromotionTable extends ControllerActionTable
 
                     $statuses = $this->StudentStatuses->findCodeList();
                     $fromGradeId = $attr['entity']->education_grade_id;
-
+                    $institutionId = $request->data[$this->alias()]['institution_id'];
                     // PROMOTED status
                     if ($studentStatusId == $statuses['PROMOTED']) {
                         // list of grades available to promote to
-                        $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($fromGradeId);
-
+                        /*POCOR-6349 starts*/
+                        $toGradeOptionPromoted = $this->EducationGrades->getNextAvailableEducationGrades($fromGradeId,  false);
+                        $getToAcademicPeriodGrade = $this->EducationGrades->getEducationGradesByPeriod($toAcademicPeriodId, $institutionId);
+                        $listOfGrades = array_intersect($toGradeOptionPromoted, $getToAcademicPeriodGrade);
+                        /*POCOR-6349 ends*/
                     // REPEATED status
                     } else if ($studentStatusId == $statuses['REPEATED']) {
                         $fromAcademicPeriodId = $attr['entity']->academic_period_id;
-
                         $gradeData = $this->EducationGrades->get($fromGradeId);
                         $programmeId = $gradeData->education_programme_id;
                         $gradeOrder = $gradeData->order;
-
                         // list of grades available to repeat
                         $query = $this->EducationGrades
                             ->find('list', [
@@ -357,7 +358,7 @@ class IndividualPromotionTable extends ControllerActionTable
 
                         if ($toAcademicPeriodId == $fromAcademicPeriodId) {
                             // if same year is chosen, only show lower grades
-                            $query->where([$this->EducationGrades->aliasField('order').' < ' => $gradeOrder]);
+                            $query->where([$this->EducationGrades->aliasField('order').' <= ' => $gradeOrder]);
                         } else {
                             // if other year is chosen, show current and lower grades
                             $query->where([$this->EducationGrades->aliasField('order').' <= ' => $gradeOrder]);
@@ -368,7 +369,7 @@ class IndividualPromotionTable extends ControllerActionTable
 
                     // Only display the options that are available in the institution and also linked to the current programme
                     // $options = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
-                    $options = $listOfInstitutionGrades;
+                    $options = $listOfGrades;
 
                     if (count($options) == 0) {
                         $attr['select'] = false;
