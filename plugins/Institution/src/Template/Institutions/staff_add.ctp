@@ -665,7 +665,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
 .mb-0{
     margin-bottom: 0;
 }
-.d-felx{
+.d-flex{
     display: flex;
 }
 .position-relative{
@@ -677,8 +677,8 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
 .input-hidden{
     opacity: 0; 
     position: absolute; 
-    width: 100%; 
-    height: 100%;
+    width: 100% !important; 
+    height: 100% !important;
     left: 0; 
     top: 0;
 }
