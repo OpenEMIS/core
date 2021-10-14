@@ -49,7 +49,7 @@ class ProfilesController extends AppController
         $this->ControllerAction->models = [
             // Users
             'Accounts'              => ['className' => 'Profile.Accounts', 'actions' => ['view', 'edit']],
-            'History'               => ['className' => 'User.UserActivities', 'actions' => ['index', 'edit', 'add']],
+            'History'               => ['className' => 'User.UserActivities', 'actions' => ['index']],
 
             // Student
             // 'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
