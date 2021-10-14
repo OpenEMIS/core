@@ -194,7 +194,14 @@ class InstitutionsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('ControllerAction.Image');
-
+        /*POCOR-6346 starts*/
+        $this->shiftTypes = [
+            self::SINGLE_OWNER => __('Single Owner'),
+            self::SINGLE_OCCUPIER => __('Single Occupier'),
+            self::MULTIPLE_OWNER => __('Multiple Owner'),
+            self::MULTIPLE_OCCUPIER => __('Multiple Occupier')
+        ];
+        /*POCOR-6346 ends*/
         $this->classificationOptions = [
             self::ACADEMIC => __('Academic Institution'),
             self::NON_ACADEMIC => __('Non-Academic Institution')
