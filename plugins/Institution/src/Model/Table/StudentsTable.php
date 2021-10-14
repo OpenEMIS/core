@@ -331,7 +331,8 @@ class StudentsTable extends ControllerActionTable
                 [
                     $ContactTypes->aliasField('id = ') . $UserContact->aliasField('contact_type_id')
                 ]
-            );
+            )
+            ->group([$this->Users->aliasField('openemis_no')]);
 
         if ($periodId > 0) {
             $query->where([$this->aliasField('academic_period_id') => $periodId]);
