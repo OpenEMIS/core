@@ -767,6 +767,14 @@ class InstitutionsController extends AppController
         $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
 
         $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+        $TransferLogs = TableRegistry::get('TransferLogs');
+        $TransferLogsData = $TransferLogs
+        ->find()
+        ->select([
+            'TransferLogs.academic_period_id'
+        ])
+        ->first();
+
         $securityRoleFunctionsData = $securityRoleFunctions
         ->find()
         ->select([
@@ -782,6 +790,11 @@ class InstitutionsController extends AppController
             $is_button_accesible = 1;
         }
         if($this->Auth->user('super_admin') == 1){
+            $is_button_accesible = 1;
+        }
+        if(empty($TransferLogsData)){
+            $is_button_accesible = 0;
+        }else{
             $is_button_accesible = 1;
         }
 
@@ -1451,6 +1464,14 @@ class InstitutionsController extends AppController
                 $institutionId = $session->read('Institution.Institutions.id');
             }
 
+            $TransferLogs = TableRegistry::get('TransferLogs');
+            $TransferLogsData = $TransferLogs
+            ->find()
+            ->select([
+                'TransferLogs.academic_period_id'
+            ])
+            ->first();
+
             $securityFunctions = TableRegistry::get('SecurityFunctions');
             $securityFunctionsData = $securityFunctions
             ->find()
@@ -1479,6 +1500,11 @@ class InstitutionsController extends AppController
                 $is_button_accesible = 1;
             }
             if($this->Auth->user('super_admin') == 1){
+                $is_button_accesible = 1;
+            }
+            if(empty($TransferLogsData)){
+                $is_button_accesible = 0;
+            }else{
                 $is_button_accesible = 1;
             }
 
