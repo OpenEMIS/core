@@ -408,6 +408,7 @@ class IndividualPromotionTable extends ControllerActionTable
                 $gradeId = $this->Session->read('grade_id');
                 $institutionId = $attr['entity']->institution_id;
                 $studentStatusId = $request->data[$this->alias()]['student_status_id'];
+                $statuses = $this->StudentStatuses->findCodeList();
                 if (!empty($request->data[$this->alias()]['education_grade_id']) && $studentStatusId == $statuses['PROMOTED']) {
                     $toGrade = $request->data[$this->alias()]['education_grade_id'];
                     $InstitutionClass = $this->InstitutionClasses;
