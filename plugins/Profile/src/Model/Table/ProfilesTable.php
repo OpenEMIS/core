@@ -63,7 +63,7 @@ class ProfilesTable extends ControllerActionTable
                 $toolbarButtons['back']['url'][0] = 'view';
                 $toolbarButtons['back']['url'][1] = $this->paramsPass(0);
                 $toolbarButtons['back']['url']['action'] = 'Personal';
-                $toolbarButtons['back']['attr']['title'] = 'Personal';
+                $toolbarButtons['back']['attr']['title'] = 'Back';
             }
         }
     }
