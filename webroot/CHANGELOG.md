@@ -1,3 +1,19 @@
+### [3.70.2] - 2021-10-15
+- Implemented: Improvement of School Shift functions
+- Implemented: Update Export button function - Institutions > Students (include custom fields phone number identity types and name of the guardian)
+- Implemented: Add Export button function - Institutions > Students > Student1 > Health (include all tabs)
+- Implemented: Add Export button function - Institutions > Transport > Buses
+- Implemented: Copy data from one academic period to another
+- Bug Fixed: Institutions > Performance > Outcomes: Outcome template is empty even when template is created in the Administration > Performance > Outcomes > Templates and is linked correctly in the Institutions > Performance > Outcomes
+- Bug Fixed: Report>Institutions>Subject: Grade column is missing and Remove Subjects that are not linked to Classes
+- Bug Fixed: Reports > Institution > Student Body Masses: Academic Period filter is not functioning
+- Bug Fixed: Report>Institution>Subjects: Subjects should filter according to the Institutions that are selected under Institution
+- Bug Fixed: Institution>Academic>Classes: Staffs are assigned to subjects even though class is already deleted
+- Bug Fixed: Personal>General: Edit Permission working only for Account tab and add permission not working except for Contact
+- Bug Fixed: Students > Academic > Programmes > Transition: Student can transition to a Education Grade that does not exist in current institution
+- Bug Fixed: Institutions>Advanced Search>Shift Type:Shift type is empty even though there is data in the database
+- Bug Fixed: Institutions>Students: System shows more than one row for students who has more than one identity number
+
 ### [3.70.1] - 2021-10-08
 - Implemented: OpenEMIS Core: Webhook Education Structure System - Create
 - Implemented: OpenEMIS Core: Webhook Academic Period - Delete
