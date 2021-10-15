@@ -1025,11 +1025,11 @@ class NavigationComponent extends Component
                 'selected' => ['InstitutionTransportProviders.add', 'InstitutionTransportProviders.edit', 'InstitutionTransportProviders.view', 'InstitutionTransportProviders.delete']
             ],
 
-            'InstitutionBuses.index' => [
+            'Institutions.InstitutionBuses.index' => [
                 'title' => 'Buses',
                 'parent' => 'Institutions.Transport',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionBuses.add', 'InstitutionBuses.edit', 'InstitutionBuses.view', 'InstitutionBuses.delete']
+                'selected' => ['Institutions.InstitutionBuses','Institutions.InstitutionBuses.add', 'Institutions.InstitutionBuses.edit', 'Institutions.InstitutionBuses.view', 'Institutions.InstitutionBuses.delete']
             ],
 
             'InstitutionTrips.index' => [
@@ -1149,7 +1149,8 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
+                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'Students.StudentBodyMasses', 'Students.StudentBodyMasses.add', 'Students.StudentBodyMasses.edit', 'Students.StudentBodyMasses.view', 'Students.StudentBodyMasses.delete', 'Students.StudentInsurances.add', 'Students.StudentInsurances.view', 'Students.StudentInsurances.edit', 'Students.StudentInsurances.delete', 'Students.StudentInsurances']
+                // 'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
             ],
             'Students.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
@@ -2038,9 +2039,15 @@ class NavigationComponent extends Component
             ],
 
             'Administration.Archive' => [
-                'title' => 'Archive',
+                'title' => 'Data Management',
                 'parent' => 'Administration',
                 'link' => false,
+            ],
+            'Archive.Copy' => [
+                'title' => 'Copy',
+                'parent' => 'Administration.Archive',
+                'selected' => ['Archives.CopyData'],
+                'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'CopyData'],
             ],
             'Archive.Backup' => [
                 'title' => 'Backup',
@@ -2049,7 +2056,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'BackupLog'],
             ],
             'Archive.Transfer' => [
-                'title' => 'Transfer',
+                'title' => 'Archive',
                 'parent' => 'Administration.Archive',
                 'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Transfer'],
                 'selected' => ['Archives.Transfer'],

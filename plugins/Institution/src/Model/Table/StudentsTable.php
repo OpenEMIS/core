@@ -28,6 +28,9 @@ class StudentsTable extends ControllerActionTable
     const IN_QUEUE = -10;
 
     private $dashboardQuery = null;
+    // POCOR-6129 custome fields code
+    private $_dynamicFieldName = 'custom_field_data';
+    // POCOR-6129 custome fields code
 
     public function initialize(array $config)
     {
@@ -331,7 +334,8 @@ class StudentsTable extends ControllerActionTable
                 [
                     $ContactTypes->aliasField('id = ') . $UserContact->aliasField('contact_type_id')
                 ]
-            );
+            )
+            ->group([$this->Users->aliasField('openemis_no')]);
 
         if ($periodId > 0) {
             $query->where([$this->aliasField('academic_period_id') => $periodId]);
@@ -363,6 +367,71 @@ class StudentsTable extends ControllerActionTable
                 }
 
                 $row['student_status'] = $student_status;
+
+                // POCOR-6129 custome fields code
+                $Guardians = TableRegistry::get('student_custom_field_values');
+                $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
+                $studentCustomFields = TableRegistry::get('student_custom_fields');
+
+                $guardianData = $Guardians->find()
+                ->select([
+                    'id'                             => $Guardians->aliasField('id'),
+                    'student_id'                     => $Guardians->aliasField('student_id'),
+                    'student_custom_field_id'        => $Guardians->aliasField('student_custom_field_id'),
+                    'text_value'                     => $Guardians->aliasField('text_value'),
+                    'number_value'                   => $Guardians->aliasField('number_value'),
+                    'decimal_value'                  => $Guardians->aliasField('decimal_value'),
+                    'textarea_value'                 => $Guardians->aliasField('textarea_value'),
+                    'date_value'                     => $Guardians->aliasField('date_value'),
+                    'time_value'                     => $Guardians->aliasField('time_value'),
+                    // 'checkbox_value_text'            => $studentCustomFieldOptions->aliasField('name'),
+                    'question_name'                  => 'studentCustomField.name',
+                    'field_type'                     => 'studentCustomField.field_type',
+                    'field_description'              => 'studentCustomField.description',
+                    'question_field_type'            => 'studentCustomField.field_type',
+                ])->leftJoin(
+                    ['studentCustomField' => 'student_custom_fields'],
+                    [
+                        'studentCustomField.id = '.$Guardians->aliasField('student_custom_field_id')
+                    ]
+                )/* ->leftJoin(
+                    [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                    [
+                        $studentCustomFieldOptions->aliasField('student_custom_field_id') => $Guardians->aliasField('student_custom_field_id')
+                    ]
+                ) */
+                ->where([
+                    $Guardians->aliasField('student_id') => $row['student_id'],
+                ])->toArray();
+
+                $existingCheckboxValue = '';
+                foreach ($guardianData as $guadionRow) {
+                    $fieldType = $guadionRow->field_type;
+                    if ($fieldType == 'TEXT') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->text_value;
+                    } else if ($fieldType == 'CHECKBOX') {
+                        $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = trim($existingCheckboxValue, ',');
+                    } else if ($fieldType == 'NUMBER') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->number_value;
+                    } else if ($fieldType == 'DECIMAL') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->decimal_value;
+                    } else if ($fieldType == 'TEXTAREA') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->textarea_value;
+                    } else if ($fieldType == 'DROPDOWN') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->checkbox_value_text;
+                    } else if ($fieldType == 'DATE') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
+                    } else if ($fieldType == 'TIME') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
+                    } else if ($fieldType == 'COORDINATES') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->text_value;
+                    } else if ($fieldType == 'NOTE') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->field_description;
+                    }
+                }
+                // POCOR-6129 custome fields code
+
                 return $row;
             });
         });
@@ -510,8 +579,30 @@ class StudentsTable extends ControllerActionTable
             'label' => __('Contact Number')
         ];
 
+        // POCOR-6129 custome fields code
+        $InfrastructureCustomFields = TableRegistry::get('student_custom_fields');
+        $customFieldData = $InfrastructureCustomFields->find()->select([
+            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+            'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+        ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
+
+        if(!empty($customFieldData)) {
+            foreach($customFieldData as $data) {
+                $custom_field_id = $data->custom_field_id;
+                $custom_field = $data->custom_field;
+                $extraField[] = [
+                    'key' => '',
+                    'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
+                    'type' => 'string',
+                    'label' => __($custom_field)
+                ];
+            }
+        }
+        // POCOR-6129 custome fields code
+
         $fields->exchangeArray($extraField);
     }
+
 
     // public function onExcelRenderIdentities(Event $event, Entity $entity, array $attr) {
     //     $str = '';

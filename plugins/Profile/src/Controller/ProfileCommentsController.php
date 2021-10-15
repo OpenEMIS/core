@@ -9,7 +9,7 @@ class ProfileCommentsController extends BaseController
     public function initialize()
     {
         parent::initialize();
-        $this->Page->disable(['add', 'delete', 'edit']);
+        $this->Page->disable(['delete']);
     }
 
     public function implementedEvents()
