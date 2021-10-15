@@ -903,6 +903,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
+            $institutionId = $this->request->data[$this->alias()]['institution_id'];
             if (in_array($feature,
                         [
                             'Report.InstitutionStudents',
@@ -912,12 +913,29 @@ class InstitutionsTable extends AppTable
 
                 $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
                 $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+                /*POCOR-6337 starts*/
+                $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+                $condition = [];
+                if ($institutionId != 0) {
+                    $condition[$InstitutionGrades->aliasField('institution_id')] = $institutionId;
+                }
+                /*POCOR-6337 ends*/
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                     ->find('visible')
                     ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                    /*POCOR-6337 starts*/
+                    ->leftJoin([$EducationGrades->alias() => $EducationGrades->table()], [
+                        $EducationGrades->aliasField('education_programme_id') . ' = '. $EducationProgrammes->aliasField('id')
+                    ])
+                    ->leftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()], [
+                        $InstitutionGrades->aliasField('education_grade_id') . ' = '. $EducationGrades->aliasField('id')
+                    ])
+                    /*POCOR-6337 ends*/
                     ->where([
                         'EducationSystems.academic_period_id' => $academicPeriodId,
+                        $condition //POCOR-6337
                     ])
                     ->order([
                         'EducationCycles.order' => 'ASC',
@@ -927,7 +945,13 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-                $attr['options'] = ['0' => __('All Programmes')] + $programmeOptions;
+                /*POCOR-6337 starts*/
+                if (count($programmeOptions) > 1) {
+                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', 0 => _('All Programmes')] + $programmeOptions;
+                } else {
+                    $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $programmeOptions;
+                }
+                /*POCOR-6337 starts*/
                 $attr['onChangeReload'] = true;
             } else {
                 $attr['value'] = self::NO_FILTER;
@@ -1609,6 +1633,8 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
+            $institutionId = $this->request->data[$this->alias()]['institution_id'];
+            $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
             if (in_array($feature,
                         [
                             'Report.InstitutionSubjects',
@@ -1630,13 +1656,24 @@ class InstitutionsTable extends AppTable
 
                 if($feature == 'Report.InstitutionSubjects') {
                     $educationProgrammeid = $this->request->data['Institutions']['education_programme_id'];
+
                     if($educationProgrammeid == 0){
                         $attr['options'] = ['' => __('All Subjects')] + $subjectOptions;
                     }else{
+                        $where = [];
+                        if ($institutionId != 0) {
+                            $where['InstitutionSubjects.institution_id'] = $institutionId;
+                        }
+                        if (!empty($academicPeriodId)) {
+                            $where['InstitutionSubjects.academic_period_id'] = $academicPeriodId;
+                        }
                         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
                         $EducationGrades = TableRegistry::get('Education.EducationGrades');
                         $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
                         $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+                        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+                        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+                        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
                         $subjectOptions = $EducationProgrammes
                             ->find()
                             ->select([
@@ -1646,17 +1683,20 @@ class InstitutionsTable extends AppTable
                                 ['EducationGrades' => 'education_grades'],
                                 ['EducationGrades.education_programme_id = ' . $EducationProgrammes->aliasField('id')]
                             )
-                            ->innerJoin(
-                                ['EducationGradesSubjects' => 'education_grades_subjects'],
-                                ['EducationGradesSubjects.education_grade_id = ' . $EducationGrades->aliasField('id')]
-                            )
-                            ->innerJoin(
-                                ['EducationSubjects' => 'education_subjects'],
-                                ['EducationSubjects.id = ' . $EducationGradesSubjects->aliasField('education_subject_id')]
-                            )
-                            ->where([
-                                $EducationProgrammes->aliasField('id') => $educationProgrammeid
+                            ->innerJoin(['InstitutionGrades' => 'institution_grades'], ['InstitutionGrades.education_grade_id = ' . $EducationGrades->aliasField('id')
                             ])
+                            ->innerJoin(['InstitutionSubjects' => 'institution_subjects'], [
+                                'InstitutionSubjects.institution_id = ' . $InstitutionGrades->aliasField('institution_id'),
+                                'InstitutionSubjects.education_grade_id = ' . $InstitutionGrades->aliasField('education_grade_id')
+                            ])
+                            ->innerJoin(['EducationSubjects' => 'education_subjects'], [
+                                'EducationSubjects.id = ' . $InstitutionSubjects->aliasField('education_subject_id')
+                            ])
+                            ->where([
+                                $EducationProgrammes->aliasField('id') => $educationProgrammeid,
+                                $where
+                            ])
+                            ->group(['InstitutionSubjects.name'])
                             ->toArray();
                             $attr['type'] = 'select';
                             $attr['select'] = false;
