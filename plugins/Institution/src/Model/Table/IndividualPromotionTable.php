@@ -444,11 +444,15 @@ class IndividualPromotionTable extends ControllerActionTable
                                         'keyField' => 'id',
                                         'valueField' => 'programme_grade_name'
                                     ])
+                                    ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()],[
+                                            $this->EducationGrades->aliasField('id').' = ' . $InstitutionGrades->aliasField('education_grade_id')
+                                    ])
                                     ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
                                     ->where([
                                         'EducationSystems.academic_period_id' => $selectedPeriodId,
                                         $this->EducationGrades->aliasField('order <=') => $gradeOrder,
-                                        $this->EducationGrades->aliasField('education_programme_id') => $programeId
+                                        $this->EducationGrades->aliasField('education_programme_id') => $programeId,
+                                        $InstitutionGrades->aliasField('institution_id') => $institutionId
                                     ]);
                         }   
                         $listOfGrades = $query->toArray();
