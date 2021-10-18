@@ -43,6 +43,8 @@ class POCOR6288 extends AbstractMigration
                                         $institution_class_students->aliasField('id') =>$text_val_id,
                                         $institution_class_students->aliasField('academic_period_id') =>$text_val['academic_period_id'],
                                         $institution_class_students->aliasField('institution_id') =>$text_val['institution_id'],
+                                        $institution_class_students->aliasField('institution_class_id') =>$text_val['institution_class_id'],
+                                        $institution_class_students->aliasField('education_grade_id') =>$text_val['correct_grade_id'],
 
                                     ])
                                     ->first();
