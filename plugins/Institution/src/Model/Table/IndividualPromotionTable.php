@@ -333,6 +333,7 @@ class IndividualPromotionTable extends ControllerActionTable
                     $statuses = $this->StudentStatuses->findCodeList();
                     $fromGradeId = $attr['entity']->education_grade_id;
                     $institutionId = $request->data[$this->alias()]['institution_id'];
+                    $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
                     // PROMOTED status
                     if ($studentStatusId == $statuses['PROMOTED']) {
                         $fromAcademicPeriodId = $attr['entity']->academic_period_id;
@@ -357,7 +358,6 @@ class IndividualPromotionTable extends ControllerActionTable
                             $gradeOrder = $query->order;
                             $programeId = $query->education_programme_id;
                         }
-                            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
                             $institutionId = $request->data[$this->alias()]['institution_id'];
                             $query = $this->EducationGrades
                                     ->find('list', [
@@ -410,11 +410,15 @@ class IndividualPromotionTable extends ControllerActionTable
                                         'keyField' => 'id',
                                         'valueField' => 'programme_grade_name'
                                     ])
+                                    ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()],[
+                                        $this->EducationGrades->aliasField('id').' = ' . $InstitutionGrades->aliasField('education_grade_id')
+                                    ])
                                     ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
                                     ->where([
                                         'EducationSystems.academic_period_id' => $selectedPeriodId,
                                         $this->EducationGrades->aliasField('order <') => $gradeOrder,
-                                        $this->EducationGrades->aliasField('education_programme_id') => $programeId
+                                        $this->EducationGrades->aliasField('education_programme_id') => $programeId,
+                                        $InstitutionGrades->aliasField('institution_id') => $institutionId
                                     ]);
                             $listOfGrades = $query->toArray();
                             if (empty($listOfGrades)) {
@@ -423,11 +427,15 @@ class IndividualPromotionTable extends ControllerActionTable
                                             'keyField' => 'id',
                                             'valueField' => 'programme_grade_name'
                                         ])
+                                        ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()],[
+                                            $this->EducationGrades->aliasField('id').' = ' . $InstitutionGrades->aliasField('education_grade_id')
+                                        ])
                                         ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
                                         ->where([
                                             'EducationSystems.academic_period_id' => $selectedPeriodId,
                                             $this->EducationGrades->aliasField('order <=') => $gradeOrder,
-                                            $this->EducationGrades->aliasField('education_programme_id <') => $programeId
+                                            $this->EducationGrades->aliasField('education_programme_id <') => $programeId,
+                                            $InstitutionGrades->aliasField('institution_id') => $institutionId
                                         ]);
                             }
                         } else {
@@ -721,7 +729,7 @@ class IndividualPromotionTable extends ControllerActionTable
             $newClassStudent['student_id'] = $entity->student_id;
             $newClassStudent['education_grade_id'] = $entity->education_grade_id;
             $newClassStudent['institution_class_id'] = $entity->institution_class_id;
-            $newClassStudent['student_status_id'] = $studentStatusId;
+            $newClassStudent['student_status_id'] = 1; //POCOR-6349
             $newClassStudent['institution_id'] = $entity->institution_id;
             $newClassStudent['academic_period_id'] = $entity->academic_period_id;
         }
