@@ -381,7 +381,7 @@ class IndividualPromotionTable extends ControllerActionTable
                         $attr['onChangeReload'] = true;
                         break;
                     } elseif ($studentStatusId == $statuses['REPEATED']) {
-                        $fromAcademicPeriodId = $attr['entity']->academic_period_id;
+                        $fromAcademicPeriodId = $request->data[$this->alias()]['from_academic_period_id'];
                         $selectedPeriodId = $request->data[$this->alias()]['academic_period_id'];
                         $gradeData = $this->EducationGrades->get($fromGradeId);
                         $stageId = $gradeData->education_stage_id;
@@ -403,7 +403,35 @@ class IndividualPromotionTable extends ControllerActionTable
                             $gradeOrder = $query->order;
                             $programeId = $query->education_programme_id;
                         }
-                        $query = $this->EducationGrades
+                        //when from academic period same as selected academic period
+                        if ($fromAcademicPeriodId == $selectedPeriodId) {
+                            $query = $this->EducationGrades
+                                    ->find('list', [
+                                        'keyField' => 'id',
+                                        'valueField' => 'programme_grade_name'
+                                    ])
+                                    ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                                    ->where([
+                                        'EducationSystems.academic_period_id' => $selectedPeriodId,
+                                        $this->EducationGrades->aliasField('order <') => $gradeOrder,
+                                        $this->EducationGrades->aliasField('education_programme_id') => $programeId
+                                    ]);
+                            $listOfGrades = $query->toArray();
+                            if (empty($listOfGrades)) {
+                                $query = $this->EducationGrades
+                                        ->find('list', [
+                                            'keyField' => 'id',
+                                            'valueField' => 'programme_grade_name'
+                                        ])
+                                        ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                                        ->where([
+                                            'EducationSystems.academic_period_id' => $selectedPeriodId,
+                                            $this->EducationGrades->aliasField('order <=') => $gradeOrder,
+                                            $this->EducationGrades->aliasField('education_programme_id <') => $programeId
+                                        ]);
+                            }
+                        } else {
+                            $query = $this->EducationGrades
                                     ->find('list', [
                                         'keyField' => 'id',
                                         'valueField' => 'programme_grade_name'
@@ -414,6 +442,7 @@ class IndividualPromotionTable extends ControllerActionTable
                                         $this->EducationGrades->aliasField('order <=') => $gradeOrder,
                                         $this->EducationGrades->aliasField('education_programme_id') => $programeId
                                     ]);
+                        }   
                         $listOfGrades = $query->toArray();
                         $options = ['' => '-- Select --'] + $listOfGrades;
                         $attr['type'] = 'select';
