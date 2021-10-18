@@ -337,119 +337,111 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 
         <div class="step-pane sample-pane" data-step="4" data-name="confirmation">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
+                <div class="row section-header header-space-lg">Information</div>
+                <div class="input string row-content">
+                    <label><?= __('Photo Content') ?></label>
+                    <div>
+                        <div class="table-thumb mb-16">
+                            <div class="profile-image-thumbnail">
+                                <i class="kd-staff"></i>
+                            </div>
+                        </div>
+                        <p class="font-italic mb-0">* Advisable photo dimension 90 by 115</p>
+                        <p class="font-italic">* Format Supported: .jpg, .jpeg, .png, .gif</p>
+                        <div class="d-flex">
+                            <div class="position-relative">
+                                <button class="btn btn-xs btn-default fontSize-16">
+                                    <i class="fa fa-folder"></i>
+                                    <span>Select File</span>
+                                </button>
+                                <input type="file" class="input-hidden">
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="input string required">
                     <label><?= __('OpenEMIS ID') ?></label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.openemis_no" type="string" ng-disabled="true">
-                    <div ng-if="InstitutionStudentController.postResponse.error.openemis_no" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.openemis_no">{{ error }}</p>
-                    </div>
                 </div>
                 <div class="input string required">
                     <label><?= __('First Name') ?></label>
-                    <input ng-model="InstitutionStudentController.selectedStudentData.first_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-init="InstitutionStudentController.selectedStudentData.first_name='';">
-                    <div ng-if="InstitutionStudentController.postResponse.error.first_name" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.first_name">{{ error }}</p>
-                    </div>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.first_name" type="string" ng-disabled="true">
                 </div>
                 <div class="input string">
                     <label><?= __('Middle Name') ?></label>
-                    <input ng-model="InstitutionStudentController.selectedStudentData.middle_name" ng-change="InstitutionStudentController.setStudentName()" type="string">
+                    <input ng-model="InstitutionStudentController.selectedStudentData.middle_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="true">
                 </div>
                 <div class="input string">
                     <label><?= __('Third Name') ?></label>
-                    <input ng-model="InstitutionStudentController.selectedStudentData.third_name" ng-change="InstitutionStudentController.setStudentName()" type="string">
+                    <input ng-model="InstitutionStudentController.selectedStudentData.third_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="true">
                 </div>
                 <div class="input string required">
                     <label><?= __('Last Name') ?></label>
-                    <input ng-model="InstitutionStudentController.selectedStudentData.last_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-init="InstitutionStudentController.selectedStudentData.last_name='';">
-                    <div ng-if="InstitutionStudentController.postResponse.error.last_name" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.last_name">{{ error }}</p>
-                    </div>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.last_name" type="string" ng-disabled="true">
                 </div>
                 <div class="input string">
                     <label><?= __('Preferred Name') ?></label>
-                    <input ng-model="InstitutionStudentController.selectedStudentData.preferred_name" type="string">
+                    <input ng-model="InstitutionStudentController.selectedStudentData.preferred_name" type="string" ng-disabled="true">
                 </div>
-                <div class="input select required error">
+                <div class="input select required">
                     <label><?= __('Gender') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Students[gender_id]" id="students-gender_id"
-                            ng-options="option.id as option.name for option in InstitutionStudentController.genderOptions"
-                            ng-model="InstitutionStudentController.selectedStudentData.gender_id"
-                            ng-change="InstitutionStudentController.changeGender()"
-                            ng-init="InstitutionStudentController.selectedStudentData.gender_id='';"
-                            >
-                            <option value="" >-- <?= __('Select') ?> --</option>
-                        </select>
-                    </div>
-                    <div ng-if="InstitutionStudentController.postResponse.error.gender_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.gender_id">{{ error }}</p>
-                    </div>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.gender.name" ng-disabled="true" />
                 </div>
                 <div class="input date required">
                     <label for="Student_date_of_birth"><?= __('Date Of Birth') ?></label>
                     <div class="input-group date " id="Student_date_of_birth" style="">
-                        <input type="text" class="form-control " name="Student[date_of_birth]" ng-model="InstitutionStudentController.selectedStudentData.date_of_birth" ng-init="InstitutionStudentController.selectedStudentData.date_of_birth='';">
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
-                    </div>
-                    <div ng-if="InstitutionStudentController.postResponse.error.date_of_birth" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.date_of_birth">{{ error }}</p>
+                        <input type="text" class="form-control " name="Student[date_of_birth]" ng-model="InstitutionStudentController.selectedStudentData.date_of_birth" ng-disabled="true">
                     </div>
                 </div>
-                <div ng-class="InstitutionStudentController.Student.nationality_class" ng-show="InstitutionStudentController.StudentNationalities != 2">
-                    <label><?= __('Nationality') ?></label>
+                <div class="row section-header header-space-lg">Location</div>
+                <div class="input string">
+                    <label><?= __('Address') ?></label>
+                    <textarea ng-model="InstitutionStudentController.selectedStaffData.address" type="string"></textarea>
+                </div>
+                <div class="input string">
+                    <label><?= __('Postal Code') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStaffData.postalCode" type="string">
+                </div>
+                <div class="row section-header header-space-lg">Address Area</div>
+                <div class="input string">
+                    <label><?= __('Address Area') ?></label>
                     <div class="input-select-wrapper">
-                        <select name="Students[nationality_id]" id="students-nationality_id"
-                            ng-options="option.id as option.name for option in InstitutionStudentController.StudentNationalitiesOptions"
-                            ng-model="InstitutionStudentController.Student.nationality_id"
-                            ng-change="InstitutionStudentController.changeNationality()"
-                            ng-init="InstitutionStudentController.Student.nationality_id='';"
+                        <select name="Staff[gender_id]" id="staff-gender_id"
+                            ng-options="option.id as option.name for option in InstitutionStaffController.genderOptions"
+                            ng-model="InstitutionStudentController.selectedStudentData.addressArea"
+                            ng-change="InstitutionStaffController.changeGender()"
+                            ng-init="InstitutionStudentController.selectedStudentData.addressArea='';"
                             >
                             <option value="" >-- <?= __('Select') ?> --</option>
                         </select>
                     </div>
-                    <div ng-if="InstitutionStudentController.postResponse.error.nationalities[0].nationality_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
+                </div>
+                <div class="row section-header header-space-lg">Birthplace Area</div>
+                <div class="input string">
+                    <label><?= __('Birthplace Area') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Staff[gender_id]" id="staff-gender_id"
+                            ng-options="option.id as option.name for option in InstitutionStaffController.genderOptions"
+                            ng-model="InstitutionStudentController.selectedStudentData.birthplaceArea"
+                            ng-change="InstitutionStaffController.changeGender()"
+                            ng-init="InstitutionStudentController.selectedStudentData.birthplaceArea='';"
+                            >
+                            <option value="" >-- <?= __('Select') ?> --</option>
+                        </select>
                     </div>
                 </div>
-                <div ng-class="InstitutionStudentController.Student.identity_type_class" ng-show="InstitutionStudentController.StudentIdentities != 2 && InstitutionStudentController.StudentNationalities == 2">
+                <div class="row section-header header-space-lg">Identities / Nationalities</div>
+                <div class="input string">
+                    <label><?= __('Nationalities') ?></label>
+                    <input ng-model="InstitutionStudentController.Student.nationality_name" type="string" ng-disabled="true" />
+                </div>
+                <div class="input string">
                     <label><?= __('Identity Type') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Students[identities_type_id]" id="students-identities_type_id"
-                            ng-options="option.id as option.name for option in InstitutionStudentController.StudentIdentitiesOptions"
-                            ng-model="InstitutionStudentController.Student.identity_type_id"
-                            ng-change="InstitutionStudentController.changeIdentityType()"
-                            >
-                            <option value="" >-- <?= __('Select') ?> --</option>
-                        </select>
-                    </div>
-                    <div ng-if="InstitutionStudentController.postResponse.error.identities[0].identity_type_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.identities[0].identity_type_id">{{ error }}</p>
-                    </div>
+                    <input ng-model="InstitutionStudentController.Student.identity_type_name" type="string" ng-disabled="true">
                 </div>
-                <div ng-class="InstitutionStudentController.Student.identity_class" ng-show="InstitutionStudentController.StudentIdentities != 2">
-                    <label><?= __('{{InstitutionStudentController.Student.identity_type_name}}') ?></label>
-                    <input ng-model="InstitutionStudentController.selectedStudentData.identity_number" type="string" ng-init="InstitutionStudentController.selectedStudentData.identity_number='';">
-                    <div ng-if="InstitutionStudentController.postResponse.error.identities[0].number" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.identities[0].number">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input string required">
-                    <label><?= __('Username') ?></label>
-                    <input ng-model="InstitutionStudentController.selectedStudentData.username" type="string" ng-init="InstitutionStudentController.selectedStudentData.username='';">
-                    <div ng-if="InstitutionStudentController.postResponse.error.username" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.username">{{ error }}</p>
-                    </div>
-                </div>
-
-                <div class="input password required">
-                    <label><?=
-                        __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
-                    ?></label>
-                    <input ng-model="InstitutionStudentController.selectedStudentData.password" type="string" ng-init="InstitutionStudentController.selectedStudentData.password='';">
-                    <div ng-if="InstitutionStudentController.postResponse.error.password" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.password">{{ error }}</p>
-                    </div>
+                <div class="input string">
+                    <label><?= __('Identity Number') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.identity_number" type="string" ng-disabled="true">
                 </div>
             </form>
         </div>
@@ -733,6 +725,48 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
 
 //]]>
 </script>
+
+<style>
+    .header-space-lg{
+        margin-bottom: 20px !important
+    }
+    .mb-16{
+        margin-bottom: 16px;
+    }
+    .font-italic{
+        font-style: italic;
+    }
+    .mb-0{
+        margin-bottom: 0;
+    }
+    .d-flex{
+        display: flex;
+    }
+    .position-relative{
+        position: relative;
+    }
+    .fontSize-16{
+        font-size: 16px !important;
+    }
+    .input-hidden{
+        opacity: 0; 
+        position: absolute; 
+        width: 100% !important; 
+        height: 100% !important;
+        left: 0; 
+        top: 0;
+    }
+    .row-content{
+        margin-bottom: 16px;
+    }
+    @media (min-width: 800px) {
+        .row-content{
+            display: flex; 
+            align-items: flex-start;
+        }
+    }
+
+</style>
 
 
 <?php
