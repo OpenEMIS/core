@@ -1826,10 +1826,44 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $requestQuery = $this->request->query;
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $query
-        ->select(['total_male_students' => 'InstitutionSubjects.total_male_students','total_female_students' => 'InstitutionSubjects.total_female_students'])
+        ->select([
+            'total_male_students' => 'InstitutionSubjects.total_male_students',
+            'total_female_students' => 'InstitutionSubjects.total_female_students',
+            'institution_subject_id' => 'InstitutionSubjects.id'
+        ])
         ->where([
             $this->aliasField('academic_period_id = ').$selectedAcademicPeriodId,
             $this->aliasField('institution_id = ').$institutionId,
         ]);
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $institutionRooms = TableRegistry::get('institution_rooms');
+                $institutionSubjectRooms = TableRegistry::get('institution_subjects_rooms');
+
+                $institutionRoomsRow = $institutionRooms
+                ->find()
+                ->select([
+                    $institutionRooms->aliasField('code'),
+                    $institutionRooms->aliasField('name')
+                ])
+                ->leftJoin(
+                    [$institutionSubjectRooms->alias() => $institutionSubjectRooms->table()],
+                    [
+                        $institutionRooms->aliasField('id  = ') . $institutionSubjectRooms->aliasField('institution_room_id')
+                    ]
+                )
+                ->where([$institutionSubjectRooms->alias('institution_subject_id') => $row->institution_subject_id])
+                ->first();
+
+                if(!empty($institutionRoomsRow)){
+                    $row['rooms'] = $institutionRoomsRow->code .' - '. $institutionRoomsRow->name;
+                }else{
+                    $row['rooms'] = '';
+                }
+                
+                return $row;
+            });
+        });
     }
 }
