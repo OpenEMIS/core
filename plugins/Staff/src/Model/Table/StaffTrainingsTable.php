@@ -207,4 +207,17 @@ class StaffTrainingsTable extends ControllerActionTable
             return $data;
         }
     }
+
+    // POCOR-6137 start
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $staffId = $session->read('Staff.Staff.id');
+
+        $query
+        ->where([
+            $this->aliasField('staff_id') => $staffId
+        ]);
+    }
+    // POCOR-6137 end
 }
