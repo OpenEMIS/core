@@ -5,6 +5,10 @@ use ArrayObject;
 
 use Cake\Event\Event;
 use Staff\Model\Table\TrainingNeedsAppTable;
+use Cake\ORM\Query;
+use Cake\ORM\ResultSet;
+use Cake\Validation\Validator;
+use Cake\ORM\TableRegistry;
 
 class StaffTrainingNeedsTable extends TrainingNeedsAppTable
 {
@@ -52,4 +56,29 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
     }
+
+    // POCOR-6137 start
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $staffId = $session->read('Staff.Staff.id');
+        $status = $this->request->query('category');
+        $workflowSteps = TableRegistry::get('workflow_steps');
+
+        $query
+        ->leftJoin([$workflowSteps->alias() => $workflowSteps->table()],[
+            $workflowSteps->aliasField('id = ').$this->aliasField('status_id')
+        ])
+        ->where([
+            $this->aliasField('staff_id') => $staffId
+        ]);
+
+        if($status > 0){
+            $query
+            ->where([
+                $workflowSteps->aliasField('category = ') => $status
+            ]); 
+        }
+    }
+    // POCOR-6137 end
 }
