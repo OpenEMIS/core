@@ -87,29 +87,115 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $User = TableRegistry::get('security_users');
-        $academicPeriod = $this->request->query['academic_period_id'];  
-        $User = TableRegistry::get('security_users');
-            $query
-            ->select(['registration_number' => 'InstitutionExaminationStudents.registration_number', 'openemi_id' => 'Users.openemis_no', 'dob' => 'Users.date_of_birth', 'identity_type' => 'IdentityTypes.name', 'identity_number' => 'Users.identity_number', 'gender' => 'Genders.code', 'academic_period' => 'AcademicPeriods.name', 'student_name' => $User->find()->func()->concat([
+        $nationalities = TableRegistry::get('nationalities');
+        $examinations = TableRegistry::get('examinations');
+        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
+        $examinationId = ($this->request->query['examination_id']) ? $this->request->query['examination_id'] : 0 ;
+        $session = $this->request->session();
+        $institutionId  = $session->read('Institution.Institutions.id'); 
+
+        $query
+        ->select([
+            'registration_number' => 'InstitutionExaminationStudents.registration_number', 
+            'openemis_no' => 'Users.openemis_no',
+            'dob' => 'Users.date_of_birth', 
+            'identity_type' => 'IdentityTypes.name', 
+            'identity_number' => 'Users.identity_number', 
+            'gender' => 'Genders.code', 
+            'academic_period' => 'AcademicPeriods.name',
+            'nationality_name' => 'nationalities.name',
+            'education_grade_id' =>$examinations->aliasField('education_grade_id'),
+            'student_name' => $User->find()->func()->concat([
                 'first_name' => 'literal',
                 " ",
                 'last_name' => 'literal'
-            ])])
-            ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
-                $this->AcademicPeriods->aliasField('id').' = ' . 'InstitutionExaminationStudents
-                .academic_period_id'
             ])
-            ->LeftJoin([$this->Users->alias() => $this->Users->table()],[
-                $this->Users->aliasField('id').' = ' . 'InstitutionExaminationStudents.student_id'
-            ])
-            ->LeftJoin([$this->IdentityTypes->alias() => $this->IdentityTypes->table()],[
-                $this->IdentityTypes->aliasField('id').' = ' . 'Users.identity_type_id'
-            ])
-            ->LeftJoin([$this->Genders->alias() => $this->Genders->table()],[
-                $this->Genders->aliasField('id').' = ' . 'Users.gender_id'
-            ])
-           
-            ->where(['InstitutionExaminationStudents.academic_period_id' =>  $academicPeriod]);
+        ])
+        ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+            $this->AcademicPeriods->aliasField('id').' = ' . 'InstitutionExaminationStudents.academic_period_id'
+        ])
+        ->LeftJoin([$this->Users->alias() => $this->Users->table()],[
+            $this->Users->aliasField('id').' = ' . 'InstitutionExaminationStudents.student_id'
+        ])
+        ->LeftJoin([$nationalities->alias() => $nationalities->table()],[
+            $nationalities->aliasField('id').' = ' .'Users.nationality_id'
+        ])
+        ->LeftJoin([$this->IdentityTypes->alias() => $this->IdentityTypes->table()],[
+            $this->IdentityTypes->aliasField('id').' = ' . 'Users.identity_type_id'
+        ])
+        ->LeftJoin([$this->Genders->alias() => $this->Genders->table()],[
+            $this->Genders->aliasField('id').' = ' . 'Users.gender_id'
+        ])
+        ->LeftJoin([$examinations->alias() => $examinations->table()], [
+            [$examinations->aliasField('id ='). $this->aliasField('examination_id')],
+        ])
+        ->where([
+            'InstitutionExaminationStudents.academic_period_id' =>  $academicPeriod,
+            'InstitutionExaminationStudents.institution_id' =>  $institutionId,
+            $this->aliasField('examination_id =') .$examinationId
+        ]);
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+                $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+                $statuses = $StudentStatuses->findCodeList();
+                $repeatedStatus = $statuses['REPEATED'];
+
+                $InstitutionStudentsCurrentData = $InstitutionStudents
+                ->find()
+                ->select([
+                    'InstitutionStudents.id', 
+                    'InstitutionStudents.student_status_id', 
+                    'InstitutionStudents.previous_institution_student_id'
+                ])
+                ->where([
+                    $InstitutionStudents->aliasField('student_id') => $row['student_id'],
+                    $InstitutionStudents->aliasField('education_grade_id') => $row['education_grade_id'],
+                    $InstitutionStudents->aliasField('student_status_id') => $repeatedStatus,
+                ])
+                ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
+                ->autoFields(true)
+                ->first();
+
+                $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+                $approvedStatuses = $StudentTransfers->getStudentTransferWorkflowStatuses('APPROVED');
+                $institutionStudentTransfer = $StudentTransfers
+                ->find()
+                ->select([
+                    $StudentTransfers->aliasField('id'),
+                    $StudentTransfers->aliasField('student_id'),
+                    $StudentTransfers->aliasField('previous_institution_id'),
+                    $StudentTransfers->aliasField('previous_academic_period_id'),
+                    $StudentTransfers->aliasField('status_id')
+                ])
+                ->where([
+                    $StudentTransfers->aliasField('student_id') => $row['student_id'],
+                    $StudentTransfers->aliasField('previous_institution_id') => $row['institution_id'],
+                    $StudentTransfers->aliasField('previous_academic_period_id') => $row['academic_period_id'],
+                    $StudentTransfers->aliasField('status_id IN') => $approvedStatuses
+                ])
+                ->order([$StudentTransfers->aliasField('status_id') => 'DESC'])
+                ->autoFields(true)
+                ->first();
+
+                if($InstitutionStudentsCurrentData){
+                    $student_status = "Yes";
+                }else{
+                    $student_status = 'No';
+                }
+                
+                if ($institutionStudentTransfer) {
+                    $transfer = 'Yes';
+                } else {
+                    $transfer = 'No';
+                }
+
+                $row['repeater_status'] = $student_status;
+                $row['transfer_status'] = $transfer;
+                return $row;
+            });
+        });
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -130,7 +216,13 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             'label' => '',
         ];
 
-       
+        $newFields[] = [
+            'key' => '',
+            'field' => 'student_name',
+            'type' => 'string',
+            'label' => 'Student',
+        ];
+
         $newFields[] = [
             'key' => 'Users.date_of_birth',
             'field' => 'dob',
@@ -138,8 +230,20 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             'label' => 'Date Of Birth',
         ];
 
-      
+        $newFields[] = [
+            'key' => 'Genders.code',
+            'field' => 'gender',
+            'type' => 'string',
+            'label' => 'Gender'
+        ];
 
+        $newFields[] = [
+            'key' => 'nationalities.name',
+            'field' => 'nationality_name',
+            'type' => 'string',
+            'label' => 'Nationality'
+        ];
+      
         $newFields[] = [
             'key' => 'IdentityTypes.name',
             'field' => 'identity_type',
@@ -155,17 +259,17 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         ];
 
         $newFields[] = [
-            'key' => 'Genders.code',
-            'field' => 'gender',
+            'key' => '',
+            'field' => 'repeater_status',
             'type' => 'string',
-            'label' => 'Gender'
+            'label' => __('Repeated')
         ];
-
+        
         $newFields[] = [
-            'key' => 'AcademicPeriods.name',
-            'field' => 'academic_period',
-            'type' => 'integer',
-            'label' => 'Academic Period',
+            'key' => '',
+            'field' => 'transfer_status',
+            'type' => 'string',
+            'label' => __('Transferred')
         ];
 
         $fields->exchangeArray($newFields);
