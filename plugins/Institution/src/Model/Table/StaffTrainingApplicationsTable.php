@@ -486,6 +486,9 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $trainingCourses = TableRegistry::get('TrainingCourses');
         $trainingLevels = TableRegistry::get('TrainingLevels');
         $trainingFieldOfStudies = TableRegistry::get('TrainingFieldOfStudies');
+        $workflowSteps = TableRegistry::get('workflow_steps');
+        $staffId = $session->read('Staff.Staff.id');
+        $status = $this->request->query('category');
     
         $query
         ->select([
@@ -506,8 +509,19 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         ->leftJoin([$trainingFieldOfStudies->alias() => $trainingFieldOfStudies->table()],[
             $trainingFieldOfStudies->aliasField('id = ').$trainingCourses->aliasField('training_field_of_study_id')
         ])
+        ->innerJoin([$workflowSteps->alias() => $workflowSteps->table()],[
+            $workflowSteps->aliasField('id = ').$this->aliasField('status_id')
+        ])
         ->where([
             'institution_id =' .$institutionId,
+            $this->aliasField('staff_id') => $staffId
         ]);
+
+        if($status > 0){
+            $query
+            ->where([
+                $workflowSteps->aliasField('category = ') => $status
+            ]); 
+        }
     }
 }
