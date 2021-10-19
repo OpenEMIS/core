@@ -17,9 +17,9 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
     };
     return service;
     
-    function init(){
+    function init(baseUrl){
         KdOrmSvc.base(baseUrl);
-        KdOrmSvc.controllerAction('Staff');
+        KdOrmSvc.controllerAction('Directory');
         KdOrmSvc.init(models);
     }
 

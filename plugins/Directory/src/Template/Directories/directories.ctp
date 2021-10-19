@@ -4,10 +4,7 @@
 <?= $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepicker.min', ['block' => true]); ?>
 <?= $this->Html->css('ControllerAction.../plugins/timepicker/css/bootstrap-timepicker.min', ['block' => true]); ?>
 
-<div ng-controller = 'DirectoryAddCtrl'>
-    <div class="alert {{class}}" ng-hide="message == null">
-        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a><?= __('{{message}}') ?>
-    </div>
+<div class="pd-10" ng-controller = 'DirectoryAddCtrl'>
     <div class="wizard" data-initialize="wizard" id="wizard">
         <div class="steps-container">
             <ul class="steps" style="margin-left: 0">
@@ -49,24 +46,43 @@
         </div>
         <div class="actions top">
             <button
-                ng-if="(step=='user_details' || step=='internal_search')"
-                type="button" class="btn btn-cancel">Cancel</button>
+                ng-if="(step=='user_details')"
+                type="button" class="btn close-btn">Cancel</button>
             <button
-                ng-if="(step!=='user_details' && step!=='internal_search')"
-                type="button" class="btn btn-prev">Back</button>
+                ng-if="(step!=='user_details' && step!=='summary')"
+                type="button" class="btn btn-prev close-btn"
+                data-last="<?= __('Save') ?>" ng-click="goToPrevStep()">Back</button>
             <button
-                ng-if="(step=='confirmation')"
-                type="button" class="btn btn-default">Confirm</button>
+                ng-if="(step=='confirmation' && step!=='summary')"
+                type="button" class="btn btn-default" data-last="<?= __('Save') ?>" ng-click="confirmUser()">Confirm</button>
             <button
                 ng-if="(step=='summary')"
-                type="button" class="btn btn-cancel">Close</button>
+                type="button" class="btn close-btn" ng-click="goToFirstStep()">Close</button>
             <button type="button" class="btn btn-default btn-next"
-                ng-if="step!=='confirmation'"
-                data-last="<?= __('Save') ?>">Next</button>
+                ng-if="step!=='confirmation' && step!=='summary'">Next</button>
         </div>
         <div class="step-content">
-            <div class="step-pane sample-pane active" data-step="1" data-name="userDetails">
+            <div class="alert {{messageClass}}" ng-if="message">
+                <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
+            </div>
+            <div class="step-pane sample-pane" data-step="1" data-name="userDetails">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
+                    <div class="input select required error">
+                        <label>User Type</label>
+                        <div class="input-select-wrapper">
+                            <select name="User[user_type_id]" id="user-user_type_id"
+                                ng-options="option.id as option.name for option in userTypeOptions"
+                                ng-model="selectedUserData.user_type_id"
+                                ng-change="changeUserType()"
+                                ng-init="selectedUserData.user_type_id='';"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                        <div ng-if="postResponse.error.gender_id" class="error-message">
+                            <p ng-repeat="error in postResponse.error.gender_id">{{ error }}</p>
+                        </div>
+                    </div>
                     <div class="input string required">
                         <label><?= __('OpenEMIS ID') ?></label>
                         <input ng-model="selectedUserData.openemis_no" type="string" ng-disabled="true">
@@ -126,7 +142,7 @@
                             <p ng-repeat="error in postResponse.error.date_of_birth">{{ error }}</p>
                         </div>
                     </div>
-                    <div ng-class="InstitutionStaffController.Staff.nationality_class">
+                    <div ng-class="nationality_class">
                         <label><?= __('Nationality') ?></label>
                         <div class="input-select-wrapper">
                             <select name="Staff[nationality_id]" id="staff-nationality_id"
@@ -200,157 +216,243 @@
                     <div>
                         <div class="scrolltabs sticky-content">
                             <div id="institution-student-table" class="table-wrapper">
-                                <div ng-if="InstitutionStaffController.externalGridOptions" kd-ag-grid="InstitutionStaffController.externalGridOptions" ag-selection-type="radio" class="ag-height-fixed"></div>
+                                <div ng-if="externalGridOptions" kd-ag-grid="externalGridOptions" ag-selection-type="radio" class="ag-height-fixed"></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="step-pane sample-pane" data-step="4" data-name="confirmation">
-            <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                <div class="row section-header header-space-lg">Information</div>
-                <div class="input string row-content">
-                    <label><?= __('Photo Content') ?></label>
-                    <div>
-                        <div class="table-thumb mb-16">
-                            <div class="profile-image-thumbnail">
-                                <i class="kd-staff"></i>
+                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
+                    <div class="row section-header header-space-lg">Information</div>
+                    <div class="input string row-content">
+                        <label><?= __('Photo Content') ?></label>
+                        <div>
+                            <div class="table-thumb mb-16">
+                                <div class="profile-image-thumbnail">
+                                    <i class="kd-staff"></i>
+                                </div>
+                            </div>
+                            <p class="font-italic mb-0">* Advisable photo dimension 90 by 115</p>
+                            <p class="font-italic">* Format Supported: .jpg, .jpeg, .png, .gif</p>
+                            <div class="d-flex">
+                                <div class="position-relative">
+                                    <button class="btn btn-xs btn-default fontSize-16">
+                                        <i class="fa fa-folder"></i>
+                                        <span>Select File</span>
+                                    </button>
+                                    <input type="file" class="input-hidden">
+                                </div>
                             </div>
                         </div>
-                        <p class="font-italic mb-0">* Advisable photo dimension 90 by 115</p>
-                        <p class="font-italic">* Format Supported: .jpg, .jpeg, .png, .gif</p>
-                        <div class="d-flex">
-                            <div class="position-relative">
-                                <button class="btn btn-xs btn-default fontSize-16">
-                                    <i class="fa fa-folder"></i>
-                                    <span>Select File</span>
-                                </button>
-                                <input type="file" class="input-hidden">
-                            </div>
-                        </div>
                     </div>
-                </div>
-                <div class="input string required">
-                    <label><?= __('OpenEMIS ID') ?></label>
-                    <input ng-model="selectedUserData.openemis_no" type="string" ng-disabled="true">
-                </div>
-                <div class="input string required">
-                    <label><?= __('First Name') ?></label>
-                    <input ng-model="selectedUserData.first_name" type="string" ng-disabled="true">
-                </div>
-                <div class="input string">
-                    <label><?= __('Middle Name') ?></label>
-                    <input ng-model="selectedUserData.middle_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="true">
-                </div>
-                <div class="input string">
-                    <label><?= __('Third Name') ?></label>
-                    <input ng-model="selectedUserData.third_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="true">
-                </div>
-                <div class="input string required">
-                    <label><?= __('Last Name') ?></label>
-                    <input ng-model="selectedUserData.last_name" type="string" ng-disabled="true">
-                </div>
-                <div class="input string">
-                    <label><?= __('Preferred Name') ?></label>
-                    <input ng-model="selectedUserData.preferred_name" type="string" ng-disabled="true">
-                </div>
-                <div class="input select required">
-                    <label><?= __('Gender') ?></label>
-                    <input ng-model="selectedUserData.gender.name" ng-disabled="true" />
-                </div>
-                <div class="input date required">
-                    <label for="Student_date_of_birth"><?= __('Date Of Birth') ?></label>
-                    <div class="input-group date " id="Student_date_of_birth" style="">
-                        <input type="text" class="form-control " name="Student[date_of_birth]" ng-model="selectedUserData.date_of_birth" ng-disabled="true">
-                    </div>
-                </div>
-                <div class="row section-header header-space-lg">Location</div>
-                <div class="input string">
-                    <label><?= __('Address') ?></label>
-                    <textarea ng-model="selectedUserData.address" type="string"></textarea>
-                </div>
-                <div class="input string">
-                    <label><?= __('Postal Code') ?></label>
-                    <input ng-model="selectedUserData.postalCode" type="string">
-                </div>
-                <div class="row section-header header-space-lg">Address Area</div>
-                <div class="input string">
-                    <label><?= __('Address Area') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Staff[gender_id]" id="staff-gender_id"
-                            ng-options="option.id as option.name for option in genderOptions"
-                            ng-model="selectedUserData.addressArea"
-                            ng-init="selectedUserData.addressArea='';"
-                            >
-                            <option value="" >-- <?= __('Select') ?> --</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="row section-header header-space-lg">Birthplace Area</div>
-                <div class="input string">
-                    <label><?= __('Birthplace Area') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Staff[gender_id]" id="staff-gender_id"
-                            ng-options="option.id as option.name for option in genderOptions"
-                            ng-model="selectedUserData.birthplaceArea"
-                            ng-init="selectedUserData.birthplaceArea='';"
-                            >
-                            <option value="" >-- <?= __('Select') ?> --</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="row section-header header-space-lg">Identities / Nationalities</div>
-                <div class="input string">
-                    <label><?= __('Nationalities') ?></label>
-                    <input ng-model="selectedUserData.nationality_name" type="string" ng-disabled="true" />
-                </div>
-                <div class="input string">
-                    <label><?= __('Identity Type') ?></label>
-                    <input ng-model="selectedUserData.identity_type_name" type="string" ng-disabled="true">
-                </div>
-                <div class="input string">
-                    <label><?= __('Identity Number') ?></label>
-                    <input ng-model="selectedUserData.identity_number" type="string" ng-disabled="true">
-                </div>
-            </form>
-            </div>
-            <div class="step-pane sample-pane" data-step="5" data-name="summary">
-                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
-                    <div class="input string">
+                    <div class="input string required">
                         <label><?= __('OpenEMIS ID') ?></label>
-                        <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['openemis_no']" disabled="disabled">
+                        <input ng-model="selectedUserData.openemis_no" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string required">
+                        <label><?= __('First Name') ?></label>
+                        <input ng-model="selectedUserData.first_name" type="string" ng-disabled="true">
                     </div>
                     <div class="input string">
-                        <label><?= __('Staff') ?></label>
-                        <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['name']" disabled="disabled">
+                        <label><?= __('Middle Name') ?></label>
+                        <input ng-model="selectedUserData.middle_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="true">
                     </div>
                     <div class="input string">
-                        <label><?= __('Currently Assigned To') ?></label>
-                        <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['institution_staff'][0]['institution']['code_name']" disabled="disabled">
+                        <label><?= __('Third Name') ?></label>
+                        <input ng-model="selectedUserData.third_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string required">
+                        <label><?= __('Last Name') ?></label>
+                        <input ng-model="selectedUserData.last_name" type="string" ng-disabled="true">
                     </div>
                     <div class="input string">
-                        <label><?= __('Requested By') ?></label>
-                        <input type="string" ng-model="InstitutionStaffController.institutionName" disabled="disabled">
+                        <label><?= __('Preferred Name') ?></label>
+                        <input ng-model="selectedUserData.preferred_name" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input select required">
+                        <label><?= __('Gender') ?></label>
+                        <input ng-model="selectedUserData.gender.name" ng-disabled="true" />
+                    </div>
+                    <div class="input date required">
+                        <label for="Student_date_of_birth"><?= __('Date Of Birth') ?></label>
+                        <div class="input-group date " id="Student_date_of_birth" style="">
+                            <input type="text" class="form-control " name="Student[date_of_birth]" ng-model="selectedUserData.date_of_birth" ng-disabled="true">
+                        </div>
+                    </div>
+                    <div class="row section-header header-space-lg">Location</div>
+                    <div class="input string">
+                        <label><?= __('Address') ?></label>
+                        <textarea ng-model="selectedUserData.address" type="string"></textarea>
                     </div>
                     <div class="input string">
-                        <label><?= __('Position') ?></label>
-                        <input type="string" ng-model="InstitutionStaffController.institutionPositionOptions.selectedOption.name" disabled="disabled">
+                        <label><?= __('Postal Code') ?></label>
+                        <input ng-model="selectedUserData.postalCode" type="string">
+                    </div>
+                    <div class="row section-header header-space-lg">Address Area</div>
+                    <div class="input string">
+                        <label><?= __('Address Area') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="Staff[gender_id]" id="staff-gender_id"
+                                ng-options="option.id as option.name for option in genderOptions"
+                                ng-model="selectedUserData.addressArea"
+                                ng-init="selectedUserData.addressArea='';"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row section-header header-space-lg">Birthplace Area</div>
+                    <div class="input string">
+                        <label><?= __('Birthplace Area') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="Staff[gender_id]" id="staff-gender_id"
+                                ng-options="option.id as option.name for option in genderOptions"
+                                ng-model="selectedUserData.birthplaceArea"
+                                ng-init="selectedUserData.birthplaceArea='';"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row section-header header-space-lg">Identities / Nationalities</div>
+                    <div class="input string">
+                        <label><?= __('Nationalities') ?></label>
+                        <input ng-model="selectedUserData.nationality_name" type="string" ng-disabled="true" />
                     </div>
                     <div class="input string">
-                        <label><?= __('Staff Type') ?></label>
-                        <input type="string" ng-model="InstitutionStaffController.staffTypeId.name" disabled="disabled">
+                        <label><?= __('Identity Type') ?></label>
+                        <input ng-model="selectedUserData.identity_type_name" type="string" ng-disabled="true">
                     </div>
                     <div class="input string">
-                        <label><?= __('FTE') ?></label>
-                        <input type="string" ng-model="InstitutionStaffController.displayedFTE" disabled="disabled">
+                        <label><?= __('Identity Number') ?></label>
+                        <input ng-model="selectedUserData.identity_number" type="string" ng-disabled="true">
                     </div>
-                    <div class="input string">
-                        <label><?= __('Start Date') ?></label>
-                        <input type="string" ng-model="InstitutionStaffController.startDate" disabled="disabled">
-                    </div>
-                    <div class="input text">
-                        <label><?= __('Comment') ?></label>
-                        <textarea ng-model="InstitutionStaffController.comment" ng-init="InstitutionStaffController.comment = ''"></textarea>
+                </form>
+            </div>
+            <div class="step-pane sample-pane active" data-step="5" data-name="summary">
+                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
+                    <div class="wrapper">
+                        <div class="wrapper-child">
+                            <div class="panel">
+                                <div class="panel-body">
+                                    <div class="row section-header">Information</div>
+                                    <div class="row hidden"></div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Photo Content</div>
+                                        <div class="form-input">
+                                            <div class="table-thumb">
+                                                <div class="profile-image-thumbnail">
+                                                    <i class="kd-staff"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">OpenEMIS ID</div>
+                                        <div class="form-input">{{selectedUserData.openemis_no}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">First Name</div>
+                                        <div class="form-input">{{selectedUserData.first_name}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Middle Name</div>
+                                        <div class="form-input">{{selectedUserData.middle_name}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Third Name</div>
+                                        <div class="form-input">{{selectedUserData.third_name}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Last Name</div>
+                                        <div class="form-input">{{selectedUserData.last_name}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Preferred Name</div>
+                                        <div class="form-input">{{selectedUserData.preferred_name}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Gender</div>
+                                        <div class="form-input">{{selectedUserData.gender.name}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Date of Birth</div>
+                                        <div class="form-input">{{selectedUserData.dateOfBirth}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Email</div>
+                                        <div class="form-input">{{selectedUserData.email}}</div>
+                                    </div>
+                                    <div class="row section-header">Identities / Nationalities</div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Nationality</div>
+                                        <div class="form-input">
+                                            <div class="form-input table-full-width">
+                                                <div class="table-wrapper">
+                                                    <div class="table-in-view">
+                                                        <table class="table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Identity Type</th>
+                                                                    <th>Identity Number</th>
+                                                                    <th>Nationality</th>
+                                                                    <th>Preferred</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td class="vertical-align-top">Birth Certificate</td>
+                                                                    <td class="vertical-align-top">1234567890</td>
+                                                                    <td class="vertical-align-top">American</td>
+                                                                    <td class="vertical-align-top">No</td>
+                                                                </tr>
+                                                            </tbody>				
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row section-header">Location</div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Address</div>
+                                        <div class="form-input">{{selectedUserData.address}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Postal Code</div>
+                                        <div class="form-input">{{selectedUserData.postalCode}}</div>
+                                    </div>
+                                    <div class="row section-header">Address Area</div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Address Area</div>
+                                        <div class="form-input">{{selectedUserData.addressArea}}</div>
+                                    </div>
+                                    <div class="row section-header">Birthplace Area</div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Birthplace Area</div>
+                                        <div class="form-input">{{selectedUserData.birthplaceArea}}</div>
+                                    </div>
+                                    <div class="row section-header">Other Information</div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Modified By</div>
+                                        <div class="form-input">System Administrator</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Modified On</div>
+                                        <div class="form-input">August 12, 2021 - 04:48:48</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Created By</div>
+                                        <div class="form-input">System Administrator</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Created On</div>
+                                        <div class="form-input">SApril 05, 2018 - 18:20:27</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -379,7 +481,10 @@
 </script>
 
 <style>
-    .btn-close {
+    .pd-10 {
+        padding: 10px;
+    }
+    .close-btn {
         border: 1px solid #000;
     }
     .header-space-lg{
@@ -413,6 +518,9 @@
     }
     .row-content{
         margin-bottom: 16px;
+    }
+    .vertical-align-top {
+        vertical-align: top !important;
     }
     @media (min-width: 800px) {
         .row-content{
