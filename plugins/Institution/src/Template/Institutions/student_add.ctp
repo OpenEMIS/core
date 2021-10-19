@@ -94,13 +94,13 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             <?= __('Back') ?>
         </button>
         <button
-            type="button" class="btn"
+            type="button" class="btn close-btn"
             ng-if="(InstitutionStudentController.step=='user_details')"
             data-last="<?= __('Save') ?>">
             <?= __('Cancel') ?>
         </button>
         <button
-            type="button" class="btn"
+            type="button" class="btn close-btn"
             ng-if="(InstitutionStudentController.step=='summary')"
             data-last="<?= __('Save') ?>">
             <?= __('Close') ?>
@@ -613,91 +613,127 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 
         <div class="step-pane sample-pane" data-step="6" data-name="summary">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
-                <div class="input string">
-                    <label><?= __('OpenEMIS ID') ?></label>
-                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['openemis_no']" disabled="disabled">
-                </div>
-                <div class="input string">
-                    <label><?= __('Student') ?></label>
-                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['name']" disabled="disabled">
-                    <div ng-if="InstitutionStudentController.postResponse.error.student_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.student_id">{{ error }}</p>
+                <div class="wrapper">
+                    <div class="wrapper-child">
+                        <div class="panel">
+                            <div class="panel-body">
+                                <div class="row section-header">Information</div>
+                                <div class="row hidden"></div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Photo Content</div>
+                                    <div class="form-input">
+                                        <div class="table-thumb">
+                                            <div class="profile-image-thumbnail">
+                                                <i class="kd-staff"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">OpenEMIS ID</div>
+                                    <div class="form-input">{{InstitutionStudentController.selectedStudentData.openemis_no}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">First Name</div>
+                                    <div class="form-input">{{InstitutionStudentController.selectedStudentData.first_name}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Middle Name</div>
+                                    <div class="form-input">{{InstitutionStudentController.selectedStudentData.middle_name}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Third Name</div>
+                                    <div class="form-input">{{InstitutionStudentController.selectedStudentData.third_name}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Last Name</div>
+                                    <div class="form-input">{{InstitutionStudentController.selectedStudentData.last_name}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Preferred Name</div>
+                                    <div class="form-input">{{InstitutionStudentController.selectedStudentData.preferred_name}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Gender</div>
+                                    <div class="form-input">{{InstitutionStudentController.selectedStudentData.gender.name}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Date of Birth</div>
+                                    <div class="form-input">{{InstitutionStudentController.selectedStudentData.date_of_birth}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Email</div>
+                                    <div class="form-input">{{InstitutionStudentController.selectedStudentData.email}}</div>
+                                </div>
+                                <div class="row section-header">Identities / Nationalities</div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Nationality</div>
+                                    <div class="form-input">
+                                        <div class="form-input table-full-width">
+                                            <div class="table-wrapper">
+                                                <div class="table-in-view">
+                                                    <table class="table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Identity Type</th>
+                                                                <th>Identity Number</th>
+                                                                <th>Nationality</th>
+                                                                <th>Preferred</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td class="vertical-align-top">{{InstitutionStudentController.Student.identity_type_name}}</td>
+                                                                <td class="vertical-align-top">{{InstitutionStudentController.selectedStudentData.identity_number}}</td>
+                                                                <td class="vertical-align-top">{{InstitutionStudentController.Student.nationality_name}}</td>
+                                                                <td class="vertical-align-top">No</td>
+                                                            </tr>
+                                                        </tbody>				
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row section-header">Location</div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Address</div>
+                                    <div class="form-input">{{InstitutionStudentController.selectedStudentData.address}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Postal Code</div>
+                                    <div class="form-input">{{InstitutionStudentController.selectedStudentData.postalCode}}</div>
+                                </div>
+                                <div class="row section-header">Address Area</div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Address Area</div>
+                                    <div class="form-input">{{InstitutionStudentController.selectedStudentData.addressArea}}</div>
+                                </div>
+                                <div class="row section-header">Birthplace Area</div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Birthplace Area</div>
+                                    <div class="form-input">{{InstitutionStudentController.selectedStudentData.birthplaceArea}}</div>
+                                </div>
+                                <div class="row section-header">Other Information</div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Modified By</div>
+                                    <div class="form-input">System Administrator</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Modified On</div>
+                                    <div class="form-input">August 12, 2021 - 04:48:48</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Created By</div>
+                                    <div class="form-input">System Administrator</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Created On</div>
+                                    <div class="form-input">SApril 05, 2018 - 18:20:27</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="input string">
-                    <label><?= __('Currently Allocated To') ?></label>
-                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['institution']['code_name']" disabled="disabled">
-                    <div ng-if="InstitutionStudentController.postResponse.error.institution_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.institution_id">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input string">
-                    <label><?= __('Academic Period') ?></label>
-                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['academic_period']['name']" disabled="disabled">
-                </div>
-                <div class="input select required">
-                    <label><?= __('Education Grade') ?></label>
-                    <div class="input-select-wrapper">
-                    <select name="Students[education_grade_id]" ng-required="required" id="students-education-grade-id"
-                            ng-options="option.education_grade.name for option in InstitutionStudentController.educationGradeOptions.availableOptions track by option.id"
-                            ng-model="InstitutionStudentController.educationGradeOptions.selectedOption"
-                            ng-change="InstitutionStudentController.onChangeEducationGrade()"
-                            >
-                            <option value="">-- <?= __('Select') ?> --</option>
-                    </select>
-                    </div>
-                    <div ng-if="InstitutionStudentController.postResponse.error.education_grade_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.education_grade_id">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input select">
-                    <label><?= __('Class') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Students[class]" id="students-class"
-                            ng-options="option.name for option in InstitutionStudentController.classOptions.availableOptions track by option.id"
-                            ng-model="InstitutionStudentController.classOptions.selectedOption"
-                            ng-change="InstitutionStudentController.onChangeClass()">
-                            <option value="">-- <?= __('No Class Assignment') ?> --</option>
-                        </select>
-                    </div>
-                    <div ng-if="InstitutionStudentController.postResponse.error.institution_class_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.institution_class_id">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input string">
-                    <label><?= __('Student Status') ?></label>
-                    <input type="string" value="<?= __('Pending Transfer') ?>" disabled="disabled">
-                </div>
-                <div class="input date required">
-                    <label for="Students_transfer_start_date"><?= __('Start Date') ?></label>
-                    <div class="input-group date" id="Students_transfer_start_date" style="">
-                        <input type="text" class="form-control " name="Students[transfer_start_date]" ng-model="InstitutionStudentController.startDate">
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
-                    </div>
-                    <div ng-if="InstitutionStudentController.postResponse.error.start_date" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.start_date">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input string">
-                    <label for="students-end-date"><?= __('End Date') ?></label>
-                    <input ng-model="InstitutionStudentController.endDateFormatted" type="text" disabled="disabled">
-                </div>
-                <div class="input select required error" ng-model="InstitutionStudentController.postResponse">
-                    <label><?= __('Student Transfer Reason') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Students[student_transfer_reason_id]" id="students-transfer-reason-id"
-                            ng-options="option.name for option in InstitutionStudentController.transferReasonOptions.availableOptions track by option.id"
-                            ng-model="InstitutionStudentController.transferReasonOptions.selectedOption">
-                            <option value="">-- <?= __('Select') ?> --</option>
-                        </select>
-                    </div>
-                    <div ng-if="InstitutionStudentController.postResponse.error.student_transfer_reason_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.student_transfer_reason_id">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input text">
-                    <label><?= __('Comment') ?></label>
-                    <textarea ng-model="InstitutionStudentController.comment" ng-init="InstitutionStudentController.comment=''"></textarea>
                 </div>
             </form>
         </div>
@@ -727,6 +763,9 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
 </script>
 
 <style>
+    .close-btn {
+        border: 1px solid #000;
+    }
     .header-space-lg{
         margin-bottom: 20px !important
     }
@@ -758,6 +797,9 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
     }
     .row-content{
         margin-bottom: 16px;
+    }
+    .vertical-align-top {
+        vertical-align: top !important;
     }
     @media (min-width: 800px) {
         .row-content{

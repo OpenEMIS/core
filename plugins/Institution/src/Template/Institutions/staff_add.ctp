@@ -559,41 +559,127 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
         </div>
         <div class="step-pane sample-pane" data-step="6" data-name="summary">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
-                <div class="input string">
-                    <label><?= __('OpenEMIS ID') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['openemis_no']" disabled="disabled">
-                </div>
-                <div class="input string">
-                    <label><?= __('Staff') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['name']" disabled="disabled">
-                </div>
-                <div class="input string">
-                    <label><?= __('Currently Assigned To') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['institution_staff'][0]['institution']['code_name']" disabled="disabled">
-                </div>
-                <div class="input string">
-                    <label><?= __('Requested By') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController.institutionName" disabled="disabled">
-                </div>
-                <div class="input string">
-                    <label><?= __('Position') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController.institutionPositionOptions.selectedOption.name" disabled="disabled">
-                </div>
-                <div class="input string">
-                    <label><?= __('Staff Type') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController.staffTypeId.name" disabled="disabled">
-                </div>
-                <div class="input string">
-                    <label><?= __('FTE') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController.displayedFTE" disabled="disabled">
-                </div>
-                <div class="input string">
-                    <label><?= __('Start Date') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController.startDate" disabled="disabled">
-                </div>
-                <div class="input text">
-                    <label><?= __('Comment') ?></label>
-                    <textarea ng-model="InstitutionStaffController.comment" ng-init="InstitutionStaffController.comment = ''"></textarea>
+                <div class="wrapper">
+                    <div class="wrapper-child">
+                        <div class="panel">
+                            <div class="panel-body">
+                                <div class="row section-header">Information</div>
+                                <div class="row hidden"></div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Photo Content</div>
+                                    <div class="form-input">
+                                        <div class="table-thumb">
+                                            <div class="profile-image-thumbnail">
+                                                <i class="kd-staff"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">OpenEMIS ID</div>
+                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.openemis_no}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">First Name</div>
+                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.first_name}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Middle Name</div>
+                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.middle_name}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Third Name</div>
+                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.third_name}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Last Name</div>
+                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.last_name}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Preferred Name</div>
+                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.preferred_name}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Gender</div>
+                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.gender.name}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Date of Birth</div>
+                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.date_of_birth}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Email</div>
+                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.email}}</div>
+                                </div>
+                                <div class="row section-header">Identities / Nationalities</div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Nationality</div>
+                                    <div class="form-input">
+                                        <div class="form-input table-full-width">
+                                            <div class="table-wrapper">
+                                                <div class="table-in-view">
+                                                    <table class="table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Identity Type</th>
+                                                                <th>Identity Number</th>
+                                                                <th>Nationality</th>
+                                                                <th>Preferred</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td class="vertical-align-top">{{InstitutionStaffController.Staff.identity_type_name}}</td>
+                                                                <td class="vertical-align-top">{{InstitutionStaffController.selectedStaffData.identity_number}}</td>
+                                                                <td class="vertical-align-top">{{InstitutionStaffController.Staff.nationality_name}}</td>
+                                                                <td class="vertical-align-top">No</td>
+                                                            </tr>
+                                                        </tbody>				
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row section-header">Location</div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Address</div>
+                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.address}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Postal Code</div>
+                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.postalCode}}</div>
+                                </div>
+                                <div class="row section-header">Address Area</div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Address Area</div>
+                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.addressArea}}</div>
+                                </div>
+                                <div class="row section-header">Birthplace Area</div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Birthplace Area</div>
+                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.birthplaceArea}}</div>
+                                </div>
+                                <div class="row section-header">Other Information</div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Modified By</div>
+                                    <div class="form-input">System Administrator</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Modified On</div>
+                                    <div class="form-input">August 12, 2021 - 04:48:48</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Created By</div>
+                                    <div class="form-input">System Administrator</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6 col-md-3 form-label">Created On</div>
+                                    <div class="form-input">SApril 05, 2018 - 18:20:27</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
@@ -653,6 +739,9 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
     }
     .row-content{
         margin-bottom: 16px;
+    }
+    .vertical-align-top {
+        vertical-align: top !important;
     }
     @media (min-width: 800px) {
         .row-content{
