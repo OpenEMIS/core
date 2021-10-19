@@ -460,7 +460,7 @@ class StudentProfilesTable extends ControllerActionTable
                 $this->aliasField('student_status_id')
             ])
             ->where($where)
-            ->where([$this->aliasField('student_status_id') => 1])
+            // ->where([$this->aliasField('student_status_id') => 1])
             ->all();
             Log::write('debug',$query);
         if (is_null($this->request->query('sort'))) {
