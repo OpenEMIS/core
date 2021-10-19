@@ -66,7 +66,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         $workflowSteps = TableRegistry::get('workflow_steps');
 
         $query
-        ->leftJoin([$workflowSteps->alias() => $workflowSteps->table()],[
+        ->innerJoin([$workflowSteps->alias() => $workflowSteps->table()],[
             $workflowSteps->aliasField('id = ').$this->aliasField('status_id')
         ])
         ->where([
