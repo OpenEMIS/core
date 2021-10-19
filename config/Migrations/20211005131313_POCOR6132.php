@@ -14,6 +14,7 @@ class POCOR6132 extends AbstractMigration
         $this->execute("UPDATE `security_functions` SET `_execute` = 'SpecialNeedsAssessments.excel' WHERE `name` = 'Assessments' AND `controller` = 'Students' AND `module` = 'Institutions' AND `category` = 'Students - Special Needs'");
         $this->execute("UPDATE `security_functions` SET `_execute` = 'SpecialNeedsServices.excel' WHERE `name` = 'Services' AND `controller` = 'Students' AND `module` = 'Institutions' AND `category` = 'Students - Special Needs'");
         $this->execute("UPDATE `security_functions` SET `_execute` = 'SpecialNeedsPlans.excel' WHERE `name` = 'Plans' AND `controller` = 'Students' AND `module` = 'Institutions' AND `category` = 'Students - Special Needs'");
+        $this->execute("UPDATE `security_functions` SET `_execute` = 'SpecialNeedsDevices.excel' WHERE `name` = 'Devices' AND `controller` = 'Students' AND `module` = 'Institutions' AND `category` = 'Students - Special Needs'");
         /** END: security_functions table changes */
     }
 
