@@ -336,6 +336,7 @@ class StudentsTable extends ControllerActionTable
 
         if ($periodId > 0) {
             $query->where([$this->aliasField('academic_period_id') => $periodId]);
+            $query->group('student_id');// POCOR-6338 
         }// POCOR-6338 starts
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
