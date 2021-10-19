@@ -1819,6 +1819,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
+    // POCOR-6128 start
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
         $session = $this->request->session();
@@ -1831,6 +1832,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'total_female_students' => 'InstitutionSubjects.total_female_students',
             'institution_subject_id' => 'InstitutionSubjects.id'
         ])
+        ->group($this->aliasField('id'))    
         ->where([
             $this->aliasField('academic_period_id = ').$selectedAcademicPeriodId,
             $this->aliasField('institution_id = ').$institutionId,
@@ -1838,9 +1840,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
+                // GETTING ROOMS FOR EACH SUBJECT
                 $institutionRooms = TableRegistry::get('institution_rooms');
                 $institutionSubjectRooms = TableRegistry::get('institution_subjects_rooms');
-
                 $institutionRoomsRow = $institutionRooms
                 ->find()
                 ->select([
@@ -1849,9 +1851,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 ])
                 ->leftJoin(
                     [$institutionSubjectRooms->alias() => $institutionSubjectRooms->table()],
-                    [
-                        $institutionRooms->aliasField('id  = ') . $institutionSubjectRooms->aliasField('institution_room_id')
-                    ]
+                    [$institutionRooms->aliasField('id  = ') . $institutionSubjectRooms->aliasField('institution_room_id')]
                 )
                 ->where([$institutionSubjectRooms->alias('institution_subject_id') => $row->institution_subject_id])
                 ->first();
@@ -1861,9 +1861,36 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }else{
                     $row['rooms'] = '';
                 }
+                // GETTING ROOMS FOR EACH SUBJECT
+
+                // GET TEACHERS FOR EACH SUBJECT 
+                $institutionSubjectStaff = TableRegistry::get('institution_subject_staff');
+                $staffTable = TableRegistry::get('security_users');
+
+                $institutionStaffTeachers = $staffTable
+                ->find()
+                ->select([
+                    $staffTable->aliasField('openemis_no'),
+                    $staffTable->aliasField('first_name'),
+                    $staffTable->aliasField('last_name')
+                ])
+                ->innerJoin(
+                    [$institutionSubjectStaff->alias() => $institutionSubjectStaff->table()],
+                    [$staffTable->aliasField('id  = ') . $institutionSubjectStaff->aliasField('staff_id')]
+                )
+                ->where([$institutionSubjectStaff->alias('institution_subject_id') => $row->institution_subject_id])
+                ->first();
+
+                if(!empty($institutionStaffTeachers)){
+                    $row['teachers'] = $institutionStaffTeachers->openemis_no .' - '. $institutionStaffTeachers->first_name .' '.$institutionStaffTeachers->last_name;
+                }else{
+                    $row['teachers'] = '';
+                }
+                // GET TEACHERS FOR EACH SUBJECT
                 
                 return $row;
             });
         });
     }
+    // POCOR-6128 End
 }
