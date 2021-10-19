@@ -219,6 +219,7 @@ class StudentsTable extends ControllerActionTable
         $UserIdentities = TableRegistry::get('User.Identities');
         $ContactTypes = TableRegistry::get('FieldOption.ContactTypes');
         $UserContact = TableRegistry::get('User.Contacts');
+        $StudentStatuses = TableRegistry::get('student_statuses');
 
 
         /* $subquery = $this->Users->find()->select([
@@ -332,10 +333,18 @@ class StudentsTable extends ControllerActionTable
                 [
                     $ContactTypes->aliasField('id = ') . $UserContact->aliasField('contact_type_id')
                 ]
-            );
+            )// POCOR-6338 starts
+            ->leftJoin(
+                [$StudentStatuses->alias() => $StudentStatuses->table()],
+                [
+                    $StudentStatuses->aliasField('id != ') => 3
+                ]
+            );// POCOR-6338 ends
 
         if ($periodId > 0) {
-            $query->where([$this->aliasField('academic_period_id') => $periodId]);
+            $query->where([$this->aliasField('academic_period_id') => $periodId,
+                            'StudentStatuses.id !='=> 3
+                            ]);
             $query->group('student_id');// POCOR-6338 
         }// POCOR-6338 starts
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
