@@ -2501,6 +2501,12 @@ trait MessagesTrait
             'transferConnectionFail' => 'Please configure connection to Archive Database.',
             'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.'
         ],
+        'CopyData' => [
+            'genralerror' => 'To and from academic period can not be same.',
+            'alreadyexist' => 'There are existing data in the selected To Academic Period.',
+            'nodataexist' => 'Data does not exist for seleceted from academic period.',
+            'nodataexisteducationsystem' => 'Data does not exist in education system for seleceted to academic period.'
+        ],
         'UserNationalities' => [
             'ValidateNumberSuccess' => 'Identity number validate successfully.',
             'ValidateNumberFail' => 'Please enter correct identity number.',
