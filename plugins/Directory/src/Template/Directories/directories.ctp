@@ -461,6 +461,94 @@
         </div>
     </div>
 </div>
+<!-- static stepper -->
+<div class="pd-10">
+    <div class="stepper-content-wrapper">
+        <div class="steps-container">
+            <ul class="steps" style="margin-left: 0">
+                <li class="active">
+                    <div class="stepper-steps-wrapper">
+                        User Details
+                        <span class="chevron"></span>
+                    </div>
+                </li>
+                <li>
+                    <div class="stepper-steps-wrapper">
+                        Internal Search
+                        <span class="chevron"></span>
+                    </div>
+                </li>
+                <li>
+                    <div class="stepper-steps-wrapper">
+                        External Search
+                        <span class="chevron"></span>
+                    </div>
+                </li>
+                <li>
+                    <div class="stepper-steps-wrapper">
+                        Confirmation
+                        <span class="chevron"></span>
+                    </div>
+                </li>
+                <li>
+                    <div class="stepper-steps-wrapper">
+                        Summary
+                        <span class="chevron"></span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="actions top">
+            <button
+                ng-if="(step=='user_details')"
+                type="button" class="btn close-btn">Cancel</button>
+            <button
+                ng-if="(step!=='user_details' && step!=='summary')"
+                type="button" class="btn btn-prev close-btn"
+                data-last="<?= __('Save') ?>" ng-click="goToPrevStep()">Back</button>
+            <button
+                ng-if="(step=='confirmation' && step!=='summary')"
+                type="button" class="btn btn-default" data-last="<?= __('Save') ?>" ng-click="confirmUser()">Confirm</button>
+            <button
+                ng-if="(step=='summary')"
+                type="button" class="btn close-btn" ng-click="goToFirstStep()">Close</button>
+            <button type="button" class="btn btn-default btn-next"
+                ng-if="step!=='confirmation' && step!=='summary'">Next</button>
+        </div>
+        <div class="step-content">
+            <div class="alert {{messageClass}}" ng-if="message">
+                <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
+            </div>
+            <div class="step-pane sample-pane" data-step="1" data-name="userDetails">
+                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
+                    <div class="input select required error">
+                        <label>User Type</label>
+                        <div class="input-select-wrapper">
+                            <select name="User[user_type_id]" id="user-user_type_id"
+                                ng-options="option.id as option.name for option in userTypeOptions"
+                                ng-model="selectedUserData.user_type_id"
+                                ng-change="changeUserType()"
+                                ng-init="selectedUserData.user_type_id='';"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                        <div ng-if="postResponse.error.gender_id" class="error-message">
+                            <p ng-repeat="error in postResponse.error.gender_id">{{ error }}</p>
+                        </div>
+                    </div>
+                    <div class="input string required">
+                        <label><?= __('OpenEMIS ID') ?></label>
+                        <input ng-model="selectedUserData.openemis_no" type="string" ng-disabled="true">
+                        <div ng-if="postResponse.error.openemis_no" class="error-message">
+                            <p ng-repeat="error in postResponse.error.openemis_no">{{ error }}</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     $(function () {
@@ -522,10 +610,261 @@
     .vertical-align-top {
         vertical-align: top !important;
     }
+    /* stepper container wrapper */
+    .stepper-content-wrapper {
+        border: 1px solid #d4d4d4;
+        border-radius: 4px;
+        box-shadow: 0 1px 4px rgb(0 0 0 / 7%);
+        background-color: #f9f9f9;
+        position: relative;
+        min-height: 48px;
+    }
+    .stepper-content-wrapper{
+        -webkit-box-shadow: none!important;
+        box-shadow: none!important;
+        border: 0;
+        background-color: #FFF;
+        margin-bottom: 10px;
+    }
+    .stepper-content-wrapper:before,
+    .stepper-content-wrapper:after {
+        display: table;
+        content: "";
+        line-height: 0;
+    }
+    /* steps container */
+    .stepper-content-wrapper .steps-container {
+        border-radius: 4px 4px 0 0;
+        overflow: hidden;
+        border: 1px solid #DDD;
+        height: 48px;
+        border-bottom: none;
+    }
+    /* steps */
+    
+    .stepper-content-wrapper > ul.steps li,
+    .stepper-content-wrapper > .steps-container > ul.steps li {
+        float: left;
+        margin: 0;
+        padding: 0 20px 0 30px;
+        height: 46px;
+        line-height: 46px;
+        position: relative;
+        background: #ededed;
+        color: #999999;
+        font-size: 16px;
+        cursor: not-allowed;
+    }
+    .stepper-content-wrapper > ul.steps li,
+    .stepper-content-wrapper > .steps-container > ul.steps li {
+        float: left;
+        margin: 0;
+        padding: 8px 20px 0 30px;
+        height: 48px;
+        line-height: 32px;
+        position: relative;
+        background: #ededed;
+        color: #999;
+        font-size: 12px;
+        cursor: not-allowed;
+        border-bottom: none;
+    }
+    .stepper-content-wrapper > ul.steps li.active,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active {
+        background: #f1f6fc;
+        color: #3a87ad;
+        cursor: default;
+    }
+    .stepper-content-wrapper > ul.steps li:first-child,
+    .stepper-content-wrapper > .steps-container > ul.steps li:first-child {
+        border-radius: 4px 0 0 4px;
+        padding-left: 20px;
+    }
+    .stepper-content-wrapper > ul.steps li:first-child,
+    .stepper-content-wrapper > .steps-container > ul.steps li:first-child {
+        -webkit-border-radius: 4px 0 0 0;
+        border-radius: 4px 0 0 0;
+    }
+    .stepper-content-wrapper > ul.steps li.active,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active {
+        line-height: 30px;
+    }
+    .stepper-content-wrapper > ul.steps li.active,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active {
+        background-color: #999;
+        color: #FFF;
+        cursor: default;
+        border-bottom: none;
+    }
+    .stepper-content-wrapper > ul.steps li.active,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active {
+        background-color: #69C;
+    }
+    .stepper-content-wrapper > ul.steps li.active,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active {
+        background-color: #6699CC;
+    }
+    .stepper-content-wrapper .steps {
+        margin-left: 0!important;
+    }
+    .stepper-content-wrapper > ul.steps,
+    .stepper-content-wrapper > .steps-container > ul.steps {
+        list-style: none outside none;
+        padding: 0;
+        margin: 0;
+        width: 999999px;
+    }
+    /* step wrapper */
+    .stepper-steps-wrapper {
+        overflow: hidden;
+        width: 100%;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: center;
+    }
+    /* chevron */
+    .stepper-content-wrapper > ul.steps li .chevron,
+    .stepper-content-wrapper > .steps-container > ul.steps li .chevron {
+        border: 24px solid transparent;
+        border-left: 14px solid #d4d4d4;
+        border-right: 0;
+        display: block;
+        position: absolute;
+        right: -14px;
+        top: 0;
+        z-index: 1;
+    }
+    .stepper-content-wrapper > ul.steps li .chevron,
+    .stepper-content-wrapper > .steps-container > ul.steps li .chevron {
+        border: 24px solid transparent;
+        border-left: 14px solid #d4d4d4;
+        border-right: 0;
+        display: block;
+        position: absolute;
+        right: -15px;
+        top: -5px;
+        z-index: 1;
+        margin-top: 5px;
+        transform: scale(1.1,1.1);
+        -ms-transform: scale(1.1,1.1);
+        -webkit-transform: scale(1.1,1.1);
+    }
+    /* chevron before */
+    .stepper-content-wrapper > ul.steps li .chevron:before,
+    .stepper-content-wrapper > .steps-container > ul.steps li .chevron:before {
+        border: 24px solid transparent;
+        border-left: 14px solid #ededed;
+        border-right: 0;
+        content: "";
+        display: block;
+        position: absolute;
+        right: 1px;
+        top: -24px;
+    }
+    .stepper-content-wrapper > ul.steps li .chevron:before,
+    .stepper-content-wrapper > .steps-container > ul.steps li .chevron:before {
+        border: 24px solid transparent;
+        border-left: 14px solid #ededed;
+        border-right: 0;
+        content: "";
+        display: block;
+        position: absolute;
+        right: 1px;
+        top: -24px;
+    }
+    .stepper-content-wrapper > ul.steps li.active .chevron:before,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active .chevron:before {
+        border-left: 14px solid #f1f6fc;
+    }
+    .stepper-content-wrapper > ul.steps li.active .chevron:before,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active .chevron:before {
+        border-left: 14px solid #999;
+    }
+    .stepper-content-wrapper > ul.steps li.active .chevron::before,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active .chevron::before {
+        border-left-color: #69C;
+    }
+    .stepper-content-wrapper > ul.steps li.active .chevron::before,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active .chevron::before {
+        border-left-color: #6699CC;
+    }
+    /* action buttons */
+    .stepper-content-wrapper > .actions {
+        z-index: 1000;
+        position: absolute;
+        right: 0;
+        top: 0;
+        line-height: 46px;
+        float: right;
+        padding-left: 15px;
+        padding-right: 15px;
+        vertical-align: middle;
+        background-color: #e5e5e5;
+        border-left: 1px solid #d4d4d4;
+        border-radius: 0 4px 0 0;
+    }
+    .stepper-content-wrapper > .actions {
+        background-color: #f9f9f9;
+        border-left: 1px solid #d4d4d4;
+        border-radius: 0 4px 0 0;
+        float: right;
+        line-height: 47px;
+        padding-left: 15px;
+        padding-right: 15px;
+        position: absolute;
+        right: 1px;
+        top: 1px;
+        vertical-align: middle;
+        z-index: 500;
+    }
+    /* step content */
+    .stepper-content-wrapper .step-content {
+        border-top: 1px solid #D4D4D4;
+        padding: 10px;
+        float: left;
+        width: 100%;
+    }
+    .stepper-content-wrapper .step-content {
+        border-top: 1px solid #DDD;
+        border-right: 1px solid #DDD;
+        border-left: 1px solid #DDD;
+        float: left;
+        width: 100%;
+    }
     @media (min-width: 800px) {
         .row-content{
             display: flex; 
             align-items: flex-start;
+        }
+    }
+    @media only screen and (max-width: 800px){
+        .stepper-content-wrapper .actions.top {
+        position: fixed!important;
+        bottom: 35px!important;
+        top: auto!important;
+        height: 50px;
+        left: 0!important;
+        right: 0!important;
+        border-top: 1px solid #DDD;
+        border-left-color: transparent;
+        -webkit-border-radius: 0!important;
+        border-radius: 0!important;
+        }
+        .stepper-content-wrapper .btn-prev,
+        .stepper-content-wrapper .btn-next {
+            position: relative;
+        }
+        .stepper-content-wrapper .btn-next {
+            text-align: left;
+            padding-right: 20px;
+        }
+        .stepper-content-wrapper .actions.top .btn-next,
+        .stepper-content-wrapper .actions.top .btn-prev {
+            position: absolute;
+            top: 10px;
+        }
+        .stepper-content-wrapper .actions.top .btn-next {
+            right: 10px;
         }
     }
 
