@@ -16,6 +16,10 @@ use App\Model\Table\ControllerActionTable;
 
 class StaffUserTable extends ControllerActionTable
 {
+    // POCOR-6133 custome fields code
+    private $_dynamicFieldName = 'custom_field_data';
+    // POCOR-6133 custome fields code
+
     public function initialize(array $config)
     {
         $this->table('security_users');
@@ -650,89 +654,173 @@ class StaffUserTable extends ControllerActionTable
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
-        /* foreach ($fields as $key => $field) {
-            //get the value from the table, but change the label to become default identity type.
-            if ($field['field'] == 'identity_number') {
-                $fields[$key] = [
-                    'key' => 'StudentUser.identity_number',
-                    'field' => 'identity_number',
-                    'type' => 'string',
-                    'label' => __($identity->name)
-                ];
-                break;
-            }
-        } */
+        $extraField[] = [
+            "key" => "StaffUser.username",
+            "field" => "username",
+            "type" => "string",
+            "label" => "Username"
+        ];
 
-        $cloneFields = $fields->getArrayCopy();
-        $newFields = [];
-        foreach ($cloneFields as $key => $value) {
-            $newFields[] = $value;
-            if ($value['field'] == 'identity_number') {
-                $newFields[] = [
-                    'key' => 'StudentUser.identity_number',
-                    'field' => 'identity_number',
-                    'type' => 'string',
-                    'label' => __($identity->name)
-                ];
+        $extraField[] = [
+            "key" => "StaffUser.openemis_no",
+            "field" => "openemis_no",
+            "type" => "string",
+            "label" => "OpenEMIS ID"
+        ];
 
-                $newFields[] = [
-                    'key' => 'IdentityTypes.name',
-                    'field' => 'identity_type',
-                    'type' => 'string',
-                    'label' => 'Identity Type'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.first_name',
+            'field' => 'first_name',
+            'type' => 'string',
+            'label' => 'First Name'
+        ];
 
-                $newFields[] = [
-                    'key' => 'Nationalities.name',
-                    'field' => 'nationality',
-                    'type' => 'string',
-                    'label' => 'Nationality'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.middle_name',
+            'field' => 'middle_name',
+            'type' => 'string',
+            'label' => 'Middle Name'
+        ];
 
-                $newFields[] = [
-                    'key' => 'userIdentities.number',
-                    'field' => 'number',
-                    'type' => 'string',
-                    'label' => 'Number'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.third_name',
+            'field' => 'third_name',
+            'type' => 'string',
+            'label' => 'Third Name'
+        ];
 
-                $newFields[] = [
-                    'key' => 'userIdentities.issue_date',
-                    'field' => 'issue_date',
-                    'type' => 'string',
-                    'label' => 'Issue Date'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.last_name',
+            'field' => 'last_name',
+            'type' => 'string',
+            'label' => 'Last Name'
+        ];
 
-                $newFields[] = [
-                    'key' => 'userIdentities.expiry_date',
-                    'field' => 'expiry_date',
-                    'type' => 'string',
-                    'label' => 'Expiry Date'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.preferred_name',
+            'field' => 'preferred_name',
+            'type' => 'string',
+            'label' => __('Preferred Name')
+        ];
 
-                $newFields[] = [
-                    'key' => 'userIdentities.issue_location',
-                    'field' => 'issuer',
-                    'type' => 'string',
-                    'label' => 'Issuer'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.email',
+            'field' => 'email',
+            'type' => 'string',
+            'label' => __('Email')
+        ];
 
-                $newFields[] = [
-                    'key' => 'userContacts.value',
-                    'field' => 'value',
-                    'type' => 'string',
-                    'label' => 'Value'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.address',
+            'field' => 'address',
+            'type' => 'string',
+            'label' => __('Address')
+        ];
 
-                $newFields[] = [
+        $extraField[] = [
+            'key' => 'StaffUser.postal_code',
+            'field' => 'postal_code',
+            'type' => 'string',
+            'label' => __('Postal Code')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.address_area_id',
+            'field' => 'address_area_id',
+            'type' => 'string',
+            'label' => __('Address Area')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.birthplace_area_id',
+            'field' => 'birthplace_area_id',
+            'type' => 'string',
+            'label' => __('Birthplace Area')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.gender_id',
+            'field' => 'gender_id',
+            'type' => 'integer',
+            'label' => 'Gender'
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.date_of_birth',
+            'field' => 'date_of_birth',
+            'type' => 'date',
+            'label' => 'Date Of Birth'
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.nationality_id',
+            'field' => 'nationality_id',
+            'type' => 'integer',
+            'label' => __('Nationality')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Birth Certificate')
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'number',
+            'type' => 'string',
+            'label' => __('Contact Number')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.external_reference',
+            'field' => 'external_reference',
+            'type' => 'string',
+            'label' => __('External Reference')
+        ];
+        $extraField[] = [
+            'key' => 'StaffUser.status',
+            'field' => 'status',
+            'type' => 'integer',
+            'label' => __('Status')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.last_login',
+            'field' => 'last_login',
+            'type' => 'datetime',
+            'label' => __('Last Login')
+        ];
+        $extraField[] = [
+            'key' => 'StaffUser.preferred_language',
+            'field' => 'preferred_language',
+            'type' => 'string',
+            'label' => __('Preferred Language')
+        ];
+
+        // POCOR-6133 custome fields code
+        $InfrastructureCustomFields = TableRegistry::get('staff_custom_fields');
+        $customFieldData = $InfrastructureCustomFields->find()->select([
+            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+            'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+        ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
+
+        if(!empty($customFieldData)) {
+            foreach($customFieldData as $data) {
+                $custom_field_id = $data->custom_field_id;
+                $custom_field = $data->custom_field;
+                $extraField[] = [
                     'key' => '',
-                    'field' => 'description',
+                    'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
                     'type' => 'string',
-                    'label' => 'Description'
+                    'label' => __($custom_field)
                 ];
             }
         }
-        $fields->exchangeArray($newFields);
+        // POCOR-6133 custome fields code
+
+        $fields->exchangeArray($extraField);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
@@ -748,6 +836,7 @@ class StaffUserTable extends ControllerActionTable
 
         $query
         ->select([
+            'staff_id' => $this->aliasField('id'),
             'identity_type' => 'IdentityTypes.name',
             'nationality' => 'Nationalities.name',
             'number' => 'userIdentities.number',
@@ -788,6 +877,70 @@ class StaffUserTable extends ControllerActionTable
         ->where([
             $this->aliasField('id = ').$staffUserId
         ]);
+
+        // POCOR-6133 custome fields CODe
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                // POCOR-6133 custome fields code
+                $CustomValues = TableRegistry::get('staff_custom_field_values');
+
+                $customData = $CustomValues->find()
+                ->select([
+                    'id'                             => $CustomValues->aliasField('id'),
+                    'staff_id'                       => $CustomValues->aliasField('staff_id'),
+                    'staff_custom_field_id'          => $CustomValues->aliasField('staff_custom_field_id'),
+                    'text_value'                     => $CustomValues->aliasField('text_value'),
+                    'number_value'                   => $CustomValues->aliasField('number_value'),
+                    'decimal_value'                  => $CustomValues->aliasField('decimal_value'),
+                    'textarea_value'                 => $CustomValues->aliasField('textarea_value'),
+                    'date_value'                     => $CustomValues->aliasField('date_value'),
+                    'time_value'                     => $CustomValues->aliasField('time_value'),
+                    'question_name'                  => 'staffCustomFields.name',
+                    'field_type'                     => 'staffCustomFields.field_type',
+                    'field_description'              => 'staffCustomFields.description',
+                    'question_field_type'            => 'staffCustomFields.field_type',
+                ])->leftJoin(
+                    ['staffCustomFields' => 'staff_custom_fields'],
+                    [
+                        'staffCustomFields.id = '.$CustomValues->aliasField('staff_custom_field_id')
+                    ]
+                )
+                ->where([
+                    $CustomValues->aliasField('staff_id') => $row['staff_id'],
+                ])->toArray();
+
+                $existingCheckboxValue = '';
+                foreach ($customData as $guadionRow) {
+                    $fieldType = $guadionRow->field_type;
+                    if ($fieldType == 'TEXT') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->text_value;
+                    } else if ($fieldType == 'CHECKBOX') {
+                        $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = trim($existingCheckboxValue, ',');
+                    } else if ($fieldType == 'NUMBER') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->number_value;
+                    } else if ($fieldType == 'DECIMAL') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->decimal_value;
+                    } else if ($fieldType == 'TEXTAREA') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->textarea_value;
+                    } else if ($fieldType == 'DROPDOWN') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->checkbox_value_text;
+                    } else if ($fieldType == 'DATE') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
+                    } else if ($fieldType == 'TIME') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
+                    } else if ($fieldType == 'COORDINATES') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->text_value;
+                    } else if ($fieldType == 'NOTE') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->field_description;
+                    }
+                }
+                // POCOR-6133 custome fields code
+
+                return $row;
+            });
+        });
+        // POCOR-6133 custome fields CODe
     }
 
     public function findStaff(Query $query, array $options = [])
