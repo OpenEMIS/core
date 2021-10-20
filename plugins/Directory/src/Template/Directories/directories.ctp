@@ -5,39 +5,35 @@
 <?= $this->Html->css('ControllerAction.../plugins/timepicker/css/bootstrap-timepicker.min', ['block' => true]); ?>
 
 <div class="pd-10" ng-controller = 'DirectoryAddCtrl'>
-    <div class="wizard" data-initialize="wizard" id="wizard">
+    <div class="stepper-content-wrapper">
         <div class="steps-container">
             <ul class="steps" style="margin-left: 0">
-                <li data-step="1" class="active" data-name="userDetails">
-                    <div class="step-wrapper">
+                <li ng-class="{'active': step === 'user_details'}">
+                    <div class="stepper-steps-wrapper">
                         User Details
                         <span class="chevron"></span>
                     </div>
                 </li>
-
-                <li data-step="2" data-name="internalSearch">
-                    <div class="step-wrapper">
+                <li ng-class="{'active': step === 'internal_search'}">
+                    <div class="stepper-steps-wrapper">
                         Internal Search
                         <span class="chevron"></span>
                     </div>
                 </li>
-
-                <li data-step="3" data-name="externalSearch">
-                    <div class="step-wrapper">
+                <li ng-class="{'active': step === 'external_search'}">
+                    <div class="stepper-steps-wrapper">
                         External Search
                         <span class="chevron"></span>
                     </div>
                 </li>
-
-                <li data-step="4" data-name="confirmation">
-                    <div class="step-wrapper">
+                <li ng-class="{'active': step === 'confirmation'}">
+                    <div class="stepper-steps-wrapper">
                         Confirmation
                         <span class="chevron"></span>
                     </div>
                 </li>
-
-                <li data-step="5" data-name="summary">
-                    <div class="step-wrapper">
+                <li ng-class="{'active': step === 'summary'}">
+                    <div class="stepper-steps-wrapper">
                         Summary
                         <span class="chevron"></span>
                     </div>
@@ -50,22 +46,21 @@
                 type="button" class="btn close-btn">Cancel</button>
             <button
                 ng-if="(step!=='user_details' && step!=='summary')"
-                type="button" class="btn btn-prev close-btn"
-                data-last="<?= __('Save') ?>" ng-click="goToPrevStep()">Back</button>
+                type="button" class="btn btn-prev close-btn" ng-click="goToPrevStep()">Back</button>
             <button
                 ng-if="(step=='confirmation' && step!=='summary')"
-                type="button" class="btn btn-default" data-last="<?= __('Save') ?>" ng-click="confirmUser()">Confirm</button>
+                type="button" class="btn btn-default" ng-click="confirmUser()">Confirm</button>
             <button
                 ng-if="(step=='summary')"
                 type="button" class="btn close-btn" ng-click="goToFirstStep()">Close</button>
             <button type="button" class="btn btn-default btn-next"
-                ng-if="step!=='confirmation' && step!=='summary'">Next</button>
+                ng-if="step!=='confirmation' && step!=='summary'" ng-click="goToNextStep()">Next</button>
         </div>
         <div class="step-content">
             <div class="alert {{messageClass}}" ng-if="message">
                 <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
             </div>
-            <div class="step-pane sample-pane" data-step="1" data-name="userDetails">
+            <div class="step-pane sample-pane" ng-if="step === 'user_details'">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                     <div class="input select required error">
                         <label>User Type</label>
@@ -200,7 +195,7 @@
                     </div>
                 </form>
             </div>
-            <div class="step-pane sample-pane" data-step="2" data-name="internalSearch">
+            <div class="step-pane sample-pane" ng-if="step === 'internal_search'">
                 <div class="table-wrapper">
                     <div>
                         <div class="scrolltabs">
@@ -211,7 +206,7 @@
                     </div>
                 </div>
             </div>
-            <div class="step-pane sample-pane" data-step="3" data-name="externalSearch">
+            <div class="step-pane sample-pane" ng-if="step === 'external_search'">
                 <div class="table-wrapper">
                     <div>
                         <div class="scrolltabs sticky-content">
@@ -222,7 +217,7 @@
                     </div>
                 </div>
             </div>
-            <div class="step-pane sample-pane" data-step="4" data-name="confirmation">
+            <div class="step-pane sample-pane" ng-if="step === 'confirmation'">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                     <div class="row section-header header-space-lg">Information</div>
                     <div class="input string row-content">
@@ -330,7 +325,7 @@
                     </div>
                 </form>
             </div>
-            <div class="step-pane sample-pane active" data-step="5" data-name="summary">
+            <div class="step-pane sample-pane active" ng-if="step === 'summary'">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
                     <div class="wrapper">
                         <div class="wrapper-child">
@@ -458,94 +453,6 @@
             </div>
         </div>
         <div class="actions bottom">
-        </div>
-    </div>
-</div>
-<!-- static stepper -->
-<div class="pd-10">
-    <div class="stepper-content-wrapper">
-        <div class="steps-container">
-            <ul class="steps" style="margin-left: 0">
-                <li class="active">
-                    <div class="stepper-steps-wrapper">
-                        User Details
-                        <span class="chevron"></span>
-                    </div>
-                </li>
-                <li>
-                    <div class="stepper-steps-wrapper">
-                        Internal Search
-                        <span class="chevron"></span>
-                    </div>
-                </li>
-                <li>
-                    <div class="stepper-steps-wrapper">
-                        External Search
-                        <span class="chevron"></span>
-                    </div>
-                </li>
-                <li>
-                    <div class="stepper-steps-wrapper">
-                        Confirmation
-                        <span class="chevron"></span>
-                    </div>
-                </li>
-                <li>
-                    <div class="stepper-steps-wrapper">
-                        Summary
-                        <span class="chevron"></span>
-                    </div>
-                </li>
-            </ul>
-        </div>
-        <div class="actions top">
-            <button
-                ng-if="(step=='user_details')"
-                type="button" class="btn close-btn">Cancel</button>
-            <button
-                ng-if="(step!=='user_details' && step!=='summary')"
-                type="button" class="btn btn-prev close-btn"
-                data-last="<?= __('Save') ?>" ng-click="goToPrevStep()">Back</button>
-            <button
-                ng-if="(step=='confirmation' && step!=='summary')"
-                type="button" class="btn btn-default" data-last="<?= __('Save') ?>" ng-click="confirmUser()">Confirm</button>
-            <button
-                ng-if="(step=='summary')"
-                type="button" class="btn close-btn" ng-click="goToFirstStep()">Close</button>
-            <button type="button" class="btn btn-default btn-next"
-                ng-if="step!=='confirmation' && step!=='summary'">Next</button>
-        </div>
-        <div class="step-content">
-            <div class="alert {{messageClass}}" ng-if="message">
-                <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
-            </div>
-            <div class="step-pane sample-pane" data-step="1" data-name="userDetails">
-                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                    <div class="input select required error">
-                        <label>User Type</label>
-                        <div class="input-select-wrapper">
-                            <select name="User[user_type_id]" id="user-user_type_id"
-                                ng-options="option.id as option.name for option in userTypeOptions"
-                                ng-model="selectedUserData.user_type_id"
-                                ng-change="changeUserType()"
-                                ng-init="selectedUserData.user_type_id='';"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                        <div ng-if="postResponse.error.gender_id" class="error-message">
-                            <p ng-repeat="error in postResponse.error.gender_id">{{ error }}</p>
-                        </div>
-                    </div>
-                    <div class="input string required">
-                        <label><?= __('OpenEMIS ID') ?></label>
-                        <input ng-model="selectedUserData.openemis_no" type="string" ng-disabled="true">
-                        <div ng-if="postResponse.error.openemis_no" class="error-message">
-                            <p ng-repeat="error in postResponse.error.openemis_no">{{ error }}</p>
-                        </div>
-                    </div>
-                </form>
-            </div>
         </div>
     </div>
 </div>

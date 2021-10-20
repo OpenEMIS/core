@@ -58,7 +58,6 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
             'identity_number': 'Identity Number',
             'account_type': 'Account Type'
         };
-        scope.initGrid();
     });
 
     scope.getUniqueOpenEmisId = function() {
@@ -131,19 +130,13 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     scope.goToPrevStep = function(){
         switch(scope.step){
             case 'internal_search': 
-                angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-                    step: "userDetails"
-                });
+                scope.step = 'user_details';
                 break;
             case 'external_search': 
-                angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-                    step: "internalSearch"
-                });
+                scope.step = 'internal_search';
                 break;
             case 'confirmation': 
-                angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-                    step: "externalSearch"
-                });
+                scope.step = 'external_search';
                 break;
         }
     }
@@ -151,48 +144,42 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     scope.goToNextStep = function() {
         switch(scope.step){
             case 'user_details': 
-                angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-                    step: "internalSearch"
-                });
+                scope.step = 'internal_search';
+                // scope.getUniqueOpenEmisId();
+                // scope.generatePassword();
                 break;
             case 'internal_search': 
-                angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-                    step: "externalSearch"
-                });
+                scope.step = 'external_search';
                 break;
             case 'external_search': 
-                angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-                    step: "confirmation"
-                });
+                scope.step = 'confirmation';
                 break;
         }
     }
 
     scope.confirmUser = function () {
-        angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-            step: "summary"
-        });
+        scope.message = (scope.selectedUserData && scope.selectedUserData.userType ? scope.selectedUserData.userType.name : 'Student') + ' successfully added.';
+        scope.messageClass = 'alert-success';
+        scope.step = "summary";
     }
 
     scope.goToFirstStep = function () {
-        setTimeout(function() {
-            scope.message = '';
-        }, 2000);
-        angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-            step: "userDetails"
-        });
-        DirectoryaddSvc.init(angular.baseUrl);
-        scope.translateFields = {
-            'openemis_no': 'OpenEMIS ID',
-            'name': 'Name',
-            'gender_name': 'Gender',
-            'date_of_birth': 'Date Of Birth',
-            'nationality_name': 'Nationality',
-            'identity_type_name': 'Identity Type',
-            'identity_number': 'Identity Number',
-            'account_type': 'Account Type'
-        };
+        scope.step = 'user_details';
     }
+
+    // scope.selectStaff = function(id) {
+    //     scope.selectedUser = id;
+    //     scope.getStaffData();
+    // }
+
+    // scope.getStaffData = function() {
+    //     var log = [];
+    //     angular.forEach(scope.rowsThisPage , function(value) {
+    //         if (value.id == scope.selectedUser) {
+    //             scope.selectedUserData = value;
+    //         }
+    //     }, log);
+    // }
 
     scope.initGrid = function() {
         AggridLocaleSvc.getTranslatedGridLocale()
@@ -231,7 +218,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id);
+                    scope.selectStaff(_e.node.data.id);
                     $scope.$apply();
                 }
             };
@@ -347,31 +334,6 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
             };
         });
     };
-
-    angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {
-        // Step 1 - User details
-        if (data.step == 1) {
-            scope.step = 'user_details';
-            scope.getUniqueOpenEmisId();
-            scope.generatePassword();
-        }
-        // Step 2 - Internal search
-        else if (data.step == 2) {
-            scope.step = 'internal_search';
-        }
-        // Step 3 - External search
-        else if (data.step == 3) {
-            scope.step = 'external_search';
-        }
-        // Step 4 - Create user
-        else if (data.step == 4) {
-            scope.step = 'confirmation';
-        }
-        // Step 5 - Summary
-        else if (data.step == 5) {
-            scope.step = 'summary';
-            scope.message = `${scope.selectedUserData.userType.name} Added successfully.`;
-            scope.messageClass = 'alert-success'
-;        }
-    });
+    
+    scope.initGrid();
 }
