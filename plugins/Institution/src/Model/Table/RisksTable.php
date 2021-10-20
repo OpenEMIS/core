@@ -241,7 +241,7 @@ class RisksTable extends ControllerActionTable
     { 
     
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = $this->request->query['academic_period_id'];
+        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
     
         $User = TableRegistry::get('security_users');
 		$query
@@ -255,15 +255,13 @@ class RisksTable extends ControllerActionTable
         'risk_index' => "(SELECT SUM(risk_value) FROM ".$this->RiskCriterias->table()." WHERE risk_id = Risks.id)",
         'status' => "(SELECT CASE WHEN status = 1 THEN 'Not Generated'
         WHEN status = 2 THEN 'Processing' 
-        WHEN status = 3 THEN 'Completed'  
-        ELSE 'Not Completed' END AS status 
+        WHEN status = 3 THEN 'Generated'  
+        ELSE 'Not Generated' END AS status 
         FROM ".$this->InstitutionRisks->table()." where risk_id = Risks.id AND institution_id = ".$institutionId.")"
         ])
-		
 		->LeftJoin([$this->RiskCriterias->alias() => $this->RiskCriterias->table()],[
 			$this->RiskCriterias->aliasField('risk_id').' = ' . 'Risks.id'
         ])
-
         ->LeftJoin([$this->InstitutionRisks->alias() => $this->InstitutionRisks->table()],[
 			$this->InstitutionRisks->aliasField('risk_id').' = ' . 'Risks.id'
         ])
@@ -271,7 +269,7 @@ class RisksTable extends ControllerActionTable
 			$User->aliasField('id').' = ' . $this->InstitutionRisks->aliasField('generated_by')
         ])
         ->where(['Risks.academic_period_id' =>  $academicPeriod,
-        'InstitutionRisks.institution_id' =>  $institutionId
+            'InstitutionRisks.institution_id' =>  $institutionId
         ])
         ->group([
             $this->RiskCriterias->aliasField('risk_id')
@@ -288,6 +286,13 @@ class RisksTable extends ControllerActionTable
             'type' => 'string',
             'label' => __('Name')
         ];
+        
+        $extraField[] = [
+            'key' =>  "",
+            'field' => 'risk_index',
+            'type' => 'integer',
+            'label' => __('Number Of Risk Index')
+        ];
 
         $extraField[] = [
             'key' =>  'Users.generated_by',
@@ -303,12 +308,6 @@ class RisksTable extends ControllerActionTable
             'label' => __('Generated On')
         ];
 
-        $extraField[] = [
-            'key' =>  "",
-            'field' => 'risk_index',
-            'type' => 'integer',
-            'label' => __('Risk Index')
-        ];
         $extraField[] = [
             'key' =>  "",
             'field' => 'status',
