@@ -230,8 +230,12 @@ class VisitRequestsTable extends ControllerActionTable
         return $query;
     }
 
+    // POCOR-6166
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        // POCOR-6166
+        $category = $this->request->query('category');
+        // POCOR-6166
 		$institutionId = $this->Session->read('Institution.Institutions.id');
         $assignees = TableRegistry::get('security_users');
 		$query
@@ -247,20 +251,39 @@ class VisitRequestsTable extends ControllerActionTable
 		->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
 			$this->AcademicPeriods->aliasField('id').' = ' . 'VisitRequests.academic_period_id'
 		])
-        
+        // POCOR-6166
+		->LeftJoin([$this->Statuses->alias() => $this->Statuses->table()],[
+            $this->Statuses->aliasField('id').' = ' . 'VisitRequests.status_id'
+        ])
+        // POCOR-6166
 		->LeftJoin([$this->Assignees->alias() => $this->Assignees->table()],[
-			$this->Assignees->aliasField('id').' = ' . 'VisitRequests.assignee_id'
-		])
-
-		->LeftJoin([$this->QualityVisitTypes->alias() => $this->QualityVisitTypes->table()],[
-			$this->QualityVisitTypes->aliasField('id').' = ' . 'VisitRequests.quality_visit_type_id'
-		])
-        ->where(['VisitRequests.institution_id' =>  $institutionId]);
+            $this->Assignees->aliasField('id').' = ' . 'VisitRequests.assignee_id'
+        ]) 
+        ->LeftJoin([$this->QualityVisitTypes->alias() => $this->QualityVisitTypes->table()],[
+            $this->QualityVisitTypes->aliasField('id').' = ' . 'VisitRequests.quality_visit_type_id'
+        ])
+        ->where(['VisitRequests.institution_id' =>  $institutionId]);     
+                
+        // POCOR-6166
+        if(isset($category) && $category > 0){
+            $query
+            ->where([
+                $this->Statuses->aliasField('category') =>  $category
+            ]);
+        }
+        // POCOR-6166
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-     
+        // POCOR-6166
+        $extraField[] = [
+            'key' => 'VisitRequests.status_id',
+            'field' => 'status_id',
+            'type' => 'integer',
+            'label' => __('Status')
+        ];
+        // POCOR-6166
         $extraField[] = [
             'key' => 'Assignees.assignee',
             'field' => 'assignee',
@@ -291,5 +314,5 @@ class VisitRequestsTable extends ControllerActionTable
 
         $fields->exchangeArray($extraField);
     }
-
+    // POCOR-6166
 }
