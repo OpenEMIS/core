@@ -336,33 +336,39 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         return compact('periodOptions', 'selectedPeriod');
     }
 
+    // POCOR-6171 start
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $academicPeriod = !empty($this->request->query['period']) ? $this->request->query['period'] : $this->AcademicPeriods->getCurrent();
         $committeType = !empty($this->request->query['type']) ? $this->request->query['type'] : -1;
 
 		$query
 		->select(['name' => 'InstitutionTestCommittees.name',
-        'chairperson' => 'InstitutionTestCommittees.chairperson',
-        'telephone' => 'InstitutionTestCommittees.telephone',
-        'email' => 'InstitutionTestCommittees.email',
-        'comment' => 'InstitutionTestCommittees.comment',
-        'type' => 'InstitutionCommitteeTypes.name',
-        'academic_period' => 'AcademicPeriods.name',
+            'chairperson' => 'InstitutionTestCommittees.chairperson',
+            'telephone' => 'InstitutionTestCommittees.telephone',
+            'email' => 'InstitutionTestCommittees.email',
+            'comment' => 'InstitutionTestCommittees.comment',
+            'type' => 'InstitutionCommitteeTypes.name',
+            'academic_period' => 'AcademicPeriods.name',
         ])
-
 		->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
 			$this->AcademicPeriods->aliasField('id').' = ' . 'InstitutionTestCommittees.academic_period_id'
 		])
-
         ->LeftJoin([$this->InstitutionCommitteeTypes->alias() => $this->InstitutionCommitteeTypes->table()],[
 			$this->InstitutionCommitteeTypes->aliasField('id').' = ' . 'InstitutionTestCommittees.institution_committee_type_id'
 		])
-
-        ->where(['InstitutionTestCommittees.academic_period_id' =>  $academicPeriod])
-        ->where(['InstitutionTestCommittees.institution_id' =>  $institutionId])
-        ->where(['InstitutionTestCommittees.institution_committee_type_id' =>  $committeType]);
+        ->where([
+            'InstitutionTestCommittees.academic_period_id' =>  $academicPeriod,
+            'InstitutionTestCommittees.institution_id' =>  $institutionId
+        ]);
+       
+        if($committeType > 0){
+            $query
+            ->where([
+                'InstitutionTestCommittees.institution_committee_type_id' =>  $committeType
+            ]);
+        }
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -420,4 +426,6 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
 
         $fields->exchangeArray($extraField);
     }
+    // POCOR-6171 ends
+
 }
