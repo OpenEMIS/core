@@ -404,7 +404,6 @@ class StaffBehavioursTable extends ControllerActionTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-
         $extraField[] = [
             'key' => 'Students.openemis_no',
             'field' => 'openemis_no',
@@ -423,7 +422,7 @@ class StaffBehavioursTable extends ControllerActionTable
             'key' => 'StudentBehaviour.date_of_behaviour',
             'field' => 'date_of_behaviour',
             'type' => 'date',
-            'label' => __('Date Of Behaviour')
+            'label' => __('Date')
         ];
 
         $extraField[] = [
@@ -439,35 +438,76 @@ class StaffBehavioursTable extends ControllerActionTable
             'type' => 'string',
             'label' => __('Behaviour Classification')
         ];
-
+        // POCOR-6155
+        $extraField[] = [
+            'key' => '',
+            'field' => 'linked_cases',
+            'type' => 'integer',
+            'label' => __('Linked Cases')
+        ];
+        // POCOR-6155
 
         $fields->exchangeArray($extraField);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $academicPeriod = $this->request->query['academic_period_id'];
+        // POCOR-6155
+        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
+        // POCOR-6155
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $User = TableRegistry::get('security_users');
-            $query
-            ->select(['date' => 'StaffBehaviours.date_of_behaviour','category' => 'StaffBehaviourCategories.name','behaviour_classification' => 'BehaviourClassifications.name', 'openemis_no' => 'Staff.openemis_no', 'student_name' => $User->find()->func()->concat([
+        $query
+        ->select([
+            'date' => 'StaffBehaviours.date_of_behaviour',
+            'category' => 'StaffBehaviourCategories.name',
+            'behaviour_classification' => 'BehaviourClassifications.name', 
+            'openemis_no' => 'Staff.openemis_no', 
+            'student_name' => $User->find()->func()->concat([
                 'first_name' => 'literal',
                 " ",
                 'last_name' => 'literal'
-            ])])
-
-            ->LeftJoin([$this->Staff->alias() => $this->Staff->table()],[
-                $this->Staff->aliasField('id').' = ' . 'StaffBehaviours.staff_id'
             ])
+        ])
+        ->LeftJoin([$this->Staff->alias() => $this->Staff->table()],[
+            $this->Staff->aliasField('id').' = ' . 'StaffBehaviours.staff_id'
+        ])
+        ->LeftJoin([$this->StaffBehaviourCategories->alias() => $this->StaffBehaviourCategories->table()],[
+            $this->StaffBehaviourCategories->aliasField('id').' = ' . 'StaffBehaviours.staff_behaviour_category_id'
+        ])
+        ->LeftJoin([$this->BehaviourClassifications->alias() => $this->BehaviourClassifications->table()],[
+            $this->BehaviourClassifications->aliasField('id').' = ' . 'StaffBehaviours.behaviour_classification_id'
+        ])
+        ->where([
+            'StaffBehaviours.academic_period_id' =>  $academicPeriod,
+            'StaffBehaviours.institution_id' =>  $institutionId
+        ]);
 
-            ->LeftJoin([$this->StaffBehaviourCategories->alias() => $this->StaffBehaviourCategories->table()],[
-                $this->StaffBehaviourCategories->aliasField('id').' = ' . 'StaffBehaviours.staff_behaviour_category_id'
-            ])
+        // POCOR-6155 start
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                // POCOR-6155 linked cases from caseBehaviour
+                $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+                $InstitutionCases = TableRegistry::get('Cases.InstitutionCases');
 
-            ->LeftJoin([$this->BehaviourClassifications->alias() => $this->BehaviourClassifications->table()],[
-                $this->BehaviourClassifications->aliasField('id').' = ' . 'StaffBehaviours.behaviour_classification_id'
-            ])
-            ->where(['StaffBehaviours.academic_period_id' =>  $academicPeriod])
-            ->where(['StaffBehaviours.institution_id' =>  $institutionId]);
+                $feature = $WorkflowRules->getFeatureByEntity($row);
+                $recordId = $row->id;
+                $query = $InstitutionCases
+                    ->find()
+                    ->contain(['Statuses', 'Assignees'])
+                    ->matching('LinkedRecords', function ($q) use ($feature, $recordId) {
+                        return $q->where([
+                            'feature' => $feature,
+                            'record_id' => $recordId
+                        ]);
+                    });
+                
+                $linked_cases = $query->count();
+                $row['linked_cases'] = $linked_cases;
+                // POCOR-6155 linked cases
+                return $row;
+            });
+        });
+        // POCOR-6155 ends
     }
 }
