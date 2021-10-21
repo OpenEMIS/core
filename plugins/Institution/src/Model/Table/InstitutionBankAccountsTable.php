@@ -184,18 +184,23 @@ class InstitutionBankAccountsTable extends AppTable {
 
 		$banks = TableRegistry::get('Banks');
 		$branches = TableRegistry::get('BankBranches');
+		
 		$query
-		->select(['active' => 'InstitutionBankAccounts.active','account_name' => 'InstitutionBankAccounts.account_name','account_number' => 'InstitutionBankAccounts.account_number', 'bank' => 'Banks.name', 'bank_branch' => 'BankBranches.name'])
-
-		->LeftJoin([$this->BankBranches->alias() => $this->BankBranches->table()],[
-			$this->BankBranches->aliasField('id').' = ' . 'InstitutionBankAccounts.bank_branch_id'
+		->select([
+			'active' => 'InstitutionBankAccounts.active',
+			'account_name' => 'InstitutionBankAccounts.account_name',
+			'account_number' => 'InstitutionBankAccounts.account_number',
+			'bank' => 'Banks.name',
+			'bank_branch' => 'BankBranches.name'
 		])
-
+		->LeftJoin([$this->BankBranches->alias() => $this->BankBranches->table()],[
+			$this->BankBranches->aliasField('id ='). 'InstitutionBankAccounts.bank_branch_id'
+		])
 		->LeftJoin([$banks->alias() => $banks->table()],[
-			$banks->aliasField('id').' = ' . 'BankBranches.bank_id'
+			$banks->aliasField('id ='). 'BankBranches.bank_id'
 		])
         ->where([
-            $this->aliasField('institution_id = ') . $institutionId
+            $this->aliasField('institution_id ='). $institutionId
         ]);
     }
 
