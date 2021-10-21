@@ -198,7 +198,12 @@ class StudentUserTable extends ControllerActionTable
                 'rule' => ['validateCustomPattern', 'postal_code'],
                 'provider' => 'table',
                 'last' => true
-            ])
+            ])//POCOR-5924 starts
+            ->allowEmpty('identity_number')
+            ->add('identity_number', 'ruleCheckUniqueIdentityNumber', [
+                'rule' => ['checkUniqueIdentityNumber'],
+                'on' => 'create'
+            ])//POCOR-5924 ends
             ;
         return $validator;
     }

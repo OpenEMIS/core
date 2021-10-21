@@ -3296,4 +3296,21 @@ class ValidationBehavior extends Behavior
         }
     }
     //POCOR-5975 ends
+    //POCOR-5924 starts
+    public static function checkUniqueIdentityNumber($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $data = $globalData['data'];
+        $userIdentities = TableRegistry::get('user_identities');
+        $IdentitiesEntity = $userIdentities->find()
+            ->where([$userIdentities->aliasField('number') => $data['identity_number']])
+            ->count()
+            ;
+        if($IdentitiesEntity > 0){
+            $validationErrorMsg = $model->getMessage('Institution.Students.identity_number.ruleCheckUniqueIdentityNumber');
+            return $validationErrorMsg;
+        }
+
+        return true;
+    }//POCOR-5924 ends
 }
