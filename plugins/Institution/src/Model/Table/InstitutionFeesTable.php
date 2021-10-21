@@ -376,25 +376,46 @@ class InstitutionFeesTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = $this->request->query['academic_period_id'];
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $academicPeriod = $this->request->query('academic_period_id');
 
         if (empty($academicPeriod)) {
-            $academicPeriod = $this->request->data['InstitutionFees']['academic_period_id'];
+            $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+            if (empty($request->query['academic_period_id'])) {
+                $request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+            }
+
+            $selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
+            $Fees = $this;
+
+            $this->advancedSelectOptions($academicPeriodOptions, $selectedOption, [
+                'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noProgrammeGradeFees')),
+                'callable' => function ($id) use ($Fees, $institutionId) {
+                    return $Fees->find()->where(['institution_id'=>$institutionId, 'academic_period_id'=>$id])->count();
+                }
+            ]);
+
+            $academicPeriod = $selectedOption;
         }
+
 		$educationProgrammes = TableRegistry::get('EducationProgrammes');
 		$query
-		->select(['total_fee' => 'InstitutionFees.total','education_grade' => 'EducationGrades.name','education_programme' => 'EducationProgrammes.name'])
-
+		->select([
+            'total_fee' => 'InstitutionFees.total',
+            'education_grade' => 'EducationGrades.name',
+            'education_programme' => 'EducationProgrammes.name'
+        ])
 		->LeftJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()],[
-			$this->EducationGrades->aliasField('id').' = ' . 'InstitutionFees.education_grade_id'
+			$this->EducationGrades->aliasField('id = '). 'InstitutionFees.education_grade_id'
 		])
 
 		->LeftJoin([$educationProgrammes->alias() => $educationProgrammes->table()],[
-			$educationProgrammes->aliasField('id').' = ' . 'EducationGrades.education_programme_id '
+			$educationProgrammes->aliasField('id = '). 'EducationGrades.education_programme_id '
 		])
-        ->where(['InstitutionFees.academic_period_id' =>  $academicPeriod])
-        ->where(['InstitutionFees.institution_id' =>  $institutionId]);
+        ->where([
+            'InstitutionFees.academic_period_id' =>  $academicPeriod,
+            'InstitutionFees.institution_id' =>  $institutionId
+        ]);
     }
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
