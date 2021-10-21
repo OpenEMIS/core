@@ -360,6 +360,12 @@ class StaffUserTable extends ControllerActionTable
                     return ($context['newRecord'] && array_key_exists('academic_period_id', $context['data']));
                 }
             ])
+            //POCOR-5924 starts
+            ->allowEmpty('identity_number')
+            ->add('identity_number', 'ruleCheckUniqueIdentityNumber', [
+                'rule' => ['checkUniqueIdentityNumber'],
+                'on' => 'create'
+            ])//POCOR-5924 ends
             ;
         return $validator;
     }
