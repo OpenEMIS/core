@@ -30,7 +30,7 @@ class POCOR6162 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_6162_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `zz_6162_security_functions` SELECT * FROM `security_functions`');
 
-		$this->execute("UPDATE `security_functions` SET `_execute` = 'Income.excel' WHERE `category`='Finance' AND `name` = 'Income' AND controller='Institutions' AND module = 'Institutions'");
+		    $this->execute("UPDATE `security_functions` SET `_execute` = 'Income.excel' WHERE `category`='Finance' AND `name` = 'Income' AND controller='Institutions' AND module = 'Institutions'");
     }
 
     public function down() {
