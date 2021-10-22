@@ -36,14 +36,22 @@ class InfrastructureNeedsTable extends ControllerActionTable
             'through' => 'Institution.InfrastructureProjectsNeeds',
             'dependent' => true
         ]);
-
-        /* $this->addBehavior('Page.FileUpload', [
-            'fieldMap' => ['file_name' => 'file_content'],
-            'size' => '2MB'
-        ]); */
+        $this->addBehavior('ControllerAction.FileUpload', [
+            // 'name' => 'file_name',
+            // 'content' => 'file_content',
+            'size' => '2MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
+        ]);
+        // setting this up to be overridden in viewAfterAction(), this code is required
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            true
+        );
 
         $this->addBehavior('Excel',[
-            // 'excludes' => ['academic_period_id', 'institution_id'],
+            'excludes' => ['academic_period_id', 'institution_id'],
             'pages' => ['index'],
         ]);
     }
@@ -175,6 +183,50 @@ class InfrastructureNeedsTable extends ControllerActionTable
         }
     }
 
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // determine if download button is shown
+        $showFunc = function () use ($entity) {
+            $filename = $entity->file_content;
+            return !empty($filename);
+        };
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            $showFunc
+        );
+        // End
+
+        // $this->field('file_name', ['visible' => false]);
+        // $this->field('file_content', ['after' => 'date_completed','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->setupFields($entity, $extra);
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity, $extra);
+    }
+
+    public function setupFields(Entity $entity, ArrayObject $extra)
+    { 
+        if($extra['elements']['view']){
+            if($entity->priority == 1){
+                $entity['priority'] = 'High';
+            }elseif($entity->priority == 2){
+                $entity['priority'] = 'Medium';
+            }elseif($entity->priority == 3){
+                $entity['priority'] = 'Low';
+            }
+        }
+
+        $this->field('infrastructure_need_type_id',['after' => 'name','visible' => ['view' => true,'edit' => true]]);
+        $this->fields['priority']['default'] = $entity->priority;
+        $this->field('priority',['after' => 'description','visible' => ['view' => true,'edit' => true]]);
+        $this->field('file_name', ['type' => 'hidden']);
+        $this->field('file_content', ['after' => 'date_completed','visible' => ['view' => false, 'edit' => true]]);
+
+        // $this->setFieldOrder(['academic_period_id', 'date_of_visit', 'quality_visit_type_id', 'comment', 'file_name', 'file_content']);
+    }
+
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('code', ['attr' => ['label' => __('Code')]]);
@@ -185,7 +237,14 @@ class InfrastructureNeedsTable extends ControllerActionTable
 
         $this->fields['priority']['type'] = 'select';
         $this->fields['priority']['options'] = $this->needPriorities;   
-        $this->field('priority', ['attr' => ['label' => __('Priority')]]);
+        $this->field('priority', [
+            'after' => 'description',
+            'attr' => ['label' => __('Priority')]
+            ]
+        );
+
+        // $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['before' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -216,7 +275,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
                 }elseif($row->priority == 2){
                     $row['priority'] = 'Medium';
                 }elseif($row->priority == 3){
-                    $row['priority'] = 'Lowa';
+                    $row['priority'] = 'Low';
                 }
 
                 return $row;
@@ -253,7 +312,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
                 }elseif($row->priority == 2){
                     $row['priority'] = 'Medium';
                 }elseif($row->priority == 3){
-                    $row['priority'] = 'Lowa';
+                    $row['priority'] = 'Low';
                 }
 
                 return $row;
