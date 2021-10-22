@@ -958,18 +958,18 @@ class InstitutionsController extends AppController
 
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
-
         if ($hasTemplate) {
+            $queryString = $this->request->query('queryString');
             $customUrl = Router::url([
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'reportCardGenerate',
                             'add',
-                            // 'user_id' => $staffId
+                            'queryString' => $queryString
                         ]);
-            // $customUrl[0] = 'AssessmentResults';
-            $this->set('reportCardGenerate',$customUrl);
 
+            $this->set('reportCardGenerate',$customUrl);
+           
             $exportPDF_Url = $this->ControllerAction->url('index');
             $exportPDF_Url['plugin'] = 'CustomExcel';
             $exportPDF_Url['controller'] = 'CustomExcels';
