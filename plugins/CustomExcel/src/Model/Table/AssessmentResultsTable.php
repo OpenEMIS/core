@@ -604,7 +604,19 @@ class AssessmentResultsTable extends AppTable
     }
 
     public function onExcelTemplateInitialiseClassStudents(Event $event, array $params, ArrayObject $extra)
-    {
+    { 
+        $where = [];
+        $ids = [];
+        if ($params['students'] != 0) {
+            foreach ($params['list_of_students']['_ids'] as $value) {
+                $ids[] = $value;
+            }
+           $where[$this->aliasField('student_id IN')] = $ids; 
+        }
+        if ($params['student_status_id'] != 0) {
+            $where[$this->aliasField('student_status_id')] = $params['student_status_id'];
+        }
+    
         if (array_key_exists('class_id', $params)) {
             $entity = $this->find()
                 ->contain([
@@ -678,13 +690,13 @@ class AssessmentResultsTable extends AppTable
                     ]
                 ])
                 ->where([
-                    $this->aliasField('institution_class_id') => $params['class_id']/*,
-                    $this->aliasField('student_status_id') => self::STUDENT_ENROLLED_STATUS*/
+                    $this->aliasField('institution_class_id') => $params['class_id'],
+                    $where
                 ])
                 ->order(['Users.first_name', 'Users.last_name'])
                 // ->hydrate(false)
                 ->all();
-            
+
             return $entity->toArray();
         }
     }
