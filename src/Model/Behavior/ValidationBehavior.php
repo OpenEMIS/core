@@ -3301,7 +3301,6 @@ class ValidationBehavior extends Behavior
     {
         $model = $globalData['providers']['table'];
         $data = $globalData['data'];
-        //echo "<pre>"; print_r($data); die;
         $userIdentities = TableRegistry::get('user_identities');
         $IdentitiesEntity = $userIdentities->find()
             ->where([
