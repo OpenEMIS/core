@@ -3301,9 +3301,13 @@ class ValidationBehavior extends Behavior
     {
         $model = $globalData['providers']['table'];
         $data = $globalData['data'];
+        //echo "<pre>"; print_r($data); die;
         $userIdentities = TableRegistry::get('user_identities');
         $IdentitiesEntity = $userIdentities->find()
-            ->where([$userIdentities->aliasField('number') => $data['identity_number']])
+            ->where([
+                $userIdentities->aliasField('number') => $data['identity_number'],
+                $userIdentities->aliasField('identity_type_id') => $data['identity_type_id']
+            ])
             ->count()
             ;
         if($IdentitiesEntity > 0){
