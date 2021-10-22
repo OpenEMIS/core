@@ -57,10 +57,13 @@ class ReportCardGenerateTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        $validator->notEmpty('Students');
+        $validator->notEmpty('academic_period_id')
+                ->notEmpty('education_grade_id')
+                ->notEmpty('institution_classes_id');
+
         return $validator;
     }
-    
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {   
         $this->field('marks', ['visible' => false]);
@@ -264,19 +267,21 @@ class ReportCardGenerateTable extends ControllerActionTable
                   'institution_id' => $data['institution_id'],
                   'academic_period_id' => $data['academic_period_id'],
                   'student_status_id' => $data['student_status_id'],
+                  'grade_id' => $data['education_grade_id'],
                   'students' => $data['students'],
                   'list_of_students' => $data['list_of_students']
         ]);
-
         return $this->controller->redirect($customUrl);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
+        $queryString = $this->request->query('queryString');
         $button = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
-            'action' => 'Assessments',
+            'action' => 'Results',
+            'queryString' => $queryString
         ];
         
         $extra['toolbarButtons']['back']['url'] = $button;
