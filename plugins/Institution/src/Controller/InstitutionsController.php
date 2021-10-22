@@ -716,7 +716,15 @@ class InstitutionsController extends AppController
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
                 $this->Navigation->addCrumb(__('Hygiene'));
                 $this->set('contentHeader', $header);
+            // POCOR-6150 start
+            }else if($this->request->param('action') == 'InfrastructureNeeds'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Needs');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Needs'));
+                $this->set('contentHeader', $header);
             }
+            // POCOR-6150 end
         }
 
     }
