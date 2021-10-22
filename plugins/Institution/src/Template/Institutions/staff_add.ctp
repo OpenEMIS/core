@@ -16,675 +16,441 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min.js'
 $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', ['block' => true]);
 ?>
 <style>.chosen-choices .search-field .default{width:90px !important;}</style>
-<div class="alert {{class}}" ng-hide="message == null">
-    <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a><?= __('{{message}}') ?>
-</div>
-<div class="wizard" data-initialize="wizard" id="wizard">
-    <div class="steps-container">
-        <ul class="steps" style="margin-left: 0">
-            <li data-step="1" class="active" data-name="userDetails">
-                <div class="step-wrapper">
-                    <?= __('User Details') ?>
-                    <span class="chevron"></span>
-                </div>
-            </li>
 
-            <li data-step="2" data-name="internalSearch">
-                <div class="step-wrapper">
-                    <?= __('Internal Search') ?>
-                    <span class="chevron"></span>
-                </div>
-            </li>
-
-            <li data-step="3" data-name="externalSearch">
-                <div class="step-wrapper">
-                    <?= __('External Search') ?>
-                    <span class="chevron"></span>
-                </div>
-            </li>
-
-            <li data-step="4" data-name="confirmation">
-                <div class="step-wrapper">
-                    <?= __('Confirmation') ?>
-                    <span class="chevron"></span>
-                </div>
-            </li>
-
-            <li data-step="5" data-name="addStaff">
-                <div class="step-wrapper">
-                    <?= __('Add Staff') ?>
-                    <input type="hidden" ng-model="InstitutionStaffController.hasExternalDataSource" ng-init="InstitutionStaffController.hasExternalDataSource = <?php if ($externalDataSource) echo 'true'; else echo 'false'; ?>; InstitutionStaffController.institutionId=<?= $institutionId; ?>; "/>
-                    <span class="chevron"></span>
-                </div>
-            </li>
-
-            <li data-step="6" data-name="summary">
-                <div class="step-wrapper">
-                    <?= __('Summary') ?>
-                    <span class="chevron"></span>
-                </div>
-            </li>
-        </ul>
-    </div>
-    <div class="actions top">
-        <!-- <?php if ($_createNewStaff) : ?>
+<div class="pd-10">
+    <div class="stepper-content-wrapper">
+        <div class="steps-container">
+            <ul class="steps" style="margin-left: 0">
+                <li ng-class="{'active': InstitutionStaffController.step === 'user_details'}">
+                    <div class="stepper-steps-wrapper">
+                        User Details
+                        <span class="chevron"></span>
+                    </div>
+                </li>
+                <li ng-class="{'active': InstitutionStaffController.step === 'internal_search'}">
+                    <div class="stepper-steps-wrapper">
+                        Internal Search
+                        <span class="chevron"></span>
+                    </div>
+                </li>
+                <li ng-class="{'active': InstitutionStaffController.step === 'external_search'}">
+                    <div class="stepper-steps-wrapper">
+                        External Search
+                        <span class="chevron"></span>
+                    </div>
+                </li>
+                <li ng-class="{'active': InstitutionStaffController.step === 'confirmation'}">
+                    <div class="stepper-steps-wrapper">
+                        Confirmation
+                        <span class="chevron"></span>
+                    </div>
+                </li>
+                <li ng-class="{'active': InstitutionStaffController.step === 'summary'}">
+                    <div class="stepper-steps-wrapper">
+                        Summary
+                        <span class="chevron"></span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="actions top">
             <button
-                ng-if="((!InstitutionStaffController.initialLoad && !InstitutionStaffController.hasExternalDataSource)
-                || (!InstitutionStaffController.initialLoad && InstitutionStaffController.step == 'external_search')
-                ) && (InstitutionStaffController.step == 'external_search' || InstitutionStaffController.step == 'internal_search')"
-                ng-disabled="InstitutionStaffController.selectedStaff"
-                ng-click="InstitutionStaffController.onAddNewStaffClick()"
-                type="button" class="btn btn-default"><?= __('Create New Staff') ?>
-            </button>
-        <?php endif; ?> -->
-        <!-- <button
-            type="button" class="btn btn-default" ng-click="InstitutionStaffController.onExternalSearchClick()"
-            ng-if="(!InstitutionStaffContr̉oller.initialLoad && InstitutionStaffController.hasExternalDataSource && InstitutionStaffController.showExternalSearchButton && InstitutionStaffController.step=='internal_search')" ng-disabled="InstitutionStaffController.selectedStaff"><?= __('External Search') ?>
-        </button> -->
-        <!-- <button
-            ng-if="InstitutionStaffController.rowsThisPage.length > 0 && (InstitutionStaffController.step=='internal_search' || InstitutionStaffController.step=='external_search')"
-            ng-model="InstitutionStaffController.selectedStaff"
-            ng-click="InstitutionStaffController.onAddStaffClick()"
-            ng-disabled="!InstitutionStaffController.selectedStaff"
-            type="button" class="btn btn-default"><?= __('Add Staff') ?>
-        </button> -->
-        <button
-            ng-if="(InstitutionStaffController.step=='user_details' || InstitutionStaffController.step=='internal_search')"
-            type="button" class="btn btn-default"><?= __('Cancel') ?>
-        </button>
-        <button
-            ng-if="(InstitutionStaffController.step!=='user_details' && InstitutionStaffController.step!=='internal_search')"
-            type="button" class="btn btn-default"><?= __('Back') ?>
-        </button>
-        <button
-            ng-if="(InstitutionStaffController.step=='add_staff')"
-            ng-click="InstitutionStaffController.onAddStaffCompleteClick()"
-            type="button" class="btn btn-default"><?= __('Confirm') ?>
-        </button>
-        <button
-            ng-if="(InstitutionStaffController.step=='summary')"
-            type="button" class="btn btn-default"><?= __('Close') ?>
-        </button>
-        <button type="button" class="btn btn-default btn-next"
-            ng-if="InstitutionStaffController.step!=='add_staff'"
-            data-last="<?= __('Save') ?>">
-            <?= __('Next') ?>
-        </button>
-    </div>
-    <div class="step-content">
-        <div class="step-pane sample-pane active" data-step="1" data-name="userDetails">
-            <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                <div class="input string required">
-                    <label><?= __('OpenEMIS ID') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.openemis_no" type="string" ng-disabled="true">
-                    <div ng-if="InstitutionStaffController.postResponse.error.openemis_no" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.openemis_no">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input string required">
-                    <label><?= __('First Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.first_name" ng-change="InstitutionStaffController.setStaffName()" type="string" ng-init="InstitutionStaffController.selectedStaffData.first_name='';">
-                    <div ng-if="InstitutionStaffController.postResponse.error.first_name" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.first_name">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input string">
-                    <label><?= __('Middle Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.middle_name" ng-change="InstitutionStaffController.setStaffName()" type="string">
-                </div>
-                <div class="input string">
-                    <label><?= __('Third Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.third_name" ng-change="InstitutionStaffController.setStaffName()" type="string">
-                </div>
-                <div class="input string required">
-                    <label><?= __('Last Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.last_name" ng-change="InstitutionStaffController.setStaffName()" type="string" ng-init="InstitutionStaffController.selectedStaffData.last_name='';">
-                    <div ng-if="InstitutionStaffController.postResponse.error.last_name" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.last_name">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input string">
-                    <label><?= __('Preferred Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.preferred_name" type="string">
-                </div>
-                <div class="input select required error">
-                    <label><?= __('Gender') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Staff[gender_id]" id="staff-gender_id"
-                            ng-options="option.id as option.name for option in InstitutionStaffController.genderOptions"
-                            ng-model="InstitutionStaffController.selectedStaffData.gender_id"
-                            ng-change="InstitutionStaffController.changeGender()"
-                            ng-init="InstitutionStaffController.selectedStaffData.gender_id='';"
-                            >
-                            <option value="" >-- <?= __('Select') ?> --</option>
-                        </select>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.gender_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.gender_id">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input date required">
-                    <label for="Staff_date_of_birth"><?= __('Date Of Birth') ?></label>
-                    <div class="input-group date " id="Staff_date_of_birth" style="">
-                        <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.selectedStaffData.date_of_birth" ng-init="InstitutionStaffController.selectedStaffData.date_of_birth='';">
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.date_of_birth" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.date_of_birth">{{ error }}</p>
-                    </div>
-                </div>
-                <div ng-class="InstitutionStaffController.Staff.nationality_class">
-                    <label><?= __('Nationality') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Staff[nationality_id]" id="staff-nationality_id"
-                            ng-options="option.id as option.name for option in InstitutionStaffController.StaffNationalitiesOptions"
-                            ng-model="InstitutionStaffController.Staff.nationality_id"
-                            ng-change="InstitutionStaffController.changeNationality()"
-                            ng-init="InstitutionStaffController.Staff.nationality_id='';"
-                            >
-                            <option value="" >-- <?= __('Select') ?> --</option>
-                        </select>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.nationalities[0].nationality_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
-                    </div>
-                </div>
-                <div ng-class="InstitutionStaffController.Staff.identity_type_class">
-                    <label><?= __('Identity Type') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Staff[identities_type_id]" id="staff-identities_type_id"
-                            ng-options="option.id as option.name for option in InstitutionStaffController.StaffIdentitiesOptions"
-                            ng-model="InstitutionStaffController.Staff.identity_type_id"
-                            ng-change="InstitutionStaffController.changeIdentityType()"
-                            >
-                            <option value="" >-- <?= __('Select') ?> --</option>
-                        </select>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.identities[0].identity_type_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].identity_type_id">{{ error }}</p>
-                    </div>
-                </div>
-                <div ng-class="InstitutionStaffController.Staff.identity_class" ng-show="InstitutionStaffController.StaffIdentities != 2">
-                    <label><?= __('{{InstitutionStaffController.Staff.identity_type_name}}') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" ng-init="InstitutionStaffController.selectedStaffData.identity_number='';">
-                    <div ng-if="InstitutionStaffController.postResponse.error.identities[0].number" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].number">{{ error }}</p>
-                    </div>
-                </div>
-
-                <div class="input string required">
-                    <label><?= __('Username') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.username" type="string" ng-init="InstitutionStaffController.selectedStaffData.username='';">
-                    <div ng-if="InstitutionStaffController.postResponse.error.username" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.username">{{ error }}</p>
-                    </div>
-                </div>
-
-                <div class="input password required">
-                    <label><?=
-                        __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
-                    ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.password" type="string" ng-init="InstitutionStaffController.selectedStaffData.password='';">
-                    <div ng-if="InstitutionStaffController.postResponse.error.password" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.password">{{ error }}</p>
-                    </div>
-                </div>
-            </form>
+                ng-if="(InstitutionStaffController.step=='user_details')"
+                type="button" class="btn close-btn">Cancel</button>
+            <button
+                ng-if="(InstitutionStaffController.step!=='user_details' && InstitutionStaffController.step!=='summary')"
+                type="button" class="btn btn-prev close-btn" ng-click="InstitutionStaffController.goToPrevStep()">Back</button>
+            <button
+                ng-if="(InstitutionStaffController.step=='confirmation' && InstitutionStaffController.step!=='summary')"
+                type="button" class="btn btn-default" ng-click="InstitutionStaffController.confirmUser()">Confirm</button>
+            <button
+                ng-if="(InstitutionStaffController.step=='summary')"
+                type="button" class="btn close-btn" ng-click="InstitutionStaffController.goToFirstStep()">Close</button>
+            <button type="button" class="btn btn-default btn-next"
+                ng-if="InstitutionStaffController.step!=='confirmation' && InstitutionStaffController.step!=='summary'" ng-click="InstitutionStaffController.goToNextStep()">Next</button>
         </div>
-        <div class="step-pane sample-pane" data-step="2" data-name="internalSearch">
-            <div class="table-wrapper">
-                <div>
-                    <div class="scrolltabs">
-                        <div id="institution-student-table" class="table-wrapper">
-                            <div ng-if="InstitutionStaffController.internalGridOptions" kd-ag-grid="InstitutionStaffController.internalGridOptions" ag-selection-type="radio" class="ag-height-fixed"></div>
+        <div class="step-content">
+            <div class="alert {{InstitutionStaffController.messageClass}}" ng-if="InstitutionStaffController.message">
+                <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionStaffController.message}}
+            </div>
+            <div class="step-pane sample-pane" ng-if="InstitutionStaffController.step === 'user_details'">
+                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
+                    <div class="input string required">
+                        <label><?= __('OpenEMIS ID') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.openemis_no" type="string" ng-disabled="true">
+                        <div ng-if="InstitutionStaffController.postResponse.error.openemis_no" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.openemis_no">{{ error }}</p>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="step-pane sample-pane" data-step="3" data-name="externalSearch">
-            <div class="table-wrapper">
-                <div>
-                    <div class="scrolltabs sticky-content">
-                        <div id="institution-student-table" class="table-wrapper">
-                            <div ng-if="InstitutionStaffController.externalGridOptions" kd-ag-grid="InstitutionStaffController.externalGridOptions" ag-selection-type="radio" class="ag-height-fixed"></div>
+                    <div class="input string required">
+                        <label><?= __('First Name') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.first_name" ng-change="InstitutionStaffController.setStaffName()" type="string" ng-init="InstitutionStaffController.selectedStaffData.first_name='';">
+                        <div ng-if="InstitutionStaffController.postResponse.error.first_name" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.first_name">{{ error }}</p>
                         </div>
                     </div>
-                </div>
+                    <div class="input string">
+                        <label><?= __('Middle Name') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.middle_name" ng-change="InstitutionStaffController.setStaffName()" type="string">
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Third Name') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.third_name" ng-change="InstitutionStaffController.setStaffName()" type="string">
+                    </div>
+                    <div class="input string required">
+                        <label><?= __('Last Name') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.last_name" ng-change="InstitutionStaffController.setStaffName()" type="string" ng-init="InstitutionStaffController.selectedStaffData.last_name='';">
+                        <div ng-if="InstitutionStaffController.postResponse.error.last_name" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.last_name">{{ error }}</p>
+                        </div>
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Preferred Name') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.preferred_name" type="string">
+                    </div>
+                    <div class="input select required error">
+                        <label><?= __('Gender') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="Staff[gender_id]" id="staff-gender_id"
+                                ng-options="option.id as option.name for option in InstitutionStaffController.genderOptions"
+                                ng-model="InstitutionStaffController.selectedStaffData.gender_id"
+                                ng-change="InstitutionStaffController.changeGender()"
+                                ng-init="InstitutionStaffController.selectedStaffData.gender_id='';"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                        <div ng-if="InstitutionStaffController.postResponse.error.gender_id" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.gender_id">{{ error }}</p>
+                        </div>
+                    </div>
+                    <div class="input date required">
+                        <label for="Staff_date_of_birth"><?= __('Date Of Birth') ?></label>
+                        <div class="input-group date " id="Staff_date_of_birth" style="">
+                            <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.selectedStaffData.date_of_birth" ng-init="InstitutionStaffController.selectedStaffData.date_of_birth='';">
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                        </div>
+                        <div ng-if="InstitutionStaffController.postResponse.error.date_of_birth" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.date_of_birth">{{ error }}</p>
+                        </div>
+                    </div>
+                    <div ng-class="nationality_class">
+                        <label><?= __('Nationality') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="Staff[nationality_id]" id="staff-nationality_id"
+                                ng-options="option.id as option.name for option in InstitutionStaffController.nationalitiesOptions"
+                                ng-model="InstitutionStaffController.selectedStaffData.nationality_id"
+                                ng-change="InstitutionStaffController.changeNationality()"
+                                ng-init="InstitutionStaffController.selectedStaffData.nationality_id='';"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                        <div ng-if="InstitutionStaffController.postResponse.error.nationalities[0].nationality_id" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
+                        </div>
+                    </div>
+                    <div ng-class="InstitutionStaffController.Staff.identity_type_class">
+                        <label><?= __('Identity Type') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="Staff[identities_type_id]" id="staff-identities_type_id"
+                                ng-options="option.id as option.name for option in InstitutionStaffController.identityTypeOptions"
+                                ng-model="InstitutionStaffController.selectedStaffData.identity_type_id"
+                                ng-change="InstitutionStaffControllerchangeIdentityType()"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                        <div ng-if="InstitutionStaffController.postResponse.error.identities[0].identity_type_id" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].identity_type_id">{{ error }}</p>
+                        </div>
+                    </div>
+                    <div ng-class="InstitutionStaffController.identity_class">
+                        <label><?= __('{{InstitutionStaffController.selectedStaffData.identity_type_name}}') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" ng-init="InstitutionStaffController.selectedStaffData.identity_number='';">
+                        <div ng-if="InstitutionStaffController.postResponse.error.identities[0].number" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].number">{{ error }}</p>
+                        </div>
+                    </div>
+
+                    <div class="input string required">
+                        <label><?= __('Username') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.username" type="string" ng-init="InstitutionStaffController.selectedStaffData.username='';">
+                        <div ng-if="InstitutionStaffController.postResponse.error.username" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.username">{{ error }}</p>
+                        </div>
+                    </div>
+
+                    <div class="input password required">
+                        <label><?=
+                            __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
+                        ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.password" type="string" ng-init="InstitutionStaffController.selectedStaffData.password='';">
+                        <div ng-if="InstitutionStaffController.postResponse.error.password" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.password">{{ error }}</p>
+                        </div>
+                    </div>
+                </form>
             </div>
-        </div>
-        <div class="step-pane sample-pane" data-step="4" data-name="confirmation">
-            <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                <div class="row section-header header-space-lg">Information</div>
-                <div class="input string row-content">
-                    <label><?= __('Photo Content') ?></label>
+            <div class="step-pane sample-pane" ng-if="InstitutionStaffController.step === 'internal_search'">
+                <div class="table-wrapper">
                     <div>
-                        <div class="table-thumb mb-16">
-                            <div class="profile-image-thumbnail">
-                                <i class="kd-staff"></i>
-                            </div>
-                        </div>
-                        <p class="font-italic mb-0">* Advisable photo dimension 90 by 115</p>
-                        <p class="font-italic">* Format Supported: .jpg, .jpeg, .png, .gif</p>
-                        <div class="d-flex">
-                            <div class="position-relative">
-                                <button class="btn btn-xs btn-default fontSize-16">
-                                    <i class="fa fa-folder"></i>
-                                    <span>Select File</span>
-                                </button>
-                                <input type="file" class="input-hidden">
+                        <div class="scrolltabs">
+                            <div id="institution-student-table" class="table-wrapper">
+                                <div ng-if="InstitutionStaffController.internalGridOptions" kd-ag-grid="InstitutionStaffController.internalGridOptions" ag-selection-type="radio" class="ag-height-fixed"></div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="input string required">
-                    <label><?= __('OpenEMIS ID') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.openemis_no" type="string" ng-disabled="true">
-                </div>
-                <div class="input string required">
-                    <label><?= __('First Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.first_name" ng-change="InstitutionStaffController.setStaffName()" type="string" ng-disabled="true">
-                </div>
-                <div class="input string">
-                    <label><?= __('Middle Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.middle_name" ng-change="InstitutionStaffController.setStaffName()" type="string" ng-disabled="true">
-                </div>
-                <div class="input string">
-                    <label><?= __('Third Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.third_name" ng-change="InstitutionStaffController.setStaffName()" type="string" ng-disabled="true">
-                </div>
-                <div class="input string required">
-                    <label><?= __('Last Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.last_name" ng-change="InstitutionStaffController.setStaffName()" type="string" ng-disabled="true">
-                </div>
-                <div class="input string">
-                    <label><?= __('Preferred Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.preferred_name" type="string" ng-disabled="true">
-                </div>
-                <div class="input string required">
-                    <label><?= __('Gender') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.gender.name" type="string" ng-disabled="true" />
-                </div>
-                <div class="input date required">
-                    <label for="Staff_date_of_birth"><?= __('Date Of Birth') ?></label>
-                    <div class="input-group date " id="Staff_date_of_birth" style="">
-                        <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.selectedStaffData.date_of_birth" ng-disabled="true">
+            </div>
+            <div class="step-pane sample-pane" ng-if="InstitutionStaffController.step === 'external_search'">
+                <div class="table-wrapper">
+                    <div>
+                        <div class="scrolltabs sticky-content">
+                            <div id="institution-student-table" class="table-wrapper">
+                                <div ng-if="InstitutionStaffController.externalGridOptions" kd-ag-grid="InstitutionStaffController.externalGridOptions" ag-selection-type="radio" class="ag-height-fixed"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="row section-header header-space-lg">Location</div>
-                <div class="input string">
-                    <label><?= __('Address') ?></label>
-                    <textarea ng-model="InstitutionStaffController.selectedStaffData.address" type="string"></textarea>
-                </div>
-                <div class="input string">
-                    <label><?= __('Postal Code') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.postalCode" type="string">
-                </div>
-                <div class="row section-header header-space-lg">Address Area</div>
-                <div class="input string">
-                    <label><?= __('Address Area') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Staff[gender_id]" id="staff-gender_id"
-                            ng-options="option.id as option.name for option in InstitutionStaffController.genderOptions"
-                            ng-model="InstitutionStaffController.selectedStaffData.addressArea"
-                            ng-change="InstitutionStaffController.changeGender()"
-                            ng-init="InstitutionStaffController.selectedStaffData.addressArea='';"
-                            >
-                            <option value="" >-- <?= __('Select') ?> --</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="row section-header header-space-lg">Birthplace Area</div>
-                <div class="input string">
-                    <label><?= __('Birthplace Area') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Staff[gender_id]" id="staff-gender_id"
-                            ng-options="option.id as option.name for option in InstitutionStaffController.genderOptions"
-                            ng-model="InstitutionStaffController.selectedStaffData.birthplaceArea"
-                            ng-change="InstitutionStaffController.changeGender()"
-                            ng-init="InstitutionStaffController.selectedStaffData.birthplaceArea='';"
-                            >
-                            <option value="" >-- <?= __('Select') ?> --</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="row section-header header-space-lg">Identities / Nationalities</div>
-                <div class="input string">
-                    <label><?= __('Nationalities') ?></label>
-                    <input ng-model="InstitutionStaffController.Staff.nationality_name" type="string" ng-disabled="true" />
-                </div>
-                <div class="input string">
-                    <label><?= __('Identity Type') ?></label>
-                    <input ng-model="InstitutionStaffController.Staff.identity_type_name" type="string" ng-disabled="true">
-                </div>
-                <div class="input string">
-                    <label><?= __('Identity Number') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" ng-disabled="true">
-                </div>
-            </form>
-        </div>
-        <div class="step-pane sample-pane" data-step="5" data-name="addStaff">
-            <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
-                <div class="input string required">
-                    <label><?= __('OpenEMIS ID') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.openemis_no" type="string" ng-disabled="true">
-                    <div ng-if="InstitutionStaffController.postResponse.error.openemis_no" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.openemis_no">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input string" ng-model="InstitutionStaffController.postResponse">
-                    <label><?= __('Staff') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.name" type="string" disabled="disabled">
-                    <div ng-if="InstitutionStaffController.postResponse.error.first_name" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.first_name">{{ error }}</p>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.last_name" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.last_name">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input string" ng-show="InstitutionStaffController.StaffNationalities != 2 && StaffController.createNewStaff == true">
-                    <label><?= __('Nationality') ?></label>
-                    <input ng-model="InstitutionStaffController.Staff.nationality_name" type="string" disabled="disabled">
-                    <div ng-if="InstitutionStaffController.postResponse.error.nationalities[0].nationality_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input string" ng-show="InstitutionStaffController.StaffIdentities != 2">
-                    <label><?= __('Identity Number') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" disabled="disabled">
-                    <div ng-if="InstitutionStaffController.postResponse.error.identities[0].number" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].number">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input string">
-                    <label><?= __('Date Of Birth') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.date_of_birth" type="string" disabled="disabled">
-                    <div ng-if="InstitutionStaffController.postResponse.error.staff_name" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.staff_name">{{ error }}</p>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.date_of_birth" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.date_of_birth">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input string">
-                    <label><?= __('Gender') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.gender.name" type="string" disabled="disabled">
-                </div>
-                <div class="input string required">
-                    <label><?= __('Username') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.username" type="string" disabled="disabled">
-                    <div ng-if="InstitutionStaffController.postResponse.error.username" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.username">{{ error }}</p>
-                    </div>
-                </div>
-
-                <div class="input password required">
-                    <label><?= __('Password') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.password" type="string" disabled="disabled">
-                    <div ng-if="InstitutionStaffController.postResponse.error.password" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.password">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input string" ng-show="!InstitutionStaffController.completeDisabled">
-                    <label><?= __('Staff Status') ?></label>
-                    <input type="string" value="<?= __('Assigned') ?>" disabled="disabled">
-                </div>
-
-                <!--<div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
-                    <label><?= __('Academic Period') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Staff[academic_period_id]" id="staff-academic-period-id"
-                            ng-options="option.name for option in InstitutionStaffController.academicPeriodOptions.availableOptions track by option.id"
-                            ng-model="InstitutionStaffController.academicPeriodOptions.selectedOption"
-                            ng-change="InstitutionStaffController.onChangeAcademicPeriod(); "
-                            >
-                        </select>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.academic_period_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.academic_period_id">{{ error }}</p>
-                    </div>
-                </div>-->
-
-                <div class="input date required" ng-show="!InstitutionStaffController.completeDisabled">
-                    <label for="Staff_start_date"><?= __('Start Date') ?></label>
-                    <div class="input-group date " id="Staff_start_date" style="">
-                        <input type="text" class="form-control " name="Staff[start_date]" ng-model="InstitutionStaffController.startDate" ng-change="InstitutionStaffController.onChangeFTE();">
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.start_date" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.start_date">{{ error }}</p>
-                    </div>
-                </div>
-
-                <div class="input date" ng-show="!InstitutionStaffController.completeDisabled">
-                    <label for="Staff_end_date"><?= __('End Date') ?></label>
-                    <div class="input-group date " id="Staff_end_date" style="">
-                        <input type="text" class="form-control " name="Staff[end_date]" ng-model="InstitutionStaffController.endDate" ng-change="InstitutionStaffController.onChangeFTE();">
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.end_date" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.end_date">{{ error }}</p>
-                    </div>
-                </div>
-
-
-
-                <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
-                    <label><?= __('Position Type') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Staff[position_type]" id="staff-position-type"
-                            ng-model="InstitutionStaffController.positionType"
-                            ng-change="InstitutionStaffController.onChangePositionType()"
-                            ng-init="InstitutionStaffController.positionType = '';"
-                            >
-                            <option value="">-- <?= __('Select')?> --</option>
-                            <option value="Full-Time"> <?= __('Full-Time')?> </option>
-                            <option value="Part-Time"> <?= __('Part-Time')?> </option>
-                        </select>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.position_type" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.position_type">{{ error }}</p>
-                    </div>
-                </div>
-
-                <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled" ng-hide="InstitutionStaffController.positionType != 'Part-Time';">
-                    <label><?= __('FTE') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Staff[position_type]" id="staff-position-type"
-                            ng-model="InstitutionStaffController.fte"
-                            ng-change="InstitutionStaffController.onChangeFTE()"
-                            ng-init="InstitutionStaffController.fte = '';"
-                            >
-                            <option value=''>-- <?= __('Select')?> --</option>
-                            <option value="0.25"> <?= __('25%')?> </option>
-                            <option value="0.5"> <?= __('50%')?> </option>
-                            <option value="0.75"> <?= __('75%')?> </option>
-                        </select>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.FTE" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.FTE">{{ error }}</p>
-                    </div>
-                </div>
-
-                <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
-                    <label><?= __('Position') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Staff[institution_position_id]" id="staff-institution-position-id"
-                            ng-model="InstitutionStaffController.institutionPositionOptions.selectedOption"
-                            ng-options="option.name group by option.group disable when option.disabled for option in InstitutionStaffController.institutionPositionOptions.availableOptions track by option.value"
-                            ng-init="InstitutionStaffController.institutionPositionOptions.selectedOption = '';"
-                            >
-                            <option value="">-- <?= __('Select')?> --</option>
-                        </select>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.institution_position_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.institution_position_id">{{ error }}</p>
-                    </div>
-                </div>
-
-                <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
-                    <label><?= __('Staff Type') ?></label>
-                    <div class="input-select-wrapper">
-                  
-                        <select name="Staff[staff_type_id]" id="staff-staff-type-id" 
-                           ng-model="InstitutionStaffController.staffTypeId"
-                           ng-options="option.name for option in InstitutionStaffController.staffTypeOptions track by option.id"
-                           ng-init="InstitutionStaffController.staffTypeId = '';"
-                            >
-                            <option value="">-- <?= __('Select')?> --</option>
-                        </select>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.staff_type_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.staff_type_id">{{ error }}</p>
-                    </div>
-                </div>
-
-
-                <div class="input select required"  >
-                    <label><?= __('Shifts') ?></label>
-
-                        <select chosen name="staff[staff_shifts_id][_ids][]" id="staff-shifts-id" data-placeholder="<?=__('Select Shifts') ?>"  multiple="multiple"  
-                                ng-model="InstitutionStaffController.staffShiftsId"
-                                options="InstitutionStaffController.staffShiftsOptions"
-                                ng-options="staffShifts.id as staffShifts.name for staffShifts in InstitutionStaffController.staffShiftsOptions "
-                                ng-init="InstitutionStaffController.staffShiftsId = [];"
-                        >
-                        </select>
-                
-                <div ng-if="InstitutionStaffController.postResponse.error.staff_shifts_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.staff_shifts_id">{{ error }}</p>
-                </div>
-                </div>
-            </form>
-        </div>
-        <div class="step-pane sample-pane" data-step="6" data-name="summary">
-            <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
-                <div class="wrapper">
-                    <div class="wrapper-child">
-                        <div class="panel">
-                            <div class="panel-body">
-                                <div class="row section-header">Information</div>
-                                <div class="row hidden"></div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Photo Content</div>
-                                    <div class="form-input">
-                                        <div class="table-thumb">
-                                            <div class="profile-image-thumbnail">
-                                                <i class="kd-staff"></i>
-                                            </div>
-                                        </div>
-                                    </div>
+            </div>
+            <div class="step-pane sample-pane" ng-if="InstitutionStaffController.step === 'confirmation'">
+                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
+                    <div class="row section-header header-space-lg">Information</div>
+                    <div class="input string row-content">
+                        <label><?= __('Photo Content') ?></label>
+                        <div>
+                            <div class="table-thumb mb-16">
+                                <div class="profile-image-thumbnail">
+                                    <i class="kd-staff"></i>
                                 </div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">OpenEMIS ID</div>
-                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.openemis_no}}</div>
+                            </div>
+                            <p class="font-italic mb-0">* Advisable photo dimension 90 by 115</p>
+                            <p class="font-italic">* Format Supported: .jpg, .jpeg, .png, .gif</p>
+                            <div class="d-flex">
+                                <div class="position-relative">
+                                    <button class="btn btn-xs btn-default fontSize-16">
+                                        <i class="fa fa-folder"></i>
+                                        <span>Select File</span>
+                                    </button>
+                                    <input type="file" class="input-hidden">
                                 </div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">First Name</div>
-                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.first_name}}</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Middle Name</div>
-                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.middle_name}}</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Third Name</div>
-                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.third_name}}</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Last Name</div>
-                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.last_name}}</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Preferred Name</div>
-                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.preferred_name}}</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Gender</div>
-                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.gender.name}}</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Date of Birth</div>
-                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.date_of_birth}}</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Email</div>
-                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.email}}</div>
-                                </div>
-                                <div class="row section-header">Identities / Nationalities</div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Nationality</div>
-                                    <div class="form-input">
-                                        <div class="form-input table-full-width">
-                                            <div class="table-wrapper">
-                                                <div class="table-in-view">
-                                                    <table class="table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Identity Type</th>
-                                                                <th>Identity Number</th>
-                                                                <th>Nationality</th>
-                                                                <th>Preferred</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr>
-                                                                <td class="vertical-align-top">{{InstitutionStaffController.Staff.identity_type_name}}</td>
-                                                                <td class="vertical-align-top">{{InstitutionStaffController.selectedStaffData.identity_number}}</td>
-                                                                <td class="vertical-align-top">{{InstitutionStaffController.Staff.nationality_name}}</td>
-                                                                <td class="vertical-align-top">No</td>
-                                                            </tr>
-                                                        </tbody>				
-                                                    </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input string required">
+                        <label><?= __('OpenEMIS ID') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.openemis_no" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string required">
+                        <label><?= __('First Name') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.first_name" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Middle Name') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.middle_name" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Third Name') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.third_name" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string required">
+                        <label><?= __('Last Name') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.last_name" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Preferred Name') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.preferred_name" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input select required">
+                        <label><?= __('Gender') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.gender.name" ng-disabled="true" />
+                    </div>
+                    <div class="input date required">
+                        <label for="Student_date_of_birth"><?= __('Date Of Birth') ?></label>
+                        <div class="input-group date " id="Student_date_of_birth" style="">
+                            <input type="text" class="form-control " name="Student[date_of_birth]" ng-model="InstitutionStaffController.selectedStaffData.date_of_birth" ng-disabled="true">
+                        </div>
+                    </div>
+                    <div class="row section-header header-space-lg">Location</div>
+                    <div class="input string">
+                        <label><?= __('Address') ?></label>
+                        <textarea ng-model="InstitutionStaffController.selectedStaffData.address" type="string"></textarea>
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Postal Code') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.postalCode" type="string">
+                    </div>
+                    <div class="row section-header header-space-lg">Address Area</div>
+                    <div class="input string">
+                        <label><?= __('Address Area') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="Staff[gender_id]" id="staff-gender_id"
+                                ng-options="option.id as option.name for option in genderOptions"
+                                ng-model="InstitutionStaffController.selectedStaffData.addressArea"
+                                ng-init="InstitutionStaffController.selectedStaffData.addressArea='';"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row section-header header-space-lg">Birthplace Area</div>
+                    <div class="input string">
+                        <label><?= __('Birthplace Area') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="Staff[gender_id]" id="staff-gender_id"
+                                ng-options="option.id as option.name for option in genderOptions"
+                                ng-model="InstitutionStaffController.selectedStaffData.birthplaceArea"
+                                ng-init="InstitutionStaffController.selectedStaffData.birthplaceArea='';"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row section-header header-space-lg">Identities / Nationalities</div>
+                    <div class="input string">
+                        <label><?= __('Nationalities') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.nationality_name" type="string" ng-disabled="true" />
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Identity Type') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.identity_type_name" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Identity Number') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" ng-disabled="true">
+                    </div>
+                </form>
+            </div>
+            <div class="step-pane sample-pane active" ng-if="InstitutionStaffController.step === 'summary'">
+                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
+                    <div class="wrapper">
+                        <div class="wrapper-child">
+                            <div class="panel">
+                                <div class="panel-body">
+                                    <div class="row section-header">Information</div>
+                                    <div class="row hidden"></div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Photo Content</div>
+                                        <div class="form-input">
+                                            <div class="table-thumb">
+                                                <div class="profile-image-thumbnail">
+                                                    <i class="kd-staff"></i>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="row section-header">Location</div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Address</div>
-                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.address}}</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Postal Code</div>
-                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.postalCode}}</div>
-                                </div>
-                                <div class="row section-header">Address Area</div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Address Area</div>
-                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.addressArea}}</div>
-                                </div>
-                                <div class="row section-header">Birthplace Area</div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Birthplace Area</div>
-                                    <div class="form-input">{{InstitutionStaffController.selectedStaffData.birthplaceArea}}</div>
-                                </div>
-                                <div class="row section-header">Other Information</div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Modified By</div>
-                                    <div class="form-input">System Administrator</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Modified On</div>
-                                    <div class="form-input">August 12, 2021 - 04:48:48</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Created By</div>
-                                    <div class="form-input">System Administrator</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-xs-6 col-md-3 form-label">Created On</div>
-                                    <div class="form-input">SApril 05, 2018 - 18:20:27</div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">OpenEMIS ID</div>
+                                        <div class="form-input">{{InstitutionStaffController.selectedStaffData.openemis_no}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">First Name</div>
+                                        <div class="form-input">{{InstitutionStaffController.selectedStaffData.first_name}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Middle Name</div>
+                                        <div class="form-input">{{InstitutionStaffController.selectedStaffData.middle_name}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Third Name</div>
+                                        <div class="form-input">{{InstitutionStaffController.selectedStaffData.third_name}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Last Name</div>
+                                        <div class="form-input">{{InstitutionStaffController.selectedStaffData.last_name}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Preferred Name</div>
+                                        <div class="form-input">{{InstitutionStaffController.selectedStaffData.preferred_name}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Gender</div>
+                                        <div class="form-input">{{InstitutionStaffController.selectedStaffData.gender.name}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Date of Birth</div>
+                                        <div class="form-input">{{InstitutionStaffController.selectedStaffData.dateOfBirth}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Email</div>
+                                        <div class="form-input">{{InstitutionStaffController.selectedStaffData.email}}</div>
+                                    </div>
+                                    <div class="row section-header">Identities / Nationalities</div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Nationality</div>
+                                        <div class="form-input">
+                                            <div class="form-input table-full-width">
+                                                <div class="table-wrapper">
+                                                    <div class="table-in-view">
+                                                        <table class="table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Identity Type</th>
+                                                                    <th>Identity Number</th>
+                                                                    <th>Nationality</th>
+                                                                    <th>Preferred</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td class="vertical-align-top">Birth Certificate</td>
+                                                                    <td class="vertical-align-top">1234567890</td>
+                                                                    <td class="vertical-align-top">American</td>
+                                                                    <td class="vertical-align-top">No</td>
+                                                                </tr>
+                                                            </tbody>				
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row section-header">Location</div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Address</div>
+                                        <div class="form-input">{{InstitutionStaffController.selectedStaffData.address}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Postal Code</div>
+                                        <div class="form-input">{{InstitutionStaffController.selectedStaffData.postalCode}}</div>
+                                    </div>
+                                    <div class="row section-header">Address Area</div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Address Area</div>
+                                        <div class="form-input">{{InstitutionStaffController.selectedStaffData.addressArea}}</div>
+                                    </div>
+                                    <div class="row section-header">Birthplace Area</div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Birthplace Area</div>
+                                        <div class="form-input">{{InstitutionStaffController.selectedStaffData.birthplaceArea}}</div>
+                                    </div>
+                                    <div class="row section-header">Other Information</div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Modified By</div>
+                                        <div class="form-input">System Administrator</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Modified On</div>
+                                        <div class="form-input">August 12, 2021 - 04:48:48</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Created By</div>
+                                        <div class="form-input">System Administrator</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6 col-md-3 form-label">Created On</div>
+                                        <div class="form-input">SApril 05, 2018 - 18:20:27</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
-    <div class="actions bottom">
+        <div class="actions bottom">
+        </div>
     </div>
 </div>
 
@@ -707,7 +473,14 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
 
 //]]>
 </script>
+
 <style>
+    .pd-10 {
+        padding: 10px;
+    }
+    .close-btn {
+        border: 1px solid #000;
+    }
     .header-space-lg{
         margin-bottom: 20px !important
     }
@@ -743,10 +516,261 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
     .vertical-align-top {
         vertical-align: top !important;
     }
+    /* stepper container wrapper */
+    .stepper-content-wrapper {
+        border: 1px solid #d4d4d4;
+        border-radius: 4px;
+        box-shadow: 0 1px 4px rgb(0 0 0 / 7%);
+        background-color: #f9f9f9;
+        position: relative;
+        min-height: 48px;
+    }
+    .stepper-content-wrapper{
+        -webkit-box-shadow: none!important;
+        box-shadow: none!important;
+        border: 0;
+        background-color: #FFF;
+        margin-bottom: 10px;
+    }
+    .stepper-content-wrapper:before,
+    .stepper-content-wrapper:after {
+        display: table;
+        content: "";
+        line-height: 0;
+    }
+    /* steps container */
+    .stepper-content-wrapper .steps-container {
+        border-radius: 4px 4px 0 0;
+        overflow: hidden;
+        border: 1px solid #DDD;
+        height: 48px;
+        border-bottom: none;
+    }
+    /* steps */
+    
+    .stepper-content-wrapper > ul.steps li,
+    .stepper-content-wrapper > .steps-container > ul.steps li {
+        float: left;
+        margin: 0;
+        padding: 0 20px 0 30px;
+        height: 46px;
+        line-height: 46px;
+        position: relative;
+        background: #ededed;
+        color: #999999;
+        font-size: 16px;
+        cursor: not-allowed;
+    }
+    .stepper-content-wrapper > ul.steps li,
+    .stepper-content-wrapper > .steps-container > ul.steps li {
+        float: left;
+        margin: 0;
+        padding: 8px 20px 0 30px;
+        height: 48px;
+        line-height: 32px;
+        position: relative;
+        background: #ededed;
+        color: #999;
+        font-size: 12px;
+        cursor: not-allowed;
+        border-bottom: none;
+    }
+    .stepper-content-wrapper > ul.steps li.active,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active {
+        background: #f1f6fc;
+        color: #3a87ad;
+        cursor: default;
+    }
+    .stepper-content-wrapper > ul.steps li:first-child,
+    .stepper-content-wrapper > .steps-container > ul.steps li:first-child {
+        border-radius: 4px 0 0 4px;
+        padding-left: 20px;
+    }
+    .stepper-content-wrapper > ul.steps li:first-child,
+    .stepper-content-wrapper > .steps-container > ul.steps li:first-child {
+        -webkit-border-radius: 4px 0 0 0;
+        border-radius: 4px 0 0 0;
+    }
+    .stepper-content-wrapper > ul.steps li.active,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active {
+        line-height: 30px;
+    }
+    .stepper-content-wrapper > ul.steps li.active,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active {
+        background-color: #999;
+        color: #FFF;
+        cursor: default;
+        border-bottom: none;
+    }
+    .stepper-content-wrapper > ul.steps li.active,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active {
+        background-color: #69C;
+    }
+    .stepper-content-wrapper > ul.steps li.active,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active {
+        background-color: #6699CC;
+    }
+    .stepper-content-wrapper .steps {
+        margin-left: 0!important;
+    }
+    .stepper-content-wrapper > ul.steps,
+    .stepper-content-wrapper > .steps-container > ul.steps {
+        list-style: none outside none;
+        padding: 0;
+        margin: 0;
+        width: 999999px;
+    }
+    /* step wrapper */
+    .stepper-steps-wrapper {
+        overflow: hidden;
+        width: 100%;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: center;
+    }
+    /* chevron */
+    .stepper-content-wrapper > ul.steps li .chevron,
+    .stepper-content-wrapper > .steps-container > ul.steps li .chevron {
+        border: 24px solid transparent;
+        border-left: 14px solid #d4d4d4;
+        border-right: 0;
+        display: block;
+        position: absolute;
+        right: -14px;
+        top: 0;
+        z-index: 1;
+    }
+    .stepper-content-wrapper > ul.steps li .chevron,
+    .stepper-content-wrapper > .steps-container > ul.steps li .chevron {
+        border: 24px solid transparent;
+        border-left: 14px solid #d4d4d4;
+        border-right: 0;
+        display: block;
+        position: absolute;
+        right: -15px;
+        top: -5px;
+        z-index: 1;
+        margin-top: 5px;
+        transform: scale(1.1,1.1);
+        -ms-transform: scale(1.1,1.1);
+        -webkit-transform: scale(1.1,1.1);
+    }
+    /* chevron before */
+    .stepper-content-wrapper > ul.steps li .chevron:before,
+    .stepper-content-wrapper > .steps-container > ul.steps li .chevron:before {
+        border: 24px solid transparent;
+        border-left: 14px solid #ededed;
+        border-right: 0;
+        content: "";
+        display: block;
+        position: absolute;
+        right: 1px;
+        top: -24px;
+    }
+    .stepper-content-wrapper > ul.steps li .chevron:before,
+    .stepper-content-wrapper > .steps-container > ul.steps li .chevron:before {
+        border: 24px solid transparent;
+        border-left: 14px solid #ededed;
+        border-right: 0;
+        content: "";
+        display: block;
+        position: absolute;
+        right: 1px;
+        top: -24px;
+    }
+    .stepper-content-wrapper > ul.steps li.active .chevron:before,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active .chevron:before {
+        border-left: 14px solid #f1f6fc;
+    }
+    .stepper-content-wrapper > ul.steps li.active .chevron:before,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active .chevron:before {
+        border-left: 14px solid #999;
+    }
+    .stepper-content-wrapper > ul.steps li.active .chevron::before,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active .chevron::before {
+        border-left-color: #69C;
+    }
+    .stepper-content-wrapper > ul.steps li.active .chevron::before,
+    .stepper-content-wrapper > .steps-container > ul.steps li.active .chevron::before {
+        border-left-color: #6699CC;
+    }
+    /* action buttons */
+    .stepper-content-wrapper > .actions {
+        z-index: 1000;
+        position: absolute;
+        right: 0;
+        top: 0;
+        line-height: 46px;
+        float: right;
+        padding-left: 15px;
+        padding-right: 15px;
+        vertical-align: middle;
+        background-color: #e5e5e5;
+        border-left: 1px solid #d4d4d4;
+        border-radius: 0 4px 0 0;
+    }
+    .stepper-content-wrapper > .actions {
+        background-color: #f9f9f9;
+        border-left: 1px solid #d4d4d4;
+        border-radius: 0 4px 0 0;
+        float: right;
+        line-height: 47px;
+        padding-left: 15px;
+        padding-right: 15px;
+        position: absolute;
+        right: 1px;
+        top: 1px;
+        vertical-align: middle;
+        z-index: 500;
+    }
+    /* step content */
+    .stepper-content-wrapper .step-content {
+        border-top: 1px solid #D4D4D4;
+        padding: 10px;
+        float: left;
+        width: 100%;
+    }
+    .stepper-content-wrapper .step-content {
+        border-top: 1px solid #DDD;
+        border-right: 1px solid #DDD;
+        border-left: 1px solid #DDD;
+        float: left;
+        width: 100%;
+    }
     @media (min-width: 800px) {
         .row-content{
             display: flex; 
             align-items: flex-start;
+        }
+    }
+    @media only screen and (max-width: 800px){
+        .stepper-content-wrapper .actions.top {
+        position: fixed!important;
+        bottom: 35px!important;
+        top: auto!important;
+        height: 50px;
+        left: 0!important;
+        right: 0!important;
+        border-top: 1px solid #DDD;
+        border-left-color: transparent;
+        -webkit-border-radius: 0!important;
+        border-radius: 0!important;
+        }
+        .stepper-content-wrapper .btn-prev,
+        .stepper-content-wrapper .btn-next {
+            position: relative;
+        }
+        .stepper-content-wrapper .btn-next {
+            text-align: left;
+            padding-right: 20px;
+        }
+        .stepper-content-wrapper .actions.top .btn-next,
+        .stepper-content-wrapper .actions.top .btn-prev {
+            position: absolute;
+            top: 10px;
+        }
+        .stepper-content-wrapper .actions.top .btn-next {
+            right: 10px;
         }
     }
 
