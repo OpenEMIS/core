@@ -1121,7 +1121,10 @@ trait MessagesTrait
                     'ageRangeHint' => 'The student should be between %s to %s years old',
                     'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.',
                     'studentNotExists' => 'This student does not exist in the system.'
-                ],
+                ],//POCOR-5924 starts
+                'identity_number' => [
+                    'ruleCheckUniqueIdentityNumber' => 'This identity has already existed in the system.'
+                ],//POCOR-5924 ends
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
