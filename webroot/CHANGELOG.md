@@ -1,3 +1,7 @@
+### [3.70.3] - 2021-10-22
+- Bug Fixed: Institution > Student > Add: There is no validation if a new student added has the same Identity Number as an existing student
+- Bug Fixed: Institutions > Students > Export : Issues with Student export file
+
 ### [3.70.2] - 2021-10-15
 - Implemented: Improvement of School Shift functions
 - Implemented: Update Export button function - Institutions > Students (include custom fields phone number identity types and name of the guardian)
