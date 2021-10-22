@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
+use Cake\I18n\Date;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -10,13 +11,13 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Core\Configure;
-use Cake\I18n\Date;
 
-use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use App\Model\Table\ControllerActionTable;
+
 use Page\Traits\EncodingTrait;
 
-class StudentBehavioursTable extends AppTable
+class StudentBehavioursTable extends ControllerActionTable
 {
     use OptionsTrait;
     use EncodingTrait;
@@ -42,10 +43,11 @@ class StudentBehavioursTable extends AppTable
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
+        $this->setDeleteStrategy('restrict');
 
         //if ($this->AccessControl->check(['Institutions', 'StudentBehaviours', 'Excel'])) { // to check execute permission
-            $this->addBehavior('Excel', ['pages' => ['index']]);
-            ///}
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+        ///}
     }
 
     public function implementedEvents()
@@ -66,10 +68,10 @@ class StudentBehavioursTable extends AppTable
         return $validator
             ->add('date_of_behaviour', [
                 'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'provider' => 'table'// POCOR 6154 
                 ]
-            ])
-        ;
+            ]);
     }
 
     // Jeff: is this validation still necessary? perhaps it is already handled by onUpdateFieldAcademicPeriod date_options
@@ -107,30 +109,111 @@ class StudentBehavioursTable extends AppTable
         }
     }
 
-    public function beforeAction()
+    /* public function beforeAction($event)
     {
-        $this->ControllerAction->field('openemis_no');
-        $this->ControllerAction->field('student_id');
-        $this->ControllerAction->field('student_behaviour_category_id', ['type' => 'select']);
+        $this->field('openemis_no');
+        $this->field('student_id');
+        $this->field('student_behaviour_category_id', ['type' => 'select']);
 
         if ($this->action == 'view' || $this->action = 'edit') {
-            $this->ControllerAction->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
+            $this->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
         }
-    }
+    } */
 
-    public function indexBeforeAction(Event $event, ArrayObject $settings)
+    // POCOR 6154 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->ControllerAction->field('description', ['visible' => false]);
-        $this->ControllerAction->field('action', ['visible' => false]);
-        $this->ControllerAction->field('time_of_behaviour', ['visible' => false]);
-        $this->ControllerAction->field('academic_period_id', ['visible' => false]);
+        $this->field('openemis_no', ['visible' => true]);
+        $this->field('description', ['visible' => false]);
+        $this->field('action', ['visible' => false]);
+        $this->field('time_of_behaviour', ['visible' => false]);
+        $this->field('academic_period_id', ['visible' => false]);
 
         $this->fields['student_id']['sort'] = ['field' => 'Students.first_name']; // POCOR-2547 adding sort
 
-        $this->ControllerAction->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id']);
+        $this->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id']);
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $extra['elements']['controls'] = ['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => [], 'order' => 1];
+
+        // Setup period options
+        // $periodOptions = ['0' => __('All Periods')];
+        $periodOptions = $this->AcademicPeriods->getYearList();
+        if (empty($this->request->query['academic_period_id'])) {
+            $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        }
+
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
+
+        $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+            'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
+            'callable' => function ($id) use ($Classes, $institutionId) {
+                $count = $Classes->find()
+                ->where([
+                    $Classes->aliasField('institution_id') => $institutionId,
+                    $Classes->aliasField('academic_period_id') => $id
+                ])
+                ->count();
+                return $count;
+            }
+        ]);
+
+        if (!empty($selectedPeriod)) {
+            $query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
+        }
+
+        // Setup class options
+        $classOptions = ['0' => __('All Classes')];
+        if (!empty($selectedPeriod)) {
+            $classOptions = $classOptions + $Classes
+            ->find('list')
+            ->where([
+                $Classes->aliasField('institution_id') => $institutionId,
+                $Classes->aliasField('academic_period_id') => $selectedPeriod
+            ])
+            ->toArray();
+
+            $query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
+        }
+
+        $selectedClass = $this->queryString('class_id', $classOptions);
+        $this->advancedSelectOptions($classOptions, $selectedClass);
+        // End setup class
+
+        $this->controller->set(compact('periodOptions', 'classOptions'));
+
+        if ($selectedClass > 0) {
+            $query->innerJoin(
+                ['class_student' => 'institution_class_students'],
+                [
+                    'class_student.student_id = ' . $this->aliasField('student_id'),
+                    'class_student.institution_class_id = ' . $selectedClass
+                ]
+            );
+        }
+
+        // will need to check for search by name: AdvancedNameSearchBehavior
+
+        // POCOR-2547 Adding sortWhiteList to $options
+        $sortList = ['Students.first_name'];
+        if (array_key_exists('sortWhitelist', $options)) {
+            $sortList = array_merge($options['sortWhitelist'], $sortList);
+        }
+        $options['sortWhitelist'] = $sortList;
+
+        // POCOR-2547 sort list of staff and student by name
+        if (!isset($this->request->query['sort'])) {
+            $query->order([$this->Students->aliasField('first_name'), $this->Students->aliasField('last_name')]);
+        }
+        // end POCOR-2547
+    }
+    // POCOR 6154 
+
+    /* public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
     {
         $toolbarElements = [
             ['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => []]
@@ -205,14 +288,16 @@ class StudentBehavioursTable extends AppTable
             $query->order([$this->Students->aliasField('first_name'), $this->Students->aliasField('last_name')]);
         }
         // end POCOR-2547
-    }
+    } */
 
     public function addAfterAction(Event $event, Entity $entity)
     {
-        $this->ControllerAction->field('academic_period_id', ['entity' => $entity]);
-        $this->ControllerAction->field('class', ['entity' => $entity]);
-        $this->ControllerAction->field('date_of_behaviour', ['entity' => $entity]);
-        $this->ControllerAction->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
+        // POCOR 6154 
+        $this->field('academic_period_id', ['entity' => $entity]);
+        $this->field('class', ['entity' => $entity]);
+        $this->field('date_of_behaviour', ['entity' => $entity]);
+        $this->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
+        // POCOR 6154 
     }
 
     // PHPOE-1916
@@ -223,13 +308,13 @@ class StudentBehavioursTable extends AppTable
 
     public function editBeforeQuery(Event $event, Query $query)
     {
-        $query->contain(['Students']);
+        $query->contain(['AcademicPeriods','Students','StudentBehaviourCategories']);// POCOR 6154 
     }
 
     public function editAfterAction(Event $event, Entity $entity)
     {
-        $this->ControllerAction->field('academic_period_id', ['entity' => $entity]);
-        $this->ControllerAction->field('date_of_behaviour', ['entity' => $entity]);
+        $this->field('academic_period_id', ['entity' => $entity]);
+        $this->field('date_of_behaviour', ['entity' => $entity]);
         $this->fields['student_id']['attr']['value'] = $entity->student->name_with_id;
 
         // PHPOE-1916
@@ -251,7 +336,7 @@ class StudentBehavioursTable extends AppTable
         // 				->toArray();
 
         // if (! $AcademicPeriodId['editable']) {
-        // 	$urlParams = $this->ControllerAction->url('view');
+        // 	$urlParams = $this->url('view');
         // 	$event->stopPropagation();
         // 	return $this->controller->redirect($urlParams);
         // }
@@ -287,6 +372,33 @@ class StudentBehavioursTable extends AppTable
     // 		}
     // 	}
     // }
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity, $extra);
+    }
+
+    public function setupFields(Entity $entity, ArrayObject $extra)
+    { 
+
+        $this->field('infrastructure_need_type_id',['after' => 'name','visible' => ['view' => true,'edit' => true]]);
+        $this->fields['priority']['default'] = $entity->priority;
+        $this->field('priority',['after' => 'description','visible' => ['view' => true,'edit' => true]]);
+        $this->field('file_name', ['type' => 'hidden']);
+        $this->field('file_content', ['after' => 'date_completed','visible' => ['view' => false, 'edit' => true]]);
+
+        // $this->setFieldOrder(['academic_period_id', 'date_of_visit', 'quality_visit_type_id', 'comment', 'file_name', 'file_content']);
+    }
+
+    /* pocor-6154 */
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->fields['student_id']['type'] = 'select';
+        $this->field('student_id', ['attr' => ['label' => __('Student')]]);
+
+        $this->fields['student_behaviour_category_id']['type'] = 'select';
+        $this->field('student_behaviour_category_id', ['attr' => ['label' => __('Student')]]);
+    }
+    /* pocor-6154 */
 
     public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, $request)
     {
@@ -444,7 +556,7 @@ class StudentBehavioursTable extends AppTable
     }
     public function viewAfterAction(Event $event, Entity $entity)
     {
-        $this->ControllerAction->field('academic_period_id', ['visible' => false]);
+        $this->field('academic_period_id', ['visible' => false]);// POCOR 6154 
         $this->request->data[$this->alias()]['student_id'] = $entity->student_id;
     }
 
@@ -633,7 +745,7 @@ class StudentBehavioursTable extends AppTable
             'key' => 'StudentBehaviourCategories.name',
             'field' => 'category_name',
             'type' => 'string',
-            'label' => __('Student Behaviour Category')
+            'label' => __('Category')// POCOR 6154 
         ];
 
 
@@ -643,28 +755,35 @@ class StudentBehavioursTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = $this->request->query['academic_period_id'];
+        // POCOR 6154 
+        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
+        // POCOR 6154 
         $User = TableRegistry::get('security_users');
-            $query
-            ->select(['title' => 'StudentBehaviours.title','category_name' => 'StudentBehaviourCategories.name','date_of_behaviour' => 'StudentBehaviours.date_of_behaviour', 'openemis_no' => 'Students.openemis_no', 'student_name' => $User->find()->func()->concat([
-                'first_name' => 'literal',
-                " ",
-                'last_name' => 'literal'
-            ])])
-            ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
-                $this->AcademicPeriods->aliasField('id').' = ' . 'StudentBehaviours.academic_period_id'
-            ])
-            ->LeftJoin([$this->Students->alias() => $this->Students->table()],[
-                $this->Students->aliasField('id').' = ' . 'StudentBehaviours.student_id'
-            ])
-            ->LeftJoin([$this->Institutions->alias() => $this->Institutions->table()],[
-                $this->Institutions->aliasField('id').' = ' . 'StudentBehaviours.institution_id'
-            ])
-            ->LeftJoin([$this->StudentBehaviourCategories->alias() => $this->StudentBehaviourCategories->table()],[
-                $this->StudentBehaviourCategories->aliasField('id').' = ' . 'StudentBehaviours.student_behaviour_category_id'
-            ])
-            ->where(['StudentBehaviours.academic_period_id' =>  $academicPeriod])
-            ->where(['StudentBehaviours.institution_id' =>  $institutionId]);
+
+        // POCOR 6154 
+        $query
+        ->select(['title' => 'StudentBehaviours.title','category_name' => 'StudentBehaviourCategories.name','date_of_behaviour' => 'StudentBehaviours.date_of_behaviour', 'openemis_no' => 'Students.openemis_no', 'student_name' => $User->find()->func()->concat([
+            'first_name' => 'literal',
+            " ",
+            'last_name' => 'literal'
+        ])])
+        ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+            $this->AcademicPeriods->aliasField('id').' = ' . 'StudentBehaviours.academic_period_id'
+        ])
+        ->LeftJoin([$this->Students->alias() => $this->Students->table()],[
+            $this->Students->aliasField('id').' = ' . 'StudentBehaviours.student_id'
+        ])
+        ->LeftJoin([$this->Institutions->alias() => $this->Institutions->table()],[
+            $this->Institutions->aliasField('id').' = ' . 'StudentBehaviours.institution_id'
+        ])
+        ->LeftJoin([$this->StudentBehaviourCategories->alias() => $this->StudentBehaviourCategories->table()],[
+            $this->StudentBehaviourCategories->aliasField('id').' = ' . 'StudentBehaviours.student_behaviour_category_id'
+        ])
+        ->where([
+            'StudentBehaviours.academic_period_id' =>  $academicPeriod,
+            'StudentBehaviours.institution_id' =>  $institutionId
+        ]);
+        // POCOR 6154 
 
     }
 
