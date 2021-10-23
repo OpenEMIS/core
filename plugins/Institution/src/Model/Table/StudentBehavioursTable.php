@@ -120,7 +120,7 @@ class StudentBehavioursTable extends ControllerActionTable
         }
     } */
 
-    // POCOR 6154 
+    // POCOR 6154 start set fields on index page 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['visible' => true]);
@@ -133,7 +133,7 @@ class StudentBehavioursTable extends ControllerActionTable
 
         $this->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id']);
     }
-
+    // setting up index page with required fields
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $extra['elements']['controls'] = ['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => [], 'order' => 1];
@@ -211,7 +211,7 @@ class StudentBehavioursTable extends ControllerActionTable
         }
         // end POCOR-2547
     }
-    // POCOR 6154 
+    // POCOR 6154 end
 
     /* public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
     {
@@ -372,31 +372,30 @@ class StudentBehavioursTable extends ControllerActionTable
     // 		}
     // 	}
     // }
+    /* pocor-6154 start set fields order on edit page */
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity, $extra);
     }
-
+    
     public function setupFields(Entity $entity, ArrayObject $extra)
     { 
+        $this->field('openemis_no', ['visible' => ['view' => true,'edit' => false]]);
+        $this->field('student_id',['after' => 'openemis_no','visible' => ['view' => true,'edit' => true]]);
+        $this->field('student_behaviour_category_id',['after' => 'student_id','visible' => ['view' => true,'edit' => true]]);
 
-        $this->field('infrastructure_need_type_id',['after' => 'name','visible' => ['view' => true,'edit' => true]]);
-        $this->fields['priority']['default'] = $entity->priority;
-        $this->field('priority',['after' => 'description','visible' => ['view' => true,'edit' => true]]);
-        $this->field('file_name', ['type' => 'hidden']);
-        $this->field('file_content', ['after' => 'date_completed','visible' => ['view' => false, 'edit' => true]]);
-
-        // $this->setFieldOrder(['academic_period_id', 'date_of_visit', 'quality_visit_type_id', 'comment', 'file_name', 'file_content']);
+        // $this->setFieldOrder(['student_id','time_of_behaviour','date_of_behaviour','title', 'student_behaviour_category_id', 'description', 'action']);
     }
+    /* pocor-6154 end */
 
-    /* pocor-6154 */
+    /* pocor-6154 set fields on add page */
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['student_id']['type'] = 'select';
         $this->field('student_id', ['attr' => ['label' => __('Student')]]);
 
         $this->fields['student_behaviour_category_id']['type'] = 'select';
-        $this->field('student_behaviour_category_id', ['attr' => ['label' => __('Student')]]);
+        $this->field('student_behaviour_category_id', ['attr' => ['label' => __('Student Behaviour Category')]]);
     }
     /* pocor-6154 */
 
@@ -554,10 +553,13 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
     }
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['visible' => false]);// POCOR 6154 
         $this->request->data[$this->alias()]['student_id'] = $entity->student_id;
+        $entity['openemis_no'] = $entity->student->openemis_no; //adding openemis no for view page only
+
+        $this->setupFields($entity, $extra);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -762,11 +764,17 @@ class StudentBehavioursTable extends ControllerActionTable
 
         // POCOR 6154 
         $query
-        ->select(['title' => 'StudentBehaviours.title','category_name' => 'StudentBehaviourCategories.name','date_of_behaviour' => 'StudentBehaviours.date_of_behaviour', 'openemis_no' => 'Students.openemis_no', 'student_name' => $User->find()->func()->concat([
-            'first_name' => 'literal',
-            " ",
-            'last_name' => 'literal'
-        ])])
+        ->select([
+            'title' => 'StudentBehaviours.title',
+            'category_name' => 'StudentBehaviourCategories.name',
+            'date_of_behaviour' => 'StudentBehaviours.date_of_behaviour', 
+            'openemis_no' => 'Students.openemis_no', 
+            'student_name' => $User->find()->func()->concat([
+                'first_name' => 'literal',
+                " ",
+                'last_name' => 'literal'
+            ])
+        ])
         ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
             $this->AcademicPeriods->aliasField('id').' = ' . 'StudentBehaviours.academic_period_id'
         ])
