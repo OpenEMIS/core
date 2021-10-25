@@ -403,7 +403,7 @@ class StudentsTable extends ControllerActionTable
                     'textarea_value'                 => $Guardians->aliasField('textarea_value'),
                     'date_value'                     => $Guardians->aliasField('date_value'),
                     'time_value'                     => $Guardians->aliasField('time_value'),
-                    // 'checkbox_value_text'            => $studentCustomFieldOptions->aliasField('name'),
+                    'checkbox_value_text'            => 'studentCustomFieldOptions.name',
                     'question_name'                  => 'studentCustomField.name',
                     'field_type'                     => 'studentCustomField.field_type',
                     'field_description'              => 'studentCustomField.description',
@@ -413,12 +413,12 @@ class StudentsTable extends ControllerActionTable
                     [
                         'studentCustomField.id = '.$Guardians->aliasField('student_custom_field_id')
                     ]
-                )/* ->leftJoin(
-                    [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                )->leftJoin(
+                    ['studentCustomFieldOptions' => 'student_custom_field_options'],
                     [
-                        $studentCustomFieldOptions->aliasField('student_custom_field_id') => $Guardians->aliasField('student_custom_field_id')
+                        'studentCustomFieldOptions.id = '.$Guardians->aliasField('number_value')
                     ]
-                ) */
+                )
                 ->where([
                     $Guardians->aliasField('student_id') => $row['student_id'],
                 ])->toArray();
