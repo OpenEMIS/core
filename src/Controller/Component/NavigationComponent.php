@@ -374,6 +374,9 @@ class NavigationComponent extends Component
                 $session->write('Directory.Directories.reload', true);
             }
             if ($userType == 7) {
+                // POCOR-6372 code for showing staff section 
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
+                // POCOR-6372 code for showing staff section 
                 $session->write('Directory.Directories.reload', true);
             }
             /*POCOR-6332 ends*/
