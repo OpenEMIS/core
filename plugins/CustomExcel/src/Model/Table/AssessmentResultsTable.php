@@ -44,6 +44,7 @@ class AssessmentResultsTable extends AppTable
             'templateTableKey' => 'assessment_id',
             'variables' => [
                 'Assessments',
+                'EducationGrades',
                 // 'AssessmentItems',
                 // 'AssessmentItemsGradingTypes',
                 // 'AssessmentPeriods',
@@ -64,11 +65,8 @@ class AssessmentResultsTable extends AppTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessments'] = 'onExcelTemplateInitialiseAssessments';
-        // $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItems'] = 'onExcelTemplateInitialiseAssessmentItems';
-        // $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemsGradingTypes'] = 'onExcelTemplateInitialiseAssessmentItemsGradingTypes';
-        // $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentPeriods'] = 'onExcelTemplateInitialiseAssessmentPeriods';
-        // $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemResults'] = 'onExcelTemplateInitialiseAssessmentItemResults';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationGrades'] = 'onExcelTemplateInitialiseEducationGrades';
+        $events['ExcelTemplates.Model.onExcelTemplateAfterGenerate'] = 'onExcelTemplateAfterGenerate';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItems'] = 'onExcelTemplateInitialiseGroupAssessmentItems';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes'] = 'onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentPeriods'] = 'onExcelTemplateInitialiseGroupAssessmentPeriods';
@@ -761,4 +759,20 @@ class AssessmentResultsTable extends AppTable
             return $results;
         }
     }
+
+    /*POCOR-6355 starts*/
+    public function onExcelTemplateInitialiseEducationGrades(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('grade_id', $params)) {
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $entity = $EducationGrades->get($params['grade_id']);
+            return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
+    {
+        return true;
+    }
+    /*POCOR-6355 ends*/
 }
