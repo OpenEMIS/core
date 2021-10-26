@@ -35,12 +35,12 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 
     const mealType = {
         'Paid': {
-            code: 'Received',
+            code: 'Yes',
             icon: 'fa fa-minus',
             color: '#999999'
         },
         'Free': {
-            code: 'Not Received',
+            code: 'No',
             icon: 'fa fa-check',
             color: '#999999'
         },
@@ -696,9 +696,9 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                                 switch (mealTypeObj.name) {
                                     case 'None':
                                         return '<i style="color: #999999;" class="fa fa-minus"></i>';
-                                    case 'Not Received':
+                                    case 'No':
                                         return '<i style="color: #999999;" class="fa fa-minus"></i>';
-                                    case 'Received':
+                                    case 'Yes':
                                         var eCell = document.createElement('div');
                                         eCell.setAttribute("class", "reason-wrapper");
                                         var eSelect = getEditMealBenefiteElement(data, mealBenefitTypeOptions, context, api);
@@ -777,11 +777,11 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                         data.institution_student_meal.comment = null;
                         data.institution_student_meal.meal_received_id = 0;
                         break;
-                    case 'Not Received':
+                    case 'No':
                         data.institution_student_meal.comment = null;
                         data.institution_student_meal.meal_received_id = 1;
                         break;
-                    case 'Received':
+                    case 'Yes':
                         data.institution_student_meal.meal_received_id = newValue;
                         oldParams.comment = data.institution_student_meal.comment;
                         break;
@@ -1049,10 +1049,10 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         console.log(mealType)
         switch (code) {
             case mealType.Paid.code:
-                html = '<i>Received</i>';
+                html = '<i>Yes</i>';
                 break;
             case mealType.Free.code:
-                html = '<i style="color: ' + mealType.Free.color + ';">Not Received</i>';
+                html = '<i style="color: ' + mealType.Free.color + ';">No</i>';
                 break;
             case mealType.None.code:
                 html = '<i style="color: ' + mealType.None.color + ';" class="' + attendanceType.NOTMARKED.icon + '"></i>';
