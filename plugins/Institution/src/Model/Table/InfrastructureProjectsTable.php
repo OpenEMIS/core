@@ -222,6 +222,9 @@ class InfrastructureProjectsTable extends ControllerActionTable
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+
         $this->fields['infrastructure_project_funding_source_id']['type'] = 'select';
         $this->field('infrastructure_project_funding_source_id', ['after' => 'description','attr' => ['label' => __('Funding Source')]]);
 
@@ -233,9 +236,16 @@ class InfrastructureProjectsTable extends ControllerActionTable
             ]
         );
 
-        $InfrastructureNeeds = $this->InfrastructureNeeds
-        ->find('optionList', ['defaultOption' => false])
-        ->toArray();
+        $InfrastructureNeeds = $this->getNeedsOptions($institutionId);
+        $this->field('infrastructure_needs', [
+            'type' => 'chosenSelect',
+            'options' => $InfrastructureNeeds,
+            'before' => 'file_content',
+            'attr' => [
+                'data-placeholder'=> 'Select Needs',
+                'label' => __('Associated Needs')
+            ]
+        ]);
 
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['before' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
