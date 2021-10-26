@@ -9,11 +9,14 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
+use Cake\Utility\Inflector;
+use App\Model\Traits\MessagesTrait;
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardGenerateTable extends ControllerActionTable
 {
+    use MessagesTrait;
+
     public function initialize(array $config)
     {
         $this->table('assessment_item_results');
@@ -47,20 +50,16 @@ class ReportCardGenerateTable extends ControllerActionTable
         ]);
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        
-        return $events;
-    }
-
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        $validator->notEmpty('academic_period_id')
+        $validator  
+                ->notEmpty('academic_period_id')
                 ->notEmpty('education_grade_id')
-                ->notEmpty('institution_classes_id');
-
+                ->notEmpty('institution_classes_id')
+                ->notEmpty('student_status_id')
+                ->notEmpty('students');
+        
         return $validator;
     }
 
@@ -199,6 +198,10 @@ class ReportCardGenerateTable extends ControllerActionTable
             $statusId = $request->data[$this->alias()]['student_status_id'];
             $InstitutionStudents = TableRegistry::get('Institution.Students');
             $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $where = [];
+            if ($statusId > 0) {
+                $where[$InstitutionClassStudents->aliasField('student_status_id')] = $statusId;
+            }
             $studentOptions = $InstitutionStudents
                                 ->find()
                                 ->select([
@@ -224,7 +227,7 @@ class ReportCardGenerateTable extends ControllerActionTable
                                     $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
                                     $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
                                     $InstitutionStudents->aliasField('institution_id') => $institutionId,
-                                    $InstitutionClassStudents->aliasField('student_status_id') => $statusId
+                                    $where
                                 ])
                                 ->group([$this->Users->aliasField('id')])
                                 ->toArray();
