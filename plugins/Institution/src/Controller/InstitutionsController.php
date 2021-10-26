@@ -254,6 +254,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBuildings']);
     }
+    // POCOR-6151 starts
+    public function InfrastructureProjects()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureProjects']);
+    }
+    // POCOR-6151 ends
     public function InstitutionFloors()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionFloors']);
@@ -710,6 +716,14 @@ class InstitutionsController extends AppController
                 $this->Navigation->addCrumb(__('Hygiene'));
                 $this->set('contentHeader', $header);
             }
+            // POCOR-6151 start
+            else if($this->request->param('action') == 'InfrastructureProjects'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Projects');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Projects'));
+                $this->set('contentHeader', $header);
+            }// POCOR-6151 end
         }
 
     }
