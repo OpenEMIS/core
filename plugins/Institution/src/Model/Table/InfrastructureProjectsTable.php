@@ -1,16 +1,19 @@
 <?php
 namespace Institution\Model\Table;
+use ArrayObject;
 
 use Cake\I18n\Date;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 
 use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class InfrastructureProjectsTable extends AppTable
+class InfrastructureProjectsTable extends ControllerActionTable
 {
     private $projectStatuses = [
         1 => 'Active',
@@ -33,9 +36,25 @@ class InfrastructureProjectsTable extends AppTable
             'dependent' => true
         ]);
 
-        $this->addBehavior('Page.FileUpload', [
-            'fieldMap' => ['file_name' => 'file_content'],
-            'size' => '2MB'
+        // POCOR-6151
+        $this->addBehavior('ControllerAction.FileUpload', [
+            // 'name' => 'file_name',
+            // 'content' => 'file_content',
+            'size' => '2MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
+        ]);
+        // POCOR-6151
+        // setting this up to be overridden in viewAfterAction(), this code is required
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            true
+        );
+
+        $this->addBehavior('Excel',[
+            'excludes' => ['description', 'funding_source_description', 'contract_amount', 'date_started', 'date_completed', 'file_name', 'file_content', 'comment', 'institution_id'],
+            'pages' => ['index'],
         ]);
     }
 
@@ -95,6 +114,151 @@ class InfrastructureProjectsTable extends AppTable
         ;
     }
 
+    /* POCOR-6151 */
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $modelAlias = 'InfrastructureProjects';
+        $userType = '';
+        $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('code');
+        $this->field('name');
+        $this->field('infrastructure_project_funding_source_id');
+        $this->field('contract_date');
+        $this->field('status');
+        $this->field('funding_source_description',['visible' => false]);
+        $this->field('contract_amount',['visible' => false]);
+        $this->field('description',['visible' => false]);
+        $this->field('date_started',['visible' => false]);
+        $this->field('date_completed',['visible' => false]);
+        $this->field('file_name',['visible' => false]);
+        $this->field('file_content',['visible' => false]);
+        $this->field('comment',['visible' => false]);
+
+        $this->setFieldOrder(['code', 'name', 'infrastructure_project_funding_source_id', 'contract_date','status']);
+
+        // set funding source filter
+        $this->fundingSourceOptions = $this->getFundingSourceOptions();
+
+        $fundingSourceOptions = [null => __('All Funding Source')] + $this->fundingSourceOptions;
+        $extra['fundingSource'] = $this->request->query('funding_source'); 
+        // set funding source filter
+
+        // set need priority filter
+        $projectStatuses = $this->projectStatuses;
+
+        $projectStatusesOptions = [null => __('All Statuses')] + $projectStatuses;
+        $extra['projectStatuses'] = $this->request->query('status'); 
+        // set need priority filter
+
+        $extra['elements']['control'] = [
+            'name' => 'Institution.Projects/controls',
+            'data' => [
+                'fundingSourceOptions'=> $fundingSourceOptions,
+                'selectedFundingSource'=> $extra['fundingSource'],
+                'projectStatusesOptions'=> $projectStatusesOptions,
+                'selectedProjectStatuses'=> $extra['projectStatuses']
+            ],
+            'order' => 3
+        ];
+
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $session = $this->request->session();
+        $institutionId  = $session->read('Institution.Institutions.id');
+        $fundingSource = ($this->request->query('funding_source')) ? $this->request->query('funding_source') : 0;
+        $projectStatuses = ($this->request->query('status')) ? $this->request->query('status') : 0;
+
+        $query
+        ->where([
+            $this->aliasField('institution_id') => $institutionId
+        ]);
+        if($fundingSource > 0){
+            $query->where([
+                $this->aliasField('infrastructure_project_funding_source_id') => $fundingSource
+            ]);
+        }
+        if($projectStatuses > 0){
+            $query->where([
+                $this->aliasField('status') => $projectStatuses
+            ]);
+        }
+        
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                if($row->status == 1){
+                    $row['status'] = 'Active';
+                }else{
+                    $row['status'] = 'Inactive';
+                }
+
+                return $row;
+            });
+        });
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // determine if download button is shown
+        $showFunc = function () use ($entity) {
+            $filename = $entity->file_content;
+            return !empty($filename);
+        };
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            $showFunc
+        );
+        // End
+        $this->field('file_name', ['visible' => false]);
+        $this->setupFields($entity, $extra);
+    }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->fields['infrastructure_project_funding_source_id']['type'] = 'select';
+        $this->field('infrastructure_project_funding_source_id', ['after' => 'description','attr' => ['label' => __('Funding Source')]]);
+
+        $this->fields['status']['type'] = 'select';
+        $this->fields['status']['options'] = $this->projectStatuses;   
+        $this->field('status', [
+            'after' => 'contract_amount',
+            'attr' => ['label' => __('Status')]
+            ]
+        );
+
+        $InfrastructureNeeds = $this->InfrastructureNeeds
+        ->find('optionList', ['defaultOption' => false])
+        ->toArray();
+
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['before' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    }
+
+    public function setupFields(Entity $entity, ArrayObject $extra)
+    { 
+        if($extra['elements']['view']){
+            if($entity->status == 1){
+                $entity['status'] = 'Active';
+            }else{
+                $entity['status'] = 'Inactive';
+            }
+        }
+
+        $this->field('infrastructure_project_funding_source_id',['after' => 'description','visible' => ['view' => true,'edit' => true]]);
+        $this->field('file_name', ['type' => 'hidden']);
+        $this->field('file_content', ['after' => 'date_completed','attr' => ['label' => __('Attachment')], 'visible' => ['view' => true, 'edit' => true]]);
+
+        // $this->setFieldOrder(['academic_period_id', 'date_of_visit', 'quality_visit_type_id', 'comment', 'file_name', 'file_content']);
+    }
+    // POCOR-6151
+
     public function findEdit(Query $query, array $options)
     {
         return $query->contain(['InfrastructureNeeds']);
@@ -123,4 +287,81 @@ class InfrastructureProjectsTable extends AppTable
 
         return $needsOptions;
     }
+
+    // POCOR-6151 Export Functionality
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $institutionId  = $session->read('Institution.Institutions.id');
+        $fundingSource = ($this->request->query('funding_source')) ? $this->request->query('funding_source') : 0;
+        $projectStatuses = ($this->request->query('status')) ? $this->request->query('status') : 0;
+
+        $query
+        ->where([
+            $this->aliasField('institution_id') => $institutionId
+        ]);
+        if($fundingSource > 0){
+            $query->where([
+                $this->aliasField('infrastructure_project_funding_source_id') => $fundingSource
+            ]);
+        }
+        if($projectStatuses > 0){
+            $query->where([
+                $this->aliasField('status') => $projectStatuses
+            ]);
+        }
+        
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                if($row->status == 1){
+                    $row['status'] = 'Active';
+                }else{
+                    $row['status'] = 'Inactive';
+                }
+
+                return $row;
+            });
+        }); 
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'InfrastructureProjects.code',
+            'field' => 'code',
+            'type'  => 'string',
+            'label' => __('Code')
+        ];
+
+        $extraField[] = [
+            'key'   => 'InfrastructureProjects.name',
+            'field' => 'name',
+            'type'  => 'string',
+            'label' => __('Name')
+        ];
+
+        $extraField[] = [
+            'key'   => 'InfrastructureProjects.infrastructure_project_funding_source_id',
+            'field' => 'infrastructure_project_funding_source_id',
+            'type'  => 'string',
+            'label' => __('Funding Source')
+        ];
+
+        $extraField[] = [
+            'key'   => 'InfrastructureProjects.contract_date',
+            'field' => 'contract_date',
+            'type'  => 'date',
+            'label' => __('Contract Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'InfrastructureProjects.status',
+            'field' => 'status',
+            'type'  => 'string',
+            'label' => __('Status')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+    // POCOR-6151 Export Functionality
 }

@@ -885,12 +885,14 @@ class NavigationComponent extends Component
                 'selected' => ['InfrastructureNeeds.view', 'InfrastructureNeeds.add', 'InfrastructureNeeds.edit', 'InfrastructureNeeds.delete']
             ],
 
-            'InfrastructureProjects.index' => [
+            // POCOR-6151
+            'Institutions.InfrastructureProjects' => [
                 'title' => 'Projects',
                 'parent' => 'Infrastructures',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InfrastructureProjects.view', 'InfrastructureProjects.add', 'InfrastructureProjects.edit', 'InfrastructureProjects.delete']
+                'selected' => ['InfrastructureProjects'.'Institutions.InfrastructureProjects.view', 'Institutions.InfrastructureProjects.add', 'Institutions.InfrastructureProjects.edit', 'Institutions.InfrastructureProjects.delete']
             ],
+            // POCOR-6151
 
             'Wash' => [
                 'title' => 'WASH',
