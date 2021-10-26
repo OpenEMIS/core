@@ -2,16 +2,18 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\ORM\Query;
-use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\ORM\TableRegistry;
 
-class InstitutionBankAccountsTable extends AppTable {
+use App\Model\Table\ControllerActionTable; //POCOR-6160 change extend class
+
+class InstitutionBankAccountsTable extends ControllerActionTable {
 	use OptionsTrait;
 	private $_selectedBankId = 1;
 	private $_bankOptions = [];
@@ -36,16 +38,16 @@ class InstitutionBankAccountsTable extends AppTable {
 		return $validator;
 	}
 
-	public function beforeAction($event) {
-		$this->ControllerAction->field('account_name', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
-		$this->ControllerAction->field('account_number', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
-		$this->ControllerAction->field('active', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno'), 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
-		$this->ControllerAction->field('bank_branch_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
-		$this->ControllerAction->field('remarks', ['type' => 'text', 'visible' => ['view'=>true, 'edit'=>true]]);
+	public function beforeAction(Event $event, ArrayObject $extra) {
+		$this->field('account_name', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+		$this->field('account_number', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+		$this->field('active', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno'), 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+		$this->field('bank_branch_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+		$this->field('remarks', ['type' => 'text', 'visible' => ['view'=>true, 'edit'=>true]]);
 
-		$this->ControllerAction->field('bank', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'onChangeReload' => true]);
+		$this->field('bank', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'onChangeReload' => true]);
 
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
 			'active', 'account_name', 'account_number', 'bank', 'bank_branch_id',
 		]);
 	}
@@ -74,13 +76,13 @@ class InstitutionBankAccountsTable extends AppTable {
 ** addEdit action methods
 **
 ******************************************************************************************************************/
-	public function addEditBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder([
+	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+		$this->setFieldOrder([
 			'bank', 'bank_branch_id', 'account_name', 'account_number', 'active', 'remarks'
 		]);
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity)
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		if (empty($this->_bankOptions)) {
 			$this->_bankOptions = $this->getBankOptions();
@@ -113,11 +115,11 @@ class InstitutionBankAccountsTable extends AppTable {
 ** edit action methods
 **
 ******************************************************************************************************************/
-	public function editBeforeAction(Event $event) {
+	public function editBeforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['bank']['type'] = 'disabled';
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$this->fields['bank']['attr']['value'] = $entity->bank_branch->bank->name;
 	}
 
@@ -177,6 +179,28 @@ class InstitutionBankAccountsTable extends AppTable {
 			->toArray();
 	}
 
+	// POCOR-6160 starts
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+		$banks = TableRegistry::get('Banks');
+
+		$query
+		->select([
+			'active' => 'InstitutionBankAccounts.active',
+			'account_name' => 'InstitutionBankAccounts.account_name',
+			'account_number' => 'InstitutionBankAccounts.account_number',
+			'bank' => 'Banks.name',
+			'bank_branch' => 'BankBranches.name'
+		])
+		->LeftJoin([$this->BankBranches->alias() => $this->BankBranches->table()],[
+			$this->BankBranches->aliasField('id ='). 'InstitutionBankAccounts.bank_branch_id'
+		])
+		->LeftJoin([$banks->alias() => $banks->table()],[
+			$banks->aliasField('id ='). 'BankBranches.bank_id'
+		]);
+    }
+	// POCOR-6160 ends
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->session();
@@ -202,6 +226,19 @@ class InstitutionBankAccountsTable extends AppTable {
         ->where([
             $this->aliasField('institution_id ='). $institutionId
         ]);
+
+		// POCOR-6160 active inactive case
+		$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                if($row->active == 1){
+                    $row['active'] = 'Active';
+                }else{
+                    $row['active'] = 'Inactive';
+                }
+
+                return $row;
+            });
+        });
     }
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
