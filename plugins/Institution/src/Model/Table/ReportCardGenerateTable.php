@@ -113,7 +113,13 @@ class ReportCardGenerateTable extends ControllerActionTable
             $educationGradeId = $request->data[$this->alias()]['education_grade_id'];
             $institutionId = $session->read('Institution.Institutions.id');
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-            $classOptions = $this->InstitutionClasses
+            $superAdmin = $this->Auth->user('super_admin');
+            $where = [];
+            if (!$superAdmin) {// if user is not super admin, the list will be filtered
+                $userId = $this->Auth->user('id');
+                $where[$this->InstitutionClasses->aliasField('staff_id')] = $userId;
+            }
+            $classQuery = $this->InstitutionClasses
                             ->find('list', ['keyField' => 'id', 
                                     'valueField' => 'name'
                             ])
@@ -122,11 +128,12 @@ class ReportCardGenerateTable extends ControllerActionTable
                             ])
                             ->where([
                                 $this->InstitutionClasses->aliasField('academic_period_id') => $periodId,
-                                $this->InstitutionClasses->aliasField('institution_id') => $institutionId
-                            ])
-                            ->toArray();
+                                $this->InstitutionClasses->aliasField('institution_id') => $institutionId,
+                                $where
+                            ]);
+            $options = $classQuery->toArray();
             $attr['type'] = 'select';
-            $attr['options'] = $classOptions;
+            $attr['options'] = $options;
             $attr['onChangeReload'] = true;
         }
         return $attr;

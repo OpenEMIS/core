@@ -7,9 +7,11 @@ use Cake\Event\Event;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 
 class AssessmentResultsTable extends AppTable
 {
+    use OptionsTrait;
     private $groupAssessmentPeriodCount = 0;
     const STUDENT_ENROLLED_STATUS = 1;
 
@@ -66,7 +68,6 @@ class AssessmentResultsTable extends AppTable
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationGrades'] = 'onExcelTemplateInitialiseEducationGrades';
-        $events['ExcelTemplates.Model.onExcelTemplateAfterGenerate'] = 'onExcelTemplateAfterGenerate';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItems'] = 'onExcelTemplateInitialiseGroupAssessmentItems';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes'] = 'onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentPeriods'] = 'onExcelTemplateInitialiseGroupAssessmentPeriods';
@@ -768,11 +769,6 @@ class AssessmentResultsTable extends AppTable
             $entity = $EducationGrades->get($params['grade_id']);
             return $entity->toArray();
         }
-    }
-
-    public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
-    {
-        return true;
     }
     /*POCOR-6355 ends*/
 }
