@@ -870,6 +870,27 @@ class AcademicPeriodsTable extends AppTable
             return false;
         }
     }
+    //POCOR-6347 starts
+    public function getAvailableAcademicPeriodsById($id, $list = true, $order='DESC')
+    {
+        if ($list) {
+            $query = $this->find('list', ['keyField' => 'id', 'valueField' => 'name']);
+        } else {
+            $query = $this->find();
+        }
+        $result = $query->where([
+                        $this->aliasField('editable') => 1,
+                        $this->aliasField('visible') . ' >' => 0,
+                        $this->aliasField('parent_id') . ' >' => 0,
+                        $this->aliasField('id') => $id
+                    ])
+                    ->order($this->aliasField('name') . ' ' . $order);
+        if ($result) {
+            return $result->toArray();
+        } else {
+            return false;
+        }
+    }//POCOR-6347 ends
 
     public function getCurrent()
     {
