@@ -8,12 +8,14 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
 
     var models = {
         Genders: 'User.Genders',
+        Nationalities: 'FieldOption.Nationalities'
     };
 
     var service = {
         init: init,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
         generatePassword: generatePassword,
+        getNationalities: getNationalities,
     };
     return service;
     
@@ -60,4 +62,12 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
             .select()
             .ajax({success:success, defer: true});
     };
+
+    function getNationalities() {
+        return Nationalities
+            .select()
+            .contain(['IdentityTypes'])
+            .order(['Nationalities.order'])
+            .ajax({defer: true});
+    }
 };
