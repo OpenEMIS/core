@@ -2208,8 +2208,13 @@ class StudentsTable extends ControllerActionTable
             ])
             ->count()
             ;
-
-        return !($completedGradeCount == 0);
+        //POCOR-6362 starts    
+        //return !($completedGradeCount == 0);
+        if($completedGradeCount == 0){
+            return false;
+        }else{
+            return true;
+        }//POCOR-6362 ends
     }
 
     public function institutionStudentRiskCalculateRiskValue(Event $event, ArrayObject $params)
