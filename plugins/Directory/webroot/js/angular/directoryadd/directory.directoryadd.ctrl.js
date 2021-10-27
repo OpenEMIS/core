@@ -45,8 +45,12 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     scope.identity_class = 'input string';
     scope.messageClass = '';
     scope.message = '';
+    scope.nationalitiesOptions = [];
+    scope.identityTypeOptions = [];
+    scope.contactTypeOptions = [];
 
     angular.element(document).ready(function () {
+        UtilsSvc.isAppendLoader(true);
         DirectoryaddSvc.init(angular.baseUrl);
         scope.translateFields = {
             'openemis_no': 'OpenEMIS ID',
@@ -58,25 +62,26 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
             'identity_number': 'Identity Number',
             'account_type': 'Account Type'
         };
+        scope.initGrid();
+        scope.getGenders();
     });
 
     scope.getUniqueOpenEmisId = function() {
         UtilsSvc.isAppendLoader(true);
         DirectoryaddSvc.getUniqueOpenEmisId()
             .then(function(response) {
-                var username = scope.selectedUserData.username;
-                //POCOR-5878 starts
-                if(username != scope.selectedUserData.openemis_no && (username == '' || typeof username == 'undefined')){
-                    scope.selectedUserData.username = scope.selectedUserData.openemis_no;
-                    scope.selectedUserData.openemis_no = scope.selectedUserData.openemis_no;
-                }else{
-                    if(username == scope.selectedUserData.openemis_no){
-                        scope.selectedUserData.username = response;
-                    }
-                    scope.selectedUserData.openemis_no = response;
+            var username = scope.selectedUserData.username;
+            //POCOR-5878 starts
+            if(username != scope.selectedUserData.openemis_no && (username == '' || typeof username == 'undefined')){
+                scope.selectedUserData.username = scope.selectedUserData.openemis_no;
+                scope.selectedUserData.openemis_no = scope.selectedUserData.openemis_no;
+            }else{
+                if(username == scope.selectedUserData.openemis_no){
+                    scope.selectedUserData.username = response;
                 }
-                //POCOR-5878 ends
-                UtilsSvc.isAppendLoader(false);
+                scope.selectedUserData.openemis_no = response;
+            }
+            UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
             UtilsSvc.isAppendLoader(false);
@@ -90,6 +95,39 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
             if (scope.selectedUserData.password == '' || typeof scope.selectedUserData.password == 'undefined') {
                 scope.selectedUserData.password = response;
             }
+            UtilsSvc.isAppendLoader(false);
+        }, function(error) {
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    scope.getGenders = function() {
+        DirectoryaddSvc.getGenders()
+        .then(function(response) {
+            scope.genderOptions = response.data;
+            scope.getNationalities();
+        }, function(error) {
+            console.log(error);
+            scope.getNationalities();
+        });
+    }
+
+    scope.getNationalities = function() {
+        DirectoryaddSvc.getNationalities()
+        .then(function(response) {
+            scope.nationalitiesOptions = response.data;
+            scope.getIdentityTypes();
+        }, function(error) {
+            console.log(error);
+            scope.getIdentityTypes();
+        });
+    }
+
+    scope.getIdentityTypes = function() {
+        DirectoryaddSvc.getIdentityTypes()
+        .then(function(response) {
+            scope.identityTypeOptions = response.data;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -127,6 +165,38 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         }
     }
 
+    scope.changeNationality =  function() {
+        var nationalityId = scope.selectedUserData.nationality_id;
+        var options = scope.nationalitiesOptions;
+        var identityOptions = scope.identityTypeOptions;
+        for (var i = 0; i < options.length; i++) {
+            if (options[i].id == nationalityId) {
+                if (options[i].identity_type_id == null) {
+                    scope.selectedUserData.identity_type_id = identityOptions['0'].id;
+                    scope.selectedUserData.identity_type_name = identityOptions['0'].name;
+                } else {
+                    scope.selectedUserData.identity_type_id = options[i].identity_type_id;
+                    scope.selectedUserData.identity_type_name = options[i].identity_type.name;
+                }
+                scope.selectedUserData.nationality_name = options[i].name;
+                break;
+            }
+        }
+    }
+
+    scope.changeIdentityType =  function() {
+        var identityType = scope.selectedUserData.identity_type_id;
+        var options = scope.identityTypeOptions;
+        for (var i = 0; i < options.length; i++) {
+            if (options[i].id == identityType) {
+                scope.selectedUserData.identity_type_name = options[i].name;
+                break;
+            }
+        }
+    }
+
+    scope.changeContactType =  function() {}
+
     scope.goToPrevStep = function(){
         switch(scope.step){
             case 'internal_search': 
@@ -145,14 +215,14 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         switch(scope.step){
             case 'user_details': 
                 scope.step = 'internal_search';
-                // scope.getUniqueOpenEmisId();
-                // scope.generatePassword();
+                scope.getUniqueOpenEmisId();
                 break;
             case 'internal_search': 
                 scope.step = 'external_search';
                 break;
             case 'external_search': 
                 scope.step = 'confirmation';
+                scope.generatePassword();
                 break;
         }
     }
@@ -335,5 +405,4 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         });
     };
     
-    scope.initGrid();
 }

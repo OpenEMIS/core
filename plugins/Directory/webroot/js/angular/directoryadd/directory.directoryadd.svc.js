@@ -15,7 +15,9 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
         init: init,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
         generatePassword: generatePassword,
+        getGenders: getGenders,
         getNationalities: getNationalities,
+        getIdentityTypes: getIdentityTypes,
     };
     return service;
     
@@ -52,22 +54,39 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
         return deferred.promise;
     }
 
-    function getGenders()
-    {
-        var success = function(response, deferred) {
-            var genderRecords = response.data.data;
-            deferred.resolve(genderRecords);
-        };
-        return Genders
-            .select()
-            .ajax({success:success, defer: true});
-    };
+    function getGenders() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getGenders/';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
 
     function getNationalities() {
-        return Nationalities
-            .select()
-            .contain(['IdentityTypes'])
-            .order(['Nationalities.order'])
-            .ajax({defer: true});
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getNationalities/';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
     }
+
+    function getIdentityTypes() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getIdentityTypes/';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
 };
