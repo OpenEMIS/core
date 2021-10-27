@@ -1026,4 +1026,17 @@ class DirectoriesController extends AppController
         }
         echo json_encode($result_array);die;
     }
+
+    public function getGenders()
+    {
+        $genders_types = TableRegistry::get('genders');
+        $genders_types_result = $genders_types
+            ->find()
+            ->select(['id','name'])
+            ->toArray();
+        foreach($genders_types_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name"=> $result['name']);
+        }
+        echo json_encode($result_array);die;
+    }
 }
