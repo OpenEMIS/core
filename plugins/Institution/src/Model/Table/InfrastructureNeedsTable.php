@@ -9,12 +9,16 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\Routing\Router;
 
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 
+use Page\Traits\EncodingTrait;
+
 class InfrastructureNeedsTable extends ControllerActionTable
 {
+    use EncodingTrait;
     private $needPriorities = [
         1 => 'High',
         2 => 'Medium',
@@ -216,13 +220,28 @@ class InfrastructureNeedsTable extends ControllerActionTable
             }elseif($entity->priority == 3){
                 $entity['priority'] = 'Low';
             }
+
+            // Projects segment for view
+            $associatedProjects = $this->getAssociatedRecords($entity);
+            $entity['associated_projects'] = $associatedProjects;
+
+            if (!empty($associatedProjects)) {
+                $this->field('associated_projects', [
+                    'type' => 'element',
+                    'after' => 'priority',
+                    'element' => 'Institution.AssociatedProjects/details',
+                    'visible' => ['view'=>true],
+                    'data' => $associatedProjects
+                ]);
+            }
+            // Projects segment for view
         }
 
         $this->field('infrastructure_need_type_id',['after' => 'name','visible' => ['view' => true,'edit' => true]]);
         $this->fields['priority']['default'] = $entity->priority;
         $this->field('priority',['after' => 'description','visible' => ['view' => true,'edit' => true]]);
         $this->field('file_name', ['type' => 'hidden']);
-        $this->field('file_content', ['after' => 'date_completed','visible' => ['view' => false, 'edit' => true]]);
+        $this->field('file_content', ['after' => 'date_completed','attr' => ['label' => __('Attachment')],'visible' => ['view' => true, 'edit' => true]]);
 
         // $this->setFieldOrder(['academic_period_id', 'date_of_visit', 'quality_visit_type_id', 'comment', 'file_name', 'file_content']);
     }
@@ -282,6 +301,45 @@ class InfrastructureNeedsTable extends ControllerActionTable
             });
         });
     }
+
+    // Projects segemnt for view
+    private function getAssociatedRecords($entity)
+    {
+        $InfrastructureProjectsNeeds = TableRegistry::get('Institution.InfrastructureProjectsNeeds'); 
+
+        $projectData = $InfrastructureProjectsNeeds->find()
+            ->contain(['InfrastructureProjects'])
+            ->where([$InfrastructureProjectsNeeds->aliasField('infrastructure_need_id') => $entity->id])
+            ->all();
+
+        $associatedRecords = [];
+        if (count($projectData)) {
+            $institutionId = $entity->institution_id;
+            $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+
+            foreach ($projectData as $key => $project) {
+                $encodedProjectId = $this->encode(['id' => $project->infrastructure_project_id]);
+                $projectName = $project->infrastructure_project->name;
+
+                // build the url
+                $url = Router::url([
+                    'plugin' => 'Institution',
+                    'controller' => 'InfrastructureProjects',
+                    'action' => 'view',
+                    'institutionId' => $encodedInstitutionId,
+                    $encodedProjectId
+                ]);
+
+                $associatedRecords[] = [
+                    'need_name' => $projectName,
+                    'link' => '<a href=' . $url . ')> ' . $projectName . '</a>'
+                ];
+            }
+        }
+
+        return $associatedRecords;
+    }
+    // Projects segemnt for view
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
