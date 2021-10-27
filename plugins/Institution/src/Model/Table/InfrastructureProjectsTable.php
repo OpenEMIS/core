@@ -9,12 +9,16 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\Routing\Router;
 
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 
+use Page\Traits\EncodingTrait;
+
 class InfrastructureProjectsTable extends ControllerActionTable
 {
+    use EncodingTrait;
     private $projectStatuses = [
         1 => 'Active',
         2 => 'Inactive'
@@ -259,13 +263,26 @@ class InfrastructureProjectsTable extends ControllerActionTable
             }else{
                 $entity['status'] = 'Inactive';
             }
+
+            // NEEDS segment for view
+            $associatedNeeds = $this->getAssociatedRecords($entity);
+            $entity['associated_needs'] = $associatedNeeds;
+
+            if (!empty($associatedNeeds)) {
+                $this->field('Associated Needs', [
+                    'type' => 'element',
+                    'before' => 'file_content',
+                    'element' => 'Institution.AssociatedNeeds/details',
+                    'visible' => ['view'=>true],
+                    'data' => $associatedNeeds
+                ]);
+            }
+            // NEEDS segment for view
         }
 
         $this->field('infrastructure_project_funding_source_id',['after' => 'description','visible' => ['view' => true,'edit' => true]]);
         $this->field('file_name', ['type' => 'hidden']);
         $this->field('file_content', ['after' => 'date_completed','attr' => ['label' => __('Attachment')], 'visible' => ['view' => true, 'edit' => true]]);
-
-        // $this->setFieldOrder(['academic_period_id', 'date_of_visit', 'quality_visit_type_id', 'comment', 'file_name', 'file_content']);
     }
     // POCOR-6151
 
@@ -273,6 +290,54 @@ class InfrastructureProjectsTable extends ControllerActionTable
     {
         return $query->contain(['InfrastructureNeeds']);
     }
+
+    // NEEDS segment for view POCOR-6151
+    private function getAssociatedRecords($entity)
+    {
+        $InfrastructureProjectsNeeds = TableRegistry::get('Institution.InfrastructureProjectsNeeds');
+        
+        $needData = $InfrastructureProjectsNeeds->find()
+        ->contain(['InfrastructureNeeds'])
+        ->where([$InfrastructureProjectsNeeds->aliasField('infrastructure_project_id') => $entity->id])
+        ->all();
+
+        $associatedRecords = [];
+        if (count($needData)) {
+            $institutionId = $entity->institution_id;
+            $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+
+            foreach ($needData as $key => $need) {
+                $encodedNeedId = $this->encode(['id' => $need->infrastructure_need_id]);
+                $needName = $need->infrastructure_need->name;
+
+                $url = Router::url([
+                    'plugin' => 'Institution',
+                    'controller' => 'InfrastructureNeeds',
+                    'action' => 'view',
+                    'institutionId' => $encodedInstitutionId,
+                    $encodedNeedId
+                ]);
+
+                $associatedRecords[] = [
+                    'need_name' => $needName,
+                    'link' => '<a href=' . $url . ' > ' . $needName . '</a>'
+                ];
+            }
+        }
+
+        return $associatedRecords;
+    }
+    // NEEDS segment for view
+
+    // for getting multiple selected Dropdown in edit
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'InfrastructureNeeds'
+        ]);
+    }
+    // for getting multiple selected Dropdown in edit
+    
 
     public function getFundingSourceOptions()
     {
