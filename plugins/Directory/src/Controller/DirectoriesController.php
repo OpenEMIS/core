@@ -14,6 +14,10 @@ use Cake\Network\Response;
 
 class DirectoriesController extends AppController
 {
+    const STUDENT = 1;
+    const STAFF = 2;
+    const GUARDIAN = 3;
+    const OTHER = 4;
     public function initialize()
     {
         parent::initialize();
@@ -1036,6 +1040,20 @@ class DirectoriesController extends AppController
             ->toArray();
         foreach($genders_types_result AS $result){
             $result_array[] = array("id" => $result['id'], "name"=> $result['name']);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getUserType()
+    {
+        $user_type_options = [
+                self::STAFF => __('Staff'),
+                self::STUDENT => __('Students'),
+                self::GUARDIAN => __('Guardians'),
+                self::OTHER => __('Others')
+            ];
+        foreach($user_type_options AS $key => $val){
+            $result_array[] = array("id" => $key, "name"=> $val);
         }
         echo json_encode($result_array);die;
     }
