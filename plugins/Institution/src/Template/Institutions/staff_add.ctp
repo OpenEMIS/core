@@ -45,6 +45,12 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                         <span class="chevron"></span>
                     </div>
                 </li>
+                <li ng-class="{'active': InstitutionStaffController.step === 'add_staff'}">
+                    <div class="stepper-steps-wrapper">
+                        Add Staff
+                        <span class="chevron"></span>
+                    </div>
+                </li>
                 <li ng-class="{'active': InstitutionStaffController.step === 'summary'}">
                     <div class="stepper-steps-wrapper">
                         Summary
@@ -61,13 +67,13 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 ng-if="(InstitutionStaffController.step!=='user_details' && InstitutionStaffController.step!=='summary')"
                 type="button" class="btn btn-prev close-btn" ng-click="InstitutionStaffController.goToPrevStep()">Back</button>
             <button
-                ng-if="(InstitutionStaffController.step=='confirmation' && InstitutionStaffController.step!=='summary')"
+                ng-if="(InstitutionStaffController.step=='add_staff' && InstitutionStaffController.step!=='summary')"
                 type="button" class="btn btn-default" ng-click="InstitutionStaffController.confirmUser()">Confirm</button>
             <button
                 ng-if="(InstitutionStaffController.step=='summary')"
                 type="button" class="btn close-btn" ng-click="InstitutionStaffController.goToFirstStep()">Close</button>
             <button type="button" class="btn btn-default btn-next"
-                ng-if="InstitutionStaffController.step!=='confirmation' && InstitutionStaffController.step!=='summary'" ng-click="InstitutionStaffController.goToNextStep()">Next</button>
+                ng-if="InstitutionStaffController.step!=='add_staff' && InstitutionStaffController.step!=='summary'" ng-click="InstitutionStaffController.goToNextStep()">Next</button>
         </div>
         <div class="step-content">
             <div class="alert {{InstitutionStaffController.messageClass}}" ng-if="InstitutionStaffController.message">
@@ -319,6 +325,121 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                     <div class="input string">
                         <label><?= __('Identity Number') ?></label>
                         <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" ng-disabled="true">
+                    </div>
+                </form>
+            </div>
+            <div class="step-pane sample-pane" ng-if="InstitutionStaffController.step === 'add_staff'">
+                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
+                    <div class="input string required">
+                        <label><?= __('OpenEMIS ID') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.openemis_no" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Staff') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.name" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Identity Number') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.identityNumber" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input date">
+                        <label for="Student_date_of_birth"><?= __('Date Of Birth') ?></label>
+                        <div class="input-group date " id="Student_date_of_birth" style="">
+                            <input type="text" class="form-control " name="Student[date_of_birth]" ng-model="InstitutionStaffController.selectedStaffData.date_of_birth" ng-disabled="true">
+                        </div>
+                    </div>
+                    <div class="input select">
+                        <label><?= __('Gender') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.gender.name" ng-disabled="true" />
+                    </div>
+                    <div class="input string required">
+                        <label><?= __('User Name') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.username" ng-disabled="true" />
+                    </div>
+                    <div class="input string required">
+                        <label><?= __('Password') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.password" ng-disabled="true" />
+                    </div>
+                    <div class="input string required">
+                        <label><?= __('Staff Status') ?></label>
+                        <input ng-model="InstitutionStaffController.selectedStaffData.staffStatus" ng-disabled="true" />
+                    </div>
+                    <div class="input date required">
+                        <label for="Staff_start_date"><?= __('Start Date') ?></label>
+                        <div class="input-group date " id="Staff_start_date" style="">
+                            <input type="text" class="form-control " name="Staff[startDate]" ng-model="InstitutionStaffController.selectedStaffData.startDate">
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                        </div>
+                        <div ng-if="InstitutionStaffController.postResponse.error.startDate" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.date_of_birth">{{ error }}</p>
+                        </div>
+                    </div>
+                    <div class="input date">
+                        <label for="Staff_end_date"><?= __('End Date') ?></label>
+                        <div class="input-group date " id="Staff_end_date" style="">
+                            <input type="text" class="form-control " name="Staff[endDate]" ng-model="InstitutionStaffController.selectedStaffData.endDate">
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                        </div>
+                    </div>
+                    <div class="input select required error">
+                        <label><?= __('Position Type') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="Staff[position_type_id]" id="staff-position_type_id"
+                                ng-options="option.id as option.name for option in InstitutionStaffController.positionTypeOptions"
+                                ng-model="InstitutionStaffController.selectedStaffData.position_type_id"
+                                ng-change="InstitutionStaffController.changePositionType()"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                        <div ng-if="InstitutionStaffController.postResponse.error.position_type_id" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.position_type_id">{{ error }}</p>
+                        </div>
+                    </div>
+                    <div class="input select required error">
+                        <label><?= __('Position') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="Staff[position_id]" id="staff-position_id"
+                                ng-options="option.id as option.name for option in InstitutionStaffController.positionsOptions"
+                                ng-model="InstitutionStaffController.selectedStaffData.position_id"
+                                ng-change="InstitutionStaffController.changePosition()"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                        <div ng-if="InstitutionStaffController.postResponse.error.position_id" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.position_id">{{ error }}</p>
+                        </div>
+                    </div>
+                    <div class="input select required error">
+                        <label><?= __('Staff Type') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="Staff[staff_type_id]" id="staff-staff_type_id"
+                                ng-options="option.id as option.name for option in InstitutionStaffController.staffTypeOptions"
+                                ng-model="InstitutionStaffController.selectedStaffData.staff_type_id"
+                                ng-change="InstitutionStaffController.changeStaffType()"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                        <div ng-if="InstitutionStaffController.postResponse.error.staff_type_id" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.staff_type_id">{{ error }}</p>
+                        </div>
+                    </div>
+                    <div class="input select required error">
+                        <label><?= __('Shifts') ?></label>
+                        <div class="input-select-wrapper">
+                            <select multiple name="Staff[shift_id]" id="staff-shift_id"
+                                ng-options="option.id as option.name for option in InstitutionStaffController.shiftsOptions"
+                                ng-model="InstitutionStaffController.selectedStaffData.shift_id"
+                                ng-change="InstitutionStaffController.changeShifts()"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                        <div ng-if="InstitutionStaffController.postResponse.error.shift_id" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.shift_id">{{ error }}</p>
+                        </div>
                     </div>
                 </form>
             </div>

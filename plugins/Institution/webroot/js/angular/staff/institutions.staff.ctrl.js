@@ -25,6 +25,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.genderOptions = [];
     StaffController.nationalitiesOptions = [];
     StaffController.identityTypeOptions = [];
+    StaffController.positionTypeOptions = [];
+    StaffController.positionsOptions = [];
+    StaffController.staffTypeOptions = [];
+    StaffController.shiftsOptions = [];
 
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
@@ -42,6 +46,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.setStaffName = setStaffName;
     StaffController.appendName = appendName;
     StaffController.initGrid = initGrid;
+    StaffController.changePositionType = changePositionType;
+    StaffController.changePosition = changePosition;
+    StaffController.changeStaffType = changeStaffType;
+    StaffController.changeShifts = changeShifts;
     
 
     angular.element(document).ready(function () {
@@ -58,43 +66,42 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             'identity_number': 'Identity Number',
             'account_type': 'Account Type'
         };
-        StaffController.getGenders();
+        StaffController.getUniqueOpenEmisId();
     });
 
     function getUniqueOpenEmisId() {
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.getUniqueOpenEmisId()
             .then(function(response) {
-                var username = StaffController.selectedUserData.username;
-                //POCOR-5878 starts
-                if(username != StaffController.selectedUserData.openemis_no && (username == '' || typeof username == 'undefined')){
-                    StaffController.selectedUserData.username = StaffController.selectedUserData.openemis_no;
-                    StaffController.selectedUserData.openemis_no = StaffController.selectedUserData.openemis_no;
-                }else{
-                    if(username == StaffController.selectedUserData.openemis_no){
-                        StaffController.selectedUserData.username = response;
-                    }
-                    StaffController.selectedUserData.openemis_no = response;
-                }
-                //POCOR-5878 ends
-                UtilsSvc.isAppendLoader(false);
+                // var username = StaffController.selectedStaffData.username;
+                // //POCOR-5878 starts
+                // if(username != StaffController.selectedStaffData.openemis_no && (username == '' || typeof username == 'undefined')){
+                //     StaffController.selectedStaffData.username = StaffController.selectedStaffData.openemis_no;
+                //     StaffController.selectedStaffData.openemis_no = StaffController.selectedStaffData.openemis_no;
+                // }else{
+                //     if(username == StaffController.selectedStaffData.openemis_no){
+                //         StaffController.selectedStaffData.username = response;
+                //     }
+                //     StaffController.selectedStaffData.openemis_no = response;
+                // }
+                StaffController.selectedStaffData.openemis_no = response;
+                StaffController.generatePassword();
         }, function(error) {
             console.log(error);
-            UtilsSvc.isAppendLoader(false);
+            StaffController.generatePassword();
         });
     }
 
     function generatePassword() {
-        UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.generatePassword()
         .then(function(response) {
-            if (StaffController.selectedUserData.password == '' || typeof StaffController.selectedUserData.password == 'undefined') {
-                StaffController.selectedUserData.password = response;
+            if (StaffController.selectedStaffData.password == '' || typeof StaffController.selectedStaffData.password == 'undefined') {
+                StaffController.selectedStaffData.password = response;
             }
-            UtilsSvc.isAppendLoader(false);
+            StaffController.getGenders();
         }, function(error) {
             console.log(error);
-            UtilsSvc.isAppendLoader(false);
+            StaffController.getGenders();
         });
     }
 
@@ -154,7 +161,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function changeGender() {
-        var userData = StaffController.selectedUserData;
+        var userData = StaffController.selectedStaffData;
         if (userData.hasOwnProperty('gender_id')) {
             var genderOptions = StaffController.genderOptions;
             for(var i = 0; i < genderOptions.length; i++) {
@@ -164,7 +171,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     };
                 }
             }
-            StaffController.selectedUserData = userData;
+            StaffController.selectedStaffData = userData;
         }
     }
 
@@ -198,6 +205,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
     }
 
+    function changePositionType() {}
+
+    function changePosition() {}
+
+    function changeStaffType() {}
+    
+    function changeShifts() {}
+    
     function goToPrevStep(){
         switch(StaffController.step){
             case 'internal_search': 
@@ -208,6 +223,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 break;
             case 'confirmation': 
                 StaffController.step = 'external_search';
+                break;
+            case 'add_staff': 
+                StaffController.step = 'confirmation';
                 break;
         }
     }
@@ -225,11 +243,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             case 'external_search': 
                 StaffController.step = 'confirmation';
                 break;
+            case 'confirmation': 
+                StaffController.step = 'add_staff';
+                break;
         }
     }
 
     function confirmUser() {
-        StaffController.message = (StaffController.selectedUserData && StaffController.selectedUserData.userType ? StaffController.selectedUserData.userType.name : 'Student') + ' successfully added.';
+        StaffController.message = (StaffController.selectedStaffData && StaffController.selectedStaffData.userType ? StaffController.selectedStaffData.userType.name : 'Student') + ' successfully added.';
         StaffController.messageClass = 'alert-success';
         StaffController.step = "summary";
     }
@@ -247,7 +268,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     //     var log = [];
     //     angular.forEach(StaffController.rowsThisPage , function(value) {
     //         if (value.id == StaffController.selectedUser) {
-    //             StaffController.selectedUserData = value;
+    //             StaffController.selectedStaffData = value;
     //         }
     //     }, log);
     // }
