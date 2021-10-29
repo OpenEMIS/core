@@ -342,7 +342,7 @@ class ExaminationResultsTable extends ControllerActionTable
     // POCOR-6159 START
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {   
-        $academicPeriodId =  ($this->request->query['academic_period_id']) ? $this->request->query['academic_period_id'] : 0 ;
+        $academicPeriodId =  ($this->request->query['academic_period_id']) ? $this->request->query['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $examinationId = ($this->request->query['examination_id']) ? $this->request->query['examination_id'] : 0 ;
         $session = $this->request->session();
         $institutionId  = $session->read('Institution.Institutions.id');
@@ -355,11 +355,10 @@ class ExaminationResultsTable extends ControllerActionTable
         $query->select([
             $this->aliasField('id') , 
             $this->aliasField('registration_number') , 
-            'student' => $students->find()->func()->concat([
-                'first_name' => 'literal',
-                " ",
-                'last_name' => 'literal'
-            ]),
+            'first_name' => $students->aliasField('first_name'),
+            'middle_name' => $students->aliasField('middle_name'),
+            'third_name' => $students->aliasField('third_name'),
+            'last_name' => $students->aliasField('last_name'),
             'openemis_no' => $students->aliasField('openemis_no'),
 			'nationality_id' =>$nationality->aliasField('name'),
 			'identity_type_id' =>$IdentityTypes->aliasField('name'),
@@ -371,21 +370,21 @@ class ExaminationResultsTable extends ControllerActionTable
             $this->aliasField('created')
         ])
         ->innerJoin([$students->alias() => $students->table()], [
-            [$students->aliasField('id ='). $this->aliasField('student_id')],
+            [$students->aliasField('id = '). $this->aliasField('student_id')],
         ])
         ->LeftJoin([$IdentityTypes->alias() => $IdentityTypes->table()], [
-            [$IdentityTypes->aliasField('id ='). $students->aliasField('identity_type_id')],
+            [$IdentityTypes->aliasField('id = '). $students->aliasField('identity_type_id')],
         ])
         ->LeftJoin([$nationality->alias() => $nationality->table()], [
-            [$nationality->aliasField('id ='). $students->aliasField('nationality_id')],
+            [$nationality->aliasField('id = '). $students->aliasField('nationality_id')],
         ])
         ->LeftJoin([$examinations->alias() => $examinations->table()], [
-            [$examinations->aliasField('id ='). $this->aliasField('examination_id')],
+            [$examinations->aliasField('id = '). $this->aliasField('examination_id')],
         ])
         ->where([
-            'institution_id =' .$institutionId,
-            $this->aliasField('academic_period_id =') .$academicPeriodId,
-            $this->aliasField('examination_id =') .$examinationId
+            'institution_id = ' .$institutionId,
+            $this->aliasField('academic_period_id = ') .$academicPeriodId,
+            $this->aliasField('examination_id = ') .$examinationId
         ]);
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
@@ -444,12 +443,18 @@ class ExaminationResultsTable extends ControllerActionTable
                     $transfer = 'No';
                 }
 
+                $row['student'] = '';
+                if($row->middle_name && $row->third_name){
+                    $row['student'] = $row->first_name.' '.$row->middle_name.' '.$row->third_name.' '.$row->last_name;
+                }else{
+                    $row['student'] = $row->first_name.' '.$row->last_name;
+                }
+
                 $row['repeater_status'] = $student_status;
                 $row['transfer_status'] = $transfer;
                 return $row;
             });
         });
-        
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
