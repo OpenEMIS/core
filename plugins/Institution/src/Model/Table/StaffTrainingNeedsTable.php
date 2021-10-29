@@ -80,5 +80,41 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
             ]); 
         }
     }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'StaffTrainingNeeds.status_id',
+            'field' => 'status_id',
+            'type'  => 'string',
+            'label' => __('Status')
+        ];
+
+        $extraField[] = [
+            'key'   => 'StaffTrainingNeeds.assignee_id',
+            'field' => 'assignee_id',
+            'type'  => 'string',
+            'label' => __('Assignee')
+        ];
+        $extraField[] = [
+            'key'   => 'StaffTrainingNeeds.type',
+            'field' => 'type',
+            'type'  => 'string',
+            'label' => __('Type')
+        ];
+        $extraField[] = [
+            'key'   => 'StaffTrainingNeeds.training_course_id',
+            'field' => 'training_course_id',
+            'type'  => 'string',
+            'label' => __('Training Course')
+        ];
+        $extraField[] = [
+            'key'   => 'StaffTrainingNeeds.training_need_category_id',
+            'field' => 'training_need_category_id',
+            'type'  => 'string',
+            'label' => __('Training Need Category')
+        ];
+        $fields->exchangeArray($extraField);
+    }
     // POCOR-6137 end
 }

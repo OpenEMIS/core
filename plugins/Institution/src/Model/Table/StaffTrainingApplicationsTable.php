@@ -36,7 +36,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->addBehavior('Workflow.Workflow', ['model' => 'Training.TrainingApplications']);
 
         $this->addBehavior('Excel',[
-            'excludes' => ['staff_id','institution_id','assignee_id'],
+            'excludes' => ['staff_id','institution_id','assignee_id','training_session_id'],
             'pages' => ['index'],
         ]);
         $this->toggle('edit', false);
@@ -445,7 +445,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $newFields = [];
         foreach ($cloneFields as $key => $value) {
             $newFields[] = $value;
-            if($value['field'] == 'training_session_id'){
+            if($value['field'] == 'status_id'){
                 $newFields[] = [
                     'key' => 'TrainingCourses.name',
                     'field' => 'course_name',
@@ -472,6 +472,13 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
                     'field' => 'credit_hours',
                     'type' => 'string',
                     'label' => 'Credit Hours'
+                ];
+
+                $newFields[] = [
+                    'key'   => 'StaffTrainingApplications.training_session_id',
+                    'field' => 'training_session_id',
+                    'type'  => 'string',
+                    'label' => __('Training Session')
                 ];
             }
         }
