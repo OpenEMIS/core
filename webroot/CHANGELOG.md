@@ -1,3 +1,12 @@
+### [3.70.4] - 2021-10-30
+- Implemented: Update Export button function - Institutions > Academic > Subjects (include grade class subject teacher room and number of students by gender)
+- Implemented: Add Export button function - Institutions > Staff > Staff1 > Special Needs (include all tabs)
+- Bug Fixed: Administration > Profiles > Institutions: Placeholders are not working across all environments
+- Bug Fixed: Institutions>General>Calendar: 404 Error
+- Bug Fixed: Institutions>Students>Student1>Promotion/Repeat:Grades that are both above and lower appears for Promotion/Repeat
+- Bug Fixed: Institutions > Performance > Assessments : Allow user to generate report by Student status
+- Bug Fixed: Institutions > Students > Undo : Education Grades should be filtered by the Academic Period selected above
+
 ### [3.70.3] - 2021-10-22
 - Bug Fixed: Institution > Student > Add: There is no validation if a new student added has the same Identity Number as an existing student
 - Bug Fixed: Institutions > Students > Export : Issues with Student export file
