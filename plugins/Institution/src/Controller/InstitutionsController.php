@@ -136,6 +136,7 @@ class InstitutionsController extends AppController
 
         //assessment
         'ImportAssessmentItemResults',
+        'ReportCardGenerate',
 
         // misc
         // 'IndividualPromotion',
@@ -414,29 +415,6 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
     }
 
-    public function InstitutionBuses()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBuses']);
-    }
-
-    public function changePageHeader($model, $modelAlias, $userType)
-    {
-        $session = $this->request->session();
-        $institutionId = 0;
-        if ($session->check('Institution.Institutions.id')) {
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
-        if (!empty($institutionId)) {
-            if($this->request->param('action') == 'InstitutionBuses') {
-                $institutionName = $session->read('Institution.Institutions.name');
-                $header = $institutionName . ' - ' . __('Buses');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
-                $this->Navigation->addCrumb(__('Buses'));
-                $this->set('contentHeader', $header);
-
-            } 
-        }
-    }
     // public function AssessmentsArchive()
     // {
     //     if (!empty($this->request->param('institutionId'))) {
@@ -987,15 +965,18 @@ class InstitutionsController extends AppController
 
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
-
         if ($hasTemplate) {
-            $customUrl = $this->ControllerAction->url('index');
-            $customUrl['plugin'] = 'CustomExcel';
-            $customUrl['controller'] = 'CustomExcels';
-            $customUrl['action'] = 'export';
-            $customUrl[0] = 'AssessmentResults';
-            $this->set('customExcel', Router::url($customUrl));
+            $queryString = $this->request->query('queryString');
+            $customUrl = Router::url([
+                            'plugin' => 'Institution',
+                            'controller' => 'Institutions',
+                            'action' => 'reportCardGenerate',
+                            'add',
+                            'queryString' => $queryString
+                        ]);
 
+            $this->set('reportCardGenerate',$customUrl);
+           
             $exportPDF_Url = $this->ControllerAction->url('index');
             $exportPDF_Url['plugin'] = 'CustomExcel';
             $exportPDF_Url['controller'] = 'CustomExcels';
@@ -1006,6 +987,10 @@ class InstitutionsController extends AppController
 
         $this->set('excelUrl', Router::url($url));
         $this->set('ngController', 'InstitutionsResultsCtrl');
+    }
+
+    public function ReportCardGenerate(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardGenerate']);
     }
 
     public function Comments()

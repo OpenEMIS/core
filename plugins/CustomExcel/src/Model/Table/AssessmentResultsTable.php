@@ -7,9 +7,11 @@ use Cake\Event\Event;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 
 class AssessmentResultsTable extends AppTable
 {
+    use OptionsTrait;
     private $groupAssessmentPeriodCount = 0;
     const STUDENT_ENROLLED_STATUS = 1;
 
@@ -44,6 +46,7 @@ class AssessmentResultsTable extends AppTable
             'templateTableKey' => 'assessment_id',
             'variables' => [
                 'Assessments',
+                'EducationGrades',
                 // 'AssessmentItems',
                 // 'AssessmentItemsGradingTypes',
                 // 'AssessmentPeriods',
@@ -64,11 +67,7 @@ class AssessmentResultsTable extends AppTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessments'] = 'onExcelTemplateInitialiseAssessments';
-        // $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItems'] = 'onExcelTemplateInitialiseAssessmentItems';
-        // $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemsGradingTypes'] = 'onExcelTemplateInitialiseAssessmentItemsGradingTypes';
-        // $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentPeriods'] = 'onExcelTemplateInitialiseAssessmentPeriods';
-        // $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemResults'] = 'onExcelTemplateInitialiseAssessmentItemResults';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationGrades'] = 'onExcelTemplateInitialiseEducationGrades';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItems'] = 'onExcelTemplateInitialiseGroupAssessmentItems';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes'] = 'onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentPeriods'] = 'onExcelTemplateInitialiseGroupAssessmentPeriods';
@@ -604,7 +603,19 @@ class AssessmentResultsTable extends AppTable
     }
 
     public function onExcelTemplateInitialiseClassStudents(Event $event, array $params, ArrayObject $extra)
-    {
+    { 
+        $where = [];
+        $ids = [];
+        if ($params['students'] != 0) {
+            foreach ($params['list_of_students']['_ids'] as $value) {
+                $ids[] = $value;
+            }
+           $where[$this->aliasField('student_id IN')] = $ids; 
+        }
+        if ($params['student_status_id'] != 0) {
+            $where[$this->aliasField('student_status_id')] = $params['student_status_id'];
+        }
+    
         if (array_key_exists('class_id', $params)) {
             $entity = $this->find()
                 ->contain([
@@ -678,13 +689,13 @@ class AssessmentResultsTable extends AppTable
                     ]
                 ])
                 ->where([
-                    $this->aliasField('institution_class_id') => $params['class_id']/*,
-                    $this->aliasField('student_status_id') => self::STUDENT_ENROLLED_STATUS*/
+                    $this->aliasField('institution_class_id') => $params['class_id'],
+                    $where
                 ])
                 ->order(['Users.first_name', 'Users.last_name'])
                 // ->hydrate(false)
                 ->all();
-            
+
             return $entity->toArray();
         }
     }
@@ -749,4 +760,15 @@ class AssessmentResultsTable extends AppTable
             return $results;
         }
     }
+
+    /*POCOR-6355 starts*/
+    public function onExcelTemplateInitialiseEducationGrades(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('grade_id', $params)) {
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $entity = $EducationGrades->get($params['grade_id']);
+            return $entity->toArray();
+        }
+    }
+    /*POCOR-6355 ends*/
 }
