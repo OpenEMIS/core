@@ -142,34 +142,49 @@ class StaffTrainingResultsTable extends ControllerActionTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-        $cloneFields = $fields->getArrayCopy();
-        $newFields = [];
-        foreach ($cloneFields as $key => $value) {
-            $newFields[] = $value;
-            if($value['field'] == 'training_result_type_id'){
-                $newFields[] = [
-                    'key' => 'TrainingCourses.name',
-                    'field' => 'course_name',
-                    'type' => 'string',
-                    'label' => 'Training Course'
-                ];
+		$extraField[] = [
+            'key' => 'WorkflowSteps.name',
+			'field' => 'result_status',
+			'type' => 'string',
+			'label' => 'Status'
+        ];
 
-                $newFields[] = [
-                    'key' => 'TrainingProviders.name',
-                    'field' => 'training_provider_name',
-                    'type' => 'string',
-                    'label' => 'Training Provider'
-                ];
+        $extraField[] = [
+			'key' => 'TrainingCourses.name',
+			'field' => 'course_name',
+			'type' => 'string',
+			'label' => 'Training Course'
+        ];
 
-                $newFields[] = [
-                    'key' => 'WorkflowSteps.name',
-                    'field' => 'result_status',
-                    'type' => 'string',
-                    'label' => 'Status'
-                ];
-            }
-        }
-        $fields->exchangeArray($newFields);
+        $extraField[] = [
+			'key' => 'TrainingProviders.name',
+			'field' => 'training_provider_name',
+			'type' => 'string',
+			'label' => 'Training Provider'
+        ];
+
+        $extraField[] = [
+			'key' => 'StaffTrainingResults.training_session_id',
+			'field' => 'training_session_id',
+			'type' => 'string',
+			'label' => 'Training Session'
+        ];
+
+        $extraField[] = [
+			'key' => 'StaffTrainingResults.training_result_type_id',
+			'field' => 'training_result_type_id',
+			'type' => 'string',
+			'label' => 'Training Result Type'
+        ];
+
+        $extraField[] = [
+			'key' => 'StaffTrainingResults.result',
+			'field' => 'result',
+			'type' => 'string',
+			'label' => 'Result'
+        ];
+
+        $fields->exchangeArray($extraField);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
