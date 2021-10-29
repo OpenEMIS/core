@@ -48,6 +48,7 @@ class DirectoriesController extends AppController
         $this->loadComponent('User.Image');
         $this->loadComponent('Institution.CreateUsers');
         $this->loadModel('FieldOption.Nationalities');
+        $this->loadModel('Directory.Directories');
         $this->attachAngularModules();
         $this->attachAngularModulesForDirectory();
 
@@ -1056,5 +1057,12 @@ class DirectoriesController extends AppController
             $result_array[] = array("id" => $key, "name"=> $val);
         }
         echo json_encode($result_array);die;
+    }
+
+    public function directoryInternalSearch()
+    {
+        $this->autoRender = false;
+        $fname = $this->request->query['fname'];
+        return new Response(['body' => $this->Directories->getInternalSearchData($fname)]);
     }
 }

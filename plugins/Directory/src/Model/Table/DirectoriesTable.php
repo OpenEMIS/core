@@ -1281,4 +1281,52 @@ class DirectoriesTable extends ControllerActionTable
 
         return $tooltipMessage;
     }
+
+
+    public function getInternalSearchData($fname)
+    {
+        $query = $this->find();
+        $conditions = [];
+
+        $notSuperAdminCondition = [
+            $this->aliasField('super_admin') => 0,
+            $this->aliasField('first_name LIKE') => "%$fname%"
+        ];
+        $conditions = array_merge($conditions, $notSuperAdminCondition);
+        $orders = [];
+
+        if (!isset($this->request->query['sort'])) {
+            $orders = [
+                $this->aliasField('first_name'),
+                $this->aliasField('last_name')
+            ];
+        }
+
+        $finaldata = $query->where($conditions)
+            ->order($orders)
+            ->toArray();
+        foreach($finaldata AS $val){
+            $genders_types = TableRegistry::get('genders');
+            $genders_types_result = $genders_types
+                ->find()
+                ->select(['name'])
+                ->where([$genders_types->aliasField('id') => $val->gender_id])
+                ->toArray();
+            $nationalities = TableRegistry::get('nationalities');
+            $nationalities_result = $nationalities
+                ->find()
+                ->select(['name'])
+                ->where([$nationalities->aliasField('id') => $val->nationality_id])
+                ->toArray();
+            $identity_types = TableRegistry::get('identity_types');
+            $identity_types_result = $identity_types
+                ->find()
+                ->select(['name'])
+                ->where([$identity_types->aliasField('id') => $val->identity_type_id])
+                ->toArray();
+            $finalArray[] = array('openemis_no' => $val->openemis_no, 'name'=>$val->first_name." ".$val->last_name, 'date_of_birth'=>$val->date_of_birth->format('Y-m-d'), 'gender'=>$genders_types_result[0]->name, 'nationality'=>$nationalities_result[0]->name, 'identity_type'=>$identity_types_result[0]->name, 'identity_number'=>$val->identity_number);
+        }
+        return json_encode($finalArray, JSON_PRETTY_PRINT);
+        
+    }
 }
