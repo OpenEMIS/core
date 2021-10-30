@@ -754,13 +754,7 @@ class ValidationBehavior extends Behavior
         $Students = TableRegistry::get('Institution.Students');
         $educationGradeField = isset($options['educationGradeField']) ? $options['educationGradeField'] : 'education_grade_id';
         $studentIdField = isset($options['studentIdField']) ? $options['studentIdField'] : 'student_id';
-        //POCOR-6362 starts    
-        //return !$Students->completedGrade($globalData['data'][$educationGradeField], $globalData['data'][$studentIdField]);
-        if (!$Students->completedGrade($globalData['data'][$educationGradeField], $globalData['data'][$studentIdField])){
-            return false;
-        }else{
-            return true;
-        }//POCOR-6362 ends    
+        return !$Students->completedGrade($globalData['data'][$educationGradeField], $globalData['data'][$studentIdField]);
     }
 
     public static function compareStudentGenderWithInstitution($field, array $globalData)
