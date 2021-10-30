@@ -112,14 +112,25 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             ->first();
 
         if (!empty($previousStudentRecord)) {
+            //POCOR-6362 starts
+            if($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED']){
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $academicPeriod = $AcademicPeriods
+                        ->find()
+                        ->where([
+                           $AcademicPeriods->aliasField('id') => $entity->academic_period_id
+                        ])
+                        ->first();
+                
+            }//POCOR-6362 ends
             // add new student record in the new institution
             $newStudent = [
                 'student_status_id' => $statuses['CURRENT'],
                 'student_id' => $entity->student_id,
                 'education_grade_id' => $entity->education_grade_id,
                 'academic_period_id' => $entity->academic_period_id,
-                'start_date' => $entity->start_date,
-                'end_date' => $entity->end_date,
+                'start_date' => ($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED']) ? $academicPeriod->start_date : $entity->start_date,//POCOR-6362 
+                'end_date' => ($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED']) ? $academicPeriod->end_date : $entity->end_date,//POCOR-6362
                 'institution_id' => $entity->institution_id,
                 'previous_institution_student_id' => $previousStudentRecord->id
             ];
@@ -127,10 +138,10 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                 $newStudent['class'] = $entity->institution_class_id;
             }
             $newStudentEntity = $Students->newEntity($newStudent);
-
             if ($Students->save($newStudentEntity)) {
                 // end previous student record (if not promoted/graduated status)
-                if ($previousStudentRecord->student_status_id == $statuses['CURRENT']) {
+                //POCOR-6362 apply condition for PROMOTED and GRADUATED status
+                if ($previousStudentRecord->student_status_id == $statuses['CURRENT'] || $previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED']) {
                     $previousStudentRecord->end_date = $entity->requested_date;
                     $previousStudentRecord->student_status_id = $statuses['TRANSFERRED'];
                     $Students->save($previousStudentRecord);
