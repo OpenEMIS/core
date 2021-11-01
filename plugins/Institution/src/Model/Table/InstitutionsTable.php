@@ -76,7 +76,7 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
-        $this->hasMany('ShiftOptions', ['className' => 'InstitutionShifts.ShiftOptions', 'foreignKey' => 'shift_option_id']);
+        //$this->hasMany('ShiftOptions', ['className' => 'InstitutionShifts.ShiftOptions', 'foreignKey' => 'shift_option_id']);
         $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->hasMany('InstitutionCustomFieldValues', ['className' => 'Institution.InstitutionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']);
@@ -194,7 +194,14 @@ class InstitutionsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('ControllerAction.Image');
-
+        /*POCOR-6346 starts*/
+        $this->shiftTypes = [
+            self::SINGLE_OWNER => __('Single Owner'),
+            self::SINGLE_OCCUPIER => __('Single Occupier'),
+            self::MULTIPLE_OWNER => __('Multiple Owner'),
+            self::MULTIPLE_OCCUPIER => __('Multiple Occupier')
+        ];
+        /*POCOR-6346 ends*/
         $this->classificationOptions = [
             self::ACADEMIC => __('Academic Institution'),
             self::NON_ACADEMIC => __('Non-Academic Institution')
@@ -598,7 +605,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('information_section', ['type' => 'section', 'title' => __('Information')]);
 
         $this->field('shift_section', ['type' => 'section', 'title' => __('Shifts'), 'visible' => ['view'=>true]]);
-        $this->field('shift_type', ['visible' => ['view' => true]]);
+        $this->field('shift_type', ['visible' => ['view' => false]]);
 
         $this->field('shift_details', [
             'type' => 'element',
@@ -1543,10 +1550,12 @@ class InstitutionsTable extends ControllerActionTable
     {
         $isActive = true;
 
-        $institutionEntity = $this->get($institutionId, ['contain' => 'Statuses']);
-        if ($institutionEntity->has('status') && $institutionEntity->status->has('code')) {
-            if ($institutionEntity->status->code == 'INACTIVE') {
-                $isActive = false;
+        if (!empty($institutionId)) {
+            $institutionEntity = $this->get($institutionId, ['contain' => 'Statuses']);
+            if ($institutionEntity->has('status') && $institutionEntity->status->has('code')) {
+                if ($institutionEntity->status->code == 'INACTIVE') {
+                    $isActive = false;
+                }
             }
         }
 
