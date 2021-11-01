@@ -181,11 +181,12 @@ private function getData($settings)
    $academicPeriodId = $requestData->academic_period_id;
    $institutionId = $requestData->institution_id;
    $riskType = $requestData->risk_type;
-
+   $areaId = $requestData->area_education_id;
    $institutionStudents = TableRegistry::get('institution_students');
    $institutionStudentRisks = TableRegistry::get('institution_student_risks');
    $studentRisksCriterias = TableRegistry::get('student_risks_criterias');
    $riskCriterias = TableRegistry::get('risk_criterias');
+   $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
    $conditions = [];
 
         if (!empty($academicPeriodId)) {
@@ -199,7 +200,9 @@ private function getData($settings)
         if (!empty($riskType)) {
             $conditions['InstitutionRisks.risk_id'] = $riskType;
         }
-
+        if ($areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
+        }
         $newConditions = [];
 
         if (!empty($academicPeriodId)) {
@@ -251,7 +254,6 @@ private function getData($settings)
                 ])
                 ->group([$institutionStudents->aliasField('student_id')])
                 ->where([$conditions]);
-
     $result = [];
     if (!empty($query)) {
         foreach ($query as $key => $value) {
