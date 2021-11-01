@@ -209,11 +209,18 @@ class GuardiansTable extends AppTable {
 
         $requestData = json_decode($settings['process']['params']);
         $institutionId = $requestData->institution_id;
+        $institutionTypeId = $requestData->institution_type_id;
         $institutionsTable = TableRegistry::get('institutions');
-
+        $areaId = $requestData->area_education_id;
         $conditions = [];
-        if (!empty($institutionId)) {
+        if (!empty($institutionId) && $institutionId > 0) {
             $conditions['Institutions.id'] = $institutionId;
+        }
+        if (!empty($institutionTypeId) && $institutionTypeId > 0) {
+            $conditions['Institutions.institution_type_id'] = $institutionTypeId;
+        }
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
         }
 
         $query

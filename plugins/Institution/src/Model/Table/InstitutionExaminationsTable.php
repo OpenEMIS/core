@@ -42,6 +42,7 @@ class InstitutionExaminationsTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -98,5 +99,70 @@ class InstitutionExaminationsTable extends ControllerActionTable
         ]);
 
         $this->setFieldOrder(['academic_period_id', 'code', 'name', 'description', 'education_grade_id', 'registration_start_date', 'registration_end_date', 'examination_items']);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+     
+        $extraField[] = [
+            'key'   => 'InstitutionExaminations.code',
+            'field' => 'code',
+            'type'  => 'string',
+            'label' => __('Code')
+        ];
+
+        $extraField[] = [
+            'key'   => 'InstitutionExaminations.name',
+            'field' => 'name',
+            'type'  => 'string',
+            'label' => __('Name')
+        ];
+
+        $extraField[] = [
+            'key'   => 'InstitutionExaminations.registration_start_date',
+            'field' => 'registration_start_date',
+            'type'  => 'date',
+            'label' => __('Registration Start Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'InstitutionExaminations.registration_end_date',
+            'field' => 'registration_end_date',
+            'type'  => 'date',
+            'label' => __('Registration End Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'AcademicPeriods.name',
+            'field' => 'academic_period',
+            'type'  => 'string',
+            'label' => __('Academic Period')
+        ];
+
+        $extraField[] = [
+            'key'   => 'EducationGrades.code',
+            'field' => 'grade',
+            'type'  => 'string',
+            'label' => __('Education Grade')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+
+        $academicPeriod = $this->request->query['academic_period_id']; 
+        
+            $query
+            ->select(['code' => 'InstitutionExaminations.code', 'name' => 'InstitutionExaminations.name', 'grade' => 'EducationGrades.code', '	registration_start_date' => 'InstitutionExaminations.registration_start_date',  'registration_end_date' => 'InstitutionExaminations.registration_end_date', 'academic_period' => 'AcademicPeriods.name'])
+            ->LeftJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()],[
+                $this->EducationGrades->aliasField('id').' = ' . 'InstitutionExaminations.education_grade_id'
+            ])
+            ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+                $this->AcademicPeriods->aliasField('id').' = ' . 'InstitutionExaminations.academic_period_id'
+            ])
+            ->where(['InstitutionExaminations.academic_period_id' =>  $academicPeriod]);
+     
     }
 }

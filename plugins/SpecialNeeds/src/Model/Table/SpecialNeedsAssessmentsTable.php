@@ -33,6 +33,11 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
+        $this->addBehavior('Excel',[
+            'excludes' => ['date', 'file_name', 'comment','security_user_id'],
+            'pages' => ['index'],
+        ]);
+
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
@@ -147,4 +152,36 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
 
         $this->setFieldOrder(['date', 'special_need_type_id', 'special_need_difficulty_id', 'file_name', 'file_content', 'comment']);
     }
+
+    // POCOR-6139 start
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'SpecialNeedsAssessments.special_need_type_id',
+            'field' => 'special_need_type_id',
+            'type'  => 'integer',
+            'label' => __('Type')
+        ];
+
+        $extraField[] = [
+            'key'   => 'SpecialNeedsAssessments.special_need_difficulty_id',
+            'field' => 'special_need_difficulty_id',
+            'type'  => 'integer',
+            'label' => __('Difficulty')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+    
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+
+        $session = $this->request->session();
+        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        
+        $query
+        ->where([
+            $this->aliasField('security_user_id = ').$staffUserId,
+        ]);
+    }
+    // POCOR-6139 end
 }
