@@ -660,6 +660,12 @@ class InstitutionsController extends AppController
     }
     //POCOR-6143 added Export button in Infratucture > Utilitie > Electricity
 
+    //POCOR-6149 Add expor button on Add Export button function - Institutions > Infrastructures > WASH > Sewage
+    public function InfrastructureWashSewages()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashSewages']);
+    }
+
     public function changeUtilitiesHeader($model, $modelAlias, $userType)
     {
         $session = $this->request->session();
@@ -703,6 +709,12 @@ class InstitutionsController extends AppController
                 $header = $institutionName . ' - ' . __('Hygiene');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
                 $this->Navigation->addCrumb(__('Hygiene'));
+                $this->set('contentHeader', $header);
+            } else if($this->request->param('action') == 'InfrastructureWashSewages'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Sewage');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Sewage'));
                 $this->set('contentHeader', $header);
             }
         }

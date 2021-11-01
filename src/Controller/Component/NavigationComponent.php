@@ -928,11 +928,11 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.InfrastructureWashWastes.view', 'Institutions.InfrastructureWashWastes.add', 'Institutions.InfrastructureWashWastes.edit', 'Institutions.InfrastructureWashWastes.delete']
             ],
 
-            'InfrastructureWashSewages.index' => [
+            'Institutions.InfrastructureWashSewages.index' => [
                 'title' => 'Sewage',
                 'parent' => 'Wash',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InfrastructureWashSewages.view', 'InfrastructureWashSewages.add', 'InfrastructureWashSewages.edit', 'InfrastructureWashSewages.delete']
+                'selected' => ['Institutions.InfrastructureWashSewages.view', 'Institutions.InfrastructureWashSewages.add', 'Institutions.InfrastructureWashSewages.edit', 'Institutions.InfrastructureWashSewages.delete']
             ],
 
             'Utilities' => [
