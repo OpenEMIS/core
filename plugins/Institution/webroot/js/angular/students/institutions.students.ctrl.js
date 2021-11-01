@@ -253,6 +253,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function goToFirstStep() {
         StudentController.step = 'user_details';
+        StudentController.selectedStudentData = {};
+    }
+
+    scope.cancelProcess = function() {
+        location.href = angular.baseUrl + '/Directory/Directories/Directories/index';
     }
 
     function initGrid() {
