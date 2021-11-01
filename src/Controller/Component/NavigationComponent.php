@@ -304,9 +304,9 @@ class NavigationComponent extends Component
         } elseif (($controller->name == 'Directories' && $action != 'index') || in_array($controller->name, $directoryControllers)) {
             $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
 
-            $encodedParam = $this->request->params['pass'][1];
-            if(!empty($encodedParam)) {
-                $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
+			$encodedParam = $this->request->params['pass'][1];
+			if(!empty($encodedParam)) {
+				$securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
             }
             if(!empty($encodedParam)) {
                 //POCOR-6202 start
@@ -316,22 +316,27 @@ class NavigationComponent extends Component
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
                 }
                 //POCOR-6202 end
-            }
+			}
 
-            $userType = '';
-            if(!empty($userInfo)) {
-                if ($userInfo->is_student && $userInfo->is_staff == 0 && $userInfo->is_guardian == 0) {
-                    $userType = 1;
-                } elseif ($userInfo->is_staff && $userInfo->is_student == 0 && $userInfo->is_guardian == 0) {
-                    $userType = 2;
-                } elseif ($userInfo->is_guardian && $userInfo->is_staff == 0 && $userInfo->is_student == 0) {
-                    $userType = 3;
-                } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
+			$userType = '';
+			if(!empty($userInfo)) {
+				if ($userInfo->is_student && $userInfo->is_staff == 0 && $userInfo->is_guardian == 0) {
+					$userType = 1;
+				} elseif ($userInfo->is_staff && $userInfo->is_student == 0 && $userInfo->is_guardian == 0) {
+					$userType = 2;
+				} elseif ($userInfo->is_guardian && $userInfo->is_staff == 0 && $userInfo->is_student == 0) {
+					$userType = 3;
+				} elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
                    $userType = 4; //superrole user
                 } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 0) {
                    $userType = 5;
-                }
+                } /*POCOR-6332 starts*/elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 0 && $userInfo->is_guardian == 1) {
+                   $userType = 6;
+                } elseif ($userInfo->is_student == 0 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
+                   $userType = 7;
+                }/*POCOR-6332 ends*/
             }
+
             $session = $this->request->session();
             $isStudent = $session->read('Directory.Directories.is_student');
             $isStaff = $session->read('Directory.Directories.is_staff');
@@ -364,6 +369,14 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
+            /*POCOR-6332 starts*/
+            if ($userType == 6) {
+                $session->write('Directory.Directories.reload', true);
+            }
+            if ($userType == 7) {
+                $session->write('Directory.Directories.reload', true);
+            }
+            /*POCOR-6332 ends*/
         } elseif (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
             $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
             $navigations = $this->appendNavigation('Profiles.Personal', $navigations, $this->getProfileNavigation());
@@ -519,12 +532,14 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution', 0 => $institutionId]
             ],
 
-            'InstitutionCalendars.index' => [
+            // POCOR-6122
+            'Institutions.InstitutionCalendars.index' => [
                 'title' => 'Calendar',
                 'parent' => 'Institution.General',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionCalendars.view', 'InstitutionCalendars.add', 'InstitutionCalendars.edit', 'InstitutionCalendars.delete']
+                'selected' => ['Institutions.InstitutionCalendars','Institutions.InstitutionCalendars.view', 'Institutions.InstitutionCalendars.add', 'Institutions.InstitutionCalendars.edit', 'Institutions.InstitutionCalendars.delete']
             ],
+            // POCOR-6122
 
             'Contacts' => [
                 'title' => 'Contacts',
@@ -553,12 +568,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution']
             ],
 
-            'Institutions.Profiles.index' => [
-                'title' => 'Profiles',
-                'parent' => 'Institution.General',
-                'selected' => ['Institutions.Profiles'],
-                'params' => ['plugin' => 'Institution']
-            ],
+			'Institutions.Profiles.index' => [
+				'title' => 'Profiles',
+				'parent' => 'Institution.General',
+				'selected' => ['Institutions.Profiles'],
+				'params' => ['plugin' => 'Institution']
+			],
 
             'Institution.Academic' => [
                 'title' => 'Academic',
@@ -730,7 +745,7 @@ class NavigationComponent extends Component
             'Institutions.Assessments.index' => [
                 'title' => 'Assessments',
                 'parent' => 'Institution.Performance',
-                'selected' => ['Institutions.Assessments', 'Institutions.Results', 'Institutions.AssessmentsArchive', 'Institutions.ImportAssessmentItemResults.add', 'Institutions.ImportAssessmentItemResults.results','Institutions.AssessmentItemResultsArchived'],
+                'selected' => ['Institutions.Assessments', 'Institutions.Results', 'Institutions.AssessmentsArchive', 'Institutions.ImportAssessmentItemResults.add', 'Institutions.ImportAssessmentItemResults.results','Institutions.AssessmentItemResultsArchived', 'Institutions.reportCardGenerate'],
                 'params' => ['plugin' => 'Institution'],
             ],
 
@@ -885,11 +900,11 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'InfrastructureWashWaters.index' => [
+            'Institutions.InfrastructureWashWaters.index' => [
                 'title' => 'Water',
                 'parent' => 'Wash',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InfrastructureWashWaters.view', 'InfrastructureWashWaters.add', 'InfrastructureWashWaters.edit', 'InfrastructureWashWaters.delete']
+                'selected' => ['Institutions.InfrastructureWashWaters.view', 'Institutions.InfrastructureWashWaters.add', 'Institutions.InfrastructureWashWaters.edit', 'Institutions.InfrastructureWashWaters.delete']
             ],
 
             'InfrastructureWashSanitations.index' => [
@@ -1012,11 +1027,11 @@ class NavigationComponent extends Component
                 'selected' => ['InstitutionTransportProviders.add', 'InstitutionTransportProviders.edit', 'InstitutionTransportProviders.view', 'InstitutionTransportProviders.delete']
             ],
 
-            'InstitutionBuses.index' => [
+            'Institutions.InstitutionBuses.index' => [
                 'title' => 'Buses',
                 'parent' => 'Institutions.Transport',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionBuses.add', 'InstitutionBuses.edit', 'InstitutionBuses.view', 'InstitutionBuses.delete']
+                'selected' => ['Institutions.InstitutionBuses','Institutions.InstitutionBuses.add', 'Institutions.InstitutionBuses.edit', 'Institutions.InstitutionBuses.view', 'Institutions.InstitutionBuses.delete']
             ],
 
             'InstitutionTrips.index' => [
@@ -1136,7 +1151,8 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
+                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'Students.StudentBodyMasses', 'Students.StudentBodyMasses.add', 'Students.StudentBodyMasses.edit', 'Students.StudentBodyMasses.view', 'Students.StudentBodyMasses.delete', 'Students.StudentInsurances.add', 'Students.StudentInsurances.view', 'Students.StudentInsurances.edit', 'Students.StudentInsurances.delete', 'Students.StudentInsurances']
+                // 'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
             ],
             'Students.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
@@ -1792,7 +1808,7 @@ class NavigationComponent extends Component
                 'selected' => ['Securities.Roles', 'Securities.Permissions']
             ],
 
-            'ProfileTemplates' => [
+			'ProfileTemplates' => [
                 'title' => 'Profiles',
                 'parent' => 'Administration',
                 'link' => false
@@ -2025,9 +2041,15 @@ class NavigationComponent extends Component
             ],
 
             'Administration.Archive' => [
-                'title' => 'Archive',
+                'title' => 'Data Management',
                 'parent' => 'Administration',
                 'link' => false,
+            ],
+            'Archive.Copy' => [
+                'title' => 'Copy',
+                'parent' => 'Administration.Archive',
+                'selected' => ['Archives.CopyData'],
+                'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'CopyData'],
             ],
             'Archive.Backup' => [
                 'title' => 'Backup',
@@ -2036,7 +2058,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'BackupLog'],
             ],
             'Archive.Transfer' => [
-                'title' => 'Transfer',
+                'title' => 'Archive',
                 'parent' => 'Administration.Archive',
                 'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Transfer'],
                 'selected' => ['Archives.Transfer'],
