@@ -520,7 +520,16 @@ class InstitutionInfrastructuresTable extends AppTable
 							$row[$data->custom_field_id] = $data->text_value;
 						} 
 						if(!empty($data->number_value)) {
-							$row[$data->custom_field_id] = $data->number_value;
+							/*POCOR-6367 starts*/
+							$optionvalue = TableRegistry::get('infrastructure_custom_field_options');
+							$fieldValue = $optionvalue->get($data->number_value);
+							if (!empty($fieldValue)) {
+								$optVal = $fieldValue->name;
+							} else {
+								$optVal = '';
+							}
+							$row[$data->custom_field_id] = $optVal;
+							/*POCOR-6367 ends*/
 						}
 						if(!empty($data->decimal_value)) {
 							$row[$data->custom_field_id] = $data->decimal_value;
