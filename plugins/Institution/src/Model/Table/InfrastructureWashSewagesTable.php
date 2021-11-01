@@ -99,6 +99,7 @@ class InfrastructureWashSewagesTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
+        $requestQuery = $this->request->query;
         $academyPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
         $query

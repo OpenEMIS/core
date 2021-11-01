@@ -122,8 +122,16 @@ class InfrastructureWashWatersTable extends ControllerActionTable
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+        $session = $this->request->session();
+        $institutionId  = $session->read('Institution.Institutions.id');
+        $requestQuery = $this->request->query;
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-        $query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriodId])
+        
+        $query
+        ->where([
+            $this->aliasField('academic_period_id') => $selectedAcademicPeriodId,
+            $this->aliasField('institution_id') => $institutionId
+        ])
         ->orderDesc($this->aliasField('created'));
     }
 }
