@@ -11,6 +11,7 @@ use Cake\Utility\Inflector;
 use Cake\Routing\Router;
 use App\Controller\AppController;
 use Cake\Network\Response;
+use Cake\Http\Client;
 
 class DirectoriesController extends AppController
 {
@@ -45,6 +46,7 @@ class DirectoriesController extends AppController
         ];
 
         $this->loadComponent('Training.Training');
+        $this->loadComponent('Configuration.Configuration');
         $this->loadComponent('User.Image');
         $this->loadComponent('Institution.CreateUsers');
         $this->loadModel('FieldOption.Nationalities');
@@ -1064,5 +1066,76 @@ class DirectoriesController extends AppController
         $this->autoRender = false;
         $fname = $this->request->query['fname'];
         return new Response(['body' => $this->Directories->getInternalSearchData($fname)]);
+    }
+
+    // public function directoryExternalSearch()
+    // {
+    //     $this->autoRender = false;
+    //     $fname = $this->request->query['fname'];
+    //     return new Response(['body' => $this->Directories->getExternalSearchData($fname)]);
+    // }
+
+    public function directoryExternalSearch()
+    {
+        $this->autoRender = false;
+        $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $attributes = $ExternalAttributes
+            ->find('list', [
+                'keyField' => 'attribute_field',
+                'valueField' => 'value'
+            ])
+            ->innerJoin(['ConfigItems' => 'config_items'], [
+                'ConfigItems.code' => 'external_data_source_type',
+                $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
+            ])
+            ->toArray();
+        
+
+        $clientId = $attributes['client_id'];
+        $scope = $attributes['scope'];
+        $tokenUri = $attributes['token_uri'];
+        $privateKey = $attributes['private_key'];
+        $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
+
+        $data = [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $token
+        ];
+
+        $fieldMapping = [
+            '{page}' => 1,
+            '{limit}' => 1,
+            '{first_name}' => 'Joshua',
+            '{last_name}' => 'Garett',
+            '{identity_number}' => '123123'
+        ];
+        $http = new Client();
+        $response = $http->post($attributes['token_uri'], $data);
+        $noData = json_encode(['data' => [], 'total' => 0], JSON_PRETTY_PRINT);
+        if ($response->isOK()) {
+            $body = $response->body('json_decode');
+            $recordUri = $attributes['record_uri'];
+
+            foreach ($fieldMapping as $key => $map) {
+                $recordUri = str_replace($key, $map, $recordUri);
+            }
+
+            $http = new Client([
+                'headers' => ['Authorization' => $body->token_type.' '.$body->access_token]
+            ]);
+
+            $response = $http->get($recordUri);
+            // echo "<pre>";print_r($this->response);die;
+            // echo "<pre>";print_r($response);die;
+
+            if ($response->isOK()) {
+                $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT));
+            } else {
+                $this->response->body($noData);
+            }
+        } else {
+            $this->response->body($noData);
+        }
+        echo "<pre>";print_r($this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT)));die;
     }
 }

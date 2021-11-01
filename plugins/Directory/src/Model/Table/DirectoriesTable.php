@@ -11,6 +11,8 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\Log\Log;
+use Cake\Http\Client;
+use Cake\Network\Response;
 
 class DirectoriesTable extends ControllerActionTable
 {
@@ -1328,5 +1330,66 @@ class DirectoriesTable extends ControllerActionTable
         }
         return json_encode($finalArray, JSON_PRETTY_PRINT);
         
+    }
+
+    public function getExternalSearchData($fname){
+        $this->autoRender = false;
+        $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $attributes = $ExternalAttributes
+            ->find('list', [
+                'keyField' => 'attribute_field',
+                'valueField' => 'value'
+            ])
+            ->innerJoin(['ConfigItems' => 'config_items'], [
+                'ConfigItems.code' => 'external_data_source_type',
+                $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
+            ])
+            ->toArray();
+            $clientId = $attributes['client_id'];
+            $scope = $attributes['scope'];
+            $tokenUri = $attributes['token_uri'];
+            $privateKey = $attributes['private_key'];
+    
+        $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
+        
+        $data = [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $token
+        ];
+        
+        $fieldMapping = [
+            '{page}' => 1,
+            '{limit}' => 1,
+            '{first_name}' => 'Joshua',
+            '{last_name}' => 'Garett',
+            '{identity_number}' => 'S9890987876'
+        ];
+        $http = new Client();
+        $response = $http->post($attributes['token_uri'], $data);
+        $noData = json_encode(['data' => [], 'total' => 0], JSON_PRETTY_PRINT);
+        if ($response) {
+            $body = $response->body('json_decode');
+            $recordUri = $attributes['record_uri'];
+
+            foreach ($fieldMapping as $key => $map) {
+                $recordUri = str_replace($key, $map, $recordUri);
+            }
+
+            $http = new Client([
+                'headers' => ['Authorization' => $body->token_type.' '.$body->access_token]
+            ]);
+
+            $response = $http->get($recordUri);
+
+            if ($response->isOK()) {
+                $data = $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT));
+                echo "<pre>";print_r($data);die;
+            } else {
+                $this->response->body($noData);
+            }
+        } else {
+            $this->response->body($noData);
+        }
+        die;
     }
 }
