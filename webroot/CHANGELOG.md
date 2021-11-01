@@ -1,3 +1,60 @@
+### [3.70.4] - 2021-10-30
+- Implemented: Update Export button function - Institutions > Academic > Subjects (include grade class subject teacher room and number of students by gender)
+- Implemented: Add Export button function - Institutions > Staff > Staff1 > Special Needs (include all tabs)
+- Bug Fixed: Administration > Profiles > Institutions: Placeholders are not working across all environments
+- Bug Fixed: Institutions>General>Calendar: 404 Error
+- Bug Fixed: Institutions>Students>Student1>Promotion/Repeat:Grades that are both above and lower appears for Promotion/Repeat
+- Bug Fixed: Institutions > Performance > Assessments : Allow user to generate report by Student status
+- Bug Fixed: Institutions > Students > Undo : Education Grades should be filtered by the Academic Period selected above
+
+### [3.70.3] - 2021-10-22
+- Bug Fixed: Institution > Student > Add: There is no validation if a new student added has the same Identity Number as an existing student
+- Bug Fixed: Institutions > Students > Export : Issues with Student export file
+
+### [3.70.2] - 2021-10-15
+- Implemented: Improvement of School Shift functions
+- Implemented: Update Export button function - Institutions > Students (include custom fields phone number identity types and name of the guardian)
+- Implemented: Add Export button function - Institutions > Students > Student1 > Health (include all tabs)
+- Implemented: Add Export button function - Institutions > Transport > Buses
+- Implemented: Copy data from one academic period to another
+- Bug Fixed: Institutions > Performance > Outcomes: Outcome template is empty even when template is created in the Administration > Performance > Outcomes > Templates and is linked correctly in the Institutions > Performance > Outcomes
+- Bug Fixed: Report>Institutions>Subject: Grade column is missing and Remove Subjects that are not linked to Classes
+- Bug Fixed: Reports > Institution > Student Body Masses: Academic Period filter is not functioning
+- Bug Fixed: Report>Institution>Subjects: Subjects should filter according to the Institutions that are selected under Institution
+- Bug Fixed: Institution>Academic>Classes: Staffs are assigned to subjects even though class is already deleted
+- Bug Fixed: Personal>General: Edit Permission working only for Account tab and add permission not working except for Contact
+- Bug Fixed: Students > Academic > Programmes > Transition: Student can transition to a Education Grade that does not exist in current institution
+- Bug Fixed: Institutions>Advanced Search>Shift Type:Shift type is empty even though there is data in the database
+- Bug Fixed: Institutions>Students: System shows more than one row for students who has more than one identity number
+
+### [3.70.1] - 2021-10-08
+- Implemented: OpenEMIS Core: Webhook Education Structure System - Create
+- Implemented: OpenEMIS Core: Webhook Academic Period - Delete
+- Implemented: OpenEMIS Core: Webhook Role - Update
+- Implemented: Add Export button function - Institutions > Staff > Staff1 (include classes subjects absences)
+- Implemented: Change text in the Updates function
+- Implemented: Add Session Start Date, Session End Date and Credit Hours to Professional Development Results List Page
+- Bug Fixed: Administrations > Profiles > Students : System should display student's latest record based on the filter selected
+- Bug Fixed: Institutions > Performance > Report Cards: Reports are stuck in Progress
+- Bug Fixed: Administration > Profiles > Institutions: Adding of new Placeholders
+- Bug Fixed: Directory>Student: Error when viewing user who is both guardian and student
+- Bug Fixed: Reports > Institution > Infrastructure: Infrastructure Level filter does not have an "All" option" and Academic Period filter is not functioning
+- Bug Fixed: Personal>Student>Academic>Absences: 404 Error
+- Bug Fixed: Institution>Attendance>Students:404 error when trying to access the Archive page for Attendance
+
+### [3.70.0] - 2021-10-01
+- Implemented: OpenEMIS Core: Webhook Role - Create
+- Implemented: OpenEMIS Core: Webhook Role - Delete
+- Implemented: Update Export button function - Institutions > Academic > Classes (include homeroom teacher and number of students per classes by gender)
+- Implemented: Add Export button function - Institutions > Infrastructures > WASH > Water
+- Bug Fixed: Institution > Academic > Students/Staff: Student or Staff Search 404 Error
+- Bug Fixed: Institutions>Students>Attendance: Imported Student Attendance does not reflect Actual Absence Type
+- Bug Fixed: Reports>Textbooks/Survey/Rubric/Workflow: Add Academic Period, Area Level, Area Name and Institution Name filters to all reports
+- Bug Fixed: Reports-Institutions:Not able to view Reports data
+- Bug Fixed: Administration>Profile>Student: institutions which are currently inactive in MEMIS are shown in the Institution filter
+- Bug Fixed: Reports: Reports that are in progress should be able to be deleted
+- Bug Fixed: Report>Institution: No data generated when Area Level and Area Education not selected and There is no link between the Area Level and Area Education and the Institution filters.
+
 ### [3.69.4] - 2021-09-23
 - Implemented: OpenEMIS Core: Webhook Education Structure System - Delete
 - Bug Fixed: Administrations > Security > Roles > Permission: To grant access for Import Extracurricular to users
