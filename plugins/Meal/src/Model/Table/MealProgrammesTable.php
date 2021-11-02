@@ -128,7 +128,7 @@ class MealProgrammesTable extends ControllerActionTable
         //     'options' => $institutionsOptions
         //     // 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
         // ]);
-        $this->field('area_id', ['title' => __('Beneficiary Field Directorates'), 'source_model' => 'Area.Areas', 'displayCountry' => false,'attr' => ['label' => __('Beneficiary Field Directorates')]]);
+        $this->field('area_id', ['title' => __('Area Education'), 'source_model' => 'Area.Areas', 'displayCountry' => false,'attr' => ['label' => __('Area Education')]]);
         
     }
    
@@ -265,18 +265,15 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('academic_period_id',['select' => false]);
         $this->field('code');
         $this->field('name');
-        $this->field('institution_id', [
-            'attr' => [
-                'label' => __('Beneficiary institutions')
-            ],
-            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
-        ]);
-        $this->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
-        $this->field('type',['select' => false]);
         $this->field('targeting');
         $this->field('start_date');
         $this->field('end_date');
         $this->field('amount');
+        $this->field('institution_id', [
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+        ]);
+        $this->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
+        $this->field('type',['select' => false]);
         $this->field('meal_nutritions', [
             'type' => 'chosenSelect',
             'attr' => [
@@ -361,6 +358,21 @@ class MealProgrammesTable extends ControllerActionTable
             ->toArray();
         return $list;
     } 
+    public function findMealInstitutionProgrammes(Query $query, array $options){
+        $institutionId = $options['institution_id'];  
+        // echo "<pre>"; print_r($institutionId); die();
+        $MealProgramme = TableRegistry::get('Meal.MealProgrammes');
+        $list = $MealProgramme
+        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+        ->where([
+            $MealProgramme->aliasField('institution_id') => $institutionId])            
+        ->orWhere([ 
+            $MealProgramme->aliasField('institution_id') => 0 ])
+        ->toArray();
+        // echo "<pre>"; print_r($list); die();
+
+        return $list;
+    }
 
      public function onGetAreaId(Event $event, Entity $entity)
     {
@@ -418,7 +430,13 @@ class MealProgrammesTable extends ControllerActionTable
                             $InstitutionsTable->aliasField('name') => 'ASC'
                         ]);
                     $institutionList = $institutionQuery->toArray();
-                $institutionOptions = ['' => '-- '.__('Select').' --'] + $institutionList;
+                 if (count($institutionList) > 1) {
+                           $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                        } else {
+                            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                        }
+
+                // $institutionOptions = ['' => '-- '.__('Select').' --'] + $institutionList;
                 $attr['type'] = 'chosenSelect';
                 $attr['onChangeReload'] = true;
                 $attr['attr']['multiple'] = false;
