@@ -1441,6 +1441,12 @@ class InstitutionsTable extends ControllerActionTable
 
     public function findMap(Query $query, array $options)
     {
+        // [POCOR-6379] - Anand Malvi
+        $institutionStatus = TableRegistry::get('institution_statuses');
+        $activeInstitutionStatus = $institutionStatus->find()
+        ->select(['id' => $institutionStatus->aliasField('id')])
+        ->where([$institutionStatus->aliasField('code') => 'ACTIVE'])->first();
+        // [POCOR-6379] - Anand Malvi
         $query
         ->select([
             'id',
@@ -1511,8 +1517,12 @@ class InstitutionsTable extends ControllerActionTable
             }
 
             return $formattedResults;
-        });
-
+        })
+        // [POCOR-6379] - Anand Malvi
+        ->where([
+            $this->aliasField('institution_status_id') => $activeInstitutionStatus->id
+        ]);
+        // [POCOR-6379] - Anand Malvi
         return $query;
     }
 
