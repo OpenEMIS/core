@@ -136,6 +136,7 @@ class InstitutionsController extends AppController
 
         //assessment
         'ImportAssessmentItemResults',
+        'ReportCardGenerate',
 
         // misc
         // 'IndividualPromotion',
@@ -601,6 +602,13 @@ class InstitutionsController extends AppController
     }
     //POCOR-5669 added InstitutionMaps
 
+    //POCOR-6122 add export button in calendar
+    public function InstitutionCalendars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Calendars']);
+    }
+    //POCOR-6122 add export button in calendar
+
     //POCOR-5683 added InstitutionStatusUpdate
     public function InstitutionStatus()
     {
@@ -762,6 +770,14 @@ class InstitutionsController extends AppController
         $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
 
         $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+        $TransferLogs = TableRegistry::get('TransferLogs');
+        $TransferLogsData = $TransferLogs
+        ->find()
+        ->select([
+            'TransferLogs.academic_period_id'
+        ])
+        ->first();
+
         $securityRoleFunctionsData = $securityRoleFunctions
         ->find()
         ->select([
@@ -777,6 +793,11 @@ class InstitutionsController extends AppController
             $is_button_accesible = 1;
         }
         if($this->Auth->user('super_admin') == 1){
+            $is_button_accesible = 1;
+        }
+        if(empty($TransferLogsData)){
+            $is_button_accesible = 0;
+        }else{
             $is_button_accesible = 1;
         }
 
@@ -944,15 +965,18 @@ class InstitutionsController extends AppController
 
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
-
         if ($hasTemplate) {
-            $customUrl = $this->ControllerAction->url('index');
-            $customUrl['plugin'] = 'CustomExcel';
-            $customUrl['controller'] = 'CustomExcels';
-            $customUrl['action'] = 'export';
-            $customUrl[0] = 'AssessmentResults';
-            $this->set('customExcel', Router::url($customUrl));
+            $queryString = $this->request->query('queryString');
+            $customUrl = Router::url([
+                            'plugin' => 'Institution',
+                            'controller' => 'Institutions',
+                            'action' => 'reportCardGenerate',
+                            'add',
+                            'queryString' => $queryString
+                        ]);
 
+            $this->set('reportCardGenerate',$customUrl);
+           
             $exportPDF_Url = $this->ControllerAction->url('index');
             $exportPDF_Url['plugin'] = 'CustomExcel';
             $exportPDF_Url['controller'] = 'CustomExcels';
@@ -963,6 +987,10 @@ class InstitutionsController extends AppController
 
         $this->set('excelUrl', Router::url($url));
         $this->set('ngController', 'InstitutionsResultsCtrl');
+    }
+
+    public function ReportCardGenerate(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardGenerate']);
     }
 
     public function Comments()
@@ -1446,6 +1474,14 @@ class InstitutionsController extends AppController
                 $institutionId = $session->read('Institution.Institutions.id');
             }
 
+            $TransferLogs = TableRegistry::get('TransferLogs');
+            $TransferLogsData = $TransferLogs
+            ->find()
+            ->select([
+                'TransferLogs.academic_period_id'
+            ])
+            ->first();
+
             $securityFunctions = TableRegistry::get('SecurityFunctions');
             $securityFunctionsData = $securityFunctions
             ->find()
@@ -1474,6 +1510,11 @@ class InstitutionsController extends AppController
                 $is_button_accesible = 1;
             }
             if($this->Auth->user('super_admin') == 1){
+                $is_button_accesible = 1;
+            }
+            if(empty($TransferLogsData)){
+                $is_button_accesible = 0;
+            }else{
                 $is_button_accesible = 1;
             }
 

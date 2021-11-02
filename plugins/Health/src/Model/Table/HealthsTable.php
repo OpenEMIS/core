@@ -24,7 +24,10 @@ class HealthsTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
+        // $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
+        
         $this->addBehavior('Health.Health');
+
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
@@ -34,8 +37,8 @@ class HealthsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         $this->addBehavior('Excel',[
-            'excludes' => [],
-            'pages' => ['view'],
+            'excludes' => ['security_user_id'],
+            'pages' => ['index','view'],
         ]);
     }
 
@@ -158,9 +161,11 @@ class HealthsTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
+    //POCOR-6131
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
-        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        $studentUserId = $session->read('Student.Students.id');
 
         $query
         ->select([
@@ -168,7 +173,8 @@ class HealthsTable extends ControllerActionTable
             ELSE 'No' END)"
         ])
         ->where([
-            $this->aliasField('security_user_id = ').$staffUserId
+            // $this->aliasField('security_user_id = ').$staffUserId
+            $this->aliasField('security_user_id') => $studentUserId
         ]);
     }
 }

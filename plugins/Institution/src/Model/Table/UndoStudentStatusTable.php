@@ -206,13 +206,23 @@ class UndoStudentStatusTable extends AppTable
             $selectedPeriod = $request->query('period');
             $gradeOptions = [];
             if (!empty($selectedPeriod)) {
-                $gradeOptions = $this->Grades
-                    ->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
-                    ->contain(['EducationGrades.EducationProgrammes', 'EducationGrades.EducationStages'])
-                    ->where([$this->Grades->aliasField('institution_id') => $institutionId])
-                    ->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-                    ->order(['EducationStages.order', 'EducationGrades.order'])
-                    ->toArray();
+                /*POCOR-6356 starts*/
+                $gradeOptions = $this->EducationGrades
+                                ->find('list', [
+                                    'keyField' => 'id', 
+                                    'valueField' => 'programme_grade_name'
+                                ])
+                                ->find('visible')
+                                ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                                ->LeftJoin([$this->Grades->alias() => $this->Grades->table()],[
+                                    $this->EducationGrades->aliasField('id').' = ' . $this->Grades->aliasField('education_grade_id')
+                                ])
+                                ->order([$this->EducationGrades->aliasField('id')])
+                                ->where([
+                                    'EducationSystems.academic_period_id' => $selectedPeriod,
+                                    $this->Grades->aliasField('institution_id') => $institutionId
+                                ])->toArray();
+                /*POCOR-6356 ends*/
                 $selectedGrade = $request->query('grade');
                 $gradeOptions = $gradeOptions;
                 $Students = $this->Students;

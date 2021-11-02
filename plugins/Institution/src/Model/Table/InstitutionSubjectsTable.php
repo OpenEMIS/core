@@ -364,7 +364,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 return $arrResults;
             });
     }
-    //6198 starts 
+    //6198 starts
     public function findBySubjectsInClass(Query $query, array $options)
     {
         $classId = $options['institution_class_id'];
@@ -380,10 +380,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
             })
             ->contain(['EducationSubjects'])
             ->leftJoin([$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()], [
-                
+
                 $this->aliasField('id = ') . $InstitutionSubjectStudents->aliasField('institution_subject_id'),
                 $this->aliasField('institution_id = ') . $InstitutionSubjectStudents->aliasField('institution_id'),
-                $this->aliasField('education_grade_id = ') . $InstitutionSubjectStudents->aliasField('education_grade_id'), 
+                $this->aliasField('education_grade_id = ') . $InstitutionSubjectStudents->aliasField('education_grade_id'),
                 $this->aliasField('academic_period_id = ') . $InstitutionSubjectStudents->aliasField('academic_period_id')
             ])
             ->where([
@@ -394,7 +394,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ])
             ->order('EducationSubjects.order');
     }
-    //6198 ends 
+    //6198 ends
 
     public function findSubjectDetails(Query $query, array $options)
     {
@@ -1821,9 +1821,78 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
+    // POCOR-6128 start
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $requestQuery = $this->request->query;
+        $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $query
-        ->select(['total_male_students' => 'InstitutionSubjects.total_male_students','total_female_students' => 'InstitutionSubjects.total_female_students']);
+        ->select([
+            'total_male_students' => 'InstitutionSubjects.total_male_students',
+            'total_female_students' => 'InstitutionSubjects.total_female_students',
+            'institution_subject_id' => 'InstitutionSubjects.id'
+        ])
+        ->group($this->aliasField('id'))    
+        ->where([
+            $this->aliasField('academic_period_id = ').$selectedAcademicPeriodId,
+            $this->aliasField('institution_id = ').$institutionId,
+        ]);
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                // GETTING ROOMS FOR EACH SUBJECT
+                $institutionRooms = TableRegistry::get('institution_rooms');
+                $institutionSubjectRooms = TableRegistry::get('institution_subjects_rooms');
+                $institutionRoomsRow = $institutionRooms
+                ->find()
+                ->select([
+                    $institutionRooms->aliasField('code'),
+                    $institutionRooms->aliasField('name')
+                ])
+                ->leftJoin(
+                    [$institutionSubjectRooms->alias() => $institutionSubjectRooms->table()],
+                    [$institutionRooms->aliasField('id  = ') . $institutionSubjectRooms->aliasField('institution_room_id')]
+                )
+                ->where([$institutionSubjectRooms->alias('institution_subject_id') => $row->institution_subject_id])
+                ->first();
+
+                if(!empty($institutionRoomsRow)){
+                    $row['rooms'] = $institutionRoomsRow->code .' - '. $institutionRoomsRow->name;
+                }else{
+                    $row['rooms'] = '';
+                }
+                // GETTING ROOMS FOR EACH SUBJECT
+
+                // GET TEACHERS FOR EACH SUBJECT 
+                $institutionSubjectStaff = TableRegistry::get('institution_subject_staff');
+                $staffTable = TableRegistry::get('security_users');
+
+                $institutionStaffTeachers = $staffTable
+                ->find()
+                ->select([
+                    $staffTable->aliasField('openemis_no'),
+                    $staffTable->aliasField('first_name'),
+                    $staffTable->aliasField('last_name')
+                ])
+                ->innerJoin(
+                    [$institutionSubjectStaff->alias() => $institutionSubjectStaff->table()],
+                    [$staffTable->aliasField('id  = ') . $institutionSubjectStaff->aliasField('staff_id')]
+                )
+                ->where([$institutionSubjectStaff->alias('institution_subject_id') => $row->institution_subject_id])
+                ->first();
+
+                if(!empty($institutionStaffTeachers)){
+                    $row['teachers'] = $institutionStaffTeachers->openemis_no .' - '. $institutionStaffTeachers->first_name .' '.$institutionStaffTeachers->last_name;
+                }else{
+                    $row['teachers'] = '';
+                }
+                // GET TEACHERS FOR EACH SUBJECT
+                
+                return $row;
+            });
+        });
     }
+    // POCOR-6128 End
 }
