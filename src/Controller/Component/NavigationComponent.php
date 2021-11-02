@@ -342,40 +342,46 @@ class NavigationComponent extends Component
             $isStaff = $session->read('Directory.Directories.is_staff');
             $isGuardian = $session->read('Directory.Directories.is_guardian');
 
-            if ($userType == 2) {
+
+            // POCOR-6372 (start) initially here userType was checking but it did not work for directory navigation so changed with roles
+            if ($isStaff) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
 
-            if ($userType == 1) {
+            if ($isStudent) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
 
-            if ($userType == 3) {
+            if ($isGuardian) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
 
-            if ($userType == 4) {
+            if ($isStudent && $isStaff && $isGuardian) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
 
-            if ($userType == 5) {
+            if ($isStudent && $isStaff && !$isGuardian) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
             /*POCOR-6332 starts*/
-            if ($userType == 6) {
+            if ($isStudent && !$isStaff && $isGuardian) {
                 $session->write('Directory.Directories.reload', true);
             }
-            if ($userType == 7) {
+            if (!$isStudent && $isStaff && $isGuardian) {
+                // POCOR-6372 code for showing staff section 
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
+                // POCOR-6372 code for showing staff section 
                 $session->write('Directory.Directories.reload', true);
             }
+            // POCOR-6372 (end) initially here userType was checking but it did not work for directory navigation so changed with roles
             /*POCOR-6332 ends*/
         } elseif (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
             $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
