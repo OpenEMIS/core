@@ -33,14 +33,13 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
-        $this->addBehavior('Excel',[
-            'excludes' => ['date', 'file_name', 'comment','security_user_id'],
-            'pages' => ['index'],
-        ]);
+      
 
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
+
+        $this->addBehavior('Excel', ['excludes' => ['date', 'file_name', 'file_content', 'comment', 'security_user_id'],'pages' => ['index']]);
     }
 
     public function validationDefault(Validator $validator)
@@ -153,35 +152,37 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->setFieldOrder(['date', 'special_need_type_id', 'special_need_difficulty_id', 'file_name', 'file_content', 'comment']);
     }
 
-    // POCOR-6139 start
+
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
-            'key'   => 'SpecialNeedsAssessments.special_need_type_id',
+            'key'   => 'special_need_type_id',
             'field' => 'special_need_type_id',
-            'type'  => 'integer',
+            'type'  => 'string',
             'label' => __('Type')
         ];
 
         $extraField[] = [
-            'key'   => 'SpecialNeedsAssessments.special_need_difficulty_id',
+            'key'   => 'special_need_difficulty_id',
             'field' => 'special_need_difficulty_id',
-            'type'  => 'integer',
+            'type'  => 'string',
             'label' => __('Difficulty')
         ];
 
         $fields->exchangeArray($extraField);
     }
-    
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
 
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
         $session = $this->request->session();
-        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        
+        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
+
+
         $query
         ->where([
-            $this->aliasField('security_user_id = ').$staffUserId,
+            'security_user_id =' .$studentUserId,
         ]);
     }
-    // POCOR-6139 end
+
 }

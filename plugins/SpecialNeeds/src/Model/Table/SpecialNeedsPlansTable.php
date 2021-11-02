@@ -31,10 +31,8 @@ class SpecialNeedsPlansTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
-        $this->addBehavior('Excel',[
-            'excludes' => ['comment', 'file_name','security_user_id'],
-            'pages' => ['index'],
-        ]);
+
+        $this->addBehavior('Excel', ['excludes' => ['comment', 'file_name', 'file_content', 'security_user_id'],'pages' => ['index']]);
 
     }
 
@@ -82,14 +80,14 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         $this->setFieldOrder(['plan_name', 'file_name', 'file_content', 'comment']);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
         $session = $this->request->session();
-        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
 
         $query
         ->where([
-            $this->aliasField('security_user_id = ').$staffUserId,
+            'security_user_id =' .$studentUserId,
         ]);
     }
 }

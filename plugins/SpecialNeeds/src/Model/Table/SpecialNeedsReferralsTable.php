@@ -38,10 +38,8 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
-        $this->addBehavior('Excel',[
-            'excludes' => ['date', 'file_name', 'reason_type_id', 'referrer_id','security_user_id','special_needs_referrer_type_id'],
-            'pages' => ['index'],
-        ]);
+        $this->addBehavior('Excel', ['excludes' => ['file_name', 'file_content', 'comment', 'academic_period_id', 'security_user_id'], 'pages' => ['index']]);
+
     }
 
     public function implementedEvents()
@@ -270,49 +268,52 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'referrer_id', 'special_needs_referrer_type_id', 'date', 'reason_type_id', 'comment', 'file_name', 'file_content']);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
-            'key' => 'InstitutionClasses.academic_period_id',
-            'field' => 'academic_period_id',
-            'type' => 'string',
-            'label' => 'Academic Period'
-        ];
-        $extraField[] = [
-            'key' => 'InstitutionClasses.special_needs_referrer_type_id',
-            'field' => 'special_needs_referrer_type_id',
-            'type' => 'string',
-            'label' => 'Duty Type'
-        ];
-        $extraField[] = [
-            'key' => 'InstitutionClasses.security_user_id',
-            'field' => 'security_user_id',
-            'type' => 'string',
-            'label' => 'Staff'
-        ];
-        $extraField[] = [
-            'key' => 'InstitutionClasses.comment',
-            'field' => 'comment',
-            'type' => 'string',
-            'label' => 'Comment'
+            'key'   => 'referrer_id',
+            'field' => 'referrer_id',
+            'type'  => 'string',
+            'label' => __('Referrer Name')
         ];
 
-        //print_r($newFields); exit;
+        $extraField[] = [
+            'key'   => 'date',
+            'field' => 'date',
+            'type'  => 'date',
+            'label' => __('Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'special_needs_referrer_type_id',
+            'field' => 'special_needs_referrer_type_id',
+            'type'  => 'string',
+            'label' => __('Referrer Type')
+        ];
+
+        $extraField[] = [
+            'key'   => 'reason_type_id',
+            'field' => 'reason_type_id',
+            'type'  => 'string',
+            'label' => __('Reason')
+        ];
+
         $fields->exchangeArray($extraField);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
         $session = $this->request->session();
-        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $academyPeriodId = $this->request->query('academic_period_id');
+        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
+        $academicPeriodId = $this->request->query['academic_period_id'];
+        $institutionId  = $session->read('Institution.Institutions.id');
 
         $query
         ->where([
-            $this->aliasField('security_user_id = ').$staffUserId,
-            $this->aliasField('academic_period_id = ').$academyPeriodId
+            'academic_period_id =' .$academicPeriodId,
+            'security_user_id =' .$studentUserId,
         ]);
     }
-
 
 }
