@@ -24,10 +24,9 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
 
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
 
-        $this->addBehavior('Excel',[
-            'excludes' => ['comment','security_user_id'],
-            'pages' => ['index'],
-        ]);
+
+        $this->addBehavior('Excel', ['excludes' => ['comment', 'security_user_id'],'pages' => ['index']]);
+
     }
 
     public function validationDefault(Validator $validator)
@@ -80,28 +79,26 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
         $this->setFieldOrder(['special_needs_device_type_id', 'comment']);
     }
 
-    // POCOR-6139 start
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-
-        $session = $this->request->session();
-        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-
-        $query
-        ->where([
-            $this->aliasField('security_user_id = ').$staffUserId,
-        ]);
-    }
-
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
-            'key'   => 'SpecialNeedsDevices.special_needs_device_type_id',
+            'key'   => 'special_needs_device_type_id',
             'field' => 'special_needs_device_type_id',
-            'type'  => 'integer',
+            'type'  => 'string',
             'label' => __('Device Name')
         ];
-        
+
         $fields->exchangeArray($extraField);
     }
-    // POCOR-6139 ENd
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
+
+        $query
+        ->where([
+            'security_user_id =' .$studentUserId,
+        ]);
+    }
 }
