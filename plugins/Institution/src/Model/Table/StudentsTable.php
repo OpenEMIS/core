@@ -339,9 +339,7 @@ class StudentsTable extends ControllerActionTable
             );
 
         if ($periodId > 0) {
-            $query->where([$this->aliasField('academic_period_id') => $periodId,
-                            'StudentStatuses.id !='=> 3
-                            ]);
+            $query->where([$this->aliasField('academic_period_id') => $periodId]);
             $query ->group([$this->Users->aliasField('openemis_no')]);// POCOR-6338 
         }
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
