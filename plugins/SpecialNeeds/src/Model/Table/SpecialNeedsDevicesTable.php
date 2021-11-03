@@ -24,9 +24,7 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
 
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
 
-
-        $this->addBehavior('Excel', ['excludes' => ['comment', 'security_user_id'],'pages' => ['index']]);
-
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function validationDefault(Validator $validator)
@@ -77,18 +75,6 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
         $this->field('comment', ['type' => 'text']);
 
         $this->setFieldOrder(['special_needs_device_type_id', 'comment']);
-    }
-
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
-    {
-        $extraField[] = [
-            'key'   => 'special_needs_device_type_id',
-            'field' => 'special_needs_device_type_id',
-            'type'  => 'string',
-            'label' => __('Device Name')
-        ];
-
-        $fields->exchangeArray($extraField);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
