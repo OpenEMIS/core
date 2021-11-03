@@ -51,6 +51,7 @@ class DirectoriesController extends AppController
         $this->loadComponent('Institution.CreateUsers');
         $this->loadModel('FieldOption.Nationalities');
         $this->loadModel('Directory.Directories');
+        $this->loadModel('Directory.AreaAdministratives');
         $this->attachAngularModules();
         $this->attachAngularModulesForDirectory();
 
@@ -1068,13 +1069,6 @@ class DirectoriesController extends AppController
         return new Response(['body' => $this->Directories->getInternalSearchData($fname)]);
     }
 
-    // public function directoryExternalSearch()
-    // {
-    //     $this->autoRender = false;
-    //     $fname = $this->request->query['fname'];
-    //     return new Response(['body' => $this->Directories->getExternalSearchData($fname)]);
-    // }
-
     public function directoryExternalSearch()
     {
         $this->autoRender = false;
@@ -1136,5 +1130,18 @@ class DirectoriesController extends AppController
             $this->response->body($noData);
         }
         return new Response(['body' => $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT))]);
+    }
+
+    public function getContactType()
+    {
+        $contact_types = TableRegistry::get('contact_types');
+        $contact_types_result = $contact_types
+            ->find()
+            ->select(['id','name'])
+            ->toArray();
+        foreach($contact_types_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name"=> $result['name']);
+        }
+        echo json_encode($result_array);die;
     }
 }
