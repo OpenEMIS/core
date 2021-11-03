@@ -186,6 +186,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 
 		$query
 		->select([
+			$this->aliasField('id'),
 			'active' => 'InstitutionBankAccounts.active',
 			'account_name' => 'InstitutionBankAccounts.account_name',
 			'account_number' => 'InstitutionBankAccounts.account_number',
@@ -211,6 +212,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 		
 		$query
 		->select([
+			$this->aliasField('id'),
 			'active' => 'InstitutionBankAccounts.active',
 			'account_name' => 'InstitutionBankAccounts.account_name',
 			'account_number' => 'InstitutionBankAccounts.account_number',
