@@ -848,7 +848,8 @@ class UserGroupsTable extends ControllerActionTable
 
         if(!empty($this->request->data['UserGroups']['users'])){
             $users = $this->request->data['UserGroups']['users'];
-            $security_group_id = $this->request->data['UserGroups']['id'];
+            // $security_group_id = $this->request->data['UserGroups']['id'];
+            $security_group_id = isset($entity->id) ? $entity->id : $this->request->data['UserGroups']['id'];
             $userId = $this->Auth->user('id');
             foreach ($users as $key => $value) {
                 $securityGroup = TableRegistry::get('security_group_users');

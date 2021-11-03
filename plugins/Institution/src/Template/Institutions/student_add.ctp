@@ -331,9 +331,10 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="input string" ng-show="InstitutionStudentController.StudentIdentities != 2">
                     <label><?= __('Identity Number') ?></label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.identity_number" type="string" disabled="disabled">
-                    <div ng-if="InstitutionStudentController.postResponse.error.identities[0].number" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.identities[0].number">{{ error }}</p>
-                    </div>
+                    <!--POCOR-5924 starts-->
+                    <div ng-if="((InstitutionStudentController.postResponse.error.identities[0].number) || (InstitutionStudentController.postResponse.error.identity_number))" class="error-message">
+                        <p ng-repeat="error in ((InstitutionStudentController.postResponse.error.identities[0].number) || (InstitutionStudentController.postResponse.error.identity_number))">{{ error }}</p>
+                    </div><!--POCOR-5924 ends-->
                 </div>
                 <div class="input string">
                     <label><?= __('Date Of Birth') ?></label>
