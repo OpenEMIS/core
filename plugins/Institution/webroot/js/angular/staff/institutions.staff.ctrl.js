@@ -136,7 +136,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function setStaffName() {
-        var staffData = StudentController.selectedStaffData;
+        var staffData = StaffController.selectedStaffData;
         staffData.name = '';
 
         if (staffData.hasOwnProperty('first_name')) {
@@ -257,6 +257,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function goToFirstStep() {
         StaffController.step = 'user_details';
+        StaffController.selectedStaffData = {};
+    }
+
+    scope.cancelProcess = function() {
+        location.href = angular.baseUrl + '/Directory/Directories/Directories/index';
     }
 
     // StaffController.selectStaff = function(id) {
