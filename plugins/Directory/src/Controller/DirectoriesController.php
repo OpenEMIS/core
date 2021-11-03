@@ -1103,11 +1103,12 @@ class DirectoriesController extends AppController
         ];
 
         $fieldMapping = [
-            '{page}' => 1,
-            '{limit}' => 1,
-            '{first_name}' => 'Joshua',
-            '{last_name}' => 'Garett',
-            '{identity_number}' => '123123'
+            '{page}' => $this->request->query('page'),
+            '{limit}' => $this->request->query('limit'),
+            '{first_name}' => $this->request->query('first_name'),
+            '{last_name}' => $this->request->query('last_name'),
+            '{date_of_birth}' => $this->request->query('date_of_birth'),
+            '{identity_number}' => $this->request->query('identity_number')
         ];
         $http = new Client();
         $response = $http->post($attributes['token_uri'], $data);
@@ -1125,8 +1126,6 @@ class DirectoriesController extends AppController
             ]);
 
             $response = $http->get($recordUri);
-            // echo "<pre>";print_r($this->response);die;
-            // echo "<pre>";print_r($response);die;
 
             if ($response->isOK()) {
                 $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT));
@@ -1136,6 +1135,6 @@ class DirectoriesController extends AppController
         } else {
             $this->response->body($noData);
         }
-        echo "<pre>";print_r($this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT)));die;
+        return new Response(['body' => $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT))]);
     }
 }
