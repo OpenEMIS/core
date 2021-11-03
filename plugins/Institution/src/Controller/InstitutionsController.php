@@ -632,6 +632,7 @@ class InstitutionsController extends AppController
     }
     //POCOR-5182 added StaffSalaries
 
+
     //POCOR-6145 added Export button in Infratucture > Wash > Waters
     public function InfrastructureWashWaters()
     {
@@ -641,6 +642,11 @@ class InstitutionsController extends AppController
     public function InfrastructureWashWastes()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashWastes']);
+    }
+    //POCOR-6146 added Export button in Infratucture > Wash > Sanitation
+    public function InfrastructureWashSanitations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashSanitations']);
     }
     //PCOOR-6146 add export button in Institutions > Infrastructures > WASH > Hygiene
     public function InfrastructureWashHygienes(){
