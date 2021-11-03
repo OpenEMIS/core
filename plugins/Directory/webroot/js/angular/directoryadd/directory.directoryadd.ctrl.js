@@ -7,39 +7,15 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     var scope = $scope;
 
     scope.step = "user_details";
+    scope.guardianStep = "user_details";
     scope.selectedUserData = {};
+    scope.selectedGuardianData = {};
     scope.internalGridOptions = null;
     scope.externalGridOptions = null;
     scope.postRespone = null;
     scope.translateFields = null;
-    scope.genderOptions = [
-        {
-            id: 1,
-            name: 'Male'
-        },
-        {
-            id: 2,
-            name: 'Female'
-        }
-    ];
-    scope.userTypeOptions = [
-        {
-            id: 1,
-            name: 'Student'
-        },
-        {
-            id: 2,
-            name: 'Staff'
-        },
-        {
-            id: 3,
-            name: 'Guardian'
-        },
-        {
-            id: 4,
-            name: 'Other'
-        }
-    ];
+    scope.genderOptions = [];
+    scope.userTypeOptions = [];
     scope.nationality_class = 'input select error';
     scope.identity_type_class = 'input select error';
     scope.identity_class = 'input string';
@@ -48,9 +24,14 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     scope.nationalitiesOptions = [];
     scope.identityTypeOptions = [];
     scope.contactTypeOptions = [];
+    scope.relationTypeOptions = [];
+    scope.addressAreaOption = [];
+    scope.birthplaceAreaOption = [];
+    scope.isGuardianAdding = false;
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
+        console.log(angular.baseUrl);
         DirectoryaddSvc.init(angular.baseUrl);
         scope.translateFields = {
             'openemis_no': 'OpenEMIS ID',
@@ -63,24 +44,60 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
             'account_type': 'Account Type'
         };
         scope.initGrid();
-        scope.getGenders();
+        scope.getUserTypes();
     });
 
     scope.getUniqueOpenEmisId = function() {
+        if(!scope.isGuardianAdding && scope.selectedUserData.openemis_no)
+            return;
+        if(scope.isGuardianAdding && scope.selectedGuardianData.openemis_no)
+            return;
         UtilsSvc.isAppendLoader(true);
         DirectoryaddSvc.getUniqueOpenEmisId()
             .then(function(response) {
-            var username = scope.selectedUserData.username;
-            //POCOR-5878 starts
-            if(username != scope.selectedUserData.openemis_no && (username == '' || typeof username == 'undefined')){
-                scope.selectedUserData.username = scope.selectedUserData.openemis_no;
-                scope.selectedUserData.openemis_no = scope.selectedUserData.openemis_no;
-            }else{
-                if(username == scope.selectedUserData.openemis_no){
-                    scope.selectedUserData.username = response;
+            if(!scope.isGuardianAdding){
+                var username = scope.selectedUserData.username;
+                if(username != scope.selectedUserData.openemis_no && (username == '' || typeof username == 'undefined')){
+                    scope.selectedUserData.username = scope.selectedUserData.openemis_no;
+                    scope.selectedUserData.openemis_no = scope.selectedUserData.openemis_no;
+                } else{
+                    if(username == scope.selectedUserData.openemis_no){
+                        scope.selectedUserData.username = response;
+                    }
+                    scope.selectedUserData.openemis_no = response;
                 }
-                scope.selectedUserData.openemis_no = response;
+            } else{
+                var username = scope.selectedGuardianData.username;
+                if(username != scope.selectedGuardianData.openemis_no && (username == '' || typeof username == 'undefined')){
+                    scope.selectedGuardianData.username = scope.selectedGuardianData.openemis_no;
+                    scope.selectedGuardianData.openemis_no = scope.selectedGuardianData.openemis_no;
+                }else{
+                    if(username == scope.selectedGuardianData.openemis_no){
+                        scope.selectedGuardianData.username = response;
+                    }
+                    scope.selectedGuardianData.openemis_no = response;
+                }
             }
+            scope.getInternalSearchData();
+        }, function(error) {
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    scope.getInternalSearchData = function() {
+        var first_name = '';
+        var last_name = '';
+        if(!scope.isGuardianAdding) {
+            first_name = scope.selectedUserData.first_name;
+            last_name = scope.selectedUserData.last_name;
+        } else{
+            first_name = scope.selectedGuardianData.first_name;
+            last_name = scope.selectedGuardianData.last_name;
+        }
+        DirectoryaddSvc.getInternalSearchData(first_name, last_name)
+        .then(function(response) {
+            
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -92,13 +109,30 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         UtilsSvc.isAppendLoader(true);
         DirectoryaddSvc.generatePassword()
         .then(function(response) {
-            if (scope.selectedUserData.password == '' || typeof scope.selectedUserData.password == 'undefined') {
-                scope.selectedUserData.password = response;
+            if(!scope.isGuardianAdding) {
+                if (scope.selectedUserData.password == '' || typeof scope.selectedUserData.password == 'undefined') {
+                    scope.selectedUserData.password = response;
+                }
+            } else {
+                if (scope.selectedGuardianData.password == '' || typeof scope.selectedGuardianData.password == 'undefined') {
+                    scope.selectedGuardianData.password = response;
+                }
             }
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
             UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    scope.getUserTypes = function() {
+        DirectoryaddSvc.getUserTypes()
+        .then(function(response) {
+            scope.userTypeOptions = response.data;
+            scope.getGenders();
+        }, function(error) {
+            console.log(error);
+            scope.getGenders();
         });
     }
 
@@ -135,19 +169,71 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         });
     }
 
-    scope.changeGender = function() {
-        var userData = scope.selectedUserData;
-        if (userData.hasOwnProperty('gender_id')) {
-            var genderOptions = scope.genderOptions;
-            for(var i = 0; i < genderOptions.length; i++) {
-                if (genderOptions[i].id == userData.gender_id) {
-                    userData.gender = {
-                        name: genderOptions[i].name
-                    };
-                }
+    scope.setName = function() {
+        if(!scope.isGuardianAdding) {
+            var userData = scope.selectedUserData;
+            userData.name = '';
+            if (userData.hasOwnProperty('first_name')) {
+                userData.name = userData.first_name.trim();
             }
+            scope.appendName(userData, 'middle_name', true);
+            scope.appendName(userData, 'third_name', true);
+            scope.appendName(userData, 'last_name', true);
             scope.selectedUserData = userData;
+        } else {
+            var guardianData = scope.selectedGuardianData;
+            guardianData.name = '';
+            if (guardianData.hasOwnProperty('first_name')) {
+                guardianData.name = userData.first_name.trim();
+            }
+            scope.appendName(guardianData, 'middle_name', true);
+            scope.appendName(guardianData, 'third_name', true);
+            scope.appendName(guardianData, 'last_name', true);
+            scope.selectedGuardianData = guardianData;
         }
+    }
+
+    scope.appendName = function(dataObj, variableName, trim) {
+        if (dataObj.hasOwnProperty(variableName)) {
+            if (trim === true) {
+                dataObj[variableName] = dataObj[variableName].trim();
+            }
+            if (dataObj[variableName] != null && dataObj[variableName] != '') {
+                dataObj.name = dataObj.name + ' ' + dataObj[variableName];
+            }
+        }
+        return dataObj;
+    }
+
+    scope.changeGender = function() {
+        if(!scope.isGuardianAdding){
+            var userData = scope.selectedUserData;
+            if (userData.hasOwnProperty('gender_id')) {
+                var genderOptions = scope.genderOptions;
+                for(var i = 0; i < genderOptions.length; i++) {
+                    if (genderOptions[i].id == userData.gender_id) {
+                        userData.gender = {
+                            name: genderOptions[i].name
+                        };
+                    }
+                }
+                scope.selectedUserData = userData;
+            }
+        } else {
+            var guardianData = scope.selectedGuardianData;
+            if (guardianData.hasOwnProperty('gender_id')) {
+                var genderOptions = scope.genderOptions;
+                for(var i = 0; i < genderOptions.length; i++) {
+                    if (genderOptions[i].id == guardianData.gender_id) {
+                        guardianData.gender = {
+                            name: genderOptions[i].name
+                        };
+                    }
+                }
+                scope.selectedGuardianData = guardianData;
+            }
+        }
+        
     }
 
     scope.changeUserType = function() {
@@ -166,91 +252,158 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     }
 
     scope.changeNationality =  function() {
-        var nationalityId = scope.selectedUserData.nationality_id;
-        var options = scope.nationalitiesOptions;
-        var identityOptions = scope.identityTypeOptions;
-        for (var i = 0; i < options.length; i++) {
-            if (options[i].id == nationalityId) {
-                if (options[i].identity_type_id == null) {
-                    scope.selectedUserData.identity_type_id = identityOptions['0'].id;
-                    scope.selectedUserData.identity_type_name = identityOptions['0'].name;
-                } else {
-                    scope.selectedUserData.identity_type_id = options[i].identity_type_id;
-                    scope.selectedUserData.identity_type_name = options[i].identity_type.name;
+        if(!scope.isGuardianAdding) {
+            var nationalityId = scope.selectedUserData.nationality_id;
+            var options = scope.nationalitiesOptions;
+            var identityOptions = scope.identityTypeOptions;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].id == nationalityId) {
+                    if (options[i].identity_type_id == null) {
+                        scope.selectedUserData.identity_type_id = identityOptions['0'].id;
+                        scope.selectedUserData.identity_type_name = identityOptions['0'].name;
+                    } else {
+                        scope.selectedUserData.identity_type_id = options[i].identity_type_id;
+                        scope.selectedUserData.identity_type_name = options[i].identity_type.name;
+                    }
+                    scope.selectedUserData.nationality_name = options[i].name;
+                    break;
                 }
-                scope.selectedUserData.nationality_name = options[i].name;
-                break;
+            }
+        } else {
+            var nationalityId = scope.selectedGuardianData.nationality_id;
+            var options = scope.nationalitiesOptions;
+            var identityOptions = scope.identityTypeOptions;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].id == nationalityId) {
+                    if (options[i].identity_type_id == null) {
+                        scope.selectedGuardianData.identity_type_id = identityOptions['0'].id;
+                        scope.selectedGuardianData.identity_type_name = identityOptions['0'].name;
+                    } else {
+                        scope.selectedGuardianData.identity_type_id = options[i].identity_type_id;
+                        scope.selectedGuardianData.identity_type_name = options[i].identity_type.name;
+                    }
+                    scope.selectedGuardianData.nationality_name = options[i].name;
+                    break;
+                }
             }
         }
     }
 
     scope.changeIdentityType =  function() {
-        var identityType = scope.selectedUserData.identity_type_id;
-        var options = scope.identityTypeOptions;
-        for (var i = 0; i < options.length; i++) {
-            if (options[i].id == identityType) {
-                scope.selectedUserData.identity_type_name = options[i].name;
-                break;
+        if(!scope.isGuardianAdding) {
+            var identityType = scope.selectedUserData.identity_type_id;
+            var options = scope.identityTypeOptions;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].id == identityType) {
+                    scope.selectedUserData.identity_type_name = options[i].name;
+                    break;
+                }
+            }
+        } else {
+            var identityType = scope.selectedGuardianData.identity_type_id;
+            var options = scope.identityTypeOptions;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].id == identityType) {
+                    scope.selectedGuardianData.identity_type_name = options[i].name;
+                    break;
+                }
             }
         }
     }
 
     scope.changeContactType =  function() {}
 
+    scope.changeRelationType = function() {}
+
     scope.goToPrevStep = function(){
-        switch(scope.step){
-            case 'internal_search': 
-                scope.step = 'user_details';
-                break;
-            case 'external_search': 
-                scope.step = 'internal_search';
-                break;
-            case 'confirmation': 
-                scope.step = 'external_search';
-                break;
+        if(!scope.isGuardianAdding) {
+            switch(scope.step){
+                case 'internal_search': 
+                    scope.step = 'user_details';
+                    break;
+                case 'external_search': 
+                    scope.step = 'internal_search';
+                    break;
+                case 'confirmation': 
+                    scope.step = 'external_search';
+                    break;
+            }
+        } else {
+            switch(scope.guardianStep){
+                case 'internal_search': 
+                    scope.guardianStep = 'user_details';
+                    break;
+                case 'external_search': 
+                    scope.guardianStep = 'internal_search';
+                    break;
+                case 'confirmation': 
+                    scope.guardianStep = 'external_search';
+                    break;
+            }
         }
     }
 
     scope.goToNextStep = function() {
-        switch(scope.step){
-            case 'user_details': 
-                scope.step = 'internal_search';
-                scope.getUniqueOpenEmisId();
-                break;
-            case 'internal_search': 
-                scope.step = 'external_search';
-                break;
-            case 'external_search': 
-                scope.step = 'confirmation';
-                scope.generatePassword();
-                break;
+        if(!scope.isGuardianAdding) {
+            switch(scope.step){
+                case 'user_details': 
+                    scope.step = 'internal_search';
+                    scope.getUniqueOpenEmisId();
+                    break;
+                case 'internal_search': 
+                    scope.step = 'external_search';
+                    break;
+                case 'external_search': 
+                    scope.step = 'confirmation';
+                    scope.generatePassword();
+                    break;
+            }
+        } else {
+            switch(scope.guardianStep){
+                case 'user_details': 
+                    scope.guardianStep = 'internal_search';
+                    scope.getUniqueOpenEmisId();
+                    break;
+                case 'internal_search': 
+                    scope.guardianStep = 'external_search';
+                    break;
+                case 'external_search': 
+                    scope.guardianStep = 'confirmation';
+                    scope.generatePassword();
+                    break;
+            }
         }
+        
     }
 
     scope.confirmUser = function () {
         scope.message = (scope.selectedUserData && scope.selectedUserData.userType ? scope.selectedUserData.userType.name : 'Student') + ' successfully added.';
         scope.messageClass = 'alert-success';
-        scope.step = "summary";
+        if(!scope.isGuardianAdding)
+            scope.step = "summary";
+        else
+            scope.guardianStep = "summary";
     }
 
     scope.goToFirstStep = function () {
-        scope.step = 'user_details';
+        if(!scope.isGuardianAdding){
+            scope.step = 'user_details';
+            scope.selectedUserData = {};
+        }
+        else{
+            scope.guardianStep = 'user_details';
+            scope.selectedGuardianData = {};
+        } 
     }
 
-    // scope.selectStaff = function(id) {
-    //     scope.selectedUser = id;
-    //     scope.getStaffData();
-    // }
+    scope.cancelProcess = function() {
+        location.href = angular.baseUrl + '/Directory/Directories/Directories/index';
+    }
 
-    // scope.getStaffData = function() {
-    //     var log = [];
-    //     angular.forEach(scope.rowsThisPage , function(value) {
-    //         if (value.id == scope.selectedUser) {
-    //             scope.selectedUserData = value;
-    //         }
-    //     }, log);
-    // }
-
+    scope.addGuardian = function () {
+        scope.isGuardianAdding = true;
+    }
+    
     scope.initGrid = function() {
         AggridLocaleSvc.getTranslatedGridLocale()
         .then(function(localeText){
