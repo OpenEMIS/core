@@ -15,9 +15,11 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
         init: init,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
         generatePassword: generatePassword,
+        getUserTypes: getUserTypes,
         getGenders: getGenders,
         getNationalities: getNationalities,
         getIdentityTypes: getIdentityTypes,
+        getInternalSearchData: getInternalSearchData,
     };
     return service;
     
@@ -54,6 +56,18 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
         return deferred.promise;
     }
 
+    function getUserTypes() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getUserType/';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
     function getGenders() {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Directories/getGenders/';
@@ -81,6 +95,18 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
     function getIdentityTypes() {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Directories/getIdentityTypes/';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getInternalSearchData(first_name ,last_name) {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/directoryInternalSearch?fname=' + first_name + '&lname=' + last_name;
         $http.get(url)
         .then(function(response){
             deferred.resolve(response);
