@@ -236,7 +236,7 @@ class InstitutionInfrastructuresTable extends AppTable
         $infrastructureLevel = $requestData->infrastructure_level;
         $infrastructureType = $requestData->infrastructure_type;
         $institutionTypeId = $requestData->institution_type_id;
-        
+        $areaId = $requestData->area_education_id;
         
         $institutionLands = TableRegistry::get('Institution.InstitutionLands');
         $institutionFloors = TableRegistry::get('Institution.InstitutionFloors');
@@ -264,7 +264,9 @@ class InstitutionInfrastructuresTable extends AppTable
         if (!empty($institutionId)) {
             $conditions[$this->aliasField('id')] = $institutionId;
         }
-
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions[$this->aliasField('area_id')] = $areaId;
+        }
         $institutions = TableRegistry::get('Institution.Institutions');
         $institutionIds = $institutions->find('list', [
                                                     'keyField' => 'id',
@@ -277,7 +279,12 @@ class InstitutionInfrastructuresTable extends AppTable
              $conditions['Institution'.$level.'.'.'institution_id IN'] = $institutionIds;
          
         }
-       
+		/*POCOR-6335 starts - applying academic period condition*/
+		if (!empty($academicPeriodId)) {
+             $conditions['Institution'.$level.'.'.'academic_period_id'] = $academicPeriodId;
+         
+        }
+		/*POCOR-633 ends*/	       
 		if ($infrastructureLevel == 1 || $infrastructureLevel == 2) {
 			$query
 					->select(['land_infrastructure_code'=>'Institution'.$level.'.'.'code',

@@ -4,6 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
@@ -37,12 +38,29 @@ class StaffSalariesTable extends AppTable {
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
-
+        /*POCOR-6295 Starts*/
+        $areaId = $requestData->area_education_id;
+        $institutionId = $requestData->institution_id;
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $conditions = [];
+        if (!empty($institutionId) && $institutionId > 0) {
+            $conditions['InstitutionStaff.institution_id'] = $institutionId; 
+        }
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId; 
+        }
         $query
             ->select(['openemis_no' => 'Users.openemis_no'])
             ->contain(['Users'])
+            ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
+                'InstitutionStaff.staff_id = ' . $this->aliasField('staff_id')
+            ])
+            ->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
+                $InstitutionsTable->aliasField('id = ') . 'InstitutionStaff.institution_id'
+            ])
+            ->where([$conditions])
             ->order([$this->aliasField('salary_date')]);
-
+        /*POCOR-6295 Ends*/
         if (!empty($academicPeriodId)) {
             $query->find('inPeriod', ['field' => 'salary_date', 'academic_period_id' => $academicPeriodId]);
         }
