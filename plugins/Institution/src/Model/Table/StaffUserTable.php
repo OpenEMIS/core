@@ -684,7 +684,7 @@ class StaffUserTable extends ControllerActionTable
                     'label' => __($identity->name)
                 ];
 
-                /* $newFields[] = [
+                $newFields[] = [
                     'key' => 'IdentityTypes.name',
                     'field' => 'identity_type',
                     'type' => 'string',
@@ -738,28 +738,7 @@ class StaffUserTable extends ControllerActionTable
                     'field' => 'description',
                     'type' => 'string',
                     'label' => 'Description'
-                ]; */
-
-                /* $newFields[] = [
-                    'key' => 'InstitutionClasses.name',
-                    'field' => 'class_name',
-                    'type' => 'string',
-                    'label' => 'Classs Name'
                 ];
-
-                $newFields[] = [
-                    'key' => 'InstitutionSubjects.name',
-                    'field' => 'subject_name',
-                    'type' => 'string',
-                    'label' => 'Subject Name'
-                ];
-
-                $newFields[] = [
-                    'key' => '',
-                    'field' => 'total_absence',
-                    'type' => 'string',
-                    'label' => 'Total Absence'
-                ]; */
             }
         }
         $fields->exchangeArray($newFields);
@@ -768,79 +747,56 @@ class StaffUserTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        if(!isset($staffUserId)){
-            $session = $this->request->session();
-            $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-            $userIdentities = TableRegistry::get('StaffUser.userIdentities');
-            $identityType = TableRegistry::get('StaffUser.IdentityTypes');
-            $userNationalities = TableRegistry::get('StaffUser.userNationalities');
-            $nationalities = TableRegistry::get('StaffUser.Nationalities');
-            $userContacts = TableRegistry::get('StaffUser.userContacts');
-            $contactTypes = TableRegistry::get('StaffUser.ContactTypes');
-            $contactOptions = TableRegistry::get('StaffUser.contactOptions');
-            $classes = TableRegistry::get('StaffUser.InstitutionClasses');
-            $institutionSubjects = TableRegistry::get('StaffUser.InstitutionSubjects');
-            $staffSubjects = TableRegistry::get('StaffUser.InstitutionSubjectStaff');
-            $staffAbsence = TableRegistry::get('StaffUser.InstitutionStaffAttendances');
+        $userIdentities = TableRegistry::get('StaffUser.userIdentities');
+        $identityType = TableRegistry::get('StaffUser.IdentityTypes  ');
+        $userNationalities = TableRegistry::get('StaffUser.userNationalities');
+        $nationalities = TableRegistry::get('StaffUser.Nationalities');
+        $userContacts = TableRegistry::get('StaffUser.userContacts');
+        $contactTypes = TableRegistry::get('StaffUser.ContactTypes  ');
+        $contactOptions = TableRegistry::get('StaffUser.contactOptions  ');
 
-            $query
-            ->select([
-                'identity_type' => 'IdentityTypes.name',
-                'nationality' => 'Nationalities.name',
-                'number' => 'userIdentities.number',
-                'issue_date' => 'userIdentities.issue_date',
-                'expiry_date' => 'userIdentities.expiry_date',
-                'issuer' => 'userIdentities.issue_location',
-                'value' => 'userContacts.value',
-                'description' => $this->find()->func()->concat([
-                    'ContactTypes.name' => 'literal',
-                    " - ",
-                    'contactOptions.name' => 'literal'
-                ]),
-                // 'class_name' => 'InstitutionClasses.name',
-                // 'subject_name' => 'InstitutionSubjects.name',
-                // 'total_absence' =>  "(SELECT COUNT(id) FROM ".$staffAbsence->table()." WHERE time_in IS NULL AND time_out IS NULL AND staff_id =".$staffUserId.")",
+        $query
+        ->select([
+            'identity_type' => 'IdentityTypes.name',
+            'nationality' => 'Nationalities.name',
+            'number' => 'userIdentities.number',
+            'issue_date' => 'userIdentities.issue_date',
+            'expiry_date' => 'userIdentities.expiry_date',
+            'issuer' => 'userIdentities.issue_location',
+            'value' => 'userContacts.value',
+            'description' => $this->find()->func()->concat([
+                'ContactTypes.name' => 'literal',
+                " - ",
+                'contactOptions.name' => 'literal'
             ])
-            ->leftjoin(
-                [$userIdentities->alias() => $userIdentities->table()],
-                [$userIdentities->aliasField('security_user_id=').$this->aliasField('id')]
-            )
-            ->leftjoin(
-                [$identityType->alias() => $identityType->table()],
-                [$identityType->aliasField('id=').$userIdentities->aliasField('identity_type_id')]
-            )
-            ->leftjoin(
-                [$nationalities->alias() => $nationalities->table()],
-                [$userIdentities->aliasField('nationality_id=').$nationalities->aliasField('id')]
-            )
-            ->leftjoin(
-                [$userContacts->alias() => $userContacts->table()],
-                [$userContacts->aliasField('security_user_id=').$this->aliasField('id')]
-            )
-            ->leftjoin(
-                [$contactTypes->alias() => $contactTypes->table()],
-                [$contactTypes->aliasField('id = ').$userContacts->aliasField('contact_type_id')]
-            )
-            ->leftjoin(
-                [$contactOptions->alias() => $contactOptions->table()],
-                [$contactOptions->aliasField('id = ').$contactTypes->aliasField('contact_option_id')]
-            )
-            ->leftjoin(
-                [$classes->alias() => $classes->table()],
-                [$classes->aliasField('staff_id = ').$this->aliasField('id')]
-            )
-            ->leftjoin(
-                [$staffSubjects->alias() => $staffSubjects->table()],
-                [$staffSubjects->aliasField('staff_id = ').$this->aliasField('id')]
-            )
-            ->leftjoin(
-                [$institutionSubjects->alias() => $institutionSubjects->table()],
-                [$institutionSubjects->aliasField('id = ').$staffSubjects->aliasField('institution_subject_id')]
-            )
-            ->where([
-                $this->aliasField('id = ').$staffUserId,
-            ]);
-        }
+        ])
+        ->leftjoin(
+            [$userIdentities->alias() => $userIdentities->table()],
+            [$userIdentities->aliasField('security_user_id=').$this->aliasField('id')]
+        )
+        ->leftjoin(
+            [$identityType->alias() => $identityType->table()],
+            [$identityType->aliasField('id=').$userIdentities->aliasField('identity_type_id')]
+        )
+       ->leftjoin(
+            [$nationalities->alias() => $nationalities->table()],
+            [$userIdentities->aliasField('nationality_id=').$nationalities->aliasField('id')]
+        )
+        ->leftjoin(
+            [$userContacts->alias() => $userContacts->table()],
+            [$userContacts->aliasField('security_user_id=').$this->aliasField('id')]
+        )
+        ->leftjoin(
+            [$contactTypes->alias() => $contactTypes->table()],
+            [$contactTypes->aliasField('id=').$userContacts->aliasField('contact_type_id')]
+        )
+        ->leftjoin(
+            [$contactOptions->alias() => $contactOptions->table()],
+            [$contactOptions->aliasField('id=').$contactTypes->aliasField('contact_option_id')]
+        )
+        ->where([
+            $this->aliasField('id = ').$staffUserId
+        ]);
     }
 
     public function findStaff(Query $query, array $options = [])
