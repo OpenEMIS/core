@@ -895,6 +895,7 @@ class StaffUserTable extends ControllerActionTable
                     'textarea_value'                 => $CustomValues->aliasField('textarea_value'),
                     'date_value'                     => $CustomValues->aliasField('date_value'),
                     'time_value'                     => $CustomValues->aliasField('time_value'),
+                    'checkbox_value_text'            => 'staffCustomFieldOptions.name',
                     'question_name'                  => 'staffCustomFields.name',
                     'field_type'                     => 'staffCustomFields.field_type',
                     'field_description'              => 'staffCustomFields.description',
@@ -903,6 +904,12 @@ class StaffUserTable extends ControllerActionTable
                     ['staffCustomFields' => 'staff_custom_fields'],
                     [
                         'staffCustomFields.id = '.$CustomValues->aliasField('staff_custom_field_id')
+                    ]
+                )
+                ->leftJoin(
+                    ['staffCustomFieldOptions' => 'staff_custom_field_options'],
+                    [
+                        'staffCustomFieldOptions.id = '.$CustomValues->aliasField('number_value')
                     ]
                 )
                 ->where([
