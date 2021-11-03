@@ -2208,7 +2208,6 @@ class StudentsTable extends ControllerActionTable
             ])
             ->count()
             ;
-
         return !($completedGradeCount == 0);
     }
 
