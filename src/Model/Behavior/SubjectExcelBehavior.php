@@ -237,8 +237,8 @@ class SubjectExcelBehavior extends Behavior
 						'SubjectRooms.name' => 'literal'
 					]),
 					'gender' => 'Genders.name',
-                    'institution_id' => 'Institutions.id',//POCOR-6338
-					//'student_status' => 'StudentStatuses.name',//POCOR-6338 uncomment student_status
+                    'institution_id' => 'Institutions.id',
+                    'student_status' => 'StudentStatuses.name',//POCOR-6338 
                 ])
 				->contain([
 					'AcademicPeriods' => [
@@ -269,12 +269,12 @@ class SubjectExcelBehavior extends Behavior
 					'InstitutionSubjectStudents.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
 				]
 				) // POCOR-6338 starts
-				/*->leftJoin(
+				->leftJoin(
 				['StudentStatuses' => 'student_statuses'],
 				[
 					'StudentStatuses.id = InstitutionSubjectStudents.student_status_id'
 				]
-				)POCOR-6338 ends*/
+				)//POCOR-6338 ends
 				->leftJoin(
 				['SubjectStudents' => 'security_users'],
 				[
@@ -310,45 +310,7 @@ class SubjectExcelBehavior extends Behavior
 					'Institutions.code',
 					'InstitutionSubjects.id'
 				]);
-                //POCOR-6338 starts
-                $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-                    return $results->map(function ($row) {
-                        $Users = TableRegistry::get('security_users');
-                        $institutionStudents = TableRegistry::get('institution_students');
-                        $user_data= $Users
-                                    ->find()
-                                    ->select([
-                                                'student_status'=>'(case 
-                                                 when StudentStatuses.name = "Repeated" then "Enrolled"
-                                                 when StudentStatuses.name = "Enrolled" then "Enrolled"
-                                                 when StudentStatuses.name = "Transferred" then "Transferred"
-                                                 when StudentStatuses.name = "Withdrawn" then "Withdrawn"
-                                                 when StudentStatuses.name = "Graduated" then "Graduated"
-                                                 else "Promoted" end
-                                             )'
-                                    ])
-                                    ->leftJoin(
-                                    ['InstitutionStudents' => 'institution_students'],
-                                    [
-                                        'InstitutionStudents.student_id = '.$Users->aliasField('id')
-                                    ]
-                                    ) 
-                                    ->leftJoin(
-                                        ['StudentStatuses' => 'student_statuses'],
-                                        [
-                                            'StudentStatuses.id = InstitutionStudents.student_status_id'
-                                        ]
-                                    )
-                                    ->where(['security_users.openemis_no' => $row->openEMIS_ID,
-                                    'InstitutionStudents.institution_id'=> $row->institution_id])
-                                    ->order([
-                                        'InstitutionStudents.created' => DESC
-                                    ])
-                                    ->first();
-                        $row['student_status'] = $user_data->student_status;
-                        return $row;
-                    });
-                });//POCOR-6338 ends
+          
                 $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
 					return $results->map(function ($row) {
 						$teachers = explode(',',$row['teachers']);
