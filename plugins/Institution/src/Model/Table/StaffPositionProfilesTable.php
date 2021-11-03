@@ -226,6 +226,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
             'contact_number'
         ];
 
+        /** START: Removed to resolve the tiket "POCOR-6367"
+         *
+         * Note: This code is commented due to remove the advanced search filter temporary base Because it is blocking the page.
+         * Author : Anand Malvi
         $this->addBehavior('AdvanceSearch', [
             'exclude' => [
                 'staff_id',
@@ -237,6 +241,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             ],
             'order' => $advancedSearchFieldOrder
         ]);
+        ** END : Removed to resolve the tiket "POCOR-6367" */
         $this->addBehavior('User.AdvancedIdentitySearch', [
             'associatedKey' => $this->aliasField('staff_id')
         ]);
