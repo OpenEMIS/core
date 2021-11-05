@@ -38,8 +38,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
-
-        $this->addBehavior('Excel', ['excludes' => ['date', 'file_name', 'file_content', 'comment', 'security_user_id'],'pages' => ['index']]);
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function validationDefault(Validator $validator)
@@ -151,27 +150,6 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
 
         $this->setFieldOrder(['date', 'special_need_type_id', 'special_need_difficulty_id', 'file_name', 'file_content', 'comment']);
     }
-
-
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
-    {
-        $extraField[] = [
-            'key'   => 'special_need_type_id',
-            'field' => 'special_need_type_id',
-            'type'  => 'string',
-            'label' => __('Type')
-        ];
-
-        $extraField[] = [
-            'key'   => 'special_need_difficulty_id',
-            'field' => 'special_need_difficulty_id',
-            'type'  => 'string',
-            'label' => __('Difficulty')
-        ];
-
-        $fields->exchangeArray($extraField);
-    }
-
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {

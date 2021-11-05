@@ -337,7 +337,17 @@ class NavigationComponent extends Component
                 }/*POCOR-6332 ends*/
             }
 
-            $session = $this->request->session();
+			$userType = '';
+			if(!empty($userInfo)) {
+				if ($userInfo->is_student) {
+					$userType = 1;
+				} elseif ($userInfo->is_staff) {
+					$userType = 2;
+				} elseif ($userInfo->is_guardian) {
+					$userType = 3;
+				}
+			}
+			$session = $this->request->session();
             $isStudent = $session->read('Directory.Directories.is_student');
             $isStaff = $session->read('Directory.Directories.is_staff');
             $isGuardian = $session->read('Directory.Directories.is_guardian');
@@ -538,12 +548,11 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution', 0 => $institutionId]
             ],
 
-            // POCOR-6122
             'Institutions.InstitutionCalendars.index' => [
                 'title' => 'Calendar',
                 'parent' => 'Institution.General',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.InstitutionCalendars','Institutions.InstitutionCalendars.view', 'Institutions.InstitutionCalendars.add', 'Institutions.InstitutionCalendars.edit', 'Institutions.InstitutionCalendars.delete']
+                'selected' => ['Institutions.InstitutionCalendars.view', 'Institutions.InstitutionCalendars.add', 'Institutions.InstitutionCalendars.edit', 'Institutions.InstitutionCalendars.delete']
             ],
             // POCOR-6122
 
