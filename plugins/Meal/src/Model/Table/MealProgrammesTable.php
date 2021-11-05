@@ -351,8 +351,18 @@ class MealProgrammesTable extends ControllerActionTable
         return $selectedAcademicPeriod;
     } 
 
+    // public function getMealInstitutionProgrammes($institutionId)
+    // {
+    //     die('asdf');
+    //     $list = $this
+    //         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+    //         ->toArray();
+    //     return $list;
+    // }
+
     public function getMealProgrammesOptions()
     {
+        die('asdf');
         $list = $this
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
