@@ -32,10 +32,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
-
-
-        $this->addBehavior('Excel', ['excludes' => ['organization', 'description', 'comment', 'file_name', 'file_content', 'academic_period_id', 'security_user_id', ],'pages' => ['index']]);
-
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function validationDefault(Validator $validator)
@@ -152,18 +149,6 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $this->field('comment', ['type' => 'text']);
 
         $this->setFieldOrder(['academic_period_id', 'special_needs_service_type_id', 'description', 'organization', 'file_name', 'file_content', 'comment']);
-    }
-
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
-    {
-        $extraField[] = [
-            'key'   => 'special_needs_service_type_id',
-            'field' => 'special_needs_service_type_id',
-            'type'  => 'string',
-            'label' => __('Service Name')
-        ];
-
-        $fields->exchangeArray($extraField);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)

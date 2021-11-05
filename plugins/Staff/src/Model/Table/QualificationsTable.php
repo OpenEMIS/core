@@ -39,7 +39,7 @@ class QualificationsTable extends ControllerActionTable
 		$this->belongsTo('QualificationTitles', ['className' => 'FieldOption.QualificationTitles']);
         $this->belongsTo('QualificationCountries', ['className' => 'FieldOption.Countries', 'foreignKey' => 'qualification_country_id']);
 		$this->belongsTo('FieldOfStudies', ['className' => 'Education.EducationFieldOfStudies', 'foreignKey' => 'education_field_of_study_id']);
-        
+
         $this->belongsToMany('EducationSubjects', [
             'className' => 'Education.EducationSubjects',
             'joinTable' => 'staff_qualifications_subjects',
@@ -102,7 +102,7 @@ class QualificationsTable extends ControllerActionTable
     {
         $query->contain(['QualificationTitles.QualificationLevels']);
     }
-    
+
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'qualification_level') {
@@ -252,13 +252,13 @@ class QualificationsTable extends ControllerActionTable
                                         $this->QualificationSpecialisations->aliasField('education_field_of_study_id') => $fieldOfStudyId
                                     ])
                                     ->toArray();
-            
+
             if (!empty($specialisationOptions)) {
                 $attr['options'] = $specialisationOptions;
             } else {
                 $attr['placeholder'] = $this->getMessage('general.select.noOptions');
             }
-            
+
         }
         return $attr;
     }
