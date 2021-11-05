@@ -32,12 +32,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
-
-        $this->addBehavior('Excel',[
-            'excludes' => ['organization', 'description', 'comment', 'file_name', 'academic_period_id','security_user_id'],
-            'pages' => ['index'],
-        ]);
-
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function validationDefault(Validator $validator)
@@ -156,30 +151,16 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'special_needs_service_type_id', 'description', 'organization', 'file_name', 'file_content', 'comment']);
     }
 
-    // POCOR-6139 start
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
         $session = $this->request->session();
-        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $academyPeriodId = $this->request->query('academic_period_id');
-        
+        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
+        $academicPeriodId = $this->request->query['academic_period_id'];
+
         $query
         ->where([
-            $this->aliasField('security_user_id = ').$staffUserId,
-            $this->aliasField('academic_period_id = ').$academyPeriodId
+            'academic_period_id =' .$academicPeriodId,
+            'security_user_id =' .$studentUserId,
         ]);
     }
-    
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
-    {
-        $extraField[] = [
-            'key'   => 'SpecialNeedsServices.special_needs_service_type_id',
-            'field' => 'special_needs_service_type_id',
-            'type'  => 'integer',
-            'label' => __('Service Name')
-        ];
-        
-        $fields->exchangeArray($extraField);
-    }
-    // POCOR-6139 ENd
 }

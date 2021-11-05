@@ -155,6 +155,10 @@ class InstitutionsController extends AppController
         // End
 
         parent::initialize();
+
+       $data =  $this->loadModel('Calendars');
+
+
         // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
@@ -632,10 +636,21 @@ class InstitutionsController extends AppController
     }
     //POCOR-5182 added StaffSalaries
 
+
     //POCOR-6145 added Export button in Infratucture > Wash > Waters
     public function InfrastructureWashWaters()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashWaters']);
+    }
+    //POCOR-6148 add Export button on Institutions > Infrastructures > WASH > Waste
+    public function InfrastructureWashWastes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashWastes']);
+    }
+    //POCOR-6146 added Export button in Infratucture > Wash > Sanitation
+    public function InfrastructureWashSanitations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashSanitations']);
     }
     //PCOOR-6146 add export button in Institutions > Infrastructures > WASH > Hygiene
     public function InfrastructureWashHygienes(){
@@ -655,6 +670,12 @@ class InstitutionsController extends AppController
     }
     //POCOR-6143 added Export button in Infratucture > Utilitie > Electricity
 
+    //POCOR-6149 Add expor button on Add Export button function - Institutions > Infrastructures > WASH > Sewage
+    public function InfrastructureWashSewages()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashSewages']);
+    }
+
     public function changeUtilitiesHeader($model, $modelAlias, $userType)
     {
         $session = $this->request->session();
@@ -669,7 +690,12 @@ class InstitutionsController extends AppController
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
                 $this->Navigation->addCrumb(__('Electricity'));
                 $this->set('contentHeader', $header);
-
+            } else if($this->request->param('action') == 'InfrastructureWashWastes'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Waste');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Waste'));
+                $this->set('contentHeader', $header);
             } else if($this->request->param('action') == 'InfrastructureUtilityInternets'){
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Internet');
@@ -693,6 +719,12 @@ class InstitutionsController extends AppController
                 $header = $institutionName . ' - ' . __('Hygiene');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
                 $this->Navigation->addCrumb(__('Hygiene'));
+                $this->set('contentHeader', $header);
+            } else if($this->request->param('action') == 'InfrastructureWashSewages'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Sewage');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Sewage'));
                 $this->set('contentHeader', $header);
             }
         }
