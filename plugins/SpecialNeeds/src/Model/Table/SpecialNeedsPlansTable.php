@@ -30,10 +30,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
-
-
-        $this->addBehavior('Excel', ['excludes' => ['comment', 'file_name', 'file_content', 'security_user_id'],'pages' => ['index']]);
-
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function validationDefault(Validator $validator)
