@@ -338,14 +338,13 @@ class StudentTransferTable extends ControllerActionTable
 
         $nextGradeOptions = [];
         if (!empty($selectedGrade) && $selectedGrade != -1 && !empty($nextPeriodId)) {
+            //$nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGrades($selectedGrade); //POCOR-6362 comment this code because wrong next education grade is showing wrong
+            $nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGradesForTransfer($nextPeriodId);//POCOR-6362
 
-            $nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGrades($selectedGrade);
+            //$currentGradeOptions = $this->getGrandEducationOptions();//POCOR-6362 because no need of current grade options
 
-            $currentGradeOptions = $this->getGrandEducationOptions();
-
-            $gradeResult = $currentGradeOptions + $nextGradeOptions;
+            $gradeResult = $nextGradeOptions;
             $nextGradeId = $request->query('next_education_grade_id');
-
 
             if (is_null($nextPeriodId)) {
                 $nextGradeId = key($nextGradeOptions);
@@ -385,7 +384,7 @@ class StudentTransferTable extends ControllerActionTable
                 // 		}
                 // 	]);
             }
-            // $this->request->query['next_education_grade_id'] = $nextGradeId;
+            $this->request->query['next_education_grade_id'] = $nextGradeId;
         }
 
         $attr['options'] = $gradeResult;
@@ -507,7 +506,6 @@ class StudentTransferTable extends ControllerActionTable
         $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
 
         $institutionOptions = [];
-
         if (!is_null($nextPeriodId) && !is_null($nextGradeId)) {
             $Grades = $this->Grades;
             $institutionId = $this->institutionId;

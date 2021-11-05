@@ -38,6 +38,8 @@ class InstitutionCasesTable extends ControllerActionTable
 
         $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
         $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
+
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function implementedEvents()
@@ -96,12 +98,12 @@ class InstitutionCasesTable extends ControllerActionTable
         //Order to follow what is defined at OptionsTrait
         foreach($this->getSelectOptions("WorkflowRules.features") as $key => $value) {
             if(array_key_exists($key, $featureOptions)) {
-                $newFeatureOption[$key] = $featureOptions[$key]; 
+                $newFeatureOption[$key] = $featureOptions[$key];
             }
         }
 
         $featureOptions = $newFeatureOption;
-        
+
         if (!is_null($this->request->query('feature')) && array_key_exists($this->request->query('feature'), $featureOptions)) {
             $selectedFeature = $this->request->query('feature');
         } else {
@@ -178,7 +180,7 @@ class InstitutionCasesTable extends ControllerActionTable
             //->where([$this->aliasField('assignee_id') => $userId])
             ->group($this->aliasField('id'));
 
-        
+
         $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
     }
 
@@ -469,4 +471,142 @@ class InstitutionCasesTable extends ControllerActionTable
 
         return $query;
     }
+
+    // POCOR-6170
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+        $assignee = TableRegistry::get('security_users');
+
+        // for getting selected feature
+        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+        $featureOptions = $WorkflowRules->getFeatureOptions();
+        $newFeatureOption = [];
+        //Order to follow what is defined at OptionsTrait
+        foreach($this->getSelectOptions("WorkflowRules.features") as $key => $value) {
+            if(array_key_exists($key, $featureOptions)) {
+                $newFeatureOption[$key] = $featureOptions[$key];
+            }
+        }
+        $featureOptions = $newFeatureOption;
+        if (!is_null($this->request->query('feature')) && array_key_exists($this->request->query('feature'), $featureOptions)) {
+            $selectedFeature = $this->request->query('feature');
+        } else {
+            $selectedFeature = key($featureOptions);
+            $this->request->query['feature'] = $selectedFeature;
+        }
+        // for getting selected feature
+
+		// query start
+        $query
+        ->select([
+            $this->aliasField('id'),
+            $this->aliasField('case_number'),
+            $this->aliasField('title'),
+            'status' => 'Statuses.name',
+            'assignee' => $assignee->find()->func()->concat([
+                'first_name' => 'literal',
+                " ",
+                'last_name' => 'literal'
+            ]),
+            $this->aliasField('description'),
+            $this->aliasField('status_id'),
+            $this->aliasField('assignee_id'),
+            $this->aliasField('institution_id'),
+            $this->aliasField('modified_user_id'),
+            $this->aliasField('modified'),
+            $this->aliasField('created_user_id'),
+            $this->aliasField('created'),
+        ])
+        ->contain(['LinkedRecords'])
+        ->innerJoin(
+            [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+            [
+                [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
+                [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+            ]
+        )
+        ->LeftJoin([$this->Assignees->alias() => $this->Assignees->table()],[
+            $this->Assignees->aliasField('id').' = ' . 'InstitutionCases.assignee_id'
+        ])  
+        ->LeftJoin([$this->Statuses->alias() => $this->Statuses->table()],[
+            $this->Statuses->aliasField('id').' = ' . 'InstitutionCases.status_id'
+        ])
+        ->where([
+            'InstitutionCases.institution_id' =>  $institutionId
+        ])
+        ->group($this->aliasField('id'));
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $row['total_linked_record'] = count($row->linked_records);
+
+                return $row;
+            });
+        });
+        // query end
+
+        // when user select academic period , feature ,instituion class and grade filter 
+        $requestQuery = $this->request->query;
+        $featureModel = TableRegistry::get($this->features[$selectedFeature]);
+
+        $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+    }
+    // POCOR-6170
+    // POCOR-6170
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key' => 'Statuses.name',
+            'field' => 'status',
+            'type' => 'string',
+            'label' => __('Status')
+        ];
+
+        $extraField[] = [
+            'key' => 'Assignees.assignee',
+            'field' => 'assignee',
+            'type' => 'string',
+            'label' => __('Assignee')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionCases.case_number',
+            'field' => 'case_number',
+            'type' => 'string',
+            'label' => __('Case Number')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionCases.title',
+            'field' => 'title',
+            'type' => 'string',
+            'label' => __('Title')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionCases.description',
+            'field' => 'description',
+            'type' => 'string',
+            'label' => __('Description')
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'total_linked_record',
+            'type' => 'string',
+            'label' => __('Linked Records')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionCases.created',
+            'field' => 'created',
+            'type' => 'date',
+            'label' => __('Created On')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+    // POCOR-6170
+
 }
