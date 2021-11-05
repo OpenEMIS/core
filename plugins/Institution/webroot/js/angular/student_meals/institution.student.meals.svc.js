@@ -295,7 +295,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         console.log('rahul');
         var success = function(response, deferred) {
             var mealProgrammes = response.data.data;
-        console.log(mealProgrammes);
+        // console.log(mealProgrammes);
             if (angular.isObject(mealProgrammes) && mealProgrammes.length > 0) {
                 deferred.resolve(mealProgrammes);
             } else {
@@ -308,10 +308,14 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 // ->where(['OR' => $condition])
 
         return MealProgrammes
-            .find('mealInstitutionProgrammes', {
-                institution_id: institutionId,
-            })
-            // .where([$condition])
+            // .find('mealInstitutionProgrammes', {
+            //     institution_id: institutionId,
+            // })
+            .where({institution_id: institutionId})
+            // .where({
+            //     institution_id: 6,
+            //     institution_id: 0,
+            // })
             
             // .select(['id', 'name'])
              .ajax({success: success, defer: true});
