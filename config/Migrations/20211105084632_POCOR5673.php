@@ -13,27 +13,28 @@ class POCOR5673 extends AbstractMigration
     public function up()
     {
 
-        $this->execute('CREATE TABLE `zz_5673_config_items` LIKE `config_items`');
-        $this->execute('INSERT INTO `zz_5673_config_items` SELECT * FROM `config_items`');
+        // $this->execute('CREATE TABLE `zz_5673_config_items` LIKE `config_items`');
+        // $this->execute('INSERT INTO `zz_5673_config_items` SELECT * FROM `config_items`');
 
         $table = $this->table('config_items');
         $data = [
             [
                 'id' => NULL,
                 'name' => 'Redirect to Guardians',
-                'code' => 'themes',
-                'type' => 'Themes',
-                'label' => 'Themes',
+                'code' => 'RedirectToGuardian',
+                'type' => 'Add New Student',
+                'label' => 'Redirect to Guardians',
                 'value' => '0',
+                'value_selection' => '',
                 'default_value' => '0',
                 'editable' => '1',
                 'visible' => '1',
-                'field_type' => '',
-                'option_type' => '',
+                'field_type' => 'Dropdown',
+                'option_type' => 'completeness',
                 'modified_user_id' => null,
                 'modified' => null,
                 'created_user_id' => '1',
-                'created' => '2017-11-30 01:01:17'
+                'created' => date('Y-m-d H:i:s')
             ],
         ];
 
