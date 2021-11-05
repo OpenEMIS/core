@@ -1,3 +1,18 @@
+### [3.70.5] - 2021-11-05
+- Implemented: Add Export button function - Institutions > Students > Student1 > Special Needs (include all tabs)
+- Implemented: Add Export button function - Institutions > Staff > Staff1 > Training (include all tabs)
+- Implemented: Add Export button function - Institutions > Infrastructures > WASH > Sanitation
+- Implemented: Add Export button function - Institutions > Infrastructures > WASH > Waste
+- Implemented: Add Export button function - Institutions > Infrastructures > WASH > Sewage
+- Implemented: Add Export button function - Institutions > Cases
+- Bug Fixed: Institutions>Academic>Subjects/Classes: Exported records are showing incorrectly when student is transferred from School A to School B and back to School A
+- Bug Fixed: Institutions>Students>Import: 404 error when trying to download the Student Import template.
+- Bug Fixed: Institutions>Students>Transfer: Wrong academic period when promoted and not visible in Bulk Transfer
+- Bug Fixed: Institutions > Staff > Pending Change in Assignment : Query is taking too long to process - To optimize query
+- Bug Fixed: Administration > System Setup > System Configuration > Coordinates: Changes limits of latitude and longitude
+- Bug Fixed: Directory>Staff>Careers:Career is missing for Staffs with Guardian role
+- Bug Fixed: Reports>Maps: Inactive Institutions should not be show
+
 ### [3.70.4] - 2021-10-30
 - Implemented: Update Export button function - Institutions > Academic > Subjects (include grade class subject teacher room and number of students by gender)
 - Implemented: Add Export button function - Institutions > Staff > Staff1 > Special Needs (include all tabs)
