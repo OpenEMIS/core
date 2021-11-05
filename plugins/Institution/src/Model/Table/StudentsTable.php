@@ -336,19 +336,11 @@ class StudentsTable extends ControllerActionTable
                 [
                     $ContactTypes->aliasField('id = ') . $UserContact->aliasField('contact_type_id')
                 ]
-            )// POCOR-6338 starts
-            ->leftJoin(
-                [$StudentStatuses->alias() => $StudentStatuses->table()],
-                [
-                    $StudentStatuses->aliasField('id != ') => 3
-                ]
-            );// POCOR-6338 ends
+            );
 
         if ($periodId > 0) {
-            $query->where([$this->aliasField('academic_period_id') => $periodId,
-                            'StudentStatuses.id !='=> 3
-                            ]);
-            $query->group('student_id');// POCOR-6338 
+            $query->where([$this->aliasField('academic_period_id') => $periodId]);
+            $query ->group([$this->Users->aliasField('openemis_no')]);// POCOR-6338 
         }
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
@@ -2208,7 +2200,6 @@ class StudentsTable extends ControllerActionTable
             ])
             ->count()
             ;
-
         return !($completedGradeCount == 0);
     }
 
