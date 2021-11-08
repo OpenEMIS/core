@@ -47,19 +47,19 @@ class InstitutionLandsTable extends ControllerActionTable
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
-        $this->addBehavior('CustomField.Record', [
-            'fieldKey' => 'infrastructure_custom_field_id',
-            'tableColumnKey' => null,
-            'tableRowKey' => null,
-            'fieldClass' => ['className' => 'Infrastructure.LandCustomFields'],
-            'formKey' => 'infrastructure_custom_form_id',
-            'filterKey' => 'infrastructure_custom_filter_id',
-            'formFieldClass' => ['className' => 'Infrastructure.LandCustomFormsFields'],
-            'formFilterClass' => ['className' => 'Infrastructure.LandCustomFormsFilters'],
-            'recordKey' => 'institution_land_id',
-            'fieldValueClass' => ['className' => 'Infrastructure.LandCustomFieldValues', 'foreignKey' => 'institution_land_id', 'dependent' => true],
-            'tableCellClass' => null
-        ]);
+        // $this->addBehavior('CustomField.Record', [
+        //     'fieldKey' => 'infrastructure_custom_field_id',
+        //     'tableColumnKey' => null,
+        //     'tableRowKey' => null,
+        //     'fieldClass' => ['className' => 'Infrastructure.LandCustomFields'],
+        //     'formKey' => 'infrastructure_custom_form_id',
+        //     'filterKey' => 'infrastructure_custom_filter_id',
+        //     'formFieldClass' => ['className' => 'Infrastructure.LandCustomFormsFields'],
+        //     'formFilterClass' => ['className' => 'Infrastructure.LandCustomFormsFilters'],
+        //     'recordKey' => 'institution_land_id',
+        //     'fieldValueClass' => ['className' => 'Infrastructure.LandCustomFieldValues', 'foreignKey' => 'institution_land_id', 'dependent' => true],
+        //     'tableCellClass' => null
+        // ]);
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
@@ -1169,8 +1169,7 @@ class InstitutionLandsTable extends ControllerActionTable
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $requestData = json_decode($settings['process']['params']);
-        $infrastructureLevel  = $requestData->infrastructure_level;
-        //echo "<pre>"; print_r($settings); die;  
+        $infrastructureLevel  = $requestData->infrastructure_level; 
         $newFields = [];
 
         $newFields[] = [
@@ -1333,26 +1332,86 @@ class InstitutionLandsTable extends ControllerActionTable
                 'type' => 'string',
                 'label' => __('Room Type')
             ];
-            $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
-            $customFieldData = $InfrastructureCustomFields->find()->select([
-                'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
-                'custom_field' => $InfrastructureCustomFields->aliasfield('name')
-            ])->innerJoin(['CustomFieldValues' => 'room_custom_field_values' ], [
-                'CustomFieldValues.infrastructure_custom_field_id = ' . $InfrastructureCustomFields->aliasField('id'),
-            ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
-            if(!empty($customFieldData)) {
+        }//POCOR-6263 ends
+        /*POCOR-6264 starts*/
+        $customModules = TableRegistry::get('custom_modules');
+        $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+        if ($landType->name == 'Land') {
+            $customFieldData =  $InfrastructureCustomFields->find()
+                        ->select([
+                            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+                            'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+                        ])
+                        ->innerJoin(['InfrastructureCustomFormsFields' => 'infrastructure_custom_forms_fields'],[
+                            'InfrastructureCustomFormsFields.infrastructure_custom_field_id = '. $InfrastructureCustomFields->aliasField('id')
+                        ])->innerJoin(['InfrastructureCustomForms' => 'infrastructure_custom_forms'],[
+                            'InfrastructureCustomForms.id = InfrastructureCustomFormsFields.infrastructure_custom_form_id' 
+                        ])
+                        ->innerJoin(['CustomModules' => 'custom_modules'],[
+                            'CustomModules.id = InfrastructureCustomForms.custom_module_id' 
+                        ])->where(['CustomModules.name' => 'Institution > Land'])->group([$InfrastructureCustomFields->aliasfield('id')])->toArray();
+        }
+        if ($landType->name == 'Floor') {
+            $customFieldData =  $InfrastructureCustomFields->find()
+                        ->select([
+                            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+                            'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+                        ])
+                        ->innerJoin(['InfrastructureCustomFormsFields' => 'infrastructure_custom_forms_fields'],[
+                            'InfrastructureCustomFormsFields.infrastructure_custom_field_id = '. $InfrastructureCustomFields->aliasField('id')
+                        ])->innerJoin(['InfrastructureCustomForms' => 'infrastructure_custom_forms'],[
+                            'InfrastructureCustomForms.id = InfrastructureCustomFormsFields.infrastructure_custom_form_id' 
+                        ])
+                        ->innerJoin(['CustomModules' => 'custom_modules'],[
+                            'CustomModules.id = InfrastructureCustomForms.custom_module_id' 
+                        ])->where(['CustomModules.name' => 'Institution > Floor'])
+                        ->group([$InfrastructureCustomFields->aliasfield('id')])->toArray();
+        }
+        if ($landType->name == 'Building') {
+            $customFieldData =  $InfrastructureCustomFields->find()
+                        ->select([
+                            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+                            'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+                        ])
+                        ->innerJoin(['InfrastructureCustomFormsFields' => 'infrastructure_custom_forms_fields'],[
+                            'InfrastructureCustomFormsFields.infrastructure_custom_field_id = '. $InfrastructureCustomFields->aliasField('id')
+                        ])->innerJoin(['InfrastructureCustomForms' => 'infrastructure_custom_forms'],[
+                            'InfrastructureCustomForms.id = InfrastructureCustomFormsFields.infrastructure_custom_form_id' 
+                        ])
+                        ->innerJoin(['CustomModules' => 'custom_modules'],[
+                            'CustomModules.id = InfrastructureCustomForms.custom_module_id' 
+                        ])->where(['CustomModules.name' => 'Institution > Building'])
+                        ->group([$InfrastructureCustomFields->aliasfield('id')])->toArray();
+        }
+        if ($landType->name == 'Room') {
+            $customFieldData =  $InfrastructureCustomFields->find()
+                        ->select([
+                            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+                            'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+                        ])
+                        ->innerJoin(['InfrastructureCustomFormsFields' => 'infrastructure_custom_forms_fields'],[
+                            'InfrastructureCustomFormsFields.infrastructure_custom_field_id = '. $InfrastructureCustomFields->aliasField('id')
+                        ])->innerJoin(['InfrastructureCustomForms' => 'infrastructure_custom_forms'],[
+                            'InfrastructureCustomForms.id = InfrastructureCustomFormsFields.infrastructure_custom_form_id' 
+                        ])
+                        ->innerJoin(['CustomModules' => 'custom_modules'],[
+                            'CustomModules.id = InfrastructureCustomForms.custom_module_id' 
+                        ])->where(['CustomModules.name' => 'Institution > Room'])
+                        ->group([$InfrastructureCustomFields->aliasfield('id')])
+                        ->toArray();
+        } 
+        if(!empty($customFieldData)) {
                 foreach($customFieldData as $data) {
                     $custom_field_id = $data->custom_field_id;
                     $custom_field = $data->custom_field;
                     $newFields[] = [
                         'key' => '',
-                        'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
+                        'field' => $custom_field_id,
                         'type' => 'string',
                         'label' => __($custom_field)
                     ];
                 }
             }
-        }//POCOR-6263 ends
         $fields->exchangeArray($newFields);
     }
 
@@ -1397,6 +1456,7 @@ class InstitutionLandsTable extends ControllerActionTable
                     'area_id' => 'Institutions.area_id',
                     'area_code' => $areas->aliasField('code'),
                     'area_name' => $areas->aliasField('name'),
+                    'level_id'=> $this->aliasField('id'),
                     'land_start_date'=>$this->aliasField('start_date'),
                     'land_infrastructure_condition'=>$infrastructureCondition->aliasField('name'),
                     'land_infrastructure_ownership'=>$infrastructureOwnerships->aliasField('name'),
@@ -1465,6 +1525,7 @@ class InstitutionLandsTable extends ControllerActionTable
                     'area_id' => 'Institutions.area_id',
                     'area_code' => $areas->aliasField('code'),
                     'area_name' => $areas->aliasField('name'),
+                    'level_id'=> 'Institution'.$level.'.'.'id', 
                     'land_start_date'=>'Institution'.$level.'.'.'start_date',
                     'land_infrastructure_type'=>$buildingTypes->aliasField('name'),
                     'land_infrastructure_condition'=>$infrastructureCondition->aliasField('name'),
@@ -1558,61 +1619,86 @@ class InstitutionLandsTable extends ControllerActionTable
                         $row['region_name'] = $val->name;
                     }
                 }
-
-                if($landType->name == 'Room') {
-                    $Guardians = TableRegistry::get('Infrastructure.RoomCustomFieldValues');
-                    $guardianData = $Guardians->find()
+                
+                $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+                if (!empty($landType->name)) {
+                    $customFieldData = $InfrastructureCustomFields->find()
                         ->select([
-                            'id'                             => $Guardians->aliasField('id'),
-                            'institution_room_id'            => $Guardians->aliasField('institution_room_id'),
-                            'infrastructure_custom_field_id' => $Guardians->aliasField('infrastructure_custom_field_id'),
-                            'number_value'                   => $Guardians->aliasField('number_value'),
-                            'decimal_value'                  => $Guardians->aliasField('decimal_value'),
-                            'textarea_value'                 => $Guardians->aliasField('textarea_value'),
-                            'date_value'                     => $Guardians->aliasField('date_value'),
-                            'time_value'                     => $Guardians->aliasField('time_value'),
-                            'text_value'                     => $Guardians->aliasField('text_value'),
-                            'checkbox_value_text'            => 'RoomCustomFieldOptions.name',
-                            'question_name'                  => 'RoomCustomFields.name',
-                            'field_type'                     => 'RoomCustomFields.field_type',
-                            'field_description'              => 'RoomCustomFields.description',
-                            'question_field_type'            => 'RoomCustomFields.field_type',
-                        ])->leftJoin(
-                            ['RoomCustomFields' => 'infrastructure_custom_fields'],
-                            ['RoomCustomFields.id = '. $Guardians->aliasField('infrastructure_custom_field_id')]
-                        )->leftJoin(
-                            ['RoomCustomFieldOptions' => 'infrastructure_custom_field_options'],
-                            ['RoomCustomFieldOptions.id = '. $Guardians->aliasField('number_value')]
-                        )
-                        ->where([
-                            $Guardians->aliasField('institution_room_id') => $row['institutions_room_id'],
-                        ])->toArray();
-                        $existingCheckboxValue = '';
-                        foreach ($guardianData as $guadionRow) {
-                            $fieldType = $guadionRow->field_type;
-                            if ($fieldType == 'TEXT') {
-                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->text_value;
-                            } else if ($fieldType == 'CHECKBOX') {
-                                $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
-                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = trim($existingCheckboxValue, ',');
-                            } else if ($fieldType == 'NUMBER') {
-                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->number_value;
-                            } else if ($fieldType == 'DECIMAL') {
-                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->decimal_value;
-                            } else if ($fieldType == 'TEXTAREA') {
-                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->textarea_value;
-                            } else if ($fieldType == 'DROPDOWN') {
-                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->checkbox_value_text;
-                            } else if ($fieldType == 'DATE') {
-                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
-                            } else if ($fieldType == 'TIME') {
-                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
-                            } else if ($fieldType == 'COORDINATES') {
-                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->text_value;
-                            } else if ($fieldType == 'NOTE') {
-                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->field_description;
+                            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+                            'custom_field' => $InfrastructureCustomFields->aliasfield('name'),
+                            'field_type' => $InfrastructureCustomFields->aliasfield('field_type'),
+                            'text_value' => 'CustomFieldValues.text_value',
+                            'number_value' => 'CustomFieldValues.number_value',
+                            'decimal_value' => 'CustomFieldValues.decimal_value',
+                            'textarea_value' => 'CustomFieldValues.textarea_value',
+                            'date_value' => 'CustomFieldValues.date_value',
+                            'time_value' => 'CustomFieldValues.time_value'
+                        ])
+                        ->innerJoin(['CustomFieldValues' => lcfirst($landType->name).'_custom_field_values' ], [
+                            'CustomFieldValues.infrastructure_custom_field_id = ' . $InfrastructureCustomFields->aliasField('id'),
+                            'CustomFieldValues.institution_'.lcfirst($landType->name).'_id  = ' . $row['level_id']
+                        ])
+                        ->toArray();
+                }
+                if(!empty($customFieldData)) {
+                    foreach($customFieldData as $data) {
+                        if(!empty($data->text_value)) {
+                            $row[$data->custom_field_id] = $data->text_value;
+                        } 
+                        if(!empty($data->number_value) && $data->field_type == 'CHECKBOX') {
+                            /*POCOR-6376 starts*/
+                            $infrastructureCustomFieldOptions = TableRegistry::get('infrastructure_custom_field_options');
+                            $infrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+                            $fieldValue = $infrastructureCustomFieldOptions->find()
+                                            ->select([$infrastructureCustomFieldOptions->aliasField('name')])
+                                            ->innerJoin([$infrastructureCustomFields->alias() => $infrastructureCustomFields->table()],[
+                                                $infrastructureCustomFields->aliasField('id').' = ' . $infrastructureCustomFieldOptions->aliasField('infrastructure_custom_field_id')
+                                            ])
+                                            ->innerJoin(['CustomFieldValues' => lcfirst($landType->name).'_custom_field_values' ], [
+                                                'CustomFieldValues.infrastructure_custom_field_id = ' . $infrastructureCustomFieldOptions->aliasField('infrastructure_custom_field_id'),
+                                                'CustomFieldValues.institution_'.lcfirst($landType->name).'_id  = ' . $row['level_id'],
+                                                'CustomFieldValues.number_value  = ' . $infrastructureCustomFieldOptions->aliasField('id')
+                                            ])
+                                            ->where([
+                                                $infrastructureCustomFields->alias('field_type') => 'CHECKBOX',
+                                                'CustomFieldValues.institution_'.lcfirst($landType->name).'_id  = ' . $row['level_id']])
+                                            ->group([$infrastructureCustomFieldOptions->aliasField('name')])
+                                            ->toArray();
+                            if (!empty($fieldValue)) {
+                                foreach ($fieldValue as $numValue) {
+                                    $optVal[] = $numValue->name;
+                                }
                             }
+                            $str = implode(',', $optVal);
+                            $row[$data->custom_field_id] = $str;
+                            unset($optVal);
+                        } 
+                        if (!empty($data->number_value) && $data->field_type != 'CHECKBOX') {
+                            $optvalue = TableRegistry::get('infrastructure_custom_field_options');
+                            $fieldVal = $optvalue->get($data->number_value);
+                            if (!empty($fieldVal)) {
+                                $opt = $fieldVal->name;
+                            } else {
+                                $opt = '';
+                            }
+                            $row[$data->custom_field_id] = $opt;
                         }
+                        /*POCOR-6376 ends*/
+                        if(!empty($data->decimal_value)) {
+                            $row[$data->custom_field_id] = $data->decimal_value;
+                        }
+                        if(!empty($data->textarea_value)) {
+                            $row[$data->custom_field_id] = $data->textarea_value;
+                        }   
+                        if(!empty($data->date_value)) {
+                            $row[$data->custom_field_id] = $data->date_value;
+                            
+                        }
+                        if(!empty($data->time_value)) {
+                            $row[$data->custom_field_id] = $data->time_value;
+                            
+                        }
+                    }
                 }
                 return $row;
             });
