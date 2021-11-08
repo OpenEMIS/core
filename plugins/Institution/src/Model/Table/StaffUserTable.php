@@ -16,10 +16,6 @@ use App\Model\Table\ControllerActionTable;
 
 class StaffUserTable extends ControllerActionTable
 {
-    // POCOR-6133 custome fields code
-    private $_dynamicFieldName = 'custom_field_data';
-    // POCOR-6133 custome fields code
-
     public function initialize(array $config)
     {
         $this->table('security_users');
@@ -768,17 +764,17 @@ class StaffUserTable extends ControllerActionTable
 
         $extraField[] = [
             'key' => '',
-            'field' => 'number',
+            'field' => 'value',
             'type' => 'string',
             'label' => __('Contact Number')
         ];
 
-        $extraField[] = [
+        /* $extraField[] = [
             'key' => 'StaffUser.external_reference',
             'field' => 'external_reference',
             'type' => 'string',
             'label' => __('External Reference')
-        ];
+        ]; */
         $extraField[] = [
             'key' => 'StaffUser.status',
             'field' => 'status',
@@ -798,27 +794,6 @@ class StaffUserTable extends ControllerActionTable
             'type' => 'string',
             'label' => __('Preferred Language')
         ];
-
-        // POCOR-6133 custome fields code
-        $InfrastructureCustomFields = TableRegistry::get('staff_custom_fields');
-        $customFieldData = $InfrastructureCustomFields->find()->select([
-            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
-            'custom_field' => $InfrastructureCustomFields->aliasfield('name')
-        ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
-
-        if(!empty($customFieldData)) {
-            foreach($customFieldData as $data) {
-                $custom_field_id = $data->custom_field_id;
-                $custom_field = $data->custom_field;
-                $extraField[] = [
-                    'key' => '',
-                    'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
-                    'type' => 'string',
-                    'label' => __($custom_field)
-                ];
-            }
-        }
-        // POCOR-6133 custome fields code
 
         $fields->exchangeArray($extraField);
     }
@@ -878,76 +853,6 @@ class StaffUserTable extends ControllerActionTable
             $this->aliasField('id = ').$staffUserId
         ]);
 
-        // POCOR-6133 custome fields CODe
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
-                // POCOR-6133 custome fields code
-                $CustomValues = TableRegistry::get('staff_custom_field_values');
-
-                $customData = $CustomValues->find()
-                ->select([
-                    'id'                             => $CustomValues->aliasField('id'),
-                    'staff_id'                       => $CustomValues->aliasField('staff_id'),
-                    'staff_custom_field_id'          => $CustomValues->aliasField('staff_custom_field_id'),
-                    'text_value'                     => $CustomValues->aliasField('text_value'),
-                    'number_value'                   => $CustomValues->aliasField('number_value'),
-                    'decimal_value'                  => $CustomValues->aliasField('decimal_value'),
-                    'textarea_value'                 => $CustomValues->aliasField('textarea_value'),
-                    'date_value'                     => $CustomValues->aliasField('date_value'),
-                    'time_value'                     => $CustomValues->aliasField('time_value'),
-                    'checkbox_value_text'            => 'staffCustomFieldOptions.name',
-                    'question_name'                  => 'staffCustomFields.name',
-                    'field_type'                     => 'staffCustomFields.field_type',
-                    'field_description'              => 'staffCustomFields.description',
-                    'question_field_type'            => 'staffCustomFields.field_type',
-                ])->leftJoin(
-                    ['staffCustomFields' => 'staff_custom_fields'],
-                    [
-                        'staffCustomFields.id = '.$CustomValues->aliasField('staff_custom_field_id')
-                    ]
-                )
-                ->leftJoin(
-                    ['staffCustomFieldOptions' => 'staff_custom_field_options'],
-                    [
-                        'staffCustomFieldOptions.id = '.$CustomValues->aliasField('number_value')
-                    ]
-                )
-                ->where([
-                    $CustomValues->aliasField('staff_id') => $row['staff_id'],
-                ])->toArray();
-
-                $existingCheckboxValue = '';
-                foreach ($customData as $guadionRow) {
-                    $fieldType = $guadionRow->field_type;
-                    if ($fieldType == 'TEXT') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->text_value;
-                    } else if ($fieldType == 'CHECKBOX') {
-                        $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = trim($existingCheckboxValue, ',');
-                    } else if ($fieldType == 'NUMBER') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->number_value;
-                    } else if ($fieldType == 'DECIMAL') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->decimal_value;
-                    } else if ($fieldType == 'TEXTAREA') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->textarea_value;
-                    } else if ($fieldType == 'DROPDOWN') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->checkbox_value_text;
-                    } else if ($fieldType == 'DATE') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
-                    } else if ($fieldType == 'TIME') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
-                    } else if ($fieldType == 'COORDINATES') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->text_value;
-                    } else if ($fieldType == 'NOTE') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->field_description;
-                    }
-                }
-                // POCOR-6133 custome fields code
-
-                return $row;
-            });
-        });
-        // POCOR-6133 custome fields CODe
     }
 
     public function findStaff(Query $query, array $options = [])
