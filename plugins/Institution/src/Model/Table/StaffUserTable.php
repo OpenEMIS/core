@@ -764,7 +764,7 @@ class StaffUserTable extends ControllerActionTable
 
         $extraField[] = [
             'key' => '',
-            'field' => 'value',
+            'field' => 'contact_number',
             'type' => 'string',
             'label' => __('Contact Number')
         ];
@@ -818,12 +818,6 @@ class StaffUserTable extends ControllerActionTable
             'issue_date' => 'userIdentities.issue_date',
             'expiry_date' => 'userIdentities.expiry_date',
             'issuer' => 'userIdentities.issue_location',
-            'value' => 'userContacts.value',
-            'description' => $this->find()->func()->concat([
-                'ContactTypes.name' => 'literal',
-                " - ",
-                'contactOptions.name' => 'literal'
-            ])
         ])
         ->leftjoin(
             [$userIdentities->alias() => $userIdentities->table()],
@@ -837,21 +831,61 @@ class StaffUserTable extends ControllerActionTable
             [$nationalities->alias() => $nationalities->table()],
             [$userIdentities->aliasField('nationality_id=').$nationalities->aliasField('id')]
         )
-        ->leftjoin(
-            [$userContacts->alias() => $userContacts->table()],
-            [$userContacts->aliasField('security_user_id=').$this->aliasField('id')]
-        )
-        ->leftjoin(
-            [$contactTypes->alias() => $contactTypes->table()],
-            [$contactTypes->aliasField('id=').$userContacts->aliasField('contact_type_id')]
-        )
-        ->leftjoin(
-            [$contactOptions->alias() => $contactOptions->table()],
-            [$contactOptions->aliasField('id=').$contactTypes->aliasField('contact_option_id')]
-        )
         ->where([
             $this->aliasField('id = ').$staffUserId
         ]);
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $userContacts = TableRegistry::get('StaffUser.userContacts');
+                $contactTypes = TableRegistry::get('StaffUser.ContactTypes ');
+                $contactOptions = TableRegistry::get('StaffUser.contactOptions');
+
+                $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+
+                $userContactsData = $userContacts
+                ->find()
+                ->select([
+                    'contact_number' => 'userContacts.value','userContacts.preferred','userContacts.contact_type_id',
+                    // 'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
+                ])
+                ->leftjoin(
+                    [$contactTypes->alias() => $contactTypes->table()],
+                    [$contactTypes->aliasField('id=').$userContacts->aliasField('contact_type_id')]
+                )
+                ->leftjoin(
+                    [$contactOptions->alias() => $contactOptions->table()],
+                    [$contactOptions->aliasField('id=').$contactTypes->aliasField('contact_option_id')]
+                )
+                ->where([
+                    $userContacts->aliasField('security_user_id') => $row->staff_id,
+                ]);
+
+                $arr = $userContactsData->toArray();
+
+                $contacct = array_filter($arr, function ($var){
+                    return ($var['preferred'] == 1 && $var['contact_type_id'] == 1);
+                });
+
+                $row['contact_number'] = '';
+                if($contacct){
+                    $d = array_shift(array_values($contacct));
+                    
+                    $row['contact_number'] = $d->contact_number;
+                }else{
+                    $contacct = array_filter($arr, function ($var){
+                        return ($var['preferred'] == 1);
+                    });
+
+                    if($contacct){
+                        $d = array_shift(array_values($contacct));
+                        $row['contact_number'] = $d->contact_number;
+                    }
+                }
+                
+                return $row;
+            });
+        });
 
     }
 
