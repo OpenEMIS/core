@@ -94,11 +94,9 @@ class SecurityRolesTable extends ControllerActionTable
           
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
 
-            //Commented Auth as it is casuing error while updating role POCOR-6132
-
-            //if ($this->Auth->user()) {
+            // if ($this->Auth->user()) { causing error in POCOR-6122 so needed to comment the code
                 $Webhooks->triggerShell('role_update', [], $updateRole);
-            //}
+            // }
         }
 
         // webhook update role ends
