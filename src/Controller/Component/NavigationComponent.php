@@ -555,7 +555,6 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.InstitutionCalendars.view', 'Institutions.InstitutionCalendars.add', 'Institutions.InstitutionCalendars.edit', 'Institutions.InstitutionCalendars.delete']
             ],
             // POCOR-6122
-
             'Contacts' => [
                 'title' => 'Contacts',
                 'parent' => 'Institution.General',
