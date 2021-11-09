@@ -756,8 +756,8 @@ class StaffUserTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key' => 'StaffUser.identity_number',
-            'field' => 'identity_number',
+            'key' => '',
+            'field' => 'number',
             'type' => 'string',
             'label' => __('Birth Certificate')
         ];
@@ -801,36 +801,21 @@ class StaffUserTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        // $userIdentities = TableRegistry::get('StaffUser.userIdentities');
-        // $identityType = TableRegistry::get('StaffUser.IdentityTypes  ');
         $userNationalities = TableRegistry::get('StaffUser.userNationalities');
-        // $nationalities = TableRegistry::get('StaffUser.Nationalities');
         $userContacts = TableRegistry::get('StaffUser.userContacts');
         $contactTypes = TableRegistry::get('StaffUser.ContactTypes  ');
         $contactOptions = TableRegistry::get('StaffUser.contactOptions  ');
+        $institutionStaff = TableRegistry::get('StaffUser.InstitutionStaff');
+
 
         $query
         ->select([
             'staff_id' => $this->aliasField('id'),
-            // 'identity_type' => 'IdentityTypes.name',
-            // 'nationality' => 'Nationalities.name',
-            // 'number' => 'userIdentities.number',
-            // 'issue_date' => 'userIdentities.issue_date',
-            // 'expiry_date' => 'userIdentities.expiry_date',
-            // 'issuer' => 'userIdentities.issue_location',
         ])
-        /* ->leftjoin(
-            [$userIdentities->alias() => $userIdentities->table()],
-            [$userIdentities->aliasField('security_user_id=').$this->aliasField('id')]
-        )
         ->leftjoin(
-            [$identityType->alias() => $identityType->table()],
-            [$identityType->aliasField('id=').$userIdentities->aliasField('identity_type_id')]
-        ) */
-        /* ->leftjoin(
-            [$nationalities->alias() => $nationalities->table()],
-            [$userIdentities->aliasField('nationality_id=').$nationalities->aliasField('id')]
-        ) */
+            [$institutionStaff->alias() => $institutionStaff->table()],
+            [$institutionStaff->aliasField('staff_id = ').$this->aliasField('id')]
+        )
         ->where([
             $this->aliasField('id = ').$staffUserId
         ]);
@@ -908,19 +893,20 @@ class StaffUserTable extends ControllerActionTable
                     $userIdentities->aliasField('security_user_id') => $row->staff_id,
                 ]);
 
-                $identity_type = '';
-                $nationality = '';
-                $number = '';
-                if($userIdentitiesData){
-                    $identity_type = implode(',',array_column($userIdentitiesData->toArray(),'identity_type'));
-                    $nationality = implode(',',array_column($userIdentitiesData->toArray(),'nationality'));
-                    $number = implode(',',array_column($userIdentitiesData->toArray(),'number'));
+                $arr1 = $userIdentitiesData->toArray();
+
+                $identy_num = array_filter($arr1, function ($var){
+                    return ($var['identity_type'] == 'Birth Certificate');
+                });
+
+                $row['number'] = '';
+                if($identy_num){
+                    $d = array_shift(array_values($identy_num));
+                    
+                    $row['number'] = $d->number;
+                }else{
+                    $row['number'] = $arr1[0]->number;
                 }
-
-                $row['identity_number'] = $number; 
-
-                // dump($userIdentitiesData->toArray());die;
-
                 return $row;
             });
         });
