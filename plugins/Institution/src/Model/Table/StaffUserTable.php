@@ -801,10 +801,10 @@ class StaffUserTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $userIdentities = TableRegistry::get('StaffUser.userIdentities');
-        $identityType = TableRegistry::get('StaffUser.IdentityTypes  ');
+        // $userIdentities = TableRegistry::get('StaffUser.userIdentities');
+        // $identityType = TableRegistry::get('StaffUser.IdentityTypes  ');
         $userNationalities = TableRegistry::get('StaffUser.userNationalities');
-        $nationalities = TableRegistry::get('StaffUser.Nationalities');
+        // $nationalities = TableRegistry::get('StaffUser.Nationalities');
         $userContacts = TableRegistry::get('StaffUser.userContacts');
         $contactTypes = TableRegistry::get('StaffUser.ContactTypes  ');
         $contactOptions = TableRegistry::get('StaffUser.contactOptions  ');
@@ -812,25 +812,25 @@ class StaffUserTable extends ControllerActionTable
         $query
         ->select([
             'staff_id' => $this->aliasField('id'),
-            'identity_type' => 'IdentityTypes.name',
-            'nationality' => 'Nationalities.name',
-            'number' => 'userIdentities.number',
-            'issue_date' => 'userIdentities.issue_date',
-            'expiry_date' => 'userIdentities.expiry_date',
-            'issuer' => 'userIdentities.issue_location',
+            // 'identity_type' => 'IdentityTypes.name',
+            // 'nationality' => 'Nationalities.name',
+            // 'number' => 'userIdentities.number',
+            // 'issue_date' => 'userIdentities.issue_date',
+            // 'expiry_date' => 'userIdentities.expiry_date',
+            // 'issuer' => 'userIdentities.issue_location',
         ])
-        ->leftjoin(
+        /* ->leftjoin(
             [$userIdentities->alias() => $userIdentities->table()],
             [$userIdentities->aliasField('security_user_id=').$this->aliasField('id')]
         )
         ->leftjoin(
             [$identityType->alias() => $identityType->table()],
             [$identityType->aliasField('id=').$userIdentities->aliasField('identity_type_id')]
-        )
-       ->leftjoin(
+        ) */
+        /* ->leftjoin(
             [$nationalities->alias() => $nationalities->table()],
             [$userIdentities->aliasField('nationality_id=').$nationalities->aliasField('id')]
-        )
+        ) */
         ->where([
             $this->aliasField('id = ').$staffUserId
         ]);
@@ -847,7 +847,6 @@ class StaffUserTable extends ControllerActionTable
                 ->find()
                 ->select([
                     'contact_number' => 'userContacts.value','userContacts.preferred','userContacts.contact_type_id',
-                    // 'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
                 ])
                 ->leftjoin(
                     [$contactTypes->alias() => $contactTypes->table()],
@@ -882,7 +881,46 @@ class StaffUserTable extends ControllerActionTable
                         $row['contact_number'] = $d->contact_number;
                     }
                 }
-                
+
+                $userIdentities = TableRegistry::get('StaffUser.userIdentities');
+                $identityType = TableRegistry::get('StaffUser.IdentityTypes  ');
+                $nationalities = TableRegistry::get('StaffUser.Nationalities');
+
+                $userIdentitiesData = $userIdentities
+                ->find()
+                ->select([
+                    'identity_type' => 'IdentityTypes.name',
+                    'nationality' => 'Nationalities.name',
+                    'number' => 'userIdentities.number',
+                    'issue_date' => 'userIdentities.issue_date',
+                    'expiry_date' => 'userIdentities.expiry_date',
+                    'issuer' => 'userIdentities.issue_location',
+                ])
+                ->leftjoin(
+                    [$identityType->alias() => $identityType->table()],
+                    [$identityType->aliasField('id = ').$userIdentities->aliasField('identity_type_id')]
+                )
+                ->leftjoin(
+                    [$nationalities->alias() => $nationalities->table()],
+                    [$userIdentities->aliasField('nationality_id = ').$nationalities->aliasField('id')]
+                )
+                ->where([
+                    $userIdentities->aliasField('security_user_id') => $row->staff_id,
+                ]);
+
+                $identity_type = '';
+                $nationality = '';
+                $number = '';
+                if($userIdentitiesData){
+                    $identity_type = implode(',',array_column($userIdentitiesData->toArray(),'identity_type'));
+                    $nationality = implode(',',array_column($userIdentitiesData->toArray(),'nationality'));
+                    $number = implode(',',array_column($userIdentitiesData->toArray(),'number'));
+                }
+
+                $row['identity_number'] = $number; 
+
+                // dump($userIdentitiesData->toArray());die;
+
                 return $row;
             });
         });
