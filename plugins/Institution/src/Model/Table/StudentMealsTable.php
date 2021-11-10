@@ -171,8 +171,8 @@ class StudentMealsTable extends ControllerActionTable
                             // 'paid' => null,
                             'meal_benefit_id' => $isMarkedRecords->meal_benefit_id,
                             'meal_benefit' => $isMarkedRecords->meal_benefit->name,
-                            'meal_received_id' => !empty($isMarkedRecords) ?  "1"  : null,
-                            'meal_received' => !empty($isMarkedRecords) ? "Yes" : "None"
+                            'meal_received_id' => !empty($isMarkedRecords) ?  "2"  : null,
+                            'meal_received' => !empty($isMarkedRecords) ? "No" : "None"
                         ];
                      }
                      
