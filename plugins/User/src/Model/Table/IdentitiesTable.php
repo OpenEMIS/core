@@ -60,6 +60,7 @@ class IdentitiesTable extends ControllerActionTable
 	public function beforeAction($event, ArrayObject $extra)
 	{
      	$UserNationalityTable = TableRegistry::get('User.UserNationalities');
+     	$users = TableRegistry::get('User.Users');
         $userId = null;
         $queryString = $this->getQueryString();
         if (isset($queryString['security_user_id'])) {
@@ -71,7 +72,14 @@ class IdentitiesTable extends ControllerActionTable
         							->where([$UserNationalityTable->aliasField('security_user_id') => $userId])
         							->first();
         	if(!empty($checkUserNationality)) {
-        		$NationalityOptions =  $UserNationalityTable
+        		$usersOptions = $users->find('list',[
+						    	'keyField' => '_matchingData.MainNationalities.id',
+						        'valueField' => '_matchingData.MainNationalities.name'
+						    ])
+						    ->matching('MainNationalities')
+                			->where([$users->aliasField('id') => $userId])
+                			->toArray();
+        		$UsersNationalityOptions =  $UserNationalityTable
 						    ->find('list',[
 						    	'keyField' => '_matchingData.NationalitiesLookUp.id',
 						        'valueField' => '_matchingData.NationalitiesLookUp.name'
@@ -79,6 +87,7 @@ class IdentitiesTable extends ControllerActionTable
 						    ->matching('NationalitiesLookUp')
                 			->where([$UserNationalityTable->aliasField('security_user_id') => $userId])
                 			->toArray();
+                $NationalityOptions = array_merge($usersOptions, $UsersNationalityOptions);
         	}
         } 
         /*POCOR-6396 starts*/
