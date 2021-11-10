@@ -729,7 +729,7 @@ class UndoStudentStatusTable extends AppTable
     }
 
     public function findUndoTransferredStudent(Query $query, array $options)
-    {
+    {   //POCOR-5670 starts
         $conditions = [
             $this->aliasField('academic_period_id') =>  $options['selectedPeriod'],
             $this->aliasField('education_grade_id') => $options['selectedGrade'],
@@ -756,7 +756,7 @@ class UndoStudentStatusTable extends AppTable
                     'InstitutionStudent.student_status_id = ' . $this->statuses['CURRENT'],
                     'InstitutionStudent.student_status_id IS NULL' //null is a result of left join to detect transferred without enrolled record (Jordan data)
                 ],
-            ]);
+            ]);//POCOR-5670 ends
         return $query;
     }
 }
