@@ -965,4 +965,30 @@ class DirectoriesController extends AppController
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
+    //POCOR-5673 starts
+    public function getRedirectToGuardian()
+    {
+        $config_items = TableRegistry::get('config_items');
+        $config_items_result = $config_items
+            ->find()
+            ->where(['code' => 'RedirectToGuardian'])
+            ->toArray();
+        foreach($config_items_result AS $result){
+            $result_array[] = array("redirecttoguardian_status" => $result['value']);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getRelationshipType()
+    {
+        $guardian_relations = TableRegistry::get('guardian_relations');
+        $guardian_relations_result = $guardian_relations
+            ->find()
+            ->where(['visible' => 1])
+            ->toArray();
+        foreach($guardian_relations_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+        }
+        echo json_encode($result_array);die;
+    }//POCOR-5673 ends
 }
