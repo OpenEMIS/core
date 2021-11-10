@@ -292,33 +292,21 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
     }
 
     function mealProgrameOptions(institutionId) {
-        console.log('rahul');
         var success = function(response, deferred) {
             var mealProgrammes = response.data.data;
-        // console.log(mealProgrammes);
             if (angular.isObject(mealProgrammes) && mealProgrammes.length > 0) {
                 deferred.resolve(mealProgrammes);
             } else {
                 deferred.reject('There was an error when retrieving the student absence reasons');
             }
         };
-
-    
-
-// ->where(['OR' => $condition])
-
+        
         return MealProgrammes
-            // .find('mealInstitutionProgrammes', {
-            //     institution_id: institutionId,
-            // })
-            .where({institution_id: institutionId})
-            // .where({
-            //     institution_id: 6,
-            //     institution_id: 0,
-            // })
-            
-            // .select(['id', 'name'])
+            .find('mealInstitutionProgrammes', {
+                institution_id: institutionId,
+            })
              .ajax({success: success, defer: true});
+            return [];
 
     }
 
