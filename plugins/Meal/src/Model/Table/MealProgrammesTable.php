@@ -351,18 +351,8 @@ class MealProgrammesTable extends ControllerActionTable
         return $selectedAcademicPeriod;
     } 
 
-    // public function getMealInstitutionProgrammes($institutionId)
-    // {
-    //     die('asdf');
-    //     $list = $this
-    //         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-    //         ->toArray();
-    //     return $list;
-    // }
-
     public function getMealProgrammesOptions()
     {
-        die('asdf');
         $list = $this
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
@@ -370,18 +360,11 @@ class MealProgrammesTable extends ControllerActionTable
     } 
     public function findMealInstitutionProgrammes(Query $query, array $options){
         $institutionId = $options['institution_id'];  
-        // echo "<pre>"; print_r($institutionId); die();
-        $MealProgramme = TableRegistry::get('Meal.MealProgrammes');
-        $list = $MealProgramme
-        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+        return $query
         ->where([
-            $MealProgramme->aliasField('institution_id') => $institutionId])            
+            $this->aliasField('institution_id') => $institutionId])
         ->orWhere([ 
-            $MealProgramme->aliasField('institution_id') => 0 ])
-        ->toArray();
-        // echo "<pre>"; print_r($list); die();
-
-        return $list;
+            $this->aliasField('institution_id') => 0 ]);
     }
 
      public function onGetAreaId(Event $event, Entity $entity)
