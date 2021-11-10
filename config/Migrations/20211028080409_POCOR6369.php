@@ -15,8 +15,8 @@ class POCOR6369 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_6369_meal_programmes` LIKE `meal_programmes`');
         $this->execute('INSERT INTO `zz_6369_meal_programmes` SELECT * FROM `meal_programmes`');
 
-        $this->execute("ALTER TABLE `meal_programmes` ADD `area_id` INT(11) NULL DEFAULT NULL AFTER `name`");
-        $this->execute("ALTER TABLE `meal_programmes` ADD `institution_id` INT(11) NULL DEFAULT NULL AFTER `area_id`");
+        $this->execute("ALTER TABLE `meal_programmes` ADD `area_id` INT(11) NOT NULL AFTER `name`");
+        $this->execute("ALTER TABLE `meal_programmes` ADD `institution_id` INT(11) NOT NULL AFTER `area_id`");
     }
 
     //rollback
