@@ -2117,11 +2117,14 @@ class ValidationBehavior extends Behavior
             ->where([
                 $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
                 $InstitutionStaffAttendances->aliasField('staff_id') => $staffId,
-                $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+                //$InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId, //POCOR-6345
                 $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
-                $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'"
+                $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
+                $InstitutionStaffAttendances->aliasField('time_in !=') => NULL, //POCOR-6345
+                $InstitutionStaffAttendances->aliasField('time_out !=') => NULL //POCOR-6345
             ])
             ->first();
+
         // Check if staff aattendance exists
         if ($staffAttendances) {
             return false;
