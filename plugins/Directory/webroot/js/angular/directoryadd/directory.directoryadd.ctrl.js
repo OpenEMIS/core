@@ -28,6 +28,9 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     scope.addressAreaOption = [];
     scope.birthplaceAreaOption = [];
     scope.isGuardianAdding = false;
+    scope.pageSize = 10;
+    scope.rowsThisPage = [];
+    scope.selectedStaff;
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
@@ -95,15 +98,54 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
             first_name = scope.selectedGuardianData.first_name;
             last_name = scope.selectedGuardianData.last_name;
         }
-        DirectoryaddSvc.getInternalSearchData(first_name, last_name)
-        .then(function(response) {
-            
-            UtilsSvc.isAppendLoader(false);
-        }, function(error) {
-            console.log(error);
-            UtilsSvc.isAppendLoader(false);
-        });
+        var dataSource = {
+            pageSize: scope.pageSize,
+            getRows: function (params) {
+                UtilsSvc.isAppendLoader(true);
+                DirectoryaddSvc.getInternalSearchData(first_name, last_name)
+                .then(function(response) {
+                    var gridData = response.data;
+                    var totalRowCount = gridData.length;
+                    return scope.processUserRecord(gridData, params, totalRowCount);
+                }, function(error) {
+                    console.log(error);
+                    UtilsSvc.isAppendLoader(false);
+                });
+            }
+        };
+        scope.internalGridOptions.api.setDatasource(dataSource);
+        scope.internalGridOptions.api.sizeColumnsToFit(); 
     }
+
+    scope.processUserRecord = function(userRecords, params, totalRowCount) {
+        console.log(userRecords);
+
+        var lastRow = totalRowCount;
+        scope.rowsThisPage = userRecords;
+
+        params.successCallback(scope.rowsThisPage, lastRow);
+        // scope.externalDataLoaded = true;
+        UtilsSvc.isAppendLoader(false);
+        return userRecords;
+    }
+
+    // scope.setGridData = function() {
+    //     if (angular.isDefined(scope.internalGridOptions.api)) {
+    //         // vm.gridOptions.api.setRowData(vm.classStudentList);
+    //         scope.setRowDatas(scope.gridData);
+    //         //  vm.countStudentData();
+     
+    //     }
+    // }
+
+    // scope.setRowDatas = function(userList) {
+    //     console.log('studentList controller',userList);
+    //     userList.forEach(function (dataItem, index) {
+    //         dataItem.rowHeight = 60;
+    //     });       
+    //     scope.internalGridOptions.api.setRowData(userList);
+        
+    // }
 
     scope.generatePassword = function() {
         UtilsSvc.isAppendLoader(true);
@@ -118,6 +160,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                     scope.selectedGuardianData.password = response;
                 }
             }
+            scope.getContactTypes();
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -162,6 +205,17 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         DirectoryaddSvc.getIdentityTypes()
         .then(function(response) {
             scope.identityTypeOptions = response.data;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error) {
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    scope.getContactTypes = function() {
+        DirectoryaddSvc.getContactTypes()
+        .then(function(response) {
+            scope.contactTypeOptions = response.data;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -311,7 +365,27 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         }
     }
 
-    scope.changeContactType =  function() {}
+    scope.changeContactType =  function() {
+        if(!scope.isGuardianAdding) {
+            var contactType = scope.selectedUserData.contact_type_id;
+            var options = scope.contactTypeOptions;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].id == contactType) {
+                    scope.selectedUserData.contact_type_name = options[i].name;
+                    break;
+                }
+            }
+        } else {
+            var contactType = scope.selectedGuardianData.contact_type_id;
+            var options = scope.contactTypeOptions;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].id == contactType) {
+                    scope.selectedGuardianData.contact_type_name = options[i].name;
+                    break;
+                }
+            }
+        }
+    }
 
     scope.changeRelationType = function() {}
 
@@ -443,7 +517,17 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                 onRowSelected: function (_e) {
                     scope.selectStaff(_e.node.data.id);
                     $scope.$apply();
-                }
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
+                onGridReady: function() {
+                    if (angular.isDefined(scope.internalGridOptions.api)) {
+                        setTimeout(function() {
+                            scope.setGridData();
+                        })
+                    }
+                },
             };
 
             scope.externalGridOptions = {
@@ -557,5 +641,19 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
             };
         });
     };
+
+    scope.selectStaff = function(id) {
+        scope.selectedStaff = id;
+        scope.getStaffData();
+    }
+
+    scope.getStaffData = function() {
+        var log = [];
+        angular.forEach(scope.rowsThisPage , function(value) {
+            if (value.id == scope.selectedStaff) {
+                scope.selectedStaffData = value;
+            }
+        }, log);
+    }
     
 }
