@@ -66,8 +66,9 @@ class IdentitiesTable extends ControllerActionTable
         if (isset($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         }
+
         /*POCOR-6396 starts*/
-        if ($this->action == 'add') {
+        if ($this->action == 'add' || $this->action == 'edit') {
         	$checkUserNationality = $UserNationalityTable->find()
         							->where([$UserNationalityTable->aliasField('security_user_id') => $userId])
         							->first();
@@ -87,9 +88,9 @@ class IdentitiesTable extends ControllerActionTable
 						    ->matching('NationalitiesLookUp')
                 			->where([$UserNationalityTable->aliasField('security_user_id') => $userId])
                 			->toArray();
-                $NationalityOptions = array_merge($usersOptions, $UsersNationalityOptions);
+                $NationalityOptions = array_unique ($usersOptions + $UsersNationalityOptions);    
         	}
-        } 
+        }
         /*POCOR-6396 starts*/
 		$this->fields['identity_type_id']['type'] = 'select';
 		$this->fields['nationality_id']['type'] = 'select';
@@ -193,6 +194,7 @@ class IdentitiesTable extends ControllerActionTable
                 }      
             }try{
 				$Users = TableRegistry::get('User.Users');
+				//echo "<pre>";print_r($this->request);die();
 				$result = $Users
 						->find()
 						->select(['identity_number','identity_type_id'])
