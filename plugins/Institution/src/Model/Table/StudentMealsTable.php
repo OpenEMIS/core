@@ -286,7 +286,7 @@ class StudentMealsTable extends ControllerActionTable
                                     $entityPeriod = $keyId;
 
                                     if ($entityDate == $date && $entityPeriod == $keyId) {
-                                        $studentMealsData[$studentId][$dayId][$keyId] = 'Yes';
+                                        $studentMealsData[$studentId][$dayId][$keyId] = 'Received';
                                         break;
                                     }
                                 }
@@ -420,7 +420,7 @@ class StudentMealsTable extends ControllerActionTable
                     $mealReceived = "None";
                 }
                 else{
-                    $mealReceived = "Yes";
+                    $mealReceived = "Received";
                 }
             }
         else{
