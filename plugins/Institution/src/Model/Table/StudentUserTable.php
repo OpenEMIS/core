@@ -983,7 +983,39 @@ class StudentUserTable extends ControllerActionTable
         }
 
         if($StudentType == 'Assessment'){
+            $newFields[] = [
+                'key' => '',
+                'field' => 'asses_academic_period',
+                'type' => 'string',
+                'label' => __('Academic Period')
+            ];
 
+            $newFields[] = [
+                'key' => '',
+                'field' => 'asses_institution_name',
+                'type' => 'string',
+                'label' => __('Institution')
+            ];
+            $newFields[] = [
+                'key' => '',
+                'field' => 'assesment_period',
+                'type' => 'string',
+                'label' => __('Assessment Periods')
+            ];
+            $newFields[] = [
+                'key' => '',
+                'field' => 'education_subject',
+                'type' => 'string',
+                'label' => __('Subject')
+            ];
+            $newFields[] = [
+                'key' => '',
+                'field' => 'marks',
+                'type' => 'string',
+                'label' => __('Mark')
+            ];
+
+            $fields->exchangeArray($newFields);
         }
 
         if($StudentType == 'Absence'){
@@ -1004,7 +1036,6 @@ class StudentUserTable extends ControllerActionTable
             $fields->exchangeArray($newFields);
         }
 
-        // dump($settings);die;
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
@@ -1014,7 +1045,6 @@ class StudentUserTable extends ControllerActionTable
         $studentAbsenceDays = TableRegistry::get('InstitutionStudentAbsenceDays');
         $Subjects = TableRegistry::get('Institution.InstitutionSubjects');
         $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $Assessments = TableRegistry::get('Assessments');
         $institutionStudentId = $settings['id'];
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $periodId = $this->request->query['academic_period_id'];
@@ -1032,6 +1062,13 @@ class StudentUserTable extends ControllerActionTable
         $institutionStudentAbsenses = TableRegistry::get('institution_student_absences');
         $absensesTypes = TableRegistry::get('absence_types');
         // for abesense
+
+        // for assessments
+        $Assessments = TableRegistry::get('Assessments');
+        $AssessmentPeriods = TableRegistry::get('assessment_periods');
+        $AssessmentItemResults = TableRegistry::get('assessment_item_results');
+        $EducationSubjects = TableRegistry::get('education_subjects');
+        // for assessments
 
         $sheetData = $settings['sheet']['sheetData'];
         $StudentType = $sheetData['student_tabs_type'];
@@ -1158,7 +1195,39 @@ class StudentUserTable extends ControllerActionTable
         // for Academic Tab
         // for Assessments Tab
         if($StudentType == 'Assessment'){
-
+            $query
+            ->select([
+                'asses_academic_period' => $AcademicPeriods->aliasField('name'),
+                'asses_institution_name' => $institutions->aliasField('name'),
+                'assesment_period' => $AssessmentPeriods->find()->func()->concat([
+                    $AssessmentPeriods->aliasField('code') => 'literal',
+                    " - ",
+                    $AssessmentPeriods->aliasField('name') => 'literal'
+                ]),
+                'education_subject' => $EducationSubjects->aliasField('name'),
+                'marks' => $AssessmentItemResults->aliasField('marks'),
+            ])
+            ->leftJoin([$AssessmentItemResults->alias() => $AssessmentItemResults->table()],[
+                $this->aliasField('id = ').$AssessmentItemResults->aliasField('student_id')
+            ])
+            ->leftJoin([$Assessments->alias() => $Assessments->table()],[
+                $AssessmentItemResults->aliasField('assessment_id = ').$Assessments->aliasField('id')
+            ])
+            ->leftJoin([$EducationSubjects->alias() => $EducationSubjects->table()],[
+                $AssessmentItemResults->aliasField('education_subject_id = ').$EducationSubjects->aliasField('id')
+            ])
+            ->innerJoin([$AcademicPeriods->alias() => $AcademicPeriods->table()],[
+                $AssessmentItemResults->aliasField('academic_period_id = ') .$AcademicPeriods->aliasField('id')
+            ])
+            ->innerJoin([$AssessmentPeriods->alias() => $AssessmentPeriods->table()],[
+                $AssessmentItemResults->aliasField('assessment_period_id = ') .$AssessmentPeriods->aliasField('id')
+            ])
+            ->innerJoin([$institutions->alias() => $institutions->table()],[
+                $AssessmentItemResults->aliasField('institution_id = ') .$institutions->aliasField('id')
+            ])
+            ->where([
+                $AssessmentItemResults->aliasField('student_id =').$institutionStudentId,
+            ]);
         }
         // for Assessments Tab
         // for Absenses Tab
