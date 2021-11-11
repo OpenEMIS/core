@@ -20,6 +20,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
         getNationalities: getNationalities,
         getIdentityTypes: getIdentityTypes,
         getInternalSearchData: getInternalSearchData,
+        getContactTypes: getContactTypes,
     };
     return service;
     
@@ -95,6 +96,18 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
     function getIdentityTypes() {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Directories/getIdentityTypes/';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getContactTypes() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getContactType/';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response);
