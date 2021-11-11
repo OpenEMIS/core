@@ -759,7 +759,7 @@ class StaffUserTable extends ControllerActionTable
             'key' => '',
             'field' => 'number',
             'type' => 'string',
-            'label' => __('Birth Certificate')
+            'label' => __($identity->name)
         ];
 
         $extraField[] = [
@@ -848,23 +848,14 @@ class StaffUserTable extends ControllerActionTable
                 $arr = $userContactsData->toArray();
 
                 $contacct = array_filter($arr, function ($var){
-                    return ($var['preferred'] == 1 && $var['contact_type_id'] == 1);
+                    return ($var['preferred'] == 1);
                 });
 
                 $row['contact_number'] = '';
                 if($contacct){
-                    $d = array_shift(array_values($contacct));
+                    $d = implode(', ',array_column($contacct, 'contact_number'));
                     
-                    $row['contact_number'] = $d->contact_number;
-                }else{
-                    $contacct = array_filter($arr, function ($var){
-                        return ($var['preferred'] == 1);
-                    });
-
-                    if($contacct){
-                        $d = array_shift(array_values($contacct));
-                        $row['contact_number'] = $d->contact_number;
-                    }
+                    $row['contact_number'] = $d;
                 }
 
                 $userIdentities = TableRegistry::get('StaffUser.userIdentities');
