@@ -1,3 +1,15 @@
+### [3.71.0] - 2021-11-13
+- Implemented: Improvement of the "Undo" operations linked to the basic student workflow procedures
+- Implemented: Add Export button function - Institutions > General > Calendar
+- Implemented: Update Export button function - Institutions > Staff (include custom fields phone number identity types)
+- Bug Fixed: Institutions>Infrastructure>Overview: Add the available custom fields to the report
+- Bug Fixed: Administration > Meals: When adding a programme, add fields for the beneficiary Field Directorates and the beneficiary institutions.
+- Bug Fixed: Institution > Meals > Students: Ask the user to choose if the meal is received or not
+- Bug Fixed: Institutions > Students > Export : Custom fields (dropdown/checkboxes) results are not showing in export file
+- Bug Fixed: Report>Institution>Infrastructure: Custom fields not showing properly
+- Bug Fixed: Institutions/ Directory > User 1 > Identities : Clicking Add Identities will return a 404 error
+- Bug Fixed: Institution/Directory > User 1 > Nationalities: Getting 404 Error
+
 ### [3.70.5] - 2021-11-05
 - Implemented: Add Export button function - Institutions > Students > Student1 > Special Needs (include all tabs)
 - Implemented: Add Export button function - Institutions > Staff > Staff1 > Training (include all tabs)
