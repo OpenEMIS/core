@@ -307,6 +307,11 @@ class NavigationComponent extends Component
 			$encodedParam = $this->request->params['pass'][1];
 			if(!empty($encodedParam)) {
 				$securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
+                /*POCOR-STARTS*/
+                if (empty($securityUserId)) {
+                    $securityUserId = $this->controller->paramsDecode($encodedParam)['security_user_id'];
+                }
+                /*POCOR-ENDS*/
             }
             if(!empty($encodedParam)) {
                 //POCOR-6202 start
@@ -555,6 +560,7 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.InstitutionCalendars.view', 'Institutions.InstitutionCalendars.add', 'Institutions.InstitutionCalendars.edit', 'Institutions.InstitutionCalendars.delete']
             ],
             // POCOR-6122
+
             'Contacts' => [
                 'title' => 'Contacts',
                 'parent' => 'Institution.General',
