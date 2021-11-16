@@ -224,15 +224,8 @@ class StudentsTable extends ControllerActionTable
         $UserContact = TableRegistry::get('User.Contacts');
         $StudentStatuses = TableRegistry::get('student_statuses');
 
-
-        /* $subquery = $this->Users->find()->select([
-            'guartdian_name' => "CONCAT(Users.first_name,' ',Users.last_name)"
-        ])
-        ->where([
-            'Users.id = StudentGurdians.guardian_id'
-        ]); */
         $query
-       ->where([$this->aliasField('institution_id') => $institutionId])
+            ->where([$this->aliasField('institution_id') => $institutionId])
             ->contain([
                 'Users.Genders',
                 'Institutions',
@@ -347,37 +340,40 @@ class StudentsTable extends ControllerActionTable
                 // POCOR-6338 starts
                 $Users = TableRegistry::get('security_users');
                 $institutionStudents = TableRegistry::get('institution_students');
-                $user_data= $Users
-                            ->find()
-                            ->select([
-                                        'student_status'=>'(case 
-                                            when StudentStatuses.name = "Repeated" then "Enrolled (Repeater)"
-                                            when StudentStatuses.name = "Enrolled" then "Enrolled"
-                                            when StudentStatuses.name = "Transferred" then "Transferred"
-                                            when StudentStatuses.name = "Withdrawn" then "Withdrawn"
-                                            when StudentStatuses.name = "Graduated" then "Graduated"
-                                            else "Promoted" end
-                                        )'
-                            ])
-                            ->leftJoin(
-                            ['InstitutionStudents' => 'institution_students'],
-                            [
-                                'InstitutionStudents.student_id = '.$Users->aliasField('id')
-                            ]
-                            ) 
-                            ->leftJoin(
-                                ['StudentStatuses' => 'student_statuses'],
-                                [
-                                    'StudentStatuses.id = InstitutionStudents.student_status_id'
-                                ]
-                            )
-                            ->where(['security_users.openemis_no' => $row->openemis_no,
-                            'InstitutionStudents.institution_id'=> $row->institution_id])
-                            ->order([
-                                'InstitutionStudents.created' => DESC
-                            ])
-                            ->first();
-                $row['student_status'] = $user_data->student_status;
+                /*POCOR-6400 starts*/
+                $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+                $InstitutionStudentsCurrentData = $InstitutionStudents
+                ->find()
+                ->select([
+                    'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
+                ])
+                ->where([
+                    $InstitutionStudents->aliasField('student_id') => $row->student_id
+                ])
+                ->order([$InstitutionStudents->aliasField('InstitutionStudents.created') => 'DESC'])
+                ->autoFields(true)
+                ->first();
+                
+                if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id)) {
+                    $previousInstStdId = $InstitutionStudents
+                                        ->find()
+                                        ->select([
+                                            'InstitutionStudents.id', 'InstitutionStudents.student_status_id'
+                                        ])
+                                        ->where([
+                                            $InstitutionStudents->aliasField('student_id') => $row->student_id,
+                                            $InstitutionStudents->aliasField('id') => $InstitutionStudentsCurrentData->previous_institution_student_id
+                                        ])->first();
+                    if (!empty($previousInstStdId) && $previousInstStdId->student_status_id == 8) {
+                        $row['student_status'] = "Enrolled (Repeater)";
+                    } else {
+                        $StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+                        $statusName = $StudentStatusesTable->get($InstitutionStudentsCurrentData->student_status_id)->name;
+                        $row['student_status'] = $statusName ;
+                    }
+                }
+                /*POCOR-6400 ends*/
+                
                 // POCOR-6338 ends                
                 // POCOR-6129 custome fields code
                 $Guardians = TableRegistry::get('student_custom_field_values');
@@ -1223,13 +1219,25 @@ class StudentsTable extends ControllerActionTable
             ->where([
                 $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id
             ])
-            ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
+            ->order([$InstitutionStudents->aliasField('InstitutionStudents.created') => 'DESC'])
             ->autoFields(true)
             ->first();
-            if($value['student_status']->name == "Enrolled"){
-                if($InstitutionStudentsCurrentData->student_status_id == 8)
+            /*POCOR-6400 starts*/
+            if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id)) {
+                $previousInstStdId = $InstitutionStudents
+                                    ->find()
+                                    ->select([
+                                        'InstitutionStudents.id', 'InstitutionStudents.student_status_id'
+                                    ])
+                                    ->where([
+                                        $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id,
+                                        $InstitutionStudents->aliasField('id') => $InstitutionStudentsCurrentData->previous_institution_student_id
+                                    ])->first();
+                if (!empty($previousInstStdId) && $previousInstStdId->student_status_id == 8) {
                     $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
+                }
             }
+            /*POCOR-6400 ends*/
         }
         $this->dashboardQuery = clone $query;
     }
