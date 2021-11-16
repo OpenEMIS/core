@@ -15,21 +15,22 @@ class POCOR6395 extends AbstractMigration
         //creating backup
         $this->execute('DROP TABLE IF EXISTS `zz_6395_security_functions`');
         $this->execute('CREATE TABLE `zz_6395_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `zz_6395_security_functions` SELECT * FROM `security_functions`');
 
         //getting parent_id value
         $row = $this->fetchRow("SELECT * FROM `security_functions` WHERE `module` = 'Personal' AND `name` = 'Overview'");
-        $parentId = $row['parent_id'];
+        $parentId = $row['id'];
         //getting max order value
         $data = $this->fetchRow("SELECT  max(`order`) FROM `security_functions`");
 
         //inserting record
         $this->insert('security_functions', [
             'name' => 'User Profile Completeness',
-            'controller' => 'Profiles',
+            'controller' => 'Dashboard',
             'module' => 'Personal',
             'category' => 'General',
             'parent_id' => $parentId,
-            '_view' => 'Dashboard.view',
+            '_view' => 'Dashboard.index',
             '_edit' => NULL,
             '_add' => NULL,
             '_delete' => NULL,
@@ -40,7 +41,7 @@ class POCOR6395 extends AbstractMigration
             'created' => date('Y-m-d H:i:s')
         ]);
     }
-
+    //rollback
     public function down()
     {
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
