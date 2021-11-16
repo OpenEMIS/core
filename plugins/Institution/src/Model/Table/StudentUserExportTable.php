@@ -15,7 +15,7 @@ use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 use Cake\Database\Exception as DatabaseException;
 
-class StudentUserTable extends ControllerActionTable
+class StudentUserExportTable extends ControllerActionTable
 {
     private $studentsTabsData = [
         0 => "General",
@@ -38,25 +38,7 @@ class StudentUserTable extends ControllerActionTable
 
         // Behaviors
         $this->addBehavior('User.User');
-        // this code is commented in POCOR-6130 because custome fields were coming in every tab so now custome fields function has been changed to custome
-        if (!in_array('Custom Fields', (array) Configure::read('School.excludedPlugins'))) {
-            $this->addBehavior('CustomField.Record', [
-                'model' => 'Student.Students',
-                'behavior' => 'Student',
-                'fieldKey' => 'student_custom_field_id',
-                'tableColumnKey' => 'student_custom_table_column_id',
-                'tableRowKey' => 'student_custom_table_row_id',
-                'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
-                'formKey' => 'student_custom_form_id',
-                'filterKey' => 'student_custom_filter_id',
-                'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
-                'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
-                'recordKey' => 'student_id',
-                'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
-                'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
-            ]);
-        }
-
+        
         $this->addBehavior('Excel', [
             'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death'],
             'filename' => 'Students',
@@ -460,40 +442,6 @@ class StudentUserTable extends ControllerActionTable
         $this->Session->write('Student.Students.name', $entity->name);
         $this->setupTabElements($entity);
         $this->setupToolbarButtons($entity, $extra);
-
-        $btnAttr = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false
-        ];
-        
-        $session = $this->request->session();
-        $institutionId = $this->request->pass[1];
-        $queryString = $this->request->query('queryString');
-        
-        $extraButtons = [
-            'export' => [
-                'Institution' => ['Institutions', 'StudentUserExport', $institutionId],
-                'action' => 'StudentUserExport',
-                'icon' => '<i class="fa kd-export"></i>',
-                'title' => __('Export')
-            ]
-        ];
-        foreach ($extraButtons as $key => $attr) {
-            if ($this->AccessControl->check($attr['permission'])) {
-                $button = [
-                    'type' => 'button',
-                    'attr' => $btnAttr,
-                    'url' => [0 => 'excel', 1 => $institutionId,'queryString' => $queryString] 
-                ];
-                $button['url']['action'] = $attr['action'];
-                $button['attr']['title'] = $attr['title'];
-                $button['label'] = $attr['icon'];
-
-                $extra['toolbarButtons'][$key] = $button;
-            }
-        }
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -1083,7 +1031,7 @@ class StudentUserTable extends ControllerActionTable
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $periodId = $this->request->query['academic_period_id'];
         $currDateTime = date("Y-m-d");
-
+        
         // for Academic Tab
         $AcademicPeriods = TableRegistry::get('academic_periods');
         $institutions = TableRegistry::get('institutions');
@@ -1182,7 +1130,7 @@ class StudentUserTable extends ControllerActionTable
         // for Generals Tab
         // for Academics Tab
         if($StudentType == 'Academic'){
-            $query
+            $res=$query
             ->select([
                 'id' => $InstitutionStudents->aliasField('id'),
                 'academic_period_name' => $AcademicPeriods->aliasField('name'),
@@ -1217,15 +1165,18 @@ class StudentUserTable extends ControllerActionTable
                 $InstitutionStudents->aliasField('student_status_id = ') .$StudentStatuses->aliasField('id')
             ])
             ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()],[
-                $this->InstitutionStudents->aliasField('student_id = ').$ClassStudents->aliasField('student_id')
+                $this->InstitutionStudents->aliasField('student_id = ').$ClassStudents->aliasField('student_id'),$this->InstitutionStudents->aliasField('student_status_id = ').$ClassStudents->aliasField('student_status_id')
             ])
             ->leftJoin([$Classes->alias() => $Classes->table()],[
                 $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
             ])
             ->where([
                 $InstitutionStudents->aliasField('student_id =').$institutionStudentId,
-            ]);
-        }
+            ])->group('current_class_name')->sql();
+
+
+
+          }
         // for Academic Tab
         // for Assessments Tab
         if($StudentType == 'Assessment'){
