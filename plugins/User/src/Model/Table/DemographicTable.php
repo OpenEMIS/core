@@ -19,13 +19,14 @@ class DemographicTable extends ControllerActionTable
         $this->belongsTo('DemographicTypes', ['className' => 'Student.DemographicTypes', 'foreignKey' => 'demographic_types_id']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->addBehavior('User.SetupTab');
-        
+        $this->excludeDefaultValidations(['security_user_id']);
         $this->toggle('remove', false);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $requestQuery = $this->request->query;
+        $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
         $query = $this
             ->find()
             ->where([$this->aliasField('security_user_id') => $userId])
@@ -84,25 +85,15 @@ class DemographicTable extends ControllerActionTable
     /*POCOR-6395 starts*/
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
     {   
-        $session = $this->request->session();
-        if ($this->request->params['plugin'] == 'Staff') {
-            $userId = $session->read('Institution.StaffUser.primaryKey.id');
-        }
-        if ($this->request->params['plugin'] == 'Student') {
-            $userId = $session->read('Student.Students.id');
-        }
+        $requestQuery = $this->request->query;
+        $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
         $entity['security_user_id'] = $userId;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        if ($this->request->params['plugin'] == 'Staff') {
-            $userId = $session->read('Institution.StaffUser.primaryKey.id');
-        }
-        if ($this->request->params['plugin'] == 'Student') {
-            $userId = $session->read('Student.Students.id');
-        }
+        $requestQuery = $this->request->query;
+        $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
         $query->where([$this->aliasField('security_user_id') => $userId])
         ->orderDesc($this->aliasField('id'));
     }
