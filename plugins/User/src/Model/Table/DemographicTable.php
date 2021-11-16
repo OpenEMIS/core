@@ -6,6 +6,8 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
+use Cake\I18n\Time;
+use Cake\ORM\Query;
 
 class DemographicTable extends ControllerActionTable
 {
@@ -17,14 +19,13 @@ class DemographicTable extends ControllerActionTable
         $this->belongsTo('DemographicTypes', ['className' => 'Student.DemographicTypes', 'foreignKey' => 'demographic_types_id']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->addBehavior('User.SetupTab');
-
+        
         $this->toggle('remove', false);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $requestQuery = $this->request->query;
-        $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
         $query = $this
             ->find()
             ->where([$this->aliasField('security_user_id') => $userId])
@@ -80,4 +81,30 @@ class DemographicTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+    /*POCOR-6395 starts*/
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
+    {   
+        $session = $this->request->session();
+        if ($this->request->params['plugin'] == 'Staff') {
+            $userId = $session->read('Institution.StaffUser.primaryKey.id');
+        }
+        if ($this->request->params['plugin'] == 'Student') {
+            $userId = $session->read('Student.Students.id');
+        }
+        $entity['security_user_id'] = $userId;
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $session = $this->request->session();
+        if ($this->request->params['plugin'] == 'Staff') {
+            $userId = $session->read('Institution.StaffUser.primaryKey.id');
+        }
+        if ($this->request->params['plugin'] == 'Student') {
+            $userId = $session->read('Student.Students.id');
+        }
+        $query->where([$this->aliasField('security_user_id') => $userId])
+        ->orderDesc($this->aliasField('id'));
+    }
+    /*POCOR-6395 ends*/
 }
