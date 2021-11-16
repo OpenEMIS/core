@@ -126,7 +126,7 @@ class DashboardController extends AppController
 
     public function getProfileCompletnessData ($userId) {
         $data = array();
-        $data['percentage'] = 0;
+        //$data['percentage'] = 0;//POCOR-6395
         $profileComplete = 0;
         $securityUsers = TableRegistry::get('security_users');
 		$securityUsersData = $securityUsers->find()		
@@ -263,6 +263,7 @@ class DashboardController extends AppController
                     }
                 }
             }
+
             $totalProfileComplete = count($data);
             $profilePercentage = 100/$totalProfileComplete * $profileComplete;
             $profilePercentage = round($profilePercentage);
