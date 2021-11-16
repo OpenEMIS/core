@@ -3210,7 +3210,7 @@ class InstitutionsController extends AppController
     }
 
     public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate)
-    {
+    { 
         if ($endDate == 'null') {
             $endDate = null;
         }
@@ -4050,4 +4050,202 @@ class InstitutionsController extends AppController
         return $data;
      }
 
+    public function getAcademicPeriod()
+    {
+        $academic_periods = TableRegistry::get('academic_periods');
+        $academic_periods_result = $academic_periods
+            ->find()
+            ->select(['id','name'])
+            ->where(['code !=' => 'All','visible' => 1])
+            ->order([$academic_periods->aliasField('id DESC')])
+            ->toArray();
+        foreach($academic_periods_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getEducationGrade($academic_period = null)
+    {
+        $academic_period = 29;//delete it when doing it dynamically
+        $academic_periods = TableRegistry::get('academic_periods');
+        $academic_periods_result = $academic_periods
+            ->find()
+            ->select(['id','name', 'start_date','end_date'])
+            ->where(['id' => $academic_period])
+            ->first();
+        
+        $startDate = date('Y-m-d', strtotime($academic_periods_result->start_date));
+        $endDate = date('Y-m-d', strtotime($academic_periods_result->end_date));
+        //echo "<pre>"; print_r($academic_periods_result); die;
+
+        $institution_grades = TableRegistry::get('institution_grades');
+        $institution_grades_result = $institution_grades
+            ->find()
+            ->select([
+                $institution_grades->aliasField('id'),
+                'EducationGrades.id',
+                'EducationGrades.name'
+            ])
+            ->LeftJoin(['EducationGrades' => 'education_grades'],[
+                'EducationGrades.id = '. $institution_grades->aliasField('education_grade_id')
+            ])
+            ->LeftJoin(['EducationProgrammes' => 'education_programmes'],[
+                'EducationProgrammes.id = EducationGrades.education_programme_id'
+            ])
+            ->LeftJoin(['EducationCycles' => 'education_cycles'],[
+                'EducationCycles.id = EducationProgrammes.education_cycle_id'
+            ])
+            ->LeftJoin(['EducationLevels' => 'education_levels'],[
+                'EducationLevels.id = EducationCycles.education_level_id'
+            ])
+            ->LeftJoin(['EducationSystems' => 'education_systems'],[
+                'EducationSystems.id = EducationLevels.education_system_id'
+            ])
+            ->where([
+                $institution_grades->aliasField('institution_id') => 6,
+                'EducationSystems.academic_period_id' => 29,
+                'OR'=>[
+                    'OR' => [
+                        [
+                            $institution_grades->aliasField('end_date') . ' IS NOT NULL',
+                            $institution_grades->aliasField('start_date') . ' <=' => $startDate,
+                            $institution_grades->aliasField('end_date') . ' >=' => $startDate
+                        ],
+                        [
+                            $institution_grades->aliasField('end_date') . ' IS NOT NULL',
+                            $institution_grades->aliasField('start_date') . ' <=' => $endDate,
+                            $institution_grades->aliasField('end_date') . ' >=' => $endDate
+                        ],
+                        [
+                            $institution_grades->aliasField('end_date') . ' IS NOT NULL',
+                            $institution_grades->aliasField('start_date') . ' >=' => $startDate,
+                            $institution_grades->aliasField('end_date') . ' <=' => $endDate
+                        ]
+                    ],
+                    [
+                        $institution_grades->aliasField('end_date') . ' IS NULL',
+                        $institution_grades->aliasField('start_date') . ' <=' => $endDate
+                    ]
+                ]
+        ])
+        ->group([$institution_grades->aliasField('education_grade_id')])
+        ->toArray();
+    
+        foreach($institution_grades_result AS $result){
+            $result_array[] = array("id" => $result['id'], "education_grade_id" => $result->EducationGrades['id'], "name" => $result->EducationGrades['name']);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getClassOptions($academic_period = null, $institution_id = null, $grade_id = null)
+    {
+        $academic_period = 29;//delete it when doing it dynamically
+        $institution_id = 6;//delete it when doing it dynamically
+        $grade_id = 87;//delete it when doing it dynamically
+        
+        $institution_classes = TableRegistry::get('institution_classes');
+        $institution_classes_result = $institution_classes
+            ->find()
+            ->select([
+                $institution_classes->aliasField('id'),
+                $institution_classes->aliasField('name')
+            ])
+            ->InnerJoin(['InstitutionClassGrades' => 'institution_class_grades'],[
+                'InstitutionClassGrades.institution_class_id = '. $institution_classes->aliasField('id'),
+                'InstitutionClassGrades.education_grade_id = '. $grade_id,
+            ])
+            
+            ->where([
+                $institution_classes->aliasField('academic_period_id') => $academic_period,
+                $institution_classes->aliasField('institution_id') => $institution_id
+            ])
+            ->group([$institution_classes->aliasField('id')])
+            ->toArray();
+    
+        foreach($institution_classes_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getPositionType()
+    {
+        $postype = [
+            'Full-Time' => 'Full-Time',
+            'Part-Time' => 'Part-Time'
+        ];
+
+        foreach($postype AS $result){
+             $result_array[] = array("id" => $result, "name" => $result);
+        }
+        
+        echo json_encode($result_array);die;
+    }
+
+    public function getFTE()
+    {
+        $ftetype = [
+            '0.25' => '25%',
+            '0.5' => '50%',
+            '0.75' => '75%'
+        ];
+
+        foreach($ftetype AS $k=>$v){
+           $result_array[] = array("id" => $k, "name" => $v);
+        }
+    
+        echo json_encode($result_array);die;
+    }
+
+    public function getStaffType()
+    {
+        $staff_types = TableRegistry::get('staff_types');
+        $staff_types_result = $staff_types
+            ->find()
+            ->select(['id','name'])
+            ->where(['visible' => 1])
+            ->toArray();
+        foreach($staff_types_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+        }
+    
+        echo json_encode($result_array);die;
+    }
+
+    public function getShifts()
+    {
+        $academic_period_id = 30;
+        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $shift =  TableRegistry::get('Institution.InstitutionShifts');
+        $shiftData = $shift->find('all',
+                            [ 'contain' => [
+                                'ShiftOptions'                   
+                            ],
+                ])->where([
+                    $shift->aliasField('academic_period_id') => $academic_period_id,
+                    $shift->aliasField('institution_id') => $institutionId
+                ])->toArray();
+        
+        if (!empty($shiftData)) {
+            foreach ($shiftData as $k => $val) {
+                $result_array[] = array("id" => $val['id'], "name" => $val->shift_option->name);
+            }
+        }
+    
+        echo json_encode($result_array);die;
+    }
+
+    public function getPositions()
+    {
+        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $fte = 0.25;
+        $startDate= '01-11-2021'; 
+        $endDate = null;
+        if ($endDate == 'null') {
+            $endDate = null;
+        }
+        $result = $this->getInstitutionPositions($institutionId, $fte, $startDate, $endDate);
+        echo $result; die;
+    }
 }
