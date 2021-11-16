@@ -1031,7 +1031,7 @@ class StudentUserExportTable extends ControllerActionTable
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $periodId = $this->request->query['academic_period_id'];
         $currDateTime = date("Y-m-d");
-
+        
         // for Academic Tab
         $AcademicPeriods = TableRegistry::get('academic_periods');
         $institutions = TableRegistry::get('institutions');
@@ -1130,7 +1130,7 @@ class StudentUserExportTable extends ControllerActionTable
         // for Generals Tab
         // for Academics Tab
         if($StudentType == 'Academic'){
-            $query
+            $res=$query
             ->select([
                 'id' => $InstitutionStudents->aliasField('id'),
                 'academic_period_name' => $AcademicPeriods->aliasField('name'),
@@ -1165,15 +1165,18 @@ class StudentUserExportTable extends ControllerActionTable
                 $InstitutionStudents->aliasField('student_status_id = ') .$StudentStatuses->aliasField('id')
             ])
             ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()],[
-                $this->InstitutionStudents->aliasField('student_id = ').$ClassStudents->aliasField('student_id')
+                $this->InstitutionStudents->aliasField('student_id = ').$ClassStudents->aliasField('student_id'),$this->InstitutionStudents->aliasField('student_status_id = ').$ClassStudents->aliasField('student_status_id')
             ])
             ->leftJoin([$Classes->alias() => $Classes->table()],[
                 $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
             ])
             ->where([
                 $InstitutionStudents->aliasField('student_id =').$institutionStudentId,
-            ]);
-        }
+            ])->group('current_class_name')->sql();
+
+
+
+          }
         // for Academic Tab
         // for Assessments Tab
         if($StudentType == 'Assessment'){
