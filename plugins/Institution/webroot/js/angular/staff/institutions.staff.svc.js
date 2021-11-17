@@ -56,7 +56,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getInstitution: getInstitution,
         addStaffTransferRequest: addStaffTransferRequest,
         generatePassword: generatePassword,
-        translate: translate
+        translate: translate,
+        getPositionTypes: getPositionTypes
     };
 
     var models = {
@@ -132,6 +133,18 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
     {
         var externalSource = url;
     };
+
+    function getPositionTypes(){
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/getPositionType';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
 
     function getExternalStaffRecords(options) {
         var deferred = $q.defer();
