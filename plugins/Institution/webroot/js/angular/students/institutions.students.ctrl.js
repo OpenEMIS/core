@@ -47,9 +47,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.setStudentName = setStudentName;
     StudentController.appendName = appendName;
     StudentController.initGrid = initGrid;  
-    StaffController.changeAcademicPeriod = changeAcademicPeriod;
-    StaffController.changeEducationGrade = changeEducationGrade;
-    StaffController.changeClass = changeClass;
+    StudentController.changeAcademicPeriod = changeAcademicPeriod;
+    StudentController.changeEducationGrade = changeEducationGrade;
+    StudentController.changeClass = changeClass;
+    StudentController.cancelProcess = cancelProcess;
+    StudentController.getAcademicPeriods = getAcademicPeriods;
+    StudentController.getEducationGrades = getEducationGrades;
+    StudentController.getClasses = getClasses;
     
 
     angular.element(document).ready(function () {
@@ -66,39 +70,29 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             'identity_number': 'Identity Number',
             'account_type': 'Account Type'
         };
-        StudentController.getUniqueOpenEmisId();
+        StudentController.getGenders();
     });
 
     function getUniqueOpenEmisId() {
+        UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getUniqueOpenEmisId()
             .then(function(response) {
-                // var username = StudentController.selectedStudentData.username;
-                // //POCOR-5878 starts
-                // if(username != StudentController.selectedStudentData.openemis_no && (username == '' || typeof username == 'undefined')){
-                //     StudentController.selectedStudentData.username = StudentController.selectedStudentData.openemis_no;
-                //     StudentController.selectedStudentData.openemis_no = StudentController.selectedStudentData.openemis_no;
-                // }else{
-                //     if(username == StudentController.selectedStudentData.openemis_no){
-                //         StudentController.selectedStudentData.username = response;
-                //     }
-                //     StudentController.selectedStudentData.openemis_no = response;
-                // }
                 StudentController.selectedStudentData.openemis_no = response;
-                StudentController.generatePassword();
-        }, function(error) {
+                StudentController.selectedStudentData.username = response;
+                UtilsSvc.isAppendLoader(false);
+    }, function(error) {
             console.log(error);
             StudentController.generatePassword();
         });
     }
 
     function generatePassword() {
-        InstitutionsStudentsSvc.generatePassword()
+            UtilsSvc.isAppendLoader(true);
+            InstitutionsStudentsSvc.generatePassword()
         .then(function(response) {
-            if (StudentController.selectedStudentData.password == '' || typeof StudentController.selectedStudentData.password == 'undefined') {
-                StudentController.selectedStudentData.password = response;
-            }
-            StudentController.getGenders();
-        }, function(error) {
+            StudentController.selectedStudentData.password = response;
+            StudentController.getAcademicPeriods();
+            }, function(error) {
             console.log(error);
             StudentController.getGenders();
         });
@@ -127,6 +121,43 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function getIdentityTypes(){
         InstitutionsStudentsSvc.getIdentityTypes().then(function(resp){
             StudentController.identityTypeOptions = resp.data;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    function getAcademicPeriods() {
+        InstitutionsStudentsSvc.getAcademicPeriods().then(function(resp){
+            StudentController.academicPeriodOptions = resp.data;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    function getEducationGrades() {
+        UtilsSvc.isAppendLoader(true);
+        InstitutionsStudentsSvc.getEducationGrades(StudentController.selectedStudentData.academic_period_id).then(function(resp){
+            StudentController.educationGradeOptions = resp.data;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    function getClasses() {
+        var params = {
+            academic_period: StudentController.selectedStudentData.academic_period_id,
+            institution_id: 6,
+            grade_id: StudentController.selectedStudentData.education_grade_id
+        };
+        UtilsSvc.isAppendLoader(true);
+        InstitutionsStudentsSvc.getClasses(params).then(function(resp){
+            StudentController.classOptions = resp.data;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
@@ -176,18 +207,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function changeNationality() {
         var nationalityId = StudentController.selectedStudentData.nationality_id;
-        var options = StudentController.nationalitiesOptions;
+        var nationalityOptions = StudentController.nationalitiesOptions;
         var identityOptions = StudentController.identityTypeOptions;
-        for (var i = 0; i < options.length; i++) {
-            if (options[i].id == nationalityId) {
-                if (options[i].identity_type_id == null) {
+        for (var i = 0; i < nationalityOptions.length; i++) {
+            if (nationalityOptions[i].id == nationalityId) {
+                if (nationalityOptions[i].identity_type_id == null) {
                     StudentController.selectedStudentData.identity_type_id = identityOptions['0'].id;
                     StudentController.selectedStudentData.identity_type_name = identityOptions['0'].name;
                 } else {
-                    StudentController.selectedStudentData.identity_type_id = options[i].identity_type_id;
-                    StudentController.selectedStudentData.identity_type_name = options[i].identity_type.name;
+                    StudentController.selectedStudentData.identity_type_id = nationalityOptions[i].identity_type_id;
+                    StudentController.selectedStudentData.identity_type_name = nationalityOptions[i].identity_type.name;
                 }
-                StudentController.selectedStudentData.nationality_name = options[i].name;
+                StudentController.selectedStudentData.nationality_name = nationalityOptions[i].name;
                 break;
             }
         }
@@ -195,20 +226,49 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function changeIdentityType() {
         var identityType = StudentController.selectedStudentData.identity_type_id;
-        var options = StudentController.identityTypeOptions;
-        for (var i = 0; i < options.length; i++) {
-            if (options[i].id == identityType) {
-                StudentController.selectedStudentData.identity_type_name = options[i].name;
+        var identityOptions = StudentController.identityTypeOptions;
+        for (var i = 0; i < identityOptions.length; i++) {
+            if (identityOptions[i].id == identityType) {
+                StudentController.selectedStudentData.identity_type_name = identityOptions[i].name;
                 break;
             }
         }
     }
 
-    function changeAcademicPeriod() {}
+    function changeAcademicPeriod() {
+        var academicPeriod = StudentController.selectedStudentData.academic_period_id;
+        var academicPeriodOptions = StudentController.academicPeriodOptions;
+        for (var i = 0; i < academicPeriodOptions.length; i++) {
+            if (academicPeriodOptions[i].id == academicPeriod) {
+                StudentController.selectedStudentData.academic_period_name = academicPeriodOptions[i].name;
+                break;
+            }
+        }
+        StudentController.getEducationGrades();
+    }
 
-    function changeClass() {}
+    function changeClass() {
+        var className = StudentController.selectedStudentData.education_grade_id;
+        var classOptions = StudentController.classOptions;
+        for (var i = 0; i < classOptions.length; i++) {
+            if (classOptions[i].id == className) {
+                StudentController.selectedStudentData.education_grade_name = classOptions[i].name;
+                break;
+            }
+        }
+    }
 
-    function changeEducationGrade() {}
+    function changeEducationGrade() {
+        var educationGrade = StudentController.selectedStudentData.education_grade_id;
+        var educationGradeOptions = StudentController.educationGradeOptions;
+        for (var i = 0; i < educationGradeOptions.length; i++) {
+            if (educationGradeOptions[i].id == educationGrade) {
+                StudentController.selectedStudentData.education_grade_name = educationGradeOptions[i].name;
+                break;
+            }
+        }
+        StudentController.getClasses();
+    }
 
     function goToPrevStep(){
         switch(StudentController.step){
@@ -221,7 +281,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             case 'confirmation': 
                 StudentController.step = 'external_search';
                 break;
-            case 'add_staff': 
+            case 'add_student': 
                 StudentController.step = 'confirmation';
                 break;
         }
@@ -240,7 +300,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.step = 'confirmation';
                 break;
             case 'confirmation': 
-                StudentController.step = 'add_staff';
+                StudentController.step = 'add_student';
+                StudentController.generatePassword();
                 break;
         }
     }
@@ -256,7 +317,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData = {};
     }
 
-    scope.cancelProcess = function() {
+    function cancelProcess() {
         location.href = angular.baseUrl + '/Directory/Directories/Directories/index';
     }
 
