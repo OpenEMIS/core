@@ -162,7 +162,7 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                             <select name="Staff[identities_type_id]" id="staff-identities_type_id"
                                 ng-options="option.id as option.name for option in InstitutionStaffController.identityTypeOptions"
                                 ng-model="InstitutionStaffController.selectedStaffData.identity_type_id"
-                                ng-change="InstitutionStaffControllerchangeIdentityType()"
+                                ng-change="InstitutionStaffController.changeIdentityType()"
                                 >
                                 <option value="" >-- <?= __('Select') ?> --</option>
                             </select>
@@ -176,24 +176,6 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                         <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" ng-init="InstitutionStaffController.selectedStaffData.identity_number='';">
                         <div ng-if="InstitutionStaffController.postResponse.error.identities[0].number" class="error-message">
                             <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].number">{{ error }}</p>
-                        </div>
-                    </div>
-
-                    <div class="input string required">
-                        <label><?= __('Username') ?></label>
-                        <input ng-model="InstitutionStaffController.selectedStaffData.username" type="string" ng-init="InstitutionStaffController.selectedStaffData.username='';">
-                        <div ng-if="InstitutionStaffController.postResponse.error.username" class="error-message">
-                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.username">{{ error }}</p>
-                        </div>
-                    </div>
-
-                    <div class="input password required">
-                        <label><?=
-                            __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
-                        ?></label>
-                        <input ng-model="InstitutionStaffController.selectedStaffData.password" type="string" ng-init="InstitutionStaffController.selectedStaffData.password='';">
-                        <div ng-if="InstitutionStaffController.postResponse.error.password" class="error-message">
-                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.password">{{ error }}</p>
                         </div>
                     </div>
                 </form>

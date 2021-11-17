@@ -46,11 +46,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.setStaffName = setStaffName;
     StaffController.appendName = appendName;
     StaffController.initGrid = initGrid;
+    StaffController.getPostionTypes = getPostionTypes;
+    StaffController.getPositions = getPositions;
+    StaffController.getStaffTypes = getStaffTypes;
+    StaffController.getShifts = getShifts;
     StaffController.changePositionType = changePositionType;
     StaffController.changePosition = changePosition;
     StaffController.changeStaffType = changeStaffType;
     StaffController.changeShifts = changeShifts;
-    
+    StaffController.cancelProcess = cancelProcess;
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
@@ -66,29 +70,19 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             'identity_number': 'Identity Number',
             'account_type': 'Account Type'
         };
-        StaffController.getUniqueOpenEmisId();
+        StaffController.getGenders();
     });
 
     function getUniqueOpenEmisId() {
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.getUniqueOpenEmisId()
             .then(function(response) {
-                // var username = StaffController.selectedStaffData.username;
-                // //POCOR-5878 starts
-                // if(username != StaffController.selectedStaffData.openemis_no && (username == '' || typeof username == 'undefined')){
-                //     StaffController.selectedStaffData.username = StaffController.selectedStaffData.openemis_no;
-                //     StaffController.selectedStaffData.openemis_no = StaffController.selectedStaffData.openemis_no;
-                // }else{
-                //     if(username == StaffController.selectedStaffData.openemis_no){
-                //         StaffController.selectedStaffData.username = response;
-                //     }
-                //     StaffController.selectedStaffData.openemis_no = response;
-                // }
                 StaffController.selectedStaffData.openemis_no = response;
-                StaffController.generatePassword();
-        }, function(error) {
+                StaffController.selectedStaffData.username = response;
+                UtilsSvc.isAppendLoader(true);
+    }, function(error) {
             console.log(error);
-            StaffController.generatePassword();
+            UtilsSvc.isAppendLoader(true);
         });
     }
 
@@ -98,10 +92,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (StaffController.selectedStaffData.password == '' || typeof StaffController.selectedStaffData.password == 'undefined') {
                 StaffController.selectedStaffData.password = response;
             }
-            StaffController.getGenders();
+            StaffController.getPostionTypes();
         }, function(error) {
             console.log(error);
-            StaffController.getGenders();
         });
     }
 
@@ -128,6 +121,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function getIdentityTypes(){
         InstitutionsStaffSvc.getIdentityTypes().then(function(resp){
             StaffController.identityTypeOptions = resp.data;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    function getPostionTypes(){
+        InstitutionsStaffSvc.getPositionTypes().then(function(resp){
+            StaffController.positionTypeOptions = resp.data;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
@@ -196,20 +199,47 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function changeIdentityType() {
         var identityType = StaffController.selectedStaffData.identity_type_id;
-        var options = StaffController.identityTypeOptions;
-        for (var i = 0; i < options.length; i++) {
-            if (options[i].id == identityType) {
-                StaffController.selectedStaffData.identity_type_name = options[i].name;
+        var identityTypeOptions = StaffController.identityTypeOptions;
+        for (var i = 0; i < identityTypeOptions.length; i++) {
+            if (identityTypeOptions[i].id == identityType) {
+                StaffController.selectedStaffData.identity_type_name = identityTypeOptions[i].name;
                 break;
             }
         }
     }
 
-    function changePositionType() {}
+    function changePositionType() {
+        var positionType = StaffController.selectedStaffData.position_type_id;
+        var positionTypeOptions = StaffController.positionTypeOptions;
+        for (var i = 0; i < positionTypeOptions.length; i++) {
+            if (positionTypeOptions[i].id == positionType) {
+                StaffController.selectedStaffData.position_type_name = positionTypeOptions[i].name;
+                break;
+            }
+        }
+    }
 
-    function changePosition() {}
+    function changePosition() {
+        var position = StaffController.selectedStaffData.position_id;
+        var positionOptions = StaffController.positionsOptions;
+        for (var i = 0; i < positionOptions.length; i++) {
+            if (positionOptions[i].id == position) {
+                StaffController.selectedStaffData.position_name = positionOptions[i].name;
+                break;
+            }
+        }
+    }
 
-    function changeStaffType() {}
+    function changeStaffType() {
+        var staffType = StaffController.selectedStaffData.staff_type_id;
+        var staffTypeOptions = StaffController.staffTypeOptions;
+        for (var i = 0; i < staffTypeOptions.length; i++) {
+            if (staffTypeOptions[i].id == staffType) {
+                StaffController.selectedStaffData.staff_type_name = staffTypeOptions[i].name;
+                break;
+            }
+        }
+    }
     
     function changeShifts() {}
     
@@ -260,7 +290,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData = {};
     }
 
-    scope.cancelProcess = function() {
+    function cancelProcess() {
         location.href = angular.baseUrl + '/Directory/Directories/Directories/index';
     }
 
