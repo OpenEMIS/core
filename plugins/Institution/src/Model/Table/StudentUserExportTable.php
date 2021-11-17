@@ -1019,8 +1019,17 @@ class StudentUserExportTable extends ControllerActionTable
         }
 
     }
+    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    {
+        
+        $users = TableRegistry::get('user_identities');
+        $result=$users->find()->select(['number'])->where(['identity_type_id' => 160,'security_user_id' => $entity->id])->first();
+        return $result->number; 
+
+    }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+            
         $InstitutionStudents = TableRegistry::get('User.InstitutionStudents');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
@@ -1058,7 +1067,9 @@ class StudentUserExportTable extends ControllerActionTable
         // for Generals Tab
         if($StudentType == 'General'){
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-                return $results->map(function ($row) {          
+
+                return $results->map(function ($row) {
+                         
                     // POCOR-6130 custome fields code
                     $Guardians = TableRegistry::get('student_custom_field_values');
                     $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
