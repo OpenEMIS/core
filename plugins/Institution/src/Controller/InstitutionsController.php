@@ -4173,8 +4173,17 @@ class InstitutionsController extends AppController
     }
 
     public function getShifts()
-    {
-        $academic_period_id = 30;
+    {   
+        //get current academic period
+        $academic_periods = TableRegistry::get('academic_periods');
+        $academic_periods_result = $academic_periods
+            ->find()
+            ->select(['id','name'])
+            ->where(['current' => 1,'visible' => 1])
+            ->first();
+
+        $academic_period_id = !empty($academic_periods_result) ? $academic_periods_result->id : 0;
+        
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
         $shift =  TableRegistry::get('Institution.InstitutionShifts');
         $shiftData = $shift->find('all',
