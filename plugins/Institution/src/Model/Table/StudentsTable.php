@@ -336,19 +336,11 @@ class StudentsTable extends ControllerActionTable
                 [
                     $ContactTypes->aliasField('id = ') . $UserContact->aliasField('contact_type_id')
                 ]
-            )// POCOR-6338 starts
-            ->leftJoin(
-                [$StudentStatuses->alias() => $StudentStatuses->table()],
-                [
-                    $StudentStatuses->aliasField('id != ') => 3
-                ]
-            );// POCOR-6338 ends
+            );
 
         if ($periodId > 0) {
-            $query->where([$this->aliasField('academic_period_id') => $periodId,
-                            'StudentStatuses.id !='=> 3
-                            ]);
-            $query->group('student_id');// POCOR-6338 
+            $query->where([$this->aliasField('academic_period_id') => $periodId]);
+            $query ->group([$this->Users->aliasField('openemis_no')]);// POCOR-6338 
         }
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
@@ -403,7 +395,7 @@ class StudentsTable extends ControllerActionTable
                     'textarea_value'                 => $Guardians->aliasField('textarea_value'),
                     'date_value'                     => $Guardians->aliasField('date_value'),
                     'time_value'                     => $Guardians->aliasField('time_value'),
-                    // 'checkbox_value_text'            => $studentCustomFieldOptions->aliasField('name'),
+                    'checkbox_value_text'            => 'studentCustomFieldOptions.name',
                     'question_name'                  => 'studentCustomField.name',
                     'field_type'                     => 'studentCustomField.field_type',
                     'field_description'              => 'studentCustomField.description',
@@ -413,12 +405,12 @@ class StudentsTable extends ControllerActionTable
                     [
                         'studentCustomField.id = '.$Guardians->aliasField('student_custom_field_id')
                     ]
-                )/* ->leftJoin(
-                    [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                )->leftJoin(
+                    ['studentCustomFieldOptions' => 'student_custom_field_options'],
                     [
-                        $studentCustomFieldOptions->aliasField('student_custom_field_id') => $Guardians->aliasField('student_custom_field_id')
+                        'studentCustomFieldOptions.id = '.$Guardians->aliasField('number_value')
                     ]
-                ) */
+                )
                 ->where([
                     $Guardians->aliasField('student_id') => $row['student_id'],
                 ])->toArray();
@@ -2208,7 +2200,6 @@ class StudentsTable extends ControllerActionTable
             ])
             ->count()
             ;
-
         return !($completedGradeCount == 0);
     }
 

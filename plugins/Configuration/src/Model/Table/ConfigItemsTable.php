@@ -856,7 +856,7 @@ class ConfigItemsTable extends AppTable
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', -99, 0],
+            'rule'  => ['range', -99, 99],
             'message' => 'Numeric Value should be between -99 to 0',
             'last' => true
         ]
@@ -869,7 +869,7 @@ class ConfigItemsTable extends AppTable
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 0, 90],
+            'rule'  => ['range', -90, 90],
             'message' => 'Numeric Value should be between 0 to 90',
             'last' => true
         ]
@@ -882,7 +882,7 @@ class ConfigItemsTable extends AppTable
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range',-180, 0],
+            'rule'  => ['range',-180, 180],
             'message' => 'Numeric Value should be between -180 to 0',
             'last' => true
         ]
@@ -894,7 +894,7 @@ class ConfigItemsTable extends AppTable
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 0, 180],
+            'rule'  => ['range', -180, 180],
             'message' => 'Numeric Value should be between 0 to 180',
             'last' => true
         ]
