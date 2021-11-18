@@ -1,3 +1,39 @@
+### [3.71.0] - 2021-11-13
+- Implemented: Improvement of the "Undo" operations linked to the basic student workflow procedures
+- Implemented: Add Export button function - Institutions > General > Calendar
+- Implemented: Update Export button function - Institutions > Staff (include custom fields phone number identity types)
+- Bug Fixed: Institutions>Infrastructure>Overview: Add the available custom fields to the report
+- Bug Fixed: Administration > Meals: When adding a programme, add fields for the beneficiary Field Directorates and the beneficiary institutions.
+- Bug Fixed: Institution > Meals > Students: Ask the user to choose if the meal is received or not
+- Bug Fixed: Institutions > Students > Export : Custom fields (dropdown/checkboxes) results are not showing in export file
+- Bug Fixed: Report>Institution>Infrastructure: Custom fields not showing properly
+- Bug Fixed: Institutions/ Directory > User 1 > Identities : Clicking Add Identities will return a 404 error
+- Bug Fixed: Institution/Directory > User 1 > Nationalities: Getting 404 Error
+
+### [3.70.5] - 2021-11-05
+- Implemented: Add Export button function - Institutions > Students > Student1 > Special Needs (include all tabs)
+- Implemented: Add Export button function - Institutions > Staff > Staff1 > Training (include all tabs)
+- Implemented: Add Export button function - Institutions > Infrastructures > WASH > Sanitation
+- Implemented: Add Export button function - Institutions > Infrastructures > WASH > Waste
+- Implemented: Add Export button function - Institutions > Infrastructures > WASH > Sewage
+- Implemented: Add Export button function - Institutions > Cases
+- Bug Fixed: Institutions>Academic>Subjects/Classes: Exported records are showing incorrectly when student is transferred from School A to School B and back to School A
+- Bug Fixed: Institutions>Students>Import: 404 error when trying to download the Student Import template.
+- Bug Fixed: Institutions>Students>Transfer: Wrong academic period when promoted and not visible in Bulk Transfer
+- Bug Fixed: Institutions > Staff > Pending Change in Assignment : Query is taking too long to process - To optimize query
+- Bug Fixed: Administration > System Setup > System Configuration > Coordinates: Changes limits of latitude and longitude
+- Bug Fixed: Directory>Staff>Careers:Career is missing for Staffs with Guardian role
+- Bug Fixed: Reports>Maps: Inactive Institutions should not be show
+
+### [3.70.4] - 2021-10-30
+- Implemented: Update Export button function - Institutions > Academic > Subjects (include grade class subject teacher room and number of students by gender)
+- Implemented: Add Export button function - Institutions > Staff > Staff1 > Special Needs (include all tabs)
+- Bug Fixed: Administration > Profiles > Institutions: Placeholders are not working across all environments
+- Bug Fixed: Institutions>General>Calendar: 404 Error
+- Bug Fixed: Institutions>Students>Student1>Promotion/Repeat:Grades that are both above and lower appears for Promotion/Repeat
+- Bug Fixed: Institutions > Performance > Assessments : Allow user to generate report by Student status
+- Bug Fixed: Institutions > Students > Undo : Education Grades should be filtered by the Academic Period selected above
+
 ### [3.70.3] - 2021-10-22
 - Bug Fixed: Institution > Student > Add: There is no validation if a new student added has the same Identity Number as an existing student
 - Bug Fixed: Institutions > Students > Export : Issues with Student export file
