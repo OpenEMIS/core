@@ -60,6 +60,7 @@ class StaffTable extends ControllerActionTable
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffRelease', ['className' => 'Institution.StaffRelease', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+       // $this->hasMany('Contacts', ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('SecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'foreignKey' => 'secondary_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Security.SecurityAccess');
@@ -256,14 +257,14 @@ class StaffTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-
+        $userContacts = TableRegistry::get('user_contacts');
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $query->where([$this->aliasField('institution_id') => $institutionId]);
         $periodId = $this->request->query['academic_period_id'];
         if ($periodId > 0) {
             $query->find('academicPeriod', ['academic_period_id' => $periodId]);
         }
-        $query
+        $res=$query
             ->contain([
                 'Users' => [
                     'fields' => [
@@ -293,6 +294,7 @@ class StaffTable extends ControllerActionTable
                         'identity_number' => 'Users.identity_number'
                     ]
                 ],
+                
                 'StaffTypes' => [
                     'fields' => [
                         'staff_type_name' => 'StaffTypes.name',
@@ -321,7 +323,10 @@ class StaffTable extends ControllerActionTable
                 'FTE' => 'Staff.FTE',
                 'start_date' => 'Staff.start_date',
                 'end_date' => 'Staff.end_date',
-            ]);
+                'contact_number' => 'group_concat(user_contacts.value)',
+            ])->leftjoin(
+                    [$userContacts->alias() => $userContacts->table()],
+                    [$this->aliasField('staff.staff_id = ').$userContacts->aliasField('security_user_id'),$userContacts->aliasField('preferred =1')])->group('staff.staff_id');
 
              $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
 
@@ -401,6 +406,8 @@ class StaffTable extends ControllerActionTable
         return ($entity->FTE * 100) . '%';
     }
 
+    
+
     public function onExcelGetPositionTitleTeaching(Event $event, Entity $entity)
     {
         $yesno = $this->getSelectOptions('general.yesno');
@@ -450,6 +457,13 @@ class StaffTable extends ControllerActionTable
             'field' => 'position_title_teaching',
             'type' => 'string',
             'label' => __('Teaching')
+        ];
+
+       $extraField[] = [
+            'key' => 'user_contacts.value',
+            'field' => 'contact_number',
+            'type' => 'string',
+            'label' => __('Contact Number')
         ];
 
         $extraField[] = [
