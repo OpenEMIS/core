@@ -1078,7 +1078,7 @@ class DirectoriesController extends AppController
             'identity_number'=> null,
             'date_of_birth'=> null,
             'page'=>1,
-            'limit'=>10
+            'limit'=>20
         ];
         $firstName = (array_key_exists('first_name', $options))? $options['first_name']: null;
         $lastName = (array_key_exists('last_name', $options))? $options['last_name']: null;
@@ -1090,7 +1090,10 @@ class DirectoriesController extends AppController
 
         $conditions = [];
         $security_users = TableRegistry::get('security_users');
-        $Genders = TableRegistry::get('genders');
+        $genders = TableRegistry::get('genders');
+        $mainIdentityTypes = TableRegistry::get('identity_types');
+        $mainNationalities = TableRegistry::get('nationalities');
+
         if (!empty($firstName)) {
             $conditions[$security_users->aliasField('first_name').' LIKE'] = $firstName . '%';
         }
@@ -1110,77 +1113,88 @@ class DirectoriesController extends AppController
             ->find()
             ->select([
                 $security_users->aliasField('id'),
-                $security_users->aliasField('username'),
-                $security_users->aliasField('password'),
                 $security_users->aliasField('openemis_no'),
                 $security_users->aliasField('first_name'),
                 $security_users->aliasField('middle_name'),
                 $security_users->aliasField('third_name'),
                 $security_users->aliasField('last_name'),
-                $security_users->aliasField('preferred_name'),
-                $security_users->aliasField('email'),
-                $security_users->aliasField('address'),
-                $security_users->aliasField('postal_code'),
                 $security_users->aliasField('address_area_id'),
                 $security_users->aliasField('birthplace_area_id'),
                 $security_users->aliasField('gender_id'),
                 $security_users->aliasField('date_of_birth'),
-                $security_users->aliasField('date_of_death'),
                 $security_users->aliasField('nationality_id'),
-                //$security_users->aliasField('identity_type_id'),
                 $security_users->aliasField('identity_number'),
-                $security_users->aliasField('external_reference'),
                 $security_users->aliasField('super_admin'),
                 $security_users->aliasField('status'),
                 $security_users->aliasField('is_student'),
                 $security_users->aliasField('is_staff'),
                 $security_users->aliasField('is_guardian'),
-            
-                //'Genders_gender_id' => 'Genders.id',
-                // 'gender_name' => 'Genders.name',
-                'Genders.id',
-                'Genders.name',
-                'MainIdentityTypes.id',
-                'MainIdentityTypes.name',
-                'MainNationalities.id',
-                'MainNationalities.name',
-               // 'MainNationalities.identity_type_id'
-            
+                'Genders_id'=> $genders->aliasField('id'),
+                'Genders_name'=> $genders->aliasField('name'),
+                'MainIdentityTypes_id'=> $mainIdentityTypes->aliasField('id'),
+                'MainIdentityTypes_name'=> $mainIdentityTypes->aliasField('name'),
+                'MainNationalities_id'=> $mainNationalities->aliasField('id'),
+                'MainNationalities_name'=> $mainNationalities->aliasField('name'),
+                'Identities.number'
             ])
             ->LeftJoin(['Identities' => 'user_identities'],[
                 'Identities.security_user_id'=> $security_users->aliasField('id'),
             ])
-            ->LeftJoin(['Genders' => 'genders'],[
-                'Genders.id' => $security_users->aliasField('gender_id')
+            ->LeftJoin([$genders->alias() => $genders->table()], [
+                $genders->aliasField('id =') . $security_users->aliasField('gender_id')
             ])
-            ->LeftJoin(['MainIdentityTypes' => 'identity_types'],[
-                'MainIdentityTypes.id' => $security_users->aliasField('identity_type_id')
+            ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
             ])
-            ->LeftJoin(['MainNationalities' => 'education_levels'],[
-                'MainNationalities.id' => $security_users->aliasField('nationality_id')
+            ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
             ])
             ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
             ->group([$security_users->aliasField('id')])
             ->limit($limit)
             ->page($page)
             ->toArray();
-            echo "<pre>"; print_r($security_users_result); die;
         }else{
             $security_users_result = $security_users
             ->find()
-            ->LeftJoin(['Identities' => 'user_identities'],[
+            ->select([
+                $security_users->aliasField('id'),
+                $security_users->aliasField('openemis_no'),
+                $security_users->aliasField('first_name'),
+                $security_users->aliasField('middle_name'),
+                $security_users->aliasField('third_name'),
+                $security_users->aliasField('last_name'),
+                $security_users->aliasField('address_area_id'),
+                $security_users->aliasField('birthplace_area_id'),
+                $security_users->aliasField('gender_id'),
+                $security_users->aliasField('date_of_birth'),
+                $security_users->aliasField('nationality_id'),
+                $security_users->aliasField('identity_number'),
+                $security_users->aliasField('super_admin'),
+                $security_users->aliasField('status'),
+                $security_users->aliasField('is_student'),
+                $security_users->aliasField('is_staff'),
+                $security_users->aliasField('is_guardian'),
+                'Genders_id'=> $genders->aliasField('id'),
+                'Genders_name'=> $genders->aliasField('name'),
+                'MainIdentityTypes_id'=> $mainIdentityTypes->aliasField('id'),
+                'MainIdentityTypes_name'=> $mainIdentityTypes->aliasField('name'),
+                'MainNationalities_id'=> $mainNationalities->aliasField('id'),
+                'MainNationalities_name'=> $mainNationalities->aliasField('name'),
+            ])
+            ->InnerJoin(['Identities' => 'user_identities'],[
                 'Identities.security_user_id'=> $security_users->aliasField('id'),
                 'Identities.number LIKE'=> $identityNumber. '%',
 
             ])
-            ->LeftJoin(['Genders' => 'genders'],[
-                'Genders.id' => $security_users->aliasField('gender_id')
+            ->LeftJoin([$genders->alias() => $genders->table()], [
+                $genders->aliasField('id =') . $security_users->aliasField('gender_id')
             ])
-            ->LeftJoin(['MainIdentityTypes' => 'identity_types'],[
-                'MainIdentityTypes.id' => $security_users->aliasField('identity_type_id')
+            ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
             ])
-            ->LeftJoin(['MainNationalities' => 'education_levels'],[
-                'MainNationalities.id' => $security_users->aliasField('nationality_id')
+            ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
             ])
             ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
             ->group([$security_users->aliasField('id')])
@@ -1189,7 +1203,13 @@ class DirectoriesController extends AppController
             ->toArray();
         }
         
-        
+        foreach($security_users_result AS $result){
+            echo "<pre>"; print_r($result); die;
+            $result_array[] = array("openemis_no" => $result['openemis_no'], "name"=> $result['name']);
+
+            array('openemis_no' => $result['openemis_no'], 'name'=>$result['first_name']." ".$result['last_name'], 'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'), 'gender'=>$result['Genders_name'], 'nationality'=>$result['MainNationalities_name'], 'identity_type'=>['MainIdentityTypes_name'], 'identity_number'=>$val->identity_number)
+        }
+        echo json_encode($result_array);die;
         //return new Response(['body' => $this->Directories->getInternalSearchData($fname)]);
     }
 
