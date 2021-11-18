@@ -665,55 +665,42 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     };
 
     function getAcademicPeriods() {
-        var success = function(response, deferred) {
-            var periods = response.data.data;
-            if (angular.isObject(periods) && periods.length > 0) {
-                deferred.resolve(periods);
-            } else {
-                deferred.reject('You need to configure Assessment Periods first');
-            }
-        };
-        return AcademicPeriods
-            .select(['id', 'name', 'current', 'start_date', 'end_date'])
-            .find('SchoolAcademicPeriod')
-            .ajax({success: success, defer: true});
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/getAcademicPeriod';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
     };
 
-    function getEducationGrades(options) {
-        var success = function(response, deferred) {
-            var educationGrades = response.data.data;
-            if (angular.isObject(educationGrades) && educationGrades.length > 0) {
-                deferred.resolve(educationGrades);
-            } else {
-                deferred.reject('You need to configure Education Grades first');
-            }
+    function getEducationGrades(academic_period) {
+        var params = {
+            academic_period: academic_period
         };
-
-        InstitutionGrades.select();
-
-        if (typeof options !== "undefined" && options.hasOwnProperty('academicPeriodId')) {
-            InstitutionGrades.find('EducationGradeInCurrentInstitution', {academic_period_id: options.academicPeriodId, institution_id: options.institutionId});
-        } else {
-            InstitutionGrades.find('EducationGradeInCurrentInstitution', {institution_id: options.institutionId});
-        }
-
-        return InstitutionGrades.ajax({success: success, defer: true});
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/getEducationGrade';
+        $http.get(url, {params: params})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
     };
 
-    function getClasses(options) {
-        var success = function(response, deferred) {
-            var classes = response.data.data;
-            // does not matter if no classes available
-            deferred.resolve(classes);
-        };
-        return InstitutionClasses
-            .select()
-            .find('ClassOptions', {
-                institution_id: options.institutionId,
-                academic_period_id: options.academicPeriodId,
-                grade_id: options.gradeId
-            })
-            .ajax({success: success, defer: true});
+    function getClasses(params) {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/getEducationGrade';
+        $http.get(url, {params: params})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
     }
 
     function getColumnDefs() {
