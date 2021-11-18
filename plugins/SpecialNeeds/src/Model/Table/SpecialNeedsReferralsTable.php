@@ -37,6 +37,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function implementedEvents()
@@ -86,7 +87,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $query->where([
             $this->aliasField('academic_period_id') => $selectedAcademicPeriod
         ]);
-        
+
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Referrals/controls', 'data' => [], 'options' => [], 'order' => 1];
         // Academic Periods Filter - END
@@ -264,4 +265,19 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
 
         $this->setFieldOrder(['academic_period_id', 'referrer_id', 'special_needs_referrer_type_id', 'date', 'reason_type_id', 'comment', 'file_name', 'file_content']);
     }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
+        $academicPeriodId = $this->request->query['academic_period_id'];
+        $institutionId  = $session->read('Institution.Institutions.id');
+
+        $query
+        ->where([
+            'academic_period_id =' .$academicPeriodId,
+            'security_user_id =' .$studentUserId,
+        ]);
+    }
+
 }
