@@ -1062,12 +1062,6 @@ class DirectoriesController extends AppController
         echo json_encode($result_array);die;
     }
 
-    /*public function directoryInternalSearch()
-    {
-        $this->autoRender = false;
-        $fname = $this->request->query['fname'];
-        return new Response(['body' => $this->Directories->getInternalSearchData($fname)]);
-    }*/
     public function directoryInternalSearch()
     {
         $this->autoRender = false;
@@ -1135,7 +1129,6 @@ class DirectoriesController extends AppController
                 'MainIdentityTypes_name'=> $mainIdentityTypes->aliasField('name'),
                 'MainNationalities_id'=> $mainNationalities->aliasField('id'),
                 'MainNationalities_name'=> $mainNationalities->aliasField('name'),
-                'Identities.number'
             ])
             ->LeftJoin(['Identities' => 'user_identities'],[
                 'Identities.security_user_id'=> $security_users->aliasField('id'),
@@ -1204,13 +1197,14 @@ class DirectoriesController extends AppController
         }
         
         foreach($security_users_result AS $result){
-            echo "<pre>"; print_r($result); die;
-            $result_array[] = array("openemis_no" => $result['openemis_no'], "name"=> $result['name']);
 
-            array('openemis_no' => $result['openemis_no'], 'name'=>$result['first_name']." ".$result['last_name'], 'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'), 'gender'=>$result['Genders_name'], 'nationality'=>$result['MainNationalities_name'], 'identity_type'=>['MainIdentityTypes_name'], 'identity_number'=>$val->identity_number)
+            $MainNationalities_name = !empty($result['MainNationalities_name']) ? $result['MainNationalities_name'] : '';
+            $MainIdentityTypes_name = !empty($result['MainIdentityTypes_name']) ? $result['MainIdentityTypes_name'] : '';
+            $identity_number = !empty($result['identity_number']) ? $result['identity_number'] : '';
+
+            $result_array[] = array('openemis_no' => $result['openemis_no'], 'name'=>$result['first_name']." ".$result['last_name'], 'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'), 'gender'=>$result['Genders_name'], 'nationality'=>$MainNationalities_name, 'identity_type'=>$MainIdentityTypes_name, 'identity_number'=>$identity_number);
         }
         echo json_encode($result_array);die;
-        //return new Response(['body' => $this->Directories->getInternalSearchData($fname)]);
     }
 
     public function directoryExternalSearch()
