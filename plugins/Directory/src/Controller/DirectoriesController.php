@@ -1062,11 +1062,135 @@ class DirectoriesController extends AppController
         echo json_encode($result_array);die;
     }
 
-    public function directoryInternalSearch()
+    /*public function directoryInternalSearch()
     {
         $this->autoRender = false;
         $fname = $this->request->query['fname'];
         return new Response(['body' => $this->Directories->getInternalSearchData($fname)]);
+    }*/
+    public function directoryInternalSearch()
+    {
+        $this->autoRender = false;
+        $options = [
+            'first_name' => 'aa',
+            'last_name'=> null,
+            'openemis_no'=> null,
+            'identity_number'=> null,
+            'date_of_birth'=> null,
+            'page'=>1,
+            'limit'=>10
+        ];
+        $firstName = (array_key_exists('first_name', $options))? $options['first_name']: null;
+        $lastName = (array_key_exists('last_name', $options))? $options['last_name']: null;
+        $openemisNo = (array_key_exists('openemis_no', $options))? $options['openemis_no']: null;
+        $identityNumber = (array_key_exists('identity_number', $options))? $options['identity_number']: null;
+        $dateOfBirth = (array_key_exists('date_of_birth', $options))? $options['date_of_birth']: null;
+        $limit = $options['limit'];
+        $page = $options['page'];
+
+        $conditions = [];
+        $security_users = TableRegistry::get('security_users');
+        $Genders = TableRegistry::get('genders');
+        if (!empty($firstName)) {
+            $conditions[$security_users->aliasField('first_name').' LIKE'] = $firstName . '%';
+        }
+        if (!empty($lastName)) { 
+            $conditions[$security_users->aliasField('last_name').' LIKE'] = $lastName . '%';
+        }
+        if (!empty($openemisNo)) {
+            $conditions[$security_users->aliasField('openemis_no').' LIKE'] = $openemisNo . '%';
+        }
+        if (!empty($dateOfBirth)) {
+            $conditions[$security_users->aliasField('date_of_birth')] = date_create($dateOfBirth)->format('Y-m-d');
+            
+        }
+
+        if($identityNumber == ''){
+            $security_users_result = $security_users
+            ->find()
+            ->select([
+                $security_users->aliasField('id'),
+                $security_users->aliasField('username'),
+                $security_users->aliasField('password'),
+                $security_users->aliasField('openemis_no'),
+                $security_users->aliasField('first_name'),
+                $security_users->aliasField('middle_name'),
+                $security_users->aliasField('third_name'),
+                $security_users->aliasField('last_name'),
+                $security_users->aliasField('preferred_name'),
+                $security_users->aliasField('email'),
+                $security_users->aliasField('address'),
+                $security_users->aliasField('postal_code'),
+                $security_users->aliasField('address_area_id'),
+                $security_users->aliasField('birthplace_area_id'),
+                $security_users->aliasField('gender_id'),
+                $security_users->aliasField('date_of_birth'),
+                $security_users->aliasField('date_of_death'),
+                $security_users->aliasField('nationality_id'),
+                //$security_users->aliasField('identity_type_id'),
+                $security_users->aliasField('identity_number'),
+                $security_users->aliasField('external_reference'),
+                $security_users->aliasField('super_admin'),
+                $security_users->aliasField('status'),
+                $security_users->aliasField('is_student'),
+                $security_users->aliasField('is_staff'),
+                $security_users->aliasField('is_guardian'),
+            
+                //'Genders_gender_id' => 'Genders.id',
+                // 'gender_name' => 'Genders.name',
+                'Genders.id',
+                'Genders.name',
+                'MainIdentityTypes.id',
+                'MainIdentityTypes.name',
+                'MainNationalities.id',
+                'MainNationalities.name',
+               // 'MainNationalities.identity_type_id'
+            
+            ])
+            ->LeftJoin(['Identities' => 'user_identities'],[
+                'Identities.security_user_id'=> $security_users->aliasField('id'),
+            ])
+            ->LeftJoin(['Genders' => 'genders'],[
+                'Genders.id' => $security_users->aliasField('gender_id')
+            ])
+            ->LeftJoin(['MainIdentityTypes' => 'identity_types'],[
+                'MainIdentityTypes.id' => $security_users->aliasField('identity_type_id')
+            ])
+            ->LeftJoin(['MainNationalities' => 'education_levels'],[
+                'MainNationalities.id' => $security_users->aliasField('nationality_id')
+            ])
+            ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
+            ->group([$security_users->aliasField('id')])
+            ->limit($limit)
+            ->page($page)
+            ->toArray();
+            echo "<pre>"; print_r($security_users_result); die;
+        }else{
+            $security_users_result = $security_users
+            ->find()
+            ->LeftJoin(['Identities' => 'user_identities'],[
+                'Identities.security_user_id'=> $security_users->aliasField('id'),
+                'Identities.number LIKE'=> $identityNumber. '%',
+
+            ])
+            ->LeftJoin(['Genders' => 'genders'],[
+                'Genders.id' => $security_users->aliasField('gender_id')
+            ])
+            ->LeftJoin(['MainIdentityTypes' => 'identity_types'],[
+                'MainIdentityTypes.id' => $security_users->aliasField('identity_type_id')
+            ])
+            ->LeftJoin(['MainNationalities' => 'education_levels'],[
+                'MainNationalities.id' => $security_users->aliasField('nationality_id')
+            ])
+            ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
+            ->group([$security_users->aliasField('id')])
+            ->limit($limit)
+            ->page($page)
+            ->toArray();
+        }
+        
+        
+        //return new Response(['body' => $this->Directories->getInternalSearchData($fname)]);
     }
 
     public function directoryExternalSearch()
