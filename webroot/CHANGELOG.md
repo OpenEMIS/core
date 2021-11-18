@@ -1,3 +1,15 @@
+### [3.71.1] - 2021-11-18
+- Implemented: Add Export button function - Institutions > Students > Student1 (include grades classes assessment item results and absences)
+- Implemented: Implement placeholder in assessment report template for area administrative name
+- Bug Fixed: Administration>Security>Roles: Permission for student transition is missing under Directory Tab
+- Bug Fixed: Institutions>Academic>Subjects:Subjects with duplicated names can be added
+- Bug Fixed: Administrations > Training > Results : System should display the Result types
+- Bug Fixed: Institutions > Staff > Training > Results: 404 Error is given when trying to access Institutions -> Staff -> Training -> Results.
+- Bug Fixed: Staff>Home Page: User Completeness is not reflecting correctly
+- Bug Fixed: Institutions>Students: Students that are repeated should show repeated not promoted
+- Bug Fixed: Report > Institutions > Students > Export : Custom fields (dropdown/checkboxes) results are not showing in export file
+- Bug Fixed: Institutions > Performance > Assessments > Results : To provide queries for subject teachers and principal when accessing assessment > results page
+
 ### [3.71.0] - 2021-11-13
 - Implemented: Improvement of the "Undo" operations linked to the basic student workflow procedures
 - Implemented: Add Export button function - Institutions > General > Calendar
