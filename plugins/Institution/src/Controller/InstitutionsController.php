@@ -4089,4 +4089,10 @@ class InstitutionsController extends AppController
     }
     /*POCOR-6264 ends*/
 
+    //  POCOR-6130 export
+    public function StudentUserExport()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUserExport']);
+    }
+
 }
