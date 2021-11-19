@@ -175,7 +175,8 @@ class IdentitiesTable extends ControllerActionTable
 	{
             if(!empty($entity->nationality_id)){
                 $nationalitiesLookUp = TableRegistry::get('Nationalities')->get($entity->nationality_id);
-                if($nationalitiesLookUp->identity_type_id == $entity->identity_type_id){
+                // if($nationalitiesLookUp->identity_type_id == $entity->identity_type_id){
+                if($nationalitiesLookUp){
                     $user = TableRegistry::get('User.Users');
                     $preferredNationality = TableRegistry::get('User.UserNationalities')
                             ->find()
