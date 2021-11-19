@@ -264,7 +264,7 @@ class StaffTable extends ControllerActionTable
         if ($periodId > 0) {
             $query->find('academicPeriod', ['academic_period_id' => $periodId]);
         }
-        $res=$query
+        $query
             ->contain([
                 'Users' => [
                     'fields' => [
