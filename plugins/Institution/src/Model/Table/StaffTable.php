@@ -323,7 +323,7 @@ class StaffTable extends ControllerActionTable
                 'FTE' => 'Staff.FTE',
                 'start_date' => 'Staff.start_date',
                 'end_date' => 'Staff.end_date',
-                'contact_number' => 'group_concat(user_contacts.value)',
+                'contact_number' => 'group_concat(DISTINCT(user_contacts.value))',
             ])->leftjoin(
                     [$userContacts->alias() => $userContacts->table()],
                     [$this->aliasField('staff.staff_id = ').$userContacts->aliasField('security_user_id'),$userContacts->aliasField('preferred =1')])->group('staff.staff_id');
