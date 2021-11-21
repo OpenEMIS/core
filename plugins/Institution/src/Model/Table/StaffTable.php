@@ -264,7 +264,7 @@ class StaffTable extends ControllerActionTable
         if ($periodId > 0) {
             $query->find('academicPeriod', ['academic_period_id' => $periodId]);
         }
-        $query
+        $res=$query
             ->contain([
                 'Users' => [
                     'fields' => [
@@ -323,16 +323,16 @@ class StaffTable extends ControllerActionTable
                 'FTE' => 'Staff.FTE',
                 'start_date' => 'Staff.start_date',
                 'end_date' => 'Staff.end_date',
-                'contact_number' => 'group_concat(DISTINCT(user_contacts.value))',
-            ])->leftjoin(
-                    [$userContacts->alias() => $userContacts->table()],
-                    [$this->aliasField('staff.staff_id = ').$userContacts->aliasField('security_user_id'),$userContacts->aliasField('preferred =1')])->group('staff.staff_id');
+            ]);
 
              $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
 
                 return $results->map(function ($row) {
                     
                     // POCOR-6130 custome fields code
+                    $userContacts = TableRegistry::get('user_contacts');
+                    $contact=$userContacts->find()->select(['contact_number' => 'group_concat(DISTINCT(user_contacts.value))'])->where(['security_user_id' => $row->staff_id,'preferred'=> 1])->group('security_user_id')->first();
+                    $row['contact_number']=$contact['contact_number'];
                     $Guardians = TableRegistry::get('staff_custom_field_values');
                     $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
                     $staffCustomFields = TableRegistry::get('staff_custom_fields');
