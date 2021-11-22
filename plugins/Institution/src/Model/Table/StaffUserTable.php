@@ -842,7 +842,7 @@ class StaffUserTable extends ControllerActionTable
                     [$contactOptions->aliasField('id=').$contactTypes->aliasField('contact_option_id')]
                 )
                 ->where([
-                    $userContacts->aliasField('security_user_id') => $row->staff_id,
+                    $userContacts->aliasField('security_user_id') => $row->staff_id,'userContacts.preferred' => 1
                 ]);
 
                 $arr = $userContactsData->toArray();
