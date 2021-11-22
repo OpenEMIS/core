@@ -856,12 +856,12 @@ class StudentUserExportTable extends ControllerActionTable
                 'label' => __($identity->name)
             ];
     
-            $extraField[] = [
+           /* $extraField[] = [
                 'key' => 'StudentUser.external_reference',
                 'field' => 'external_reference',
                 'type' => 'string',
                 'label' => __('External Reference')
-            ];
+            ];*/
             $extraField[] = [
                 'key' => 'StudentUser.status',
                 'field' => 'status',
