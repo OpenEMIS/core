@@ -437,35 +437,52 @@ class MealProgrammesTable extends ControllerActionTable
 
             $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id'] : 0;
             $institutionList = [];
-                    $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-                     $InstitutionStatusesTable = TableRegistry::get('Institution.Statuses');
-                    $activeStatus = $InstitutionStatusesTable->getIdByCode('ACTIVE');
-                    $institutionQuery = $InstitutionsTable
-                        ->find('list', [
-                            'keyField' => 'id',
-                            'valueField' => 'code_name'
-                        ])
-                        ->where([
-                            $InstitutionsTable->aliasField('area_id') => $areaId,
-                            $InstitutionsTable->aliasField('institution_status_id') => $activeStatus
-                        ])
-                        ->order([
-                            $InstitutionsTable->aliasField('code') => 'ASC',
-                            $InstitutionsTable->aliasField('name') => 'ASC'
-                        ]);
-                    $institutionList = $institutionQuery->toArray();
-                 if (count($institutionList) > 1) {
-                           $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
-                        } else {
-                            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
-                        }
+            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $InstitutionStatusesTable = TableRegistry::get('Institution.Statuses');
+            $activeStatus = $InstitutionStatusesTable->getIdByCode('ACTIVE');
+            if ($areaId > 0) {
+                $institutionQuery = $InstitutionsTable
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
+                ->where([
+                    $InstitutionsTable->aliasField('area_id') => $areaId,
+                    $InstitutionsTable->aliasField('institution_status_id') => $activeStatus
+                ])
+                ->order([
+                    $InstitutionsTable->aliasField('code') => 'ASC',
+                    $InstitutionsTable->aliasField('name') => 'ASC'
+                ]);
+            } 
 
-                // $institutionOptions = ['' => '-- '.__('Select').' --'] + $institutionList;
-                $attr['type'] = 'chosenSelect';
-                $attr['onChangeReload'] = true;
-                $attr['attr']['multiple'] = false;
-                $attr['options'] = $institutionOptions;
-                $attr['attr']['required'] = true;
+            else{
+                $institutionQuery = $InstitutionsTable
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
+                ->where([
+                    $InstitutionsTable->aliasField('institution_status_id') => $activeStatus
+                ])
+                ->order([
+                    $InstitutionsTable->aliasField('code') => 'ASC',
+                    $InstitutionsTable->aliasField('name') => 'ASC'
+                ]);
+            }
+            $institutionList = $institutionQuery->toArray();
+            if (count($institutionList) > 1) {
+             $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+         } else {
+            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+        }
+
+                    // $institutionOptions = ['' => '-- '.__('Select').' --'] + $institutionList;
+        $attr['type'] = 'chosenSelect';
+        $attr['onChangeReload'] = true;
+        $attr['attr']['multiple'] = false;
+        $attr['options'] = $institutionOptions;
+        $attr['attr']['required'] = true;
         
         return $attr;
     }
