@@ -10,7 +10,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     var StaffController = this;
 
-    var pageSize = 10;
+    StaffController.pageSize = 10;
     StaffController.step = 'user_details';
     StaffController.selectedStaffData = {};
     StaffController.internalGridOptions = null;
@@ -26,9 +26,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.nationalitiesOptions = [];
     StaffController.identityTypeOptions = [];
     StaffController.positionTypeOptions = [];
-    StaffController.positionsOptions = [];
+    StaffController.institutionPositionOptions = {
+        availableOptions: [],
+        selectedOption: ''
+    };
     StaffController.staffTypeOptions = [];
     StaffController.shiftsOptions = [];
+    StaffController.fteOptions = [];
+    StaffController.shiftsId = [];
+    StaffController.rowsThisPage= [];
 
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
@@ -50,11 +56,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.getPositions = getPositions;
     StaffController.getStaffTypes = getStaffTypes;
     StaffController.getShifts = getShifts;
+    StaffController.getFtes = getFtes;
     StaffController.changePositionType = changePositionType;
     StaffController.changePosition = changePosition;
     StaffController.changeStaffType = changeStaffType;
-    StaffController.changeShifts = changeShifts;
     StaffController.cancelProcess = cancelProcess;
+    StaffController.changeFte = changeFte;
+    StaffController.getInternalSearchData = getInternalSearchData;
+    StaffController.getExternalSearchData = getExternalSearchData;
+    StaffController.processInternalGridUserRecord = processInternalGridUserRecord;
+    StaffController.processExternalGridUserRecord = processExternalGridUserRecord;
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
@@ -79,14 +90,83 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             .then(function(response) {
                 StaffController.selectedStaffData.openemis_no = response;
                 StaffController.selectedStaffData.username = response;
-                UtilsSvc.isAppendLoader(true);
+                StaffController.getInternalSearchData();
     }, function(error) {
             console.log(error);
-            UtilsSvc.isAppendLoader(true);
+            UtilsSvc.isAppendLoader(false);
         });
     }
 
+    function getInternalSearchData() {
+        first_name = StaffController.selectedStaffData.first_name;
+        last_name = StaffController.selectedStaffData.last_name;
+        var dataSource = {
+            pageSize: StaffController.pageSize,
+            getRows: function (params) {
+                UtilsSvc.isAppendLoader(true);
+                InstitutionsStaffSvc.getInternalSearchData(first_name, last_name)
+                .then(function(response) {
+                    var gridData = response.data;
+                    var totalRowCount = gridData.length;
+                    return StaffController.processInternalGridUserRecord(gridData, params, totalRowCount);
+                }, function(error) {
+                    console.log(error);
+                    UtilsSvc.isAppendLoader(false);
+                });
+            }
+        };
+        StaffController.internalGridOptions.api.setDatasource(dataSource);
+        StaffController.internalGridOptions.api.sizeColumnsToFit(); 
+    }
+
+    function processInternalGridUserRecord(userRecords, params, totalRowCount) {
+        console.log(userRecords);
+
+        var lastRow = totalRowCount;
+        StaffController.rowsThisPage = userRecords;
+
+        params.successCallback(StaffController.rowsThisPage, lastRow);
+        // scope.externalDataLoaded = true;
+        UtilsSvc.isAppendLoader(false);
+        return userRecords;
+    }
+
+    function getExternalSearchData() {
+        first_name = StaffController.selectedStaffData.first_name;
+        last_name = StaffController.selectedStaffData.last_name;
+        var dataSource = {
+            pageSize: StaffController.pageSize,
+            getRows: function (params) {
+                UtilsSvc.isAppendLoader(true);
+                InstitutionsStaffSvc.getExternalSearchData(first_name, last_name)
+                .then(function(response) {
+                    var gridData = response.data;
+                    var totalRowCount = gridData.length;
+                    return StaffController.processExternalGridUserRecord(gridData, params, totalRowCount);
+                }, function(error) {
+                    console.log(error);
+                    UtilsSvc.isAppendLoader(false);
+                });
+            }
+        };
+        StaffController.externalGridOptions.api.setDatasource(dataSource);
+        StaffController.externalGridOptions.api.sizeColumnsToFit(); 
+    }
+
+    function processExternalGridUserRecord(userRecords, params, totalRowCount) {
+        console.log(userRecords);
+
+        var lastRow = totalRowCount;
+        StaffController.rowsThisPage = userRecords;
+
+        params.successCallback(StaffController.rowsThisPage, lastRow);
+        // scope.externalDataLoaded = true;
+        UtilsSvc.isAppendLoader(false);
+        return userRecords;
+    }
+
     function generatePassword() {
+        UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.generatePassword()
         .then(function(response) {
             if (StaffController.selectedStaffData.password == '' || typeof StaffController.selectedStaffData.password == 'undefined') {
@@ -95,6 +175,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.getPostionTypes();
         }, function(error) {
             console.log(error);
+            StaffController.getPostionTypes();
         });
     }
 
@@ -131,6 +212,54 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function getPostionTypes(){
         InstitutionsStaffSvc.getPositionTypes().then(function(resp){
             StaffController.positionTypeOptions = resp.data;
+            StaffController.getStaffTypes();
+        }, function(error){
+            console.log(error);
+            StaffController.getStaffTypes();
+        });
+    }
+
+    function getFtes(){
+        UtilsSvc.isAppendLoader(true);
+        InstitutionsStaffSvc.getFtes().then(function(resp){
+            StaffController.fteOptions = resp.data;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    function getPositions(){
+        UtilsSvc.isAppendLoader(true);
+        var params = {
+            institutionId: 6,
+            fte: StaffController.selectedStaffData.position_type_id === 'Full-Time' ? 1 : StaffController.selectedStaffData.fte_id,
+            startDate: StaffController.selectedStaffData.startDate,
+            endDate: StaffController.selectedStaffData.endDate,
+        }
+        InstitutionsStaffSvc.getPositions(params).then(function(resp){
+            StaffController.institutionPositionOptions.availableOptions = resp.data;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    function getStaffTypes(){
+        InstitutionsStaffSvc.getStaffTypes().then(function(resp){
+            StaffController.staffTypeOptions = resp.data;
+            StaffController.getShifts();
+        }, function(error){
+            console.log(error);
+            StaffController.getShifts();
+        });
+    }
+
+    function getShifts(){
+        InstitutionsStaffSvc.getShifts().then(function(resp){
+            StaffController.shiftsOptions = resp.data;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
@@ -217,11 +346,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 break;
             }
         }
+        if(positionType === 'Full-Time'){
+            StaffController.selectedStaffData.fte_id = 1;
+            StaffController.getPositions();
+        }
+        else{
+            StaffController.getFtes();
+        }
     }
 
     function changePosition() {
         var position = StaffController.selectedStaffData.position_id;
-        var positionOptions = StaffController.positionsOptions;
+        var positionOptions = StaffController.institutionPositionOptions;
         for (var i = 0; i < positionOptions.length; i++) {
             if (positionOptions[i].id == position) {
                 StaffController.selectedStaffData.position_name = positionOptions[i].name;
@@ -239,9 +375,20 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 break;
             }
         }
+        StaffController.getPositions();
     }
-    
-    function changeShifts() {}
+
+    function changeFte() {
+        var fte = StaffController.selectedStaffData.fte_id;
+        var fteOptions = StaffController.fteOptions;
+        for (var i = 0; i < fteOptions.length; i++) {
+            if (fteOptions[i].id == fte) {
+                StaffController.selectedStaffData.fte_name = fteOptions[i].name;
+                break;
+            }
+        }
+        StaffController.getPositions();
+    }
     
     function goToPrevStep(){
         switch(StaffController.step){
@@ -264,17 +411,21 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         switch(StaffController.step){
             case 'user_details': 
                 StaffController.step = 'internal_search';
-                // StaffController.getUniqueOpenEmisId();
-                // StaffController.generatePassword();
+                StaffController.getUniqueOpenEmisId();
                 break;
             case 'internal_search': 
                 StaffController.step = 'external_search';
+                UtilsSvc.isAppendLoader(false);
+                setTimeout(function(){
+                    StaffController.getExternalSearchData();
+                }, 1500);
                 break;
             case 'external_search': 
                 StaffController.step = 'confirmation';
                 break;
             case 'confirmation': 
                 StaffController.step = 'add_staff';
+                StaffController.generatePassword();
                 break;
         }
     }
@@ -294,19 +445,19 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         location.href = angular.baseUrl + '/Directory/Directories/Directories/index';
     }
 
-    // StaffController.selectStaff = function(id) {
-    //     StaffController.selectedUser = id;
-    //     StaffController.getStaffData();
-    // }
+    StaffController.selectStaff = function(id) {
+        StaffController.selectedUser = id;
+        StaffController.getStaffData();
+    }
 
-    // StaffController.getStaffData = function() {
-    //     var log = [];
-    //     angular.forEach(StaffController.rowsThisPage , function(value) {
-    //         if (value.id == StaffController.selectedUser) {
-    //             StaffController.selectedStaffData = value;
-    //         }
-    //     }, log);
-    // }
+    StaffController.getStaffData = function() {
+        var log = [];
+        angular.forEach(StaffController.rowsThisPage , function(value) {
+            if (value.id == StaffController.selectedUser) {
+                StaffController.selectedStaffData = value;
+            }
+        }, log);
+    }
 
     function initGrid() {
         AggridLocaleSvc.getTranslatedGridLocale()
@@ -347,7 +498,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 onRowSelected: function (_e) {
                     StaffController.selectStaff(_e.node.data.id);
                     $scope.$apply();
-                }
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
             };
 
             StaffController.externalGridOptions = {
@@ -384,7 +538,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 onRowSelected: function (_e) {
                     StaffController.selectStaff(_e.node.data.id);
                     $scope.$apply();
-                }
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
             };
         }, function(error){
             StaffController.internalGridOptions = {
@@ -421,7 +578,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 onRowSelected: function (_e) {
                     StaffController.selectStaff(_e.node.data.id);
                     $scope.$apply();
-                }
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
             };
 
             StaffController.externalGridOptions = {
@@ -457,7 +617,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 onRowSelected: function (_e) {
                     StaffController.selectStaff(_e.node.data.id);
                     $scope.$apply();
-                }
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
             };
         });
     };

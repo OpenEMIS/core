@@ -11,7 +11,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     var StudentController = this;
     var test = $scope;
 
-    var pageSize = 10;
+    StudentController.pageSize = 10;
 
     StudentController.step = 'user_details';
     StudentController.selectedStudentData = {};
@@ -54,6 +54,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.getAcademicPeriods = getAcademicPeriods;
     StudentController.getEducationGrades = getEducationGrades;
     StudentController.getClasses = getClasses;
+    StudentController.getInternalSearchData = getInternalSearchData;
+    StudentController.processInternalGridUserRecord = processInternalGridUserRecord;
+    StudentController.getExternalSearchData = getExternalSearchData;
+    StudentController.processExternalGridUserRecord = processExternalGridUserRecord;
     
 
     angular.element(document).ready(function () {
@@ -79,11 +83,81 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             .then(function(response) {
                 StudentController.selectedStudentData.openemis_no = response;
                 StudentController.selectedStudentData.username = response;
-                UtilsSvc.isAppendLoader(false);
+                StudentController.getInternalSearchData();
     }, function(error) {
             console.log(error);
             StudentController.generatePassword();
         });
+    }
+
+
+
+    function getInternalSearchData() {
+        first_name = StudentController.selectedStudentData.first_name;
+        last_name = StudentController.selectedStudentData.last_name;
+        var dataSource = {
+            pageSize: StudentController.pageSize,
+            getRows: function (params) {
+                UtilsSvc.isAppendLoader(true);
+                InstitutionsStudentsSvc.getInternalSearchData(first_name, last_name)
+                .then(function(response) {
+                    var gridData = response.data;
+                    var totalRowCount = gridData.length;
+                    return StudentController.processInternalGridUserRecord(gridData, params, totalRowCount);
+                }, function(error) {
+                    console.log(error);
+                    UtilsSvc.isAppendLoader(false);
+                });
+            }
+        };
+        StudentController.internalGridOptions.api.setDatasource(dataSource);
+        StudentController.internalGridOptions.api.sizeColumnsToFit(); 
+    }
+
+    function processInternalGridUserRecord(userRecords, params, totalRowCount) {
+        console.log(userRecords);
+
+        var lastRow = totalRowCount;
+        StudentController.rowsThisPage = userRecords;
+
+        params.successCallback(StudentController.rowsThisPage, lastRow);
+        // scope.externalDataLoaded = true;
+        UtilsSvc.isAppendLoader(false);
+        return userRecords;
+    }
+
+    function getExternalSearchData() {
+        first_name = StudentController.selectedStudentData.first_name;
+        last_name = StudentController.selectedStudentData.last_name;
+        var dataSource = {
+            pageSize: StudentController.pageSize,
+            getRows: function (params) {
+                UtilsSvc.isAppendLoader(true);
+                InstitutionsStudentsSvc.getExternalSearchData(first_name, last_name)
+                .then(function(response) {
+                    var gridData = response.data;
+                    var totalRowCount = gridData.length;
+                    return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
+                }, function(error) {
+                    console.log(error);
+                    UtilsSvc.isAppendLoader(false);
+                });
+            }
+        };
+        StudentController.externalGridOptions.api.setDatasource(dataSource);
+        StudentController.externalGridOptions.api.sizeColumnsToFit(); 
+    }
+
+    function processExternalGridUserRecord(userRecords, params, totalRowCount) {
+        console.log(userRecords);
+
+        var lastRow = totalRowCount;
+        StudentController.rowsThisPage = userRecords;
+
+        params.successCallback(StudentController.rowsThisPage, lastRow);
+        // scope.externalDataLoaded = true;
+        UtilsSvc.isAppendLoader(false);
+        return userRecords;
     }
 
     function generatePassword() {
@@ -295,6 +369,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 break;
             case 'internal_search': 
                 StudentController.step = 'external_search';
+                UtilsSvc.isAppendLoader(true);
+                setTimeout(function(){
+                    StudentController.getExternalSearchData();
+                }, 1500);
                 break;
             case 'external_search': 
                 StudentController.step = 'confirmation';
@@ -319,6 +397,20 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function cancelProcess() {
         location.href = angular.baseUrl + '/Directory/Directories/Directories/index';
+    }
+
+    StudentController.selectStaff = function(id) {
+        StudentController.selectedStudent = id;
+        StudentController.getStudentData();
+    }
+
+    StudentController.getStudentData = function() {
+        var log = [];
+        angular.forEach(StudentController.rowsThisPage , function(value) {
+            if (value.id == StudentController.selectedStudent) {
+                StudentController.selectedStudentData = value;
+            }
+        }, log);
     }
 
     function initGrid() {
@@ -358,9 +450,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StudentController.selectStaff(_e.node.data.id);
+                    StudentController.selectStudent(_e.node.data.id);
                     $scope.$apply();
-                }
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
             };
 
             StudentController.externalGridOptions = {
@@ -395,9 +490,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StudentController.selectStaff(_e.node.data.id);
+                    StudentController.c(_e.node.data.id);
                     $scope.$apply();
-                }
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
             };
         }, function(error){
             StudentController.internalGridOptions = {
@@ -432,9 +530,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StudentController.selectStaff(_e.node.data.id);
+                    StudentController.selectStudent(_e.node.data.id);
                     $scope.$apply();
-                }
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
             };
 
             StudentController.externalGridOptions = {
@@ -468,9 +569,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StudentController.selectStaff(_e.node.data.id);
+                    StudentController.selectStudent(_e.node.data.id);
                     $scope.$apply();
-                }
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
             };
         });
     };
