@@ -52,7 +52,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         getExternalSourceMapping: getExternalSourceMapping,
         generatePassword: generatePassword,
         translate: translate,
-        getStudentTransferReasons: getStudentTransferReasons
+        getStudentTransferReasons: getStudentTransferReasons,
+        getInternalSearchData: getInternalSearchData,
+        getExternalSearchData: getExternalSearchData
     };
 
     var models = {
@@ -125,6 +127,30 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     function setExternalSourceUrl(url)
     {
         var externalSource = url;
+    };
+
+    function getInternalSearchData(first_name ,last_name) {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/directoryInternalSearch?fname=' + first_name + '&lname=' + last_name;
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getExternalSearchData(first_name ,last_name) {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/directoryInternalSearch?fname=' + first_name + '&lname=' + last_name;
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
     };
 
     function getExternalStudentRecords(options) {
@@ -739,6 +765,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         });
         return deferred.promise;
     }
+
+
 
     function getAddNewStudentConfig() {
         return ConfigItems

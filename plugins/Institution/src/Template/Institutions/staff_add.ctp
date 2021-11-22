@@ -133,7 +133,7 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                     <div class="input date required">
                         <label for="Staff_date_of_birth"><?= __('Date Of Birth') ?></label>
                         <div class="input-group date " id="Staff_date_of_birth" style="">
-                            <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.selectedStaffData.date_of_birth" ng-init="InstitutionStaffController.selectedStaffData.date_of_birth='';">
+                            <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.selectedStaffData.date_of_birth">
                             <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                         </div>
                         <div ng-if="InstitutionStaffController.postResponse.error.date_of_birth" class="error-message">
@@ -171,7 +171,7 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                             <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].identity_type_id">{{ error }}</p>
                         </div>
                     </div>
-                    <div ng-class="InstitutionStaffController.identity_class">
+                    <div ng-class="InstitutionStaffController.identity_class" ng-if="InstitutionStaffController.selectedStaffData.identity_type_id">
                         <label><?= __('{{InstitutionStaffController.selectedStaffData.identity_type_name}}') ?></label>
                         <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" ng-init="InstitutionStaffController.selectedStaffData.identity_number='';">
                         <div ng-if="InstitutionStaffController.postResponse.error.identities[0].number" class="error-message">
@@ -348,18 +348,18 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                     </div>
                     <div class="input date required">
                         <label for="Staff_start_date"><?= __('Start Date') ?></label>
-                        <div class="input-group date " id="Staff_start_date" style="">
-                            <input type="text" class="form-control " name="Staff[startDate]" ng-model="InstitutionStaffController.selectedStaffData.startDate">
+                        <div class="input-group date" id="Staff_start_date" style="">
+                            <input type="text" class="form-control " name="Staff[start_date]" ng-model="InstitutionStaffController.selectedStaffData.startDate">
                             <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                         </div>
-                        <div ng-if="InstitutionStaffController.postResponse.error.startDate" class="error-message">
-                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.date_of_birth">{{ error }}</p>
+                        <div ng-if="InstitutionStaffController.postResponse.error.start_date" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.start_date">{{ error }}</p>
                         </div>
                     </div>
                     <div class="input date">
                         <label for="Staff_end_date"><?= __('End Date') ?></label>
-                        <div class="input-group date " id="Staff_end_date" style="">
-                            <input type="text" class="form-control " name="Staff[endDate]" ng-model="InstitutionStaffController.selectedStaffData.endDate">
+                        <div class="input-group date" id="Staff_end_date" style="">
+                            <input type="text" class="form-control " name="Staff[end_date]" ng-model="InstitutionStaffController.selectedStaffData.endDate">
                             <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                         </div>
                     </div>
@@ -378,16 +378,31 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                             <p ng-repeat="error in InstitutionStaffController.postResponse.error.position_type_id">{{ error }}</p>
                         </div>
                     </div>
-                    <div class="input select required error">
-                        <label><?= __('Position') ?></label>
+                    <div class="input select required error" ng-if="InstitutionStaffController.selectedStaffData.position_type_id === 'Part-Time'">
+                        <label><?= __('FTE') ?></label>
                         <div class="input-select-wrapper">
-                            <select name="Staff[position_id]" id="staff-position_id"
-                                ng-options="option.id as option.name for option in InstitutionStaffController.positionsOptions"
-                                ng-model="InstitutionStaffController.selectedStaffData.position_id"
-                                ng-change="InstitutionStaffController.changePosition()"
+                            <select name="Staff[fte_id]" id="staff-fte_id"
+                                ng-options="option.id as option.name for option in InstitutionStaffController.fteOptions"
+                                ng-model="InstitutionStaffController.selectedStaffData.fte_id"
+                                ng-change="InstitutionStaffController.changeFte()"
                                 >
                                 <option value="" >-- <?= __('Select') ?> --</option>
                             </select>
+                        </div>
+                        <div ng-if="InstitutionStaffController.postResponse.error.fte_id" class="error-message">
+                            <p ng-repeat="error in InstitutionStaffController.postResponse.error.fte_id">{{ error }}</p>
+                        </div>
+                    </div>
+                    <div class="input select required error">
+                        <label><?= __('Position') ?></label>
+                        <div class="input-select-wrapper">
+                        <select name="Staff[institution_position_id]" id="staff-institution-position-id"
+                            ng-model="InstitutionStaffController.institutionPositionOptions.selectedOption"
+                            ng-options="option.name group by option.group disable when option.disabled for option in InstitutionStaffController.institutionPositionOptions.availableOptions track by option.value"
+                            ng-init="InstitutionStaffController.institutionPositionOptions.selectedOption = '';"
+                            >
+                            <option value="">-- <?= __('Select')?> --</option>
+                        </select>
                         </div>
                         <div ng-if="InstitutionStaffController.postResponse.error.position_id" class="error-message">
                             <p ng-repeat="error in InstitutionStaffController.postResponse.error.position_id">{{ error }}</p>
@@ -408,16 +423,15 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                             <p ng-repeat="error in InstitutionStaffController.postResponse.error.staff_type_id">{{ error }}</p>
                         </div>
                     </div>
-                    <div class="input select required error">
+                    <div class="input select required">
                         <label><?= __('Shifts') ?></label>
                         <div class="input-select-wrapper">
-                            <select multiple name="Staff[shift_id]" id="staff-shift_id"
-                                ng-options="option.id as option.name for option in InstitutionStaffController.shiftsOptions"
-                                ng-model="InstitutionStaffController.selectedStaffData.shift_id"
-                                ng-change="InstitutionStaffController.changeShifts()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
+                        <select chosen name="staff[staff_shifts_id][_ids][]" id="staff-shifts-id" data-placeholder="<?=__('Select Shifts') ?>"  multiple="multiple"  
+                                ng-model="InstitutionStaffController.staffShiftsId"
+                                options="InstitutionStaffController.shiftsOptions"
+                                ng-options="staffShifts.id as staffShifts.name for staffShifts in InstitutionStaffController.shiftsOptions"
+                                ng-init="InstitutionStaffController.shiftsId = [];"
+                        ></select>
                         </div>
                         <div ng-if="InstitutionStaffController.postResponse.error.shift_id" class="error-message">
                             <p ng-repeat="error in InstitutionStaffController.postResponse.error.shift_id">{{ error }}</p>
@@ -561,16 +575,14 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
 $(function () {
 var datepicker0 = $('#Staff_start_date').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
 var datepicker1 = $('#Staff_end_date').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
-var datepicker2 = $('#Staffs_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
-var datepicker3 = $('#Staff_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
+var datepicker2 = $('#Staff_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
 $( document ).on('DOMMouseScroll mousewheel scroll', function(){
-    window.clearTimeout( t );
-    t = window.setTimeout( function(){
+    // window.clearTimeout( t );
+    // t = window.setTimeout( function(){
         datepicker0.datepicker('place');
         datepicker1.datepicker('place');
         datepicker2.datepicker('place');
-        datepicker3.datepicker('place');
-    });
+    // });
 });
 });
 

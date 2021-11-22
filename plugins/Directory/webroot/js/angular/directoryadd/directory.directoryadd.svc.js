@@ -20,7 +20,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
         getNationalities: getNationalities,
         getIdentityTypes: getIdentityTypes,
         getInternalSearchData: getInternalSearchData,
+        getExternalSearchData: getExternalSearchData,
         getContactTypes: getContactTypes,
+        getRelationType: getRelationType,
+        getRedirectToGuardian: getRedirectToGuardian
     };
     return service;
     
@@ -128,4 +131,40 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
         });
         return deferred.promise;
     };
+
+    function getExternalSearchData(first_name ,last_name) {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/directoryInternalSearch?fname=' + first_name + '&lname=' + last_name;
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getRelationType() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getRelationshipType';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getRedirectToGuardian() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getRedirectToGuardian';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
 };

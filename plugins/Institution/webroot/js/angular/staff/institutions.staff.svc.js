@@ -50,14 +50,17 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         addUserIdentity: addUserIdentity,
         addUserNationality: addUserNationality,
         getExternalSourceMapping: getExternalSourceMapping,
-        getPositionList: getPositionList,
-        getStaffTypes: getStaffTypes,
-        getStaffShifts: getStaffShifts,
         getInstitution: getInstitution,
         addStaffTransferRequest: addStaffTransferRequest,
         generatePassword: generatePassword,
         translate: translate,
-        getPositionTypes: getPositionTypes
+        getPositionTypes: getPositionTypes,
+        getFtes: getFtes,
+        getPositions: getPositions,
+        getStaffTypes: getStaffTypes,
+        getShifts: getShifts,
+        getInternalSearchData: getInternalSearchData,
+        getExternalSearchData: getExternalSearchData
     };
 
     var models = {
@@ -134,9 +137,81 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         var externalSource = url;
     };
 
+    function getInternalSearchData(first_name ,last_name) {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/directoryInternalSearch?fname=' + first_name + '&lname=' + last_name;
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getExternalSearchData(first_name ,last_name) {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/directoryInternalSearch?fname=' + first_name + '&lname=' + last_name;
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
     function getPositionTypes(){
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/getPositionType';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
+    function getFtes(){
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/getFTE';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
+    function getPositions(params){
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/getPositions';
+        $http.get(url, {params: params})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
+    function getStaffTypes(){
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/getStaffType';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
+    function getShifts(){
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/getShifts';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response);
@@ -732,12 +807,6 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
             deferred.reject(error);
         });
         return deferred.promise;
-    }
-
-    function getStaffTypes() {
-        return StaffTypes
-        .select()
-        .ajax({defer: true});
     }
     
     function getStaffShifts(institutionId, academicPeriodId) {
