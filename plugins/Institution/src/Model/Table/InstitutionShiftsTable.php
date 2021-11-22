@@ -445,7 +445,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                 }
             }
         } elseif ($action == 'edit') {
-            $attr['onChangeReload'] = 'changeLocation';
+            // $attr['onChangeReload'] = 'changeLocation';
             // $attr['type'] = 'readonly';
             // $Institutions = TableRegistry::get('Institution.Institutions');
             // $occupier = $Institutions->findById($attr['entity']->location_institution_id)->first();
