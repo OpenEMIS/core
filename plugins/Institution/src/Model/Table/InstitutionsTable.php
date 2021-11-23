@@ -30,8 +30,9 @@ class InstitutionsTable extends ControllerActionTable
     private $studentsTabsData = [
         0 => "Overview",
         1 => "Map",
-        2 => "Contact Institution",
-        3 => "Contact People"
+        2 => "Shifts",
+        3 => "Contact Institution",
+        4 => "Contact People"
     ];
     public $shiftTypes = [];
 
@@ -83,6 +84,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
         /*$this->hasMany('institutionContactPersons', ['className' => 'Institution.institutionContactPersons', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']);*/
         $this->hasMany('ShiftOptions', ['className' => 'InstitutionShifts.ShiftOptions', 'foreignKey' => 'shift_option_id']);
+        $this->hasMany('AcademicPeriods', ['className' => 'AcademicPeriods', 'foreignKey' => 'id']);
         $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->hasMany('InstitutionCustomFieldValues', ['className' => 'Institution.InstitutionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']);
@@ -125,6 +127,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionCommittees', ['className' => 'Institution.InstitutionCommittees', 'dependent' => true, 'cascadeCallbacks' => true]);
+
 
         $this->belongsToMany('ExaminationCentresExaminations', [
             'className' => 'Examination.ExaminationCentresExaminations',
@@ -358,7 +361,7 @@ class InstitutionsTable extends ControllerActionTable
         unset($sheets[0]);
         $studentsTabsData = $this->studentsTabsData;
         foreach($studentsTabsData as $key => $val) {  
-            $tabsName = $val.'s';
+            $tabsName = $val;
             $sheets[] = [
                 'sheetData' => [
                     'institute_tabs_type' => $val
@@ -380,42 +383,50 @@ class InstitutionsTable extends ControllerActionTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+         // echo "<pre>";
+         // print_r(); exit;
 
         $sheetData = $settings['sheet']['sheetData'];
         $instituteType = $sheetData['institute_tabs_type'];
         $cloneFields = $fields->getArrayCopy();
         $newFields = [];
     
-        foreach ($cloneFields as $key => $value) {
-             
+        foreach ($cloneFields as $key => $value) {          
             if($instituteType=='Map'){
-             if ($value['field'] == 'longitude') {
-                $newFields[] = [
-                    'key' => 'Institutions.longitude',
-                    'field' => 'longitude',
-                    'type' => 'string',
-                    'label' => 'Longitude'
-                ];
-                $newFields[] = [
-                    'key' => 'Institutions.latitude',
-                    'field' => 'latitude',
-                    'type' => 'string',
-                    'label' => 'Latitude'
-                ];
-             }
+                  if ($value['field'] == 'longitude') {
+                        $newFields[] = [
+                            'key' => 'Institutions.longitude',
+                            'field' => 'longitude',
+                            'type' => 'string',
+                            'label' => 'Longitude'
+                        ];
+                        $newFields[] = [
+                            'key' => 'Institutions.latitude',
+                            'field' => 'latitude',
+                            'type' => 'string',
+                            'label' => 'Latitude'
+                        ];
+                  }
             }
             if($instituteType=='Overview'){
-              $newFields[] = $value;
-
-            if ($value['field'] == 'area_id') {
-                $newFields[] = [
-                    'key' => 'Areas.code',
-                    'field' => 'area_code',
-                    'type' => 'string',
-                    'label' => ''
-                ];
+                  $newFields[] = $value;
+                if ($value['field'] == 'area_id') {
+                    $newFields[] = [
+                        'key' => 'Areas.code',
+                        'field' => 'area_code',
+                        'type' => 'string',
+                        'label' => ''
+                    ];
+                }
             }
+        if($instituteType=='Shifts'){
             if($value['field'] == 'shift_type'){
+                $newFields[] = [
+                    'key' => 'AcademicPeriods.name',
+                    'field' => 'academic_period',
+                    'type' => 'string',
+                    'label' => 'Academic Period'
+                ];
                 $newFields[] = [
                     'key' => 'ShiftOptions.name',
                     'field' => 'shift_name',
@@ -427,14 +438,14 @@ class InstitutionsTable extends ControllerActionTable
                     'key' => 'InstitutionShifts.start_time',
                     'field' => 'shift_start_time',
                     'type' => 'string',
-                    'label' => ''
+                    'label' => 'Start Time'
                 ];
 
                 $newFields[] = [
                     'key' => 'InstitutionShifts.end_time',
                     'field' => 'shift_end_time',
                     'type' => 'string',
-                    'label' => ''
+                    'label' => 'End Time'
                 ];
 
                 $newFields[] = [
@@ -452,8 +463,7 @@ class InstitutionsTable extends ControllerActionTable
                 ];
             }
           }
-
-          if($instituteType=='Contact Institution'){
+        if($instituteType=='Contact Institution'){
             if ($value['field'] == 'telephone') {
             $newFields[] = [
                     'key' => 'Institutions.telephone',
@@ -480,66 +490,59 @@ class InstitutionsTable extends ControllerActionTable
                     'label' => 'Website'
                 ];
           }
-      }
+        }
         if($instituteType=='Contact People'){
 
             if ($value['field'] == 'contact_person') {
 
            /*$newFields[] = [
-                    'key' => 'contacts.contact_person',
+                    'key' => 'institution_contact_persons.person',
                     'field' => 'contact_person',
                     'type' => 'string',
                     'label' => 'Contact Person'
                 ];*/
             
                $newFields[] = [
-                    'key' => '',
+                    'key' => 'institution_contact_persons.designation',
                     'field' => 'designation',
                     'type' => 'string',
                     'label' => 'Designation'
                 ];
            
-            
-           /* $newFields[] = [
-                    'key' => 'institutionContactPersons.designation',
-                    'field' => 'designation',
-                    'type' => 'string',
-                    'label' => 'Designation'
-                ];
             $newFields[] = [
-                    'key' => 'institutionContactPersons.department',
+                    'key' => 'institution_contact_persons.department',
                     'field' => 'department',
                     'type' => 'string',
                     'label' => 'Department'
                 ];
             $newFields[] = [
-                    'key' => 'institutionContactPersons.telephone',
+                    'key' => 'institution_contact_persons.telephone',
                     'field' => 'telephone',
                     'type' => 'string',
                     'label' => 'Telephone'
                 ];
             $newFields[] = [
-                    'key' => 'institutionContactPersons.mobile_number',
+                    'key' => 'institution_contact_persons.mobile_number',
                     'field' => 'mobile_number',
                     'type' => 'string',
                     'label' => 'mobile_number'
                 ];
             $newFields[] = [
-                    'key' => 'institutionContactPersons.email',
+                    'key' => 'institution_contact_persons.email',
                     'field' => 'email',
                     'type' => 'string',
                     'label' => 'Email'
                 ];
             $newFields[] = [
-                    'key' => 'institutionContactPersons.preferred',
+                    'key' => 'institution_contact_persons.preferred',
                     'field' => 'preferred',
                     'type' => 'string',
                     'label' => 'preferred'
-                ];*/
+                ];
           }
          }
-        }
         $fields->exchangeArray($newFields);
+     }
     }
     public function onExcelGetDesignation(Event $event, Entity $entity)
     {
@@ -560,6 +563,7 @@ class InstitutionsTable extends ControllerActionTable
         $instituteType = $sheetData['institute_tabs_type'];
         $academicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
         $institutionId = $this->Session->read('Institution.Institutions.id');
+        if($instituteType!='Contact People' && $instituteType!='Shifts'){
         $query
         ->select(['area_code' => 'Areas.code','shift_name' => 'ShiftOptions.name','Owner' => 'Institutions.name','Occupier' => 'Institutions.name','shift_start_time' => 'InstitutionShifts.start_time','shift_end_time' => 'InstitutionShifts.end_time','custom_field_name' =>'InstitutionCustomFields.name','custom_field_value' =>'InstitutionCustomFieldValues.text_value'])
         ->LeftJoin([$this->Areas->alias() => $this->Areas->table()],[
@@ -591,38 +595,45 @@ class InstitutionsTable extends ControllerActionTable
         ->group([
             $this->aliasField('id'),
         ]);
-
+      }
         if($instituteType=='Contact People'){
 
-         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
-               $institutionContactPersons = TableRegistry::get('institution_contact_persons');
-               $result=$this->find()
+             $institutionContactPersons = TableRegistry::get('institution_contact_persons');
+              $res=$query->select([
+                'person'=>$institutionContactPersons->aliasField('contact_person'),
+                'designation'=>$institutionContactPersons->aliasField('designation'),
+                'department'=>$institutionContactPersons->aliasField('department'),
+                'telephone'=>$institutionContactPersons->aliasField('telephone'),
+                'mobile_number'=>$institutionContactPersons->aliasField('mobile_number'),
+                'fax'=>$institutionContactPersons->aliasField('fax'),
+                'email'=>$institutionContactPersons->aliasField('email'),
+                'preferred'=>$institutionContactPersons->aliasField('preferred'),
+
+            ])
                ->leftJoin([$institutionContactPersons->alias() => $institutionContactPersons->table()],[
                 $this->aliasField('id = ').$institutionContactPersons->aliasField('institution_id')
             ])
-               ->where(['institution_id' => $row->id])->toArray();
-              /* $i=0;
-
-               foreach ($result as $key => $value) {
-                  // $row['contacts'][]['contact_person']=$value['contact_person'];
-                  // $row['designation_'.$value->id]=$value['designation'];
-                  // $row['contacts']['department']=$value['department'];
-                  // $row['contacts']['telephone']=$value['telephone'];
-                  // $row['contacts']['mobile_number']=$value['mobile_number'];
-                  // $row['contacts']['fax']=$value['fax'];
-                  // $row['contacts']['email']=$value['email'];
-                  // $row['contacts']['preferred']=$value['preferred'];
-                $row['designation']=$value['designation'];
-               $i++;}
-               // echo "<pre>";
-               // print_r($row); exit;
-               */
-              return $row;
-
+               ->where(['institution_contact_persons.institution_id' => $institutionId]);
               
-            });
-        });
+      }
+      if($instituteType=='Shifts'){
+             $institutionContactPersons = TableRegistry::get('institution_contact_persons');
+              $res=$query->select(['academic_period'=>'AcademicPeriods.name','shift_name' => 'ShiftOptions.name','shift_start_time' => 'InstitutionShifts.start_time','shift_end_time' => 'InstitutionShifts.end_time','Owner' => 'Institutions.name','Occupier' => 'Institutions.name',])
+
+            ->LeftJoin(['InstitutionShifts' => 'institution_shifts'],[
+                $this->aliasField('id').' = InstitutionShifts.institution_id',
+            ])
+            ->LeftJoin([$this->ShiftOptions->alias() => $this->ShiftOptions->table()],[
+            $this->ShiftOptions->aliasField('id').' = ' . $this->InstitutionShifts->aliasField('shift_option_id')
+            ])
+            ->LeftJoin([$this->ShiftOptions->alias() => $this->ShiftOptions->table()],[
+            $this->ShiftOptions->aliasField('id').' = ' . $this->InstitutionShifts->aliasField('shift_option_id')
+            ])
+            ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+            $this->AcademicPeriods->aliasField('id').' = ' . $this->InstitutionShifts->aliasField('academic_period_id')
+            ])
+               ->where(['InstitutionShifts.institution_id' => $institutionId,'InstitutionShifts.academic_period_id' => $academicPeriod]); 
+                    
       }
     }
 
