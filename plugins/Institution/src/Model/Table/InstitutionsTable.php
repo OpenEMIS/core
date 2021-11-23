@@ -383,9 +383,6 @@ class InstitutionsTable extends ControllerActionTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-         // echo "<pre>";
-         // print_r(); exit;
-
         $sheetData = $settings['sheet']['sheetData'];
         $instituteType = $sheetData['institute_tabs_type'];
         $cloneFields = $fields->getArrayCopy();
@@ -495,12 +492,12 @@ class InstitutionsTable extends ControllerActionTable
 
             if ($value['field'] == 'contact_person') {
 
-           /*$newFields[] = [
-                    'key' => 'institution_contact_persons.person',
-                    'field' => 'contact_person',
+           $newFields[] = [
+                    'key' => 'institution_contact_persons.contact_person',
+                    'field' => 'person',
                     'type' => 'string',
                     'label' => 'Contact Person'
-                ];*/
+                ];
             
                $newFields[] = [
                     'key' => 'institution_contact_persons.designation',
@@ -516,20 +513,26 @@ class InstitutionsTable extends ControllerActionTable
                     'label' => 'Department'
                 ];
             $newFields[] = [
-                    'key' => 'institution_contact_persons.telephone',
-                    'field' => 'telephone',
+                    'key' => 'telephone',
+                    'field' => 'tel',
                     'type' => 'string',
                     'label' => 'Telephone'
                 ];
             $newFields[] = [
                     'key' => 'institution_contact_persons.mobile_number',
-                    'field' => 'mobile_number',
+                    'field' => 'mobile_no',
                     'type' => 'string',
-                    'label' => 'mobile_number'
+                    'label' => 'Mobile Number'
+                ];
+            $newFields[] = [
+                    'key' => 'fax',
+                    'field' => 'faxs',
+                    'type' => 'string',
+                    'label' => 'Fax'
                 ];
             $newFields[] = [
                     'key' => 'institution_contact_persons.email',
-                    'field' => 'email',
+                    'field' => 'contact_email',
                     'type' => 'string',
                     'label' => 'Email'
                 ];
@@ -603,10 +606,10 @@ class InstitutionsTable extends ControllerActionTable
                 'person'=>$institutionContactPersons->aliasField('contact_person'),
                 'designation'=>$institutionContactPersons->aliasField('designation'),
                 'department'=>$institutionContactPersons->aliasField('department'),
-                'telephone'=>$institutionContactPersons->aliasField('telephone'),
-                'mobile_number'=>$institutionContactPersons->aliasField('mobile_number'),
-                'fax'=>$institutionContactPersons->aliasField('fax'),
-                'email'=>$institutionContactPersons->aliasField('email'),
+                'tel'=>$institutionContactPersons->aliasField('telephone'),
+                'mobile_no'=>$institutionContactPersons->aliasField('mobile_number'),
+                'faxs'=>$institutionContactPersons->aliasField('fax'),
+                'contact_email'=>$institutionContactPersons->aliasField('email'),
                 'preferred'=>$institutionContactPersons->aliasField('preferred'),
 
             ])
