@@ -18,6 +18,7 @@ use Cake\Core\Configure;
 use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
+use Cake\Utility\Security;
 
 class InstitutionsController extends AppController
 {
@@ -4024,9 +4025,10 @@ class InstitutionsController extends AppController
         echo json_encode($result_array);die;
     }
 
-    public function getEducationGrade($academic_period = null)
+    public function getEducationGrade()
     {
-        $academic_period = 29;//delete it when doing it dynamically
+        $requestData = json_decode($this->request->data(), true);
+        $academic_period = $requestData['academic_periods'];
         $academic_periods = TableRegistry::get('academic_periods');
         $academic_periods_result = $academic_periods
             ->find()
@@ -4036,8 +4038,7 @@ class InstitutionsController extends AppController
         
         $startDate = date('Y-m-d', strtotime($academic_periods_result->start_date));
         $endDate = date('Y-m-d', strtotime($academic_periods_result->end_date));
-        //echo "<pre>"; print_r($academic_periods_result); die;
-
+        
         $institution_grades = TableRegistry::get('institution_grades');
         $institution_grades_result = $institution_grades
             ->find()
@@ -4099,10 +4100,11 @@ class InstitutionsController extends AppController
 
     public function getClassOptions($academic_period = null, $institution_id = null, $grade_id = null)
     {
-        $academic_period = 29;//delete it when doing it dynamically
-        $institution_id = 6;//delete it when doing it dynamically
-        $grade_id = 87;//delete it when doing it dynamically
-        
+        $requestData = json_decode($this->request->data(), true);
+        $academic_period = $requestData['academic_periods'];
+        $grade_id = $requestData['grade_id'];
+        $institution_id = $this->request->session()->read('Institution.Institutions.id');
+
         $institution_classes = TableRegistry::get('institution_classes');
         $institution_classes_result = $institution_classes
             ->find()
@@ -4206,9 +4208,10 @@ class InstitutionsController extends AppController
 
     public function getPositions()
     {
+        $requestData = json_decode($this->request->data(), true);
+        $fte = $requestData['fte'];
+        $startDate = $requestData['startDate'];
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
-        $fte = 0.25;
-        $startDate= '01-11-2021'; 
         $endDate = null;
         if ($endDate == 'null') {
             $endDate = null;
