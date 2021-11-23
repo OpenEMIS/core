@@ -1065,22 +1065,14 @@ class DirectoriesController extends AppController
     public function directoryInternalSearch()
     {
         $this->autoRender = false;
-        $options = [
-            'first_name' => 'aa',
-            'last_name'=> null,
-            'openemis_no'=> null,
-            'identity_number'=> null,
-            'date_of_birth'=> null,
-            'page'=>1,
-            'limit'=>20
-        ];
-        $firstName = (array_key_exists('first_name', $options))? $options['first_name']: null;
-        $lastName = (array_key_exists('last_name', $options))? $options['last_name']: null;
-        $openemisNo = (array_key_exists('openemis_no', $options))? $options['openemis_no']: null;
-        $identityNumber = (array_key_exists('identity_number', $options))? $options['identity_number']: null;
-        $dateOfBirth = (array_key_exists('date_of_birth', $options))? $options['date_of_birth']: null;
-        $limit = $options['limit'];
-        $page = $options['page'];
+        $requestData = json_decode($this->request->data(), true);
+        $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
+        $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
+        $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
+        $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
+        $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? $requestData['date_of_birth']: null;
+        $limit = (array_key_exists('limit', $requestData)) ? $requestData['limit']: 10;
+        $page = (array_key_exists('page', $requestData)) ? $requestData['page']: 1;
 
         $conditions = [];
         $security_users = TableRegistry::get('security_users');
@@ -1099,7 +1091,6 @@ class DirectoriesController extends AppController
         }
         if (!empty($dateOfBirth)) {
             $conditions[$security_users->aliasField('date_of_birth')] = date_create($dateOfBirth)->format('Y-m-d');
-            
         }
 
         if($identityNumber == ''){
@@ -1197,7 +1188,6 @@ class DirectoriesController extends AppController
         }
         
         foreach($security_users_result AS $result){
-
             $MainNationalities_name = !empty($result['MainNationalities_name']) ? $result['MainNationalities_name'] : '';
             $MainIdentityTypes_name = !empty($result['MainIdentityTypes_name']) ? $result['MainIdentityTypes_name'] : '';
             $identity_number = !empty($result['identity_number']) ? $result['identity_number'] : '';
