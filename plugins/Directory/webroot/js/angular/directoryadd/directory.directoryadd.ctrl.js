@@ -51,10 +51,18 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     });
 
     scope.getUniqueOpenEmisId = function() {
-        if(!scope.isGuardianAdding && scope.selectedUserData.openemis_no)
+        if(!scope.isGuardianAdding && scope.selectedUserData.openemis_no){
+            setTimeout(function(){
+                scope.getInternalSearchData();
+            }, 1500);
             return;
-        if(scope.isGuardianAdding && scope.selectedGuardianData.openemis_no)
+        }
+        if(scope.isGuardianAdding && scope.selectedGuardianData.openemis_no){
+            setTimeout(function(){
+                scope.getInternalSearchData();
+            }, 1500);
             return;
+        }
         UtilsSvc.isAppendLoader(true);
         DirectoryaddSvc.getUniqueOpenEmisId()
             .then(function(response) {
@@ -106,7 +114,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                 .then(function(response) {
                     var gridData = response.data;
                     var totalRowCount = gridData.length;
-                    return scope.processUserRecord(gridData, params, totalRowCount);
+                    return scope.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
                     UtilsSvc.isAppendLoader(false);
@@ -117,7 +125,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         scope.internalGridOptions.api.sizeColumnsToFit(); 
     }
 
-    scope.processUserRecord = function(userRecords, params, totalRowCount) {
+    scope.processInternalGridUserRecord = function(userRecords, params, totalRowCount) {
         console.log(userRecords);
 
         var lastRow = totalRowCount;
@@ -129,23 +137,46 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         return userRecords;
     }
 
-    // scope.setGridData = function() {
-    //     if (angular.isDefined(scope.internalGridOptions.api)) {
-    //         // vm.gridOptions.api.setRowData(vm.classStudentList);
-    //         scope.setRowDatas(scope.gridData);
-    //         //  vm.countStudentData();
-     
-    //     }
-    // }
+    scope.getExternalSearchData = function() {
+        var first_name = '';
+        var last_name = '';
+        if(!scope.isGuardianAdding) {
+            first_name = scope.selectedUserData.first_name;
+            last_name = scope.selectedUserData.last_name;
+        } else{
+            first_name = scope.selectedGuardianData.first_name;
+            last_name = scope.selectedGuardianData.last_name;
+        }
+        var dataSource = {
+            pageSize: scope.pageSize,
+            getRows: function (params) {
+                UtilsSvc.isAppendLoader(true);
+                DirectoryaddSvc.getExternalSearchData(first_name, last_name)
+                .then(function(response) {
+                    var gridData = response.data;
+                    var totalRowCount = gridData.length;
+                    return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
+                }, function(error) {
+                    console.log(error);
+                    UtilsSvc.isAppendLoader(false);
+                });
+            }
+        };
+        scope.externalGridOptions.api.setDatasource(dataSource);
+        scope.externalGridOptions.api.sizeColumnsToFit(); 
+    }
 
-    // scope.setRowDatas = function(userList) {
-    //     console.log('studentList controller',userList);
-    //     userList.forEach(function (dataItem, index) {
-    //         dataItem.rowHeight = 60;
-    //     });       
-    //     scope.internalGridOptions.api.setRowData(userList);
-        
-    // }
+    scope.processExternalGridUserRecord = function(userRecords, params, totalRowCount) {
+        console.log(userRecords);
+
+        var lastRow = totalRowCount;
+        scope.rowsThisPage = userRecords;
+
+        params.successCallback(scope.rowsThisPage, lastRow);
+        // scope.externalDataLoaded = true;
+        UtilsSvc.isAppendLoader(false);
+        return userRecords;
+    }
 
     scope.generatePassword = function() {
         UtilsSvc.isAppendLoader(true);
@@ -216,6 +247,28 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         DirectoryaddSvc.getContactTypes()
         .then(function(response) {
             scope.contactTypeOptions = response.data;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error) {
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    scope.getRedirectToGuardian = function(){
+        UtilsSvc.isAppendLoader(true);
+        DirectoryaddSvc.getRedirectToGuardian()
+        .then(function(response) {
+            UtilsSvc.isAppendLoader(false);
+        }, function(error) {
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+    
+    scope.getRelationType = function(){
+        UtilsSvc.isAppendLoader(true);
+        DirectoryaddSvc.getRelationType()
+        .then(function(response) {
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -426,6 +479,10 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                     break;
                 case 'internal_search': 
                     scope.step = 'external_search';
+                    UtilsSvc.isAppendLoader(true);
+                    setTimeout(function(){
+                        scope.getExternalSearchData();
+                    }, 1500);
                     break;
                 case 'external_search': 
                     scope.step = 'confirmation';
@@ -440,6 +497,10 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                     break;
                 case 'internal_search': 
                     scope.guardianStep = 'external_search';
+                    UtilsSvc.isAppendLoader(true);
+                    setTimeout(function(){
+                        scope.getExternalSearchData();
+                    }, 1500);
                     break;
                 case 'external_search': 
                     scope.guardianStep = 'confirmation';
@@ -453,8 +514,10 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     scope.confirmUser = function () {
         scope.message = (scope.selectedUserData && scope.selectedUserData.userType ? scope.selectedUserData.userType.name : 'Student') + ' successfully added.';
         scope.messageClass = 'alert-success';
-        if(!scope.isGuardianAdding)
+        if(!scope.isGuardianAdding){
             scope.step = "summary";
+            scope.getRedirectToGuardian();
+        }
         else
             scope.guardianStep = "summary";
     }
@@ -476,6 +539,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
 
     scope.addGuardian = function () {
         scope.isGuardianAdding = true;
+        scope.getRelationType();
     }
     
     scope.initGrid = function() {
@@ -540,7 +604,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                     {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
-                enableColResize: false,
+                enableColResize: true,
                 enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
@@ -562,9 +626,19 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id);
+                    scope.selectStaff(_e.node.data.id);
                     $scope.$apply();
-                }
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
+                onGridReady: function() {
+                    if (angular.isDefined(scope.externalGridOptions.api)) {
+                        setTimeout(function() {
+                            scope.setGridData();
+                        })
+                    }
+                },
             };
         }, function(error){
             scope.internalGridOptions = {
@@ -599,9 +673,19 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id);
+                    scope.selectStaff(_e.node.data.id);
                     $scope.$apply();
-                }
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
+                onGridReady: function() {
+                    if (angular.isDefined(scope.internalGridOptions.api)) {
+                        setTimeout(function() {
+                            scope.setGridData();
+                        })
+                    }
+                },
             };
 
             scope.externalGridOptions = {
@@ -635,9 +719,19 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id);
+                    scope.selectStaff(_e.node.data.id);
                     $scope.$apply();
-                }
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
+                onGridReady: function() {
+                    if (angular.isDefined(scope.externalGridOptions.api)) {
+                        setTimeout(function() {
+                            scope.setGridData();
+                        })
+                    }
+                },
             };
         });
     };
