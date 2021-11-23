@@ -1063,7 +1063,7 @@ class DirectoriesController extends AppController
     }
 
     public function directoryInternalSearch()
-    {
+    { 
         $this->autoRender = false;
         $requestData = json_decode($this->request->data(), true);
         $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
@@ -1073,6 +1073,7 @@ class DirectoriesController extends AppController
         $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? $requestData['date_of_birth']: null;
         $limit = (array_key_exists('limit', $requestData)) ? $requestData['limit']: 10;
         $page = (array_key_exists('page', $requestData)) ? $requestData['page']: 1;
+        $get_user_id = (array_key_exists('id', $requestData)) ? $requestData['id']: null;
 
         $conditions = [];
         $security_users = TableRegistry::get('security_users');
@@ -1092,7 +1093,11 @@ class DirectoriesController extends AppController
         if (!empty($dateOfBirth)) {
             $conditions[$security_users->aliasField('date_of_birth')] = date_create($dateOfBirth)->format('Y-m-d');
         }
-
+        //it is user for getting single user data
+        if (!empty($get_user_id)) {
+            $conditions[$security_users->aliasField('id')] = $get_user_id;
+        }
+        $totalCount = 0;
         if($identityNumber == ''){
             $security_users_result = $security_users
             ->find()
@@ -1138,6 +1143,9 @@ class DirectoriesController extends AppController
             ->limit($limit)
             ->page($page)
             ->toArray();
+
+            $totalCount = $this->getCountInernalSearch($conditions, $identityNumber);
+
         }else{
             $security_users_result = $security_users
             ->find()
@@ -1185,6 +1193,8 @@ class DirectoriesController extends AppController
             ->limit($limit)
             ->page($page)
             ->toArray();
+
+            $totalCount = $this->getCountInernalSearch($conditions, $identityNumber);
         }
         
         foreach($security_users_result AS $result){
@@ -1192,13 +1202,111 @@ class DirectoriesController extends AppController
             $MainIdentityTypes_name = !empty($result['MainIdentityTypes_name']) ? $result['MainIdentityTypes_name'] : '';
             $identity_number = !empty($result['identity_number']) ? $result['identity_number'] : '';
 
-            $result_array[] = array('openemis_no' => $result['openemis_no'], 'name'=>$result['first_name']." ".$result['last_name'], 'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'), 'gender'=>$result['Genders_name'], 'nationality'=>$MainNationalities_name, 'identity_type'=>$MainIdentityTypes_name, 'identity_number'=>$identity_number);
+            $result_array[] = array('id' => $result['id'],'openemis_no' => $result['openemis_no'], 'name'=>$result['first_name']." ".$result['last_name'], 'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'), 'gender'=>$result['Genders_name'], 'nationality'=>$MainNationalities_name, 'identity_type'=>$MainIdentityTypes_name, 'identity_number'=>$identity_number);
         }
-        echo json_encode($result_array);die;
+        echo json_encode(['data' => $result_array, 'total' => $totalCount], JSON_PRETTY_PRINT); die;
+    }
+
+    public function getCountInernalSearch($conditions = [], $identityNumber){
+        $security_users = TableRegistry::get('security_users');
+        $genders = TableRegistry::get('genders');
+        $mainIdentityTypes = TableRegistry::get('identity_types');
+        $mainNationalities = TableRegistry::get('nationalities');
+        if($identityNumber == ''){
+            $security_users_result = $security_users
+                ->find()
+                ->select([
+                    $security_users->aliasField('id'),
+                    $security_users->aliasField('openemis_no'),
+                    $security_users->aliasField('first_name'),
+                    $security_users->aliasField('middle_name'),
+                    $security_users->aliasField('third_name'),
+                    $security_users->aliasField('last_name'),
+                    $security_users->aliasField('address_area_id'),
+                    $security_users->aliasField('birthplace_area_id'),
+                    $security_users->aliasField('gender_id'),
+                    $security_users->aliasField('date_of_birth'),
+                    $security_users->aliasField('nationality_id'),
+                    $security_users->aliasField('identity_number'),
+                    $security_users->aliasField('super_admin'),
+                    $security_users->aliasField('status'),
+                    $security_users->aliasField('is_student'),
+                    $security_users->aliasField('is_staff'),
+                    $security_users->aliasField('is_guardian'),
+                    'Genders_id'=> $genders->aliasField('id'),
+                    'Genders_name'=> $genders->aliasField('name'),
+                    'MainIdentityTypes_id'=> $mainIdentityTypes->aliasField('id'),
+                    'MainIdentityTypes_name'=> $mainIdentityTypes->aliasField('name'),
+                    'MainNationalities_id'=> $mainNationalities->aliasField('id'),
+                    'MainNationalities_name'=> $mainNationalities->aliasField('name'),
+                ])
+                ->LeftJoin(['Identities' => 'user_identities'],[
+                    'Identities.security_user_id'=> $security_users->aliasField('id'),
+                ])
+                ->LeftJoin([$genders->alias() => $genders->table()], [
+                    $genders->aliasField('id =') . $security_users->aliasField('gender_id')
+                ])
+                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                    $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
+                ])
+                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                    $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
+                ])
+                ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
+                ->group([$security_users->aliasField('id')])
+                ->count();
+        }else{
+            $security_users_result = $security_users
+                ->find()
+                ->select([
+                    $security_users->aliasField('id'),
+                    $security_users->aliasField('openemis_no'),
+                    $security_users->aliasField('first_name'),
+                    $security_users->aliasField('middle_name'),
+                    $security_users->aliasField('third_name'),
+                    $security_users->aliasField('last_name'),
+                    $security_users->aliasField('address_area_id'),
+                    $security_users->aliasField('birthplace_area_id'),
+                    $security_users->aliasField('gender_id'),
+                    $security_users->aliasField('date_of_birth'),
+                    $security_users->aliasField('nationality_id'),
+                    $security_users->aliasField('identity_number'),
+                    $security_users->aliasField('super_admin'),
+                    $security_users->aliasField('status'),
+                    $security_users->aliasField('is_student'),
+                    $security_users->aliasField('is_staff'),
+                    $security_users->aliasField('is_guardian'),
+                    'Genders_id'=> $genders->aliasField('id'),
+                    'Genders_name'=> $genders->aliasField('name'),
+                    'MainIdentityTypes_id'=> $mainIdentityTypes->aliasField('id'),
+                    'MainIdentityTypes_name'=> $mainIdentityTypes->aliasField('name'),
+                    'MainNationalities_id'=> $mainNationalities->aliasField('id'),
+                    'MainNationalities_name'=> $mainNationalities->aliasField('name'),
+                ])
+                ->InnerJoin(['Identities' => 'user_identities'],[
+                    'Identities.security_user_id'=> $security_users->aliasField('id'),
+                    'Identities.number LIKE'=> $identityNumber. '%',
+
+                ])
+                ->LeftJoin([$genders->alias() => $genders->table()], [
+                    $genders->aliasField('id =') . $security_users->aliasField('gender_id')
+                ])
+                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                    $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
+                ])
+                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                    $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
+                ])
+                ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
+                ->group([$security_users->aliasField('id')])
+                ->count();
+        }
+
+        return $security_users_result;
     }
 
     public function directoryExternalSearch()
-    {
+    {   
         $this->autoRender = false;
         $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
         $attributes = $ExternalAttributes
@@ -1212,25 +1320,34 @@ class DirectoriesController extends AppController
             ])
             ->toArray();
         
-
         $clientId = $attributes['client_id'];
         $scope = $attributes['scope'];
         $tokenUri = $attributes['token_uri'];
         $privateKey = $attributes['private_key'];
         $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
-
+ 
         $data = [
             'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
             'assertion' => $token
         ];
+        
+        $requestData = json_decode($this->request->data(), true);
+        $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
+        $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
+        $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
+        $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
+        $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
+        $limit = (array_key_exists('limit', $requestData)) ? $requestData['limit']: 10;
+        $page = (array_key_exists('page', $requestData)) ? $requestData['page']: 1;
+        $id = (array_key_exists('id', $requestData)) ? $requestData['id']: '';
 
         $fieldMapping = [
-            '{page}' => $this->request->query('page'),
-            '{limit}' => $this->request->query('limit'),
-            '{first_name}' => $this->request->query('first_name'),
-            '{last_name}' => $this->request->query('last_name'),
-            '{date_of_birth}' => $this->request->query('date_of_birth'),
-            '{identity_number}' => $this->request->query('identity_number')
+            '{page}' => $page,
+            '{limit}' => $limit,
+            '{first_name}' => $firstName,
+            '{last_name}' => $lastName,
+            '{date_of_birth}' => $dateOfBirth,
+            '{identity_number}' => $identityNumber
         ];
         $http = new Client();
         $response = $http->post($attributes['token_uri'], $data);
@@ -1257,6 +1374,18 @@ class DirectoriesController extends AppController
         } else {
             $this->response->body($noData);
         }
+
+        if(!empty($id)){
+            $mydata = json_decode(new Response(['body' => $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT))]));
+            $singleUserData = [];
+            foreach ($mydata->data as $key => $value) {
+                if($value->id == $id){
+                    $singleUserData['data'][] = $value;
+                }
+            }
+            return new Response(['body' => $this->response->body(json_encode($singleUserData, JSON_PRETTY_PRINT))]);
+        }
+
         return new Response(['body' => $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT))]);
     }
 
@@ -1272,4 +1401,31 @@ class DirectoriesController extends AppController
         }
         echo json_encode($result_array);die;
     }
+
+    //POCOR-5673 starts
+    public function getRedirectToGuardian()
+    {
+        $config_items = TableRegistry::get('config_items');
+        $config_items_result = $config_items
+            ->find()
+            ->where(['code' => 'RedirectToGuardian'])
+            ->toArray();
+        foreach($config_items_result AS $result){
+            $result_array[] = array("redirecttoguardian_status" => $result['value']);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getRelationshipType()
+    {
+        $guardian_relations = TableRegistry::get('guardian_relations');
+        $guardian_relations_result = $guardian_relations
+            ->find()
+            ->where(['visible' => 1])
+            ->toArray();
+        foreach($guardian_relations_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+        }
+        echo json_encode($result_array);die;
+    }//POCOR-5673 ends
 }
