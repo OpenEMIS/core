@@ -4189,6 +4189,20 @@ class InstitutionsController extends AppController
         $academic_period_id = !empty($academic_periods_result) ? $academic_periods_result->id : 0;
         
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        /*$encodedInstitution = '';
+        if(!empty($institutionId)){
+            $params = [];
+            $params['id'] = $institutionId;
+            $sessionId = Security::hash('session_id', 'sha256');
+            $params[$sessionId] = session_id();
+            $jsonParam = json_encode($params);
+            $base64Param = str_replace('=', '', strtr(base64_encode($jsonParam), '+/', '-_'));
+            $signature = Security::hash($jsonParam, 'sha256', true);
+            $base64Signature = str_replace('=', '', strtr(base64_encode($signature), '+/', '-_'));
+            $encodedInstitution = "$base64Param.$base64Signature";
+        }
+        $result_array['encodedInstitution'] = $encodedInstitution;
+        */
         $shift =  TableRegistry::get('Institution.InstitutionShifts');
         $shiftData = $shift->find('all',
                             [ 'contain' => [
@@ -4204,7 +4218,8 @@ class InstitutionsController extends AppController
                 $result_array[] = array("id" => $val['id'], "name" => $val->shift_option->name);
             }
         }
-    
+        
+        
         echo json_encode($result_array);die;
     }
 
@@ -4222,14 +4237,12 @@ class InstitutionsController extends AppController
         echo $result; die;
     }
 
-    public function getSaveStudentsData()
+    public function postSaveStudentsData()
     {
         $this->autoRender = false;
-        //$requestData = json_decode($this->request->data(), true);
-        $requestData = json_decode('{"openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021","end_date":"31-12-2021","institution_class_id":"524","student_status_id":1}', true);
+        $requestData = json_decode($this->request->data(), true);
+        /*$requestData = json_decode('{"openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021","end_date":"31-12-2021","institution_class_id":"524","student_status_id":1}', true);*/
         
-        //echo "<pre>"; print_r(); die;
-
         if(!empty($requestData)){
             $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
             $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
@@ -4373,22 +4386,26 @@ class InstitutionsController extends AppController
                     $InstitutionStudentsResult = $InstitutionStudents->save($entityStudentsData);
                 }
 
-                /*$workflows = TableRegistry::get('workflows');
+                $workflows = TableRegistry::get('workflows');
                 $workflowSteps = TableRegistry::get('workflow_steps');
 
-                $workflows = $workflows->find()
+                $workflowResults = $workflows->find()
+                            ->select(['workflowSteps_id'=>$workflowSteps->aliasField('id')])
                             ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
-                                $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id')
-                                $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id')
-                            ]);*/
-
-                if(!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionClassId)){
+                                $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                                $workflowSteps->aliasField('name')=> 'Approved'
+                            ])
+                            ->where([
+                                $workflows->aliasField('name') => 'Student Admission'
+                            ])
+                            ->first();          
+                if(!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionClassId) && !empty($workflowResults)){
                     $institutionStudentAdmission = TableRegistry::get('institution_student_admission');
                     $entityAdmissionData = [
                         'start_date' => $startDate,
                         'end_date' => $endDate,
                         'student_id' => $user_record_id,
-                        'status_id' => 82, //static value for now
+                        'status_id' => $workflowResults->workflowSteps_id, 
                         'assignee_id' => 0,
                         'institution_id' => $institutionId,
                         'academic_period_id' => $academicPeriodId,
@@ -4490,9 +4507,10 @@ class InstitutionsController extends AppController
                         }
                     }        
                 }
+            }else{
+                return false;
             }
         }
-        echo "done"; die;
-        //echo "<pre>"; print_r($user_nationalitiesResult); die;
+        return true;
     }
 }
