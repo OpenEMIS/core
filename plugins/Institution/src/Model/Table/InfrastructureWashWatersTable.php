@@ -160,8 +160,8 @@ class InfrastructureWashWatersTable extends ControllerActionTable
             $extraField[] = ["key" => "", "field" => "water_accessbility", "type" => "integer", "label" => "Accessibility"];
             $extraField[] = ["key" => "", "field" => "institutions_name", "type" => "integer", "label" => "Institution Name"];
             $extraField[] = ["key" => "", "field" => "institutions_code", "type" => "integer", "label" => "Institution Code"];
-            $extraField[] = ["key" => "", "field" => "area_administratives_name", "type" => "integer", "label" => "Area Administratives"];
-            $extraField[] = ["key" => "", "field" => "area_name", "type" => "integer", "label" => "Area"];
+            $extraField[] = ["key" => "", "field" => "area_administratives_name", "type" => "integer", "label" => "Area Administration"];
+            $extraField[] = ["key" => "", "field" => "area_name", "type" => "integer", "label" => "Area Education"];
         }
         if ($infrastructureType == 'Sanitation')
         {
@@ -181,10 +181,8 @@ class InfrastructureWashWatersTable extends ControllerActionTable
 
             $extraField[] = ["key" => "", "field" => "institutions_name", "type" => "integer", "label" => "Institution Name"];
             $extraField[] = ["key" => "", "field" => "institutions_code", "type" => "integer", "label" => "Institution Code"];
-            $extraField[] = ["key" => "", "field" => "area_administratives_name", "type" => "integer", "label" => "Area Administratives"];
-            $extraField[] = ["key" => "", "field" => "area_name", "type" => "integer", "label" => "Area"];
-
-            $fields->exchangeArray($extraField);
+            $extraField[] = ["key" => "", "field" => "area_administratives_name", "type" => "integer", "label" => "Area Administration"];
+            $extraField[] = ["key" => "", "field" => "area_name", "type" => "integer", "label" => "Area Education"];
 
         }
         if ($infrastructureType == 'Hygiene')
@@ -197,10 +195,9 @@ class InfrastructureWashWatersTable extends ControllerActionTable
             $extraField[] = ["key" => "", "field" => "hygeine_total_mixed", "type" => "string", "label" => "Total Mixed"];
             $extraField[] = ["key" => "", "field" => "institutions_name", "type" => "integer", "label" => "Institution Name"];
             $extraField[] = ["key" => "", "field" => "institutions_code", "type" => "integer", "label" => "Institution Code"];
-            $extraField[] = ["key" => "", "field" => "area_administratives_name", "type" => "integer", "label" => "Area Administratives"];
-            $extraField[] = ["key" => "", "field" => "area_name", "type" => "integer", "label" => "Area"];
+            $extraField[] = ["key" => "", "field" => "area_administratives_name", "type" => "integer", "label" => "Area Administration"];
+            $extraField[] = ["key" => "", "field" => "area_name", "type" => "integer", "label" => "Area Education"];
 
-            $fields->exchangeArray($extraField);
         }
         if ($infrastructureType == 'Waste')
         {
@@ -208,9 +205,8 @@ class InfrastructureWashWatersTable extends ControllerActionTable
             $extraField[] = ["key" => "", "field" => "waste_functionality", "type" => "string", "label" => "Functionality"];
             $extraField[] = ["key" => "", "field" => "institutions_name", "type" => "integer", "label" => "Institution Name"];
             $extraField[] = ["key" => "", "field" => "institutions_code", "type" => "integer", "label" => "Institution Code"];
-            $extraField[] = ["key" => "", "field" => "area_administratives_name", "type" => "integer", "label" => "Area Administratives"];
-            $extraField[] = ["key" => "", "field" => "area_name", "type" => "integer", "label" => "Area"];
-            $fields->exchangeArray($extraField);
+            $extraField[] = ["key" => "", "field" => "area_administratives_name", "type" => "integer", "label" => "Area Administration"];
+            $extraField[] = ["key" => "", "field" => "area_name", "type" => "integer", "label" => "Area Education"];
         }
         if ($infrastructureType == 'Sewage')
         {
@@ -218,10 +214,11 @@ class InfrastructureWashWatersTable extends ControllerActionTable
             $extraField[] = ["key" => "", "field" => "sewage_functionality", "type" => "string", "label" => "Functionality"];
             $extraField[] = ["key" => "", "field" => "institutions_name", "type" => "integer", "label" => "Institution Name"];
             $extraField[] = ["key" => "", "field" => "institutions_code", "type" => "integer", "label" => "Institution Code"];
-            $extraField[] = ["key" => "", "field" => "area_administratives_name", "type" => "integer", "label" => "Area Administratives"];
-            $extraField[] = ["key" => "", "field" => "area_name", "type" => "integer", "label" => "Area"];
-            $fields->exchangeArray($extraField);
+            $extraField[] = ["key" => "", "field" => "area_administratives_name", "type" => "integer", "label" => "Area Administration"];
+            $extraField[] = ["key" => "", "field" => "area_name", "type" => "integer", "label" => "Area Education"];
+            
         }
+        $fields->exchangeArray($extraField);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
