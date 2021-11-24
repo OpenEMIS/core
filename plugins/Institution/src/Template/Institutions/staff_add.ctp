@@ -62,7 +62,7 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
         <div class="actions top">
             <button
                 ng-if="(InstitutionStaffController.step=='user_details')"
-                type="button" class="btn close-btn" ng-click="cancelProcess()">Cancel</button>
+                type="button" class="btn close-btn" ng-click="InstitutionStaffController.cancelProcess()">Cancel</button>
             <button
                 ng-if="(InstitutionStaffController.step!=='user_details' && InstitutionStaffController.step!=='summary')"
                 type="button" class="btn btn-prev close-btn" ng-click="InstitutionStaffController.goToPrevStep()">Back</button>
