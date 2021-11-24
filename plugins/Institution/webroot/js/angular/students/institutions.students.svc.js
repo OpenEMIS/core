@@ -54,7 +54,10 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         translate: translate,
         getStudentTransferReasons: getStudentTransferReasons,
         getInternalSearchData: getInternalSearchData,
-        getExternalSearchData: getExternalSearchData
+        getExternalSearchData: getExternalSearchData,
+        getRedirectToGuardian: getRedirectToGuardian,
+        getRelationType: getRelationType,
+        saveStudentDetails: saveStudentDetails,
     };
 
     var models = {
@@ -152,6 +155,42 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         });
         return deferred.promise;
     };
+
+    function getRelationType() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getRelationshipType';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getRedirectToGuardian() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getRedirectToGuardian';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function saveStudentDetails(params) {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getRedirectToGuardian';
+        $http.post(url, params)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
 
     function getExternalStudentRecords(options) {
         var deferred = $q.defer();
@@ -704,7 +743,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getEducationGrades(academic_period) {
         var params = {
-            academic_period: academic_period
+            academic_periods: academic_period
         };
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/getEducationGrade';
