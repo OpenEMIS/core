@@ -4227,6 +4227,8 @@ class InstitutionsController extends AppController
         $this->autoRender = false;
         //$requestData = json_decode($this->request->data(), true);
         $requestData = json_decode('{"openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021","end_date":"31-12-2021","institution_class_id":"524","student_status_id":1}', true);
+        
+        //echo "<pre>"; print_r(); die;
 
         if(!empty($requestData)){
             $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
@@ -4278,7 +4280,10 @@ class InstitutionsController extends AppController
                         $ConfigItems->aliasField('type') => 'System'
                     ])
                     ->first();
-            
+            //get Student Status List        
+            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+            $statuses = $StudentStatuses->findCodeList();
+        
             $SecurityUsers = TableRegistry::get('security_users');
             $entityData = [
                 'openemis_no' => $openemisNo,
@@ -4304,7 +4309,6 @@ class InstitutionsController extends AppController
             //save in security_users table
             $entity = $SecurityUsers->newEntity($entityData);
             $SecurityUserResult = $SecurityUsers->save($entity);
-            //echo "<pre>"; print_r($SecurityUserResult); die;
             if($SecurityUserResult){
                 $user_record_id=$SecurityUserResult->id;
                 if(!empty($nationalityId)){
@@ -4369,6 +4373,15 @@ class InstitutionsController extends AppController
                     $InstitutionStudentsResult = $InstitutionStudents->save($entityStudentsData);
                 }
 
+                /*$workflows = TableRegistry::get('workflows');
+                $workflowSteps = TableRegistry::get('workflow_steps');
+
+                $workflows = $workflows->find()
+                            ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
+                                $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id')
+                                $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id')
+                            ]);*/
+
                 if(!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionClassId)){
                     $institutionStudentAdmission = TableRegistry::get('institution_student_admission');
                     $entityAdmissionData = [
@@ -4398,7 +4411,7 @@ class InstitutionsController extends AppController
                         'education_grade_id' => $educationGradeId,
                         'academic_period_id' => $academicPeriodId,
                         'institution_id' => $institutionId,
-                        'student_status_id' => 1, 
+                        'student_status_id' => $statuses['CURRENT'], 
                         'created_user_id' => $userId,
                         'created' => date('y-m-d H:i:s')
                     ];
@@ -4464,7 +4477,7 @@ class InstitutionsController extends AppController
                                 'academic_period_id' => $academicPeriodId,
                                 'education_subject_id' => $sval->education_subject_id,
                                 'education_grade_id' => $educationGradeId,
-                                'student_status_id' => 1,
+                                'student_status_id' => $statuses['CURRENT'],
                                 'created_user_id' => $userId,
                                 'created' => date('y-m-d H:i:s')
                             ];

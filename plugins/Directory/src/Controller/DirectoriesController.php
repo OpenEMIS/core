@@ -310,6 +310,11 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historical.HistoricalStaffLeave']);
     }
+    public function Addguardian()
+    {
+        $this->attachAngularModulesForDirectory();
+        $this->set('ngController', 'DirectoryaddguardianCtrl as $ctrl');
+    }
     // End
 
     // AngularJS
@@ -404,11 +409,20 @@ class DirectoriesController extends AppController
     private function attachAngularModulesForDirectory()
     {
         $action = $this->request->pass[0];
+        if($action == ''){
+            $action = $this->request->params['action'];
+        }
         switch ($action) {
             case 'add':
                 $this->Angular->addModules([
                     'directory.directoryadd.ctrl',
                     'directory.directoryadd.svc'
+                ]);
+                break;
+            case 'Addguardian':
+                $this->Angular->addModules([
+                    'directory.directoryaddguardian.ctrl',
+                    'directory.directoryaddguardian.svc'
                 ]);
                 break;
         }
