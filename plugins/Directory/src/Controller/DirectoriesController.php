@@ -1103,11 +1103,23 @@ class DirectoriesController extends AppController
             ->find()
             ->select([
                 $security_users->aliasField('id'),
+                $security_users->aliasField('username'),
+                $security_users->aliasField('password'),
                 $security_users->aliasField('openemis_no'),
                 $security_users->aliasField('first_name'),
                 $security_users->aliasField('middle_name'),
                 $security_users->aliasField('third_name'),
                 $security_users->aliasField('last_name'),
+                $security_users->aliasField('preferred_name'),
+                $security_users->aliasField('email'),
+                $security_users->aliasField('address'),
+                $security_users->aliasField('postal_code'),
+                $security_users->aliasField('date_of_death'),
+                $security_users->aliasField('external_reference'),
+                $security_users->aliasField('last_login'),
+                $security_users->aliasField('photo_name'),
+                $security_users->aliasField('photo_content'),
+                $security_users->aliasField('preferred_language'),
                 $security_users->aliasField('address_area_id'),
                 $security_users->aliasField('birthplace_area_id'),
                 $security_users->aliasField('gender_id'),
@@ -1151,11 +1163,23 @@ class DirectoriesController extends AppController
             ->find()
             ->select([
                 $security_users->aliasField('id'),
+                $security_users->aliasField('username'),
+                $security_users->aliasField('password'),
                 $security_users->aliasField('openemis_no'),
                 $security_users->aliasField('first_name'),
                 $security_users->aliasField('middle_name'),
                 $security_users->aliasField('third_name'),
                 $security_users->aliasField('last_name'),
+                $security_users->aliasField('preferred_name'),
+                $security_users->aliasField('email'),
+                $security_users->aliasField('address'),
+                $security_users->aliasField('postal_code'),
+                $security_users->aliasField('date_of_death'),
+                $security_users->aliasField('external_reference'),
+                $security_users->aliasField('last_login'),
+                $security_users->aliasField('photo_name'),
+                $security_users->aliasField('photo_content'),
+                $security_users->aliasField('preferred_language'),
                 $security_users->aliasField('address_area_id'),
                 $security_users->aliasField('birthplace_area_id'),
                 $security_users->aliasField('gender_id'),
@@ -1198,11 +1222,19 @@ class DirectoriesController extends AppController
         }
         
         foreach($security_users_result AS $result){
+            $MainNationalities_id = !empty($result['MainNationalities_id']) ? $result['MainNationalities_id'] : '';
             $MainNationalities_name = !empty($result['MainNationalities_name']) ? $result['MainNationalities_name'] : '';
+            $MainIdentityTypes_id = !empty($result['MainIdentityTypes_id']) ? $result['MainIdentityTypes_id'] : '';
             $MainIdentityTypes_name = !empty($result['MainIdentityTypes_name']) ? $result['MainIdentityTypes_name'] : '';
             $identity_number = !empty($result['identity_number']) ? $result['identity_number'] : '';
 
-            $result_array[] = array('id' => $result['id'],'openemis_no' => $result['openemis_no'], 'name'=>$result['first_name']." ".$result['last_name'], 'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'), 'gender'=>$result['Genders_name'], 'nationality'=>$MainNationalities_name, 'identity_type'=>$MainIdentityTypes_name, 'identity_number'=>$identity_number);
+            $UserNeeds = TableRegistry::get('user_special_needs_assessments');
+            $SpecialNeeds = $UserNeeds->find()
+                            ->where([$UserNeeds->aliasField('security_user_id') => $result['id']])
+                            ->count();
+            $has_special_needs = ($SpecialNeeds == 1) ? true : false;
+
+            $result_array[] = array('id' => $result['id'],'username' => $result['username'],'password' => $result['password'],'openemis_no' => $result['openemis_no'],'first_name' => $result['first_name'],'middle_name' => $result['middle_name'],'third_name' => $result['third_name'],'last_name' => $result['last_name'],'preferred_name' => $result['preferred_name'],'email' => $result['email'],'address' => $result['address'],'postal_code' => $result['postal_code'],'gender_id' => $result['gender_id'],'external_reference' => $result['external_reference'],'last_login' => $result['last_login'],'photo_name' => $result['photo_name'],'photo_content' => $result['photo_content'],'preferred_language' => $result['preferred_language'],'address_area_id' => $result['address_area_id'],'birthplace_area_id' => $result['birthplace_area_id'],'super_admin' => $result['super_admin'],'status' => $result['status'],'is_student' => $result['is_student'],'is_staff' => $result['is_staff'],'is_guardian' => $result['is_guardian'],'name'=>$result['first_name']." ".$result['last_name'],'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'),'gender'=>$result['Genders_name'],'nationality_id'=>$MainNationalities_id,'nationality'=>$MainNationalities_name,'identity_type_id'=>$MainIdentityTypes_id,'identity_type'=>$MainIdentityTypes_name,'identity_number'=>$identity_number,'has_special_needs'=>$has_special_needs);
         }
         echo json_encode(['data' => $result_array, 'total' => $totalCount], JSON_PRETTY_PRINT); die;
     }
