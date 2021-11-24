@@ -4226,9 +4226,7 @@ class InstitutionsController extends AppController
     {
         $this->autoRender = false;
         //$requestData = json_decode($this->request->data(), true);
-        
-        $requestData = json_decode('{"openemis_no":"1522272226111","first_name":"AAA","middle_name":"","third_name":"","last_name":"Endicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"aaa111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021", "end_date":"31-12-2021","institution_class_id":"524"}', true);
-
+        $requestData = json_decode('{"openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021","end_date":"31-12-2021","institution_class_id":"524","student_status_id":1}', true);
 
         if(!empty($requestData)){
             $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
@@ -4271,7 +4269,7 @@ class InstitutionsController extends AppController
                 $startYear = $periods->start_year;
                 $endYear = $periods->end_year;
             }
-            
+
             //get prefered language
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
             $pref_lang = $ConfigItems->find()
@@ -4306,6 +4304,7 @@ class InstitutionsController extends AppController
             //save in security_users table
             $entity = $SecurityUsers->newEntity($entityData);
             $SecurityUserResult = $SecurityUsers->save($entity);
+            //echo "<pre>"; print_r($SecurityUserResult); die;
             if($SecurityUserResult){
                 $user_record_id=$SecurityUserResult->id;
                 if(!empty($nationalityId)){
@@ -4338,8 +4337,8 @@ class InstitutionsController extends AppController
                     $UserIdentities = TableRegistry::get('user_identities');
                     $entityIdentitiesData = [
                         'identity_type_id' => $identityTypeId,
-                        'number' => $nationalityId,
-                        'nationality_id' => $identityNumber,
+                        'number' => $identityNumber,
+                        'nationality_id' => $nationalityId,
                         'security_user_id' => $user_record_id,
                         'created_user_id' => $userId,
                         'created' => date('y-m-d H:i:s')
@@ -4409,11 +4408,78 @@ class InstitutionsController extends AppController
                 }
 
                 if(!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionClassId)){
+                    $institutionClassSubjects = TableRegistry::get('institution_class_subjects');
+                    $institutionSubjects = TableRegistry::get('institution_subjects');
+                    $SubjectsResult = $institutionClassSubjects
+                        ->find()
+                        ->select([
+                            $institutionClassSubjects->aliasField('institution_class_id'),
+                            $institutionClassSubjects->aliasField('institution_subject_id'),
+                            'name' => $institutionSubjects->aliasField('name'),
+                            'institution_id' => $institutionSubjects->aliasField('institution_id'),
+                            'education_grade_id' => $institutionSubjects->aliasField('education_grade_id'),
+                            'education_subject_id' => $institutionSubjects->aliasField('education_subject_id'),
+                            'academic_period_id' => $institutionSubjects->aliasField('academic_period_id'),
+                        ])
+                        ->LeftJoin([$institutionSubjects->alias() => $institutionSubjects->table()], [
+                            $institutionSubjects->aliasField('id =') . $institutionClassSubjects->aliasField('institution_subject_id')
+                        ])
+                        ->where([
+                            $institutionClassSubjects->aliasField('institution_class_id') => $institutionClassId
+                        ])
+                        ->toArray();
+                       
+                    if(!empty($SubjectsResult)){
+                        $institutionSubjectStudents = TableRegistry::get('institution_subject_students');
+                        foreach ($SubjectsResult as $skey => $sval) {
+                            $primaryKey = $institutionSubjectStudents->primaryKey();
+                            $hashString = [];
+                            foreach ($primaryKey as $key) {
+                                if($key == 'student_id'){
+                                    $hashString[] = $user_record_id;
+                                }
+                                if($key == 'institution_class_id'){
+                                    $hashString[] = $institutionClassId;
+                                }
+                                if($key == 'academic_period_id'){
+                                    $hashString[] = $academicPeriodId;
+                                }
+                                if($key == 'education_grade_id'){
+                                    $hashString[] = $educationGradeId;
+                                }
+                                if($key == 'institution_id'){
+                                    $hashString[] = $institutionId;
+                                }
+                                if($key == 'education_subject_id'){
+                                    $hashString[] = $sval->education_subject_id;
+                                }
+                            }
+                            
+                            $entitySubjectsData = [
+                                'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                                'student_id' => $user_record_id,
+                                'institution_subject_id' => $sval->institution_subject_id,
+                                'institution_class_id' => $institutionClassId,
+                                'institution_id' => $institutionId,
+                                'academic_period_id' => $academicPeriodId,
+                                'education_subject_id' => $sval->education_subject_id,
+                                'education_grade_id' => $educationGradeId,
+                                'student_status_id' => 1,
+                                'created_user_id' => $userId,
+                                'created' => date('y-m-d H:i:s')
+                            ];
+                            //save in institution_subject_students table
+                            $entitySubjectsData = $institutionSubjectStudents->newEntity($entitySubjectsData);
+                            $institutionSubjectStudentsResult = $institutionSubjectStudents->save($entitySubjectsData);
 
+                            unset($entitySubjectsData);
+                            unset($hashString);
+                        }
+                    }        
                 }
-                
             }
         }
-        echo "<pre>"; print_r($user_nationalitiesResult); die;
+        echo "done"; die;
+        //echo "<pre>"; print_r($user_nationalitiesResult); die;
     }
 }
