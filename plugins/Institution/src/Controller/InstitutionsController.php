@@ -4029,6 +4029,7 @@ class InstitutionsController extends AppController
     public function getEducationGrade()
     {
         $requestData = json_decode($this->request->data(), true);
+        $institution_id = $this->request->session()->read('Institution.Institutions.id');
         $academic_period = $requestData['academic_periods'];
         $academic_periods = TableRegistry::get('academic_periods');
         $academic_periods_result = $academic_periods
@@ -4064,8 +4065,8 @@ class InstitutionsController extends AppController
                 'EducationSystems.id = EducationLevels.education_system_id'
             ])
             ->where([
-                $institution_grades->aliasField('institution_id') => 6,
-                'EducationSystems.academic_period_id' => 29,
+                $institution_grades->aliasField('institution_id') => $institution_id,
+                'EducationSystems.academic_period_id' => $academic_period,
                 'OR'=>[
                     'OR' => [
                         [
@@ -4226,7 +4227,7 @@ class InstitutionsController extends AppController
         $this->autoRender = false;
         //$requestData = json_decode($this->request->data(), true);
         
-        $requestData = json_decode('{"openemis_no":"1522272226111","first_name":"AAA","middle_name":"","third_name":"","last_name":"Endicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"aaa111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","education_grade_id":"30", "start_date":"01-01-2021", "end_date":"31-12-2021"}', true);
+        $requestData = json_decode('{"openemis_no":"1522272226111","first_name":"AAA","middle_name":"","third_name":"","last_name":"Endicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"aaa111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021", "end_date":"31-12-2021","institution_class_id":"524"}', true);
 
 
         if(!empty($requestData)){
@@ -4248,6 +4249,7 @@ class InstitutionsController extends AppController
             $addressAreaId = (array_key_exists('address_area_id', $requestData))? $requestData['address_area_id'] : null;
             $identityTypeId = (array_key_exists('identity_type_id', $requestData))? $requestData['identity_type_id'] : null;
             
+            $institutionClassId = (array_key_exists('institution_class_id', $requestData))? $requestData['institution_class_id'] : null;
             $educationGradeId = (array_key_exists('education_grade_id', $requestData))? $requestData['education_grade_id'] : null;
             $academicPeriodId = (array_key_exists('academic_period_id', $requestData))? $requestData['academic_period_id'] : null;
             $startDate = (array_key_exists('start_date', $requestData))? date('y-m-d', strtotime($requestData['start_date'])) : null;
@@ -4363,9 +4365,51 @@ class InstitutionsController extends AppController
                         'created_user_id' => $userId,
                         'created' => date('y-m-d H:i:s')
                     ];
-                    //save in user_identities table
+                    //save in institution_students table
                     $entityStudentsData = $InstitutionStudents->newEntity($entityStudentsData);
                     $InstitutionStudentsResult = $InstitutionStudents->save($entityStudentsData);
+                }
+
+                if(!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionClassId)){
+                    $institutionStudentAdmission = TableRegistry::get('institution_student_admission');
+                    $entityAdmissionData = [
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'student_id' => $user_record_id,
+                        'status_id' => 82, //static value for now
+                        'assignee_id' => 0,
+                        'institution_id' => $institutionId,
+                        'academic_period_id' => $academicPeriodId,
+                        'education_grade_id' => $educationGradeId,
+                        'institution_class_id' => $institutionClassId,
+                        'created_user_id' => $userId,
+                        'created' => date('y-m-d H:i:s')
+                    ];
+                    //save in institution_student_admission table
+                    $entityAdmissionData = $institutionStudentAdmission->newEntity($entityAdmissionData);
+                    $InstitutionAdmissionResult = $institutionStudentAdmission->save($entityAdmissionData);
+                }
+
+                if(!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionClassId)){
+                    $institutionClassStudents = TableRegistry::get('institution_class_students');
+                    $entityAdmissionData = [
+                        'id' => Text::uuid(),
+                        'student_id' => $user_record_id,
+                        'institution_class_id' => $institutionClassId,
+                        'education_grade_id' => $educationGradeId,
+                        'academic_period_id' => $academicPeriodId,
+                        'institution_id' => $institutionId,
+                        'student_status_id' => 1, 
+                        'created_user_id' => $userId,
+                        'created' => date('y-m-d H:i:s')
+                    ];
+                    //save in institution_class_students table
+                    $entityClassData = $institutionClassStudents->newEntity($entityAdmissionData);
+                    $InstitutionClassResult = $institutionClassStudents->save($entityClassData);
+                }
+
+                if(!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionClassId)){
+
                 }
                 
             }
