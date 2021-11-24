@@ -99,7 +99,9 @@ class FieldOptionComponent extends Component
         'TrainingPriorities' => ['className' => 'Training.TrainingPriorities', 'parent' => 'Training'],
         'TrainingProviders' => ['className' => 'Training.TrainingProviders', 'parent' => 'Training'],
         'TrainingRequirements' => ['className' => 'Training.TrainingRequirements', 'parent' => 'Training'],
+        /* START: POCOR-6391
         'TrainingResultTypes' => ['className' => 'Training.TrainingResultTypes', 'parent' => 'Training'],
+        /* END: POCOR-6391  */
         'TrainingSpecialisations' => ['className' => 'Training.TrainingSpecialisations', 'parent' => 'Training'],
         'TrainingCourseCategories' => ['className' => 'Training.TrainingCourseCategories', 'parent' => 'Training'],//POCOR-5695 add Training Courses Categories
 

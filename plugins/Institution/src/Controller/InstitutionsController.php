@@ -4082,4 +4082,17 @@ class InstitutionsController extends AppController
         return $data;
      }
 
+    /*POCOR-6264 starts*/
+    public function Lands()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Lands']);
+    }
+    /*POCOR-6264 ends*/
+
+    //  POCOR-6130 export
+    public function StudentUserExport()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUserExport']);
+    }
+
 }

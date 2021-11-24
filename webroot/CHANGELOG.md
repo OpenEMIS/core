@@ -1,3 +1,27 @@
+### [3.71.1] - 2021-11-18
+- Implemented: Add Export button function - Institutions > Students > Student1 (include grades classes assessment item results and absences)
+- Implemented: Implement placeholder in assessment report template for area administrative name
+- Bug Fixed: Administration>Security>Roles: Permission for student transition is missing under Directory Tab
+- Bug Fixed: Institutions>Academic>Subjects:Subjects with duplicated names can be added
+- Bug Fixed: Administrations > Training > Results : System should display the Result types
+- Bug Fixed: Institutions > Staff > Training > Results: 404 Error is given when trying to access Institutions -> Staff -> Training -> Results.
+- Bug Fixed: Staff>Home Page: User Completeness is not reflecting correctly
+- Bug Fixed: Institutions>Students: Students that are repeated should show repeated not promoted
+- Bug Fixed: Report > Institutions > Students > Export : Custom fields (dropdown/checkboxes) results are not showing in export file
+- Bug Fixed: Institutions > Performance > Assessments > Results : To provide queries for subject teachers and principal when accessing assessment > results page
+
+### [3.71.0] - 2021-11-13
+- Implemented: Improvement of the "Undo" operations linked to the basic student workflow procedures
+- Implemented: Add Export button function - Institutions > General > Calendar
+- Implemented: Update Export button function - Institutions > Staff (include custom fields phone number identity types)
+- Bug Fixed: Institutions>Infrastructure>Overview: Add the available custom fields to the report
+- Bug Fixed: Administration > Meals: When adding a programme, add fields for the beneficiary Field Directorates and the beneficiary institutions.
+- Bug Fixed: Institution > Meals > Students: Ask the user to choose if the meal is received or not
+- Bug Fixed: Institutions > Students > Export : Custom fields (dropdown/checkboxes) results are not showing in export file
+- Bug Fixed: Report>Institution>Infrastructure: Custom fields not showing properly
+- Bug Fixed: Institutions/ Directory > User 1 > Identities : Clicking Add Identities will return a 404 error
+- Bug Fixed: Institution/Directory > User 1 > Nationalities: Getting 404 Error
+
 ### [3.70.5] - 2021-11-05
 - Implemented: Add Export button function - Institutions > Students > Student1 > Special Needs (include all tabs)
 - Implemented: Add Export button function - Institutions > Staff > Staff1 > Training (include all tabs)
