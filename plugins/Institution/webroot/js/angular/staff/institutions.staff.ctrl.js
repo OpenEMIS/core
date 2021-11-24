@@ -442,7 +442,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function cancelProcess() {
-        location.href = angular.baseUrl + '/Directory/Directories/Directories/index';
+        location.href = angular.baseUrl + '/Institution/Institutions/eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6ImtjMTBnNThzMjRsaXVsMTZ2Y2lsMmlvN2tpIn0.ZDJiNzg2MTc0ZWJkNTQ4NmZlZjU0ZDFlOTc1ZTEyNjY3OWQwNzk1MTk4MjVmZTIzMDQ4ZjY2OTRmZWVlZjA3OA/Staff/index';
     }
 
     StaffController.selectStaff = function(id) {

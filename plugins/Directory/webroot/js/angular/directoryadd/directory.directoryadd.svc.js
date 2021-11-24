@@ -120,10 +120,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
         return deferred.promise;
     };
 
-    function getInternalSearchData(first_name ,last_name) {
+    function getInternalSearchData(params) {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/directoryInternalSearch?fname=' + first_name + '&lname=' + last_name;
-        $http.get(url)
+        var url = angular.baseUrl + '/Directories/directoryInternalSearch';
+        $http.get(url, {params: params})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
@@ -132,10 +132,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
         return deferred.promise;
     };
 
-    function getExternalSearchData(first_name ,last_name) {
+    function getExternalSearchData(params) {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/directoryInternalSearch?fname=' + first_name + '&lname=' + last_name;
-        $http.get(url)
+        var url = angular.baseUrl + '/Directories/directoryExternalSearch';
+        $http.get(url, {params: params})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {

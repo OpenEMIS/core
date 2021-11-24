@@ -55,7 +55,7 @@
                 type="button" class="btn btn-default" ng-click="confirmUser()">Confirm</button>
             <button
                 ng-if="(step=='summary')"
-                type="button" class="btn close-btn" ng-click="goToFirstStep()">Close</button>
+                type="button" class="btn close-btn" ng-click="cancelProcess()">Close</button>
             <button type="button" class="btn btn-default btn-next"
                 ng-if="step!=='confirmation' && step!=='summary'" ng-click="goToNextStep()">Next</button>
             <button type="button" class="btn btn-default btn-next"
