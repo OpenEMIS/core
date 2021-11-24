@@ -53,12 +53,14 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     scope.getUniqueOpenEmisId = function() {
         if(!scope.isGuardianAdding && scope.selectedUserData.openemis_no){
             setTimeout(function(){
+                scope.internalGridOptions = null;
                 scope.getInternalSearchData();
             }, 1500);
             return;
         }
         if(scope.isGuardianAdding && scope.selectedGuardianData.openemis_no){
             setTimeout(function(){
+                scope.internalGridOptions = null;
                 scope.getInternalSearchData();
             }, 1500);
             return;
@@ -99,18 +101,36 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     scope.getInternalSearchData = function() {
         var first_name = '';
         var last_name = '';
+        var openemis_no = '';
+        var date_of_birth = '';
+        var identity_number = '';
         if(!scope.isGuardianAdding) {
             first_name = scope.selectedUserData.first_name;
             last_name = scope.selectedUserData.last_name;
+            date_of_birth = scope.selectedUserData.date_of_birth;
+            openemis_no = scope.selectedUserData.openemis_no;
+            identity_number = scope.selectedUserData.identity_number;
         } else{
             first_name = scope.selectedGuardianData.first_name;
             last_name = scope.selectedGuardianData.last_name;
+            date_of_birth = scope.selectedGuardianData.date_of_birth;
+            openemis_no = scope.selectedGuardianData.openemis_no;
+            identity_number = scope.selectedGuardianData.identity_number;
         }
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
                 UtilsSvc.isAppendLoader(true);
-                DirectoryaddSvc.getInternalSearchData(first_name, last_name)
+                var param = {
+                    page: params.endRow / (params.endRow - params.startRow),
+                    limit: params.endRow - params.startRow,
+                    first_name: first_name,
+                    last_name: last_name,
+                    openemis_no: openemis_no,
+                    date_of_birth: date_of_birth,
+                    identity_number: identity_number,
+                }
+                DirectoryaddSvc.getInternalSearchData(param)
                 .then(function(response) {
                     var gridData = response.data;
                     var totalRowCount = gridData.length;
@@ -138,20 +158,29 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     }
 
     scope.getExternalSearchData = function() {
-        var first_name = '';
-        var last_name = '';
+        var param = {};
         if(!scope.isGuardianAdding) {
-            first_name = scope.selectedUserData.first_name;
-            last_name = scope.selectedUserData.last_name;
+            param = {
+                first_name: scope.selectedUserData.first_name,
+                last_name: scope.selectedUserData.last_name,
+                date_of_birth: scope.selectedUserData.date_of_birth,
+                identity_number: scope.selectedUserData.identity_number,
+            }
         } else{
-            first_name = scope.selectedGuardianData.first_name;
-            last_name = scope.selectedGuardianData.last_name;
+            param = {
+                first_name: scope.selectedGuardianData.first_name,
+                last_name: scope.selectedGuardianData.last_name,
+                date_of_birth: scope.selectedGuardianData.date_of_birth,
+                identity_number: scope.selectedGuardianData.identity_number,
+            }
         }
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
                 UtilsSvc.isAppendLoader(true);
-                DirectoryaddSvc.getExternalSearchData(first_name, last_name)
+                param.limit = params.endRow - params.startRow;
+                param.page = params.endRow / (params.endRow - params.startRow);
+                DirectoryaddSvc.getExternalSearchData(param)
                 .then(function(response) {
                     var gridData = response.data;
                     var totalRowCount = gridData.length;
@@ -442,6 +471,218 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
 
     scope.changeRelationType = function() {}
 
+    scope.goToInternalSearch = function(){
+        UtilsSvc.isAppendLoader(true);
+        AggridLocaleSvc.getTranslatedGridLocale()
+        .then(function(localeText){
+            scope.internalGridOptions = {
+                columnDefs: [
+                    {headerName: scope.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
+                ],
+                localeText: localeText,
+                enableColResize: true,
+                enableFilter: false,
+                enableServerSideFilter: true,
+                enableServerSideSorting: true,
+                enableSorting: false,
+                headerHeight: 38,
+                rowData: [],
+                rowHeight: 38,
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    scope.selectStaff(_e.node.data.id);
+                    $scope.$apply();
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
+                onGridReady: function() {
+                    if (angular.isDefined(scope.internalGridOptions.api)) {
+                        setTimeout(function() {
+                            scope.setGridData();
+                        })
+                    }
+                },
+            };
+            setTimeout(function(){
+                scope.getInternalSearchData();
+            }, 1500);
+        }, function(error){
+            scope.internalGridOptions = {
+                columnDefs: [
+                    {headerName: scope.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                ],
+                enableColResize: false,
+                enableFilter: false,
+                enableServerSideFilter: true,
+                enableServerSideSorting: true,
+                enableSorting: false,
+                headerHeight: 38,
+                rowData: [],
+                rowHeight: 38,
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    scope.selectStaff(_e.node.data.id);
+                    $scope.$apply();
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
+                onGridReady: function() {
+                    if (angular.isDefined(scope.internalGridOptions.api)) {
+                        setTimeout(function() {
+                            scope.setGridData();
+                        })
+                    }
+                },
+            };
+            setTimeout(function(){
+                scope.getInternalSearchData();
+            }, 1500);
+        });
+    }
+
+    scope.goToExternalSearch = function(){
+        UtilsSvc.isAppendLoader(true);
+        AggridLocaleSvc.getTranslatedGridLocale()
+        .then(function(localeText){
+            scope.externalGridOptions = {
+                columnDefs: [
+                    {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                ],
+                localeText: localeText,
+                enableColResize: true,
+                enableFilter: false,
+                enableServerSideFilter: true,
+                enableServerSideSorting: true,
+                enableSorting: false,
+                headerHeight: 38,
+                rowData: [],
+                rowHeight: 38,
+                 rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    scope.selectStaff(_e.node.data.id);
+                    $scope.$apply();
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
+                onGridReady: function() {
+                    if (angular.isDefined(scope.externalGridOptions.api)) {
+                        setTimeout(function() {
+                            scope.setGridData();
+                        })
+                    }
+                },
+            };
+            setTimeout(function(){
+                scope.getExternalSearchData();
+            }, 1500);
+        }, function(error){
+            scope.externalGridOptions = {
+                columnDefs: [
+                    {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                ],
+                enableColResize: false,
+                enableFilter: false,
+                enableServerSideFilter: true,
+                enableServerSideSorting: true,
+                enableSorting: false,
+                headerHeight: 38,
+                rowData: [],
+                rowHeight: 38,
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    scope.selectStaff(_e.node.data.id);
+                    $scope.$apply();
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
+                onGridReady: function() {
+                    if (angular.isDefined(scope.externalGridOptions.api)) {
+                        setTimeout(function() {
+                            scope.setGridData();
+                        })
+                    }
+                },
+            };setTimeout(function(){
+                scope.getExternalSearchData();
+            }, 1500);
+        });
+    }
+
     scope.goToPrevStep = function(){
         if(!scope.isGuardianAdding) {
             switch(scope.step){
@@ -450,9 +691,13 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                     break;
                 case 'external_search': 
                     scope.step = 'internal_search';
+                    scope.internalGridOptions = null;
+                    scope.goToInternalSearch();
                     break;
                 case 'confirmation': 
                     scope.step = 'external_search';
+                    scope.externalGridOptions = null;
+                    scope.goToExternalSearch();
                     break;
             }
         } else {
@@ -462,9 +707,13 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                     break;
                 case 'external_search': 
                     scope.guardianStep = 'internal_search';
+                    scope.internalGridOptions = null;
+                    scope.goToInternalSearch();
                     break;
                 case 'confirmation': 
                     scope.guardianStep = 'external_search';
+                    scope.externalGridOptions = null;
+                    scope.goToExternalSearch();
                     break;
             }
         }
