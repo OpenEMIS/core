@@ -35,6 +35,7 @@ class StudentTransferTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+        $this->belongsTo('InstitutionGrades', ['className' => 'Institution.InstitutionGrades']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
 
@@ -288,6 +289,7 @@ class StudentTransferTable extends ControllerActionTable
 
     public function onUpdateFieldNextAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
+
         $nextPeriodOptions = [];
 
         if (!is_null($this->currentPeriod)) {
@@ -340,6 +342,7 @@ class StudentTransferTable extends ControllerActionTable
         if (!empty($selectedGrade) && $selectedGrade != -1 && !empty($nextPeriodId)) {
             //$nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGrades($selectedGrade); //POCOR-6362 comment this code because wrong next education grade is showing wrong
             $nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGradesForTransfer($nextPeriodId);//POCOR-6362
+            // $nextGradeOptions = $this->InstitutionGrades->getNextAvailableEducationGradesForTransfer($nextPeriodId);//POCOR-6362
 
             //$currentGradeOptions = $this->getGrandEducationOptions();//POCOR-6362 because no need of current grade options
 
