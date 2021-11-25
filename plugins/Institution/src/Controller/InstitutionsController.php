@@ -4042,8 +4042,7 @@ class InstitutionsController extends AppController
             $institution_id = $institution->id;
         }
         //get academic period
-        //$academic_period = $requestData['academic_periods'];
-        $academic_period = 30;
+        $academic_period = $requestData['academic_periods'];
         $academic_periods = TableRegistry::get('academic_periods');
         $academic_periods_result = $academic_periods
             ->find()
@@ -4115,10 +4114,8 @@ class InstitutionsController extends AppController
     public function getClassOptions()
     {
         $requestData = json_decode($this->request->data(), true);
-        $academic_period = 30;
-        //$academic_period = $requestData['academic_periods'];
-        //$grade_id = $requestData['grade_id'];
-        $grade_id = 59;
+        $academic_period = $requestData['academic_periods'];
+        $grade_id = $requestData['grade_id'];
         $institution_id = $this->request->session()->read('Institution.Institutions.id');
 
         $institution_classes = TableRegistry::get('institution_classes');
