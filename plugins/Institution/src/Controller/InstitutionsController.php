@@ -1525,6 +1525,13 @@ class InstitutionsController extends AppController
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        //for api purpose starts
+        if($this->request->params['action'] == 'getEducationGrade'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getEducationGrade';
+        }
+        if($this->request->params['action'] == 'getClassOptions'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getClassOptions';
+        }//for api purpose ends
         return $events;
     }
 
@@ -4028,7 +4035,9 @@ class InstitutionsController extends AppController
 
     public function getEducationGrade()
     {
-        $requestData = json_decode($this->request->data(), true);
+        $requestData = $this->request->input('json_decode', true) ;
+       /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
+        echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
         $institution_name = $this->request->session()->read('Institution.Institutions.name');
         $institutions = TableRegistry::get('institutions');
         $institution = $institutions
@@ -4525,23 +4534,89 @@ class InstitutionsController extends AppController
         return true;
     }
 
-    /*public function studentCustomFields()
+    public function studentCustomFields()
     {
         $studentCustomForms =  TableRegistry::get('student_custom_forms');
         $studentCustomFormsFields =  TableRegistry::get('student_custom_forms_fields');
         $studentCustomFields =  TableRegistry::get('student_custom_fields');
         $studentCustomFieldOptions =  TableRegistry::get('student_custom_field_options');
-        
 
+        $SectionData = $studentCustomForms->find()
+                            ->select([
+                                'student_custom_form_id'=>$studentCustomFormsFields->aliasField('student_custom_form_id'),
+                                'student_custom_field_id'=>$studentCustomFormsFields->aliasField('student_custom_field_id'),
+                                'section'=>$studentCustomFormsFields->aliasField('section'),
+                            ])
+                            ->LeftJoin([$studentCustomFormsFields->alias() => $studentCustomFormsFields->table()], [
+                                $studentCustomFormsFields->aliasField('student_custom_form_id =') . $studentCustomForms->aliasField('id'),
+                            ])
+                            ->where([
+                                $studentCustomForms->aliasField('name') => 'Student Custom Fields'
+                            ])
+                            ->group([$studentCustomFormsFields->aliasField('section')])
+                            ->toArray();
+        $SectionArr = [];
+        $remove_field_type = ['FILE','COORDINATES','TABLE'];                    
+        foreach ($SectionData as $skey => $sval) {
+            $SectionArr[$skey][$sval->section] = $sval->section;
+            $CustomFieldsData = $studentCustomFormsFields->find()
+                            ->select([
+                                'student_custom_form_id'=>$studentCustomFormsFields->aliasField('student_custom_form_id'),
+                                'student_custom_field_id'=>$studentCustomFormsFields->aliasField('student_custom_field_id'),
+                                'section'=>$studentCustomFormsFields->aliasField('section'),
+                                'name'=>$studentCustomFormsFields->aliasField('name'),
+                                'order'=>$studentCustomFormsFields->aliasField('order'),
+                                'description'=>$studentCustomFields->aliasField('description'),
+                                'field_type'=>$studentCustomFields->aliasField('field_type'),
+                                'is_mandatory'=>$studentCustomFields->aliasField('is_mandatory'),
+                                'is_unique'=>$studentCustomFields->aliasField('is_unique'),
+                                'params'=>$studentCustomFields->aliasField('params'),
+                            ])
+                            ->LeftJoin([$studentCustomFields->alias() => $studentCustomFields->table()], [
+                                $studentCustomFields->aliasField('id =') . $studentCustomFormsFields->aliasField('student_custom_field_id'),
+                            ])
+                            ->where([
+                                $studentCustomFormsFields->aliasField('section') => $sval->section,
+                                $studentCustomFields->aliasField('field_type NOT IN') => $remove_field_type
+                            ])->toArray();
+            $fieldsArr = [];
+            foreach ($CustomFieldsData as $ckey => $cval) {
+                $fieldsArr[$ckey]['student_custom_form_id'] = $cval->student_custom_form_id;
+                $fieldsArr[$ckey]['student_custom_field_id'] = $cval->student_custom_field_id;
+                $fieldsArr[$ckey]['section'] = $cval->section;
+                $fieldsArr[$ckey]['name'] = $cval->name;
+                $fieldsArr[$ckey]['order'] = $cval->order;
+                $fieldsArr[$ckey]['description'] = $cval->description;
+                $fieldsArr[$ckey]['field_type'] = $cval->field_type;
+                $fieldsArr[$ckey]['is_mandatory'] = $cval->is_mandatory;
+                $fieldsArr[$ckey]['is_unique'] = $cval->is_unique;
+                $fieldsArr[$ckey]['params'] = $cval->params;
 
-        $CustomFieldsData = $studentCustomForms->find()
-                        //->select(['workflowSteps_id'=>$workflowSteps->aliasField('id')])
-                        ->LeftJoin([$studentCustomFormsFields->alias() => $studentCustomFormsFields->table()], [
-                            $studentCustomFormsFields->aliasField('workflow_id =') . $workflows->aliasField('id'),
-                            $workflowSteps->aliasField('name')=> 'Approved'
-                        ])
-                        ->where([
-                            $studentCustomForms->aliasField('name') => 'Student Custom Fields'
-                        ])->toArray();
-    }*/
+                if($cval->field_type == 'DROPDOWN' || $cval->field_type == 'CHECKBOX'){
+                    $OptionData = $studentCustomFieldOptions->find()
+                                    ->select([
+                                        'option_id'=>$studentCustomFieldOptions->aliasField('id'),
+                                        'option_name'=>$studentCustomFieldOptions->aliasField('name'),
+                                        'is_default'=>$studentCustomFieldOptions->aliasField('is_default'),
+                                        'visible'=>$studentCustomFieldOptions->aliasField('visible'),
+                                        'option_order'=>$studentCustomFieldOptions->aliasField('order')
+                                    ])
+                                    ->where([
+                                        $studentCustomFieldOptions->aliasField('student_custom_field_id') => $cval->student_custom_field_id
+                                    ])->toArray();
+                    $OptionDataArr =[];
+                    foreach ($OptionData as $opkey => $opval) {
+                        $OptionDataArr[$opkey]['option_id'] = $opval->option_id;
+                        $OptionDataArr[$opkey]['option_name'] = $opval->option_name;
+                        $OptionDataArr[$opkey]['is_default'] = $opval->is_default;
+                        $OptionDataArr[$opkey]['visible'] = $opval->visible;
+                        $OptionDataArr[$opkey]['option_order'] = $opval->option_order;
+                    }
+                    $fieldsArr[$ckey]['option'] = $OptionDataArr;
+                }
+            }
+            $SectionArr[$skey][$sval->section] = $fieldsArr;
+        }
+        echo json_encode($SectionArr);die;
+    }
 }
