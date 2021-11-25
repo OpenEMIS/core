@@ -25,7 +25,7 @@ class InstitutionStatisticsTable extends AppTable
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.CustomReport');
         $this->addBehavior('CustomExcel.ExcelReport', [
-            'templateTable' => 'Report.InstitutionStatistics',
+            'templateTable' => 'Institution.InstitutionStatistics',
             'templateTableKey' => 'feature',
             'download' => false,
             'purge' => false,
@@ -266,7 +266,7 @@ class InstitutionStatisticsTable extends AppTable
     }
 
     public function onCsvBeforeGenerate(Event $event, ArrayObject $settings)
-    {die("in");
+    {
         $params = $settings['requestQuery'];
         $customReportData = $this->get($params['feature']);
 		
