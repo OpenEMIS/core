@@ -4029,7 +4029,19 @@ class InstitutionsController extends AppController
     public function getEducationGrade()
     {
         $requestData = json_decode($this->request->data(), true);
-        $institution_id = $this->request->session()->read('Institution.Institutions.id');
+        $institution_name = $this->request->session()->read('Institution.Institutions.name');
+        $institutions = TableRegistry::get('institutions');
+        $institution = $institutions
+                        ->find()
+                        ->select(['id','name'])
+                        ->where(['name' => $institution_name])
+                        ->first();
+        //get instituiton                 
+        $institution_id = 0;       
+        if(!empty($institution)){
+            $institution_id = $institution->id;
+        }
+        //get academic period
         $academic_period = $requestData['academic_periods'];
         $academic_periods = TableRegistry::get('academic_periods');
         $academic_periods_result = $academic_periods
@@ -4037,7 +4049,7 @@ class InstitutionsController extends AppController
             ->select(['id','name', 'start_date','end_date'])
             ->where(['id' => $academic_period])
             ->first();
-        
+       
         $startDate = date('Y-m-d', strtotime($academic_periods_result->start_date));
         $endDate = date('Y-m-d', strtotime($academic_periods_result->end_date));
         
@@ -4093,7 +4105,6 @@ class InstitutionsController extends AppController
         ])
         ->group([$institution_grades->aliasField('education_grade_id')])
         ->toArray();
-    
         foreach($institution_grades_result AS $result){
             $result_array[] = array("id" => $result['id'], "education_grade_id" => $result->EducationGrades['id'], "name" => $result->EducationGrades['name']);
         }
@@ -4513,4 +4524,24 @@ class InstitutionsController extends AppController
         }
         return true;
     }
+
+    /*public function studentCustomFields()
+    {
+        $studentCustomForms =  TableRegistry::get('student_custom_forms');
+        $studentCustomFormsFields =  TableRegistry::get('student_custom_forms_fields');
+        $studentCustomFields =  TableRegistry::get('student_custom_fields');
+        $studentCustomFieldOptions =  TableRegistry::get('student_custom_field_options');
+        
+
+
+        $CustomFieldsData = $studentCustomForms->find()
+                        //->select(['workflowSteps_id'=>$workflowSteps->aliasField('id')])
+                        ->LeftJoin([$studentCustomFormsFields->alias() => $studentCustomFormsFields->table()], [
+                            $studentCustomFormsFields->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                            $workflowSteps->aliasField('name')=> 'Approved'
+                        ])
+                        ->where([
+                            $studentCustomForms->aliasField('name') => 'Student Custom Fields'
+                        ])->toArray();
+    }*/
 }
