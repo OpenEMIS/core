@@ -197,7 +197,9 @@ class InstitutionsController extends AppController
             'ImportStudentExtracurriculars'   => ['className' => 'Institution.ImportStudentExtracurriculars', 'actions' => ['add']],
             'StudentArchive'  => ['className' => 'Institution.StudentArchive', 'actions' => ['add']],
             'AssessmentsArchive'  => ['className' => 'Institution.AssessmentsArchive', 'actions' => ['index']],
-            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']]
+            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
+            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
+            'InstitutionStatistics'              => ['className' => 'Report.InstitutionStatistics', 'actions' => ['index', 'add']],
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -2030,7 +2032,7 @@ class InstitutionsController extends AppController
                     $persona = $Users->get($requestQuery['user_id']);
                 }
             }
-
+           
             if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
                 $header = $persona->name . ' - ' . $model->getHeader($alias);
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
@@ -2046,8 +2048,10 @@ class InstitutionsController extends AppController
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
             }elseif ($model->alias() == 'InstitutionAssociationStudent') {
                 $header .= ' - '. __('Associations');
+            } elseif($model->alias() == 'InstitutionStatistics'){
+                $header .= ' - '. __('Statistics');
             } else {
-                 $header .= ' - ' . $model->getHeader($alias);
+                $header .= ' - ' . $model->getHeader($alias);
             }
            
             $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
@@ -4094,5 +4098,4 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUserExport']);
     }
-
 }
