@@ -4112,11 +4112,13 @@ class InstitutionsController extends AppController
         echo json_encode($result_array);die;
     }
 
-    public function getClassOptions($academic_period = null, $institution_id = null, $grade_id = null)
+    public function getClassOptions()
     {
         $requestData = json_decode($this->request->data(), true);
-        $academic_period = $requestData['academic_periods'];
-        $grade_id = $requestData['grade_id'];
+        $academic_period = 30;
+        //$academic_period = $requestData['academic_periods'];
+        //$grade_id = $requestData['grade_id'];
+        $grade_id = 59;
         $institution_id = $this->request->session()->read('Institution.Institutions.id');
 
         $institution_classes = TableRegistry::get('institution_classes');
