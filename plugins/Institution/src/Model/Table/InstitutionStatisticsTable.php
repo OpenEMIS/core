@@ -242,7 +242,7 @@ class InstitutionStatisticsTable extends AppTable
     }
 
     public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
-    {die("in2");
+    {
         $str = $this->get($params['feature'])->name;
         $reportName = str_replace(' ', '_', $str);
         $this->behaviors()->get('ExcelReport')->config([
@@ -251,7 +251,7 @@ class InstitutionStatisticsTable extends AppTable
     }
 
     public function onExcelTemplateInitialiseQueryVariables(Event $event, array $params, ArrayObject $extra)
-    {die("in1");
+    {
         // get json query from reports database table
         $customReportData = $this->get($params['feature']);
         $jsonQuery = json_decode($customReportData->query, true);
