@@ -61,12 +61,25 @@ class ReportListBehavior extends Behavior {
 		                $roles[] = $value->security_role_id;
 		            }
 	        	} 
-	        	$function = $securityFunctions->find()
+	   
+	        	if ($this->_table->alias() == 'InstitutionStatistics') {
+	        		$function = $securityFunctions->find()
+	        				->select([$securityFunctions->aliasField('id')])
+	        				->where([
+	        					$securityFunctions->aliasField('module') => 'Institutions',
+	        					$securityFunctions->aliasField('_delete') => $this->_table->alias() .'.'.'remove'
+	        				])
+	        				->first();
+	        	} else {
+	        		$function = $securityFunctions->find()
 	        				->select([$securityFunctions->aliasField('id')])
 	        				->where([
 	        					$securityFunctions->aliasField('module') => 'Reports',
 	        					$securityFunctions->aliasField('_delete') => $this->_table->alias() .'.'.'delete'
-	        				])->first();
+	        				])
+	        				->first();
+	        	}
+	        	
 	        	if (!empty($function)) {
 	        		$functionId = $function->id;
 	        		$data = $SecurityRoleFunctions->find()
