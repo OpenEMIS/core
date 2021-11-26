@@ -2160,7 +2160,11 @@ class StudentsTable extends ControllerActionTable
 
         foreach ($StudentAttendances as $key => $attendances) {
 
-			$total_present = $total_absent = $total_late = 0;
+            // START: POCOR-6382
+			// $total_present = $total_absent = $total_late = 0;
+            $total_absent = $total_late = 0;
+            $total_present = -1;
+            // END: POCOR-6382
 
 			foreach ($attendances as $key => $attendance) {
 
