@@ -261,14 +261,16 @@ class InstitutionLandsTable extends ControllerActionTable
         /*POCOR-6264 starts*/
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
-        $button = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'Lands', 'excel',
-            'institutionId' => $institutionId
-        ];
-        
-        $extra['toolbarButtons']['export']['url'] = $button;
+        if ($this->AccessControl->check(['Institutions', 'Lands', 'excel'])) {
+            $button = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Lands', 'excel',
+                'institutionId' => $institutionId
+            ];
+            $extra['toolbarButtons']['export']['url'] = $button;
+        }
+       
         /*POCOR-6264 ends*/
     }
 
