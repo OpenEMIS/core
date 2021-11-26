@@ -1,3 +1,17 @@
+### [3.71.2] - 2021-11-26
+- Implemented: Add Export button function - Institutions > Infrastructures > Needs
+- Bug Fixed: Institutions>Performance>Assessments: Unable to import assessment item result
+- Bug Fixed: Institutions>Staff>Staff1> Career >Subjects: Start date is changed when students are added or removed from subjects
+- Bug Fixed: Administration>Meals: Active Institutions should be displayed and Institution should be filtered by the area education
+- Bug Fixed: Institutions>Students>Transfer: Education grade is repeated and next education grade is showing all grades
+- Bug Fixed: Institution>Overview: Institution Overview Page should contain export information for Map, Contacts and Shifts
+- Bug Fixed: Institution>Staff: Report does not include custom fields and contact
+- Bug Fixed: Institution>Infrastructure>Wash: Report should include all Wash modules and include institution name, code and field directorate name
+- Bug Fixed: Add Export button function - Institutions > Students > Student1-Remove External Reference
+- Bug Fixed: Institutions>Infrastructure>Overview: Execute Permission not working for Export
+- Bug Fixed: Administrations > Training > Results : Duplicate result types
+- Bug Fixed: Institutions>Performance>Assessments: Only System admin can see the classes
+
 ### [3.71.1] - 2021-11-18
 - Implemented: Add Export button function - Institutions > Students > Student1 (include grades classes assessment item results and absences)
 - Implemented: Implement placeholder in assessment report template for area administrative name
