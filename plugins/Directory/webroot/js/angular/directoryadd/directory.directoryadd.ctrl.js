@@ -1,9 +1,9 @@
 angular.module('directory.directoryadd.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'directory.directoryadd.svc'])
     .controller('DirectoryAddCtrl', DirectoryAddController);
 
-DirectoryAddController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddSvc'];
+DirectoryAddController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddguardianSvc'];
 
-function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddSvc) {
+function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddguardianSvc) {
     var scope = $scope;
 
     scope.step = "user_details";
@@ -35,7 +35,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
         console.log(angular.baseUrl);
-        DirectoryaddSvc.init(angular.baseUrl);
+        DirectoryaddguardianSvc.init(angular.baseUrl);
         scope.translateFields = {
             'openemis_no': 'OpenEMIS ID',
             'name': 'Name',
@@ -66,7 +66,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
             return;
         }
         UtilsSvc.isAppendLoader(true);
-        DirectoryaddSvc.getUniqueOpenEmisId()
+        DirectoryaddguardianSvc.getUniqueOpenEmisId()
             .then(function(response) {
             if(!scope.isGuardianAdding){
                 var username = scope.selectedUserData.username;
@@ -130,7 +130,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                     date_of_birth: date_of_birth,
                     identity_number: identity_number,
                 }
-                DirectoryaddSvc.getInternalSearchData(param)
+                DirectoryaddguardianSvc.getInternalSearchData(param)
                 .then(function(response) {
                     var gridData = response.data;
                     var totalRowCount = gridData.length;
@@ -180,7 +180,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                 UtilsSvc.isAppendLoader(true);
                 param.limit = params.endRow - params.startRow;
                 param.page = params.endRow / (params.endRow - params.startRow);
-                DirectoryaddSvc.getExternalSearchData(param)
+                DirectoryaddguardianSvc.getExternalSearchData(param)
                 .then(function(response) {
                     var gridData = response.data;
                     var totalRowCount = gridData.length;
@@ -209,7 +209,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
 
     scope.generatePassword = function() {
         UtilsSvc.isAppendLoader(true);
-        DirectoryaddSvc.generatePassword()
+        DirectoryaddguardianSvc.generatePassword()
         .then(function(response) {
             if(!scope.isGuardianAdding) {
                 if (scope.selectedUserData.password == '' || typeof scope.selectedUserData.password == 'undefined') {
@@ -229,7 +229,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     }
 
     scope.getUserTypes = function() {
-        DirectoryaddSvc.getUserTypes()
+        DirectoryaddguardianSvc.getUserTypes()
         .then(function(response) {
             scope.userTypeOptions = response.data;
             scope.getGenders();
@@ -240,7 +240,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     }
 
     scope.getGenders = function() {
-        DirectoryaddSvc.getGenders()
+        DirectoryaddguardianSvc.getGenders()
         .then(function(response) {
             scope.genderOptions = response.data;
             scope.getNationalities();
@@ -251,7 +251,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     }
 
     scope.getNationalities = function() {
-        DirectoryaddSvc.getNationalities()
+        DirectoryaddguardianSvc.getNationalities()
         .then(function(response) {
             scope.nationalitiesOptions = response.data;
             scope.getIdentityTypes();
@@ -262,7 +262,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     }
 
     scope.getIdentityTypes = function() {
-        DirectoryaddSvc.getIdentityTypes()
+        DirectoryaddguardianSvc.getIdentityTypes()
         .then(function(response) {
             scope.identityTypeOptions = response.data;
             UtilsSvc.isAppendLoader(false);
@@ -273,7 +273,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     }
 
     scope.getContactTypes = function() {
-        DirectoryaddSvc.getContactTypes()
+        DirectoryaddguardianSvc.getContactTypes()
         .then(function(response) {
             scope.contactTypeOptions = response.data;
             UtilsSvc.isAppendLoader(false);
@@ -285,7 +285,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
 
     scope.getRedirectToGuardian = function(){
         UtilsSvc.isAppendLoader(true);
-        DirectoryaddSvc.getRedirectToGuardian()
+        DirectoryaddguardianSvc.getRedirectToGuardian()
         .then(function(response) {
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
@@ -296,7 +296,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     
     scope.getRelationType = function(){
         UtilsSvc.isAppendLoader(true);
-        DirectoryaddSvc.getRelationType()
+        DirectoryaddguardianSvc.getRelationType()
         .then(function(response) {
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
