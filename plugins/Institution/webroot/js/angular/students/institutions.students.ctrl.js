@@ -35,6 +35,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.guardianStep = 'user_details';
     StudentController.redirectToGuardian = false;
     StudentController.error = {};
+    StudentController.institutionId = null;
 
     //controller function
     StudentController.getUniqueOpenEmisId = getUniqueOpenEmisId;
@@ -74,8 +75,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
-        StudentController.initGrid();
         InstitutionsStudentsSvc.init(angular.baseUrl);
+        StudentController.institutionId = Number($window.localStorage.getItem("institution_id"));
         StudentController.translateFields = {
             'openemis_no': 'OpenEMIS ID',
             'name': 'Name',
@@ -86,6 +87,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             'identity_number': 'Identity Number',
             'account_type': 'Account Type'
         };
+        StudentController.initGrid();
         StudentController.getGenders();
     });
 
@@ -284,7 +286,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function getEducationGrades() {
         UtilsSvc.isAppendLoader(true);
         var param = {
-            "academic_periods": String(StudentController.selectedStudentData.academic_period_id)
+            academic_periods: StudentController.selectedStudentData.academic_period_id,
+            institution_id: StudentController.institutionId
         };
         InstitutionsStudentsSvc.getEducationGrades(param).then(function(resp){
             StudentController.educationGradeOptions = resp.data;
@@ -298,7 +301,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function getClasses() {
         var params = {
             academic_period: StudentController.selectedStudentData.academic_period_id,
-            institution_id: 6,
+            institution_id: StudentController.institutionId,
             grade_id: StudentController.selectedStudentData.education_grade_id
         };
         UtilsSvc.isAppendLoader(true);

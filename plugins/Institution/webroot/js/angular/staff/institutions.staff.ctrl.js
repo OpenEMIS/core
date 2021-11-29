@@ -35,6 +35,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.fteOptions = [];
     StaffController.shiftsId = [];
     StaffController.rowsThisPage= [];
+    StaffController.institutionId = null;
 
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
@@ -71,6 +72,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         UtilsSvc.isAppendLoader(true);
         StaffController.initGrid();
         InstitutionsStaffSvc.init(angular.baseUrl);
+        StaffController.institutionId = Number($window.localStorage.getItem("institution_id"));
         StaffController.translateFields = {
             'openemis_no': 'OpenEMIS ID',
             'name': 'Name',
@@ -233,7 +235,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function getPositions(){
         UtilsSvc.isAppendLoader(true);
         var params = {
-            institutionId: 6,
+            institution_id: StaffController.institutionId,
             fte: StaffController.selectedStaffData.position_type_id === 'Full-Time' ? 1 : StaffController.selectedStaffData.fte_id,
             startDate: StaffController.selectedStaffData.startDate,
             endDate: StaffController.selectedStaffData.endDate,
