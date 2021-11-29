@@ -223,8 +223,8 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
     //POCOR-6362 starts
-    public function getNextAvailableEducationGradesForTransfer($academicPeriodId) {
-        if (!empty($academicPeriodId)) {
+    public function getNextAvailableEducationGradesForTransfer($gradeId,$academicPeriodId) {
+        if (!empty($gradeId)) {
             $gradeOptionsData = $this
                 ->find()
                 ->select([
@@ -307,6 +307,7 @@ class EducationGradesTable extends ControllerActionTable
                     ]
                 )
                 ->where([
+                    $this->aliasField('id') => $gradeId,
                     'ToAcademicPeriods.id' => $academicPeriodId,
                 ])
                 ->order([$this->aliasField('id')])
