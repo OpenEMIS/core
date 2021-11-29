@@ -22,7 +22,6 @@ function DirectoryaddguardianSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSv
         getInternalSearchData: getInternalSearchData,
         getExternalSearchData: getExternalSearchData,
         getContactTypes: getContactTypes,
-        getRelationType: getRelationType,
         getRedirectToGuardian: getRedirectToGuardian
     };
     return service;
@@ -136,18 +135,6 @@ function DirectoryaddguardianSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSv
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Directories/directoryExternalSearch';
         $http.get(url, {params: params})
-        .then(function(response){
-            deferred.resolve(response);
-        }, function(error) {
-            deferred.reject(error);
-        });
-        return deferred.promise;
-    };
-
-    function getRelationType() {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getRelationshipType';
-        $http.get(url)
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {

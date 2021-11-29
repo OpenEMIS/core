@@ -17,6 +17,13 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
 ?>
 <style>.chosen-choices .search-field .default{width:90px !important;}</style>
 
+<script>
+    if(localStorage.getItem('institution_id')){
+        localStorage.removeItem("institution_id");
+    }
+    localStorage.setItem('institution_id', '<?php echo $institutionId;?>');
+</script>
+
 <div class="pd-10">
     <div class="stepper-content-wrapper">
         <div class="steps-container">
