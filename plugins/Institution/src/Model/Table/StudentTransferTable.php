@@ -339,7 +339,7 @@ class StudentTransferTable extends ControllerActionTable
         $nextGradeOptions = [];
         if (!empty($selectedGrade) && $selectedGrade != -1 && !empty($nextPeriodId)) {
             //$nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGrades($selectedGrade); //POCOR-6362 comment this code because wrong next education grade is showing wrong
-            $nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGradesForTransfer($selectedGrade,$nextPeriodId);//POCOR-6362
+            $nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGradesForTransfer($selectedGrade,$nextPeriodId,true,true);//POCOR-6362
 
             //$currentGradeOptions = $this->getGrandEducationOptions();//POCOR-6362 because no need of current grade options
 
