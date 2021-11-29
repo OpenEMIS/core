@@ -120,7 +120,8 @@ class CsvBehavior extends Behavior
         if (!is_null($host) && strtolower($host) != 'localhost') {
             $exportCmd .= ' --host=' . $host;
         }
-        if (!is_null($port)) {
+        /*POCOR-6403 - added is_numeric condition check port*/
+        if (!is_null($port) && is_numeric($port)) {
             $exportCmd .= ' --port=' . $port;
         }
         $exportCmd .= ' --quick';
