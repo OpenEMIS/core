@@ -223,7 +223,10 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
     //POCOR-6362 starts
-    public function getNextAvailableEducationGradesForTransfer($gradeId,$academicPeriodId) {
+    public function getNextAvailableEducationGradesForTransfer($gradeId,$academicPeriodId,$getNextProgrammeGrades = true, $firstGradeOnly = false) {
+        $gradeObj = $this->get($gradeId);
+        $programmeId = $gradeObj->education_programme_id;
+        $getNextProgrammeGrades = true;
         if (!empty($gradeId)) {
             $gradeOptionsData = $this
                 ->find()
@@ -320,16 +323,23 @@ class EducationGradesTable extends ControllerActionTable
                 
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
-                if ($firstGradeOnly) {
+                if ($firstGradeOnly && $programmeId) {
+                   //echo ; exit;
                     $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
                 } else {
-                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
                 }
                 $results = $gradeOptions + $nextProgrammesGradesOptions;
             } else {
                 $results = $gradeOptions;
             }
-            return $results;
+            $i=0; 
+            foreach ($results as $key => $value) {
+               if($i==0){
+                $result[$key]=$value;
+               } 
+            $i++;}
+            return $result;
         } else {
             return [];
         }
