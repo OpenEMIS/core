@@ -81,6 +81,8 @@ class InstitutionReportCardsTable extends AppTable
                 'InfrastructureRoomsNotAccessibile',
                 'EducationProgrammes',
                 //POCOR-6328 ends
+                'InstitutionEducationGrade',
+                'InstitutionStudentCount'
             ]
         ]);
     }
@@ -144,7 +146,9 @@ class InstitutionReportCardsTable extends AppTable
 
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationProgrammes'] = 'onExcelTemplateInitialiseEducationProgrammes';
         //POCOR-6328 ends
-		return $events;
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionEducationGrade'] = 'onExcelTemplateInitialiseInstitutionEducationGrade';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentCount'] = 'onExcelTemplateInitialiseInstitutionStudentCount';
+        return $events;
     }
 
     public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
@@ -2255,6 +2259,297 @@ class InstitutionReportCardsTable extends AppTable
 			}
             return $entity;
         }
+    }
+
+    /*public function onExcelTemplateInitialiseInstitutionStudentCount111(Event $event, array $params, ArrayObject $extra)
+    {
+        
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+
+            $EducationGradesData = $InstitutionGrades->find()
+                ->select([
+                    'id' => 'EducationGrades.id',
+                    'name' => 'EducationGrades.name'
+                ])
+                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                ->where([
+                    'EducationSystems.academic_period_id' => $params['academic_period_id']
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])    
+                ->group([
+                    'EducationGrades.id'
+                ])
+                ->hydrate(false)
+                ->toArray()
+            ;
+            //echo "<pre>"; print_r($EducationGradesData); 
+            //die;
+            if(!empty($EducationGradesData)){
+                foreach ($EducationGradesData as $edu_key => $edu_val) {
+                    
+                }
+            }
+            
+        }
+    }*/
+
+    public function onExcelTemplateInitialiseInstitutionEducationGrade(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $entity = $InstitutionGrades->find()
+                ->select([
+                    'id' => 'EducationGrades.id',
+                    'name' => 'EducationGrades.name'
+                ])
+                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                ->where([
+                    'EducationSystems.academic_period_id' => $params['academic_period_id']
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])    
+                ->group([
+                    'EducationGrades.id'
+                ])
+                ->hydrate(false)
+                ->toArray()
+            ;
+
+            $totalArray = [];
+            $totalArray = [
+                'id' => count($entity) + 1,
+                'name' => '',
+            ];
+            $entity[] = $totalArray;
+            //echo "<pre>"; print_r($entity); die;
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseInstitutionStudentCount(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            
+            $institutionsTbl = TableRegistry::get('institutions');
+            $institutions = $institutionsTbl->find()
+                        ->where([$institutionsTbl->aliasField('id') => $params['institution_id']])
+                        ->first(); 
+
+            $areasTbl = TableRegistry::get('areas');
+            $areaLevelsTbl = TableRegistry::get('area_levels');
+            $areaLevels = $areaLevelsTbl->find()->count();           
+            /*$institutionsResult = $institutionsTbl->find()
+                        ->where([$institutionsTbl->aliasField('area_id') => $institutions->area_id])
+                        ->toArray();
+
+            
+            $areaLevelsTbl = TableRegistry::get('area_levels');
+            
+                                
+            $distArr = [];
+            $regArr = []; 
+            foreach ($institutionsResult as $instit) {
+                $distArr[] = $instit->id;//district array
+            }*/
+            //echo "<pre>"; print_r($distArr); die;
+            $areas = $areasTbl->find()
+                    ->select([
+                        'area_id' => $areasTbl->aliasField('id'),
+                        'area_name' => $areasTbl->aliasField('name'),
+                        'area_parent_id' => $areasTbl->aliasField('parent_id')
+                    ])
+                    ->where([$areasTbl->aliasField('id') => $institutions->area_id])
+                    ->first();
+            $distArr = [];
+            if($areas->area_parent_id > 0){
+                $distArr[0][] = $institutions->area_id; //first time we get area_id
+                $k = $areas->area_parent_id;
+                for($i=$areas->area_parent_id; $i>=1; $i--){
+                    if($k == ''){
+                        break;
+                    }
+                    for($j=1; $j<$areaLevels; $j++){
+                        //get district's regions
+                        $areas1 = $areasTbl->find()
+                            ->select([
+                                'area_id' => $areasTbl->aliasField('id'),
+                                'area_name' => $areasTbl->aliasField('name'),
+                                'area_parent_id' => $areasTbl->aliasField('parent_id')
+                            ])
+                            ->where([$areasTbl->aliasField('id') => $k])
+                            ->first();
+                        if($areas1->area_parent_id > 0){
+                            $areas2 = $areasTbl->find()
+                                ->select([
+                                    'area_id' => $areasTbl->aliasField('id'),
+                                    'area_name' => $areasTbl->aliasField('name'),
+                                    'area_parent_id' => $areasTbl->aliasField('parent_id')
+                                ])
+                                ->where([$areasTbl->aliasField('parent_id') => $areas1->area_id])
+                                ->toArray();
+                            if(!empty($areas2)){
+                                foreach ($areas2 as $ar2) {
+                                    $distArr[$j][] = $ar2->area_id;//district array
+                                }
+                            }
+                        } else {
+                            //get country's regions
+                            $areas3 = $areasTbl->find()
+                                    ->select([
+                                        'area_id' => $areasTbl->aliasField('id'),
+                                        'area_name' => $areasTbl->aliasField('name'),
+                                        'area_parent_id' => $areasTbl->aliasField('parent_id')
+                                    ])
+                                    ->where([$areasTbl->aliasField('parent_id') => $k])
+                                    ->toArray();
+
+                            if(!empty($areas3)){
+                                $reg = [];
+                                foreach ($areas3 as $ar3) {
+                                    $reg [] = $ar3->area_id; 
+                                }
+                                
+                                if(!empty($reg)){
+                                    $areas4 = $areasTbl->find()
+                                            ->select([
+                                                'area_id' => $areasTbl->aliasField('id'),
+                                                'area_name' => $areasTbl->aliasField('name'),
+                                                'area_parent_id' => $areasTbl->aliasField('parent_id')
+                                            ])
+                                            ->where([$areasTbl->aliasField('parent_id IN') => $reg])
+                                            ->toArray();
+                                    if(!empty($areas4)){
+                                        foreach ($areas4 as $ar4) {
+                                            $distArr[$j][] = $ar4->area_id;//district array
+                                        }
+                                    }
+                                }
+                            }
+                        } 
+                        $k = $areas1->area_parent_id;
+                    }
+                }
+            }
+            
+           // echo "<pre>"; print_r($distArr); die;
+            
+            if(!empty($distArr)){
+                $insArr = [];
+                $i=0;
+                foreach ($distArr as $dis_key => $dis_val) {
+                    $institutionsResult = $institutionsTbl->find()
+                        ->where([$institutionsTbl->aliasField('area_id IN') => $dis_val])
+                        ->toArray();
+                    foreach ($institutionsResult as $instit) {
+                        $insArr[$i][] = $instit->id;//district array
+                    }
+
+                    $i++;
+                }
+            }
+
+            $areaLevelsTbl = TableRegistry::get('area_levels');
+            $areaLevelsData = $areaLevelsTbl->find()
+                            ->toArray();
+
+            //echo "<pre>"; print_r($areaLevelsData); die;
+            
+           
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+
+            $EducationGradesData = $InstitutionGrades->find()
+                ->select([
+                    'id' => 'EducationGrades.id',
+                    'name' => 'EducationGrades.name'
+                ])
+                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                ->where([
+                    'EducationSystems.academic_period_id' => $params['academic_period_id']
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])    
+                ->group([
+                    'EducationGrades.id'
+                ])
+                ->hydrate(false)
+                ->toArray()
+            ;
+
+            $InstitutionStudents = TableRegistry::get('institution_students');
+            foreach ($EducationGradesData as $edu_key => $edu_val) {
+                //echo "<pre>"; print_r($edu_val); die;
+                $district = $region = $country = '';
+                foreach ($insArr as $insKey => $insVal) {
+                    if($insKey == 0){
+                        $InstitutionStudentsData = $InstitutionStudents->find()
+                            ->select([
+                                'student_id' => $InstitutionStudents->aliasField('student_id')
+                            ])
+                            ->where([
+                                $InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id'],
+                                $InstitutionStudents->aliasField('education_grade_id') => $edu_val['id'],
+                                $InstitutionStudents->aliasField('institution_id IN') => $insVal,
+
+                            ])
+                            ->distinct(['student_id'])    
+                            ->count()
+                        ;
+                        $district = $InstitutionStudentsData;
+                    }else if($insKey == 1){
+                        $InstitutionStudentsData = $InstitutionStudents->find()
+                            ->select([
+                                'student_id' => $InstitutionStudents->aliasField('student_id')
+                            ])
+                            ->where([
+                                $InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id'],
+                                $InstitutionStudents->aliasField('education_grade_id') => $edu_val['id'],
+                                $InstitutionStudents->aliasField('institution_id IN') => $insVal,
+
+                            ])
+                            ->distinct(['student_id'])    
+                            ->count()
+                        ;
+                        $region = $InstitutionStudentsData;
+                    }else{
+                        $InstitutionStudentsData = $InstitutionStudents->find()
+                            ->select([
+                                'student_id' => $InstitutionStudents->aliasField('student_id')
+                            ])
+                            ->where([
+                                $InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id'],
+                                $InstitutionStudents->aliasField('education_grade_id') => $edu_val['id'],
+                                $InstitutionStudents->aliasField('institution_id IN') => $insVal,
+
+                            ])
+                            ->distinct(['student_id'])    
+                            ->count()
+                        ;
+                        $country = $InstitutionStudentsData;
+                    }
+
+                }
+
+
+                $entity[] = [
+                        'id' => $edu_val['id'],
+                        'district' => $district,
+                        'region' => $region,
+                        'country' => $country
+                    ];
+            }
+            
+            $totalArray = [];
+            $totalArray = [
+                'id' => count($entity) + 1,
+                'name' => '',
+            ];
+            $entity[] = $totalArray;
+            
+            return $entity;
+            
+            
+        }
+        
+        
     }
 
 }
