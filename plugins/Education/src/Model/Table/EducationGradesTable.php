@@ -223,10 +223,10 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
     //POCOR-6362 starts
-    public function getNextAvailableEducationGradesForTransfer($gradeId,$academicPeriodId,$getNextProgrammeGrades = true, $firstGradeOnly = false) {
+    public function getNextAvailableEducationGradesForTransfer($gradeId, $academicPeriodId, $getNextProgrammeGrades = true, $firstGradeOnly = false) {
+        $getNextProgrammeGrades = true;
         $gradeObj = $this->get($gradeId);
         $programmeId = $gradeObj->education_programme_id;
-        $getNextProgrammeGrades = true;
         if (!empty($gradeId)) {
             $gradeOptionsData = $this
                 ->find()
@@ -323,22 +323,23 @@ class EducationGradesTable extends ControllerActionTable
                 
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
-                if ($firstGradeOnly && $programmeId) {
-                   //echo ; exit;
+
+                if ($firstGradeOnly) {
                     $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
                 } else {
-                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
+                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
                 }
                 $results = $gradeOptions + $nextProgrammesGradesOptions;
             } else {
                 $results = $gradeOptions;
             }
-            $i=0; 
+            $$i=0;
             foreach ($results as $key => $value) {
-               if($i==0){
-                $result[$key]=$value;
-               } 
+                if($i==0){
+                 $result[$key]=$value;
+                }
             $i++;}
+            //print_r($result); exit;
             return $result;
         } else {
             return [];
