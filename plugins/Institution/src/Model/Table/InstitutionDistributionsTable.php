@@ -243,13 +243,22 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     public function getNameOptions($institutionId)
     {
+        $institutionId = $options['institution_id'];
+
+        $MealProgrammesLists = TableRegistry::get('Meal.MealProgrammesLists');
+
         $MealProgramme = TableRegistry::get('Meal.MealProgrammes');
         $levelOptions = $MealProgramme
         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+        ->innerJoin(
+            [$MealProgrammesLists->alias() => $MealProgrammesLists->table()], [
+                $MealProgramme->aliasField('id = ') . $MealProgrammesLists->aliasField('meal_programmes_id')
+            ]
+        )
         ->where([
-            $MealProgramme->aliasField('institution_id') => $institutionId])            
+            $MealProgrammesLists->aliasField('institution_id') => $institutionId])            
         ->orWhere([ 
-            $MealProgramme->aliasField('institution_id') => 0 ])
+            $MealProgrammesLists->aliasField('institution_id') => 0 ])
         ->toArray();
 
         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
