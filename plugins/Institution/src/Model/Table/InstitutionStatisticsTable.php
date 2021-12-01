@@ -59,7 +59,12 @@ class InstitutionStatisticsTable extends AppTable
 	{
 		$controllerName = $this->controller->name;
 		$reportName = __('Statistics');
-
+        /*POCOR-6403 starts*/
+        if (array_key_exists('institutionId', $this->request->params)) {
+            $institutionId = $this->request->params['institutionId'];
+            $this->Session->write('institute_id', $institutionId);
+        }
+        /*POCOR-6403 ends*/
 		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
 		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
 	}
@@ -67,7 +72,7 @@ class InstitutionStatisticsTable extends AppTable
 	public function addBeforeAction(Event $event)
 	{
         $this->fields = [];
-
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $this->Session->read('institute_id')]);
         $this->ControllerAction->field('feature', ['type' => 'select', 'select' => false]);
         $this->ControllerAction->field('format');
 
@@ -269,7 +274,7 @@ class InstitutionStatisticsTable extends AppTable
     {
         $params = $settings['requestQuery'];
         $customReportData = $this->get($params['feature']);
-		
+    
 		if(!empty($params['start_date'])) {
 			$params['start_date'] = date("Y-m-d", strtotime($params['start_date']));	
 		}
