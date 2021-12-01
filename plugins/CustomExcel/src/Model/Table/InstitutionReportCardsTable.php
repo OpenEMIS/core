@@ -2360,6 +2360,8 @@ class InstitutionReportCardsTable extends AppTable
                     ])
                     ->where([$areasTbl->aliasField('id') => $institutions->area_id])
                     ->first();
+
+            //echo "<pre>"; print_r($distArr); die;     
             $distArr = [];
             if($areas->area_parent_id > 0){
                 $distArr[0][] = $institutions->area_id; //first time we get area_id
@@ -2452,6 +2454,15 @@ class InstitutionReportCardsTable extends AppTable
             $areaLevelsData = $areaLevelsTbl->find()
                             ->toArray();
 
+           /* echo "<pre>"; print_r($areaLevelsData); die;                
+            foreach ($areaLevelsData as $level_key => $level_val) {
+                                # code...
+            } */               
+
+
+
+
+
             //echo "<pre>"; print_r($areaLevelsData); die;
             
            
@@ -2493,6 +2504,9 @@ class InstitutionReportCardsTable extends AppTable
                             ->distinct(['student_id'])    
                             ->count()
                         ;
+
+                        $district_name = $this->getAreaNameByInstitution($insKey, $insVal);
+
                         $district = $InstitutionStudentsData;
                     }else if($insKey == 1){
                         $InstitutionStudentsData = $InstitutionStudents->find()
@@ -2508,6 +2522,7 @@ class InstitutionReportCardsTable extends AppTable
                             ->distinct(['student_id'])    
                             ->count()
                         ;
+                        //$region_name = $this->getAreaNameByInstitution($insKey, $insVal);
                         $region = $InstitutionStudentsData;
                     }else{
                         $InstitutionStudentsData = $InstitutionStudents->find()
@@ -2523,6 +2538,7 @@ class InstitutionReportCardsTable extends AppTable
                             ->distinct(['student_id'])    
                             ->count()
                         ;
+                        //$country_name = $this->getAreaNameByInstitution($insKey, $insVal);
                         $country = $InstitutionStudentsData;
                     }
 
@@ -2531,8 +2547,11 @@ class InstitutionReportCardsTable extends AppTable
 
                 $entity[] = [
                         'id' => $edu_val['id'],
+                        'district_name' => $district_name,
                         'district' => $district,
+                        //'region_name' => $region_name,
                         'region' => $region,
+                       // 'country_name' => $country_name,
                         'country' => $country
                     ];
             }
@@ -2551,5 +2570,84 @@ class InstitutionReportCardsTable extends AppTable
         
         
     }
+
+    public function getAreaNameByInstitution($institution_key,$institutionIds =[]){
+        /*echo $institution_key;
+        echo "<pre>"; print_r($institutionIds); die;*/
+        $areasTbl = TableRegistry::get('areas');
+        $institutionsTbl = TableRegistry::get('institutions');
+        if($institution_key == 0){
+
+            $institutions = $institutionsTbl->find()
+                        ->select([
+                            'area_name' => $areasTbl->aliasField('name')
+                        ])
+                        ->innerJoin(
+                            [$areasTbl->alias() => $areasTbl->table()],
+                            [
+                                $areasTbl->aliasField('id').' = ' . $institutionsTbl->aliasField('area_id')
+                            ]
+                            )
+                        ->where([$institutionsTbl->aliasField('id IN') => $institutionIds])
+                        ->first()
+                        ;
+            return $institutions->area_name;
+
+        }else if($institution_key == 1){
+            $institutions = $institutionsTbl->find()
+                        ->select([
+                            'area_parent_id' => $areasTbl->aliasField('parent_id')
+                        ])
+                        ->innerJoin(
+                            [$areasTbl->alias() => $areasTbl->table()],
+                            [
+                                $areasTbl->aliasField('id').' = ' . $institutionsTbl->aliasField('area_id')
+                            ]
+                            )
+                        ->where([$institutionsTbl->aliasField('id IN') => $institutionIds])
+                        ->first();
+
+            $areas = $areasTbl->find()
+                    ->select([
+                        'area_id' => $areasTbl->aliasField('id'),
+                        'area_name' => $areasTbl->aliasField('name'),
+                        'area_parent_id' => $areasTbl->aliasField('parent_id')
+                    ])
+                    ->where([$areasTbl->aliasField('id') => $institutions->area_parent_id])
+                    ->first();
+
+            return $areas->area_name;
+        }else if($institution_key == 2){
+            $institutions = $institutionsTbl->find()
+                        ->select([
+                            'area_parent_id' => $areasTbl->aliasField('parent_id')
+                        ])
+                        ->innerJoin(
+                            [$areasTbl->alias() => $areasTbl->table()],
+                            [
+                                $areasTbl->aliasField('id').' = ' . $institutionsTbl->aliasField('area_id')
+                            ]
+                            )
+                        ->where([$institutionsTbl->aliasField('id IN') => $institutionIds])
+                        ->first();
+
+            $areasRegion = $areasTbl->find()
+                    ->select([
+                        'area_parent_id' => $areasTbl->aliasField('parent_id')
+                    ])
+                    ->where([$areasTbl->aliasField('id') => $institutions->area_parent_id])
+                    ->first();
+
+            $areas = $areasTbl->find()
+                    ->select([
+                        'area_name' => $areasTbl->aliasField('name')
+                    ])
+                    ->where([$areasTbl->aliasField('id') => $areasRegion->area_parent_id])
+                    ->first();
+            return $areas->area_name;
+        }
+    }
+
+    
 
 }
