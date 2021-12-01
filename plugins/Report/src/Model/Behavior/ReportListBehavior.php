@@ -308,9 +308,21 @@ class ReportListBehavior extends Behavior {
 
 			$name .= ' - '.$filterStr;
 		}
+		/*POCOR-6304 starts*/
+		if (array_key_exists('institution_id', $data['InstitutionStatistics'])) {
+			$jsonData = base64_decode($data['InstitutionStatistics']['institution_id']);
+	        preg_match_all('/{(.*?)}/', $jsonData, $matches);
+	        $requestData = json_decode($matches[0][0]);
+	        $Institutions = TableRegistry::get('Institution.Institutions');
+	        $institutionData = $Institutions->get($requestData->id);
+	        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStatistics']['academic_period_id']);
+			$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
+		}
+		/*POCOR-6304 ends*/		
 
 		$params = $data[$alias];
-
+		
 		$ReportProgress = TableRegistry::get('Report.ReportProgress');
 		$obj = ['name' => $name, 'module' => $alias, 'params' => $params];
 		$id = $ReportProgress->addReport($obj);
