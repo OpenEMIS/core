@@ -109,36 +109,25 @@ class BodyMassesTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
+        $areaId = $requestData->area_education_id;
 
         $conditions = [];
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        if (!empty($institutionId)) {
+        if ($institutionId != 0) {
             $conditions['Institutions.id'] = $institutionId;
         }
-
-        $institutions = TableRegistry::get('Institution.Institutions');
-        $institutionIds = $institutions->find('list', [
-                                                    'keyField' => 'id',
-                                                    'valueField' => 'id'
-                                                ])
-                        ->where(['institution_type_id' => $institutionTypeId])
-                        ->toArray();
-
-        if (!empty($institutionTypeId)) {
-            $conditions['BodyMasses.institution_id IN'] = $institutionIds;
+        if ($areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
         }
         
-
-        
-        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
-        
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;  
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $areas = TableRegistry::get('Area.Areas');
         $institutionsTable = TableRegistry::get('institutions');
-        //echo '<pre>'; print_r($area); die;
+        
         $query
             ->select([
                 $this->aliasField('student_id'),
@@ -156,6 +145,8 @@ class BodyMassesTable extends AppTable
                 'bm_comment' => 'UserBodyMasses.comment',
                 'class_name' => 'InstitutionClasses.name',
                 'area_id' => 'Areas.id',
+                'area_code' => 'Areas.code',
+                'area_name' => 'Areas.name'
             ])
             ->contain([
                 'Users' => [
@@ -174,7 +165,7 @@ class BodyMassesTable extends AppTable
                 ],
                 'EducationGrades' => [
                     'fields' => [
-							'education_grade' => 'EducationGrades.name'
+                            'education_grade' => 'EducationGrades.name'
                     ]
                 ],
                 'Users.Genders' => [
@@ -202,11 +193,11 @@ class BodyMassesTable extends AppTable
                     'UserBodyMasses.academic_period_id = ' . $this->aliasField('academic_period_id')
                 ]
             )
-            ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+            ->innerJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                 $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                 $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
+                $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                 $ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
             ])
             ->leftJoin([$Class->alias() => $Class->table()], [
@@ -214,49 +205,6 @@ class BodyMassesTable extends AppTable
             ])
 
             ->where($conditions);
-			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
-				$areaTable = TableRegistry::get('areas');
-                $areasData = $areaTable
-                            ->find()
-                            ->where([$areaTable->alias('id')=>$row['area_id']])
-                            ->first();
-             
-                if(!empty($areasData)){
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
-                    $val = $areas
-                                ->find()
-                                ->select([
-                                    $areas->aliasField('code'),
-                                    $areas->aliasField('name'),
-                                    ])
-                                ->leftJoin(
-                                    [$areaLevels->alias() => $areaLevels->table()],
-                                    [
-                                        $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
-                                    ]
-                                )
-                                ->leftJoin(
-                                    [$institutions->alias() => $institutions->table()],
-                                    [
-                                        $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
-                                    ]
-                                )    
-                                ->where([
-                                    $areaLevels->aliasField('level !=') => 1,
-                                    $areas->aliasField('id') => $areasData->parent_id
-                                ])->first();
-                    
-                    if (!empty($val->name) && !empty($val->code)) {
-                        $row['area_code'] = $val->code;
-                        $row['area_name'] = $val->name;
-                    }
-                }
-                return $row;
-            });
-        });
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -285,8 +233,8 @@ class BodyMassesTable extends AppTable
             'type' => 'string',
             'label' => __('Area Name')
         ];
-		
-		$extraFieldsFirst[] = [
+        
+        $extraFieldsFirst[] = [
             'key' => 'area_code',
             'field' => 'area_code',
             'type' => 'string',
