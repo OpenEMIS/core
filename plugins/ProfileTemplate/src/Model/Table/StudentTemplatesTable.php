@@ -68,17 +68,17 @@ class StudentTemplatesTable extends ControllerActionTable
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                 'provider' => 'table'
             ])
-            ->add('generate_start_date', 'ruleInAcademicPeriod', [
-                'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-            ])
-            ->add('generate_end_date', [
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                ],
-                'ruleCompareDateReverse' => [
-                    'rule' => ['compareDateReverse', 'generate_start_date', false]
-                ]
-            ])
+            // ->add('generate_start_date', 'ruleInAcademicPeriod', [
+            //     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+            // ])
+            // ->add('generate_end_date', [
+            //     'ruleInAcademicPeriod' => [
+            //         'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+            //     ],
+            //     'ruleCompareDateReverse' => [
+            //         'rule' => ['compareDateReverse', 'generate_start_date', false]
+            //     ]
+            // ])
             ->allowEmpty('excel_template');
     }
 

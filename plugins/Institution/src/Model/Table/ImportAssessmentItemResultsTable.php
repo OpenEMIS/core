@@ -331,9 +331,19 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportGetAssessmentPeriodsId(Event $event, $cellValue)
     {
-        
-        $dataRecord = $this->AssessmentPeriods->find()->select([$this->AssessmentPeriods->aliasField('id')])->where([$this->AssessmentPeriods->aliasField('code') => $cellValue])->first();
-        
+        /*POCOR-6377 starts*/
+        $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $dataRecord = $this->AssessmentPeriods->find()
+                    ->select([$this->AssessmentPeriods->aliasField('id')])
+                    ->leftJoin([$Assessments->alias() => $Assessments->table()], [
+                        $this->AssessmentPeriods->aliasField('assessment_id = ') . $Assessments->aliasField('id')
+                    ])
+                    ->where([
+                        $Assessments->aliasField('academic_period_id') => $academicPeriodId,
+                        $this->AssessmentPeriods->aliasField('code') => $cellValue
+                    ])->first();
+        /*POCOR-6377 ends*/
         $assessmentPeriodsId = $dataRecord->id;
         
         return $assessmentPeriodsId;

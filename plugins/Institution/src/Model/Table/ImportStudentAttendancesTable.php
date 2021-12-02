@@ -433,6 +433,20 @@ class ImportStudentAttendancesTable extends AppTable {
         $tempRow['record_source'] = 'import_student_attendances';
          $tempRow['education_grade_id'] = $educationGradeId['education_grade_id'];
 
+         $StudentAttendanceMarkedRecords = TableRegistry::get('StudentAttendanceMarkedRecords');
+        $markRecord = $StudentAttendanceMarkedRecords->newEntity([
+            'institution_id'       => $tempRow['institution_id'],
+            'academic_period_id'   => $tempRow['academic_period_id'],
+            'institution_class_id' => $tempRow['institution_class_id'],
+            'education_grade_id'   => $tempRow['education_grade_id'],
+            'date'                 => $tempRow['date'],
+            'period'               => $tempRow['period'],
+            'subject_id'           => 0,
+        ]);
+        if (!$markRecord->errors()) {
+            $StudentAttendanceMarkedRecords->save($markRecord);
+        }
+
         return true;
     }
 

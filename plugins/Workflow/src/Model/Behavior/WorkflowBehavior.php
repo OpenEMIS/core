@@ -49,6 +49,7 @@ class WorkflowBehavior extends Behavior
         'filter' => [
             'type' => true,
             'category' => true,
+            'level' => true,
             'area' => true,
             'period' => true,
             'month' => true
@@ -466,14 +467,39 @@ class WorkflowBehavior extends Behavior
                 $this->_table->controller->set(compact('categoryOptions', 'selectedCategory'));
                 // End
             }
+            $selectedLevel = '-1';
+            if (in_array($registryAlias, ['Training.TrainingSessions','Training.TrainingSessionResults'])) {
+                $Level = TableRegistry::get('Area.AreaLevels');
+                $levelOptions = $Level->find('list')->toArray();
+                $levelOptions = ['-1' => '-- '.__('Select Area Level').' --'] + $levelOptions;
+                $selectedLevel = $this->_table->queryString('level', $levelOptions);
+                if (isset($this->controller->request->query['level'])) {
+                    $selectedLevel = $this->controller->request->query['level'];
+                }
+                $this->_table->advancedSelectOptions($levelOptions, $selectedLevel);
+                $this->_table->controller->set(compact('levelOptions','selectedLevel'));
+            }
             //POCOR-5695 starts
             if ($filterConfig['area']) {
                 // Area Options
                 $Areas = TableRegistry::get('Area.Areas');
+                /*
                 $areaOptions = $Areas
                             ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                             ->order([$Areas->aliasField('order')]);
                 $areaOptions = ['-1' => '-- ' . __('All Areas') . ' --'] + $areaOptions->toArray();            
+                */
+                if (in_array($registryAlias, ['Training.TrainingSessions','Training.TrainingSessionResults'])) {
+                    if($selectedLevel != -1){
+                        $areaOptions = $Areas->find('list')->where([$Areas->aliasField('area_level_id') => $selectedLevel])->toArray();
+                    } else{
+                        $areaOptions = $Areas->find('list')->toArray();
+                    }
+                    $areaOptions = ['-1' => '-- ' . __('All Areas') . ' --'] + $areaOptions;
+                } else {
+                    $areaOptions = $Areas->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])->order([$Areas->aliasField('order')]);
+                    $areaOptions = ['-1' => '-- ' . __('All Areas') . ' --'] + $areaOptions->toArray();
+                }
                 $selectedArea = $this->_table->queryString('area', $areaOptions);
                 $this->_table->advancedSelectOptions($areaOptions, $selectedArea);
                 $this->_table->controller->set(compact('areaOptions','selectedArea'));
@@ -539,6 +565,90 @@ class WorkflowBehavior extends Behavior
             }
         }
         
+        //POCOR-5695 starts
+        if(($this->_table->alias == 'Results') || ($this->_table->alias == 'Sessions')){
+            $TrainingSessions = TableRegistry::get('training_sessions');
+            if($this->_table->alias == 'Results'){
+                $query->leftJoin(
+                        [$TrainingSessions->alias() => $TrainingSessions->table()],
+                        [
+                            $this->_table->aliasField('training_session_id = ') . $TrainingSessions->aliasField('id'),
+                        ]
+                    );
+            }
+            if ($filterConfig['area']) {
+                $selectedArea = $this->_table->ControllerAction->getVar('selectedArea');
+                if (!is_null($selectedArea) && $selectedArea != -1) {
+                    $areaIds= []; 
+                    $Areas = TableRegistry::get('Area.Areas');
+                    $AreasOptions = $Areas
+                                    ->find()
+                                    ->where([$Areas->aliasField('parent_id') => $selectedArea])
+                                    ->all();    
+                    $areaIds[] =  $selectedArea;              
+                    if(!empty($AreasOptions)){
+                        foreach ($AreasOptions as $AreasOption) {
+                            $areaIds[] = $AreasOption->id;
+
+                            $AreasOptions1 =$Areas
+                                    ->find()
+                                    ->where([$Areas->aliasField('parent_id') => $AreasOption->id])
+                                    ->all();
+                            if(!empty($AreasOptions1)){
+                                foreach ($AreasOptions1 as $AreasOption1) {
+                                    $areaIds[] = $AreasOption1->id;
+                                }
+                            }
+                        }
+                    }
+                    $selectedArea = $areaIds;      
+                    if($this->_table->alias == 'Results'){
+                        $query->where([$TrainingSessions->aliasField('area_id IN') => $selectedArea]);
+                    }else{
+                        $query->where([$this->_table->aliasField('area_id IN') => $selectedArea]);
+                    }
+                }
+            }
+            if ($filterConfig['period'] && $filterConfig['month']) { 
+                $selectedPeriods = $this->_table->ControllerAction->getVar('selectedPeriods');
+                $selectedMonth = $this->_table->ControllerAction->getVar('selectedMonth');
+                $checkFlag = 0;
+                if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && ($selectedMonth == -1)) {
+                    $compare_start_date = $selectedPeriods .'-01-01';
+                    $compare_end_date = $selectedPeriods .'-12-31';   
+                    $checkFlag =1;
+                }else if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && (!is_null($selectedMonth) && $selectedMonth != -1)) {
+
+                    $cal_date_in_month = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedPeriods); //calcualte days in given month in given year
+                    $compare_start_date = $selectedPeriods .'-'. $selectedMonth.'-'.'01';
+                    $compare_end_date = $selectedPeriods .'-'. $selectedMonth.'-'.$cal_date_in_month;   
+                    $checkFlag =1;
+                }
+                if($checkFlag == 1){
+                    if($this->_table->alias == 'Results'){
+                        $query->where([
+                            'OR'=>[
+                                    [$TrainingSessions->aliasField('start_date >=') => $compare_start_date, $TrainingSessions->aliasField('end_date <=') => $compare_end_date],
+                                    [$TrainingSessions->aliasField('start_date >=') => $compare_start_date, $TrainingSessions->aliasField('start_date <=') => $compare_end_date],
+                                    [$TrainingSessions->aliasField('end_date >=') => $compare_start_date, $TrainingSessions->aliasField('end_date <=') => $compare_end_date]
+                                ]
+                            ]
+                        );
+                    }else{
+                        $query->where([
+                            'OR'=>[
+                                    [$this->_table->aliasField('start_date >=') => $compare_start_date, $this->_table->aliasField('end_date <=') => $compare_end_date],
+                                    [$this->_table->aliasField('start_date >=') => $compare_start_date, $this->_table->aliasField('start_date <=') => $compare_end_date],
+                                    [$this->_table->aliasField('end_date >=') => $compare_start_date, $this->_table->aliasField('end_date <=') => $compare_end_date]
+                                ]
+                            ]
+                        );
+                    }
+                }
+
+            }//POCOR-5695 ends
+        }
+
         //POCOR-5695 starts
         if(($this->_table->alias == 'Results') || ($this->_table->alias == 'Sessions')){
             $TrainingSessions = TableRegistry::get('training_sessions');
