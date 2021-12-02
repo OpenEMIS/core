@@ -76,12 +76,55 @@ class DashboardController extends AppController
     public function index()
     {
         $user = $this->Auth->user();
+        /*POCOR-6395 starts*/
+        if (!$this->AccessControl->isAdmin()) {
+            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+            $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+            $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+            $SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+            $roleIds = [];
+            $functionId = $SecurityFunctions->find()
+                        ->where([
+                            $SecurityFunctions->aliasField('name') => 'User Profile Completeness',
+                            $SecurityFunctions->aliasField('module') => 'Personal',
+                        ])->first()->id;
+                if (!empty($functionId)) {
+                    $userRole = $SecurityGroupUsers
+                        ->find()
+                        ->select([
+                            $SecurityGroupUsers->aliasField('security_role_id'),
+                        ])
+                        ->where(['security_user_id' => $user['id']])
+                        ->toArray();
+                if (!empty($userRole)) {
+                    foreach ($userRole as $role) {
+                        $roleIds[] = $role->security_role_id;
+                    }
+
+                $functionAccess = $SecurityRoleFunctions->find()
+                                ->where([
+                                    $SecurityRoleFunctions->aliasField('security_role_id IN') => $roleIds,
+                                    $SecurityRoleFunctions->aliasField('security_function_id') => $functionId,
+                                    $SecurityRoleFunctions->aliasField('_view') => 1
+                                ])->toArray();
+                    if (!empty($functionAccess)) {
+                        $hasPermission = true;
+                    } else {
+                        $hasPermission = false;
+                    }
+                }
+
+                $this->set('hasPermission', $hasPermission);
+            }
+        } 
+        /*POCOR-6395 ends*/
         $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
         $StudentStatusUpdates->checkRequireUpdate();
         $this->set('ngController', 'DashboardCtrl as DashboardController');
         if ($this->AccessControl->isAdmin()) {
             $this->set('isAdmin',true);
         }
+        
         $profileData = $this->getProfileCompletnessData($user['id']);
         $this->set('profileCompletness',$profileData);
         $this->set('noBreadcrumb', true);
@@ -126,7 +169,7 @@ class DashboardController extends AppController
 
     public function getProfileCompletnessData ($userId) {
         $data = array();
-        $data['percentage'] = 0;
+        //$data['percentage'] = 0;//POCOR-6395
         $profileComplete = 0;
         $securityUsers = TableRegistry::get('security_users');
 		$securityUsersData = $securityUsers->find()		
@@ -263,6 +306,7 @@ class DashboardController extends AppController
                     }
                 }
             }
+
             $totalProfileComplete = count($data);
             $profilePercentage = 100/$totalProfileComplete * $profileComplete;
             $profilePercentage = round($profilePercentage);

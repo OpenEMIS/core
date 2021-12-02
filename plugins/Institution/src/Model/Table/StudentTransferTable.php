@@ -35,6 +35,7 @@ class StudentTransferTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+        $this->belongsTo('InstitutionGrades', ['className' => 'Institution.InstitutionGrades']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
 
@@ -237,12 +238,25 @@ class StudentTransferTable extends ControllerActionTable
             $selectedPeriod = $this->currentPeriod->id;
             $statuses = $this->statuses;
 
-            $gradeOptions = $Grades
+            /*$gradeOptions = $Grades
                 ->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
                 ->contain(['EducationGrades'])
                 ->where([$Grades->aliasField('institution_id') => $institutionId])
                 ->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-                ->toArray();
+                ->toArray();*/
+
+                 $gradeOptions = $Grades
+                        ->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
+                        //->contain(['EducationGrades.EducationProgrammes', 'EducationGrades.EducationStages'])
+                        ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems', 'EducationGrades.EducationStages'])
+                        ->where([
+                            'EducationSystems.academic_period_id' => $selectedPeriod
+                        ])
+                        ->where([$Grades->aliasField('institution_id') => $institutionId])
+                        //->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
+                        ->order(['EducationStages.order', 'EducationGrades.order'])
+                        ->toArray();
+
 
             $selectedGrade = $request->query('education_grade_id');
             $pendingTransferStatuses = $this->StudentTransfers->getStudentTransferWorkflowStatuses('PENDING');
@@ -288,6 +302,7 @@ class StudentTransferTable extends ControllerActionTable
 
     public function onUpdateFieldNextAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
+
         $nextPeriodOptions = [];
 
         if (!is_null($this->currentPeriod)) {
@@ -338,14 +353,14 @@ class StudentTransferTable extends ControllerActionTable
 
         $nextGradeOptions = [];
         if (!empty($selectedGrade) && $selectedGrade != -1 && !empty($nextPeriodId)) {
+            //$nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGrades($selectedGrade); //POCOR-6362 comment this code because wrong next education grade is showing wrong
+            // $nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGradesForTransfer($nextPeriodId);//POCOR-6362
+            $nextGradeOptions = $this->InstitutionGrades->getNextAvailableEducationGradesForTransfer($nextPeriodId);
 
-            $nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGrades($selectedGrade);
+            //$currentGradeOptions = $this->getGrandEducationOptions();//POCOR-6362 because no need of current grade options
 
-            $currentGradeOptions = $this->getGrandEducationOptions();
-
-            $gradeResult = $currentGradeOptions + $nextGradeOptions;
+            $gradeResult = $nextGradeOptions;
             $nextGradeId = $request->query('next_education_grade_id');
-
 
             if (is_null($nextPeriodId)) {
                 $nextGradeId = key($nextGradeOptions);
@@ -385,7 +400,7 @@ class StudentTransferTable extends ControllerActionTable
                 // 		}
                 // 	]);
             }
-            // $this->request->query['next_education_grade_id'] = $nextGradeId;
+            $this->request->query['next_education_grade_id'] = $nextGradeId;
         }
 
         $attr['options'] = $gradeResult;
@@ -507,7 +522,6 @@ class StudentTransferTable extends ControllerActionTable
         $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
 
         $institutionOptions = [];
-
         if (!is_null($nextPeriodId) && !is_null($nextGradeId)) {
             $Grades = $this->Grades;
             $institutionId = $this->institutionId;
