@@ -1015,7 +1015,7 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->aliasField('marks IS NOT NULL')
                                     ])
                                     ->all();
-                                //echo "<pre>";print_r($assessmentItemResultsEntities);die();
+                               
                                 if (!$assessmentItemResultsEntities->isEmpty()) {
                                     foreach ($assessmentItemResultsEntities as $entity) {
                                         foreach ($reportCardSubjectsEntity as $reportCardSubjectEntity) {
