@@ -688,6 +688,22 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 ->execute();
             }
 
+            $institutionShifts = TableRegistry::get('institution_shifts');
+            $institutionShiftsData = $institutionShifts->find()
+                    ->select([
+                        'institution_id' => 'institution_shifts.institution_id',
+                        'location_institution_id' => 'institution_shifts.location_institution_id',
+                    ])
+                    ->where([$institutionShifts->aliasField('institution_id') => $entity->id])
+                    ->toArray();
+            foreach($institutionShiftsData AS $institutionShiftsDataVal){
+                $query = $institutionShifts->query();
+                $query->update()
+                ->set(['institution_id' => $institutionShiftsDataVal->location_institution_id])
+                ->where(['institution_id' => $institutionShiftsDataVal->institution_id, 'location_institution_id'=>$institutionShiftsDataVal->location_institution_id])
+                ->execute();
+            }
+
             $query = $this->query();
             $query->update()
             ->set(['date_closed' => date('Y-m-d'), 'institution_status_id' => 2])

@@ -118,6 +118,8 @@ trait MessagesTrait
             'validationRules' => 'Validation Rules',
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
             'custom_validation_pattern' => 'Please enter a valid format',
+            'bulk_student_transfer_in' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution.',
+            'bulk_student_transfer_out' => 'Students Transferred Successful.',
             'inactive_message' => 'This institution is inactive, all data entry operation are disabled.',
             'status_update' => 'You are about to update the status of the Institution. This action will affect the availability of the Institution in the system.',
             'contactInstitution' => [
@@ -416,7 +418,8 @@ trait MessagesTrait
         ],
         'StaffBehaviours' => [
             'date_of_behaviour' => 'Date',
-            'time_of_behaviour' => 'Time'
+            'time_of_behaviour' => 'Time',
+            'restrictDelete' => 'Behaviour cannot be deleted until after configured days'
         ],
         'SystemGroups' => [
             'tabTitle' => 'System Groups'
@@ -512,6 +515,7 @@ trait MessagesTrait
             'date_of_behaviour' => [
                 'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
             ],
+            'cannotDelete' => 'Behaviour cannot be deleted until after configured days'
         ],
         'StudentPromotion' => [
             'noGrades' => 'No Available Grades',
@@ -543,11 +547,17 @@ trait MessagesTrait
             'savingError' => 'Some selected students record were not updated succesfully',
         ],
         'BulkStudentTransferIn' => [
-            'success' => 'Bulk students transfer successful',
+            'success' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution',
             'reconfirm' => 'Please review the information before proceeding with the operation',
             'noStudentSelected' => 'There are no students selected',
             'savingError' => 'Some selected students record were not updated succesfully',
-        ],
+        ], //6028 starts
+        'BulkStudentTransferOut' => [
+            'success' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution',
+            'reconfirm' => 'Please review the information before proceeding with the operation',
+            'noStudentSelected' => 'There are no students selected',
+            'savingError' => 'Some selected students record were not updated succesfully',
+        ],//6028 ends
         'IndividualPromotion' => [
             'noGrades' => 'No Available Grades',
             'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',
@@ -1111,7 +1121,10 @@ trait MessagesTrait
                     'ageRangeHint' => 'The student should be between %s to %s years old',
                     'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.',
                     'studentNotExists' => 'This student does not exist in the system.'
-                ],
+                ],//POCOR-5924 starts
+                'identity_number' => [
+                    'ruleCheckUniqueIdentityNumber' => 'This identity has already existed in the system.'
+                ],//POCOR-5924 ends
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
@@ -2157,7 +2170,8 @@ trait MessagesTrait
                 'risk_value' => [
                     'ruleRange' => 'Value must be within 1 to 99'
                 ]
-            ]
+            ],
+            'generate' => 'Generate risk for all institutions successfully.',
         ],
         'Textbook' => [
             'Textbooks' => [
@@ -2463,7 +2477,7 @@ trait MessagesTrait
                 ]
             ],
             'addEdit' => 'This feature is for historical record use only. For current records, please refrain from adding record on this page.'
-        ],        
+        ],
         'Schedule' => [
             'ScheduleTerms' => [
                 'start_date' => [
@@ -2490,10 +2504,19 @@ trait MessagesTrait
             'transferConnectionFail' => 'Please configure connection to Archive Database.',
             'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.'
         ],
+        'CopyData' => [
+            'genralerror' => 'To and from academic period can not be same.',
+            'alreadyexist' => 'There are existing data in the selected To Academic Period.',
+            'nodataexist' => 'Data does not exist for seleceted from academic period.',
+            'nodataexisteducationsystem' => 'Data does not exist in education system for seleceted to academic period.'
+        ],
         'UserNationalities' => [
             'ValidateNumberSuccess' => 'Identity number validate successfully.',
             'ValidateNumberFail' => 'Please enter correct identity number.',
             'IdentityNumberNotExist' => 'Identity number should not be blank.',
+        ],
+        'StudentMarkTypeStatuses' => [
+            'statusAlreadyAdded' => 'Attendance for the selected Education Grade already added.',
         ]
 
     ];

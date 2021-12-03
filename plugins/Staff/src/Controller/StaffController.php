@@ -95,6 +95,9 @@ class StaffController extends AppController
         $this->set('contentHeader', 'Staff');
 
         $this->attachAngularModules();
+
+        $this->loadModel('Institution.StaffBodyMasses');
+        $this->loadModel('User.UserInsurances');
     }
 
     // CAv4
@@ -238,11 +241,63 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStaffAttendanceActivities']);
     }
 
+    public function InstitutionStaffAttendancesArchive()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStaffAttendancesArchive']);
+    }
+
+    //POCOR-6138 - Add export Button
+    public function StaffBodyMasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.StaffBodyMasses']);
+    }
+
+    public function StaffInsurances()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.UserInsurances']);
+    }
+
+    public function changeHealthHeader($model, $modelAlias, $userType)
+    {
+        if($this->request->param('action') == 'StaffBodyMasses'){
+            $session = $this->request->session();
+            $institutionId = 0;
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+            if (!empty($institutionId)) {
+
+                $staffName = $session->read('Staff.Staff.name');
+                $header = $staffName . ' - ' . __('Body Mass');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Body Mass'));
+                $this->set('contentHeader', $header);
+            }
+        } else if($this->request->param('action') == 'StaffInsurances'){
+            $session = $this->request->session();
+            $institutionId = 0;
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+            if (!empty($institutionId)) {
+
+                $staffName = $session->read('Staff.Staff.name');
+                $header = $staffName . ' - ' . __('Insurances');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore('Staff Insurances')));
+                $this->Navigation->addCrumb(__('Insurances'));
+                $this->set('contentHeader', $header);
+            }
+        }
+    }
+
+    //POCOR-6138 - Add export Button
+
     // AngularJS
     public function StaffAttendances()
     {
         $_edit = $this->AccessControl->check(['Staff', 'StaffAttendances', 'edit']);
         $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
+        $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
         if (!empty($this->request->param('institutionId'))) {
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
         } else {
@@ -260,9 +315,16 @@ class StaffController extends AppController
         $historyUrl['controller'] = 'Staff';
         $historyUrl['action'] = 'InstitutionStaffAttendanceActivities';
 
+        $archiveUrl = $this->ControllerAction->url('index');
+        $archiveUrl['plugin'] = 'Staff';
+        $archiveUrl['controller'] = 'Staff';
+        $archiveUrl['action'] = 'InstitutionStaffAttendancesArchive';
+
         $this->set('historyUrl', Router::url($historyUrl));
         $this->set('_edit', $_edit);
         $this->set('_history', $_history);
+        $this->set('_archive', $_archive);
+        $this->set('archiveUrl', Router::url($archiveUrl));
         $this->set('institution_id', $institutionId);
         $this->set('staff_id', $staffId);
         $this->set('tabElements', $tabElements);

@@ -26,14 +26,26 @@ class StudentBehavioursTable extends AppTable {
 		$this->ControllerAction->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
 	}
         
-        public function beforeFind( Event $event, Query $query )
-        {   
-            if ($this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
-                $studentId = $this->Session->read('Auth.User.id');
-                $conditions[$this->aliasField('student_id')] = $studentId;
-                $query->where($conditions, [], true);
-            }            
-        }
+	public function beforeFind( Event $event, Query $query )
+	{   
+		if (isset($this->controller->name) && $this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
+			if ($this->Session->read('Auth.User.is_guardian') == 1) {
+				$sId = $this->Session->read('Student.ExaminationResults.student_id'); 
+				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+			} else {
+				$studentId = $this->Session->read('Auth.User.id');
+			}
+		} 
+
+		/*POCOR-6267 starts*/
+	    if (isset($this->controller->name) && $this->controller->name == 'GuardianNavs') {
+	    	$session = $this->request->session();
+	        $studentId = $session->read('Student.Students.id');
+	    }/*POCOR-6267 ends*/ 
+
+	    $conditions[$this->aliasField('student_id')] = $studentId;
+		$query->where($conditions, [], true);        
+	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		parent::onUpdateActionButtons($event, $entity, $buttons);

@@ -18,7 +18,7 @@ class EducationCyclesTable extends ControllerActionTable
 	{
 		parent::initialize($config);
 		$this->belongsTo('EducationLevels', ['className' => 'Education.EducationLevels']);
-		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
+        $this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
 
 		if ($this->behaviors()->has('Reorder')) {
 			$this->behaviors()->get('Reorder')->config([
@@ -54,7 +54,7 @@ class EducationCyclesTable extends ControllerActionTable
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		// Academic period filter
+        // Academic period filter
 	    $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
@@ -69,12 +69,12 @@ class EducationCyclesTable extends ControllerActionTable
             $levelOptions = ['0' => '-- '.__('No Education Level').' --'] + $levelOptions;
             $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
         }
-        
+
         $this->controller->set(compact('levelOptions', 'selectedLevel'));
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
 		$query->where([$this->aliasField('education_level_id') => $selectedLevel])
-                        ->order([$this->aliasField('order') => 'ASC']); 
-		
+                        ->order([$this->aliasField('order') => 'ASC']);
+
 		$sortList = ['name','EducationLevels.name'];
 		if (array_key_exists('sortWhitelist', $extra['options'])) {
 			$sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
@@ -84,20 +84,51 @@ class EducationCyclesTable extends ControllerActionTable
 
 	public function addEditBeforeAction(Event $event, ArrayObject $extra)
 	{
-		$this->field('education_level_id');
+        $this->field('education_level_id');
 		$this->field('admission_age', ['after' => 'name', 'attr' => ['min' => 0, 'max' => 99]]);
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
 	{
-		// update the admission age in education grade if there is changes on the admission age
+        // Webhook Education Cycle create -- start
+        if($entity->isNew()){
+            $body = array();
+            $body = [
+				'education_level_id'   => $entity->education_level_id,
+                'education_cycle_id'   => $entity->id,
+                'education_cycle_name' => $entity->name,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_cycle_create', ['username' => $username], $body);
+            }
+        }
+        // Webhook Education Cycle create -- end
+
+        //webhook Education Cycle update -- start
+        if(!$entity->isNew()){
+            $body = array();
+            $body = [
+                'education_level_id'   => $entity->education_level_id,
+                'education_cycle_id'   => $entity->id,
+                'education_cycle_name' => $entity->name,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_cycle_update', ['username' => $username], $body);
+            }
+        }
+
+        //webhook Education Cycle update -- start
+
+        // update the admission age in education grade if there is changes on the admission age
 		if (!$entity->isNew()) {
-			$originalEntity = $entity->extractOriginal(['admission_age']);
-			$originalAdmissionAge = $originalEntity['admission_age'];
+            $originalEntity = $entity->extractOriginal(['admission_age']);
+            $originalAdmissionAge = $originalEntity['admission_age'];
 			$admissionAge = $entity->admission_age;
 
 			if ($originalAdmissionAge != $admissionAge) {
-				$educationCycleId = $entity->id;
+                $educationCycleId = $entity->id;
 
 				$educationProgrammeRecords = $this->EducationProgrammes->find()
 					->where([$this->EducationProgrammes->aliasField('education_cycle_id') => $entity->id])
@@ -129,9 +160,25 @@ class EducationCyclesTable extends ControllerActionTable
 		}
 	}
 
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // Webhook Education Cycle Delete -- Start
+
+        $body = array();
+        $body = [
+            'education_cycle_id' => $entity->id
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('education_cycle_delete', ['username' => $username], $body);
+        }
+        // Webhook Education Cycle Delete -- End
+    }
+
 	public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, Request $request)
 	{
-		list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
+        //echo $this->ControllerAction; exit;
+        list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
 		$attr['options'] = $levelOptions;
 		if ($action == 'add') {
 			$attr['default'] = $selectedLevel;
@@ -142,7 +189,7 @@ class EducationCyclesTable extends ControllerActionTable
 
 	public function getSelectOptions()
 	{
-		// Academic period filter
+        // Academic period filter
 	    $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();

@@ -14,7 +14,7 @@ use App\Model\Traits\OptionsTrait;
 
 class InstitutionStaffTable extends AppTable
 {
-	use OptionsTrait;
+    use OptionsTrait;
 
     public function initialize(array $config)
     {
@@ -55,17 +55,26 @@ class InstitutionStaffTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $statusId = $requestData->status;
         $typeId = $requestData->type;
-
-        if ($statusId!=0) {
+        $institutionId = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
+        if ($statusId != 0) {
             $query->where([
                 $this->aliasField('staff_status_id') => $statusId
             ]);
         }
 
-        if ($typeId!=0) {
+        if ($typeId != 0) {
             $query->where([
                 $this->aliasField('staff_type_id') => $typeId
             ]);
+        }
+        if ($institutionId != 0) {
+            $query->where([
+                $this->aliasField('institution_id') => $institutionId
+            ]);
+        }
+        if ($areaId != -1) {
+            $query->where(['Institutions.area_id' => $areaId]);
         }
 
         $query
@@ -112,7 +121,12 @@ class InstitutionStaffTable extends AppTable
                         'area_administrative_code' => 'AreaAdministratives.code',
                         'area_administrative_name' => 'AreaAdministratives.name'
                     ]
-                ],
+                ],//POCOR-5388 starts
+                'Institutions.Localities' => [
+                    'fields' => [
+                        'locality_name' => 'Localities.name'
+                    ]
+                ],//POCOR-5388 ends
                 'Users' => [
                     'fields' => [
                         'Users.id', // this field is required for Identities and IdentityTypes to appear
@@ -329,7 +343,14 @@ class InstitutionStaffTable extends AppTable
             'type' => 'integer',
             'label' => '',
         ];
-
+        //POCOR-5388 starts
+        $newFields[] = [
+            'key' => 'Institutions.locality_name',
+            'field' => 'locality_name',
+            'type' => 'string',
+            'label' => __('Locality')
+        ];
+        //POCOR-5388 ends
         $newFields[] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',

@@ -46,7 +46,7 @@ return [
             'host' => 'smtp.gmail.com',
             'port' => 587,
             'timeout' => 30,
-            'username' => 'app@kordit.com',
+            'username' => 'app@openemis.org',
             'password' => '',
             'client' => null,
             'tls' => true,
@@ -57,7 +57,7 @@ return [
     'Email' => [
         'openemis' => [
             'transport' => 'openemis',
-            'from' => ['app@kordit.com' => 'DoNotReply'],
+            'from' => ['app@openemis.org' => 'DoNotReply'],
             //'charset' => 'utf-8',
             //'headerCharset' => 'utf-8',
         ],

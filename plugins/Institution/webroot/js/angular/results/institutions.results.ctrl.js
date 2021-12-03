@@ -16,6 +16,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
     $scope.academicTermOptions = [];
     $scope.selectedAcademicTerm = undefined;
     $scope.editPermissionForSelectedSubject = false;
+    $scope.editPermission=0;
 
     angular.element(document).ready(function () {
         // init
@@ -48,8 +49,10 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
             if ($scope.academicTermOptions.length > 0) {
                 $scope.selectedAcademicTerm = $scope.academicTermOptions[0]['name'];
             }
-
-            $scope.subjects = promises[0];
+            
+            $scope.editPermission=promises[0][0].is_editable;
+            
+             $scope.subjects = promises[0];
             if (angular.isObject($scope.subjects) && $scope.subjects.length > 0) {
                 var subject = $scope.subjects[0];
 
@@ -279,7 +282,11 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
         $scope.onChangeSubject();
     };
 
-    $scope.onChangeSubject = function(subject = undefined) {
+    $scope.onChangeSubject = function(subject = undefined, editable) {
+        //console.log(editable);
+        if(editable != undefined){
+        $scope.editPermission= editable;
+    }
         AlertSvc.reset($scope);
         $scope.action = 'view';
 

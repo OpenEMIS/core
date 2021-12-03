@@ -7,6 +7,8 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
+use Cake\Routing\Router;
 
 use App\Controller\AppController;
 
@@ -63,7 +65,7 @@ class StudentsController extends AppController
         $this->ControllerAction->models = [
             'Accounts'          => ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
             'Nationalities'     => ['className' => 'User.Nationalities'],
-            'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
+            // 'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
             'Behaviours'        => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'Extracurriculars'  => ['className' => 'Student.Extracurriculars',  'actions' => ['index', 'add', 'edit', 'remove','view']],
             'History'           => ['className' => 'User.UserActivities', 'actions' => ['index']],
@@ -73,6 +75,9 @@ class StudentsController extends AppController
         $this->loadComponent('User.Image');
         $this->loadComponent('Institution.InstitutionAccessControl');
         $this->attachAngularModules();
+
+        $this->loadModel('User.UserBodyMasses');
+        $this->loadModel('User.UserInsurances');
 
         $this->set('contentHeader', 'Students');
     }
@@ -145,19 +150,24 @@ class StudentsController extends AppController
     public function Outcomes()
     {
         $comment = $this->request->query['comment'];
-        if(!empty($comment) && $comment == 1){ 
+        if(!empty($comment) && $comment == 1){
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
-        
+
         }else{
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
-        }        
+        }
+    }
+
+    public function Absences()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
     }
 
     public function Meals()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionMealStudents']);
     }
-	
+
 	public function Profiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Profiles']);
@@ -231,7 +241,7 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentVisits']);
     }
     // Visits - END
-    
+
     public function Competencies()
     {
         $session = $this->request->session();
@@ -249,15 +259,70 @@ class StudentsController extends AppController
 
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCompetencies']);
         }
-        
+
     }
     // End
+
+    public function AssessmentItemResultsArchived()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.AssessmentItemResultsArchived']);
+    }
+
+    //POCOR-6131 - Add export Button
+    public function StudentBodyMasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserBodyMasses']);
+    }
+
+    public function StudentInsurances()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserInsurances']);
+    }
+
+    public function changeStudentHealthHeader($model, $modelAlias, $userType)
+    {
+        if($this->request->param('action') == 'StudentBodyMasses'){
+            $session = $this->request->session();
+            $institutionId = 0;
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+            if (!empty($institutionId)) {
+
+                $studentName = $session->read('Student.Students.name');
+                $header = $studentName . ' - ' . __('Body Mass');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Body Mass'));
+                $this->set('contentHeader', $header);
+            }
+        } else if($this->request->param('action') == 'StudentInsurances'){
+            $session = $this->request->session();
+            $institutionId = 0;
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+            if (!empty($institutionId)) {
+
+                $studentName = $session->read('Student.Students.name');
+                $header = $studentName . ' - ' . __('Insurances');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore('Student Insurances')));
+                $this->Navigation->addCrumb(__('Insurances'));
+                $this->set('contentHeader', $header);
+            }
+        }
+    }
+
+    //POCOR-6131 - Add export Button
 
     // AngularJS
     public function Results()
     {
         $session = $this->request->session();
-
+        $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
+        $archiveUrl = $this->ControllerAction->url('index');
+        $archiveUrl['plugin'] = 'Student';
+        $archiveUrl['controller'] = 'Students';
+        $archiveUrl['action'] = 'AssessmentItemResultsArchived';
         if ($session->check('Student.Students.id')) {
             $studentId = $session->read('Student.Students.id');
             $session->write('Student.Results.student_id', $studentId);
@@ -265,12 +330,18 @@ class StudentsController extends AppController
             // tabs
             $options = ['type' => 'student'];
             $tabElements = $this->getAcademicTabElements($options);
+            $this->set('_archive', $_archive);
+            $this->set('archiveUrl', Router::url($archiveUrl));
             $this->set('tabElements', $tabElements);
             $this->set('selectedAction', 'Results');
             // End
 
             $this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
         }
+    }
+
+    public function InstitutionStudentAbsencesArchived(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStudentAbsencesArchived']);
     }
 
     public function ExaminationResults()
@@ -296,7 +367,7 @@ class StudentsController extends AppController
     private function attachAngularModules()
     {
         $action = $this->request->action;
-        
+
         switch ($action) {
             case 'Results':
                 $this->Angular->addModules([
@@ -314,7 +385,7 @@ class StudentsController extends AppController
                 ]);
                 break;
             case 'StudentScheduleTimetable':
-                
+
                 $this->Angular->addModules([
                     'studenttimetable.ctrl',
                     'studenttimetable.svc'
@@ -398,9 +469,10 @@ class StudentsController extends AppController
             $idKey = $this->ControllerAction->getPrimaryKey($model);
             $primaryKey = $model->primaryKey();
 
+            $alias = $model->alias;
             //POCOR-5890 starts
-            if($model->getHeader($alias) == 'Immunizations'){
-                $alias = __('Vaccinations');     
+            if($model->getHeader($alias) == 'HealthImmunizations'){
+                $alias = __('Vaccinations');
             }
             //POCOR-5890 ends
             $this->Navigation->addCrumb($model->getHeader($alias));
@@ -514,7 +586,7 @@ class StudentsController extends AppController
     // }
 
     public function getUserTabElements($options = [])
-    {
+    {   
         $session = $this->request->session();
         $tabElements = $session->read('Institution.Students.tabElements');
 
@@ -700,18 +772,18 @@ class StudentsController extends AppController
         ];
         return $this->TabPermission->checkTabPermission($tabElements);
     }
-    
+
     public function StudentScheduleTimetable()
     {
         $session = $this->request->session();
 
         if ($session->check('Student.Students.id')) {
             $userId = $session->read('Student.Students.id');
-            
+
         }else{
             $userId = $this->Auth->user('id');
         }
-        
+
         $InstitutionStudents =
             TableRegistry::get('Institution.InstitutionStudents')
             ->find()
@@ -720,12 +792,12 @@ class StudentsController extends AppController
             ])
             ->hydrate(false)
             ->first();
-        
+
         $institutionId = $InstitutionStudents['institution_id'];
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
                 ->getCurrent();
-        
-        $InstitutionClassStudentsResult = 
+
+        $InstitutionClassStudentsResult =
                 TableRegistry::get('Institution.InstitutionClassStudents')
                     ->find()
                     ->where([
@@ -735,7 +807,7 @@ class StudentsController extends AppController
                     ])
                     ->hydrate(false)
                     ->first();
-        
+
         $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
         $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
                 ->find()
@@ -747,10 +819,10 @@ class StudentsController extends AppController
                     ])
                 ->hydrate(false)
                 ->first();
-        
+
         $this->set('userId', $userId);
         $timetable_id = (isset($ScheduleTimetables['id']))?$ScheduleTimetables['id']:0;
-        $this->set('timetable_id', $timetable_id);  
+        $this->set('timetable_id', $timetable_id);
         $this->set('academicPeriodId', $academicPeriodId);
         $this->set('institutionDefaultId', $institutionId);
         $this->set('ngController', 'StudentTimetableCtrl as $ctrl');

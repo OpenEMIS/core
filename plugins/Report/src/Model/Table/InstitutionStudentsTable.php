@@ -11,34 +11,35 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
 class InstitutionStudentsTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('institution_students');
-		parent::initialize($config);
+     private $_dynamicFieldName = 'custom_field_data';
+    public function initialize(array $config) {
+        $this->table('institution_students');
+        parent::initialize($config);
 
-		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'student_id']);
-		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
-		$this->belongsTo('EducationGrades',	['className' => 'Education.EducationGrades']);
-		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-		$this->belongsTo('AcademicPeriods',	['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->addBehavior('Report.ReportList');
-		$this->addBehavior('Excel', [
-			'excludes' => ['start_year', 'end_year', 'previous_institution_student_id'],
-			'pages' => false,
+        $this->belongsTo('Users',           ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+        $this->belongsTo('Institutions',    ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Excel', [
+            'excludes' => ['start_year', 'end_year', 'previous_institution_student_id'],
+            'pages' => false,
             'autoFields' => false
-		]);
-		$this->addBehavior('Report.InstitutionSecurity');
+        ]);
+        $this->addBehavior('Report.InstitutionSecurity');
 
         $this->statuses = $this->StudentStatuses->findCodeList();
-	}
+    }
 
-	public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
-		$sheets[] = [
-			'name' => $this->alias(),
-			'table' => $this,
-			'query' => $this->find(),
-			'orientation' => 'landscape'
-		];
-	}
+    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+        $sheets[] = [
+            'name' => $this->alias(),
+            'table' => $this,
+            'query' => $this->find(),
+            'orientation' => 'landscape'
+        ];
+    }
 
     // Thed-to-do: We should write data patch to delete orphan institution student records instead of auto delete from this report
     // public function onExcelBeforeWrite(Event $event, ArrayObject $settings, $rowProcessed, $percentCount) {
@@ -48,12 +49,12 @@ class InstitutionStudentsTable extends AppTable  {
     //     }
     // }
 
-	public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
-		// Setting request data and modifying fetch condition
-		$requestData = json_decode($settings['process']['params']);
-		$academicPeriodId = $requestData->academic_period_id;
+    public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
+        // Setting request data and modifying fetch condition
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
         $educationProgrammeId = $requestData->education_programme_id;
-		$statusId = $requestData->status;
+        $statusId = $requestData->status;
 
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
@@ -61,26 +62,32 @@ class InstitutionStudentsTable extends AppTable  {
         $Risks = TableRegistry::get('Institution.Risks');
         $UserIdentities = TableRegistry::get('User.UserIdentities');
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-        
+        $institution_id = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
+        if ($academicPeriodId != 0) {
+            $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
+        }
 
-		if ($academicPeriodId!=0) {
-			$query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
-		}
-
-        if ($educationProgrammeId!=0) {
+        if ($educationProgrammeId != 0) {
             $query->where(['EducationProgrammes.id' => $educationProgrammeId]);
         }
 
-		if ($statusId!=0) {
-			$query->where([$this->aliasField('student_status_id') => $statusId]);
-		}
+        if ($statusId != 0) {
+            $query->where([$this->aliasField('student_status_id') => $statusId]);
+        }
+        if ($institution_id != 0) {
+            $query->where([$this->aliasField('institution_id') => $institution_id]);
+        }
+        if ($areaId != -1) {
+            $query->where(['Institutions.area_id' => $areaId]);
+        }
 
         $statusOptions = $this->StudentStatuses
             ->find('list', ['keyField' => 'id', 'valueField' => 'code'])
             ->toArray();
 
-		$query
-			->select([
+        $query
+            ->select([
                 $this->aliasField('id'),
                 $this->aliasField('student_id'),
                 $this->aliasField('student_status_id'),
@@ -157,7 +164,17 @@ class InstitutionStudentsTable extends AppTable  {
                         'area_administrative_code' => 'AreaAdministratives.code',
                         'area_administrative_name' => 'AreaAdministratives.name'
                     ]
+                ],//POCOR-5388 starts
+                'Institutions.Localities' => [
+                    'fields' => [
+                        'locality_name' => 'Localities.name'
+                    ]
                 ],
+                'Institutions.Sectors' => [
+                    'fields' => [
+                        'sector_name' => 'Sectors.name'
+                    ]
+                ],//POCOR-5388 ends
                 'StudentStatuses' => [
                     'fields' => [
                         'StudentStatuses.name'
@@ -309,17 +326,91 @@ class InstitutionStudentsTable extends AppTable  {
                     return $row;
                 });
             });
+     $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                // POCOR-6338 starts
+                
+                $Users = TableRegistry::get('security_users');
+                $institutionStudents = TableRegistry::get('institution_students');      
+                // POCOR-6129 custome fields code
+                $Guardians = TableRegistry::get('student_custom_field_values');
+                $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
+                $studentCustomFields = TableRegistry::get('student_custom_fields');
+
+                $guardianData = $Guardians->find()
+                ->select([
+                    'id'                             => $Guardians->aliasField('id'),
+                    'student_id'                     => $Guardians->aliasField('student_id'),
+                    'student_custom_field_id'        => $Guardians->aliasField('student_custom_field_id'),
+                    'text_value'                     => $Guardians->aliasField('text_value'),
+                    'number_value'                   => $Guardians->aliasField('number_value'),
+                    'decimal_value'                  => $Guardians->aliasField('decimal_value'),
+                    'textarea_value'                 => $Guardians->aliasField('textarea_value'),
+                    'date_value'                     => $Guardians->aliasField('date_value'),
+                    'time_value'                     => $Guardians->aliasField('time_value'),
+                    'checkbox_value_text'            => 'studentCustomFieldOptions.name',
+                    'question_name'                  => 'studentCustomField.name',
+                    'field_type'                     => 'studentCustomField.field_type',
+                    'field_description'              => 'studentCustomField.description',
+                    'question_field_type'            => 'studentCustomField.field_type',
+                ])->leftJoin(
+                    ['studentCustomField' => 'student_custom_fields'],
+                    [
+                        'studentCustomField.id = '.$Guardians->aliasField('student_custom_field_id')
+                    ]
+                )->leftJoin(
+                    ['studentCustomFieldOptions' => 'student_custom_field_options'],
+                    [
+                        'studentCustomFieldOptions.id = '.$Guardians->aliasField('number_value')
+                    ]
+                )
+                ->where([
+                    $Guardians->aliasField('student_id') => $row->student_id,
+                ])->toArray();
+                $existingCheckboxValue = '';
+                foreach ($guardianData as $guadionRow) {
+                    $fieldType = $guadionRow->field_type;
+                    if ($fieldType == 'TEXT') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->text_value;
+                    } else if ($fieldType == 'CHECKBOX') {
+                        $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = trim($existingCheckboxValue, ',');
+                    } else if ($fieldType == 'NUMBER') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->number_value;
+                    } else if ($fieldType == 'DECIMAL') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->decimal_value;
+                    } else if ($fieldType == 'TEXTAREA') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->textarea_value;
+                    } else if ($fieldType == 'DROPDOWN') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->checkbox_value_text;
+                    } else if ($fieldType == 'DATE') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
+                    } else if ($fieldType == 'TIME') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
+                    } else if ($fieldType == 'COORDINATES') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->text_value;
+                    } else if ($fieldType == 'NOTE') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->field_description;
+                    }
+                }
+                // POCOR-6129 custome fields code
+
+                return $row;
+            });
+        });
+
+     
     }
 
-	public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
-		$age = '';
+    public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
+        $age = '';
         if ($entity->has('date_of_birth') && !empty($entity->date_of_birth)) {
             $dateOfBirth = $entity->date_of_birth->format('Y-m-d');
             $today = date('Y-m-d');
             $age = date_diff(date_create($dateOfBirth), date_create($today))->y;
         }
-		return $age;
-	}
+        return $age;
+    }
 
     public function onExcelRenderOpenemisNo(Event $event, Entity $entity, $attr) {
         $student_id = $entity->student_id;
@@ -496,35 +587,35 @@ class InstitutionStudentsTable extends AppTable  {
         return implode(', ', array_values($return));
     }
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 
         $requestData = json_decode($settings['process']['params']);
         $statusId = $requestData->status;
 
-		// To update to this code when upgrade server to PHP 5.5 and above
-		// unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
+        // To update to this code when upgrade server to PHP 5.5 and above
+        // unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
 
-		foreach ($fields as $key => $field) {
-			if ($field['field'] == 'institution_id') {
-				unset($fields[$key]);
-				// break;
-			} 
-		}
-		
-		$PrimaryField[] = [
-			'key' => 'Institutions.code',
-			'field' => 'code',
-			'type' => 'string',
-			'label' => __('Institution Code')
-		];
+        foreach ($fields as $key => $field) {
+            if ($field['field'] == 'institution_id') {
+                unset($fields[$key]);
+                // break;
+            } 
+        }
+        
+        $PrimaryField[] = [
+            'key' => 'Institutions.code',
+            'field' => 'code',
+            'type' => 'string',
+            'label' => __('Institution Code')
+        ];
 
         if ($statusId == $this->statuses['TRANSFERRED']) {
-    		$PrimaryField[] = [
-    			'key' => 'Students.institution_id',
-    			'field' => 'institution_id',
-    			'type' => 'integer',
-    			'label' => __('Institution Transferred From')
-    		];
+            $PrimaryField[] = [
+                'key' => 'Students.institution_id',
+                'field' => 'institution_id',
+                'type' => 'integer',
+                'label' => __('Institution Transferred From')
+            ];
         } else {
             $PrimaryField[] = [
                 'key' => 'Students.institution_id',
@@ -534,23 +625,34 @@ class InstitutionStudentsTable extends AppTable  {
             ];
         }
 
-		$PrimaryField[] = [
-			'key' => 'Institutions.institution_type_id',
-			'field' => 'institution_type',
-			'type' => 'integer',
-			'label' => __('Type'),
-		];
-
-
+        $PrimaryField[] = [
+            'key' => 'Institutions.institution_type_id',
+            'field' => 'institution_type',
+            'type' => 'integer',
+            'label' => __('Type'),
+        ];
+        //POCOR-5388 starts
+        $PrimaryField[] = [
+            'key' => 'Institutions.sector_name',
+            'field' => 'sector_name',
+            'type' => 'string',
+            'label' => __('Sector')
+        ];
+        //POCOR-5388 ends
         $PrimaryField[] = [
             'key' => 'Institutions.institution_provider_id',
             'field' => 'institution_provider',
             'type' => 'integer',
             'label' => __('Provider'),
         ];
-
-        
-
+        //POCOR-5388 starts
+        $PrimaryField[] = [
+            'key' => 'Institutions.locality_name',
+            'field' => 'locality_name',
+            'type' => 'string',
+            'label' => __('Locality')
+        ];
+        //POCOR-5388 ends
         if ($statusId == $this->statuses['TRANSFERRED']) {
             $PrimaryField[] = [
                 'key' => 'Institutions.area_code',
@@ -559,12 +661,12 @@ class InstitutionStudentsTable extends AppTable  {
                 'label' => __('Area Education Code Transferred From')
             ];
 
-    		$PrimaryField[] = [
-    			'key' => 'Institutions.area_name',
-    			'field' => 'area_name',
-    			'type' => 'string',
-    			'label' => __('Area Education Transferred From')
-    		];
+            $PrimaryField[] = [
+                'key' => 'Institutions.area_name',
+                'field' => 'area_name',
+                'type' => 'string',
+                'label' => __('Area Education Transferred From')
+            ];
 
             $PrimaryField[] = [
                 'key' => 'Institutions.area_administrative_code',
@@ -573,7 +675,7 @@ class InstitutionStudentsTable extends AppTable  {
                 'label' => __('Area Administrative Code Transferred From')
             ];
 
-    		$PrimaryField[] = [
+            $PrimaryField[] = [
                 'key' => 'Institutions.area_administrative_name',
                 'field' => 'area_administrative_name',
                 'type' => 'string',
@@ -872,7 +974,25 @@ class InstitutionStudentsTable extends AppTable  {
             'label' => __('Guardian Date of Birth')
         ];
 
+        $InfrastructureCustomFields = TableRegistry::get('student_custom_fields');
+        $customFieldData = $InfrastructureCustomFields->find()->select([
+            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+            'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+        ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
+       
+        if(!empty($customFieldData)) {
+            foreach($customFieldData as $data) {
+                $custom_field_id = $data->custom_field_id;
+                $custom_field = $data->custom_field;
+                $DataField[] = [
+                    'key' => '',
+                    'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
+                    'type' => 'string',
+                    'label' => __($custom_field)
+                ];
+            }
+        }
         $fields_new = array_merge($fields->getArrayCopy(),$DataField);
         $fields->exchangeArray($fields_new);
-	}
+    }
 }
