@@ -73,19 +73,9 @@ class CsvBehavior extends Behavior
     private function saveSql($settings)
     {
         $process = $settings['process'];
-        /*POCOR-6403 starts*/
-        $jData = json_decode($process['params']);
         $query = $settings['query'];
-        if (array_key_exists('institution_id', $jData)) {
-            $jsonData = base64_decode($jData->institution_id);
-            preg_match_all('/{(.*?)}/', $jsonData, $matches);
-            $requestData = json_decode($matches[0][0]);
-            $periodId = $jData->academic_period_id;
-            $sql = "SELECT institutions.code, institutions.name AS `Institution Name`, education_grades.name AS `Education Grade`, education_subjects.name AS `Subject`, SUM(total_male_students + total_female_students) AS `Total Students` FROM institution_subjects INNER JOIN education_grades ON institution_subjects.education_grade_id = education_grades.id INNER JOIN institutions ON institution_subjects.institution_id = institutions.id INNER JOIN education_subjects ON institution_subjects.education_subject_id = education_subjects.id where academic_period_id = $periodId and institution_id = $requestData->id GROUP BY institution_subjects.education_grade_id, institution_subjects.education_subject_id, institution_subjects.institution_id ORDER BY institutions.name asc, education_grades.id asc";
-        } else {
-            $sql = array_key_exists('sql', $settings) ? $settings['sql'] : $query->sql();
-        }
-        /*POCOR-6403 ends*/
+        $sql = array_key_exists('sql', $settings) ? $settings['sql'] : $query->sql();
+        
         $ReportProgress = TableRegistry::get('Report.ReportProgress');
         $ReportProgress->updateAll(
             ['sql' => $sql],
