@@ -46,11 +46,12 @@ class BulkStudentTransferInTable extends ControllerActionTable
             ->toArray();
         //remove open status because we are not getting start_date, end_date, institution class  
         $option = array();
+        //POCOR-6362 starts
         foreach ($steplists as $klist => $vlist) {
-            if($vlist == 'Pending Approval From Receiving Institution'){
+            if($vlist == 'Pending Approval From Receiving Institution' || $vlist == 'Pending Cancellation'){
                 $option[$klist] = $vlist;
             }
-        } 
+        }//POCOR-6362 ends 
         $this->_stepsOptions = $option;
     }
 
@@ -453,7 +454,8 @@ class BulkStudentTransferInTable extends ControllerActionTable
         $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
         $workflowTransitionEntities = $WorkflowTransitions->newEntities($workflowTransitionObj);
         if ($WorkflowTransitions->saveMany($workflowTransitionEntities)) {
-            $this->Alert->success($this->aliasField('success'), ['reset' => true]);
+            //$this->Alert->success($this->aliasField('success'), ['reset' => true]);
+            $this->Alert->success('general.bulk_student_transfer_in', ['reset' => true]);
             $session = $this->Session;
             $session->delete($this->registryAlias() . '.confirm');
             $session->delete($this->registryAlias() . '.Data');

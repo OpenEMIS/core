@@ -137,6 +137,22 @@ class AcademicPeriodsTable extends AppTable
         }
     }
 
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {   
+        // Webhook Academic Period Delete -- Start
+        $body = array();
+        $body = [
+            'academic_period_id' => $entity->id,
+            'parent_id' => $entity->parent_id 
+        ];
+
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('academic_period_delete', [], $body);
+        }
+        // Webhook Academic Period Delete -- End
+    }
+
     public function onBeforeDelete(Event $event, ArrayObject $options, $ids)
     {
         $entity = $this->find()->select(['current'])->where($ids)->first();
@@ -166,13 +182,64 @@ class AcademicPeriodsTable extends AppTable
         return $buttons;
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    {
+    
+        if($entity->isNew()){
+          
+            $body = array();
+            $body = [
+                'academic_period_level_id' =>$entity->academic_period_level_id,
+                'code' =>$entity->code,
+                'name' =>$entity->name,
+                'start_date' =>$entity->start_date,
+                'end_date' =>$entity->end_date,
+                'current' =>$entity->start_date,
+                'academic_period_id' =>'',
+            ];
+          
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('academic_period_create', ['username' => $username], $body);
+            }
+        }
+
+        //webhook academic period update starts
+        if(!$entity->isNew()) {
+            $body = array();
+            $updateBody = [
+                'academic_period_level_id' =>$entity->academic_period_level_id,
+                'code' =>$entity->code,
+                'name' =>$entity->name,
+                'start_date' =>$entity->start_date,
+                'end_date' =>$entity->end_date,
+                'current' =>$entity->start_date,
+                'academic_period_id' =>$entity->id,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('academic_period_update', [], $updateBody);
+            }
+        }
+
+        // webhook academic period update ends
+
+
+      
+
+    }
+    
+
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
+      
+       
         //POCOR-5917 starts
         if(isset($entity->old_end_date) && !empty($entity->old_end_date) && isset($entity->old_end_year) && !empty($entity->old_end_year)){ //when edit academic period
             $academic_end_date = (new Date($entity->old_end_date))->format('Y-m-d'); 
             $academic_end_year = $entity->old_end_year; 
             $institutionStudents = TableRegistry::get('institution_students');
+       
             $institutionStudentsData = $institutionStudents
                                             ->find()
                                             ->where([
@@ -181,6 +248,7 @@ class AcademicPeriodsTable extends AppTable
                                                 $institutionStudents->aliasField('student_status_id') => 1
                                             ])->toArray();
             if(!empty($institutionStudentsData)){
+               
                 foreach ($institutionStudentsData as $key => $val) {
                     $institution_students_end_date = (new Date($entity->end_date))->format('Y-m-d');
                     $institution_students_end_year = $entity->end_year;
@@ -225,6 +293,7 @@ class AcademicPeriodsTable extends AppTable
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
+     
         $this->addAfterSave($event, $entity, $requestData);
     }
 
@@ -522,6 +591,36 @@ class AcademicPeriodsTable extends AppTable
         return $list;
     }
 
+    public function getArchivedYearList($academicPeriod)
+    {
+        $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
+        $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
+        $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
+
+        $level = $this->Levels
+            ->find()
+            ->order([$this->Levels->aliasField('level ASC')])
+            ->first();
+        $where = [
+            $this->aliasField('current !=') => 1,
+            $this->aliasField('id IN')  => $academicPeriod
+        ];
+        
+
+        $data = $this
+            ->find('list')
+            ->where($where)
+            ->toArray();
+
+        if (!$withLevels) {
+            $list = $data;
+        } else {
+            $list[$level->name] = $data;
+        }
+
+        return $list;
+    }
+
     public function findSchoolAcademicPeriod(Query $query, array $options)
     {
         $query
@@ -706,6 +805,43 @@ class AcademicPeriodsTable extends AppTable
         return $weeks;
     }
 
+    public function getDateFrom($id)
+    {
+        $period = $this->findById($id)->first();
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
+
+        // If First of week is sunday changed the value to 7, because sunday with the '0' value unable to be displayed
+        if ($firstDayOfWeek == 0) {
+            $firstDayOfWeek = 7;
+        }
+
+        $daysPerWeek = $ConfigItems->value('days_per_week');
+
+        // If last day index is '0'-valued-sunday it will change the value to '7' so it will be displayed.
+        $lastDayIndex = ($firstDayOfWeek - 1);// last day index always 1 day before the starting date.
+        if ($lastDayIndex == 0) {
+            $lastDayIndex = 7;
+        }
+
+        $startDate = $period->start_date;
+
+        $weekIndex = 1;
+        $weeks = [];
+
+        do {
+            $endDate = $startDate->copy();
+            if ($endDate->gt($period->end_date)) {
+                $endDate = $period->end_date;
+            }
+            $weeks[$weekIndex++] = [$startDate];
+            $startDate = $endDate->copy();
+            $startDate->addDay();
+        } while ($endDate->lt($period->end_date));
+
+        return $weeks;
+    }
+
     public function getEditable($academicPeriodId)
     {
         try {
@@ -734,6 +870,27 @@ class AcademicPeriodsTable extends AppTable
             return false;
         }
     }
+    //POCOR-6347 starts
+    public function getAvailableAcademicPeriodsById($id, $list = true, $order='DESC')
+    {
+        if ($list) {
+            $query = $this->find('list', ['keyField' => 'id', 'valueField' => 'name']);
+        } else {
+            $query = $this->find();
+        }
+        $result = $query->where([
+                        $this->aliasField('editable') => 1,
+                        $this->aliasField('visible') . ' >' => 0,
+                        $this->aliasField('parent_id') . ' >' => 0,
+                        $this->aliasField('id') => $id
+                    ])
+                    ->order($this->aliasField('name') . ' ' . $order);
+        if ($result) {
+            return $result->toArray();
+        } else {
+            return false;
+        }
+    }//POCOR-6347 ends
 
     public function getCurrent()
     {

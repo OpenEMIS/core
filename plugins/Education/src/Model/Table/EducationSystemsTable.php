@@ -31,11 +31,11 @@ class EducationSystemsTable extends ControllerActionTable
     		$this->field('name');
     	}else{
     		$this->field('name');
-			$this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);    		
+			$this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
     	}
-        
+
     }
-    
+
     public function validationDefault(Validator $validator)
     {
     	$validator = parent::validationDefault($validator);
@@ -83,7 +83,7 @@ class EducationSystemsTable extends ControllerActionTable
 	        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 	        $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
 	        $query->where($where);
-        }	
+        }
     }
     //POCOR-5696 start
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
@@ -94,7 +94,7 @@ class EducationSystemsTable extends ControllerActionTable
             'data-placement' => 'bottom',
             'escape' => false
         ];
- 
+
         $extraButtons = [
             'copy' => [
                 'Systems' => ['Educations', 'CopySystems', 'add'],
@@ -123,7 +123,7 @@ class EducationSystemsTable extends ControllerActionTable
 
     //updating type of academic period
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
-    {	
+    {
     	if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
                 list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
@@ -152,7 +152,7 @@ class EducationSystemsTable extends ControllerActionTable
     }
     //POCOR-5696 start
     public function onUpdateFieldStartYear(Event $event, array $attr, $action, Request $request)
-    {	
+    {
     	if($this->request->action == 'CopySystems'){
             if ($action == 'add') {
             	list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
@@ -160,14 +160,14 @@ class EducationSystemsTable extends ControllerActionTable
                 $attr['options'] = $periodOptions;
                 $attr['default'] = $selectedPeriod;
                 $attr['onChangeReload'] = 'changeEducationSystemId';
-            } 
+            }
         }
         return $attr;
     }
 
     public function addEditOnChangeEducationSystemId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-    	
+
     	$request = $this->request;
         unset($request->query['education_system_id']);
 
@@ -181,7 +181,7 @@ class EducationSystemsTable extends ControllerActionTable
     }
 
     public function onUpdateFieldEducationSystemId(Event $event, array $attr, $action, Request $request)
-    {	
+    {
 
     	if($this->request->action == 'CopySystems'){
             if ($action == 'add') {
@@ -215,17 +215,18 @@ class EducationSystemsTable extends ControllerActionTable
                                     ]
                                 )
 							    ->where([$educationSytems->aliasField('academic_period_id') => $selectedPeriod])
-                                ->toArray(); 
-				
+                                ->toArray();
+
 				$optionsArray = ['' => __('-- Select --')] + $educationSytemsList;
         		$attr['options'] = $optionsArray;
-            } 
+            }
         }
         return $attr;
     }
-    
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+
     	$session = $this->request->session();
     	if ($entity->isNew()) {
             $academic_period_id = $entity->academic_period_id;
@@ -313,7 +314,26 @@ class EducationSystemsTable extends ControllerActionTable
 										$program_result = $education_programmes->save($newProgEntites);
 
 										if(!empty($program_result)){
-											//grades data
+											//POCOR-6053 starts
+                                            //next programmes data
+                                            $EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+                                            $nextProgrammesData = $EducationProgrammesNextProgrammesTable->find()
+                                                                    ->where([$EducationProgrammesNextProgrammesTable->aliasField('education_programme_id') => $prog_val['id']])
+                                                                    ->toArray();
+
+                                            if (!empty($nextProgrammesData)) {
+                                                foreach ($nextProgrammesData as $nextProgramekey => $value) {
+                                                   $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['id'] = Text::uuid();
+                                                    $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['education_programme_id'] = $program_result->id;
+                                                   $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['next_programme_id'] = $value['next_programme_id'];
+
+                                                   //insert next programmes data
+                                                    $newNextProgramEntites = $EducationProgrammesNextProgrammesTable->newEntity($nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]);
+                                                    $nextProgramResult = $EducationProgrammesNextProgrammesTable->save($newNextProgramEntites);
+                                                }
+                                            }
+                                            //POCOR-6053 ends
+                                            //grades data
 											$education_grades = TableRegistry::get('education_grades');
 									    	$educationGradesData = $education_grades
 																	    ->find()
@@ -368,12 +388,68 @@ class EducationSystemsTable extends ControllerActionTable
 										}//program ends
 									}
 								} // if educationProgrammesData
-							}//cycle ends	
+							}//cycle ends
 						}
 					} // if educationCyclesData
 				}//level ends
 			}
-		} //if educationLevelsData            	           
+		} //if educationLevelsData     
+		
+		// Webhook Education Structure System create starts
+		//POCOR-6085 starts
+		if($entity->isNew()) {
+
+			$educationStructure = [
+				'education_system_id' =>$entity->id,
+				'education_system_name' =>$entity->name,
+				'academic_period_id' =>$entity->academic_period_id
+			];
+
+			$Webhooks = TableRegistry::get('Webhook.Webhooks');
+			if ($this->Auth->user()) {
+				$Webhooks->triggerShell('education_structure_system_create', [], $educationStructure);
+			}
+		}
+		
+		//POCOR-6085 ends
+		// Webhook Education Structure System create ends
+
+		// POCOR-6086 starts
+		 //webhook education structure system update starts
+		 if(!$entity->isNew()) {
+            $body = array();
+            $educationUpdateArray = [
+				'education_system_id' =>$entity->id,
+				'education_system_name' =>$entity->name,
+				'visible' =>$entity->visible,
+				'academic_period_id' =>$entity->academic_period_id
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_structure_system_update', [], $educationUpdateArray);
+            }
+        }
+		// POCOR-6086 ends
+
+        // webhook education structure system update ends
     }
+
     //POCOR-5696 ends
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // Webhook Education Structure System Delete -- Starts
+       //POCOR-6087 starts
+        $body = array();
+        $deleteBodyArray = [
+            'education_system_id' => $entity->id
+        ];
+
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('education_structure_system_delete', [], $deleteBodyArray);
+        }
+		//POCOR-6087 ends
+        // Webhook Education Structure System Delete  -- Ends
+    }
 }

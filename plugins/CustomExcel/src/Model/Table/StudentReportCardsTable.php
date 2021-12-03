@@ -227,6 +227,7 @@ class StudentReportCardsTable extends AppTable
 					'date_of_birth' => 'Users.date_of_birth',
 					'identity_number' => 'Users.identity_number',
 					'gender' => 'Genders.name',
+                    'openemis_no' => 'Users.openemis_no',//add openemis_no in report POCOR-6321
                 ])
                 ->contain([
                     'Users' => [
@@ -238,6 +239,7 @@ class StudentReportCardsTable extends AppTable
                             'email',
                             'address',
                             'date_of_birth',
+                            'openemis_no',//add openemis_no in report POCOR-6321
                         ]
                     ]
                 ])
@@ -259,6 +261,7 @@ class StudentReportCardsTable extends AppTable
 					'address' => $entity->address,
 					'date_of_birth' => $entity->date_of_birth,
 					'gender' => $entity->gender,
+                    'openemis_no' => $entity->openemis_no,//add openemis_no in report POCOR-6321
 				];
             return $result;
         }
@@ -481,7 +484,7 @@ class StudentReportCardsTable extends AppTable
 	public function onExcelTemplateInitialiseStudentExtracurriculars(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
-            $Extracurriculars = TableRegistry::get('Student.Extracurriculars');
+            $Extracurriculars = TableRegistry::get('student_extracurriculars');
 
             $entity = $Extracurriculars
                 ->find()

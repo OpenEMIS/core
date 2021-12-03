@@ -29,6 +29,7 @@ class ImportStudentAttendancesTable extends AppTable {
         $this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $this->StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        $this->InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
     }
 
     public function beforeAction($event) {
@@ -47,7 +48,8 @@ class ImportStudentAttendancesTable extends AppTable {
             'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',
             'Model.import.onImportPopulateAbsenceTypesData' => 'onImportPopulateAbsenceTypesData',
             'Model.import.onImportPopulateStudentAttendanceTypesData' => 'onImportPopulateStudentAttendanceTypesData',
-            'Model.import.onImportPopulateSubjectData' => 'onImportPopulateSubjectData',
+            'Model.import.onImportPopulateInstitutionSubjectsData' => 'onImportPopulateInstitutionSubjectsData',
+            'Model.import.onImportPopulateInstitutionSubjectsId' => 'onImportPopulateInstitutionSubjectsId',
             'Model.import.onImportPopulatePeriodData' => 'onImportPopulatePeriodData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.import.onImportGetPeriodId' => 'onImportGetPeriodId',
@@ -226,7 +228,12 @@ class ImportStudentAttendancesTable extends AppTable {
     //  }
     // }
 
-    public function onImportPopulateSubjectData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportGetInstitutionSubjectsId(Event $event, $cellValue)
+    {
+        return $cellValue;
+    }
+
+    public function onImportPopulateInstitutionSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         $classId = !empty($this->request->query('class')) ? $this->request->query('class') : '';
 
         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
@@ -334,7 +341,7 @@ class ImportStudentAttendancesTable extends AppTable {
 
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-
+    
         if (empty($tempRow['student_id'])) {
             $rowInvalidCodeCols['student_id'] = __('OpenEMIS ID was not defined');
             return false;
@@ -412,8 +419,33 @@ class ImportStudentAttendancesTable extends AppTable {
             $tempRow['student_absence_reason_id'] = NULL;
         }
 
+        if($tempRow['subject_id'] !=  1 && empty($tempRow['subject_id'])) {
+            $tempRow['subject_id'] = 0;
+        }
+
+         $GradeId = TableRegistry::get('institution_class_grades');
+         $educationGradeId = $GradeId->find()->where([
+            'institution_class_id' => $tempRow['institution_class_id']
+        ])->first();
+
         //add identifier that later will be used on StudentAbsencesPeriodDetails
+        // $tempRow['date'] = date('Y-m-d',strtotime('2021-05-24'));
         $tempRow['record_source'] = 'import_student_attendances';
+         $tempRow['education_grade_id'] = $educationGradeId['education_grade_id'];
+
+         $StudentAttendanceMarkedRecords = TableRegistry::get('StudentAttendanceMarkedRecords');
+        $markRecord = $StudentAttendanceMarkedRecords->newEntity([
+            'institution_id'       => $tempRow['institution_id'],
+            'academic_period_id'   => $tempRow['academic_period_id'],
+            'institution_class_id' => $tempRow['institution_class_id'],
+            'education_grade_id'   => $tempRow['education_grade_id'],
+            'date'                 => $tempRow['date'],
+            'period'               => $tempRow['period'],
+            'subject_id'           => 0,
+        ]);
+        if (!$markRecord->errors()) {
+            $StudentAttendanceMarkedRecords->save($markRecord);
+        }
 
         return true;
     }

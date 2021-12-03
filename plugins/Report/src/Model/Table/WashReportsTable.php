@@ -279,16 +279,17 @@ class WashReportsTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $washType = $requestData->wash_type;
+        $areaId = $requestData->area_education_id;
         $conditions = [];
-        
         $SanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
-        
         if (!empty($academicPeriodId)) {
             $conditions['AcademicPeriods.id'] = $academicPeriodId;
         }
-        
-        if (!empty($institutionId)) {
+        if (!empty($institutionId) && $institutionId > 0) {
             $conditions[$this->aliasField('id')] = $institutionId;
+        }
+        if (!empty($areaId) && $areaId > 0) {
+            $conditions[$this->aliasField('area_id')] = $areaId;
         }
         
         if($washType == 'Water'){

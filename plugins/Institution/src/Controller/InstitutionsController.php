@@ -136,6 +136,7 @@ class InstitutionsController extends AppController
 
         //assessment
         'ImportAssessmentItemResults',
+        'ReportCardGenerate',
 
         // misc
         // 'IndividualPromotion',
@@ -154,6 +155,10 @@ class InstitutionsController extends AppController
         // End
 
         parent::initialize();
+
+       $data =  $this->loadModel('Calendars');
+
+
         // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
@@ -199,6 +204,7 @@ class InstitutionsController extends AppController
         $this->loadComponent('Training.Training');
         $this->loadComponent('Institution.CreateUsers');
         $this->attachAngularModules();
+        $this->loadModel('Institution.StaffBodyMasses');
     }
 
     // CAv4
@@ -206,7 +212,7 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAttachments']);
     }
-	
+
 	public function Profiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Profiles']);
@@ -223,7 +229,7 @@ class InstitutionsController extends AppController
     }
 
     public function Institutions()
-    { 
+    {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Institutions']);
     }
 
@@ -249,6 +255,13 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionLands']);
     }
+    // POCOR-6150 start
+    public function InfrastructureNeeds()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureNeeds']);
+    }
+    // POCOR-6150 end
+
     public function InstitutionBuildings()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBuildings']);
@@ -293,12 +306,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']);
     }
-    //POCOR-5671    
+    //POCOR-5671
     public function StudentTransition()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Transition']);
     }
-     //POCOR-5671 
+     //POCOR-5671
     public function Exams()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminations']);
@@ -318,6 +331,10 @@ class InstitutionsController extends AppController
     public function Contacts()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']);
+    }
+    public function InstitutionContactPersons()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContactPersons']);
     }
     public function IndividualPromotion()
     {
@@ -403,32 +420,38 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
     }
-    public function AssessmentsArchive()
+
+    public function AssessmentItemResultsArchived()
     {
-        if (!empty($this->request->param('institutionId'))) {
-            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
-        } else {
-            $session = $this->request->session();
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
-
-        $backUrl = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'Assessments',
-            'institutionId' => $institutionId,
-            'index',
-            $this->ControllerAction->paramsEncode(['id' => $timetableId])
-        ];
-        $this->set('backUrl', Router::url($backUrl));
-
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-            $this->Navigation->addCrumb($crumbTitle);
-        $this->set('institution_id', $institutionId);
-        $this->set('ngController', 'InstitutionAssessmentsArchiveCtrl as $ctrl');
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
     }
 
-    public function Distribution()
+    // public function AssessmentsArchive()
+    // {
+    //     if (!empty($this->request->param('institutionId'))) {
+    //         $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+    //     } else {
+    //         $session = $this->request->session();
+    //         $institutionId = $session->read('Institution.Institutions.id');
+    //     }
+
+    //     $backUrl = [
+    //         'plugin' => 'Institution',
+    //         'controller' => 'Institutions',
+    //         'action' => 'Assessments',
+    //         'institutionId' => $institutionId,
+    //         'index',
+    //         $this->ControllerAction->paramsEncode(['id' => $timetableId])
+    //     ];
+    //     $this->set('backUrl', Router::url($backUrl));
+
+    //     $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+    //         $this->Navigation->addCrumb($crumbTitle);
+    //     $this->set('institution_id', $institutionId);
+    //     $this->set('ngController', 'InstitutionAssessmentsArchiveCtrl as $ctrl');
+    // }
+
+    public function Distributions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDistributions']);
     }
@@ -437,9 +460,9 @@ class InstitutionsController extends AppController
         $classId = $this->request->query['class_id'];
         $academicPeriodId = $this->request->query['academic_period_id'];
         $reportCardId = $this->request->query['report_card_id'];
-       
+
         if(!empty($classId) && $classId == 'all'){
-            return $this->redirect(['action' => 'ReportCardStatusProgress', 
+            return $this->redirect(['action' => 'ReportCardStatusProgress',
                     'class_id' => $classId,
                     'academic_period_id' => $academicPeriodId,
                     'report_card_id' => $reportCardId
@@ -448,15 +471,15 @@ class InstitutionsController extends AppController
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatuses']);
         }
     }
-    
+
     public function ReportCardStatusProgress()
     {
         $classId = $this->request->query['class_id'];
         $academicPeriodId = $this->request->query['academic_period_id'];
         $reportCardId = $this->request->query['report_card_id'];
-       
+
         if(!empty($classId) && $classId <> 'all'){
-            return $this->redirect(['action' => 'ReportCardStatuses', 
+            return $this->redirect(['action' => 'ReportCardStatuses',
                     'class_id' => $classId,
                     'academic_period_id' => $academicPeriodId,
                     'report_card_id' => $reportCardId
@@ -466,7 +489,7 @@ class InstitutionsController extends AppController
             $this->render('report_status_progress');
         }
     }
-    
+
     public function InstitutionStudentsReportCards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCards']);
@@ -505,6 +528,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferOut']);
     }
+    //POCOR-6028 start
+    public function BulkStudentTransferOut()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.BulkStudentTransferOut']);
+    }
+    //POCOR-6028 ends
     public function Transfer()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransfer']);
@@ -550,13 +579,13 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentStatusUpdates']);
     }
     // End
-    
+
     public function ScheduleTimetableOverview()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Schedule.ScheduleTimetables']);
     }
 
-    public function ScheduleIntervals() 
+    public function ScheduleIntervals()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Schedule.ScheduleIntervals']);
     }
@@ -583,14 +612,21 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionMaps']);
     }
     //POCOR-5669 added InstitutionMaps
-    
+
+    //POCOR-6122 add export button in calendar
+    public function InstitutionCalendars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Calendars']);
+    }
+    //POCOR-6122 add export button in calendar
+
     //POCOR-5683 added InstitutionStatusUpdate
     public function InstitutionStatus()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStatus']);
 
         /*$institutionId = $this->request->pass[1];
-       
+
         $backUrl = [
             'plugin' => 'Institution',
             'controller' => 'Institution',
@@ -607,15 +643,119 @@ class InstitutionsController extends AppController
     }
     //POCOR-5182 added StaffSalaries
 
+
+    //POCOR-6145 added Export button in Infratucture > Wash > Waters
+    public function InfrastructureWashWaters()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashWaters']);
+    }
+    //POCOR-6148 add Export button on Institutions > Infrastructures > WASH > Waste
+    public function InfrastructureWashWastes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashWastes']);
+    }
+    //POCOR-6146 added Export button in Infratucture > Wash > Sanitation
+    public function InfrastructureWashSanitations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashSanitations']);
+    }
+    //PCOOR-6146 add export button in Institutions > Infrastructures > WASH > Hygiene
+    public function InfrastructureWashHygienes(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashHygienes']);
+    }
+
+    //POCOR-6144 added Export button in Infratucture > Utilitie > Internet
+    public function InfrastructureUtilityInternets()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureUtilityInternets']);
+    }
+
+    //POCOR-6143 added Export button in Infratucture > Utilitie > Electricity
+    public function InfrastructureUtilityElectricities()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureUtilityElectricities']);
+    }
+    //POCOR-6143 added Export button in Infratucture > Utilitie > Electricity
+
+    //POCOR-6149 Add expor button on Add Export button function - Institutions > Infrastructures > WASH > Sewage
+    public function InfrastructureWashSewages()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashSewages']);
+    }
+
+    public function changeUtilitiesHeader($model, $modelAlias, $userType)
+    {
+        $session = $this->request->session();
+        $institutionId = 0;
+        if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        if (!empty($institutionId)) {
+            if($this->request->param('action') == 'InfrastructureUtilityElectricities') {
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Electricity');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Electricity'));
+                $this->set('contentHeader', $header);
+            } else if($this->request->param('action') == 'InfrastructureWashWastes'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Waste');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Waste'));
+                $this->set('contentHeader', $header);
+            } else if($this->request->param('action') == 'InfrastructureUtilityInternets'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Internet');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Internet'));
+                $this->set('contentHeader', $header);
+            } else if($this->request->param('action') == 'InfrastructureWashWaters'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Water');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Water'));
+                $this->set('contentHeader', $header);
+            } else if($this->request->param('action') == 'InfrastructureWashSanitations'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Sanitation');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Sanitation'));
+                $this->set('contentHeader', $header);
+            } else if($this->request->param('action') == 'InfrastructureWashHygienes'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Hygiene');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Hygiene'));
+                $this->set('contentHeader', $header);
+            } else if($this->request->param('action') == 'InfrastructureWashSewages'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Sewage');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Sewage'));
+            // POCOR-6150 start
+            }else if($this->request->param('action') == 'InfrastructureNeeds'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Needs');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Needs'));
+                $this->set('contentHeader', $header);
+            }
+            // POCOR-6150 end
+        }
+
+    }
+
+    //PCOOR-6146 add export button in Institutions > Infrastructures > WASH > Hygiene
+
     // AngularJS
     public function ScheduleTimetable($action = 'view')
     {
-       
+
         $timetableId = $this->ControllerAction->paramsDecode($this->request->query('timetableId'))['id'];
-       
+
         $session = $this->request->session();
         $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
-       
+
         $backUrl = [
             'plugin' => $this->plugin,
             'controller' => $this->name,
@@ -624,7 +764,7 @@ class InstitutionsController extends AppController
             'view',
             $this->ControllerAction->paramsEncode(['id' => $timetableId])
         ];
-        
+
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
                 ->getCurrent();
 
@@ -637,15 +777,20 @@ class InstitutionsController extends AppController
         $this->set('ngController', 'TimetableCtrl as $ctrl');
         $this->render('timetable');
     }
-    
+
+    public function InstitutionStudentAbsencesArchived()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentAbsencesArchived']);
+    }
+
     public function StudentAttendances($pass='')
     {
         if($pass=='excel'){
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAttendances']);
-        }else{       
+        }else{
 
         $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
-        
+
         $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
         $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
 
@@ -671,6 +816,14 @@ class InstitutionsController extends AppController
         $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
 
         $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+        $TransferLogs = TableRegistry::get('TransferLogs');
+        $TransferLogsData = $TransferLogs
+        ->find()
+        ->select([
+            'TransferLogs.academic_period_id'
+        ])
+        ->first();
+
         $securityRoleFunctionsData = $securityRoleFunctions
         ->find()
         ->select([
@@ -688,6 +841,11 @@ class InstitutionsController extends AppController
         if($this->Auth->user('super_admin') == 1){
             $is_button_accesible = 1;
         }
+        if(empty($TransferLogsData)){
+            $is_button_accesible = 0;
+        }else{
+            $is_button_accesible = 1;
+        }
 
         // issue
         $excelUrl = [
@@ -697,7 +855,7 @@ class InstitutionsController extends AppController
             'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
             'excel'
         ];
-        
+
         $importUrl = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
@@ -706,13 +864,18 @@ class InstitutionsController extends AppController
             'add'
         ];
 
-        $archiveUrl = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'StudentArchive',
-            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-            'add'
-        ];
+        // $archiveUrl = [
+        //     'plugin' => 'Institution',
+        //     'controller' => 'Institutions',
+        //     'action' => 'StudentArchive',
+        //     'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+        //     'add'
+        // ];
+
+        $archiveUrl = $this->ControllerAction->url('index');
+        $archiveUrl['plugin'] = 'Institution';
+        $archiveUrl['controller'] = 'Institutions';
+        $archiveUrl['action'] = 'InstitutionStudentAbsencesArchived';
 
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
         $this->Navigation->addCrumb($crumbTitle);
@@ -776,7 +939,7 @@ class InstitutionsController extends AppController
             $this->set('institution_id', $institutionId);
             $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
         }
-        
+
     }
 
     public function StudentArchive(){
@@ -811,7 +974,7 @@ class InstitutionsController extends AppController
             $this->set('archiveUrl', Router::url($archiveUrl));
             $this->set('institution_id', $institutionId);
             $this->set('ngController', 'InstitutionStudentArchiveCtrl as $ctrl');
-                
+
     }
 
     public function Results()
@@ -848,15 +1011,18 @@ class InstitutionsController extends AppController
 
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
-
         if ($hasTemplate) {
-            $customUrl = $this->ControllerAction->url('index');
-            $customUrl['plugin'] = 'CustomExcel';
-            $customUrl['controller'] = 'CustomExcels';
-            $customUrl['action'] = 'export';
-            $customUrl[0] = 'AssessmentResults';
-            $this->set('customExcel', Router::url($customUrl));
+            $queryString = $this->request->query('queryString');
+            $customUrl = Router::url([
+                            'plugin' => 'Institution',
+                            'controller' => 'Institutions',
+                            'action' => 'reportCardGenerate',
+                            'add',
+                            'queryString' => $queryString
+                        ]);
 
+            $this->set('reportCardGenerate',$customUrl);
+           
             $exportPDF_Url = $this->ControllerAction->url('index');
             $exportPDF_Url['plugin'] = 'CustomExcel';
             $exportPDF_Url['controller'] = 'CustomExcels';
@@ -867,6 +1033,10 @@ class InstitutionsController extends AppController
 
         $this->set('excelUrl', Router::url($url));
         $this->set('ngController', 'InstitutionsResultsCtrl');
+    }
+
+    public function ReportCardGenerate(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardGenerate']);
     }
 
     public function Comments()
@@ -1247,7 +1417,7 @@ class InstitutionsController extends AppController
         }
     }
 
-    // Assosiation feature 
+    // Assosiation feature
     public function Associations($subaction = 'index', $associationId = null)
     {
         if ($subaction == 'add') {
@@ -1324,6 +1494,11 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionAssociationStudent']);
     }
 
+    public function InstitutionStaffAttendancesArchive()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffAttendancesArchive']);
+    }
+
     public function InstitutionStaffAttendances($pass = 'index')
     {
         if ($pass == 'excel') {
@@ -1337,12 +1512,56 @@ class InstitutionsController extends AppController
             $_otherView = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'otherview']);
             $_otherEdit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'otheredit']);
             $_permissionStaffId = $this->Auth->user('id');
-			
+
             if (!empty($this->request->param('institutionId'))) {
                 $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
             } else {
                 $session = $this->request->session();
                 $institutionId = $session->read('Institution.Institutions.id');
+            }
+
+            $TransferLogs = TableRegistry::get('TransferLogs');
+            $TransferLogsData = $TransferLogs
+            ->find()
+            ->select([
+                'TransferLogs.academic_period_id'
+            ])
+            ->first();
+
+            $securityFunctions = TableRegistry::get('SecurityFunctions');
+            $securityFunctionsData = $securityFunctions
+            ->find()
+            ->select([
+                'SecurityFunctions.id'
+            ])
+            ->where([
+                'SecurityFunctions.name' => 'Student Attendance Archive'
+            ])
+            ->first();
+            $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
+
+            $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+            $securityRoleFunctionsData = $securityRoleFunctions
+            ->find()
+            ->select([
+                'SecurityRoleFunctions._view'
+            ])
+            ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id' => $permission_id,
+            ])
+            ->first();
+            $is_button_accesible = 0;
+            if( (!empty($securityRoleFunctionsData) && $securityRoleFunctionsData->_view == 1) ){
+                $is_button_accesible = 1;
+            }
+            if($this->Auth->user('super_admin') == 1){
+                $is_button_accesible = 1;
+            }
+            if(empty($TransferLogsData)){
+                $is_button_accesible = 0;
+            }else{
+                $is_button_accesible = 1;
             }
 
             $excelUrl = [
@@ -1361,6 +1580,13 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
                 'add'
             ];
+
+            $archiveUrl = $this->ControllerAction->url('index');
+            $archiveUrl['plugin'] = 'Institution';
+            $archiveUrl['controller'] = 'Institutions';
+            $archiveUrl['action'] = 'InstitutionStaffAttendancesArchive';
+
+
             $this->set('importUrl', Router::url($importUrl));
             $this->set('_import', $_import);
             $this->set('_edit', $_edit);
@@ -1371,6 +1597,9 @@ class InstitutionsController extends AppController
             $this->set('_permissionStaffId', $_permissionStaffId);
             $this->set('_excel', $_excel);
             $this->set('_history', $_history);
+            $this->set('_archive', $_archive);
+            $this->set('archiveUrl', Router::url($archiveUrl));
+            $this->set('is_button_accesible', $is_button_accesible);
             $this->set('institution_id', $institutionId);
             $this->set('excelUrl', Router::url($excelUrl));
             $this->set('ngController', 'InstitutionStaffAttendancesCtrl as $ctrl');
@@ -1430,7 +1659,7 @@ class InstitutionsController extends AppController
     }
 
     public function beforeFilter(Event $event)
-    { 
+    {
         parent::beforeFilter($event);
         $session = $this->request->session();
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
@@ -1484,7 +1713,7 @@ class InstitutionsController extends AppController
             || $action == 'dashboard'
             || ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']))) {
             $id = 0;
-           
+
             if (isset($this->request->pass[0]) && (in_array($action, ['dashboard']))) {
                 $id = $this->request->pass[0];
                 $id = $this->ControllerAction->paramsDecode($id)['id'];
@@ -1555,7 +1784,7 @@ class InstitutionsController extends AppController
             } else {
                  $header = $name .' - '.__('Dashboard');
             }
-           
+
         }
         $this->set('contentHeader', $header);
     }
@@ -1714,7 +1943,7 @@ class InstitutionsController extends AppController
                     'institution.staff.attendances.svc'
                 ]);
                 break;
-            
+
             case 'ScheduleTimetable':
                 $this->Angular->addModules([
                     'timetable.ctrl',
@@ -1768,6 +1997,7 @@ class InstitutionsController extends AppController
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
                 'StudentRisks' => __('Risks'),
+                'StudentTextbooks' => __('Textbox'),
                 'StudentAssociations' => __('Associations')
             ];
             if (array_key_exists($alias, $studentModels)) {
@@ -1791,7 +2021,7 @@ class InstitutionsController extends AppController
                 $this->Navigation->addCrumb('Attachments');
                 $header = __($institutionName) ;
                 $this->set('contentHeader', $header);
-            } 
+            }
             else {
                 $this->Navigation->addCrumb($crumbTitle, $crumbOptions);
                 $header = $this->activeObj->name;
@@ -1833,7 +2063,7 @@ class InstitutionsController extends AppController
             } else {
                  $header .= ' - ' . $model->getHeader($alias);
             }
-
+           
             $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
             $event = $model->eventManager()->dispatch($event);
 
@@ -1969,24 +2199,24 @@ class InstitutionsController extends AppController
             $InstitutionStudents = TableRegistry::get('Institution.Students');
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
-			
+
 			$params = [
                 'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
                     $statuses['PROMOTED'], $statuses['REPEATED']]]
             ];
             $highChartDatas[] = $InstitutionStudents->getHighChart('student_attendance', $params);
-            
+
             $params = [
                 'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
             ];
             $highChartDatas[] = $InstitutionStaff->getHighChart('staff_attendance', $params);
-            
+
             //Students By Grade for current year, excludes transferred ,withdrawn, promoted, repeated students
             $params = [
                 'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
                     $statuses['PROMOTED'], $statuses['REPEATED']]]
             ];
-	
+
             $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_stage', $params);
 
             //Students By Year, excludes transferred withdrawn,promoted,repeated students
@@ -2031,7 +2261,7 @@ class InstitutionsController extends AppController
                     $this->set('haveProfilePermission',$this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles));
                 } else {
                     $this->set('haveProfilePermission',false);
-                }         
+                }
         } else {
             $this->set('haveProfilePermission',true);
         }
@@ -2047,7 +2277,7 @@ class InstitutionsController extends AppController
                     'modelCount' => 25,
                     'modelArray' => []]
                 ]);
-        
+
             // $this->controller->viewVars['indexElements']['mini_dashboard'] = [
             //     'name' => $indexDashboard,
             //     'data' => [
@@ -2072,11 +2302,11 @@ class InstitutionsController extends AppController
         $profileComplete = 0;
         // $totalProfileCount = 28;
         // check in config item
-        
-/********************************************* */ 
+
+/********************************************* */
         //Overview
         $institutions = TableRegistry::get('institutions');
-		$institutionsData = $institutions->find()		
+		$institutionsData = $institutions->find()
 				->select([
 					'created' => 'institutions.created',
 					'modified' => 'institutions.modified',
@@ -2097,10 +2327,10 @@ class InstitutionsController extends AppController
             $data[0]['profileComplete'] = 0;
             $data[0]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
+/********************************************* */
         //Events
         $calendarEvents = TableRegistry::get('calendar_events');
-		$calendarEventsData = $calendarEvents->find()		
+		$calendarEventsData = $calendarEvents->find()
 				->select([
 					'created' => 'calendar_events.created',
 					'modified' => 'calendar_events.modified',
@@ -2120,10 +2350,10 @@ class InstitutionsController extends AppController
             $data[1]['profileComplete'] = 0;
             $data[1]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
+/********************************************* */
         //Contacts
         $institutionContactPersons = TableRegistry::get('institution_contact_persons');
-		$institutionContactPersonsData = $institutionContactPersons->find()		
+		$institutionContactPersonsData = $institutionContactPersons->find()
 				->select([
 					'created' => 'institution_contact_persons.created',
 					'modified' => 'institution_contact_persons.modified',
@@ -2132,7 +2362,7 @@ class InstitutionsController extends AppController
                 ->order(['institution_contact_persons.modified'=>'desc'])
 				->limit(1)
 				->first();
-                
+
 		$data[2]['feature'] = 'Contacts';
 		if(!empty($institutionContactPersonsData)) {
 			$profileComplete = $profileComplete + 1;
@@ -2144,10 +2374,10 @@ class InstitutionsController extends AppController
             $data[2]['profileComplete'] = 0;
             $data[2]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
+/********************************************* */
         //Shifts
         $institutionShifts = TableRegistry::get('institution_shifts');
-		$institutionShiftsData = $institutionShifts->find()		
+		$institutionShiftsData = $institutionShifts->find()
 				->select([
 					'created' => 'institution_shifts.created',
 					'modified' => 'institution_shifts.modified',
@@ -2167,10 +2397,10 @@ class InstitutionsController extends AppController
             $data[3]['profileComplete'] = 0;
             $data[3]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
+/********************************************* */
         //Programmes
         $institutionProgrammes = TableRegistry::get('institution_grades');
-		$institutionProgrammesData = $institutionProgrammes->find()		
+		$institutionProgrammesData = $institutionProgrammes->find()
 				->select([
 					'created' => 'institution_grades.created',
 					'modified' => 'institution_grades.modified',
@@ -2191,10 +2421,10 @@ class InstitutionsController extends AppController
             $data[4]['profileComplete'] = 0;
             $data[4]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 		
+/********************************************* */
          //Classes
         $institutionClasses = TableRegistry::get('institution_classes');
-		$institutionClassesData = $institutionClasses->find()		
+		$institutionClassesData = $institutionClasses->find()
 				->select([
 					'created' => 'institution_classes.created',
 					'modified' => 'institution_classes.modified',
@@ -2215,10 +2445,10 @@ class InstitutionsController extends AppController
             $data[5]['profileComplete'] = 0;
             $data[5]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
+/********************************************* */
          //Subjects
         $institutionSubjects = TableRegistry::get('institution_subjects');
-		$institutionSubjectsData = $institutionSubjects->find()		
+		$institutionSubjectsData = $institutionSubjects->find()
 				->select([
 					'created' => 'institution_subjects.created',
 					'modified' => 'institution_subjects.modified',
@@ -2239,10 +2469,10 @@ class InstitutionsController extends AppController
             $data[6]['profileComplete'] = 0;
             $data[6]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
+/********************************************* */
          //Textbooks
         $institutionTextbooks = TableRegistry::get('institution_textbooks');
-		$institutionTextbooksData = $institutionTextbooks->find()		
+		$institutionTextbooksData = $institutionTextbooks->find()
 				->select([
 					'created' => 'institution_textbooks.created',
 					'modified' => 'institution_textbooks.modified',
@@ -2263,10 +2493,10 @@ class InstitutionsController extends AppController
             $data[7]['profileComplete'] = 0;
             $data[7]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
+/********************************************* */
          //Students
         $institutionStudents = TableRegistry::get('institution_students');
-		$institutionStudentsData = $institutionStudents->find()		
+		$institutionStudentsData = $institutionStudents->find()
 				->select([
 					'created' => 'institution_students.created',
 					'modified' => 'institution_students.modified',
@@ -2287,10 +2517,10 @@ class InstitutionsController extends AppController
             $data[8]['profileComplete'] = 0;
             $data[8]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
+/********************************************* */
         //Staff
         $institutionStaff = TableRegistry::get('institution_staff');
-		$institutionStaffData = $institutionStaff->find()		
+		$institutionStaffData = $institutionStaff->find()
 				->select([
 					'created' => 'institution_staff.created',
 					'modified' => 'institution_staff.modified',
@@ -2311,10 +2541,10 @@ class InstitutionsController extends AppController
             $data[9]['profileComplete'] = 0;
             $data[9]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
+/********************************************* */
         //Attendance
         $institutionAttendance = TableRegistry::get('institution_staff_attendances');
-		$institutionAttendanceData = $institutionAttendance->find()		
+		$institutionAttendanceData = $institutionAttendance->find()
 				->select([
 					'created' => 'institution_staff_attendances.created',
 					'modified' => 'institution_staff_attendances.modified',
@@ -2336,10 +2566,10 @@ class InstitutionsController extends AppController
             $data[10]['modifiedDate'] = 'Not updated';
         }
 
-/********************************************* */ 
+/********************************************* */
         //Behaviour
         $institutionBehaviour = TableRegistry::get('staff_behaviours');
-		$institutionBehaviourData = $institutionBehaviour->find()		
+		$institutionBehaviourData = $institutionBehaviour->find()
 				->select([
 					'created' => 'staff_behaviours.created',
 					'modified' => 'staff_behaviours.modified',
@@ -2360,10 +2590,10 @@ class InstitutionsController extends AppController
             $data[11]['profileComplete'] = 0;
             $data[11]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
+/********************************************* */
         //Positions
         $institutionPositions = TableRegistry::get('institution_positions');
-		$institutionPositionsData = $institutionPositions->find()		
+		$institutionPositionsData = $institutionPositions->find()
 				->select([
 					'created' => 'institution_positions.created',
 					'modified' => 'institution_positions.modified',
@@ -2384,10 +2614,10 @@ class InstitutionsController extends AppController
             $data[12]['profileComplete'] = 0;
             $data[12]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
-        //Bank Accounts 
+/********************************************* */
+        //Bank Accounts
         $institutionBankAccounts  = TableRegistry::get('institution_bank_accounts');
-		$institutionBankAccountsData = $institutionBankAccounts->find()		
+		$institutionBankAccountsData = $institutionBankAccounts->find()
 				->select([
 					'created' => 'institution_bank_accounts.created',
 					'modified' => 'institution_bank_accounts.modified',
@@ -2408,10 +2638,10 @@ class InstitutionsController extends AppController
             $data[13]['profileComplete'] = 0;
             $data[13]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
+/********************************************* */
         //Institution Fees
         $institutionInstitutionFees = TableRegistry::get('institution_fees');
-		$institutionInstitutionFeesData = $institutionInstitutionFees->find()		
+		$institutionInstitutionFeesData = $institutionInstitutionFees->find()
 				->select([
 					'created' => 'institution_fees.created',
 					'modified' => 'institution_fees.modified',
@@ -2432,10 +2662,10 @@ class InstitutionsController extends AppController
             $data[14]['profileComplete'] = 0;
             $data[14]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
-        // Student Fees 
+/********************************************* */
+        // Student Fees
         // $institutionStudentFees  = TableRegistry::get('student_fees');
-		// $institutionStudentFeesData = $institutionStudentFees->find()		
+		// $institutionStudentFeesData = $institutionStudentFees->find()
 		// 		->select([
 		// 			'created' => 'student_fees.created',
 		// 			'modified' => 'student_fees.modified',
@@ -2453,10 +2683,10 @@ class InstitutionsController extends AppController
         //     $data[15]['complete'] = 'no';
         //     $data[15]['modifiedDate'] = 'Not updated';
         // }
-/********************************************* */ 
-        //Infrastructures Overview 
+/********************************************* */
+        //Infrastructures Overview
         $institutionInfrastructuresOverview  = TableRegistry::get('institution_lands');
-		$institutionInfrastructuresOverviewData = $institutionInfrastructuresOverview->find()		
+		$institutionInfrastructuresOverviewData = $institutionInfrastructuresOverview->find()
 				->select([
 					'created' => 'institution_lands.created',
 					'modified' => 'institution_lands.modified',
@@ -2477,10 +2707,10 @@ class InstitutionsController extends AppController
             $data[16]['profileComplete'] = 0;
             $data[16]['modifiedDate'] = 'Not updated';
         }
- /********************************************* */ 
-        // Infrastructures Needs 
+ /********************************************* */
+        // Infrastructures Needs
         $institutionInfrastructuresNeeds  = TableRegistry::get('infrastructure_needs');
-		$institutionInfrastructuresNeedsData = $institutionInfrastructuresNeeds->find()		
+		$institutionInfrastructuresNeedsData = $institutionInfrastructuresNeeds->find()
 				->select([
 					'created' => 'infrastructure_needs.created',
 					'modified' => 'infrastructure_needs.modified',
@@ -2501,10 +2731,10 @@ class InstitutionsController extends AppController
             $data[17]['profileComplete'] = 0;
             $data[17]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
-        // Wash Water 
+/********************************************* */
+        // Wash Water
         $institutionWashWater  = TableRegistry::get('infrastructure_wash_waters');
-		$institutionWashWaterData = $institutionWashWater->find()		
+		$institutionWashWaterData = $institutionWashWater->find()
 				->select([
 					'created' => 'infrastructure_wash_waters.created',
 					'modified' => 'infrastructure_wash_waters.modified',
@@ -2525,10 +2755,10 @@ class InstitutionsController extends AppController
             $data[18]['profileComplete'] = 0;
             $data[18]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
-        // Wash Hygiene  
+/********************************************* */
+        // Wash Hygiene
         $institutionWashHygiene  = TableRegistry::get('infrastructure_wash_hygienes');
-		$institutionWashHygieneData = $institutionWashHygiene->find()		
+		$institutionWashHygieneData = $institutionWashHygiene->find()
 				->select([
 					'created' => 'infrastructure_wash_hygienes.created',
 					'modified' => 'infrastructure_wash_hygienes.modified',
@@ -2549,10 +2779,10 @@ class InstitutionsController extends AppController
             $data[19]['profileComplete'] = 0;
             $data[19]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
-        // Wash Waste  
+/********************************************* */
+        // Wash Waste
         $institutionWashWaste  = TableRegistry::get('infrastructure_wash_wastes');
-		$institutionWashWasteData = $institutionWashWaste->find()		
+		$institutionWashWasteData = $institutionWashWaste->find()
 				->select([
 					'created' => 'infrastructure_wash_wastes.created',
 					'modified' => 'infrastructure_wash_wastes.modified',
@@ -2573,10 +2803,10 @@ class InstitutionsController extends AppController
             $data[20]['profileComplete'] = 0;
             $data[20]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
-        // Wash Sewage  
+/********************************************* */
+        // Wash Sewage
         $institutionWashSewage  = TableRegistry::get('infrastructure_wash_sewages');
-		$institutionWashSewageData = $institutionWashSewage->find()		
+		$institutionWashSewageData = $institutionWashSewage->find()
 				->select([
 					'created' => 'infrastructure_wash_sewages.created',
 					'modified' => 'infrastructure_wash_sewages.modified',
@@ -2598,10 +2828,10 @@ class InstitutionsController extends AppController
             $data[21]['modifiedDate'] = 'Not updated';
         }
 
-/********************************************* */ 
-        // Utilities Electricity  
+/********************************************* */
+        // Utilities Electricity
         $institutionUtilitiesElectricity  = TableRegistry::get('infrastructure_utility_electricities');
-		$institutionUtilitiesElectricityData = $institutionUtilitiesElectricity->find()		
+		$institutionUtilitiesElectricityData = $institutionUtilitiesElectricity->find()
 				->select([
 					'created' => 'infrastructure_utility_electricities.created',
 					'modified' => 'infrastructure_utility_electricities.modified',
@@ -2622,10 +2852,10 @@ class InstitutionsController extends AppController
             $data[22]['profileComplete'] = 0;
             $data[22]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
-        // Utilities Internet  
+/********************************************* */
+        // Utilities Internet
         $institutionUtilitiesInternet  = TableRegistry::get('infrastructure_utility_internets');
-		$institutionUtilitiesInternetData = $institutionUtilitiesInternet->find()		
+		$institutionUtilitiesInternetData = $institutionUtilitiesInternet->find()
 				->select([
 					'created' => 'infrastructure_utility_internets.created',
 					'modified' => 'infrastructure_utility_internets.modified',
@@ -2646,10 +2876,10 @@ class InstitutionsController extends AppController
             $data[23]['profileComplete'] = 0;
             $data[23]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
+/********************************************* */
         //Utilities Telephone
         $institutionUtilitiesTelephone  = TableRegistry::get('infrastructure_utility_telephones');
-		$institutionUtilitiesTelephoneData = $institutionUtilitiesTelephone->find()		
+		$institutionUtilitiesTelephoneData = $institutionUtilitiesTelephone->find()
 				->select([
 					'created' => 'infrastructure_utility_telephones.created',
 					'modified' => 'infrastructure_utility_telephones.modified',
@@ -2670,10 +2900,10 @@ class InstitutionsController extends AppController
             $data[24]['profileComplete'] = 0;
             $data[24]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
-        // Assets  
+/********************************************* */
+        // Assets
         $institutionAssets  = TableRegistry::get('institution_assets');
-		$institutionAssetsData = $institutionAssets->find()		
+		$institutionAssetsData = $institutionAssets->find()
 				->select([
 					'created' => 'institution_assets.created',
 					'modified' => 'institution_assets.modified',
@@ -2694,10 +2924,10 @@ class InstitutionsController extends AppController
             $data[25]['profileComplete'] = 0;
             $data[25]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */   
-        //Transport 
+/********************************************* */
+        //Transport
         $institutionTransport  = TableRegistry::get('institution_buses');
-		$institutionTransportData = $institutionTransport->find()		
+		$institutionTransportData = $institutionTransport->find()
 				->where([$institutionTransport->aliasField('institution_id') => $institutionId])
                 ->order(['institution_buses.modified'=>'desc'])
 				->limit(1)
@@ -2714,10 +2944,10 @@ class InstitutionsController extends AppController
             $data[26]['profileComplete'] = 0;
             $data[26]['modifiedDate'] = 'Not updated';
         }
-/********************************************* */ 
-        //Committees 
+/********************************************* */
+        //Committees
         $institutionCommittees  = TableRegistry::get('institution_committees');
-		$institutionCommitteesData = $institutionCommittees->find()		
+		$institutionCommitteesData = $institutionCommittees->find()
 				->select([
 					'created' => 'institution_committees.created',
 					'modified' => 'institution_committees.modified',
@@ -2754,7 +2984,7 @@ class InstitutionsController extends AppController
             ->order('type')
             ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'Institution Completeness'])
             ->toArray();
-          
+
         $typeOptions = array_keys($typeList);
         $totalProfileComplete = count($data);
         $typeListDisable = $ConfigItem
@@ -2769,14 +2999,14 @@ class InstitutionsController extends AppController
                 $countList = count($typeListDisable);
                 $profileComplete = $profileComplete - $countList;
             }
- 
+
         foreach($data as $key => $featureData) {
             if (!in_array($featureData['feature'], $typeOptions)) {
-                unset($data[$key]);              
+                unset($data[$key]);
                 $totalProfileComplete = count($data);
-                }  
+                }
         }
-       
+
             $profilePercentage = 100/$totalProfileComplete * $profileComplete;
             $profilePercentage = round($profilePercentage);
             $data['percentage'] = $profilePercentage;
@@ -3177,30 +3407,30 @@ class InstitutionsController extends AppController
             }
         }
     }
-    
+
     public function ajaxGetReportCardStatusProgress()
     {
         $this->autoRender = false;
         $dataSet = [];
-        
+
         if (isset($this->request->query['ids'])) {
             $ids = $this->request->query['ids'];
-            
+
             $academicPeriodId = $this->request->query('academic_period_id');
             $reportCardId = $this->request->query('report_card_id');
             $institutionId = $this->request->query('institution_id');
-            
+
             $institutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $reportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
             $institutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-        
+
             if (!empty($ids)) {
-                
+
                 $results = $institutionClasses
                 ->find()
                 ->select([
                     'id','name','institution_id',
-                    
+
                     'inProcess' => $reportCardProcesses->find()->where([
                                 'report_card_id' => $reportCardId,
                                 'academic_period_id' => $academicPeriodId,
@@ -3213,15 +3443,15 @@ class InstitutionsController extends AppController
                                 'status' => 3
                             ])->count()
                 ])
-                ->where(['academic_period_id' => $academicPeriodId, 
+                ->where(['academic_period_id' => $academicPeriodId,
                         $institutionClasses->aliasField('id IN ') => $ids
                         ])->all();
-                
+
                 if (!$results->isEmpty()) {
                     foreach ($results as $key => $entity) {
-                        
+
                         $total = $entity->inCompleted + $entity->inProcess;
-                        if ($entity->inCompleted > 0 && $entity->inProcess > 0) {                            
+                        if ($entity->inCompleted > 0 && $entity->inProcess > 0) {
                             $data['percent'] = intval(($entity->inCompleted / $total) * 100);
                             if ($data['percent'] > 100) {
                                 $data['percent'] = 100;
@@ -3236,7 +3466,7 @@ class InstitutionsController extends AppController
                             $data['modified'] = 'In Progress';
                             $data['expiry_date'] = null;
                         }
-                        
+
                         $dataSet[$entity->id] = $data;
                     }
                 }
@@ -3257,7 +3487,7 @@ class InstitutionsController extends AppController
             echo "Meeting deleted successfully.";
             die;
         }
-    } 
+    }
     /**
      * Get intitute profile completness data
      * @return array
@@ -3268,7 +3498,7 @@ class InstitutionsController extends AppController
         $profileComplete = 0;
         //Overview
         $institutions = TableRegistry::get('institutions');
-		$institutionsData = $institutions->find()		
+		$institutionsData = $institutions->find()
 				->select([
 					'created' => 'institutions.created',
 					'modified' => 'institutions.modified',
@@ -3279,7 +3509,7 @@ class InstitutionsController extends AppController
 				->first();
          //Events
         $calendarEvents = TableRegistry::get('calendar_events');
-		$calendarEventsData = $calendarEvents->find()		
+		$calendarEventsData = $calendarEvents->find()
 				->select([
 					'created' => 'calendar_events.created',
 					'modified' => 'calendar_events.modified',
@@ -3290,7 +3520,7 @@ class InstitutionsController extends AppController
 				->first();
         //Contacts
         $institutionContactPersons = TableRegistry::get('institution_contact_persons');
-		$institutionContactPersonsData = $institutionContactPersons->find()		
+		$institutionContactPersonsData = $institutionContactPersons->find()
 				->select([
 					'created' => 'institution_contact_persons.created',
 					'modified' => 'institution_contact_persons.modified',
@@ -3301,7 +3531,7 @@ class InstitutionsController extends AppController
 				->first();
         //Shifts
         $institutionShifts = TableRegistry::get('institution_shifts');
-		$institutionShiftsData = $institutionShifts->find()		
+		$institutionShiftsData = $institutionShifts->find()
 				->select([
 					'created' => 'institution_shifts.created',
 					'modified' => 'institution_shifts.modified',
@@ -3312,7 +3542,7 @@ class InstitutionsController extends AppController
 				->first();
         //Programmes
         $institutionProgrammes = TableRegistry::get('institution_grades');
-		$institutionProgrammesData = $institutionProgrammes->find()		
+		$institutionProgrammesData = $institutionProgrammes->find()
 				->select([
 					'created' => 'institution_grades.created',
 					'modified' => 'institution_grades.modified',
@@ -3323,7 +3553,7 @@ class InstitutionsController extends AppController
 				->first();
         //Classes
         $institutionClasses = TableRegistry::get('institution_classes');
-		$institutionClassesData = $institutionClasses->find()		
+		$institutionClassesData = $institutionClasses->find()
 				->select([
 					'created' => 'institution_classes.created',
 					'modified' => 'institution_classes.modified',
@@ -3334,7 +3564,7 @@ class InstitutionsController extends AppController
 				->first();
          //Subjects
         $institutionSubjects = TableRegistry::get('institution_subjects');
-		$institutionSubjectsData = $institutionSubjects->find()		
+		$institutionSubjectsData = $institutionSubjects->find()
 				->select([
 					'created' => 'institution_subjects.created',
 					'modified' => 'institution_subjects.modified',
@@ -3345,7 +3575,7 @@ class InstitutionsController extends AppController
 				->first();
         //Textbooks
         $institutionTextbooks = TableRegistry::get('institution_textbooks');
-		$institutionTextbooksData = $institutionTextbooks->find()		
+		$institutionTextbooksData = $institutionTextbooks->find()
 				->select([
 					'created' => 'institution_textbooks.created',
 					'modified' => 'institution_textbooks.modified',
@@ -3356,7 +3586,7 @@ class InstitutionsController extends AppController
 				->first();
         //Students
         $institutionStudents = TableRegistry::get('institution_students');
-		$institutionStudentsData = $institutionStudents->find()		
+		$institutionStudentsData = $institutionStudents->find()
 				->select([
 					'created' => 'institution_students.created',
 					'modified' => 'institution_students.modified',
@@ -3367,7 +3597,7 @@ class InstitutionsController extends AppController
 				->first();
          //Staff
         $institutionStaff = TableRegistry::get('institution_staff');
-		$institutionStaffData = $institutionStaff->find()		
+		$institutionStaffData = $institutionStaff->find()
 				->select([
 					'created' => 'institution_staff.created',
 					'modified' => 'institution_staff.modified',
@@ -3379,7 +3609,7 @@ class InstitutionsController extends AppController
 
         //Attendance
         $institutionAttendance = TableRegistry::get('institution_staff_attendances');
-		$institutionAttendanceData = $institutionAttendance->find()		
+		$institutionAttendanceData = $institutionAttendance->find()
 				->select([
 					'created' => 'institution_staff_attendances.created',
 					'modified' => 'institution_staff_attendances.modified',
@@ -3391,7 +3621,7 @@ class InstitutionsController extends AppController
 
          //Behaviour
         $institutionBehaviour = TableRegistry::get('staff_behaviours');
-		$institutionBehaviourData = $institutionBehaviour->find()		
+		$institutionBehaviourData = $institutionBehaviour->find()
 				->select([
 					'created' => 'staff_behaviours.created',
 					'modified' => 'staff_behaviours.modified',
@@ -3403,7 +3633,7 @@ class InstitutionsController extends AppController
 
         //Positions
         $institutionPositions = TableRegistry::get('institution_positions');
-		$institutionPositionsData = $institutionPositions->find()		
+		$institutionPositionsData = $institutionPositions->find()
 				->select([
 					'created' => 'institution_positions.created',
 					'modified' => 'institution_positions.modified',
@@ -3413,9 +3643,9 @@ class InstitutionsController extends AppController
 				->limit(1)
 				->first();
 
-        //Bank Accounts 
+        //Bank Accounts
         $institutionBankAccounts  = TableRegistry::get('institution_bank_accounts');
-		$institutionBankAccountsData = $institutionBankAccounts->find()		
+		$institutionBankAccountsData = $institutionBankAccounts->find()
 				->select([
 					'created' => 'institution_bank_accounts.created',
 					'modified' => 'institution_bank_accounts.modified',
@@ -3427,7 +3657,7 @@ class InstitutionsController extends AppController
 
         //Institution Fees
         $institutionInstitutionFees = TableRegistry::get('institution_fees');
-		$institutionInstitutionFeesData = $institutionInstitutionFees->find()		
+		$institutionInstitutionFeesData = $institutionInstitutionFees->find()
 				->select([
 					'created' => 'institution_fees.created',
 					'modified' => 'institution_fees.modified',
@@ -3437,9 +3667,9 @@ class InstitutionsController extends AppController
 				->limit(1)
 				->first();
 
-         //Infrastructures Overview 
+         //Infrastructures Overview
         $institutionInfrastructuresOverview  = TableRegistry::get('institution_lands');
-		$institutionInfrastructuresOverviewData = $institutionInfrastructuresOverview->find()		
+		$institutionInfrastructuresOverviewData = $institutionInfrastructuresOverview->find()
 				->select([
 					'created' => 'institution_lands.created',
 					'modified' => 'institution_lands.modified',
@@ -3449,9 +3679,9 @@ class InstitutionsController extends AppController
 				->limit(1)
 				->first();
 
-        // Infrastructures Needs 
+        // Infrastructures Needs
         $institutionInfrastructuresNeeds  = TableRegistry::get('infrastructure_needs');
-		$institutionInfrastructuresNeedsData = $institutionInfrastructuresNeeds->find()		
+		$institutionInfrastructuresNeedsData = $institutionInfrastructuresNeeds->find()
 				->select([
 					'created' => 'infrastructure_needs.created',
 					'modified' => 'infrastructure_needs.modified',
@@ -3461,9 +3691,9 @@ class InstitutionsController extends AppController
 				->limit(1)
 				->first();
 
-        // Wash Water 
+        // Wash Water
         $institutionWashWater  = TableRegistry::get('infrastructure_wash_waters');
-		$institutionWashWaterData = $institutionWashWater->find()		
+		$institutionWashWaterData = $institutionWashWater->find()
 				->select([
 					'created' => 'infrastructure_wash_waters.created',
 					'modified' => 'infrastructure_wash_waters.modified',
@@ -3473,9 +3703,9 @@ class InstitutionsController extends AppController
 				->limit(1)
 				->first();
 
-        // Wash Hygiene  
+        // Wash Hygiene
         $institutionWashHygiene  = TableRegistry::get('infrastructure_wash_hygienes');
-		$institutionWashHygieneData = $institutionWashHygiene->find()		
+		$institutionWashHygieneData = $institutionWashHygiene->find()
 				->select([
 					'created' => 'infrastructure_wash_hygienes.created',
 					'modified' => 'infrastructure_wash_hygienes.modified',
@@ -3485,9 +3715,9 @@ class InstitutionsController extends AppController
 				->limit(1)
 				->first();
 
-        // Wash Waste  
+        // Wash Waste
         $institutionWashWaste  = TableRegistry::get('infrastructure_wash_wastes');
-		$institutionWashWasteData = $institutionWashWaste->find()		
+		$institutionWashWasteData = $institutionWashWaste->find()
 				->select([
 					'created' => 'infrastructure_wash_wastes.created',
 					'modified' => 'infrastructure_wash_wastes.modified',
@@ -3497,9 +3727,9 @@ class InstitutionsController extends AppController
 				->limit(1)
 				->first();
 
-         // Wash Sewage  
+         // Wash Sewage
         $institutionWashSewage  = TableRegistry::get('infrastructure_wash_sewages');
-		$institutionWashSewageData = $institutionWashSewage->find()		
+		$institutionWashSewageData = $institutionWashSewage->find()
 				->select([
 					'created' => 'infrastructure_wash_sewages.created',
 					'modified' => 'infrastructure_wash_sewages.modified',
@@ -3509,9 +3739,9 @@ class InstitutionsController extends AppController
 				->limit(1)
 				->first();
 
-        // Utilities Electricity  
+        // Utilities Electricity
         $institutionUtilitiesElectricity  = TableRegistry::get('infrastructure_utility_electricities');
-		$institutionUtilitiesElectricityData = $institutionUtilitiesElectricity->find()		
+		$institutionUtilitiesElectricityData = $institutionUtilitiesElectricity->find()
 				->select([
 					'created' => 'infrastructure_utility_electricities.created',
 					'modified' => 'infrastructure_utility_electricities.modified',
@@ -3521,9 +3751,9 @@ class InstitutionsController extends AppController
 				->limit(1)
 				->first();
 
-         // Utilities Internet  
+         // Utilities Internet
         $institutionUtilitiesInternet  = TableRegistry::get('infrastructure_utility_internets');
-		$institutionUtilitiesInternetData = $institutionUtilitiesInternet->find()		
+		$institutionUtilitiesInternetData = $institutionUtilitiesInternet->find()
 				->select([
 					'created' => 'infrastructure_utility_internets.created',
 					'modified' => 'infrastructure_utility_internets.modified',
@@ -3535,7 +3765,7 @@ class InstitutionsController extends AppController
 
          //Utilities Telephone
         $institutionUtilitiesTelephone  = TableRegistry::get('infrastructure_utility_telephones');
-		$institutionUtilitiesTelephoneData = $institutionUtilitiesTelephone->find()		
+		$institutionUtilitiesTelephoneData = $institutionUtilitiesTelephone->find()
 				->select([
 					'created' => 'infrastructure_utility_telephones.created',
 					'modified' => 'infrastructure_utility_telephones.modified',
@@ -3545,9 +3775,9 @@ class InstitutionsController extends AppController
 				->limit(1)
 				->first();
 
-         // Assets  
+         // Assets
         $institutionAssets  = TableRegistry::get('institution_assets');
-		$institutionAssetsData = $institutionAssets->find()		
+		$institutionAssetsData = $institutionAssets->find()
 				->select([
 					'created' => 'institution_assets.created',
 					'modified' => 'institution_assets.modified',
@@ -3557,17 +3787,17 @@ class InstitutionsController extends AppController
 				->limit(1)
 				->first();
 
-        //Transport 
+        //Transport
         $institutionTransport  = TableRegistry::get('institution_buses');
-		$institutionTransportData = $institutionTransport->find()		
+		$institutionTransportData = $institutionTransport->find()
 				->where([$institutionTransport->aliasField('institution_id') => $institutionId])
                 ->order(['institution_buses.modified'=>'desc'])
 				->limit(1)
 				->first();
 
-        //Committees 
+        //Committees
         $institutionCommittees  = TableRegistry::get('institution_committees');
-		$institutionCommitteesData = $institutionCommittees->find()		
+		$institutionCommitteesData = $institutionCommittees->find()
 				->select([
 					'created' => 'institution_committees.created',
 					'modified' => 'institution_committees.modified',
@@ -3577,7 +3807,7 @@ class InstitutionsController extends AppController
 				->limit(1)
 				->first();
 
-        // config 
+        // config
         $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		$enabledTypeList = $ConfigItem
             ->find()
@@ -3865,5 +4095,18 @@ class InstitutionsController extends AppController
         $data['percentage'] = $profilePercentage;
         return $data;
      }
+
+    /*POCOR-6264 starts*/
+    public function Lands()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Lands']);
+    }
+    /*POCOR-6264 ends*/
+
+    //  POCOR-6130 export
+    public function StudentUserExport()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUserExport']);
+    }
 
 }

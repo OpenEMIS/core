@@ -22,7 +22,11 @@ class ImportAssessmentItemResultsTable extends AppTable {
         $this->table('import_mapping');
         parent::initialize($config);
 
-        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'AssessmentItemResults']);
+        $this->addBehavior('Import.Import', [
+            'plugin'=>'Institution', 
+            'model'=>'AssessmentItemResults',
+            'backUrl' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments']
+        ]);
         // register table once
         $this->AssessmentItemResults = TableRegistry::get('Institution.AssessmentItemResults');
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -34,6 +38,9 @@ class ImportAssessmentItemResultsTable extends AppTable {
         $this->AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
         $this->InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $this->Student = TableRegistry::get('Security.Users');
+        $this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $this->InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $this->Users = TableRegistry::get('User.Users');
     }
 
     public function beforeAction($event) {
@@ -51,6 +58,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
             'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
             'Model.import.onImportPopulateAssessmentPeriodsData' => 'onImportPopulateAssessmentPeriodsData',
             'Model.import.onImportPopulateEducationSubjectsData' => 'onImportPopulateEducationSubjectsData',
+            'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',
             'Model.import.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
@@ -73,13 +81,13 @@ class ImportAssessmentItemResultsTable extends AppTable {
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
-    {
+    {  
         if (isset($buttons[1])) {
             $buttons[1]['url'] = $this->ControllerAction->url('index');
             $buttons[1]['url']['action'] = 'Assessments';
         }
         $request = $this->request;
-        if (empty($request->query('education_grade'))) {
+        if (empty($request->query('class_name'))) {
             unset($buttons[0]);
             unset($buttons[1]);
         }
@@ -89,17 +97,18 @@ class ImportAssessmentItemResultsTable extends AppTable {
     public function addOnInitialize(Event $event, Entity $entity)
     {
         $request = $this->request;
-        unset($request->query['education_grade']);
+        unset($request->query['class_name']);
     }
 
     public function addAfterAction(Event $event, Entity $entity)
     {
         $this->dependency = [];
-        $this->dependency["education_grade"] = ["select_file"];
+        $this->dependency["class_name"] = ["select_file"];
 
-        $this->ControllerAction->field('education_grade', ['type' => 'select']);
+        $this->ControllerAction->field('class_name', ['type' => 'select']);
+        $this->ControllerAction->field('education_subject', ['type' => 'select']);
         $this->ControllerAction->field('select_file', ['visible' => false]);
-        $this->ControllerAction->setFieldOrder(['education_grade', 'select_file']);
+        $this->ControllerAction->setFieldOrder(['class_name', 'education_subject', 'select_file']);
 
         //Assumption - onChangeReload must be named in this format: change<field_name>. E.g changeClass
         $currentFieldName = strtolower(str_replace("change", "", $entity->submit));
@@ -129,36 +138,77 @@ class ImportAssessmentItemResultsTable extends AppTable {
         }
     }
 
-    public function onUpdateFieldEducationGrade(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldClassName(Event $event, array $attr, $action, Request $request) {
         if ($action == 'add') {
             $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
             
             $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+            $classNameOption = $InstitutionClasses->find('list', [
+                                    'keyField' => 'id',
+                                    'valueField' => 'name'
+                                ])
+                                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
+                                    $InstitutionClassGrades->aliasField('institution_class_id = ') . $this->InstitutionClasses->aliasField('id')
+                                ])
+                                ->leftJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()],[
+                                    $this->EducationGrades->aliasField('id = ') . $this->InstitutionClassGrades->aliasField('education_grade_id')
+                                ])
+                                ->leftJoin([$this->Assessments->alias() => $this->Assessments->table()], [
+                                    $this->Assessments->aliasField('education_grade_id = ') . $this->EducationGrades->aliasField('id')
+                                ])
+                                ->where([
+                                    $InstitutionClasses->aliasField('institution_id') => $institutionId,
+                                    $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
+                                    $this->Assessments->aliasField('academic_period_id') => $academicPeriodId
+                                ])
+                                ->toArray();
             
-            $educationGradeOptions = $this->InstitutionGrades
-            ->find('list', [
-                'keyField' => 'education_grade_id',
-                'valueField' => 'EducationGrades'
-            ])
-            ->leftJoin([$this->Assessments->alias() => $this->Assessments->table()],
-                            [
-                                $this->Assessments->aliasField('education_grade_id = ') . $this->InstitutionGrades->aliasField('education_grade_id')
-                            ])
-            ->leftJoin(['EducationGrades' => 'education_grades'], [
-                'EducationGrades.id = ' . $this->InstitutionGrades->aliasField('education_grade_id')
-            ])
-            ->select(['EducationGrades' => 'EducationGrades.name', 'education_grade_id' => 'EducationGrades.id'])
-            ->where([$this->InstitutionGrades->aliasField('institution_id') => $institutionId,
-                $this->Assessments->aliasField('academic_period_id') => $academicPeriodId 
-                ])
-            ->group([
-                'EducationGrades.id',
-            ])
-            ->toArray();
             
-            $attr['options'] = $educationGradeOptions;
-                // useing onChangeReload to do visible
-            $attr['onChangeReload'] = 'changeEducationGrade';
+            $attr['options'] = $classNameOption;
+            // using onChangeReload to do visible
+            $attr['onChangeReload'] = 'changeClassName';
+        }
+        
+        return $attr;
+    }
+
+    public function onUpdateFieldEducationSubject(Event $event, array $attr, $action, Request $request) {
+        if ($action == 'add') {
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+            $classId = $request->data['ImportAssessmentItemResults']['class_name'];
+            $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+            $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+            $superAdmin = $this->Auth->user('super_admin');
+            $where = [];
+            if ($superAdmin != 1) {
+                $where[$InstitutionSubjectStaff->aliasField('staff_id')] =  $this->Auth->user('id');
+            }
+
+            $educationSubjectOption = $this->EducationSubjects->find('list', [
+                                        'keyField' => 'id',
+                                        'valueField' => 'name'
+                                    ])
+                                    ->leftJoin([$this->InstitutionSubjects->alias() => $this->InstitutionSubjects->table()],[
+                                         $this->InstitutionSubjects->aliasField('education_subject_id = ') . $this->EducationSubjects->aliasField('id')
+                                    ])
+                                    ->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()],[
+                                         $InstitutionClassSubjects->aliasField('institution_subject_id = ') . $this->InstitutionSubjects->aliasField('id')
+                                    ])
+                                    ->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()],[
+                                         $InstitutionSubjectStaff->aliasField('institution_subject_id = ') . $this->InstitutionSubjects->aliasField('id')
+                                    ])
+                                    ->where([
+                                       $InstitutionClassSubjects->aliasField('institution_class_id') => $classId,
+                                       $where
+                                    ])
+                                    ->toArray();
+            
+            $attr['options'] = $educationSubjectOption;
+            // using onChangeReload to do visible
+            $attr['onChangeReload'] = 'changeEducationSubject';
         }
         
         return $attr;
@@ -166,7 +216,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $educationGradeId = $this->request->query['education_grade'];
+        $subjectId = $this->request->query['education_subject'];
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
         $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
 
@@ -176,20 +226,8 @@ class ImportAssessmentItemResultsTable extends AppTable {
                             $this->EducationSubjects->aliasField('code'),
                             $this->EducationSubjects->aliasField('name')
                         ])
-                        ->leftJoin([$this->AssessmentItems->alias() => $this->AssessmentItems->table()],
-                            [
-                                $this->EducationSubjects->aliasField('id = ') . $this->AssessmentItems->aliasField('education_subject_id')
-                        ])
-                        ->leftJoin([$this->Assessments->alias() => $this->Assessments->table()],
-                            [
-                                $this->AssessmentItems->aliasField('assessment_id = ') . $this->Assessments->aliasField('id')
-                        ])
-                        ->where([
-                            $this->Assessments->aliasField('academic_period_id') => $academicPeriodId,
-                            //$this->InstitutionSubjects->aliasField('education_grade_id') => $educationGradeId
-                        ]); 
-
-               
+                        ->where([$this->EducationSubjects->aliasField('id') => $subjectId]); 
+        
         $translatedReadableCol = $this->getExcelLabel($EducationSubjectsResults, 'Name');
 
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -197,8 +235,8 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
         $modelData = $EducationSubjectsResults->find('all')
         ->select([
-            'code',
-            'name'
+            'name',
+            'code'
         ]);
 
         if (!empty($modelData)) {
@@ -214,7 +252,12 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportPopulateAssessmentPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $educationGradeId = $this->request->query['education_grade'];
+        $classId = $this->request->query['class_name'];
+        $educationData = $this->InstitutionClassGrades->find()
+                        ->select([$this->InstitutionClassGrades->aliasField('education_grade_id')])
+                        ->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId])
+                        ->first();
+        $educationGradeId = $educationData->education_grade_id;
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
 
         $Assessments = TableRegistry::get('Assessment.Assessments');
@@ -241,8 +284,8 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
         $modelData = $assessmentPeriodsResult->find('all')
         ->select([
-            'code',
-            'name'
+            'name',
+            'code'
         ]);
 
         if (!empty($modelData)) {
@@ -255,38 +298,32 @@ class ImportAssessmentItemResultsTable extends AppTable {
         }
     }
 
-    public function onImportPopulateAssessmentsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateInstitutionClassesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $educationGradeId = $this->request->query['education_grade'];
-        $academicPeriodId = $this->AcademicPeriods->getCurrent();
-
-        $assessmentsResult = $this->Assessments->find()
-                        ->select([
-                            $this->Assessments->aliasField('id'),
-                            $this->Assessments->aliasField('code'),
-                            $this->Assessments->aliasField('name')
+        $classId = $this->request->query['class_name'];
+        $classData = $this->InstitutionClasses->find()
+                        ->select([ 
+                            $this->InstitutionClasses->aliasField('id'),
+                            $this->InstitutionClasses->aliasField('name')
                         ])
-                        ->where([
-                            $this->Assessments->aliasField('academic_period_id') => $academicPeriodId,
-                            $this->Assessments->aliasField('education_grade_id') => $educationGradeId
-                        ]);
-
-        $translatedReadableCol = $this->getExcelLabel($assessmentsResult, 'Name');
+                        ->where([$this->InstitutionClasses->aliasField('id') => $classId]);
+        
+        $translatedReadableCol = $this->getExcelLabel($classData, 'Name');
 
         $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = ['Name', $translatedCol];
 
-        $modelData = $assessmentsResult->find('all')
+        $modelData = $classData->find('all')
         ->select([
-            'code',
-            'name'
+            'name',
+            'id'
         ]);
 
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
-                    $row->code
+                    $row->id
                 ];
             }
         }
@@ -294,21 +331,33 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportGetAssessmentPeriodsId(Event $event, $cellValue)
     {
-        
-        $dataRecord = $this->AssessmentPeriods->find()->select([$this->AssessmentPeriods->aliasField('id')])->where([$this->AssessmentPeriods->aliasField('code') => $cellValue])->first();
-        
+        /*POCOR-6377 starts*/
+        $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $dataRecord = $this->AssessmentPeriods->find()
+                    ->select([$this->AssessmentPeriods->aliasField('id')])
+                    ->leftJoin([$Assessments->alias() => $Assessments->table()], [
+                        $this->AssessmentPeriods->aliasField('assessment_id = ') . $Assessments->aliasField('id')
+                    ])
+                    ->where([
+                        $Assessments->aliasField('academic_period_id') => $academicPeriodId,
+                        $this->AssessmentPeriods->aliasField('code') => $cellValue
+                    ])->first();
+        /*POCOR-6377 ends*/
         $assessmentPeriodsId = $dataRecord->id;
         
         return $assessmentPeriodsId;
     }
 
-    public function onImportGetAssessmentsId(Event $event, $cellValue)
-    {  
-        $record = $this->Assessments->find()->select([$this->Assessments->aliasField('id')])->where([$this->Assessments->aliasField('code') => $cellValue])->first();
-        
-        $assessmentsId = $record->id;
+    public function onImportGetInstitutionClassesId(Event $event, $cellValue)
+    {
+        $record = $this->InstitutionClasses->find()
+                ->select([$this->InstitutionClasses->aliasField('id')])
+                ->where([$this->InstitutionClasses->aliasField('id') => $cellValue])
+                ->first();
 
-        return $assessmentsId;
+        $classId = $record->id;
+        return $classId;
     }
 
     public function onImportGetEducationSubjectsId(Event $event, $cellValue)
@@ -320,23 +369,89 @@ class ImportAssessmentItemResultsTable extends AppTable {
         return $educationSubjectsId;
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+    public function onImportGetUsersId(Event $event, $cellValue)
+    {  
+        $record = $this->Users->find()->select([$this->Users->aliasField('id')])->where([$this->Users->aliasField('openemis_no') => $cellValue])->first();
         
+        $userId = $record->id;
+
+        return $userId;
+    }
+
+    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
+    {
+        $classId = $this->request->query['class_name'];
+        $academicPeriodId = !is_null($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Users = TableRegistry::get('User.Users');
+        $studentData = $InstitutionClassStudents->find()
+                        ->where([
+                            $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
+                            $InstitutionClassStudents->aliasField('academic_period_id') => $academicPeriodId
+                        ])->toArray();
+        $studentIds = [];
+        if (!empty($studentData)) {
+            foreach ($studentData as $value) {
+               $studentIds[] = $value->student_id;
+        }
+
+        $UsersData = $Users->find()
+                        ->select([
+                            $Users->aliasField('id'),
+                            $Users->aliasField('first_name'),
+                            $Users->aliasField('middle_name'),
+                            $Users->aliasField('third_name'),
+                            $Users->aliasField('last_name'),
+                            $Users->aliasField('openemis_no')
+                        ])
+                        ->where([$Users->aliasField('id IN') => $studentIds]);
+
+        $translatedReadableCol = $this->getExcelLabel($UsersData, 'Name');
+
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = ['Name', $translatedCol];
+        
+        $modelData = $UsersData->find('all')
+        ->select([ 
+            'first_name', 
+            'middle_name', 
+            'third_name', 
+            'last_name',
+            'openemis_no'
+        ]);
+
+            if (!empty($modelData)) {
+                foreach($modelData->toArray() as $row) {
+                    $name = $row->first_name.' '.$row->middle_name.' '.$row->third_name.' '.$row->last_name; 
+                    $data[$columnOrder]['data'][] = [
+                        $name,
+                        $row->openemis_no
+                    ];
+                }
+            }
+        }
+    }
+
+    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+       
         $educationGradeId = $this->request->query['education_grade'];
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
-        $institutionId = $this->ControllerAction->paramsDecode($this->request->params['institutionId']);
-        $id = $institutionId['id'];
-        $tempRow['institution_id'] = $id;
-        $tempRow['education_grade_id'] = $educationGradeId;
+        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $tempRow['institution_id'] = $institutionId;
         $tempRow['academic_period_id'] = $academicPeriodId;
-    
-        $studentRecord = $this->Student->find()
-                           ->select([$this->Student->aliasField('id')]) 
-                           ->where([$this->Student->aliasField('openemis_no') => $tempRow['student_id']])
-                           ->first();
-
-        $stdId = $studentRecord['id'];
-        $tempRow['student_id'] = $stdId;
+        $classId = $this->request->query['class_name'];
+        $educationData = $this->InstitutionClassGrades->find()
+                        ->select([$this->InstitutionClassGrades->aliasField('education_grade_id')])
+                        ->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId])
+                        ->first();
+        $educationGradeId = $educationData->education_grade_id;
+        $tempRow['education_grade_id'] = $educationGradeId;
+        $assessment = $this->AssessmentPeriods->find()
+                        ->select([$this->AssessmentPeriods->aliasField('assessment_id')])
+                        ->where([$this->AssessmentPeriods->aliasField('id') => $tempRow['assessment_period_id']])
+                        ->first();
+        $tempRow['assessment_id'] = $assessment->assessment_id;
+        $tempRow['institution_classes_id'] = $tempRow['class_id'];
         
         return true;
     }
