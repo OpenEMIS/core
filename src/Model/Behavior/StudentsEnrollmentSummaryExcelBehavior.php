@@ -161,6 +161,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
 
     //POCOR-5863 starts
     private function getData($settings) {
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $areaEducationId = $requestData->area_education_id;
@@ -250,7 +251,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                                                 $StudentsEnrollmentSummary->aliasfield('academic_period_id').' = ' . 'AcademicPeriods.id'
                                             ])
-                                ->where(['Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId, $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id])
+                                ->where(['Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId, $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id, $StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus])
                                 ->group(['EducationGrades.id', 'Genders.id'])->toArray();
                 
                 if(!empty($instStudData)){
