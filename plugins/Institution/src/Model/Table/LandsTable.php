@@ -1676,13 +1676,15 @@ class LandsTable extends ControllerActionTable
                         } 
                         if (!empty($data->number_value) && $data->field_type != 'CHECKBOX') {
                             $optvalue = TableRegistry::get('infrastructure_custom_field_options');
-                            $fieldVal = $optvalue->get($data->number_value);
-                            if (!empty($fieldVal)) {
-                                $opt = $fieldVal->name;
-                            } else {
-                                $opt = '';
+                            if($optvalue->exists(['id'=>$data->number_value])){
+                                $fieldVal = $optvalue->get($data->number_value);
+                                if (!empty($fieldVal)) {
+                                    $opt = $fieldVal->name;
+                                } else {
+                                    $opt = '';
+                                }
+                                $row[$data->custom_field_id] = $opt;
                             }
-                            $row[$data->custom_field_id] = $opt;
                         }
                         /*POCOR-6376 ends*/
                         if(!empty($data->decimal_value)) {
