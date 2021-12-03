@@ -35,6 +35,56 @@ class EducationLevelsTable extends ControllerActionTable
 		$this->fields['education_system_id']['sort'] = ['field' => 'EducationSystems.name'];
 	}
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
+
+        // Webhook Education Level create -- start
+        if($entity->isNew()){
+            $body = array();
+            $body = [
+                'education_system_id' =>$entity->education_system_id,
+                'education_level_id' =>$entity->id,
+                'education_level_name' =>$entity->name,
+                'education_level_isced' =>$entity->education_level_isced_id,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_level_create', ['username' => $username], $body);
+            }
+        }
+        // Webhook Education Level create -- end
+
+        // Webhook Education Level update -- start
+        if(!$entity->isNew()){
+            $body = array();
+            $body = [
+                    'education_system_id' =>$entity->education_system_id,
+                    'education_level_id' =>$entity->id,
+                    'education_level_name' =>$entity->name,
+                    'education_level_isced' =>$entity->education_level_isced_id,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_level_update', ['username' => $username], $body);
+            }
+        }
+        // Webhook Education Level update -- end
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // Webhook Education Level Delete -- Start
+
+        $body = array();
+        $body = [
+            'education_level_id' =>$entity->id,
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('education_level_delete', ['username' => $username], $body);
+        }
+        // Webhook Education Level Delete -- End
+    }
+
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
 	{
 		$query->where([$this->aliasField('education_system_id') => $entity->education_system_id]);
@@ -51,18 +101,19 @@ class EducationLevelsTable extends ControllerActionTable
 
         // Education System filter
         $systemOptions = $this->EducationSystems->getSystemOptions($selectedAcademicPeriod);
+
         if (!empty($systemOptions )) {
         	$selectedSystem = !empty($this->request->query('system')) ? $this->request->query('system') : key($systemOptions);
         } else {
         	$systemOptions = ['0' => '-- '.__('No Education System').' --'] + $systemOptions;
         	$selectedSystem = !empty($this->request->query('system')) ? $this->request->query('system') : 0;
         }
-        
+
         $this->controller->set(compact('systemOptions', 'selectedSystem'));
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $query->where([$this->aliasField('education_system_id') => $selectedSystem])
                         ->order([$this->aliasField('order')]);
-        
+
         //sort
 		$sortList = ['name', 'EducationLevelIsced.name', 'EducationSystems.name'];
 		if (array_key_exists('sortWhitelist', $extra['options'])) {
@@ -126,18 +177,34 @@ class EducationLevelsTable extends ControllerActionTable
 		return $list;
 	}
 
-	public function getLevelOptions()
+	public function getLevelOptions($selectedAcademicPeriod = null)
 	{
-		$list = $this
-			->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
-			->find('visible')
-			->contain(['EducationSystems'])
-			->order([
-				$this->EducationSystems->aliasField('order'),
-				$this->aliasField('order')
-			])
-			->toArray();
-
+		//POCOR-5973 starts
+		$systemOptions = $this->EducationSystems->getSystemOptions($selectedAcademicPeriod);
+		if(!empty($systemOptions)){
+			$list = $this
+					->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
+					->find('visible')
+					->contain(['EducationSystems'])
+					->where([$this->aliasField('education_system_id') . ' IN (' .  implode(',',array_keys($systemOptions)) . ')'])
+					->order([
+						$this->EducationSystems->aliasField('order'),
+						$this->aliasField('order')
+					])
+					->toArray();
+		}else{
+			$educationSystems = TableRegistry::get('Education.EducationSystems');
+			$list = $this
+					->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
+					->find('visible')
+					->contain(['EducationSystems'])
+					->where([$educationSystems->aliasField('academic_period_id') => $selectedAcademicPeriod])
+					->order([
+						$this->EducationSystems->aliasField('order'),
+						$this->aliasField('order')
+					])
+					->toArray();
+		}//POCOR-5973 ends
 		return $list;
 	}
 

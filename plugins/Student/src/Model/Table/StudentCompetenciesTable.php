@@ -101,12 +101,19 @@ class StudentCompetenciesTable extends ControllerActionTable
         $session = $this->request->session(); 
         if ($this->controller->name == 'Profiles') {
             $userData = $this->Session->read();
-			$studentId = $userData['Auth']['User']['id'];
+            if ($userData['Auth']['User']['is_guardian'] == 1) {
+                $sId = $session->read('Student.ExaminationResults.student_id');
+                if (!empty($sId)) {
+                    $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+                } else {
+                    $studentId = $session->read('Auth.User.id');
+                }
+            } else {
+                $studentId = $userData['Auth']['User']['id'];
+            }
         } else {
             $studentId = $session->read('Student.Students.id');
-        }
-        
-		
+        }		
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $Competencies = TableRegistry::get('Competency.CompetencyTemplates');

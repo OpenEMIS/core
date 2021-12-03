@@ -1,7 +1,19 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Student.angular/results/student.results.svc', ['block' => true]); ?>
 <?= $this->Html->script('Student.angular/results/student.results.ctrl', ['block' => true]); ?>
-
+<?php
+$this->start('toolbar');
+?>
+<?php if ($_archive) : ?>
+    <a href="<?=$archiveUrl ?>">
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Archive') ?>" >
+            <i class="fa fa-folder"></i>
+        </button>
+    </a>
+<?php endif; ?>
+<?php
+$this->end();
+?>
 <?php
 $this->start('panelBody');
 ?>

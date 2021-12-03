@@ -2,7 +2,7 @@
 namespace User\Model\Table;
 
 use ArrayObject;
-
+use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 
@@ -31,6 +31,13 @@ class AwardsTable extends ControllerActionTable
                 $this->controller->set('tabElements', $tabElements);
                 $this->controller->set('selectedAction', $this->alias());
                 break;
+            /*POCOR-6267 starts*/
+            case 'GuardianNavs':
+                $tabElements = $this->controller->getAcademicTabElements();
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->alias());
+                break;
+            /*POCOR-6267 ends*/
             case 'Staff':
                 $tabElements = $this->controller->getProfessionalTabElements();
                 $this->controller->set('tabElements', $tabElements);
@@ -40,7 +47,11 @@ class AwardsTable extends ControllerActionTable
             case 'Profiles':
                 $type = $this->request->query('type');
                 $options['type'] = $type;
-                if ($this->action == 'index') {
+                $session = $this->request->session();
+                $isStaff = $session->read('Auth.User.is_staff');
+                if ($isStaff) {
+                    $tabElements = $this->controller->getProfessionalTabElements($options);
+                } else if ($this->action == 'index') {
                     $tabElements = $this->controller->getAcademicTabElements($options);
                 } elseif ($type == 'student') {
                     $tabElements = $this->controller->getAcademicTabElements($options);
@@ -53,6 +64,29 @@ class AwardsTable extends ControllerActionTable
                 break;
         }
     }
+
+    //Function Uncommented for ask POCOR-6267
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
+		$session = $this->request->session();
+		if ($this->controller->name == 'Profiles') {
+			if ($session->read('Auth.User.is_guardian') == 1) {
+				$sId = $session->read('Student.ExaminationResults.student_id');
+			}else {
+				$sId = $session->read('Student.Students.id');
+			}
+			if (!empty($sId)) {
+				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+			} else {
+				$studentId = $session->read('Auth.User.id');
+			}
+		} else {
+				$studentId = $session->read('Student.Students.id');
+		}
+
+        $query->where([$this->aliasField('security_user_id') => $studentId]);
+        
+	}
 
     public function afterAction(Event $event, ArrayObject $extra)
     {

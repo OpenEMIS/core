@@ -35,7 +35,7 @@ $this->start('toolbar');
             <i class="fa kd-edit"></i>
         </button> -->
 
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view'" ng-click="onEditClick()">
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view' && (editPermission == 1 || editPermission == undefined)" ng-click="onEditClick()">
             <i class="fa kd-edit"></i>
         </button>
         <!-- End -->
@@ -47,8 +47,8 @@ $this->start('toolbar');
         <!-- End -->
     <?php endif; ?>
     <?php if ($_excel) : ?>
-        <?php if (isset($customExcel)) : ?>
-            <a href="<?=$customExcel ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Report') ?>" ><i class="fa kd-header-row"></i></button></a>
+        <?php if (isset($reportCardGenerate)) : ?>
+            <a href="<?=$reportCardGenerate ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Report') ?>" ><i class="fa kd-header-row"></i></button></a>
             <a href="<?=$exportPDF ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('PDF') ?>" ><i class="fa fa-file-pdf-o"></i></button></a>
         <?php endif;?>
 
@@ -89,9 +89,9 @@ $roles = '[' . implode(",", $_roles) . ']';
     
     <div ng-init="class_id=<?= $classId; ?>;assessment_id=<?= $assessmentId; ?>;institution_id=<?= $institutionId; ?>;roles=<?=$roles; ?>">
         <div class="scrolltabs sticky-content">
-            <scrollable-tabset show-tooltips="false" show-drop-down="false">
+      <scrollable-tabset show-tooltips="false" show-drop-down="false">
                 <uib-tabset justified="true">
-                    <uib-tab heading="<?= __('{{subject.name}}') ?>" ng-repeat="subject in subjects" ng-click="onChangeSubject(subject)">
+                    <uib-tab heading="<?= __('{{subject.name}}') ?>" ng-repeat="subject in subjects" ng-click="onChangeSubject(subject, subject.is_editable)">
                     </uib-tab>
                 </uib-tabset>
                 <div class="tabs-divider"></div>

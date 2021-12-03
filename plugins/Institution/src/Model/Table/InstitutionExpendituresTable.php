@@ -35,6 +35,8 @@ class InstitutionExpendituresTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function beforeAction($event) {
@@ -52,7 +54,7 @@ class InstitutionExpendituresTable extends ControllerActionTable
         return $validator
             ->allowEmpty('file_content');
     }
-	
+
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$entity->institution_id = $this->request->session()->read('Institution.Institutions.id');
     }
@@ -72,13 +74,13 @@ class InstitutionExpendituresTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function indexBeforeAction($event) { 
+    public function indexBeforeAction($event) {
         unset($this->fields['academic_period_id']);
         unset($this->fields['description']);
         $this->setFieldOrder(['date', 'budget_type_id', 'expenditure_type_id', 'amount']);
     }
 
-    public function viewBeforeAction($event) { 
+    public function viewBeforeAction($event) {
         unset($this->fields['attachment']);
         unset($this->fields['description']);
         $this->setFieldOrder(['date', 'budget_type_id', 'expenditure_type_id', 'amount']);
@@ -91,7 +93,12 @@ class InstitutionExpendituresTable extends ControllerActionTable
         } else if ($field == 'expenditure_type_id') {
             return  __('Type');
         } else if ($field == 'amount' && $this->action == 'index') {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+            if (!empty($module) && $module == 'InstitutionExpenditures') {
+                return __('Amount');
+            } else {
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+            }
+            //return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -104,7 +111,65 @@ class InstitutionExpendituresTable extends ControllerActionTable
         $this->field('expenditure_type_id', ['attr' => ['label' => __('Type')], 'type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('amount', ['attr' => ['label' => __('Amount')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->setFieldOrder(['academic_period_id', 'date', 'budget_type_id', 'expenditure_type_id', 'amount', 'file_name', 'file_content', 'description']);
-        
+
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $academyPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+
+		$query
+		->select(['date' => 'InstitutionExpenditures.date','budget' => 'BudgetTypes.name', 'type' => 'ExpenditureTypes.name', 'amount' =>'InstitutionExpenditures.amount'])
+
+        ->LeftJoin([$this->BudgetTypes->alias() => $this->BudgetTypes->table()],[
+            $this->BudgetTypes->aliasField('id').' = ' . 'InstitutionExpenditures.budget_type_id'
+        ])
+
+		->LeftJoin([$this->ExpenditureTypes->alias() => $this->ExpenditureTypes->table()],[
+			$this->ExpenditureTypes->aliasField('id').' = ' . 'InstitutionExpenditures.expenditure_type_id'
+        ])
+
+        ->where([
+            $this->aliasField('academic_period_id = ') . $academyPeriodId,
+            $this->aliasField('institution_id = ') . $institutionId,
+        ]);
+
+    }
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key' => 'InstitutionIncomes.date',
+            'field' => 'date',
+            'type' => 'date',
+            'label' => __('Date')
+        ];
+
+        $extraField[] = [
+            'key' => 'BudgetTypes.name',
+            'field' => 'budget',
+            'type' => 'string',
+            'label' => __('Budget')
+        ];
+
+        $extraField[] = [
+            'key' => 'ExpenditureTypes.name',
+            'field' => 'type',
+            'type' => 'string',
+            'label' => __('Type')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionExpenditures.amount',
+            'field' => 'amount',
+            'type' => 'integer',
+            'label' => __('Amount')
+        ];
+
+        $fields->exchangeArray($extraField);
     }
 }

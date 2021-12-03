@@ -300,7 +300,6 @@ class CustomFieldListBehavior extends Behavior {
 
 	// Function to generate the excel content
 	public function excelContent(ArrayObject $sheets, $name, $filterKey=null, $key=null) {
-
 		$query = $this->_table->find();
 
 		// If the filter is present

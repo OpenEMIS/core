@@ -18,8 +18,8 @@ class POCOR5685 extends AbstractMigration
         $this->execute('CREATE TABLE `z_5685_locale_content_translations` LIKE `locale_content_translations`');
         $this->execute('INSERT INTO `z_5685_locale_content_translations` SELECT * FROM `locale_content_translations`');
         // End
-        
-		
+
+
 		$localeContent = [
 
             [
@@ -302,7 +302,7 @@ class POCOR5685 extends AbstractMigration
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ]
-            
+
         ];
         $this->insert('locale_contents', $localeContent);
         $getLocales1= $this->query("SELECT * FROM locales WHERE `name` = 'العربية' AND `iso` = 'ar'");

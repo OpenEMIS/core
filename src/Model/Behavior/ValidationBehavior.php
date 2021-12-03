@@ -3043,11 +3043,12 @@ class ValidationBehavior extends Behavior
             $report_end_date =  strtotime($globalData['data']['report_end_date']);
             $datediff = $report_end_date - $report_start_date;
             $days = round($datediff / (60 * 60 * 24));  
-            if($days <= 31){
+            if($days <= 31) {
                 return true;
+            } else {
+                return false;
             }
         }
-        return false;
     }
 
     //POCOR-5917 starts
@@ -3295,4 +3296,24 @@ class ValidationBehavior extends Behavior
         }
     }
     //POCOR-5975 ends
+    //POCOR-5924 starts
+    public static function checkUniqueIdentityNumber($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $data = $globalData['data'];
+        $userIdentities = TableRegistry::get('user_identities');
+        $IdentitiesEntity = $userIdentities->find()
+            ->where([
+                $userIdentities->aliasField('number') => $data['identity_number'],
+                $userIdentities->aliasField('identity_type_id') => $data['identity_type_id']
+            ])
+            ->count()
+            ;
+        if($IdentitiesEntity > 0){
+            $validationErrorMsg = $model->getMessage('Institution.Students.identity_number.ruleCheckUniqueIdentityNumber');
+            return $validationErrorMsg;
+        }
+
+        return true;
+    }//POCOR-5924 ends
 }
