@@ -388,7 +388,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         return StudentAttendanceMarkedRecords
-            .find('periodIsMarked', extra)
+            .find('noScheduledClass', extra)
             .ajax({success: success, defer: true});
     }
 
