@@ -112,6 +112,9 @@ class StudentAttendanceSummaryTable extends AppTable
         if (!empty($areaId) && $areaId  != -1) {
             $conditions['Institutions.area_id'] = $areaId;
         }
+
+        $conditions['StudentAttendanceMarkedRecords.period !='] = 0; //POCOR-6439 
+        $conditions['StudentAttendanceMarkedRecords.subject_id !='] = 0; //POCOR-6439 
         
         $query
 
@@ -1093,12 +1096,19 @@ public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
             $studentAttendanceMarkTypes = $studentAttendanceMarkTypesTable->getAttendancePerDayOptionsByClass(
                     $institionClassId, $academicPeriodId, $dayId , $educationGradeId
                     );
-
-            foreach ($studentAttendanceMarkTypes as $studentAttendanceMarkTypes){
+            //POCOR-6439 starts
+            /*foreach ($studentAttendanceMarkTypes as $studentAttendanceMarkTypes){
                 $studentAttendanceMarkTypeTmpArr[$studentAttendanceMarkTypes['id']] = $studentAttendanceMarkTypes['name'];
             }
         
-            $periodName = $studentAttendanceMarkTypeTmpArr[$periodId];
+            $periodName = $studentAttendanceMarkTypeTmpArr[$periodId];*/
+            
+            if(!empty($studentAttendanceMarkTypes)){
+                foreach ($studentAttendanceMarkTypes as $studentAttendanceMarkTypes){
+                    $studentAttendanceMarkTypeTmpArr[$studentAttendanceMarkTypes['id']] = $studentAttendanceMarkTypes['name'];
+                }
+                $periodName = $studentAttendanceMarkTypeTmpArr[$periodId];
+            }//POCOR-6439 ends
         }
         
         return (empty($subjectId))?$periodName:'';
