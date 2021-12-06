@@ -264,6 +264,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('leave_type', ['type' => 'hidden']);
         $this->ControllerAction->field('workflow_status', ['type' => 'hidden']);
         //POCOR-5762 ends
+        $this->ControllerAction->field('institution_class_id');//POCOR-6439 use this as testing purpose in report > Institution > Student Attandance Summary
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -1900,4 +1901,51 @@ class InstitutionsTable extends AppTable
         }
     }
     //POCOR-5762 ends
+    //POCOR-6439 starts this function is use it for testing purpose
+    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, Request $request)
+    { 
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            //$areaLevelId = $this->request->data[$this->alias()]['area_level_id'];//POCOR-6333
+            if ((in_array($feature,
+                [
+                    'Report.StudentAttendanceSummary'
+                ]))) {
+                //$Areas = TableRegistry::get('Area.Areas');
+                $entity = $attr['entity'];
+
+                if ($action == 'add') {
+                    $where = [];
+
+                    $InstitutionClasses = TableRegistry::get('institution_classes');
+                    $InstitutionClassesArr = $InstitutionClasses
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                        ->leftJoin(['InstitutionClassGrades' => 'institution_class_grades'], [
+                            'InstitutionClassGrades.institution_class_id = '. $InstitutionClasses->aliasField('id'),
+                        ])
+                        ->where([
+                            $InstitutionClasses->aliasField('institution_id') => 41,
+                            $InstitutionClasses->aliasField('academic_period_id ') => 32,
+                            'InstitutionClassGrades.education_grade_id' => 247
+                        ]);
+
+                    $classOptions = $InstitutionClassesArr->toArray();
+                    $attr['type'] = 'chosenSelect';
+                    $attr['attr']['multiple'] = false;
+                    $attr['select'] = true;
+                    /*POCOR-6333 starts*/
+                    if (count($areaOptions) > 1) {
+                        $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('Select Class')] + $areaOptions;
+                    } else {
+                        $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $classOptions;
+                    }
+                    /*POCOR-6333 ends*/
+                    $attr['onChangeReload'] = true;
+                } else {
+                    $attr['type'] = 'hidden';
+                }
+            }
+        }
+        return $attr;
+    }//POCOR-6439 ends
 }
