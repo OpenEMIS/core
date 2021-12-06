@@ -98,22 +98,22 @@ class MealProgrammesTable extends ControllerActionTable
         // $institutionId = $entity->institution_id;
         // $entity->institution_id = $institutionId;
 
-        $MealProgrammesLists = TableRegistry::get('Meal.MealProgrammesLists');
+        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
         $result=$this->find('all',['fields'=>'id'])->last();
 
         $record_id=$result->id;
         $institutionIds = $entity->institution_id;
         $institutionIdsData = $institutionIds['_ids'];
-        // echo "<pre>";print_r($institutionIdsData);die;
         foreach($institutionIdsData AS $key => $value)
         {
             try{
-                $data = $MealProgrammesLists->newEntity([
-                    'meal_programmes_id' => $record_id,
-                    'institution_id' => $value
+                $data = $MealInstitutionProgrammes->newEntity([
+                    'meal_programme_id' => $record_id,
+                    'institution_id' => $value,
+                    'created_user_id' => 2
                 ]);
     
-                $saveData = $MealProgrammesLists->save($data);
+                $saveData = $MealInstitutionProgrammes->save($data);
             }
             catch (PDOException $e) {
                 echo "<pre>";print_r($e);die;
