@@ -23,7 +23,7 @@ class InstitutionStatisticsTable extends AppTable
         $this->table('institution_statistics');
         parent::initialize($config);
         $this->addBehavior('Report.ReportList');
-        $this->addBehavior('Report.CustomReport');
+        $this->addBehavior('Report.InstitutionStatistics');
         $this->addBehavior('CustomExcel.ExcelReport', [
             'templateTable' => 'Institution.InstitutionStatistics',
             'templateTableKey' => 'feature',
@@ -62,7 +62,11 @@ class InstitutionStatisticsTable extends AppTable
         /*POCOR-6403 starts*/
         if (array_key_exists('institutionId', $this->request->params)) {
             $institutionId = $this->request->params['institutionId'];
-            $this->Session->write('institute_id', $institutionId);
+            $jsonData = base64_decode($institutionId);
+            preg_match_all('/{(.*?)}/', $jsonData, $matches);
+            $requestData = json_decode($matches[0][0]);
+            $id = $requestData->id;
+            $this->Session->write('inst_id', $id);
         }
         /*POCOR-6403 ends*/
 		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
@@ -72,7 +76,7 @@ class InstitutionStatisticsTable extends AppTable
 	public function addBeforeAction(Event $event)
 	{
         $this->fields = [];
-        $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $this->Session->read('institute_id')]);
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $this->Session->read('inst_id')]);
         $this->ControllerAction->field('feature', ['type' => 'select', 'select' => false]);
         $this->ControllerAction->field('format');
 
@@ -287,6 +291,7 @@ class InstitutionStatisticsTable extends AppTable
 
             // csvBehavior can only can handle one query
             $obj = current($jsonQuery);
+
             $byaccess = true;
             $toSql = true;
             $settings['sql'] = $this->buildQuery($obj, $params, $byaccess, $toSql);
