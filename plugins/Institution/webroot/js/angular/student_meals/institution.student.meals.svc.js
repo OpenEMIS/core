@@ -94,7 +94,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         StudentAttendanceMarkedRecords: 'Meal.StudentAttendanceMarkedRecords',
         MealBenefit: 'Meal.MealBenefit',
         MealProgrammes: 'Meal.MealProgrammes',
-        MealProgrammesLists: 'Meal.MealProgrammesLists',
+        MealInstitutionProgrammes: 'Meal.MealInstitutionProgrammes',
         StudentMealMarkedRecords: 'Meal.StudentMealMarkedRecords',
         MealReceived: 'Meal.MealReceived',
     };
@@ -302,7 +302,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             }
         };
         
-        return MealProgrammesLists
+        return MealInstitutionProgrammes
             .find('mealInstitutionProgrammes', {
                 institution_id: institutionId,
             })

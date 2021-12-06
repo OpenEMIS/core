@@ -15,7 +15,7 @@ use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 use App\Model\Traits\MessagesTrait;
 
-class MealProgrammesListsTable extends ControllerActionTable
+class MealInstitutionProgrammesTable extends ControllerActionTable
 {
 
     /**
@@ -36,7 +36,7 @@ class MealProgrammesListsTable extends ControllerActionTable
         $this->belongsToMany('MealNutritions', [
             'className' => 'Meal.MealNutritions',
             'joinTable' => 'meal_nutritional_records',
-            'foreignKey' => 'meal_programmes_id',
+            'foreignKey' => 'meal_programme_id',
             'targetForeignKey' => 'nutritional_content_id',
             'through' => 'Meal.MealNutritionalRecords',
             'dependent' => true
@@ -55,13 +55,13 @@ class MealProgrammesListsTable extends ControllerActionTable
         $MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
         $query
         ->select([
-            $this->aliasField('meal_programmes_id'),
+            $this->aliasField('meal_programme_id'),
             'name' => $MealProgrammes->aliasField('name'),
             'id' => $MealProgrammes->aliasField('id')
         ])
         ->innerJoin(
             [$MealProgrammes->alias() => $MealProgrammes->table()], [
-                $this->aliasField('meal_programmes_id = ') . $MealProgrammes->aliasField('id')
+                $this->aliasField('meal_programme_id = ') . $MealProgrammes->aliasField('id')
             ]
         )
         ->where([
