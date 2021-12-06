@@ -115,7 +115,7 @@ class StudentAttendanceSummaryTable extends AppTable
 
         $conditions['StudentAttendanceMarkedRecords.period !='] = 0; //POCOR-6439 
         $conditions['StudentAttendanceMarkedRecords.subject_id !='] = 0; //POCOR-6439 
-        
+
         $query
 
             ->contain([
@@ -172,7 +172,6 @@ class StudentAttendanceSummaryTable extends AppTable
             ->where([$conditions]);
             
             $results = $query->toArray();
-                                    
             // To get a list of dates based on user's input start and end dates
             $begin = $reportStartDate;
             $end = $reportEndDate;
