@@ -130,6 +130,9 @@ class SpecialNeedsServicesTable extends ControllerActionTable
                 }
             }
 
+            if ($selectedAcademicPeriodId == '-1') {
+                $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
+            }
             $academicPeriodName = $this->AcademicPeriods
                 ->get($selectedAcademicPeriodId)
                 ->name;
