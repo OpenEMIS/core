@@ -179,12 +179,12 @@ class InstitutionBusesTable extends ControllerActionTable
     }
     // POCOR-6168 For excel Filters
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+   /* public function beforeAction(Event $event, ArrayObject $extra)
     {
         $modelAlias = 'InstitutionBuses';
         $userType = '';
         $this->controller->changePageHeader($this, $modelAlias, $userType);
-    }
+    } */
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
