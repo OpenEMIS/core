@@ -29,6 +29,11 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     scope.rowsThisPage = [];
     scope.selectedUser;
 
+    scope.datepickerOptions = {
+        maxDate: new Date(),
+        showWeeks: false
+    };
+
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
         console.log(angular.baseUrl);

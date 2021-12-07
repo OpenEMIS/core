@@ -1,11 +1,12 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Directory.angular/directoryaddguardian/directory.directoryaddguardian.svc', ['block' => true]); ?>
 <?= $this->Html->script('Directory.angular/directoryaddguardian/directory.directoryaddguardian.ctrl', ['block' => true]); ?>
-<?= $this->Html->css('ControllerAction.../plugins/chosen/css/chosen.min.css', ['block' => true]); ?>
-<?= $this->Html->css('ControllerAction.../plugins/datepicker/css/bootstrap-datepicker.min', ['block' => true]); ?>
-<?= $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepicker.min', ['block' => true]); ?>
-<?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min.js', ['block' => true]); ?>
-<?= $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', ['block' => true]); ?>
+
+<script data-require="jquery@1.11.3" data-semver="1.11.3" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<link data-require="bootstrap@3.3.2" data-semver="3.3.2" rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+<script data-require="bootstrap@3.3.2" data-semver="3.3.2" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+<script data-require="angularjs@1.4.9" data-semver="1.4.9" src="https://code.angularjs.org/1.4.9/angular.min.js"></script>
+<script data-require="ui-bootstrap@*" data-semver="1.3.2" src="https://cdn.rawgit.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-1.3.2.js"></script>
 
 <div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl'>
     <div class="stepper-content-wrapper">
@@ -127,8 +128,8 @@
                     </div>
                     <div class="input date required">
                         <label for="User_date_of_birth"><?= __('Date Of Birth') ?></label>
-                        <div class="input-group date " id="User_date_of_birth" style="">
-                            <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="selectedGuardianData.date_of_birth">
+                        <div class="input-group date" id="User_date_of_birth" style="" datepicker="" ng-model="selectedGuardianData.date_of_birth" ng-click="isDatepickerOpen = !isDatepickerOpen">
+                            <input type="text" class="form-control " ng-model="selectedGuardianData.date_of_birth" uib-datepicker-popup="dd/MM/yyyy" is-open="isDatepickerOpen" datepicker-options="datepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" />
                             <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                         </div>
                         <div ng-if="postResponse.error.date_of_birth" class="error-message">
@@ -492,22 +493,6 @@
     </div>
 </div>
 
-<script>
-    $(function () {
-        var datepicker1 = $('#Users_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
-        var datepicker2 = $('#User_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
-        var datepicker3 = $('#Guardian_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
-        $( document ).on('DOMMouseScroll mousewheel scroll', function(){
-            window.clearTimeout( t );
-            t = window.setTimeout( function(){
-                datepicker1.datepicker('place');
-                datepicker2.datepicker('place');
-                datepicker3.datepicker('place');
-            });
-        });
-    });
-</script>
-
 <style>
     .pd-10 {
         padding: 10px;
@@ -808,4 +793,38 @@
         }
     }
 
+    .uib-title {
+        background-color: #fff !important;
+        color: #333 !important;
+        margin-top: -22px;
+        border-color: #ccc !important;
+    }
+
+    .uib-left, .uib-right {
+        background-color: #fff !important;
+        color: #333 !important;
+        border-color: #ccc !important;
+    }
+
+    .uib-day .btn-sm {
+        background-color: #fff !important;
+        color: #333 !important;
+        border-color: #ccc !important;
+    }
+
+    .uib-month .btn-default {
+        background-color: #fff !important;
+        color: #333 !important;
+        border-color: #ccc !important;
+    }
+
+    .uib-years .btn-default {
+        background-color: #fff !important;
+        color: #333 !important;
+        border-color: #ccc !important;
+    }
+
+    .uib-datepicker-popup {
+        padding: 5px 10px;
+    }
 </style>
