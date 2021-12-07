@@ -373,7 +373,7 @@ class PositionsTable extends ControllerActionTable {
        $institutionShifts = TableRegistry::get('institution_shifts');
        $shiftOptions = TableRegistry::get('shift_options'); 
        $institutionStaffShifts = TableRegistry::get('institution_staff_shifts');
-        $res=$institutionShifts->find()->select(['name'=> $shiftOptions->aliasField('name') ])
+        $res=$institutionShifts->find()->select(['name'=> 'group_concat(shift_options.name)' ])
                                 ->leftJoin(
                                         [$shiftOptions->alias() => $shiftOptions->table()],
                                         [
@@ -388,9 +388,9 @@ class PositionsTable extends ControllerActionTable {
                                     )
                               
                                
-                                ->where([$institutionStaffShifts->aliasField('staff_id')=> $entity->id])->sql();
-                              echo "<pre>";  print_r($res); exit;
-        return $res['name'];
+                                ->where([$institutionStaffShifts->aliasField('staff_id')=> $entity->id])->order($institutionShifts->aliasField('id'))->first();
+                              // print_r($res['name']); exit;
+                         return $res['name'];
         
     }
 }
