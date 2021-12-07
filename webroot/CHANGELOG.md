@@ -1,3 +1,30 @@
+### [3.71.3] - 2021-12-03
+- Bug Fixed: Institutions>Staff>Staff1>Career>Staff Leave: Unable to create leave even when attendance is deleted
+- Bug Fixed: Institutions>Staff>Staff1> Career >Subjects: Discrepancies in the number of students displayed in the Academic > Subjects and Staff > Career > Subjects pages
+- Bug Fixed: Administrations > Profiles > Students : Incorrect message upon hover
+- Bug Fixed: Institutions > Attendances > Students : System does not fully populate the list of subjects
+- Bug Fixed: Institutions > Performance > Report Cards : Unable to generate report cards
+- Bug Fixed: Institutions > Students > Transfer : Next grade should only show one grade and not all grades
+- Bug Fixed: Institutions > Students > Undo : System does not display list of students that are not assigned to any class
+- Bug Fixed: Institution > Infrastructure > Export : System returns 404 error
+- Bug Fixed: Reports> Student: Enrollment summary support is not showing correct record of students
+- Bug Fixed: Institutions>Staff>Staff1>Finance: Unable to add payslips
+- Bug Fixed: Institutions>Report Cards>Comments:Total Mark and the Overall Average are not showing
+
+### [3.71.2] - 2021-11-26
+- Implemented: Add Export button function - Institutions > Infrastructures > Needs
+- Bug Fixed: Institutions>Performance>Assessments: Unable to import assessment item result
+- Bug Fixed: Institutions>Staff>Staff1> Career >Subjects: Start date is changed when students are added or removed from subjects
+- Bug Fixed: Administration>Meals: Active Institutions should be displayed and Institution should be filtered by the area education
+- Bug Fixed: Institutions>Students>Transfer: Education grade is repeated and next education grade is showing all grades
+- Bug Fixed: Institution>Overview: Institution Overview Page should contain export information for Map, Contacts and Shifts
+- Bug Fixed: Institution>Staff: Report does not include custom fields and contact
+- Bug Fixed: Institution>Infrastructure>Wash: Report should include all Wash modules and include institution name, code and field directorate name
+- Bug Fixed: Add Export button function - Institutions > Students > Student1-Remove External Reference
+- Bug Fixed: Institutions>Infrastructure>Overview: Execute Permission not working for Export
+- Bug Fixed: Administrations > Training > Results : Duplicate result types
+- Bug Fixed: Institutions>Performance>Assessments: Only System admin can see the classes
+
 ### [3.71.1] - 2021-11-18
 - Implemented: Add Export button function - Institutions > Students > Student1 (include grades classes assessment item results and absences)
 - Implemented: Implement placeholder in assessment report template for area administrative name
