@@ -37,6 +37,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.error = {};
     StudentController.institutionId = null;
 
+    StudentController.datepickerOptions = {
+        maxDate: new Date(),
+        showWeeks: false
+    };
+
     //controller function
     StudentController.getUniqueOpenEmisId = getUniqueOpenEmisId;
     StudentController.generatePassword = generatePassword;

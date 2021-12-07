@@ -37,6 +37,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.rowsThisPage= [];
     StaffController.institutionId = null;
 
+    StaffController.datepickerOptions = {
+        maxDate: new Date(),
+        showWeeks: false
+    };
+
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
     StaffController.generatePassword = generatePassword;

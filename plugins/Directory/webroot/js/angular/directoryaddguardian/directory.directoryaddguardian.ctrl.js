@@ -28,6 +28,11 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
     scope.rowsThisPage = [];
     scope.selectedStaff;
 
+    scope.datepickerOptions = {
+        maxDate: new Date(),
+        showWeeks: false
+    };
+
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
         console.log(angular.baseUrl);
