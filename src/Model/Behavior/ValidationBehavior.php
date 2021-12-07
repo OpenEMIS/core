@@ -2122,6 +2122,7 @@ class ValidationBehavior extends Behavior
                 $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'"
             ])
             ->first();
+
         // Check if staff aattendance exists
         if ($staffAttendances) {
             return false;

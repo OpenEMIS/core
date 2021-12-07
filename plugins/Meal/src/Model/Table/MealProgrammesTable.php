@@ -269,10 +269,10 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('start_date');
         $this->field('end_date');
         $this->field('amount');
+        $this->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
         $this->field('institution_id', [
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
         ]);
-        $this->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
         $this->field('type',['select' => false]);
         $this->field('meal_nutritions', [
             'type' => 'chosenSelect',
@@ -408,33 +408,81 @@ class MealProgrammesTable extends ControllerActionTable
         }
     } 
 
+    public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
+    {
+
+                    $Areas = TableRegistry::get('Area.Areas');
+                    $entity = $attr['entity'];
+
+                    if ($action == 'add' || $action == 'edit') {
+                        $areaOptions = $Areas
+                            ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                            ->order([$Areas->aliasField('order')]);
+
+                        $attr['type'] = 'chosenSelect';
+                        $attr['attr']['multiple'] = false;
+                        $attr['select'] = true;
+                        $attr['options'] = ['' => '-- ' . __('Select') . ' --', '0' => __('All Areas')] + $areaOptions->toArray();
+                        $attr['onChangeReload'] = true;
+                    } else {
+                        $attr['type'] = 'hidden';
+                    }
+           
+        return $attr;
+
+    }
+
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
-        
-            $institutionList = [];
-                    $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-                    $institutionQuery = $InstitutionsTable
-                        ->find('list', [
-                            'keyField' => 'id',
-                            'valueField' => 'code_name'
-                        ])
-                        ->order([
-                            $InstitutionsTable->aliasField('code') => 'ASC',
-                            $InstitutionsTable->aliasField('name') => 'ASC'
-                        ]);
-                    $institutionList = $institutionQuery->toArray();
-                 if (count($institutionList) > 1) {
-                           $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
-                        } else {
-                            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
-                        }
 
-                // $institutionOptions = ['' => '-- '.__('Select').' --'] + $institutionList;
-                $attr['type'] = 'chosenSelect';
-                $attr['onChangeReload'] = true;
-                $attr['attr']['multiple'] = false;
-                $attr['options'] = $institutionOptions;
-                $attr['attr']['required'] = true;
+            $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id'] : 0;
+            $institutionList = [];
+            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $InstitutionStatusesTable = TableRegistry::get('Institution.Statuses');
+            $activeStatus = $InstitutionStatusesTable->getIdByCode('ACTIVE');
+            if ($areaId > 0) {
+                $institutionQuery = $InstitutionsTable
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
+                ->where([
+                    $InstitutionsTable->aliasField('area_id') => $areaId,
+                    $InstitutionsTable->aliasField('institution_status_id') => $activeStatus
+                ])
+                ->order([
+                    $InstitutionsTable->aliasField('code') => 'ASC',
+                    $InstitutionsTable->aliasField('name') => 'ASC'
+                ]);
+            } 
+
+            else{
+                $institutionQuery = $InstitutionsTable
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
+                ->where([
+                    $InstitutionsTable->aliasField('institution_status_id') => $activeStatus
+                ])
+                ->order([
+                    $InstitutionsTable->aliasField('code') => 'ASC',
+                    $InstitutionsTable->aliasField('name') => 'ASC'
+                ]);
+            }
+            $institutionList = $institutionQuery->toArray();
+            if (count($institutionList) > 1) {
+             $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+         } else {
+            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+        }
+
+                    // $institutionOptions = ['' => '-- '.__('Select').' --'] + $institutionList;
+        $attr['type'] = 'chosenSelect';
+        $attr['onChangeReload'] = true;
+        $attr['attr']['multiple'] = false;
+        $attr['options'] = $institutionOptions;
+        $attr['attr']['required'] = true;
         
         return $attr;
     }
