@@ -368,12 +368,16 @@ class PositionsTable extends ControllerActionTable {
 
     public function onGetShift(Event $event, Entity $entity)
     {
-       // echo "<pre>";
-       //print_r($entity); exit;
+        //echo "<pre>";
+       ////print_r($entity); exit;
+       $institutionStaff = TableRegistry::get('institution_staff');
+       $staffId=$institutionStaff->find()->select(['staff_id'])->where(['id' =>$entity->id])->first();
+       $staff_id=$staffId['staff_id']; 
+
        $institutionShifts = TableRegistry::get('institution_shifts');
        $shiftOptions = TableRegistry::get('shift_options'); 
        $institutionStaffShifts = TableRegistry::get('institution_staff_shifts');
-        $res=$institutionShifts->find()->select(['name'=> 'group_concat(shift_options.name)' ])
+        $res=$institutionShifts->find()->select(['name'=> 'group_concat(shift_options.name order by shift_options.name)' ])
                                 ->leftJoin(
                                         [$shiftOptions->alias() => $shiftOptions->table()],
                                         [
@@ -388,7 +392,7 @@ class PositionsTable extends ControllerActionTable {
                                     )
                               
                                
-                                ->where([$institutionStaffShifts->aliasField('staff_id')=> $entity->id])->order($institutionShifts->aliasField('id'))->first();
+                                ->where([$institutionStaffShifts->aliasField('staff_id')=> $staff_id])->order($institutionShifts->aliasField('id'))->first();
                               // print_r($res['name']); exit;
                          return $res['name'];
         
