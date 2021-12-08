@@ -1434,6 +1434,9 @@ class StudentsTable extends ControllerActionTable
 
 
 			if (!empty($bodyData)) {
+
+               // echo "<pre>";
+               // print_r($bodyData); exit;
 				foreach ($bodyData as $key => $value) {
 					$user_id = $value->user->id;
 					$openemis_no = $value->user->openemis_no;
@@ -1489,14 +1492,21 @@ class StudentsTable extends ControllerActionTable
 					$studentStatus = $value->student_status->name;
 
 					if(!empty($value->start_date)) {
+                        $i=0;
+
 						foreach ($value->start_date as $key => $date) {
-							$startDate = $date;
-						}
+                            if($i==0){
+        							$startDate = $date;
+                                }
+						$i++;}
 					}
 
 					if(!empty($value->end_date)) {
+                        $i=0;
 						foreach ($value->end_date as $key => $date) {
-							$endDate = $date;
+                            if($i==0){
+							  $endDate = $date;
+                           $i++; }
 						}
 					}
 
