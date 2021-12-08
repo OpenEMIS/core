@@ -1,3 +1,10 @@
+### [3.71.4] - 2021-12-08
+- Bug Fixed: Institutions>Dashboard: Modifying or adding absence, it is not reflected on the dashboard
+- Bug Fixed: Personal>Account: Account permission should allow user to edit username
+- Bug Fixed: Institutions>Academic>Subjects-User remains on the same page after adding new subjects.
+- Bug Fixed: Special Needs : Set Default Academic Period filter to All Academic Periods
+- Bug Fixed: Institutions > Students > Export : Students should not be appearing more then once in report
+
 ### [3.71.3] - 2021-12-03
 - Bug Fixed: Institutions>Staff>Staff1>Career>Staff Leave: Unable to create leave even when attendance is deleted
 - Bug Fixed: Institutions>Staff>Staff1> Career >Subjects: Discrepancies in the number of students displayed in the Academic > Subjects and Staff > Career > Subjects pages
