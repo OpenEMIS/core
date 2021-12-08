@@ -429,26 +429,37 @@ class StudentsTable extends ControllerActionTable
                     if ($fieldType == 'TEXT') {
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->text_value;
                     } else if ($fieldType == 'CHECKBOX') {
-                        $studentCustomFieldOptionsData = $Guardians->find()
-                        ->select([
-                            'checkbox_value_text' => $studentCustomFieldOptions->aliasField('name')
-                        ])->innerJoin(
-                            [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
-                            [
-                                $studentCustomFieldOptions->aliasField('student_custom_field_id') => $Guardians->aliasField('student_custom_field_id'),
-                                $studentCustomFieldOptions->aliasField('id') => $Guardians->aliasField('number_value')
-                            ]
-                        )
-                        ->where([
-                            $studentCustomFieldOptions->aliasField('student_custom_field_id') => $guadionRow->student_custom_field_id,
-                            $Guardians->aliasField('student_id') => $guadionRow->student_id,
-                        ])->toArray();
-                        $dataArra = [];
-                        foreach($studentCustomFieldOptionsData AS $studentCustomFieldOptionsDataValue){
-                            $dataArra[] = $studentCustomFieldOptionsDataValue->checkbox_value_text;
+                        $Guardians_data_for_checkbox = TableRegistry::get('student_custom_field_values');
+                        $studentCustomFieldOptions_for_checkbox = TableRegistry::get('student_custom_field_options');
+
+                        $Guardians_data_for_checkbox_data = $Guardians_data_for_checkbox->find()
+                            ->select([
+                                $Guardians_data_for_checkbox->aliasField('student_custom_field_id'),
+                                $Guardians_data_for_checkbox->aliasField('student_id'),
+                                $Guardians_data_for_checkbox->aliasField('number_value'),
+                            ])
+                            ->where([
+                                $Guardians_data_for_checkbox->aliasField('student_custom_field_id') => $guadionRow->student_custom_field_id,
+                                $Guardians_data_for_checkbox->aliasField('student_id') => $guadionRow->student_id,
+                            ])->toArray();
+
+                        
+                        $checkbox_data_arr = [];
+                        foreach($Guardians_data_for_checkbox_data AS $Guardians_data_for_checkbox_data_value){
+                            $studentCustomFieldOptions_Data = $studentCustomFieldOptions_for_checkbox->find()
+                                ->select([
+                                    $studentCustomFieldOptions_for_checkbox->aliasField('id'),
+                                    $studentCustomFieldOptions_for_checkbox->aliasField('name'),
+                                    
+                                ])
+                                ->where([
+                                    $studentCustomFieldOptions_for_checkbox->aliasField('id') => $Guardians_data_for_checkbox_data_value->number_value
+                                ])->first();
+                            $checkbox_data_arr[] = $studentCustomFieldOptions_Data->name;
                         }
+
                         // $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $studentCustomFieldOptionsData ;
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = implode(',', $checkbox_data_arr) ;
                     } else if ($fieldType == 'NUMBER') {
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->number_value;
                     } else if ($fieldType == 'DECIMAL') {
@@ -463,7 +474,6 @@ class StudentsTable extends ControllerActionTable
                         ->where([
                             $studentCustomFieldOptions->aliasField('id') => $guadionRow->number_value,
                         ])->toArray();
-                        // echo "<pre>";print_r($studentCustomFieldOptionsData->dropdown_value_text);die;
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $studentCustomFieldOptionsData[0]->dropdown_value_text;
                     } else if ($fieldType == 'DATE') {
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
@@ -475,7 +485,7 @@ class StudentsTable extends ControllerActionTable
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->field_description;
                     }
                 }
-                echo "<pre>";print_r($row);die;
+                // echo "<pre>";print_r($row);die;
                 // POCOR-6129 custome fields code
 
                 return $row;
