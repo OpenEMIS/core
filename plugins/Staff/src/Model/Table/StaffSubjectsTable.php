@@ -192,6 +192,7 @@ class StaffSubjectsTable extends ControllerActionTable {
         // this 'save' does not redirect, need to re-extract the $subjectOptions after saving is done
         $this->fields['subjects']['data']['subjects'] = $subjectOptions;
         $extra['subjectOptions'] = $subjectOptions;
+        return $this->controller->redirect($this->url('index'));
     }
 
     private function getSubjectOptions() {
