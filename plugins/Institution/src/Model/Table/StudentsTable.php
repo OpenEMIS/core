@@ -429,13 +429,14 @@ class StudentsTable extends ControllerActionTable
                     if ($fieldType == 'TEXT') {
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->text_value;
                     } else if ($fieldType == 'CHECKBOX') {
-                        $studentCustomFieldOptionsData = $studentCustomFieldOptions->find()
+                        $studentCustomFieldOptionsData = $Guardians->find()
                         ->select([
                             'checkbox_value_text' => $studentCustomFieldOptions->aliasField('name')
-                        ])->leftJoin(
-                            [$Guardians->alias() => $Guardians->table()],
+                        ])->innerJoin(
+                            [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
                             [
-                                $Guardians->aliasField('student_custom_field_id') => $studentCustomFieldOptions->aliasField('student_custom_field_id')
+                                $studentCustomFieldOptions->aliasField('student_custom_field_id') => $Guardians->aliasField('student_custom_field_id'),
+                                $studentCustomFieldOptions->aliasField('id') => $Guardians->aliasField('number_value')
                             ]
                         )
                         ->where([
@@ -447,7 +448,7 @@ class StudentsTable extends ControllerActionTable
                             $dataArra[] = $studentCustomFieldOptionsDataValue->checkbox_value_text;
                         }
                         // $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = implode(",",$dataArra);;
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $studentCustomFieldOptionsData ;
                     } else if ($fieldType == 'NUMBER') {
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->number_value;
                     } else if ($fieldType == 'DECIMAL') {
@@ -474,7 +475,7 @@ class StudentsTable extends ControllerActionTable
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->field_description;
                     }
                 }
-                // echo "<pre>";print_r($row);die;
+                echo "<pre>";print_r($row);die;
                 // POCOR-6129 custome fields code
 
                 return $row;
