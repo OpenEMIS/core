@@ -403,7 +403,7 @@ class StudentsTable extends ControllerActionTable
                     'textarea_value'                 => $Guardians->aliasField('textarea_value'),
                     'date_value'                     => $Guardians->aliasField('date_value'),
                     'time_value'                     => $Guardians->aliasField('time_value'),
-                    // 'checkbox_value_text'            => $studentCustomFieldOptions->aliasField('name'),
+                    'checkbox_value_text'            => $studentCustomFieldOptions->aliasField('name'),
                     'question_name'                  => 'studentCustomField.name',
                     'field_type'                     => 'studentCustomField.field_type',
                     'field_description'              => 'studentCustomField.description',
@@ -413,12 +413,12 @@ class StudentsTable extends ControllerActionTable
                     [
                         'studentCustomField.id = '.$Guardians->aliasField('student_custom_field_id')
                     ]
-                )/* ->leftJoin(
+                ) ->leftJoin(
                     [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
                     [
                         $studentCustomFieldOptions->aliasField('student_custom_field_id') => $Guardians->aliasField('student_custom_field_id')
                     ]
-                ) */
+                )
                 ->where([
                     $Guardians->aliasField('student_id') => $row['student_id'],
                 ])->toArray();
@@ -438,7 +438,15 @@ class StudentsTable extends ControllerActionTable
                     } else if ($fieldType == 'TEXTAREA') {
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->textarea_value;
                     } else if ($fieldType == 'DROPDOWN') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->checkbox_value_text;
+                        $studentCustomFieldOptionsData = $studentCustomFieldOptions->find()
+                        ->select([
+                            'dropdown_value_text' => $studentCustomFieldOptions->aliasField('name')
+                        ])
+                        ->where([
+                            $studentCustomFieldOptions->aliasField('id') => $guadionRow->number_value,
+                        ])->toArray();
+                        // echo "<pre>";print_r($studentCustomFieldOptionsData->dropdown_value_text);die;
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->dropdown_value_text;
                     } else if ($fieldType == 'DATE') {
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
                     } else if ($fieldType == 'TIME') {
