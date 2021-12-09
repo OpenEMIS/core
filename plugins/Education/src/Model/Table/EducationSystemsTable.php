@@ -393,9 +393,10 @@ class EducationSystemsTable extends ControllerActionTable
 					} // if educationCyclesData
 				}//level ends
 			}
-		} //if educationLevelsData
-
-		// Webhook Education Structure System starts
+		} //if educationLevelsData     
+		
+		// Webhook Education Structure System create starts
+		//POCOR-6085 starts
 		if($entity->isNew()) {
 
 			$educationStructure = [
@@ -409,8 +410,9 @@ class EducationSystemsTable extends ControllerActionTable
 				$Webhooks->triggerShell('education_structure_system_create', [], $educationStructure);
 			}
 		}
-
-		// Webhook Education Structure System ends
+		
+		//POCOR-6085 ends
+		// Webhook Education Structure System create ends
 
 		// POCOR-6086 starts
 		 //webhook education structure system update starts
