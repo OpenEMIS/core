@@ -729,14 +729,48 @@ class UndoStudentStatusTable extends AppTable
     }
 
     public function findUndoTransferredStudent(Query $query, array $options)
-    {   //POCOR-5670 starts
+    {
+        // START: POCOR-6436
+        $StudentTransfer = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $entities = $StudentTransfer->find()->select([
+            'student_id' => $StudentTransfer->aliasField('student_id'),
+            'institution_classes_students_id' => 'InstitutionClassesStudents.student_id'
+        ])->leftJoin(['InstitutionClassesStudents' => 'institution_class_students'], [
+            'InstitutionClassesStudents.student_id = ' . $StudentTransfer->aliasField('student_id'),
+            'InstitutionClassesStudents.institution_id = ' .  $options['institutionId'],
+            'InstitutionClassesStudents.education_grade_id = ' .  $options['selectedGrade'],
+        ])->where([
+            $StudentTransfer->aliasField('previous_institution_id') => $options['institutionId'],
+            $StudentTransfer->aliasField('academic_period_id') => $options['selectedPeriod'],
+            $StudentTransfer->aliasField('education_grade_id') =>  $options['selectedGrade'],
+        ])->hydrate(false)->toArray();
+        $studentWithoutClass = [];
+        $studentWithClass = [];
+        foreach ($entities AS $entity) {
+            if (is_null($entity['institution_classes_students_id'])) {
+                $studentWithoutClass[] = $entity['student_id'];
+            } else {
+                $studentWithClass[] = $entity['student_id'];
+            }
+        }
+        $student_ids = $studentWithClass;
+        if ($options['selectedClass'] == -1) {
+            $student_ids = $studentWithoutClass;
+        }
+        // END: POCOR-6436
+        //POCOR-5670 starts
         $conditions = [
             $this->aliasField('academic_period_id') =>  $options['selectedPeriod'],
             $this->aliasField('education_grade_id') => $options['selectedGrade'],
-            $this->aliasField('student_status_id') => $this->statuses['TRANSFERRED'],
-            'StudentTransfer.institution_id = ' . $options['institutionId']
+            $this->aliasField('student_status_id') => $this->statuses['CURRENT'],
+            'StudentTransfer.previous_institution_id = ' . $options['institutionId'],
         ];
-
+        if (!empty($student_ids)) {
+            $conditions[] = [$this->aliasField('student_id IN ') => $student_ids];
+        }
+        if ($options['selectedClass'] != -1) {
+            $conditions[] = 'InstitutionClassesStudents.institution_class_id = ' . $options['selectedClass'];
+        }
         $query
             ->innerjoin(
                 ['StudentTransfer' => 'institution_student_transfers'], [
@@ -750,6 +784,11 @@ class UndoStudentStatusTable extends AppTable
                     'StudentTransfer.institution_id = ' . 'InstitutionStudent.institution_id',
                     'StudentTransfer.education_grade_id = ' . 'InstitutionStudent.education_grade_id'
                 ])
+            ->leftJoin(['InstitutionClassesStudents' => 'institution_class_students'], [
+                'InstitutionClassesStudents.student_id = ' . $this->aliasField('student_id'),
+                'InstitutionClassesStudents.academic_period_id = ' . $this->aliasField('academic_period_id'),
+                'InstitutionClassesStudents.education_grade_id = ' . $this->aliasField('education_grade_id')
+            ])
             ->where([
                 $conditions,
                 'OR' => [

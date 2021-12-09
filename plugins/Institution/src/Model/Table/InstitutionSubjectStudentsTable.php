@@ -466,21 +466,38 @@ class InstitutionSubjectStudentsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+
         if($entity->isNew() || $entity->dirty('student_status_id')) {
             $id = $entity->institution_subject_id;
             $countMale = $this->getMaleCountBySubject($id);
             $countFemale = $this->getFemaleCountBySubject($id);
-            $this->InstitutionSubjects->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
+              
+            //$this->InstitutionSubjects->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
         }
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
-    {
+    {   
+       
+        $res=$this->InstitutionSubjects->find()->select(['InstitutionSubjects.id'])->join([
+            'institution_subject_students' => [
+                'table' => 'institution_subject_students',
+                'type' => 'LEFT',
+                'conditions' => 'institution_subject_students.institution_subject_id = InstitutionSubjects.id'
+            ]])->where(['institution_subject_students.academic_period_id'=>$entity->academic_period_id,'institution_subject_students.education_grade_id'=>$entity->education_grade_id,'institution_subject_students.education_subject_id'=>$entity->education_subject_id,'institution_subject_students.institution_class_id' =>$entity->institution_class_id])->group('institution_subject_students.institution_subject_id')->first();
+        
+        $oldCount=$this->InstitutionSubjects->find()->select(['total_male_students','total_female_students'])->where(['id'=>$res['id']])->first();
+        $id = $entity->institution_subject_id;
+        $prevCount=$this->InstitutionSubjects->find()->select(['total_male_students','total_female_students'])->where(['id'=>$id])->first();
         $id = $entity->institution_subject_id;
         $countMale = $this->getMaleCountBySubject($id);
         $countFemale = $this->getFemaleCountBySubject($id);
+        $totalMale=$oldCount['total_male_students']+$prevCount['total_male_students']-$countMale;
+        $totalFemale=$oldCount['total_female_students']+$prevCount['total_female_students']-$countFemale;
+        
         $this->InstitutionSubjects->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
-
+        
+        $this->InstitutionSubjects->updateAll(['total_male_students' => $totalMale, 'total_female_students' => $totalFemale], ['id' => $res['id']]);
         // Disabled this logic because results should never be deleted when removing students from subjects
 
         //PHPOE-2338 - implement afterDelete to delete records in AssessmentItemResultsTable
