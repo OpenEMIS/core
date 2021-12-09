@@ -351,12 +351,16 @@ class StudentProfilesTable extends ControllerActionTable
 								// ->where([
 								// 	$Institutions->aliasField('area_id IN ') => $areaKey
 								// ])
+                                ->where([
+									$Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
+								])
 								->toArray();
         }
         else{
             $institutionOptions = $Institutions->find('list')
 								->where([
-									$Institutions->aliasField('area_id ') => $selectedArea
+									$Institutions->aliasField('area_id') => $selectedArea,
+                                    $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
 								])
 								->toArray();
         }
@@ -456,7 +460,7 @@ class StudentProfilesTable extends ControllerActionTable
                 $this->aliasField('student_status_id')
             ])
             ->where($where)
-            ->where([$this->aliasField('student_status_id') => 1])
+            // ->where([$this->aliasField('student_status_id') => 1])
             ->all();
             Log::write('debug',$query);
         if (is_null($this->request->query('sort'))) {
@@ -573,7 +577,7 @@ class StudentProfilesTable extends ControllerActionTable
                     
                 } else { 
                     $generateButton['attr']['data-html'] = true;
-                    $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('StaffProfiles.date_closed'));
+                    $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('StudentProfiles.date_closed'));
                     $generateButton['url'] = 'javascript:void(0)';
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
                 }

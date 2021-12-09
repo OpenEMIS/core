@@ -1,5 +1,10 @@
 <div class="search">
 	<div class="input-group">
+	<?php
+		$session = $this->request->session();
+		$howManyStudents = $session->check('is_any_student') ? $session->read('is_any_student') : 1;
+		if ($howManyStudents > 0) {
+	?>
 		<?=
 		$this->Form->input('Search.searchField', [
 			'label' => false,
@@ -27,5 +32,6 @@
 			<?php endif ?>
 		</span>
 
+	<?php } ?>
 	</div>
 </div>

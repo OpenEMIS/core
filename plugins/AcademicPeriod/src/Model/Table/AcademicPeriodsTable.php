@@ -137,6 +137,22 @@ class AcademicPeriodsTable extends AppTable
         }
     }
 
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {   
+        // Webhook Academic Period Delete -- Start
+        $body = array();
+        $body = [
+            'academic_period_id' => $entity->id,
+            'parent_id' => $entity->parent_id 
+        ];
+
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('academic_period_delete', [], $body);
+        }
+        // Webhook Academic Period Delete -- End
+    }
+
     public function onBeforeDelete(Event $event, ArrayObject $options, $ids)
     {
         $entity = $this->find()->select(['current'])->where($ids)->first();
@@ -178,9 +194,8 @@ class AcademicPeriodsTable extends AppTable
                 'name' =>$entity->name,
                 'start_date' =>$entity->start_date,
                 'end_date' =>$entity->end_date,
-                'current' =>$entity->current,
-                'academic_period_id' =>$entity->id,
-                'parent_id' => $entity->parent_id,
+                'current' =>$entity->start_date,
+                'academic_period_id' =>'',
             ];
           
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
@@ -198,9 +213,8 @@ class AcademicPeriodsTable extends AppTable
                 'name' =>$entity->name,
                 'start_date' =>$entity->start_date,
                 'end_date' =>$entity->end_date,
-                'current' =>$entity->current,
+                'current' =>$entity->start_date,
                 'academic_period_id' =>$entity->id,
-                'parent_id' => $entity->parent_id,
             ];
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
@@ -210,7 +224,12 @@ class AcademicPeriodsTable extends AppTable
 
         // webhook academic period update ends
 
+
+      
+
     }
+    
+
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
       
@@ -851,7 +870,7 @@ class AcademicPeriodsTable extends AppTable
             return false;
         }
     }
-
+    //POCOR-6347 starts
     public function getAvailableAcademicPeriodsById($id, $list = true, $order='DESC')
     {
         if ($list) {
@@ -871,7 +890,7 @@ class AcademicPeriodsTable extends AppTable
         } else {
             return false;
         }
-    }
+    }//POCOR-6347 ends
 
     public function getCurrent()
     {

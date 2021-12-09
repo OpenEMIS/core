@@ -86,7 +86,6 @@ class WorkflowsTable extends AppTable
         ]);
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_id', ['type' => 'hidden']);
-       
 
         if (!isset($this->request->data[$this->alias()]['feature'])) {
             $selectedFeature = key($this->modelList);
@@ -113,7 +112,7 @@ class WorkflowsTable extends AppTable
             'select' => false,
             'type' => 'select'
         ]);
-         $this->ControllerAction->field('report_start_date',['type'=>'hidden']);
+        $this->ControllerAction->field('report_start_date',['type'=>'hidden']);
         $this->ControllerAction->field('report_end_date',['type'=>'hidden']);
             $this->ControllerAction->field('academic_period_id', ['select' => false]);
 
