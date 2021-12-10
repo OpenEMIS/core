@@ -263,19 +263,28 @@ class AbsencesTable extends ControllerActionTable
 
             $this->advancedSelectOptions($dateToOptions, $selectedDateTo);
             $this->controller->set(compact('dateToOptions', 'selectedDateTo'));
-            if ($this->controller->name != 'Profiles') {
-                $extra['elements']['controls'] = ['name' => 'Student.Absences/controls', 'data' => [], 'options' => [], 'order' => 1];
-            }
             if ($this->controller->name != 'Directories') {
                 $extra['elements']['controls'] = ['name' => 'Student.Absences/controls', 'data' => [], 'options' => [], 'order' => 1];
             } 
 
             if ($this->controller->name == 'Directories') {
                 $query->find('all');  
+            } elseif ($this->controller->name == 'Profiles') {
+                $userData = $this->Session->read();
+                $userId =  $userData['Student']['ExaminationResults']['student_id'];
+                $studentId = $this->ControllerAction->paramsDecode($userId);
+                //echo "<pre>";print_r($studentId['id']);die();
+                $query
+                    ->find('all')
+                    ->where([
+                        $conditions,
+                        $this->aliasField('student_id') => $studentId['id']
+                    ])->toArray(); 
             } else {
                 $query
                 ->find('all')
                 ->where($conditions);
+                
             }
         }
     }
