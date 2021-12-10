@@ -354,10 +354,12 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         
     }
 
-    vm.setColumnDef = function() {
+    vm.setColumnDef = function(noScheduledClicked) {
+        if(!noScheduledClicked)
+            noScheduledClicked=false;
         var columnDefs = [];
         if (vm.selectedDay != -1) {
-            columnDefs = InstitutionStudentAttendancesSvc.getSingleDayColumnDefs(vm.selectedAttendancePeriod, vm.selectedSubject);
+            columnDefs = InstitutionStudentAttendancesSvc.getSingleDayColumnDefs(vm.selectedAttendancePeriod, noScheduledClicked, vm.selectedSubject);
         } else {
             columnDefs = InstitutionStudentAttendancesSvc.getAllDayColumnDefs(vm.dayListOptions, vm.attendancePeriodOptions);
         }
@@ -790,7 +792,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams())
         .then(function(isMarked) {
             vm.updateIsMarked(isMarked);
-            vm.setColumnDef();
+            vm.setColumnDef(isMarked);
             vm.countStudentData();
             AlertSvc.reset($scope);
         }, vm.error)
