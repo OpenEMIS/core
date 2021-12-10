@@ -1,3 +1,9 @@
+### [3.72.0] - 2021-12-10
+- Implemented: Institutions > Staff > Career > Positions tab: To add Shift column on the list page
+- Bug Fixed: Institutions>Transport>Buses: 404 Error
+- Bug Fixed: Administration > Security > Roles > Permissions > Institutions: Meal component not available in Institution
+- Bug Fixed: Institutions>Students>Student1>Academic>Extracurriculars:Unable to save record when added
+
 ### [3.71.4] - 2021-12-08
 - Bug Fixed: Institutions>Dashboard: Modifying or adding absence, it is not reflected on the dashboard
 - Bug Fixed: Personal>Account: Account permission should allow user to edit username
