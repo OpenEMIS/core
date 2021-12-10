@@ -90,6 +90,7 @@ class AbsencesTable extends ControllerActionTable
     /*POCOR-6313 starts*/
     public function indexBeforeAction(Event $event, ArrayObject $settings)
     {  
+        //echo "<pre>";print_r();die();
         $this->fields['institution_student_absence_day_id']['visible'] = false;
         $this->fields['education_grade_id']['visible'] = false;
         $this->fields['comment']['visible'] = false;
@@ -99,8 +100,10 @@ class AbsencesTable extends ControllerActionTable
         $this->field('class', ['visible' => true]);
         $this->field('periods', ['visible' => true]);
         $this->field('subjects', ['visible' => true]);
-    
         $this->setFieldOrder(['Date', 'periods', 'subjects', 'class', 'absence_type_id']);
+        if ($this->controller->name == 'Directories') {
+            $settings['indexButtons']['remove']['visible'] = false;
+        }
     }
 
     public function onGetDate(Event $event, Entity $entity)
@@ -240,7 +243,7 @@ class AbsencesTable extends ControllerActionTable
                     ];
                 }
                 $conditions = array_merge($conditions, $dateConditions);
-            }else{
+            } else {
                 /*POCOR-6267 starts*/
                 if (!is_null($institutionId)) {
                     $conditions = [
@@ -260,14 +263,20 @@ class AbsencesTable extends ControllerActionTable
 
             $this->advancedSelectOptions($dateToOptions, $selectedDateTo);
             $this->controller->set(compact('dateToOptions', 'selectedDateTo'));
-            if (!$this->controller->name == 'Directories') {
+            if ($this->controller->name != 'Profiles') {
                 $extra['elements']['controls'] = ['name' => 'Student.Absences/controls', 'data' => [], 'options' => [], 'order' => 1];
             }
-            
-            $query
+            if ($this->controller->name != 'Directories') {
+                $extra['elements']['controls'] = ['name' => 'Student.Absences/controls', 'data' => [], 'options' => [], 'order' => 1];
+            } 
+
+            if ($this->controller->name == 'Directories') {
+                $query->find('all');  
+            } else {
+                $query
                 ->find('all')
                 ->where($conditions);
-            echo "<pre>";print_r($query);die();
+            }
         }
     }
     
