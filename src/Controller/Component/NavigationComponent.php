@@ -1487,7 +1487,7 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.ProfileStudents.index',
                 'params' =>  ['plugin' => 'Profile', 'controller' => 'Profiles', $studentId],
                 'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours', 'Profiles.StudentCompetencies','Profiles.StudentCompetencies.index',
-                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes', 'Profiles.StudentRisks', 'Profiles.StudentAssociations']
+                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes', 'Profiles.StudentRisks', 'Profiles.StudentAssociations', 'Profiles.Absences']
             ],
         ];
 
