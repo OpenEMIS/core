@@ -4109,4 +4109,8 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUserExport']);
     }
 
+    public function InstitutionBuses(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBuses']);
+    }
+
 }
