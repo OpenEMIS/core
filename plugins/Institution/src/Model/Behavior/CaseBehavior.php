@@ -43,7 +43,13 @@ class CaseBehavior extends Behavior
     {
         $model = $this->_table;
         $showFieldBefore = isset($model->fields['modified_user_id']) ? 'modified_user_id' : 'create__user_id';
-
+        /*POCOR-6313 starts*/
+        if ($model->alias() == 'Absences') {
+            $model->field('linked_cases', [
+                'visible' => false
+            ]);
+        }
+        /*POCOR-6313 ends*/
         $model->field('linked_cases', [
             'type' => 'custom_linked_cases',
             'valueClass' => 'table-full-width',
@@ -54,8 +60,18 @@ class CaseBehavior extends Behavior
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $showFieldBefore = $entity->has('modified_user_id') ? 'modified_user_id' : 'create__user_id';
-
+        //echo "<pre>";print_r($entity->has('student_id') ? 'student_id' : 'student_id');die();
         $model = $this->_table;
+        /*POCOR-6313 starts*/
+        if ($model->alias() == 'Absences') {
+            //$showBefore = $entity->has('student') ? 'student' : 'student';
+            $model->field('linked_cases', [
+                'type' => 'custom_linked_cases',
+                'valueClass' => 'table-full-width',
+                'after' => 'student_id'
+            ]);
+        }
+        /*POCOR-6313 ends*/
         $model->field('linked_cases', [
             'type' => 'custom_linked_cases',
             'valueClass' => 'table-full-width',
