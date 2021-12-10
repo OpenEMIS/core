@@ -31,6 +31,11 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             icon: 'fa fa-circle-o',
             color: '#CC5C5C'
         },
+        'NoScheduledClicked': {
+            code: 'NoScheduledClicked',
+            icon: '',
+            color: 'black',
+        }
     };
 
     const icons = {
@@ -523,7 +528,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return columnDefs;
     }
 
-    function getSingleDayColumnDefs(period) {
+    function getSingleDayColumnDefs(period, noScheduledClicked) {
         var columnDefs = [];
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
@@ -571,7 +576,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                     var data = params.data;
 
                     if (mode == 'view') {
-                        return getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed);
+                        return getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed, noScheduledClicked);
                     }
                     else if (mode == 'edit') {
                         var api = params.api;
@@ -896,12 +901,19 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return eSelectWrapper;
     }
 
-    function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed) {
+    function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed, noScheduledClicked) {
         if (angular.isDefined(data.institution_student_absences)) {
             var html = '';
             if (isMarked) {
                 var id = (data.absence_type_id === null) ? 0 : data.institution_student_absences.absence_type_id;
-                var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);
+                if(noScheduledClicked)
+                    var absenceTypeObj = {
+                        id: null,
+                        code: 'NoScheduledClicked',
+                        name: 'No Lessons'
+                    };
+                else
+                    var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);
                 switch (absenceTypeObj.code) {
                     case attendanceType.PRESENT.code:
                         html = '<div style="color: ' + attendanceType.PRESENT.color + ';"><i class="' + attendanceType.PRESENT.icon + '"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
@@ -914,6 +926,9 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                         break;
                     case attendanceType.EXCUSED.code:
                         html = '<div style="color: ' + attendanceType.EXCUSED.color + '"><i class="' + attendanceType.EXCUSED.icon + '"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
+                        break;
+                    case attendanceType.NoScheduledClicked.code:
+                        html = '<div style="color: ' + attendanceType.NoScheduledClicked.color + '"> <span> ' + absenceTypeObj.name + ' </span></div>';
                         break;
                     default:
                         break;
