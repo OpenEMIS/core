@@ -20,7 +20,6 @@ class AbsencesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-        // $this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -32,8 +31,6 @@ class AbsencesTable extends ControllerActionTable
         }
         $this->toggle('add', false);
         $this->toggle('edit', false);
-        //$this->toggle('remove', false);
-        //$this->toggle('index', false);
     }
 
     public function implementedEvents()
@@ -41,8 +38,6 @@ class AbsencesTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $newEvent = [
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons'
-
-
         ];
         $events = array_merge($events, $newEvent);
         return $events;
@@ -65,26 +60,31 @@ class AbsencesTable extends ControllerActionTable
 		}
 	}
 
-    public function beforeAction($event)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         // $this->fields['student_absence_reason_id']['type'] = 'select';
         $this->fields['institution_student_absence_day_id']['visible'] = false;
-        // POCOR-5245
-        $queryString = $this->request->query('queryString');
-        if ($queryString) {
-            $event->stopPropagation();
-            $condition = $this->paramsDecode($queryString);            
-            $entity = $this->get($condition['id']);            
-            $institutionStudentAbsenceDaysEntity = $this->InstitutionStudentAbsenceDays->get($entity->institution_student_absence_day_id);
-            $this->InstitutionStudentAbsenceDays->delete($institutionStudentAbsenceDaysEntity);
-            TableRegistry::get('InstitutionStudentAbsenceDetails')
-                    ->deleteAll(['student_id'=>$entity->student_id,
-                            'date'=>$entity->date,
-                            ]);            
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+       
+        if ($this->action == 'remove') {
+            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $userData = $this->Session->read();
+            $userId =  $userData['Institution']['StudentUser']['primaryKey']['id'];
+            $date = date_format($userData['leave_date'], 'Y-m-d');
+            $academicPeriod = !empty($this->request->query) ? $this->request->query('academic_period') :  $AcademicPeriod->getCurrent();
             
-            $this->delete($entity);
-            $this->Alert->success('StudentAbsence.deleteRecord', ['reset'=>true]);
-            return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
+            if ($userData) {
+                $event->stopPropagation();
+                $this->deleteAll([
+                    $this->aliasField('student_id') => $userId,
+                    $this->aliasField('institution_id') =>  $institutionId,
+                    $this->aliasField('academic_period_id') => $academicPeriod,
+                    $this->aliasField('date') => $date
+                ]);
+                
+                $this->Alert->success('StudentAbsence.deleteRecord', ['reset'=>true]);
+                return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
+            }
         }
     }
     /*POCOR-6313 starts*/
@@ -103,10 +103,14 @@ class AbsencesTable extends ControllerActionTable
         if ($this->controller->name == 'Directories') {
             unset($settings['indexButtons']['remove']);
         }
+        if ($this->controller->name == 'Profiles') {
+            unset($settings['indexButtons']['view']);
+        }
     }
 
     public function onGetDate(Event $event, Entity $entity)
-    {  
+    {
+        $this->Session->write('leave_date', $entity->date);  
         return $this->Date = date_format($entity->date, 'F d, Y');
     }
 
@@ -298,6 +302,7 @@ class AbsencesTable extends ControllerActionTable
     {
         parent::onUpdateActionButtons($event, $entity, $buttons);
         unset($buttons['edit']);
+        
         return $buttons;
     }
     
@@ -385,14 +390,24 @@ class AbsencesTable extends ControllerActionTable
         $toolbarButtons = $extra['toolbarButtons'];
         if ($toolbarButtons->offsetExists('back')) {
             $encodedParams = $this->request->params['pass'][1];
-            $backUrl = [
-                'plugin' => 'Student',
-                'controller' => 'Students',
-                'action' => 'Absences',
-                'index',
-                $encodedParams
-            ];
-
+            if ($this->controller->name == 'Directories') {
+                $backUrl = [
+                    'plugin' => 'Directory',
+                    'controller' => 'Directories',
+                    'action' => 'Absences',
+                    'index',
+                    $encodedParams
+                ];
+            } else {
+                $backUrl = [
+                    'plugin' => 'Student',
+                    'controller' => 'Students',
+                    'action' => 'Absences',
+                    'index',
+                    $encodedParams
+                ];
+            }
+            
             $toolbarButtons['back']['url'] = $backUrl;
         }
     }
@@ -422,26 +437,5 @@ class AbsencesTable extends ControllerActionTable
             ->where(['id' => $entity->academic_period_id])
             ->first();
         return $this->academicPeriod = $result->name;
-    }
-
-    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $queryString = $this->request->query('queryString');
-        //echo "<pre>";print_r($queryString);die();
-        if ($queryString) {
-            $event->stopPropagation();
-            $condition = $this->paramsDecode($queryString);            
-            $entity = $this->get($condition['id']);            
-            $institutionStudentAbsenceDaysEntity = $this->InstitutionStudentAbsenceDays->get($entity->institution_student_absence_day_id);
-            $this->InstitutionStudentAbsenceDays->delete($institutionStudentAbsenceDaysEntity);
-            TableRegistry::get('InstitutionStudentAbsenceDetails')
-                    ->deleteAll(['student_id'=>$entity->student_id,
-                            'date'=>$entity->date,
-                            ]);            
-            
-            $this->delete($entity);
-            $this->Alert->success('StudentAbsence.deleteRecord', ['reset'=>true]);
-            return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
-        }
     }
 }
