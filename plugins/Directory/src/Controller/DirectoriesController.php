@@ -970,4 +970,6 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
     }
+
+    public function Absences()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']); }
 }
