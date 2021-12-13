@@ -90,7 +90,6 @@ class AbsencesTable extends ControllerActionTable
     /*POCOR-6313 starts*/
     public function indexBeforeAction(Event $event, ArrayObject $settings)
     {  
-        //echo "<pre>";print_r();die();
         $this->fields['institution_student_absence_day_id']['visible'] = false;
         $this->fields['education_grade_id']['visible'] = false;
         $this->fields['comment']['visible'] = false;
@@ -102,7 +101,7 @@ class AbsencesTable extends ControllerActionTable
         $this->field('subjects', ['visible' => true]);
         $this->setFieldOrder(['Date', 'periods', 'subjects', 'class', 'absence_type_id']);
         if ($this->controller->name == 'Directories') {
-            $settings['indexButtons']['remove']['visible'] = false;
+            unset($settings['indexButtons']['remove']);
         }
     }
 
@@ -263,17 +262,23 @@ class AbsencesTable extends ControllerActionTable
 
             $this->advancedSelectOptions($dateToOptions, $selectedDateTo);
             $this->controller->set(compact('dateToOptions', 'selectedDateTo'));
-            if ($this->controller->name != 'Directories') {
-                $extra['elements']['controls'] = ['name' => 'Student.Absences/controls', 'data' => [], 'options' => [], 'order' => 1];
-            } 
+            
+            $extra['elements']['controls'] = ['name' => 'Student.Absences/controls', 'data' => [], 'options' => [], 'order' => 1]; 
 
             if ($this->controller->name == 'Directories') {
-                $query->find('all');  
+                $userData = $this->Session->read();
+                $userId =  $userData['Institution']['StudentUser']['primaryKey']['id'];
+                $query
+                    ->find('all')
+                    ->where([
+                        $conditions,
+                        $this->aliasField('student_id') => $userId
+                    ])->toArray(); 
             } elseif ($this->controller->name == 'Profiles') {
                 $userData = $this->Session->read();
                 $userId =  $userData['Student']['ExaminationResults']['student_id'];
                 $studentId = $this->ControllerAction->paramsDecode($userId);
-                //echo "<pre>";print_r($studentId['id']);die();
+                
                 $query
                     ->find('all')
                     ->where([
