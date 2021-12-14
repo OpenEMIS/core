@@ -16,11 +16,13 @@ class POCOR6021 extends AbstractMigration
         $this->execute("DELETE FROM locale_contents WHERE en = 'No Scheduled Class'");
         /*inserting data*/
         $this->execute("INSERT INTO `locale_contents` (`en`, `created_user_id`, `created`) VALUES ('No Scheduled Class', '1', NOW())");
+        $this->execute('ALTER TABLE `student_attendance_marked_records` ADD `no_scheduled_class` TINYINT NOT NULL DEFAULT 0');
     }
 
     //rollback
     public function down()
     {
         $this->execute("DELETE FROM locale_contents WHERE en = 'No Scheduled Class'");
+        $this->execute('ALTER TABLE `student_attendance_marked_records` DROP COLUMN `no_scheduled_class`');
     }
 }
