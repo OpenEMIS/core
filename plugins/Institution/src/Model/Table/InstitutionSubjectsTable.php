@@ -92,7 +92,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         ]);
 
         $this->setDeleteStrategy('restrict');
-		$this->addBehavior('SubjectExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
+        $this->addBehavior('SubjectExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
     }
 
     public function implementedEvents()
@@ -1479,7 +1479,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                     'conditions' => [
                                         'GradesSubjects.education_grade_id IN' => $grades,
                                         'GradesSubjects.education_subject_id = EducationSubjects.id',
-                                        'GradesSubjects.visible' => 1
+                                        'GradesSubjects.visible' => 1,
+                                        'GradesSubjects.auto_allocation' => 1
                                     ]
                                 ]
                             ]);
@@ -1495,21 +1496,42 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $educationSubjects = [];
             if (count($educationGradeSubjects) > 0) {
                 foreach ($educationGradeSubjects as $gradeSubject) {
-                    foreach ($gradeSubject->education_subjects as $subject) {
-                        if (!isset($educationSubjects[$gradeSubject->id.'_'.$subject->id])) {
-                            $educationSubjects[$gradeSubject->id.'_'.$subject->id] = [
-                                'id' => $subject->id,
-                                'education_grade_id' => $gradeSubject->id,
-                                'name' => $subject->name
-                            ];
+                    if (!empty($gradeSubject->education_subjects)) {
+                        foreach ($gradeSubject->education_subjects as $subject) {
+                            if (!isset($educationSubjects[$gradeSubject->id.'_'.$subject->id])) {
+                                $educationSubjects[$gradeSubject->id.'_'.$subject->id] = [
+                                    'id' => $subject->id,
+                                    'education_grade_id' => $gradeSubject->id,
+                                    'name' => $subject->name
+                                ];
+                            }
                         }
-                    }
+                    } /*POCOR-6368 starts*/else {
+                        $institutionProgramGradeSubjects = TableRegistry::get('InstitutionProgramGradeSubjects')
+                                ->find()
+                                ->where([
+                                    'InstitutionProgramGradeSubjects.education_grade_id' => $gradeSubject->id,
+                                    'InstitutionProgramGradeSubjects.institution_id' => $entity->institution_id
+                                    ])
+                                ->toArray();
+                        if (!empty($institutionProgramGradeSubjects)) {
+                            foreach ($institutionProgramGradeSubjects as $subject) {
+                                $eduSubjects = $this->EducationSubjects->get($subject->education_grade_subject_id);
+                                $educationSubjects[$subject->education_grade_id.'_'.$subject->education_grade_subject_id] = [
+                                        'id' => $eduSubjects->id,
+                                        'education_grade_id' => $subject->education_grade_id,
+                                        'name' => $eduSubjects->name
+                                ];
+                            }
+                        }
+                    }/*POCOR-6368 ends*/
                     unset($subject);
                 }
                 unset($gradeSubject);
             }
-            unset($educationGradeSubjects);
 
+            unset($educationGradeSubjects);
+            
             if (!empty($educationSubjects)) {
                 /**
                  * for each education subjects, find the primary key of institution_classes using (entity->academic_period_id and institution_id and education_subject_id)
@@ -1569,11 +1591,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         ];
                     }
                 }
-
+               
                 if (!empty($newSchoolSubjects)) {
                     $programsubjects = 0;
                     $newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
-                    foreach ($newSchoolSubjects as $subject) {     //POCOR 5001
+                    foreach ($newSchoolSubjects as $subject) {    //POCOR 5001
                         //POCOR-5932 starts
                         /*$institutionProgramGradeSubjects =
                             TableRegistry::get('InstitutionProgramGradeSubjects')
