@@ -80,7 +80,7 @@ class PayslipsTable extends ControllerActionTable
                 $response["file_content"][] ="Field Can not be empty";
                 $entity->errors($response);
                     return false;
-            }else if($emptyFields == 1 && $_SERVER['REQUEST_URI'] != $path_uri){
+            }else if($emptyFields == 1 && !is_int(strpos($_SERVER['REQUEST_URI'], $path_uri))){
                 echo $_SERVER['REQUEST_URI'];die;
                 $response = array('error'=> 'Please enter either OpenEMIS ID or identity number');
                 $entity->errors($response);    
@@ -144,7 +144,7 @@ class PayslipsTable extends ControllerActionTable
                             }
                         } 
                     }else{
-                        if(($openemis_payload_exist == 0 && $_SERVER['REQUEST_URI'] != $path_uri)){
+                        if(($openemis_payload_exist == 0 && !is_int(strpos($_SERVER['REQUEST_URI'], $path_uri)) )){
                             if(empty($entity->user_identity_number)){
                                 $response["user_identity_number"][] ="Field Can not be empty";
                                 $entity->errors($response);
