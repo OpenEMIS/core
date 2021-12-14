@@ -913,7 +913,16 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                         name: 'No Lessons'
                     };
                 else
-                    var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);
+                    if (data.institution_student_absences.absence_type_code == "NoScheduledClicked") {
+                        var absenceTypeObj = {
+                            id: null,
+                            code: 'NoScheduledClicked',
+                            name: 'No Lessons'
+                        };
+                    } else {
+                        var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);
+                    }
+                    
                 switch (absenceTypeObj.code) {
                     case attendanceType.PRESENT.code:
                         html = '<div style="color: ' + attendanceType.PRESENT.color + ';"><i class="' + attendanceType.PRESENT.icon + '"></i> <span> ' + absenceTypeObj.name + ' </span></div>';

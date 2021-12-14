@@ -76,11 +76,10 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                 ])
                 ->formatResults(function (ResultSetInterface $results) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day) {
                         return $results->map(function ($row) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day) {
-                            //echo $institutionClassId;die();
                                 if (!empty($row)) {
                                     $query = $this->query();
                                     $query ->update()
-                                            ->set(['period' => 0, 'subject_id' => 0])
+                                            ->set(['period' => 0, 'subject_id' => 0, 'no_scheduled_class' => 1])
                                             ->where([
                                                 $this->aliasField('institution_class_id') => $institutionClassId,
                                                 $this->aliasField('education_grade_id') => $educationGradeId,
@@ -97,7 +96,8 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                                         'academic_period_id' => $academicPeriodId,
                                         'date' => $day,
                                         'period' => 0,
-                                        'subject_id' => 0
+                                        'subject_id' => 0,
+                                        'no_scheduled_class' => 1
                                     ]);
                                     $query->save($newEntity);
                                 }
