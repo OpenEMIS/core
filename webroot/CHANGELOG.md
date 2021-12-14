@@ -1,3 +1,29 @@
+### [3.72.0] - 2021-12-10
+- Implemented: Institutions > Staff > Career > Positions tab: To add Shift column on the list page
+- Bug Fixed: Institutions>Transport>Buses: 404 Error
+- Bug Fixed: Administration > Security > Roles > Permissions > Institutions: Meal component not available in Institution
+- Bug Fixed: Institutions>Students>Student1>Academic>Extracurriculars:Unable to save record when added
+
+### [3.71.4] - 2021-12-08
+- Bug Fixed: Institutions>Dashboard: Modifying or adding absence, it is not reflected on the dashboard
+- Bug Fixed: Personal>Account: Account permission should allow user to edit username
+- Bug Fixed: Institutions>Academic>Subjects-User remains on the same page after adding new subjects.
+- Bug Fixed: Special Needs : Set Default Academic Period filter to All Academic Periods
+- Bug Fixed: Institutions > Students > Export : Students should not be appearing more then once in report
+
+### [3.71.3] - 2021-12-03
+- Bug Fixed: Institutions>Staff>Staff1>Career>Staff Leave: Unable to create leave even when attendance is deleted
+- Bug Fixed: Institutions>Staff>Staff1> Career >Subjects: Discrepancies in the number of students displayed in the Academic > Subjects and Staff > Career > Subjects pages
+- Bug Fixed: Administrations > Profiles > Students : Incorrect message upon hover
+- Bug Fixed: Institutions > Attendances > Students : System does not fully populate the list of subjects
+- Bug Fixed: Institutions > Performance > Report Cards : Unable to generate report cards
+- Bug Fixed: Institutions > Students > Transfer : Next grade should only show one grade and not all grades
+- Bug Fixed: Institutions > Students > Undo : System does not display list of students that are not assigned to any class
+- Bug Fixed: Institution > Infrastructure > Export : System returns 404 error
+- Bug Fixed: Reports> Student: Enrollment summary support is not showing correct record of students
+- Bug Fixed: Institutions>Staff>Staff1>Finance: Unable to add payslips
+- Bug Fixed: Institutions>Report Cards>Comments:Total Mark and the Overall Average are not showing
+
 ### [3.71.2] - 2021-11-26
 - Implemented: Add Export button function - Institutions > Infrastructures > Needs
 - Bug Fixed: Institutions>Performance>Assessments: Unable to import assessment item result
