@@ -541,8 +541,9 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 					$academicCode = $value->academic_period->code;
 					$academicGrade = $value->academic_period->name;
 					$studentStatus = $value->student_status->name;
-					
-					if(!empty($value->start_date)) {
+					$startDate=$value->start_date;
+                    $endDate=$value->end_date;
+					/*if(!empty($value->start_date)) {
 						foreach ($value->start_date as $key => $date) {
 							$startDate = $date;
 						}
@@ -552,7 +553,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 						foreach ($value->end_date as $key => $date) {
 							$endDate = $date;
 						}
-					}
+					}*/
 					
 				}
 			}

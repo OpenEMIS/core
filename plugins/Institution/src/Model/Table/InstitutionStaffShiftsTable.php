@@ -153,7 +153,7 @@ class InstitutionStaffShiftsTable extends ControllerActionTable
                 'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
                 'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
                 'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-                'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
+                //'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
                 'institution_staff_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
                 'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL, 
                 'institution_positions_position_no'=>!empty($position_no) ? $position_no : NULL,
