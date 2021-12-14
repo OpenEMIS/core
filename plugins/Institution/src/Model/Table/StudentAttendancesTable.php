@@ -325,14 +325,27 @@ class StudentAttendancesTable extends ControllerActionTable
                                     ->toArray();
                                     
                                     if (!empty($isMarkedRecords)) {
-                                        $data = [
-                                            'date' => $findDay,
-                                            'period' => $attendancePeriodId,
-                                            'comment' => null,
-                                            'absence_type_id' => $PRESENT,
-                                            'student_absence_reason_id' => null,
-                                            'absence_type_code' => null
-                                        ];
+                                        /*POCOR-6021 starts*/
+                                        if ($isMarkedRecords[0]['no_scheduled_class'] != 1) {
+                                            $data = [
+                                                'date' => $findDay,
+                                                'period' => $attendancePeriodId,
+                                                'comment' => null,
+                                                'absence_type_id' => $PRESENT,
+                                                'student_absence_reason_id' => null,
+                                                'absence_type_code' => 'NoScheduledClicked'
+                                            ];
+                                        } /*POCOR-6021 ends*/else {
+                                            $data = [
+                                                'date' => $findDay,
+                                                'period' => $attendancePeriodId,
+                                                'comment' => null,
+                                                'absence_type_id' => null,
+                                                'student_absence_reason_id' => null,
+                                                'absence_type_code' => null
+                                            ];
+                                        }
+                                        
                                     } else {
                                         $data = [
                                             'date' => $findDay,
