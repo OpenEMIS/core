@@ -215,7 +215,7 @@ class NavigationComponent extends Component
                 if ($classification == $Institutions::NON_ACADEMIC) {
                     // navigation items to exclude from non-academic institutions
                     $academicArray = [
-                        'Institution.Academic',
+                        // 'Institution.Academic',
                         'Institutions.Students.index',
                         'Institutions.StudentAttendances.index',
                         'Institutions.StudentBehaviours.index',
