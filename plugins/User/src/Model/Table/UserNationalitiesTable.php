@@ -800,4 +800,19 @@ class UserNationalitiesTable extends ControllerActionTable {
         return 0;
     }
     // task POCOR-5668 ends
+
+    /*POCOR-6267 Starts*/
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $session = $this->request->session();
+        $queryString = $this->getQueryString();
+        if (!empty($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
+        } else {
+            $userId = $session->read('Student.Students.id');
+        }
+
+        $query->where([$this->aliasField('security_user_id') => $userId]);
+    }
+    /*POCOR-6267 Ends*/
 }

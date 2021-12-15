@@ -53,6 +53,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         ]);
 
         $this->setDeleteStrategy('restrict');
+        $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportOutcomeTemplates']);
     }
 
     public function validationDefault(Validator $validator)

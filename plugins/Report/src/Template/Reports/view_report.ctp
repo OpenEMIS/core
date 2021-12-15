@@ -49,7 +49,7 @@ $(document).ready( function () {
 			<?php endforeach; ?>
 			</thead>
 			<tbody>
-				<?php foreach ($finalRowData as $key => $val) :?>
+				<?php foreach ($newArr2 as $key => $val) :?>
 				<tr>
 					<?php foreach ($val as $key1 => $val1) :?>
 					<td><?=$val1 ?></td>
