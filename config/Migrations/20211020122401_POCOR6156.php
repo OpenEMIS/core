@@ -14,6 +14,8 @@ class POCOR6156 extends AbstractMigration
 
         /** END: security_functions table changes */
     }
+
+    
     //rollback
     public function down()
     {
