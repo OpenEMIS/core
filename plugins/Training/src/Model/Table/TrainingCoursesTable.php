@@ -513,7 +513,7 @@ class TrainingCoursesTable extends ControllerActionTable
             return $entity->special_education_needs == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
         } elseif ($this->action == 'view') {
             $SENOptions = $this->getSelectOptions('general.yesno');
-            return $SENOptions[$entity->special_education_needs];    
+            return $SENOptions[$entity->special_education_needs];
         }
     }
 

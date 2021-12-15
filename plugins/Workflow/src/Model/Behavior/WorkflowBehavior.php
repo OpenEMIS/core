@@ -49,6 +49,7 @@ class WorkflowBehavior extends Behavior
         'filter' => [
             'type' => true,
             'category' => true,
+            'level' => true,
             'area' => true,
             'period' => true,
             'month' => true
@@ -466,14 +467,39 @@ class WorkflowBehavior extends Behavior
                 $this->_table->controller->set(compact('categoryOptions', 'selectedCategory'));
                 // End
             }
+            $selectedLevel = '-1';
+            if (in_array($registryAlias, ['Training.TrainingSessions','Training.TrainingSessionResults'])) {
+                $Level = TableRegistry::get('Area.AreaLevels');
+                $levelOptions = $Level->find('list')->toArray();
+                $levelOptions = ['-1' => '-- '.__('Select Area Level').' --'] + $levelOptions;
+                $selectedLevel = $this->_table->queryString('level', $levelOptions);
+                if (isset($this->controller->request->query['level'])) {
+                    $selectedLevel = $this->controller->request->query['level'];
+                }
+                $this->_table->advancedSelectOptions($levelOptions, $selectedLevel);
+                $this->_table->controller->set(compact('levelOptions','selectedLevel'));
+            }
             //POCOR-5695 starts
             if ($filterConfig['area']) {
                 // Area Options
                 $Areas = TableRegistry::get('Area.Areas');
+                /*
                 $areaOptions = $Areas
                             ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                             ->order([$Areas->aliasField('order')]);
                 $areaOptions = ['-1' => '-- ' . __('All Areas') . ' --'] + $areaOptions->toArray();            
+                */
+                if (in_array($registryAlias, ['Training.TrainingSessions','Training.TrainingSessionResults'])) {
+                    if($selectedLevel != -1){
+                        $areaOptions = $Areas->find('list')->where([$Areas->aliasField('area_level_id') => $selectedLevel])->toArray();
+                    } else{
+                        $areaOptions = $Areas->find('list')->toArray();
+                    }
+                    $areaOptions = ['-1' => '-- ' . __('All Areas') . ' --'] + $areaOptions;
+                } else {
+                    $areaOptions = $Areas->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])->order([$Areas->aliasField('order')]);
+                    $areaOptions = ['-1' => '-- ' . __('All Areas') . ' --'] + $areaOptions->toArray();
+                }
                 $selectedArea = $this->_table->queryString('area', $areaOptions);
                 $this->_table->advancedSelectOptions($areaOptions, $selectedArea);
                 $this->_table->controller->set(compact('areaOptions','selectedArea'));

@@ -128,7 +128,7 @@ class AssessmentItemsTable extends AppTable
             $classId = $options['class_id'];
             $staffId = $options['staff_id'];
             $query
-                    ->contain('EducationSubjects.InstitutionSubjects')
+                    //->contain('EducationSubjects.InstitutionSubjects')
                     ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
                         $ClassSubjects->aliasField('institution_class_id') => $classId
                     ])

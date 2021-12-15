@@ -138,7 +138,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 console.log('mealBenefitTypeOptions',mealBenefitTypeOptions);
                 vm.mealBenefitTypeOptions = mealBenefitTypeOptions;
                 vm.gridOptions.context.mealBenefitTypeOptions = vm.mealBenefitTypeOptions;
-                return InstitutionStudentMealsSvc.mealProgrameOptions();
+                return InstitutionStudentMealsSvc.mealProgrameOptions(vm.institutionId);
             }, vm.error)
             .then(function(mealPrograme) {
                 vm.gridOptions.context.mealPrograme = mealPrograme[0].id
