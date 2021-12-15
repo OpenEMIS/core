@@ -10,6 +10,7 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\TableRegistry;
 use Workflow\Model\Behavior\WorkflowBehavior;
 
 class StaffTrainingApplicationsTable extends ControllerActionTable
@@ -34,6 +35,10 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
         $this->addBehavior('Workflow.Workflow', ['model' => 'Training.TrainingApplications']);
 
+        $this->addBehavior('Excel',[
+            'excludes' => ['staff_id','institution_id','assignee_id','training_session_id'],
+            'pages' => ['index'],
+        ]);
         $this->toggle('edit', false);
     }
 
@@ -433,5 +438,97 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $tabElements = $this->controller->getTrainingTabElements();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
+    }
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+        $cloneFields = $fields->getArrayCopy();
+        $newFields = [];
+        foreach ($cloneFields as $key => $value) {
+            $newFields[] = $value;
+            if($value['field'] == 'status_id'){
+                $newFields[] = [
+                    'key' => 'TrainingCourses.name',
+                    'field' => 'course_name',
+                    'type' => 'string',
+                    'label' => 'Course'
+                ];
+    
+                $newFields[] = [
+                    'key' => 'TrainingLevels.name',
+                    'field' => 'training_level_name',
+                    'type' => 'string',
+                    'label' => 'Training Level'
+                ];
+    
+                $newFields[] = [
+                    'key' => 'TrainingFieldOfStudies.name',
+                    'field' => 'training_study_of_fields',
+                    'type' => 'string',
+                    'label' => 'Field Of Study'
+                ];
+    
+                $newFields[] = [
+                    'key' => 'TrainingCourses.credit_hours',
+                    'field' => 'credit_hours',
+                    'type' => 'string',
+                    'label' => 'Credit Hours'
+                ];
+
+                $newFields[] = [
+                    'key'   => 'StaffTrainingApplications.training_session_id',
+                    'field' => 'training_session_id',
+                    'type'  => 'string',
+                    'label' => __('Training Session')
+                ];
+            }
+        }
+        $fields->exchangeArray($newFields);
+    }
+    
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $trainingSession = TableRegistry::get('TrainingSessions');
+        $trainingCourses = TableRegistry::get('TrainingCourses');
+        $trainingLevels = TableRegistry::get('TrainingLevels');
+        $trainingFieldOfStudies = TableRegistry::get('TrainingFieldOfStudies');
+        $workflowSteps = TableRegistry::get('workflow_steps');
+        $staffId = $session->read('Staff.Staff.id');
+        $status = $this->request->query('category');
+    
+        $query
+        ->select([
+            'course_name' => 'TrainingCourses.name',
+            'training_level_name' => 'TrainingLevels.name',
+            'training_study_of_fields' => 'TrainingFieldOfStudies.name',
+            'credit_hours' => 'TrainingCourses.credit_hours'
+        ])
+        ->leftJoin([$trainingSession->alias() => $trainingSession->table()],[
+            $trainingSession->aliasField('id = ').$this->aliasField('training_session_id')
+        ])
+        ->leftJoin([$trainingCourses->alias() => $trainingCourses->table()],[
+            $trainingCourses->aliasField('id = ').$trainingSession->aliasField('training_course_id')
+        ])
+        ->leftJoin([$trainingLevels->alias() => $trainingLevels->table()],[
+            $trainingLevels->aliasField('id = ').$trainingCourses->aliasField('training_level_id')
+        ])
+        ->leftJoin([$trainingFieldOfStudies->alias() => $trainingFieldOfStudies->table()],[
+            $trainingFieldOfStudies->aliasField('id = ').$trainingCourses->aliasField('training_field_of_study_id')
+        ])
+        ->innerJoin([$workflowSteps->alias() => $workflowSteps->table()],[
+            $workflowSteps->aliasField('id = ').$this->aliasField('status_id')
+        ])
+        ->where([
+            'institution_id =' .$institutionId,
+            $this->aliasField('staff_id') => $staffId
+        ]);
+
+        if($status > 0){
+            $query
+            ->where([
+                $workflowSteps->aliasField('category = ') => $status
+            ]); 
+        }
     }
 }

@@ -460,7 +460,7 @@ class StudentProfilesTable extends ControllerActionTable
                 $this->aliasField('student_status_id')
             ])
             ->where($where)
-            ->where([$this->aliasField('student_status_id') => 1])
+            // ->where([$this->aliasField('student_status_id') => 1])
             ->all();
             Log::write('debug',$query);
         if (is_null($this->request->query('sort'))) {
@@ -577,7 +577,7 @@ class StudentProfilesTable extends ControllerActionTable
                     
                 } else { 
                     $generateButton['attr']['data-html'] = true;
-                    $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('StaffProfiles.date_closed'));
+                    $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('StudentProfiles.date_closed'));
                     $generateButton['url'] = 'javascript:void(0)';
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
                 }

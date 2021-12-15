@@ -116,13 +116,16 @@ class ImmunizationsTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
+     // POCOR-6131
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
-        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        $studentUserId = $session->read('Student.Students.id');
 
         $query
         ->where([
-            $this->aliasField('security_user_id = ').$staffUserId
+            // $this->aliasField('security_user_id = ').$staffUserId
+            $this->aliasField('security_user_id') => $studentUserId
         ]);
     }
 }

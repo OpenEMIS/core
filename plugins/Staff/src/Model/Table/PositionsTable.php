@@ -183,11 +183,13 @@ class PositionsTable extends ControllerActionTable {
         $this->fields['end_year']['visible'] = false;
         $this->fields['FTE']['visible'] = false;
         $this->fields['security_group_user_id']['visible'] = false;
+        $this->field('shift', ['after' => 'institution_position_id']);
 
         $this->setFieldOrder([
             'institution_id',
             'institution_position_id',
             'staff_type_id',
+            'shift',
             'start_date',
             'end_date',
             'staff_status_id'
@@ -362,5 +364,39 @@ class PositionsTable extends ControllerActionTable {
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'staff_status');
         return $rowEntity->name;
+    }
+
+    public function onGetShift(Event $event, Entity $entity)
+    {
+        //echo "<pre>";
+       ////print_r($entity); exit;
+       $institutionStaff = TableRegistry::get('institution_staff');
+       $staffId=$institutionStaff->find()->select(['staff_id'])->where(['id' =>$entity->id])->first();
+       $staff_id=$staffId['staff_id']; 
+
+       $institutionShifts = TableRegistry::get('institution_shifts');
+       $shiftOptions = TableRegistry::get('shift_options'); 
+       $institutionStaffShifts = TableRegistry::get('institution_staff_shifts');
+        $res=$institutionShifts->find()->select(['name'=> 'shift_options.name' ])
+                                ->leftJoin(
+                                        [$shiftOptions->alias() => $shiftOptions->table()],
+                                        [
+                                            $shiftOptions->aliasField('id = ') . $institutionShifts->aliasField('shift_option_id')
+                                        ]
+                                    )
+                                    ->leftJoin(
+                                        [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
+                                        [
+                                            $institutionStaffShifts->aliasField('shift_id = ') . $institutionShifts->aliasField('id')
+                                        ]
+                                    )
+                              
+                               
+                                ->where([$institutionStaffShifts->aliasField('staff_id')=> $staff_id])->order($institutionShifts->aliasField('id'))->group('shift_options.name')->order('shift_options.name')->toArray();
+                                $shift='';
+                                foreach ($res as $key => $value) {
+                                    $shift.=$value['name'].','; 
+                                }
+                               return  rtrim($shift,',');        
     }
 }
