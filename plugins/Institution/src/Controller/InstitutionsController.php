@@ -3321,7 +3321,7 @@ class InstitutionsController extends AppController
         // START : POCOR-6450
         $expectedStaffStatuses = $this->getSpecificInstitutionStaff($institutionId, $staffUserPriId);
         if ( !empty($expectedStaffStatuses) ) {
-            $positionConditions[$StaffTable->Positions->aliasField('status_id').' NOT IN '] = $expectedStaffStatuses;
+            $positionConditions[$StaffTable->Positions->aliasField('staff_position_title_id').' NOT IN '] = $expectedStaffStatuses;
         }
         // END : POCOR-6450
         if ($selectedFTE > 0) {
@@ -3396,7 +3396,8 @@ class InstitutionsController extends AppController
         $StaffTable = TableRegistry::get('Institution.Staff');
         $alreadyAssignedStaffs = $StaffTable->find()->select([
             'institution_position_id' => $StaffTable->aliasField('institution_position_id'),
-            'status_id' => $institutionPositionsTable->aliasField('status_id')
+            'status_id' => $institutionPositionsTable->aliasField('status_id'),
+            'staff_position_title_id' => $institutionPositionsTable->aliasField('staff_position_title_id')
         ])->innerJoin([$institutionPositionsTable->alias() => $institutionPositionsTable->table()], [
             $institutionPositionsTable->aliasField('id = ') . $StaffTable->aliasField('institution_position_id'),
         ])->where([
@@ -3406,7 +3407,7 @@ class InstitutionsController extends AppController
         ->hydrate(false)->toArray();
         $expectedStaffStatuses = [];
         foreach ($alreadyAssignedStaffs AS $staff) {
-            $expectedStaffStatuses[$staff['status_id']] = $staff['status_id'];
+            $expectedStaffStatuses[$staff['staff_position_title_id']] = $staff['staff_position_title_id'];
         }
         return $expectedStaffStatuses;
     }
