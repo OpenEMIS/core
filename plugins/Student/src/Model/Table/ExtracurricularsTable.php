@@ -78,6 +78,8 @@ class ExtracurricularsTable extends AppTable {
 	public function beforeFind( Event $event, Query $query )
 	{   
 		//if ($this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
+		$session = $this->request->session();
+		$studentId = $session->read('Student.Students.id');
 		if ($this->alias() == 'Extracurriculars') {
 			if ($this->controller->name == 'Profiles') {
 				if ($this->Session->read('Auth.User.is_guardian') == 1) {
@@ -86,9 +88,15 @@ class ExtracurricularsTable extends AppTable {
 				} else {
 					$studentId = $this->Session->read('Auth.User.id');
 				}
-				$conditions[$this->aliasField('security_user_id')] = $studentId;
-				$query->where($conditions, [], true);
-			}            
+			} 
+			/*POCOR-6267 starts*/
+			if ($this->controller->name == 'GuardianNavs') {
+				$session = $this->request->session();//POCOR-6267
+				$studentId = $session->read('Student.Students.id');
+			}
+			/*POCOR-6267 ends*/
+			$conditions[$this->aliasField('security_user_id')] = $studentId;		
+			$query->where($conditions, [], true);           
 		}
 	}
 }
