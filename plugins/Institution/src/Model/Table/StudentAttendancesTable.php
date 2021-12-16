@@ -565,7 +565,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
 
                    // $studentWithdraw->aliasField('effective_date >= ') => $day,
-                    $studentWithdraw->aliasField('effective_date <= ') => $day['date'],
+                    $studentWithdraw->aliasField('effective_date <= ') => $findDay,
                     $InstitutionStudents->aliasField('student_status_id !=') => 1 //POCOR-6062
                 ])
                 ->toArray();
