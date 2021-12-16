@@ -287,8 +287,8 @@ class AssessmentItemResultsTable extends AppTable
         }
     }
 
-    public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId)
-    {
+    public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId)
+    {   //add $institutionClassesId param in function for POCOR-6468
         $query = $this->find();
         $totalMarks = $query
             ->select([
@@ -302,12 +302,14 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('education_subject_id') => $educationSubjectId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('institution_classes_id') => $institutionClassesId,//POCOR-6468
                 $this->AssessmentGradingOptions->AssessmentGradingTypes->aliasField('result_type') => 'MARKS',
             ])
             ->group([
                 $this->aliasField('student_id'),
                 $this->aliasField('assessment_id'),
-                $this->aliasField('education_subject_id')
+                $this->aliasField('education_subject_id'),
+                $this->aliasField('institution_classes_id'),//POCOR-6468
             ])
             ->first();
 
