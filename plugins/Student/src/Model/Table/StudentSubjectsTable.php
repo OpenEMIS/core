@@ -203,15 +203,26 @@ class StudentSubjectsTable extends ControllerActionTable
                 $where[$this->aliasField('institution_class_id')] = $InstitutionClassStudentsQuery->institution_class_id;
             }
         }
+        $InstitutionClassStudents = TableRegistry::get('institution_class_students');
         //POCOR-6468
         $query
             ->matching('InstitutionClasses.ClassGrades')
+            ->innerJoin(//POCOR-6468
+                [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()],
+                [
+                    $InstitutionClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $InstitutionClassStudents->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    $InstitutionClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $InstitutionClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $InstitutionClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
+                ]
+            )//POCOR-6468
             ->where($where)
             ->group([
                 $this->aliasField('education_subject_id'), 
                 $this->aliasField('education_grade_id'), 
                 $this->aliasField('institution_id')
-            ]);//POCOR-6468 add group condition
+            ]);  
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
