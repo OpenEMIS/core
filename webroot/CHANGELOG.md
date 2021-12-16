@@ -1,3 +1,16 @@
+### [3.72.1] - 2021-12-16
+- Implemented: Add Export button function - Institutions > Risks
+- Implemented: Add Export button function - Institutions > Examinations > Results
+- Implemented: Add "Area Level", "From Date" and "To Date" fields and "All Institutions" option to Reports > Workflows > Institution > Student Transfers > Sending / Receiving
+- Implemented: Develop institution statistics feature
+- Bug Fixed: Administration>System Setup>System Configuration>Webhooks:Add Role Names column from security_roles table to Student/Staff Create and Update webhooks
+- Bug Fixed: Institutions > Student > Academic > Absences Tab : Absence record is not showing
+- Bug Fixed: Institutions>Academic>Subjects-Unable to add same subject with a different name
+- Bug Fixed: Institutions>Staff: Able to repeatedly add same position of same shift
+- Bug Fixed: Institutions>Attendance>Students-attendance for withdrawn students is allowed to be added
+- Bug Fixed: Institution>Performance>Assessments: Total Marks is showing the total marks for both class(Student1 is moved from Class 1A to Class 1B)
+- Bug Fixed: Institution>Performance>Assessments: Export(button) report is showing total marks and marks for previous class(Student 1 is moved from Class 1A to Class 1B)
+
 ### [3.72.0] - 2021-12-10
 - Implemented: Institutions > Staff > Career > Positions tab: To add Shift column on the list page
 - Bug Fixed: Institutions>Transport>Buses: 404 Error
