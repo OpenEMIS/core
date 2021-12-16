@@ -530,7 +530,7 @@ class StaffUserTable extends ControllerActionTable
                     $postalCode = $value->user->postal_code;
                     $addressArea = $value->user->address_area->name;
                     $birthplaceArea = $value->user->birthplace_area->name;
-
+                    $role = $value->user->is_staff;
                     $contactValue = [];
                     $contactType = [];
                     if(!empty($value->user['contacts'])) {
@@ -570,14 +570,30 @@ class StaffUserTable extends ControllerActionTable
 
                 }
             }
-            $shift =  TableRegistry::get('Institution.InstitutionShifts');
-            $shiftData = $shift->find('all',
-                                [ 'contain' => [
-                                    'ShiftOptions'
-                                ],
-                    ])->where([
-                        $shift->aliasField('id') => $entity->id
-                    ]);
+       $institutionShifts = TableRegistry::get('institution_shifts');
+       $shiftOptions = TableRegistry::get('shift_options'); 
+       $institutionStaffShifts = TableRegistry::get('institution_staff_shifts');
+       $res=$institutionShifts->find()->select(['name'=> 'shift_options.name' ])
+                                ->leftJoin(
+                                        [$shiftOptions->alias() => $shiftOptions->table()],
+                                        [
+                                            $shiftOptions->aliasField('id = ') . $institutionShifts->aliasField('shift_option_id')
+                                        ]
+                                    )
+                                    ->leftJoin(
+                                        [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
+                                        [
+                                            $institutionStaffShifts->aliasField('shift_id = ') . $institutionShifts->aliasField('id')
+                                        ]
+                                    )
+                              
+                               
+                                ->where([$institutionStaffShifts->aliasField('staff_id')=> $entity->id])->order($institutionShifts->aliasField('id'))->group('shift_options.name')->order('shift_options.name')->toArray();
+                                $shift='';
+                                foreach ($res as $key => $value) {
+                                    $shift.=$value['name'].','; 
+                                }
+                               $shiftName=rtrim($shift,',');    
             if (!empty($shiftData)) {
                 foreach ($shiftData as $k => $val) {
                     $shiftName =  $val->shift_option->name;
@@ -608,14 +624,15 @@ class StaffUserTable extends ControllerActionTable
                 'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
                 'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
                 'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-                'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
+                //'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
                 'institution_staff_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
                 'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
                 'institution_positions_position_no'=>!empty($position_no) ? $position_no : NULL,
                 'staff_position_titles_type'=>!empty($class) ? $class : NULL,
                 'staff_position_titles_name'=>!empty($staff_position_titles_name) ? $staff_position_titles_name : NULL,
                 'staff_types_name'=>!empty($staff_types_name) ? $staff_types_name : NULL,
-                'shift_options_name' => !empty($shiftName) ? $shiftName : NULL
+                'shift_options_name' => !empty($shiftName) ? $shiftName : NULL,
+                'role_name' => ($role == 1) ? 'staff' : NULL
             ];
               $Webhooks = TableRegistry::get('Webhook.Webhooks');
               $Webhooks->triggerShell('staff_update', ['username' => ''], $body);
