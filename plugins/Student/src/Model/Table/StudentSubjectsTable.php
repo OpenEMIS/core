@@ -161,9 +161,9 @@ class StudentSubjectsTable extends ControllerActionTable
             $where['ClassGrades.education_grade_id'] = $selectedGrade;
         }
         // End
-		
-		
-		$userData = $this->Session->read();
+        
+        
+        $userData = $this->Session->read();
         $session = $this->request->session();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) {
             //$sId = $userData['Student']['ExaminationResults']['student_id'];//POCOR-6267
@@ -187,7 +187,23 @@ class StudentSubjectsTable extends ControllerActionTable
                 }
             }
         }
-		
+        //POCOR-6468
+        if(isset($userData['Institution']['StudentUser']['primaryKey']['id'])){
+            $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');//POCOR-6468 starts
+            $InstitutionClassStudents = TableRegistry::get('institution_class_students');
+            $InstitutionClassStudentsQuery = $InstitutionClassStudents->find()
+                                ->where([
+                                    $InstitutionClassStudents->aliasField('student_id') => $userData['Institution']['StudentUser']['primaryKey']['id'],
+                                    $InstitutionClassStudents->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                                    $InstitutionClassStudents->aliasField('institution_id') => $selectedInstitution,
+                                    $InstitutionClassStudents->aliasField('student_status_id') => $enrolledStatus,
+                                ])
+                                ->first();
+            if($InstitutionClassStudentsQuery){
+                $where[$this->aliasField('institution_class_id')] = $InstitutionClassStudentsQuery->institution_class_id;
+            }
+        }
+        //POCOR-6468
         $query
             ->matching('InstitutionClasses.ClassGrades')
             ->where($where);
