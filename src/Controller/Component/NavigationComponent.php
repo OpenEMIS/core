@@ -1074,7 +1074,13 @@ class NavigationComponent extends Component
                     //'selected' => ['Institutions.Committees','InstitutionCommitteeAttachments.add', 'InstitutionCommitteeAttachments.edit', 'InstitutionCommitteeAttachments.view', 'InstitutionCommitteeAttachments.index','InstitutionCommitteeAttachments.delete'],
                     'selected' => ['Institutions.Committees','Institutions.CommitteeAttachments'],
                     'params' => ['plugin' => 'Institution']
-                ],
+            ],
+            'Institutions.InstitutionStatistics' => [
+                    'title' => 'Statistics',
+                    'parent' => 'Institutions.Institutions.index',
+                    'params' => ['plugin' => 'Institution', 0 => $institutionId],
+                    'selected' => ['Institutions.InstitutionStatistics.index', 'Institutions.InstitutionStatistics.view', 'Institutions.InstitutionStatistics.edit', 'Institutions.InstitutionStatistics.remove', 'Institutions.InstitutionStatistics.download', 'Institutions.InstitutionStatistics.excel']
+                ]
         ];
 
         foreach ($navigation as &$n) {
