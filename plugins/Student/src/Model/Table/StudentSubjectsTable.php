@@ -206,7 +206,12 @@ class StudentSubjectsTable extends ControllerActionTable
         //POCOR-6468
         $query
             ->matching('InstitutionClasses.ClassGrades')
-            ->where($where);
+            ->where($where)
+            ->group([
+                $this->aliasField('education_subject_id'), 
+                $this->aliasField('education_grade_id'), 
+                $this->aliasField('institution_id')
+            ]);//POCOR-6468 add group condition
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
