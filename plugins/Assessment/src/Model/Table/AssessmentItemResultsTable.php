@@ -149,7 +149,7 @@ class AssessmentItemResultsTable extends AppTable
      *  @return array The assessment results group field - institution id, key field - student id
      *      value field - assessment item id with array containing marks, grade name and grade code
      */
-    public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId)
+    public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId, $classId)
     {
         $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 
@@ -175,6 +175,7 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('assessment_id') => $assessmentId,
                 $this->aliasField('education_subject_id') => $subjectId,
                 $this->aliasField('student_id') => $studentId,
+                $this->aliasField('institution_classes_id') => $classId,
             ])
             ->hydrate(false);
 
