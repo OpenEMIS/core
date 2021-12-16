@@ -149,7 +149,7 @@ class AssessmentItemResultsTable extends AppTable
      *  @return array The assessment results group field - institution id, key field - student id
      *      value field - assessment item id with array containing marks, grade name and grade code
      */
-    public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId)
+    public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId, $classId)
     {
         $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 
@@ -175,6 +175,7 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('assessment_id') => $assessmentId,
                 $this->aliasField('education_subject_id') => $subjectId,
                 $this->aliasField('student_id') => $studentId,
+                $this->aliasField('institution_classes_id') => $classId,
             ])
             ->hydrate(false);
 
@@ -287,8 +288,8 @@ class AssessmentItemResultsTable extends AppTable
         }
     }
 
-    public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId)
-    {
+    public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId)
+    {   //add $institutionClassesId param in function for POCOR-6468
         $query = $this->find();
         $totalMarks = $query
             ->select([
@@ -302,12 +303,14 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('education_subject_id') => $educationSubjectId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('institution_classes_id') => $institutionClassesId,//POCOR-6468
                 $this->AssessmentGradingOptions->AssessmentGradingTypes->aliasField('result_type') => 'MARKS',
             ])
             ->group([
                 $this->aliasField('student_id'),
                 $this->aliasField('assessment_id'),
-                $this->aliasField('education_subject_id')
+                $this->aliasField('education_subject_id'),
+                $this->aliasField('institution_classes_id'),//POCOR-6468
             ])
             ->first();
 
