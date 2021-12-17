@@ -17,11 +17,11 @@ class POCOR6473 extends AbstractMigration
 
         /** Create OpenEMIS Core events */
         $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_minute` ON SCHEDULE EVERY 1 MINUTE ON COMPLETION NOT PRESERVE ENABLE DO CALL openemis_core_reports(`minute`)');
-        $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_hour` ON SCHEDULE EVERY 1 MINUTE ON COMPLETION NOT PRESERVE ENABLE DO CALL openemis_core_reports(`hour`)');
-        $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_day` ON SCHEDULE EVERY 1 MINUTE ON COMPLETION NOT PRESERVE ENABLE DO CALL openemis_core_reports(`day`)');
-        $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_week` ON SCHEDULE EVERY 1 MINUTE ON COMPLETION NOT PRESERVE ENABLE DO CALL openemis_core_reports(`week`)');
-        $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_month` ON SCHEDULE EVERY 1 MINUTE ON COMPLETION NOT PRESERVE ENABLE DO CALL openemis_core_reports(`month`)');
-        $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_year` ON SCHEDULE EVERY 1 MINUTE ON COMPLETION NOT PRESERVE ENABLE DO CALL openemis_core_reports(`year`)');
+        $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_hour` ON SCHEDULE EVERY 1 HOUR ON COMPLETION NOT PRESERVE ENABLE DO CALL openemis_core_reports(`hour`)');
+        $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_day` ON SCHEDULE EVERY 1 DAY ON COMPLETION NOT PRESERVE ENABLE DO CALL openemis_core_reports(`day`)');
+        $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_week` ON SCHEDULE EVERY 1 WEEK ON COMPLETION NOT PRESERVE ENABLE DO CALL openemis_core_reports(`week`)');
+        $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_month` ON SCHEDULE EVERY 1 MONTH ON COMPLETION NOT PRESERVE ENABLE DO CALL openemis_core_reports(`month`)');
+        $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_year` ON SCHEDULE EVERY 1 YEAR ON COMPLETION NOT PRESERVE ENABLE DO CALL openemis_core_reports(`year`)');
 
         /** Create OpenEMIS Core procedure */
         $this->execute('
@@ -64,7 +64,7 @@ class POCOR6473 extends AbstractMigration
           `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
           `name` varchar(50) NOT NULL,
           `query_sql` text NOT NULL,
-          `frequency` varchar(10) NOT NULL COMMENT 'minute, hour, day, week, month, year',
+          `frequency` varchar(10) NOT NULL COMMENT `minute, hour, day, week, month, year`,
           `status` int(11) NOT NULL COMMENT '0 = diabled and 1 = enabled',
           `modified_user_id` int(11) DEFAULT NULL,
           `modified` datetime DEFAULT NULL,
