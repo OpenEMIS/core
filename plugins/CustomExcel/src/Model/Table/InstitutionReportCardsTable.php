@@ -10,6 +10,7 @@ use Cake\Utility\Security;
 use App\Model\Table\AppTable;
 use DateTime;//POCOR-6328
 use Cake\I18n\Time;//POCOR-6328
+use Cake\Datasource\ConnectionManager;
 
 class InstitutionReportCardsTable extends AppTable
 {
@@ -3199,25 +3200,43 @@ class InstitutionReportCardsTable extends AppTable
     }
 
     public function getStaffCountByArea($academic_period, $education_grade_id,$institutionIds =[]){
-        $institutionClasses = TableRegistry::get('institution_classes');
-        $institutionClassGrades = TableRegistry::get('institution_class_grades');
-        $institutionClassesData = $institutionClasses->find()
-                                ->select([
-                                    'staff_id' => $institutionClasses->aliasField('staff_id')
-                                ])
-                                ->leftJoin([$institutionClassGrades->alias() => $institutionClassGrades->table()], [
-                                    $institutionClassGrades->aliasField('institution_class_id = ') . $institutionClasses->aliasField('id')
-                                ])
-                                ->where([
-                                    $institutionClassGrades->aliasField('education_grade_id') => $education_grade_id,
-                                    $institutionClasses->aliasField('academic_period_id') => $academic_period,
-                                    $institutionClasses->aliasField('institution_id IN') => $institutionIds,
-                                    $institutionClasses->aliasField('staff_id <>') => 0
-                                ])
-                                ->distinct(['staff_id'])    
-                                ->count()
-                            ;
-        return $institutionClassesData;
+        $institution_id = implode(',', $institutionIds );
+        $connection = ConnectionManager::get('default');
+        $institutionClassesData = $connection->execute("SELECT
+                                *
+                            FROM
+                                (
+                                SELECT
+                                    `institution_classes`.`staff_id` AS `staff_id`,
+                                    education_grade_id,
+                                    academic_period_id,
+                                    institution_id
+                                FROM
+                                    `institution_classes` `institution_classes`
+                                LEFT JOIN `institution_class_grades` `institution_class_grades` ON
+                                    `institution_class_grades`.`institution_class_id` = `institution_classes`.`id`
+                                UNION
+                            SELECT
+                                `institution_classes_secondary_staff`.`secondary_staff_id` AS `staff_id`,
+                                education_grade_id,
+                                academic_period_id,
+                                institution_id
+                            FROM
+                                `institution_classes` `institution_classes`
+                            INNER JOIN institution_class_grades ON `institution_class_grades`.`institution_class_id` = `institution_classes`.`id`
+                            LEFT JOIN institution_classes_secondary_staff ON `institution_classes_secondary_staff`.`institution_class_id` = `institution_classes`.`id`
+                            WHERE
+                                `institution_classes_secondary_staff`.`secondary_staff_id` IS NOT NULL
+                            ) AS education_grade_staff
+                            WHERE
+                                (
+                                        `education_grade_staff`.`education_grade_id` = $education_grade_id AND `education_grade_staff`.`academic_period_id` = $academic_period AND `education_grade_staff`.`institution_id` IN ($institution_id) AND `education_grade_staff`.`staff_id` != 0
+                                )
+                            GROUP BY
+                                staff_id,
+                                education_grade_id,
+                                academic_period_id");
+        return count($institutionClassesData);
     }
     
     public function onExcelTemplateInitialiseInstitutionRoomTypes(Event $event, array $params, ArrayObject $extra)
