@@ -251,8 +251,14 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                                                 $StudentsEnrollmentSummary->aliasfield('academic_period_id').' = ' . 'AcademicPeriods.id'
                                             ])
-                                ->where(['Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId, $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id, $StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus])
-                                ->group(['EducationGrades.id', 'Genders.id'])->toArray();
+                                ->where([
+                                    'Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId,
+                                    $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id
+                                ]);
+                                if ($institutionId > 0) {
+                                    $instStudData->where([$StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus]);
+                                }
+                                $instStudData->group(['EducationGrades.id', 'Genders.id'])->toArray();
                 
                 if(!empty($instStudData)){
                     foreach ($instStudData as $key => $value) {
@@ -277,13 +283,19 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                     $result[$i][] = $AcademicPeriodData->name;
                     $result[$i][] = '';
                     $result[$i][] = '';
-                    $result[$i][] = ' 0';
+                    $result[$i][] = 0;
                     $i++;
                 }                
             }
         }
         if ($institutionId == '' || $institutionId == null || $institutionId < 1) {
-            return $result;
+            $updated_result = [];
+            foreach ($result AS $grade_data) {
+                if ($grade_data[5] != 0) {
+                    $updated_result[] = $grade_data;
+                }
+            }
+            return $updated_result;
         } else {
             $check_grade_exist = [];
             $updated_result= [];
