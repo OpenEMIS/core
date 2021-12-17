@@ -24,39 +24,7 @@ class POCOR6473 extends AbstractMigration
         $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_year` ON SCHEDULE EVERY 1 YEAR ON COMPLETION NOT PRESERVE ENABLE DO CALL openemis_core_reports(`year`)');
 
         /** Create OpenEMIS Core procedure */
-        $this->execute('
-        DELIMITER //
-        CREATE PROCEDURE `openemis_core_reports`(IN `var_interval` VARCHAR(10))
-            NO SQL
-        BEGIN 
-        
-          DECLARE var_row TEXT;
-          DECLARE var_done INT DEFAULT FALSE;
-          DECLARE var_cursor CURSOR FOR SELECT query_sql FROM report_queries WHERE status = 1 AND frequency LIKE var_interval ORDER BY id ASC;
-          DECLARE CONTINUE HANDLER FOR NOT FOUND SET var_done = TRUE;
-        
-          OPEN var_cursor;
-        
-          read_loop: LOOP
-        
-            FETCH var_cursor INTO var_row;
-        
-            IF var_done THEN
-              LEAVE read_loop;
-            END IF;
-        
-            SET @var_row = var_row;
-            PREPARE report_query FROM @var_row; 
-            EXECUTE report_query; 
-            DEALLOCATE PREPARE report_query;
-        
-          END LOOP;
-        
-          CLOSE var_cursor;
-        
-        END //
-        DELIMITER ;
-        ');
+        $this->execute('DELIMITER // CREATE PROCEDURE `openemis_core_reports`(IN `var_interval` VARCHAR(10)) NO SQL BEGIN  DECLARE var_row TEXT; DECLARE var_done INT DEFAULT FALSE; DECLARE var_cursor CURSOR FOR SELECT query_sql FROM report_queries WHERE status = 1 AND frequency LIKE var_interval ORDER BY id ASC; DECLARE CONTINUE HANDLER FOR NOT FOUND SET var_done = TRUE; OPEN var_cursor; read_loop: LOOP FETCH var_cursor INTO var_row; IF var_done THEN LEAVE read_loop; END IF; SET @var_row = var_row; PREPARE report_query FROM @var_row;  EXECUTE report_query;  DEALLOCATE PREPARE report_query; END LOOP; CLOSE var_cursor; END // DELIMITER ;');
         
         /** Create OpenEMIS Core report_queries table */
         $this->execute('
