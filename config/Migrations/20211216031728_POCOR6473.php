@@ -65,7 +65,7 @@ class POCOR6473 extends AbstractMigration
           `name` varchar(50) NOT NULL,
           `query_sql` text NOT NULL,
           `frequency` varchar(10) NOT NULL COMMENT `minute, hour, day, week, month, year`,
-          `status` int(11) NOT NULL COMMENT '0 = diabled and 1 = enabled',
+          `status` int(11) NOT NULL COMMENT `0 = diabled and 1 = enabled`,
           `modified_user_id` int(11) DEFAULT NULL,
           `modified` datetime DEFAULT NULL,
           `created_user_id` int(11) NOT NULL,
