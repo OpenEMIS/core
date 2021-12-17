@@ -1,5 +1,4 @@
-<?php
-use Migrations\AbstractMigration;
+e Migrations\AbstractMigration;
 
 class POCOR6473 extends AbstractMigration
 {
@@ -25,7 +24,7 @@ class POCOR6473 extends AbstractMigration
 
         /** Create OpenEMIS Core procedure */
         $this->execute('
-        DELIMITER $$
+        DELIMITER //
         CREATE PROCEDURE `openemis_core_reports`(IN `var_interval` VARCHAR(10))
             NO SQL
         BEGIN 
@@ -54,8 +53,8 @@ class POCOR6473 extends AbstractMigration
         
           CLOSE var_cursor;
         
-        END$$
-        DELIMITER;
+        END //
+        DELIMITER ;
         ');
         
         /** Create OpenEMIS Core report_queries table */
