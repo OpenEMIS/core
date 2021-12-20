@@ -17,7 +17,7 @@ class POCOR6430 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_6430_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `zz_6430_security_functions` SELECT * FROM `security_functions`');
 
-        $this->execute("UPDATE `security_functions` SET  `_view`='Committees.index|Committees.view',`_add` = 'Committees.add' , `_edit` = 'Committees.edit', `_delete` = 'Committees.remove' WHERE `name` = 'Institution Committees' AND `controller` = 'Institutions' AND `module` = 'Institutions' AND `category` = 'Committees'");
+        $this->execute("UPDATE `security_functions` SET `controller` = 'Institutions', `_view`='Committees.index|Committees.view',`_add` = 'Committees.add' , `_edit` = 'Committees.edit', `_delete` = 'Committees.remove' WHERE `name` = 'Institution Committees' AND `controller` = 'InstitutionCommittees' AND `module` = 'Institutions' AND `category` = 'Committees'");
         /* END: security_functions table changes */
     }
 
