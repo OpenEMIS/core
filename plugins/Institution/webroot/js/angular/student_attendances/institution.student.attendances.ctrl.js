@@ -789,7 +789,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         vm.gridOptions.context.mode = vm.action;
         UtilsSvc.isAppendLoader(true);
 
-        InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams())
+        InstitutionStudentAttendancesSvc.getNoScheduledClassMarked(vm.getIsMarkedParams())
         .then(function(isMarked) {
             vm.updateIsMarked(isMarked);
             vm.setColumnDef(isMarked);
