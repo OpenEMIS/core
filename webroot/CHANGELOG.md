@@ -1,3 +1,8 @@
+### [3.72.2] - 2021-12-21
+- Bug Fixed: Institution>Performance>Report Cards: The Report Card Reflects Subjects that the Student is not Assigned to
+- Bug Fixed: Institutions>Students>Student1>Academic>Extracurriculars: View and edit showing the oldest record instead of the current one
+- Bug Fixed: Institutions > Attendances > Students : Student is no longer enrolled in school however he is showing up in this page
+
 ### [3.72.1] - 2021-12-16
 - Implemented: Add Export button function - Institutions > Risks
 - Implemented: Add Export button function - Institutions > Examinations > Results
