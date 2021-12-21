@@ -106,7 +106,24 @@ class ProfileTemplatesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // Academic Period filter
+        $institutionPositionsTable = TableRegistry::get('Institution.InstitutionPositions');
+        $StaffTable = TableRegistry::get('Institution.Staff');
+        $alreadyAssignedStaffs = $StaffTable->find()->select([
+            'institution_position_id' => $StaffTable->aliasField('institution_position_id'),
+            'status_id' => $institutionPositionsTable->aliasField('status_id')
+        ])->innerJoin([$institutionPositionsTable->alias() => $institutionPositionsTable->table()], [
+            $institutionPositionsTable->aliasField('id = ') . $StaffTable->aliasField('institution_position_id'),
+        ])->where([
+            $StaffTable->aliasField('institution_id') => 6,
+            $StaffTable->aliasField('staff_id') => 8810,
+        ])
+        ->hydrate(false)->toArray();
+        $expectedStaffStatuses = [];
+        foreach ($alreadyAssignedStaffs AS $staff) {
+            $expectedStaffStatuses[$staff['status_id']] = $staff['status_id'];
+        }
+        return $expectedStaffStatuses;
+
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
