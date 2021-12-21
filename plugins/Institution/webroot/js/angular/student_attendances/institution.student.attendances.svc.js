@@ -97,6 +97,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         getSubjectOptions: getSubjectOptions,
         getPeriodOptions: getPeriodOptions,
         getIsMarked: getIsMarked,
+        getNoScheduledClassMarked : getNoScheduledClassMarked,
         getClassStudent: getClassStudent,
 
         getSingleDayColumnDefs: getSingleDayColumnDefs,
@@ -394,6 +395,38 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         return StudentAttendanceMarkedRecords
             .find('noScheduledClass', extra)
+            .ajax({success: success, defer: true});
+    }
+
+    function getNoScheduledClassMarked(params) {
+        console.log("parms", params)
+        var extra = {
+            institution_id: params.institution_id,
+            institution_class_id: params.institution_class_id,
+            education_grade_id: params.education_grade_id,
+            academic_period_id: params.academic_period_id,
+            day_id: params.day_id,
+            attendance_period_id: params.attendance_period_id,
+            subject_id: params.subject_id
+        };
+
+        if (extra.day_id == ALL_DAY_VALUE) {
+            return $q.resolve(false);
+        }
+
+        var success = function(response, deferred) {
+            var count = response.data.total;
+            console.log("response.data", response.data)
+            if (angular.isDefined(count)) {
+                var isMarked = count > 0;
+                deferred.resolve(isMarked);
+            } else {
+                deferred.reject('There was an error when retrieving the is_marked record');
+            }
+        };
+
+        return StudentAttendanceMarkedRecords
+            .find('periodIsMarked', extra)
             .ajax({success: success, defer: true});
     }
 
@@ -906,23 +939,17 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             var html = '';
             if (isMarked) {
                 var id = (data.absence_type_id === null) ? 0 : data.institution_student_absences.absence_type_id;
+                console.log(data)
+                console.log('exit')
                 if(noScheduledClicked)
                     var absenceTypeObj = {
-                        id: null,
-                        code: 'NoScheduledClicked',
-                        name: 'No Lessons'
-                    };
-                else
-                    if (data.institution_student_absences.absence_type_code == "NoScheduledClicked") {
-                        var absenceTypeObj = {
                             id: null,
                             code: 'NoScheduledClicked',
                             name: 'No Lessons'
                         };
-                    } else {
-                        var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);
-                    }
-                    
+                else
+                    var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);            
+                
                 switch (absenceTypeObj.code) {
                     case attendanceType.PRESENT.code:
                         html = '<div style="color: ' + attendanceType.PRESENT.color + ';"><i class="' + attendanceType.PRESENT.icon + '"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
