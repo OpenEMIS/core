@@ -36,6 +36,6 @@ class POCOR6021 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `locale_contents`');
         $this->execute('RENAME TABLE `zz_6021_locale_contents` TO `locale_contents`');
         $this->execute('DROP TABLE IF EXISTS `student_attendance_marked_records`');
-        $this->execute('RENAME TABLE `zz_6021_student_attendance_marked_records` TO `locale_contents`');
+        $this->execute('RENAME TABLE `zz_6021_student_attendance_marked_records` TO `student_attendance_marked_records`');
     }
 }
