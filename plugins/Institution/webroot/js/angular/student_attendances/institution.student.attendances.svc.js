@@ -394,7 +394,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         return StudentAttendanceMarkedRecords
-            .find('noScheduledClass', extra)
+            .find('periodIsMarked', extra)
             .ajax({success: success, defer: true});
     }
 
@@ -426,7 +426,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         return StudentAttendanceMarkedRecords
-            .find('periodIsMarked', extra)
+            .find('NoScheduledClass', extra)
             .ajax({success: success, defer: true});
     }
 
@@ -937,19 +937,17 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed, noScheduledClicked) {
         if (angular.isDefined(data.institution_student_absences)) {
             var html = '';
-            if (isMarked) {
+            if (isMarked) {console.log('in')
                 var id = (data.absence_type_id === null) ? 0 : data.institution_student_absences.absence_type_id;
-                console.log(data)
-                console.log('exit')
                 if(noScheduledClicked)
                     var absenceTypeObj = {
-                            id: null,
-                            code: 'NoScheduledClicked',
-                            name: 'No Lessons'
-                        };
+                        id: null,
+                        code: 'NoScheduledClicked',
+                        name: 'No Lessons'
+                    };
                 else
-                    var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);            
-                
+                    var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);
+            
                 switch (absenceTypeObj.code) {
                     case attendanceType.PRESENT.code:
                         html = '<div style="color: ' + attendanceType.PRESENT.color + ';"><i class="' + attendanceType.PRESENT.icon + '"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
@@ -971,10 +969,14 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 }
                 return html;
             } else {
-                if (isSchoolClosed) {
+                if (isSchoolClosed) {console.log('in')
                     html = '<i style="color: #999999;" class="fa fa-minus"></i>';
-                } else {
-                    html = '<i class="' + icons.PRESENT + '"></i>';
+                } else {console.log('out')
+                    if (data.is_NoClassScheduled == 1) {
+                        html = '<i style="color: #000000;"><span>No Lessons</span></i>';
+                    } else {
+                        html = '<i class="' + icons.PRESENT + '"></i>';
+                    }
                 }
             }
             return html;
