@@ -328,13 +328,14 @@ class StudentAttendancesTable extends ControllerActionTable
                                     
                                     if (!empty($isMarkedRecords)) {
                                         $data = [
-                                            'date' => $findDay,
-                                            'period' => $attendancePeriodId,
-                                            'comment' => null,
-                                            'absence_type_id' => $PRESENT,
-                                            'student_absence_reason_id' => null,
-                                            'absence_type_code' => null
-                                        ];
+                                                'date' => $findDay,
+                                                'period' => $attendancePeriodId,
+                                                'comment' => null,
+                                                'absence_type_id' => $PRESENT,
+                                                'student_absence_reason_id' => null,
+                                                'absence_type_code' => null
+                                            ];
+                                        
                                     } else {
                                         $data = [
                                             'date' => $findDay,
@@ -348,6 +349,21 @@ class StudentAttendancesTable extends ControllerActionTable
                         } 
 
                         $row->institution_student_absences = $data;
+                        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+                        $getRecord = $StudentAttendanceMarkedRecords->find('all')
+                                    ->where([
+                                        $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
+                                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
+                                        $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
+                                        $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
+                                        $StudentAttendanceMarkedRecords->aliasField('date') => $findDay,
+                                        $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class') => 1
+                                    ])->first();
+                        if (!empty($getRecord)) {
+                            $row->is_NoClassScheduled = 1;
+                        } else {
+                            $row->is_NoClassScheduled = 0;
+                        }
 
                     if (isset($this->request) && ('excel' === $this->request->pass[0])) {
 
@@ -369,7 +385,8 @@ class StudentAttendancesTable extends ControllerActionTable
                            $row->class = $row['institution_class']['name'];                        
                            $row->date =  date("d/m/Y", strtotime($findDay));                        
                            $row->StudentStatuses = $row['_matchingData']['StudentStatuses']['name'];                        
-                           $row->studentId = $row['student_id'];                        
+                           $row->studentId = $row['student_id'];
+                           $row->test = 1;                       
                         }
 
                         return $row;
