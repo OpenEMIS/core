@@ -28,6 +28,11 @@ $this->start('toolbar');
         <i class="fa kd-back"></i>
     </button>
 <?php endif; ?>
+<?php if ($_edit) : ?>
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('No Scheduled Class');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onNoScheduledClick()">
+        <i class="kd-null"></i> 
+    </button>
+<?php endif; ?>
 <?php 
 $session = $this->Session;
 $superAdmin = $session->read('Auth.User.super_admin');
