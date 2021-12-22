@@ -123,7 +123,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
 
         $generate($_settings);
 
-        $labelArray = array("Name","Code","Academic Period","Education Grade","Gender","Number of Students");
+        $labelArray = array("Name","Code","Academic Period","Education Grade","Gender","Number of Students","Student Status");
         
         foreach($labelArray as $label) {
             $headerRow[] = $this->getFields($this->_table, $settings, $label);
@@ -233,6 +233,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                     'academic_period_name' => 'AcademicPeriods.name',
                                     'gender_name' =>'Genders.name',
                                     'education_grade_name' => 'EducationGrades.name',
+                                    'student_status' => 'StudentStatuses.name',
                                     'count'=> $StudentsEnrollmentSummary->find()->func()->count('DISTINCT '.$StudentsEnrollmentSummary->aliasField('student_id'))
                                     
                                  ])
@@ -251,6 +252,9 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                                                 $StudentsEnrollmentSummary->aliasfield('academic_period_id').' = ' . 'AcademicPeriods.id'
                                             ])
+                                ->leftJoin(['StudentStatuses' => 'student_statuses'], [
+                                    $StudentsEnrollmentSummary->aliasfield('student_status_id') . ' = ' .'StudentStatuses.id'
+                                ])
                                 ->where([
                                     'Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId,
                                     $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id
@@ -258,7 +262,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 if ($institutionId > 0) {
                                     $instStudData->where([$StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus]);
                                 }
-                                $instStudData->group(['EducationGrades.id', 'Genders.id'])->toArray();
+                                $instStudData->group(['EducationGrades.id', 'Genders.id', 'StudentStatuses.id'])->toArray();
                 
                 if(!empty($instStudData)){
                     foreach ($instStudData as $key => $value) {
@@ -268,6 +272,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                         $result[$i][] = !empty($value->education_grade_name) ? $value->education_grade_name : ' 0';
                         $result[$i][] = !empty($value->gender_name) ? $value->gender_name : ' 0';
                         $result[$i][] = !empty($value->count) ? $value->count : ' 0';
+                        $result[$i][] = !empty($value->student_status) ? $value->student_status : ' -';;
                         $i++;
                     }
                 }else{
@@ -284,6 +289,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                     $result[$i][] = '';
                     $result[$i][] = '';
                     $result[$i][] = 0;
+                    $result[$i][] = '';
                     $i++;
                 }                
             }
