@@ -1,3 +1,10 @@
+### [3.72.3] - 2021-12-22
+- Implemented: Develop Attendance > Student > No Scheduled Class function
+- Implemented: Development of Institution Profile placeholder
+- Implemented: Create a batch / background process to generate reports
+- Bug Fixed: Institutions > Committee : Permissions are enabled but user is unable to view in menu
+- Bug Fixed: Personal > Students > Academic > Extracurriculars: Extracurriculars tab is missing
+
 ### [3.72.2] - 2021-12-21
 - Bug Fixed: Institution>Performance>Report Cards: The Report Card Reflects Subjects that the Student is not Assigned to
 - Bug Fixed: Institutions>Students>Student1>Academic>Extracurriculars: View and edit showing the oldest record instead of the current one
