@@ -598,7 +598,9 @@ class InstitutionClassStudentsTable extends AppTable
         // POCOR-4371 to encode the array of ids as comma separated values in restfulv2component is not support, will throw error
         // $institutionClassIds = $options['institution_class_ids'];
         $institutionClassIds = explode(',', $this->urlsafeB64Decode($options['institution_class_ids']));
-
+        $institutionSubjects = TableRegistry::get('institution_subjects');
+        $education_subject_id=$institutionSubjects->find()->select(['education_subject_id'])->where(['id'=>$institutionSubjectId,'education_grade_id' =>$educationGradeId,'academic_period_id'=>$academicPeriodId])->first();
+        $education_subject_id=$education_subject_id['education_subject_id'];
         return $query
             ->contain('InstitutionClasses')
             ->matching('Users', function ($q) {
@@ -611,14 +613,14 @@ class InstitutionClassStudentsTable extends AppTable
             })
             ->matching('Users.Genders')
             ->matching('StudentStatuses')
-            ->leftJoinWith('SubjectStudents', function ($q) use ($institutionSubjectId, $academicPeriodId) {
+            ->leftJoinWith('SubjectStudents', function ($q) use ($education_subject_id, $academicPeriodId) {
                 return $q
                     ->innerJoin(['EducationGradesSubjects' => 'education_grades_subjects'], [
                         'EducationGradesSubjects.education_grade_id = SubjectStudents.education_grade_id',
                         'EducationGradesSubjects.education_subject_id = SubjectStudents.education_subject_id'
                     ])
                     ->where([
-                        'SubjectStudents.institution_subject_id' => $institutionSubjectId,
+                        'SubjectStudents.education_subject_id' => $education_subject_id,
                         'SubjectStudents.academic_period_id' => $academicPeriodId
                     ]);
             })
@@ -626,11 +628,14 @@ class InstitutionClassStudentsTable extends AppTable
                 $this->aliasField('institution_class_id').' IN ' => $institutionClassIds,
                 $this->aliasField('education_grade_id') => $educationGradeId,
                 $this->aliasField('academic_period_id') => $academicPeriodId,
+                //'SubjectStudents.education_subject_id' => $educationSubjectId['education_subject_id'],
                 'SubjectStudents.student_id IS NULL'
             ])
-            ->order(['Users.first_name', 'Users.last_name']) // POCOR-2547 sort list of staff and student by name
+            ->order(['Users.first_name', 'Users.last_name'])// POCOR-2547 sort list of staff and student by name
             ->formatResults(function ($results) {
                 $resultArr = [];
+                
+              // echo "<pre>"; print_r($results); exit;
                 foreach ($results as $result) {
                     $resultArr[] = [
                         'openemis_no' => $result->_matchingData['Users']->openemis_no,
