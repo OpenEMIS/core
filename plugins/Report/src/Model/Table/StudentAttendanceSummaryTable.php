@@ -25,7 +25,6 @@ class StudentAttendanceSummaryTable extends AppTable
 
     public function initialize(array $config)
     {
-        //$this->table('institution_classes');
         $this->table('report_student_attendance_summary');
         parent::initialize($config);
 
@@ -34,14 +33,7 @@ class StudentAttendanceSummaryTable extends AppTable
             'foreignKey' => 'institution_id'
         ]);
         $this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
-        $this->belongsToMany('EducationGrades', [
-            'className' => 'Education.EducationGrades',
-            'joinTable' => 'institution_class_grades',
-            'through' => 'Institution.InstitutionClassGrades',
-            'foreignKey' => 'institution_class_id',
-            'targetForeignKey' => 'education_grade_id',
-            'dependent' => true
-        ]);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
         $this->addBehavior('Excel', [
             'excludes' => [
@@ -73,29 +65,21 @@ class StudentAttendanceSummaryTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        //
         $requestData = json_decode($settings['process']['params']);
-        //echo "<pre>"; print_r($requestData); die;
-        //$sheetData = $settings['sheet']['sheetData'];
-        //$gradeId = $sheetData['education_grade_id'];
         $academicPeriodId = $requestData->academic_period_id;
         $educationGradeId = $requestData->education_grade_id;
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
-
         $reportStartDate = new DateTime($requestData->report_start_date);
         $reportEndDate = new DateTime($requestData->report_end_date);
-        
         $startDate = $reportStartDate->format('Y-m-d');
         $endDate = $reportEndDate->format('Y-m-d');
 
         $conditions = [];
 
         $institutions = TableRegistry::get('Institution.Institutions');
-        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
-        $institutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $studentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
         $institutionIds = $institutions->find('list', [
                                                     'keyField' => 'id',
@@ -103,205 +87,218 @@ class StudentAttendanceSummaryTable extends AppTable
                                                 ])
                         ->where(['institution_type_id' => $institutionTypeId])
                         ->toArray();
-
-        if (!empty($institutionTypeId)) {
-            $conditions['StudentAttendanceSummary.institution_id IN'] = $institutionIds;
+        if ($institutionId != 0) {
+            $conditions[$this->aliasField('institution_id')] = $institutionId;
         }
 
         if (!empty($academicPeriodId)) {
-            $conditions['StudentAttendanceSummary.academic_period_id'] = $academicPeriodId;
+            $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        if (!empty($areaId) && $areaId  != -1) {
+        if ($areaId  != -1) {
             $conditions['Institutions.area_id'] = $areaId;
         }
-
-        $query
-
-            ->contain([
-                'Institutions' => [
-                    'fields' => [
-                        'Institutions.id',
-                        'Institutions.name'
-                    ]
-                ],
-                'AcademicPeriods' => [
-                    'fields' => [
-                        'AcademicPeriods.name'
-                    ]
-                ],
-        
-                'InstitutionClassStudents' => function ($q) use ($enrolledStatus) {
-                    return $q
-                        ->select([
-                            'id',
-                            'student_id',
-                            'institution_class_id',
-                            'academic_period_id',
-                            'institution_id',
-                            'student_status_id'
-                        ])
-                        
-                        ->where(['InstitutionClassStudents.student_status_id' => $enrolledStatus]);
-                }
-            ])
-
-            ->leftJoin(['InstitutionClassGrades' => 'institution_class_grades'], [
-                        'InstitutionClassGrades.institution_class_id = '. $this->aliasField('id'),
-                    ])
-            ->leftJoin(['StudentAttendanceMarkedRecords' => 'institution_student_absence_details'], [
-                        'StudentAttendanceMarkedRecords.institution_class_id = '. $this->aliasField('id'),
-                        'StudentAttendanceMarkedRecords.academic_period_id = '.$this->aliasField('academic_period_id'),
-                        'StudentAttendanceMarkedRecords.institution_id = '.$this->aliasField('institution_id'),
-                        'StudentAttendanceMarkedRecords.date >= "'.$startDate.'"',
-                        'StudentAttendanceMarkedRecords.date <= "'.$endDate.'"'
-                    ])
-            ->select([
-                $this->aliasField('id'),
-                'name'=>$this->aliasField('class_name'),
-                $this->aliasField('institution_id'),
-                $this->aliasField('academic_period_id'),
-                'InstitutionClassGrades.education_grade_id',
-                'StudentAttendanceMarkedRecords.period',
-                'StudentAttendanceMarkedRecords.subject_id', 
-                $this->aliasField('mark_status'),
-                $this->aliasField('female_count'),
-                $this->aliasField('male_count'),
-                $this->aliasField('total_count'),
-                $this->aliasField('present_female_count'),
-                $this->aliasField('present_male_count'),
-                $this->aliasField('present_total_count'),
-                $this->aliasField('absent_female_count'),
-                $this->aliasField('absent_male_count'),
-                $this->aliasField('absent_total_count'),
-                $this->aliasField('late_female_count'),
-                $this->aliasField('late_male_count'),
-                $this->aliasField('late_total_count'),
-                'date'=>$this->aliasField('attendance_date')
-            ])
-            ->group([$this->aliasField('id'), 
-                'StudentAttendanceMarkedRecords.period', 
-                'StudentAttendanceMarkedRecords.subject_id'
-                ])
-            ->where([$conditions]);
-            
-        //$results = $query->toArray();
-        echo "<pre>"; print_r($query); die;
-            // To get a list of dates based on user's input start and end dates
-            
-        
-    }
-
-    public function onExcelRenderDate(Event $event, Entity $entity, $attr)
-    {
-        $date = '';
-        if ($entity->has('date')) {
-            $date = $this->formatDate($entity->date);
+        if ($educationGradeId != -1) {
+            $conditions[$this->aliasField('education_grade_id')] = $educationGradeId;
         }
-        return $date;
+        
+        $query
+            ->leftJoin(['StudentAttendanceMarkedRecords' => 'institution_student_absence_details'], [
+                'StudentAttendanceMarkedRecords.institution_class_id = '. $this->aliasField('class_id'),
+                'StudentAttendanceMarkedRecords.academic_period_id = '.$this->aliasField('academic_period_id'),
+                'StudentAttendanceMarkedRecords.institution_id = '.$this->aliasField('institution_id'),
+                'StudentAttendanceMarkedRecords.education_grade_id = '.$this->aliasField('education_grade_id'),
+                'StudentAttendanceMarkedRecords.date >= "'.$startDate.'"',
+                'StudentAttendanceMarkedRecords.date <= "'.$endDate.'"'
+            ])
+            ->select([
+                'name' => $this->aliasField('class_name'),
+                'institution_name' => $this->aliasField('institution_name'),
+                'academic_period' => $this->aliasField('academic_period_name'),
+                'subject' => $this->aliasField('subject_name'),
+                'period' => $this->aliasField('period_name'),
+                'date' => $this->aliasField('attendance_date'),
+                'mark_status' => $this->aliasField('mark_status'),
+                'total_female_students' => $this->aliasField('female_count'),
+                'total_male_students' => $this->aliasField('male_count'),
+                'total_students' => $this->aliasField('total_count'),
+                'total_female_students_present' => $this->aliasField('present_female_count'),
+                'total_male_students_present' => $this->aliasField('present_male_count'),
+                'total_students_present' => $this->aliasField('present_total_count'),
+                'total_female_students_absent' => $this->aliasField('absent_female_count'),
+                'total_male_students_absent' => $this->aliasField('absent_male_count'),
+                'total_students_absent' => $this->aliasField('absent_total_count'),
+                'total_female_students_late' => $this->aliasField('late_female_count'),
+                'total_male_students_late' => $this->aliasField('late_male_count'),
+                'total_students_late' => $this->aliasField('late_total_count')
+            ])
+            ->group([
+                $this->aliasField('subject_name'),
+                $this->aliasField('period_name')
+            ])
+            ->where([$conditions])
+            ->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+                    if ($row->total_female_students == 0) {
+                        $row->total_female_students = '-';
+                    }
+                    if ($row->total_male_students == 0) {
+                        $row->total_male_students = '-';
+                    }
+                    if ($row->total_students == 0) {
+                        $row->total_students = '-';
+                    }
+                    if ($row->total_female_students_present == 0) {
+                        $row->total_female_students_present = '-';
+                    }
+                    if ($row->total_male_students_present == 0) {
+                        $row->total_male_students_present = '-';
+                    }
+                    if ($row->total_students_present == 0) {
+                        $row->total_students_present = '-';
+                    }
+                    if ($row->total_female_students_absent == 0) {
+                        $row->total_female_students_absent = '-';
+                    }
+                    if ($row->total_male_students_absent == 0) {
+                        $row->total_male_students_absent = '-';
+                    }
+                    if ($row->total_students_absent == 0) {
+                        $row->total_students_absent = '-';
+                    }
+                    if ($row->total_female_students_late == 0) {
+                        $row->total_female_students_late = '-';
+                    }
+                    if ($row->total_male_students_late == 0) {
+                        $row->total_male_students_late = '-';
+                    }
+                    if ($row->total_students_late == 0) {
+                        $row->total_students_late = '-';
+                    }
+                    return $row; 
+                });
+            });
     }
-    
+
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $extraField[] = [
-            'key' => 'Subject',
-            'field' => 'Subject',
-            'type' => 'Subject',
-            'label' => 'Subject',
+            'key' => '',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => __('Name')
         ];
 
         $extraField[] = [
-            'key' => 'Period',
-            'field' => 'Period',
-            'type' => 'Period',
-            'label' => 'Period',
+            'key' => '',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution Name')
         ];
 
         $extraField[] = [
-            'key' => 'Date',
-            'field' => 'Date',
-            'type' => 'Date',
-            'label' => 'Date',
-        ];
-        $extraField[] = [
-            'key' => 'MarkStatus',
-            'field' => 'MarkStatus',
-            'type' => 'MarkStatus',
-            'label' => 'Mark Status',
-        ];
-        $extraField[] = [
-            'key' => 'TotalFemaleStudents',
-            'field' => 'TotalFemaleStudents',
-            'type' => 'TotalFemaleStudents',
-            'label' => 'No. of Female Students',
-        ];
-        $extraField[] = [
-            'key' => 'TotalMaleStudents',
-            'field' => 'TotalMaleStudents',
-            'type' => 'TotalMaleStudents',
-            'label' => __('No. of Male Students'),
-        ];
-        $extraField[] = [
-            'key' => 'TotalStudents',
-            'field' => 'TotalStudents',
-            'type' => 'TotalStudents',
-            'label' => 'Total No. Students',
-        ];
-        $extraField[] = [
-            'key' => 'TotalFemaleStudentsPresent',
-            'field' => 'TotalFemaleStudentsPresent',
-            'type' => 'TotalFemaleStudentsPresent',
-            'label' => 'No. of Female Students Present',
-        ];
-        $extraField[] = [
-            'key' => 'TotalMaleStudentsPresent',
-            'field' => 'TotalMaleStudentsPresent',
-            'type' => 'TotalMaleStudentsPresent',
-            'label' => 'No. of Male Students Present',
-        ];
-        $extraField[] = [
-            'key' => 'TotalStudentsPresent',
-            'field' => 'TotalStudentsPresent',
-            'type' => 'TotalStudentsPresent',
-            'label' => 'Total No. Students Present',
+            'key' => '',
+            'field' => 'academic_period',
+            'type' => 'string',
+            'label' => __('Academic Period')
         ];
         $extraField[] = [
             'key' => '',
-            'field' => 'TotalFemaleStudentsAbsent',
-            'type' => 'TotalFemaleStudentsAbsent',
-            'label' => 'No. of Female Students Absent',
+            'field' => 'subject',
+            'type' => 'string',
+            'label' => __('Subject')
         ];
         $extraField[] = [
             'key' => '',
-            'field' => 'TotalMaleStudentsAbsent',
-            'type' => 'TotalMaleStudentsAbsent',
-            'label' => 'No. of Male Students Absent',
-        ];
-        $extraField[] = [
-            'key' => 'TotalStudentsAbsent',
-            'field' => 'TotalStudentsAbsent',
-            'type' => 'TotalStudentsAbsent',
-            'label' => 'Total No. Students Absent',
+            'field' => 'period',
+            'type' => 'string',
+            'label' => __('Period')
         ];
         $extraField[] = [
             'key' => '',
-            'field' => 'TotalFemaleStudentsLate',
-            'type' => 'TotalFemaleStudentsLate',
-            'label' => 'No. of Female Students Late',
+            'field' => 'date',
+            'type' => 'string',
+            'label' => __('Date')
+        ];
+        $extraField[] = [
+           'key' => '',
+            'field' => 'mark_status',
+            'type' => 'string',
+            'label' => __('Mark Status')
         ];
         $extraField[] = [
             'key' => '',
-            'field' => 'TotalMaleStudentsLate',
-            'type' => 'TotalMaleStudentsLate',
-            'label' => 'No. of Male Students Late',
+            'field' => 'total_female_students',
+            'type' => 'string',
+            'label' => __('No. of Female Students')
         ];
         $extraField[] = [
-            'key' => 'TotalStudentsLate',
-            'field' => 'TotalStudentsLate',
-            'type' => 'TotalStudentsLate',
-            'label' => 'Total No. Students Late',
+            'key' => '',
+            'field' => 'total_male_students',
+            'type' => 'string',
+            'label' => __('No. of Male Students')
         ];
-        $newFields = array_merge($fields->getArrayCopy(), $extraField);
-        $fields->exchangeArray($newFields);
+        $extraField[] = [
+            'key' => '',
+            'field' => 'total_students',
+            'type' => 'string',
+            'label' => __('Total No. Students')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'total_female_students_present',
+            'type' => 'string',
+            'label' => __('No. of Female Students Present')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'total_male_students_present',
+            'type' => 'string',
+            'label' => __('No. of Male Students Present')
+        ];
+        $extraField[] = [
+           'key' => '',
+            'field' => 'total_students_present',
+            'type' => 'string',
+            'label' => __('Total No. Students Present')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'total_female_students_absent',
+            'type' => 'string',
+            'label' => __('No. of Female Students Absent')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'total_male_students_absent',
+            'type' => 'string',
+            'label' => __('No. of Male Students Absent')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'total_students_absent',
+            'type' => 'string',
+            'label' => __('Total No. Students Absent')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'total_female_students_late',
+            'type' => 'string',
+            'label' => __('No. of Female Students Late')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'total_male_students_late',
+            'type' => 'string',
+            'label' => __('No. of Male Students Late')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'total_students_late',
+            'type' => 'string',
+            'label' => __('Total No. Students Late')
+        ];
+        
+        $fields->exchangeArray($extraField);
     }
 
     private function getSchoolClosedDate($requestData)
@@ -331,8 +328,8 @@ class StudentAttendanceSummaryTable extends AppTable
 
         $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
         $institutionGradeResults = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId, true);
-
         $gradeOptions = [];
+        
         if ($educationGradeId != -1) {
             if(in_array($educationGradeId, $institutionGradeResults)){
                 $gradeOptions[$educationGradeId] = $institutionGradeResults[$educationGradeId];
@@ -363,10 +360,14 @@ class StudentAttendanceSummaryTable extends AppTable
 
         $sheets = [];
         foreach ($gradeOptions as $gradeId => $gradeName) {
+            $where = [];
+            if ($institutionId != 0) {
+                $where[$this->aliasField('institution_id')] = $institutionId;
+            }
             $query = $this
                 ->find()
                 ->where([
-                    $this->aliasField('institution_id') => $institutionId,
+                    $where,
                     $this->aliasField('academic_period_id') => $academicPeriodId
                 ])
                 ->matching('EducationGrades', function ($q) use ($gradeId) {
