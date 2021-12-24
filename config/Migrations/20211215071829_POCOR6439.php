@@ -12,6 +12,7 @@ class POCOR6439 extends AbstractMigration
      */
     public function up()
     {
+        $this->execute('DROP TABLE IF EXISTS `report_student_attendance_summary`');
         /** START: report_student_attendance_summary table */
         $this->execute('CREATE TABLE `report_student_attendance_summary` (
           `education_grade_id` int(10) DEFAULT NULL,
@@ -137,14 +138,12 @@ class POCOR6439 extends AbstractMigration
             AND calculate_mark_status.academic_period_id = academic_periods.id
             AND calculate_mark_status.date = student_attendance_marked_records.date
             ORDER BY student_attendance_marked_records.date DESC");
-//ALTER TABLE `report_student_attendance_summary` ADD `id` INT NOT NULL AUTO_INCREMENT FIRST, ADD PRIMARY KEY (`id`); 
-                    
         /** END: report_student_attendance_summary table  */
     }
 
     //rollback
     public function down()
     {
-        
+        $this->execute('DROP TABLE IF EXISTS `report_student_attendance_summary`');
     }
 }
