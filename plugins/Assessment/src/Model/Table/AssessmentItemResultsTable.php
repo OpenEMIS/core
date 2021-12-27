@@ -174,12 +174,12 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('assessment_id') => $assessmentId,
                 $this->aliasField('education_subject_id') => $subjectId,
-                $this->aliasField('student_id') => $studentId,
-                $this->aliasField('institution_classes_id') => $classId,
+                $this->aliasField('student_id') => $studentId
             ])
+            ->group([$this->aliasField('assessment_period_id')])
             ->hydrate(false);
 
-        $results = $query->toArray();
+        $results = $query->toArray(); 
         $returnArray = [];
         foreach ($results as $result) {
             $returnArray[$result['student_id']][$subjectId][$result['assessment_period_id']] = [
@@ -303,14 +303,12 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('education_subject_id') => $educationSubjectId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
-                $this->aliasField('institution_classes_id') => $institutionClassesId,//POCOR-6468
                 $this->AssessmentGradingOptions->AssessmentGradingTypes->aliasField('result_type') => 'MARKS',
             ])
             ->group([
                 $this->aliasField('student_id'),
                 $this->aliasField('assessment_id'),
                 $this->aliasField('education_subject_id'),
-                $this->aliasField('institution_classes_id'),//POCOR-6468
             ])
             ->first();
 
