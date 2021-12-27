@@ -215,7 +215,7 @@ class NavigationComponent extends Component
                 if ($classification == $Institutions::NON_ACADEMIC) {
                     // navigation items to exclude from non-academic institutions
                     $academicArray = [
-                        // 'Institution.Academic',
+                        'Institution.Academic',
                         'Institutions.Students.index',
                         'Institutions.StudentAttendances.index',
                         'Institutions.StudentBehaviours.index',
@@ -594,6 +594,12 @@ class NavigationComponent extends Component
 				'selected' => ['Institutions.Profiles'],
 				'params' => ['plugin' => 'Institution']
 			],
+            'Institutions.Shifts' => [
+                'title' => 'Shifts',
+                'parent' => 'Institution.General',
+                'selected' => ['Institutions.Shifts'],
+                'params' => ['plugin' => 'Institution']
+            ],
 
             'Institution.Academic' => [
                 'title' => 'Academic',
@@ -601,12 +607,6 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.Shifts' => [
-                'title' => 'Shifts',
-                'parent' => 'Institution.Academic',
-                'selected' => ['Institutions.Shifts'],
-                'params' => ['plugin' => 'Institution']
-            ],
 
             'Institutions.Programmes' => [
                 'title' => 'Programmes',
