@@ -354,12 +354,18 @@ class InstitutionSubjectsTable extends ControllerActionTable
         return $query
             ->formatResults(function ($results) {
                 $arrResults = $results->toArray();
+
                 foreach ($arrResults as &$value) {
                     if (isset($value['subject_students']) && is_array($value['subject_students'])) {
-                        foreach ($value['subject_students'] as $student) {
-                            $student['student_status']['name'] = __($student['student_status']['name']);
+                        $i=0;
+                         foreach ($value['subject_students'] as $student) {
+                            if($student->student_status_id==4){
+                              unset($arrResults[0]['subject_students'][$i]);  
+                            }
+                           //
+                         $i++;}
                         }
-                    }
+                    
                 }
                 return $arrResults;
             });
@@ -400,6 +406,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         // POCOR-2547 sort list of staff and student by name
         // move the contain from institution.subject.student.ctrl.js since its using finder method
+        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
         return $query
             ->find('translateItem')
             ->contain([
@@ -411,7 +418,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'SubjectStudents.Users.Genders',
                 'SubjectStudents.StudentStatuses',
                 'ClassSubjects',
-                'SubjectStudents.InstitutionClasses'
+                'SubjectStudents.InstitutionClasses',
             ]);
     }
 
@@ -546,7 +553,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
+    { 
         $query->contain([
                 'Classes.ClassesSecondaryStaff',
                 'Teachers',
