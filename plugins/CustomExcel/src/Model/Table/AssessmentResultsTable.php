@@ -466,7 +466,8 @@ class AssessmentResultsTable extends AppTable
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 
-            $query = $AssessmentItemResults->find();
+            $query = $AssessmentItemResults->find()
+            ->group([$AssessmentItemResults->aliasField('assessment_period_id')]);
 
             $withoutTerm = $AssessmentItemResults->find()
                 ->select([
@@ -506,6 +507,7 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentItemResults->aliasField('academic_period_id'),
                     $AssessmentItemResults->aliasField('assessment_id'),
                     $AssessmentItemResults->aliasField('student_id'),
+                    $AssessmentItemResults->aliasField('assessment_period_id'),
                     'subject_classification',
                     'academic_term_value'
                 ])
@@ -551,6 +553,7 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentItemResults->aliasField('academic_period_id'),
                     $AssessmentItemResults->aliasField('assessment_id'),
                     $AssessmentItemResults->aliasField('student_id'),
+                    $AssessmentItemResults->aliasField('assessment_period_id'),
                     'subject_classification',
                     'academic_term_value'
                 ])
