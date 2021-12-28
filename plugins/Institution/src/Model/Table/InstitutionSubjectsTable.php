@@ -92,7 +92,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         ]);
 
         $this->setDeleteStrategy('restrict');
-		$this->addBehavior('SubjectExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
+		$this->addBehavior('SubjectExcel', ['excludes' => ['security_group_id','identity_number','identity_type','student_status','openEMIS_ID','gender'], 'pages' => ['view']]);
     }
 
     public function implementedEvents()
@@ -1761,6 +1761,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
         return $entity->total_male_students + $entity->total_female_students;
     }
 
+    public function onExcelGetTotalStudents(Event $event, Entity $entity)
+    {
+        return $entity->total_male_students + $entity->total_female_students;
+    }
+
     //called by ControllerActionHelper incase extra search highlighted
     // public function getSearchableFields(Event $event, $fields, ArrayObject $searchableFields) {
     //  $searchableFields[] = "education_subject_id";
@@ -1809,9 +1814,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         $cloneFields = $fields->getArrayCopy();
         $newFields = [];
+      //echo "<pre>";  print_r($cloneFields); exit;
         foreach ($cloneFields as $key => $value) {
             $newFields[] = $value;
-            if($value['field'] == 'gender'){
+            if($value['field'] == 'student_name'){
 
                 $newFields[] = [
                     'key' => 'InstitutionSubjects.total_male_students',
@@ -1825,6 +1831,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     'field' => 'total_female_students',
                     'type' => 'string',
                     'label' => 'Total Female Student'
+                ];
+
+                $newFields[] = [
+                    'key' => '',
+                    'field' => 'total_students',
+                    'type' => 'integer',
+                    'label' => 'Total Students'
                 ];
             }
 
@@ -1906,5 +1919,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
             });
         });
     }
+
     // POCOR-6128 End
 }
