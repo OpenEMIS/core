@@ -22,6 +22,7 @@ use App\Model\Traits\MessagesTrait;
 
 class InstitutionClassesTable extends ControllerActionTable
 {
+
     use MessagesTrait;
 
     public function initialize(array $config)
@@ -87,7 +88,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
 
-		$this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
+		$this->addBehavior('ClassExcel', ['excludes' => ['security_group_id','identity_number','identity_type','student_status','student_name','gender','institution_classes_staff_openemis_no','special_need','openEMIS_ID'], 'pages' => ['view']]);
     }
 
     public function validationDefault(Validator $validator)
@@ -1893,6 +1894,13 @@ class InstitutionClassesTable extends ControllerActionTable
                     'type' => 'string',
                     'label' => 'Total Female Student'
                 ];
+                $newFields[] = [
+                    'key' => '',
+                    'field' => 'total_students',
+                    'type' => 'integer',
+                    'label' => 'Total Students'
+                ];
+                
             }
 
         }
@@ -1900,13 +1908,6 @@ class InstitutionClassesTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    /* public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
-    {
-        $query
-        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students']);
-
-        $query->group(['InstitutionClasses.id']);
-    } */
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
@@ -1915,7 +1916,8 @@ class InstitutionClassesTable extends ControllerActionTable
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         
         $query
-        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'])
+        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students',
+            'total_students' => 'total_male_students+total_female_students'])
         ->where([
             $this->aliasField('academic_period_id ='). $selectedAcademicPeriodId,
             $this->aliasField('Institutions.id ='). $institutionID,
