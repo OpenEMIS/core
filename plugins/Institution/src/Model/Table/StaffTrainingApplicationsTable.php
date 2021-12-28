@@ -44,6 +44,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        /*
         $modelAlias = 'Applications';
         $userType = 'StaffUser';
         $this->controller->changeUserHeader($this, $modelAlias, $userType);
@@ -52,6 +53,26 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $session = $this->request->session();
         $extra['staffId'] = $session->read('Staff.Staff.id');
         $extra['institutionId'] = $session->read('Institution.Institutions.id');
+        */
+
+        $session = $this->request->session();
+        if (isset($this->request->url) && $this->request->url == 'Profiles/Profiles/StaffTrainingApplications/index') {
+            $session->write('Staff.Staff.id', $this->Auth->user('id'));
+            $session->write('Institution.Institutions.id', $this->getInstitutionIdOfLoggedStaff());
+        } else {
+            $modelAlias = 'Applications';
+            $userType = 'StaffUser';
+            $this->controller->changeUserHeader($this, $modelAlias, $userType);
+        }
+        $this->setupTabElements();
+        $extra['staffId'] = $session->read('Staff.Staff.id');
+        $extra['institutionId'] = $session->read('Institution.Institutions.id');
+    }
+
+    private function getInstitutionIdOfLoggedStaff()
+    {
+        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+        return $InstitutionStaff->find()->where(['InstitutionStaff.staff_id' => $this->Auth->user('id')])->first()->institution_id;
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -128,9 +149,10 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $user_id = ( empty($extra['staffId']) || $extra['staffId'] == '' ) ? $this->Auth->user('id') : $extra['staffId'];
         $query
             ->contain(['Sessions.Courses.TrainingFieldStudies', 'Sessions.Courses.TrainingLevels'])
-            ->where([$this->aliasField('staff_id') => $extra['staffId']]);
+            ->where([$this->aliasField('staff_id') => $user_id]);
 
         $extra['auto_contain_fields'] = ['Sessions.Courses' => ['credit_hours']];
 
