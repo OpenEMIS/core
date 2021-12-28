@@ -475,6 +475,8 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentItemResults->aliasField('academic_period_id'),
                     $AssessmentItemResults->aliasField('assessment_id'),
                     $AssessmentItemResults->aliasField('student_id'),
+                    $AssessmentItemResults->aliasField('marks'),
+                    $AssessmentPeriods->aliasField('weight'),
                     'subject_classification' => '(
                         CASE
                         WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
@@ -512,7 +514,12 @@ class AssessmentResultsTable extends AppTable
                     'academic_term_value'
                 ])
                 ->hydrate(false)
-                ->all();
+                ->toArray();
+                foreach($withoutTerm AS $key => $value){
+                    // echo "<pre>";print_r($withoutTermData);die;
+                    $withoutTerm[$key]['academic_term_total_weighted_marks'] = $value['marks']*$value['assessment_period']['weight'];
+                }
+                // echo "<pre>";print_r($withoutTerm);die;
 
             $withTerm = $AssessmentItemResults->find()
                 ->select([
@@ -563,7 +570,8 @@ class AssessmentResultsTable extends AppTable
             if (!$withTerm->isEmpty()) { // If academic_term is setup, to use the academic_term to calculate the average
                 $recordsToUse = $withTerm->toArray();
             } else { // else, to calculate the average by subject_classification
-                $recordsToUse = $withoutTerm->toArray(); 
+                // $recordsToUse = $withoutTerm->toArray();
+                $recordsToUse = $withoutTerm; 
             }
 
             $averageStudentSubjectResults = [];
@@ -595,11 +603,13 @@ class AssessmentResultsTable extends AppTable
                         'student_id' => $studentId,
                         'subject_classification' => $result['subject_classification'],
                         'academic_term_value' => __('Average'),
-                        'academic_term_total_weighted_marks' => ($this->groupAssessmentPeriodCount > 0) ? $result['group_academic_term_total_weighted_marks'] / $this->groupAssessmentPeriodCount : ''
+                        // 'academic_term_total_weighted_marks' => ($this->groupAssessmentPeriodCount > 0) ? $result['group_academic_term_total_weighted_marks'] / $this->groupAssessmentPeriodCount : ''
+                        // 'academic_term_total_weighted_marks' => 1111
                     ];
                 }
             }
-            $studentSubjectResults = array_merge($withoutTerm->toArray(), $withTerm->toArray(), $averageRecords);
+            // $studentSubjectResults = array_merge($withoutTerm->toArray(), $withTerm->toArray(), $averageRecords);
+            $studentSubjectResults = array_merge($withoutTerm, $withTerm->toArray(), $averageRecords);
 
             return $studentSubjectResults;
         }
