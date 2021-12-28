@@ -287,4 +287,39 @@ class CustomReportsTable extends AppTable
             $settings['sql'] = $this->buildQuery($obj, $params, $byaccess, $toSql);
         }
     }
+
+    /*POCOR-6451 starts- institution filter*/
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $institutionQuery = $InstitutionsTable
+                                ->find('list', [
+                                    'keyField' => 'id',
+                                    'valueField' => 'code_name'
+                                ])
+                                ->order([$InstitutionsTable->aliasField('name') => 'ASC']);
+
+            $superAdmin = $this->Auth->user('super_admin');
+            if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                $userId = $this->Auth->user('id');
+                $institutionQuery->find('byAccess', ['userId' => $userId]);
+            }
+
+            $institutionList = $institutionQuery->toArray();
+           
+            $attr['onChangeReload'] = "institution_id";
+            if (count($institutionList) > 1) {
+                $attr['options'] = [0 => __('All Institutions')] + $institutionList;
+            } else {
+                $attr['options'] = $institutionList;
+            }
+            
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['required'] = true;
+            return $attr;
+        }
+    }
+    /*POCOR-6451 ends*/
 }
