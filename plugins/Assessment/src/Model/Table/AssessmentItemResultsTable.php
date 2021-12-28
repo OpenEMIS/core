@@ -176,7 +176,7 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('education_subject_id') => $subjectId,
                 $this->aliasField('student_id') => $studentId
             ])
-            ->group([$this->aliasField('assessment_period_id')])
+            // ->group([$this->aliasField('assessment_period_id')])
             ->hydrate(false);
 
         $results = $query->toArray(); 
@@ -288,30 +288,45 @@ class AssessmentItemResultsTable extends AppTable
         }
     }
 
-    public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId)
+    public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId)
     {   //add $institutionClassesId param in function for POCOR-6468
-        $query = $this->find();
-        $totalMarks = $query
-            ->select([
-                'calculated_total' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)')
-            ])
+        //$query = $this->find();
+        $query
+            ->find()
+            // ->select([
+            //     'calculated_total' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)')
+            // ])
+            // ->find('all')
             ->matching('Assessments')
             ->matching('AssessmentPeriods')
             ->matching('AssessmentGradingOptions.AssessmentGradingTypes')
+            ->order([
+                $this->aliasField('created') => 'DESC'
+                
+            ])
             ->where([
                 $this->aliasField('student_id') => $studentId,
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('education_subject_id') => $educationSubjectId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
-                $this->AssessmentGradingOptions->AssessmentGradingTypes->aliasField('result_type') => 'MARKS',
+                // $this->aliasField('assessment_period_id') => $assessmentPeriodId,
+                // $this->AssessmentGradingOptions->AssessmentGradingTypes->aliasField('result_type') => 'MARKS',
             ])
             ->group([
-                $this->aliasField('student_id'),
-                $this->aliasField('assessment_id'),
-                $this->aliasField('education_subject_id'),
-            ])
-            ->first();
+                // $this->aliasField('student_id'),
+                // $this->aliasField('assessment_id'),
+                $this->aliasField('assessment_period_id')
+            ]); 
 
-        return $totalMarks;
+        $query->formatResults(function ($results) {
+            echo "<pre>";print_r('sfs');die;
+            
+        });
+            // foreach($totalMarks AS $totalMarksdata){
+            //     $sum = $sum+$totalMarksdata->marks*$totalMarksdata->_matchingData['AssessmentPeriods']->weight;
+            // }
+
+
+        // return $totalMarks;
     }
 }
