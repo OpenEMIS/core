@@ -144,18 +144,22 @@ class InstitutionSubjectStudentsTable extends AppTable
         $educationGradeId = $results->education_grade_id;
         $institutionId = $results->institution_id;
         $institutionClassesId = $results->institution_classes_id;
+        $assessmentPeriodId = $results->assessment_period_id;
+        // echo "<pre>";print_r($assessmentPeriodId);die;
 
         $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-        $totalMark = $ItemResults->getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId);//POCOR-6468
+        $totalMark = $ItemResults->getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId );//POCOR-6468
+        echo "<pre>";print_r('fsdgft');die;
         if (!empty($totalMark)) {
             // update all records of student regardless of institution
             $modifiedUserId = (isset($event->data()[0]->modified_user_id) && $event->data()[0]->modified_user_id)?$event->data()[0]->modified_user_id:$event->data()[0]->created_user_id;
             $this->query()
                 ->update()
                 ->set([
-                    'total_mark' => $totalMark->calculated_total,
+                    // 'total_mark' => $totalMark->calculated_total,
+                    'total_mark' => $totalMark,
                     'modified_user_id' => $modifiedUserId,
-                    'modified' => Time::now()
+                    'created' => Time::now()
                 ])
                 ->where([
                     'student_id' => $studentId,
@@ -292,7 +296,6 @@ class InstitutionSubjectStudentsTable extends AppTable
 
         $query->formatResults(function ($results1) {
             $arrResults1 = is_array($results1) ? $results1 : $results1->toArray();
-           
             foreach ($arrResults1 as &$result) {
                 $assessmentItemResults = TableRegistry::get('assessment_item_results');
             
