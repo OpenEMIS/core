@@ -3588,14 +3588,12 @@ class InstitutionReportCardsTable extends AppTable
                         ->hydrate(false)
                         ->toArray();
 
-            //echo "<pre>"; print_r($areas); die;
             $totalArray = [];
             $totalArray = [
                 'id' => count($entity) + 1,
                 'name' => '',
             ];
             $entity[] = $totalArray;
-            //echo "<pre>"; print_r($entity); die;
             return $entity;
         }
     }//POCOR-6481 ends
