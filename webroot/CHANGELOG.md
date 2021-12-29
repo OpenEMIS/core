@@ -1,3 +1,6 @@
+### [3.72.4] - 2021-12-29
+- Bug Fixed: Institutions > Performance > Assessments : Assessment Marks Display
+
 ### [3.72.3] - 2021-12-22
 - Implemented: Develop Attendance > Student > No Scheduled Class function
 - Implemented: Development of Institution Profile placeholder
