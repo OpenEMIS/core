@@ -380,7 +380,6 @@ class ProfilesController extends AppController
                         $model->toggle('add', true);
                     }
                 }
-
                 // redirected view feature is to cater for the link that redirected to institution
                 if (in_array($alias, $this->redirectedViewFeature)) {
                     $model->toggle('view', false);
