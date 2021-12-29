@@ -473,6 +473,9 @@ class AssessmentResultsTable extends AppTable
                 ->select([
                     $AssessmentItemResults->aliasField('institution_id'),
                     $AssessmentItemResults->aliasField('academic_period_id'),
+                    $AssessmentItemResults->aliasField('education_subject_id'),//POCOR-6479
+                    $AssessmentItemResults->aliasField('education_grade_id'),//POCOR-6479
+                    $AssessmentItemResults->aliasField('assessment_period_id'),//POCOR-6479
                     $AssessmentItemResults->aliasField('assessment_id'),
                     $AssessmentItemResults->aliasField('student_id'),
                     $AssessmentItemResults->aliasField('marks'),
@@ -515,12 +518,33 @@ class AssessmentResultsTable extends AppTable
                 ])
                 ->hydrate(false)
                 ->toArray();
+                
                 foreach($withoutTerm AS $key => $value){
-                    // echo "<pre>";print_r($withoutTermData);die;
-                    $withoutTerm[$key]['academic_term_total_weighted_marks'] = $value['marks']*$value['assessment_period']['weight'];
+                    //POCOR-6479 starts
+                    $assessmentItemResults = TableRegistry::get('assessment_item_results');
+                    $assessmentItemResultsData = $assessmentItemResults->find()
+                            ->select([
+                                $assessmentItemResults->aliasField('marks')
+                            ])
+                            ->order([
+                                $assessmentItemResults->aliasField('modified') => 'DESC',
+                                $assessmentItemResults->aliasField('created') => 'DESC'
+                                
+                            ])
+                            ->where([
+                                $assessmentItemResults->aliasField('student_id') => $value['student_id'],
+                                $assessmentItemResults->aliasField('academic_period_id') => $value['academic_period_id'],
+                                $assessmentItemResults->aliasField('education_grade_id') => $value['education_grade_id'],
+                                $assessmentItemResults->aliasField('assessment_period_id') => $value['assessment_period_id'],
+                                $assessmentItemResults->aliasField('education_subject_id') => $value['education_subject_id'],
+                            ])
+                            ->first();
+                        
+                    $withoutTerm[$key]['marks'] = $assessmentItemResultsData->marks;
+                    $withoutTerm[$key]['academic_term_total_weighted_marks'] = $assessmentItemResultsData->marks*$value['assessment_period']['weight'];
+                    //POCOR-6479 ends
                 }
-                // echo "<pre>";print_r($withoutTerm);die;
-
+               
             $withTerm = $AssessmentItemResults->find()
                 ->select([
                     $AssessmentItemResults->aliasField('institution_id'),
