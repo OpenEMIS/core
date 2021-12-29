@@ -1210,6 +1210,11 @@ class InstitutionClassesTable extends ControllerActionTable
         return $entity->total_male_students + $entity->total_female_students;
     }
 
+    public function onExcelGetTotalStudents(Event $event, Entity $entity)
+    {
+        return $entity->total_male_students + $entity->total_female_students;
+    }
+
     public function onGetSubjects(Event $event, Entity $entity)
     {
         if (!empty($entity->id) ) {
@@ -1916,8 +1921,8 @@ class InstitutionClassesTable extends ControllerActionTable
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         
         $query
-        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students',
-            'total_students' => 'total_male_students+total_female_students'])
+        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'
+            ])
         ->where([
             $this->aliasField('academic_period_id ='). $selectedAcademicPeriodId,
             $this->aliasField('Institutions.id ='). $institutionID,
