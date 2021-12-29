@@ -247,6 +247,7 @@ class InstitutionSubjectStudentsTable extends AppTable
             ->where([
                 $InstitutionSubjects->aliasField('institution_id') => $institutionId,
                 $this->aliasField('education_grade_id') => $gradeId,
+                $this->aliasField('institution_class_id') => $classId //POCOR-6479 
                 //$StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']
             ])
             ->group([
