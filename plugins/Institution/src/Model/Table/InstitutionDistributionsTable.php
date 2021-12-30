@@ -214,9 +214,11 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     public function onUpdateFieldMealProgrammesId(Event $event, array $attr, $action, $request)
     {
-        // echo "<pre>"; print_r($request); die();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        // $session = $this->request->session();
+        // $institutionId = $session->read('Institution.Institutions.id');
+        //POCOR-6434[START]
+        $institutionId = $request->data['InstitutionDistributions'];
+        //POCOR-6434[END]
 
         list($levelOptions, $selectedLevel) = array_values($this->getNameOptions($institutionId));
         $attr['options'] = $levelOptions;
@@ -241,7 +243,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     }
 
-    public function getNameOptions($institutionId)
+    public function getNameOptions($options)
     {
         $institutionId = $options['institution_id'];
 
