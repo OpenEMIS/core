@@ -321,10 +321,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             openemisNo = StaffController.selectedStaffData.openemis_no;
         }
 
+        var staffUserPriId = 0;
+        if (StaffController.hasOwnProperty('selectedStaffData') && StaffController.selectedStaffData.id != undefined) {
+            staffUserPriId = StaffController.selectedStaffData.id;
+        }
         StaffController.displayedFTE = (fte*100) + '%';
         var startDate = StaffController.startDate;
         var endDate = StaffController.endDate;
-        InstitutionsStaffSvc.getPositionList(fte, startDate, endDate, openemisNo)
+        InstitutionsStaffSvc.getPositionList(fte, startDate, endDate, openemisNo, staffUserPriId)
         .then(function(response) {
             StaffController.institutionPositionOptions.availableOptions = response;
         }, function(errors) {
