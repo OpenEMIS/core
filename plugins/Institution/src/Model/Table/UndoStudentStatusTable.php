@@ -435,12 +435,16 @@ class UndoStudentStatusTable extends AppTable
                     );
                 } else if ($selectedStatus == $this->statuses['WITHDRAWN']) {
                     $data = $data
+                        /** START: POCOR-6469
                         ->leftJoin(['InstitutionStudent' => 'institution_students'], [
                             $this->aliasfield('id') . ' = ' . 'InstitutionStudent.previous_institution_student_id'
                         ])
+                        * END: POCOR-6469 */
                         ->where([
                             $conditions,
+                            /** START: POCOR-6469
                             'InstitutionStudent.student_status_id IS NULL' //no record after withdraw record
+                            * END: POCOR-6469 */
                         ]);
                 } else {
                     $data = $data
