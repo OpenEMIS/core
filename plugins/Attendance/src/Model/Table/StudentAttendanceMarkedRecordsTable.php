@@ -7,6 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Datasource\ResultSetInterface;
 
 class StudentAttendanceMarkedRecordsTable extends AppTable
 {
@@ -53,4 +54,58 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
         $ClassAttendanceRecords->dispatchEvent('Model.StudentAttendances.afterSaveCommit', [$entity], $ClassAttendanceRecords);
     }
+
+    /*POCOR-6021 starts*/
+    public function findNoScheduledClass(Query $query, array $options) 
+    {
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $institutionClassId = $options['institution_class_id'];
+        $educationGradeId = $options['education_grade_id'];        
+        $day = $options['day_id'];
+        $row = [];
+        
+        return $query
+                ->formatResults(function (ResultSetInterface $results) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day) { 
+                            return $results->map(function ($row) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day) {
+                                    $getRecord = $this->find('all')
+                                            ->where([
+                                                $this->aliasField('institution_class_id') => $institutionClassId,
+                                                $this->aliasField('education_grade_id') => $educationGradeId,
+                                                $this->aliasField('institution_id') => $institutionId,
+                                                $this->aliasField('academic_period_id') => $academicPeriodId,
+                                                $this->aliasField('date') => $day
+                                        ])->toArray();
+                                    if (!empty($getRecord)) {
+                                        $query = $this->query();
+                                        $query ->update()
+                                                ->set(['period' => 0, 'subject_id' => 0, 'no_scheduled_class' => 1])
+                                                ->where([
+                                                    $this->aliasField('institution_class_id') => $institutionClassId,
+                                                    $this->aliasField('education_grade_id') => $educationGradeId,
+                                                    $this->aliasField('institution_id') => $institutionId,
+                                                    $this->aliasField('academic_period_id') => $academicPeriodId,
+                                                    $this->aliasField('date') => $day
+                                                ])
+                                                ->execute();
+                                    } else {
+                                        $newRecord = $this->newEntity([
+                                                'institution_class_id' => $institutionClassId,
+                                                'education_grade_id' => $educationGradeId,
+                                                'institution_id' => $institutionId,
+                                                'academic_period_id' => $academicPeriodId,
+                                                'date' => $day,
+                                                'period' => 0,
+                                                'subject_id' => 0,
+                                                'no_scheduled_class' => 1
+                                            ]);
+                                        $this->save($newRecord);
+                                    }
+                                    $row->is_Scheduled = 1;
+                                    return $row;
+                            });
+                        });
+                        
+    }
+    /*POCOR-6021 ends*/
 }

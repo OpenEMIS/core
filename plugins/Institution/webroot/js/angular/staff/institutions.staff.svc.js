@@ -700,7 +700,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         });
     };
 
-    function getPositionList(fte, startDate, endDate, openemisNo) {
+    function getPositionList(fte, startDate, endDate, openemisNo, staffUserPriId = 0) {
         var vm = this;
         var institutionId = vm.getInstitutionId();
         var deferred = $q.defer();
@@ -710,7 +710,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         }
         // only 4 parameters is passed to getInstitutionPositions function. Parameters openemisNo is added but not in use.
         // var url = angular.baseUrl + '/Institution/Institutions/getInstitutionPositions/' + institutionId + '/' + fte + '/' + startDate + '/' + endDate + '/' + openemisNo;
-        var url = angular.baseUrl + '/Institution/Institutions/getInstitutionPositions/' + institutionId + '/' + fte + '/' + startDate + '/' + endDate;
+        var url = angular.baseUrl + '/Institution/Institutions/getInstitutionPositions/' + institutionId + '/' + fte + '/' + startDate + '/' + endDate + '/' + staffUserPriId;
 
         $http.get(url)
         .then(function(response){
