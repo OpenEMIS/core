@@ -1885,6 +1885,7 @@ class InstitutionClassesTable extends ControllerActionTable
         foreach ($cloneFields as $key => $value) {
             $newFields[] = $value;
             if($value['field'] == 'homeroom_teacher'){
+                
 
                 $newFields[] = [
                     'key' => 'InstitutionClasses.total_male_students',
@@ -1919,7 +1920,9 @@ class InstitutionClassesTable extends ControllerActionTable
         $requestQuery = $this->request->query;
         $institutionID = $_SESSION['Institution']['Institutions']['id'];
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-        
+        //$query->group($overwrite = false);
+        //print_r($query->sql()); exit;
+        //$query=str_replace('GROUP BY `ClassesStudents`.`id`', '', $query);
         $query
         ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'
             ])
