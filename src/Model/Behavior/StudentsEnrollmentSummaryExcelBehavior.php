@@ -288,14 +288,18 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                 }                
             }
         }
+        /* START : POCOR-6469
         if ($institutionId == '' || $institutionId == null || $institutionId < 1) {
+        * END : POCOR-6469 */
             $updated_result = [];
             foreach ($result AS $grade_data) {
+                $check_key = $grade_data[0].$grade_data[1].$grade_data[2].$grade_data[3].$grade_data[4];
                 if ($grade_data[5] != 0) {
-                    $updated_result[] = $grade_data;
+                    $updated_result[$check_key] = $grade_data;
                 }
             }
             return $updated_result;
+        /* START : POCOR-6469
         } else {
             $check_grade_exist = [];
             $updated_result= [];
@@ -307,6 +311,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
             }
             return $updated_result;
         }
+        * END : POCOR-6469 */
     }
     //POCOR-5863 ends
     private function getFields($table, $settings, $label)
