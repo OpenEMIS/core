@@ -91,7 +91,8 @@ class InstitutionReportCardsTable extends AppTable
                 'InstitutionRoomTypes',
                 'InstitutionRoomTypesCount',
                 //POCOR-6426 ends
-                'InstitutionAreaName'//POCOR-6481
+                'InstitutionAreaName',//POCOR-6481
+                'NonTeachingStaffCount'//POCOR-6481
             ]
         ]);
     }
@@ -165,6 +166,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionRoomTypesCount'] = 'onExcelTemplateInitialiseInstitutionRoomTypesCount';
         //POCOR-6426 ends
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionAreaName'] = 'onExcelTemplateInitialiseInstitutionAreaName';//POCOR-6481
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseNonTeachingStaffCount'] = 'onExcelTemplateInitialiseNonTeachingStaffCount';//POCOR-6481
         return $events;
     }
 
@@ -3480,7 +3482,130 @@ class InstitutionReportCardsTable extends AppTable
     //POCOR-6426 ends
 
     //POCOR-6481 starts
+    public function getAreaName($institution_id){
+        $institutionsTbl = TableRegistry::get('institutions');
+        $institutions = $institutionsTbl->find()
+                    ->where([$institutionsTbl->aliasField('id') => $institution_id])
+                    ->first(); 
+
+        $areasTbl = TableRegistry::get('areas');
+        $areaLevelsTbl = TableRegistry::get('area_levels');
+        $areaLevels = $areaLevelsTbl->find()->count();           
+
+        $areas = $areasTbl->find()
+                ->select([
+                    'area_id' => $areasTbl->aliasField('id'),
+                    'area_name' => $areasTbl->aliasField('name'),
+                    'area_parent_id' => $areasTbl->aliasField('parent_id')
+                ])
+                ->where([$areasTbl->aliasField('id') => $institutions->area_id])
+                ->first();
+
+        $areaLevelArr = [];
+        if($areas->area_parent_id > 0){
+            $areaLevelArr[0][] = $institutions->area_id; //first time we get area_id
+            $k = $areas->area_parent_id;
+            for($i=$areas->area_parent_id; $i>=1; $i--){
+                if($k == ''){
+                    break;
+                }
+                for($j=1; $j<$areaLevels; $j++){
+                    //get district's regions
+                    $areas1 = $areasTbl->find()
+                        ->select([
+                            'area_id' => $areasTbl->aliasField('id'),
+                            'area_name' => $areasTbl->aliasField('name'),
+                            'area_parent_id' => $areasTbl->aliasField('parent_id')
+                        ])
+                        ->where([$areasTbl->aliasField('id') => $k])
+                        ->first();
+                    if($areas1->area_parent_id > 0){
+                        $areas2 = $areasTbl->find()
+                            ->select([
+                                'area_id' => $areasTbl->aliasField('id'),
+                                'area_name' => $areasTbl->aliasField('name'),
+                                'area_parent_id' => $areasTbl->aliasField('parent_id')
+                            ])
+                            ->where([$areasTbl->aliasField('id') => $areas1->area_id])
+                            ->toArray();
+                        if(!empty($areas2)){
+                            foreach ($areas2 as $ar2) {
+                                $areaLevelArr[$j][] = $ar2->area_id;//district array
+                            }
+                        }
+                    } else {
+                        //get country's regions
+                        $areas3 = $areasTbl->find()
+                                ->select([
+                                    'area_id' => $areasTbl->aliasField('id'),
+                                    'area_name' => $areasTbl->aliasField('name'),
+                                    'area_parent_id' => $areasTbl->aliasField('parent_id')
+                                ])
+                                ->where([$areasTbl->aliasField('id') => $k])
+                                ->toArray();
+
+                        if(!empty($areas3)){
+                            $reg = [];
+                            foreach ($areas3 as $ar3) {
+                                $reg [] = $ar3->area_id; 
+                            }
+                            
+                            if(!empty($reg)){
+                                $areas4 = $areasTbl->find()
+                                        ->select([
+                                            'area_id' => $areasTbl->aliasField('id'),
+                                            'area_name' => $areasTbl->aliasField('name'),
+                                            'area_parent_id' => $areasTbl->aliasField('parent_id')
+                                        ])
+                                        ->where([$areasTbl->aliasField('id IN') => $reg])
+                                        ->toArray();
+                                if(!empty($areas4)){
+                                    foreach ($areas4 as $ar4) {
+                                        $areaLevelArr[$j][] = $ar4->area_id;//district array
+                                    }
+                                }
+                            }
+                        }
+                    } 
+                    $k = $areas1->area_parent_id;
+                }
+            }
+        }
+        $levelArr=[];
+        if(!empty($areaLevelArr)){
+            foreach ($areaLevelArr as $akey => $aval) {
+                $levelArr[] = $aval[0];
+            }
+        }
+        return $levelArr;
+    }
+
     public function onExcelTemplateInitialiseInstitutionAreaName(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $levelArr = $this->getAreaName($params['institution_id']);
+            $areasTbl = TableRegistry::get('areas');
+            $entity = $areasTbl->find()
+                        ->select([
+                            $areasTbl->aliasField('id'),
+                            $areasTbl->aliasField('name'),
+                        ])
+                        ->where([$areasTbl->aliasField('id IN') => $levelArr])
+                        ->order([$areasTbl->aliasField('id') => 'DESC'])
+                        ->hydrate(false)
+                        ->toArray();
+
+            $totalArray = [];
+            $totalArray = [
+                'id' => count($entity) + 1,
+                'name' => '',
+            ];
+            $entity[] = $totalArray;
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseNonTeachingStaffCount(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $institutionsTbl = TableRegistry::get('institutions');
@@ -3501,9 +3626,9 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$areasTbl->aliasField('id') => $institutions->area_id])
                     ->first();
 
-            $areaLevelArr = [];
+            $distArr = [];
             if($areas->area_parent_id > 0){
-                $areaLevelArr[0][] = $institutions->area_id; //first time we get area_id
+                $distArr[0][] = $institutions->area_id; //first time we get area_id
                 $k = $areas->area_parent_id;
                 for($i=$areas->area_parent_id; $i>=1; $i--){
                     if($k == ''){
@@ -3526,11 +3651,11 @@ class InstitutionReportCardsTable extends AppTable
                                     'area_name' => $areasTbl->aliasField('name'),
                                     'area_parent_id' => $areasTbl->aliasField('parent_id')
                                 ])
-                                ->where([$areasTbl->aliasField('id') => $areas1->area_id])
+                                ->where([$areasTbl->aliasField('parent_id') => $areas1->area_id])
                                 ->toArray();
                             if(!empty($areas2)){
                                 foreach ($areas2 as $ar2) {
-                                    $areaLevelArr[$j][] = $ar2->area_id;//district array
+                                    $distArr[$j][] = $ar2->area_id;//district array
                                 }
                             }
                         } else {
@@ -3541,15 +3666,13 @@ class InstitutionReportCardsTable extends AppTable
                                         'area_name' => $areasTbl->aliasField('name'),
                                         'area_parent_id' => $areasTbl->aliasField('parent_id')
                                     ])
-                                    ->where([$areasTbl->aliasField('id') => $k])
+                                    ->where([$areasTbl->aliasField('parent_id') => $k])
                                     ->toArray();
-
                             if(!empty($areas3)){
                                 $reg = [];
                                 foreach ($areas3 as $ar3) {
                                     $reg [] = $ar3->area_id; 
                                 }
-                                
                                 if(!empty($reg)){
                                     $areas4 = $areasTbl->find()
                                             ->select([
@@ -3557,11 +3680,11 @@ class InstitutionReportCardsTable extends AppTable
                                                 'area_name' => $areasTbl->aliasField('name'),
                                                 'area_parent_id' => $areasTbl->aliasField('parent_id')
                                             ])
-                                            ->where([$areasTbl->aliasField('id IN') => $reg])
+                                            ->where([$areasTbl->aliasField('parent_id IN') => $reg])
                                             ->toArray();
                                     if(!empty($areas4)){
                                         foreach ($areas4 as $ar4) {
-                                            $areaLevelArr[$j][] = $ar4->area_id;//district array
+                                            $distArr[$j][] = $ar4->area_id;//district array
                                         }
                                     }
                                 }
@@ -3571,23 +3694,41 @@ class InstitutionReportCardsTable extends AppTable
                     }
                 }
             }
-            $levelArr=[];
-            if(!empty($areaLevelArr)){
-                foreach ($areaLevelArr as $akey => $aval) {
-                    $levelArr[] = $aval[0];
+            
+            if(!empty($distArr)){
+                $insArr = [];
+                $i=0;
+                foreach ($distArr as $dis_key => $dis_val) {
+                    $institutionsResult = $institutionsTbl->find()
+                        ->where([$institutionsTbl->aliasField('area_id IN') => $dis_val])
+                        ->toArray();
+                    foreach ($institutionsResult as $instit) {
+                        $insArr[$i][] = $instit->id;//district array
+                    }
+
+                    $i++;
                 }
             }
-
-            $entity = $areasTbl->find()
-                        ->select([
-                            $areasTbl->aliasField('id'),
-                            $areasTbl->aliasField('name'),
-                        ])
-                        ->where([$areasTbl->aliasField('id IN') => $levelArr])
-                        ->order([$areasTbl->aliasField('id') => DESC])
-                        ->hydrate(false)
-                        ->toArray();
-
+            
+            $areaLevelsTbl = TableRegistry::get('area_levels');
+            $areaLevelsData = $areaLevelsTbl->find()
+                            ->toArray();
+            //get area names
+            $AreaNameData = $this->getAreaName($params['institution_id']);
+            foreach ($AreaNameData as $area_key => $area_val) {
+                $area_level ='';
+                foreach ($insArr as $insKey => $insVal) {
+                    if($area_key == $insKey){
+                        $area_level = $this->getNonTeachingStaffCountByArea($params['academic_period_id'], $insVal);
+                        break;
+                    }
+                }
+                $entity[] = [
+                        'id' => $area_val,
+                        'area_level' =>$area_level,
+                    ];
+            }
+            
             $totalArray = [];
             $totalArray = [
                 'id' => count($entity) + 1,
@@ -3596,5 +3737,41 @@ class InstitutionReportCardsTable extends AppTable
             $entity[] = $totalArray;
             return $entity;
         }
-    }//POCOR-6481 ends
+    }
+
+    public function getNonTeachingStaffCountByArea($academic_period, $institutionIds =[]){
+        $institution_id = implode(',', $institutionIds );
+        $connection = ConnectionManager::get('default');
+        $NonTeachingStaffData = $connection->execute("SELECT
+                            academic_periods.id,
+                            academic_periods.code,
+                            academic_periods.name,
+                            institution_staff.*
+                        FROM
+                            institution_staff
+                        INNER JOIN institutions ON `institutions`.`id` = `institution_staff`.`institution_id`
+                        INNER JOIN institution_positions ON `institution_positions`.`id` = `institution_staff`.`institution_position_id`
+                        INNER JOIN staff_position_titles ON staff_position_titles.id = institution_positions.staff_position_title_id
+                        INNER JOIN areas ON `areas`.`id` = `institutions`.`area_id`
+                        INNER JOIN academic_periods ON(
+                                (
+                                    (
+                                        `institution_staff`.`end_date` IS NOT NULL AND `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND `institution_staff`.`end_date` >= `academic_periods`.`start_date`
+                                    ) OR(
+                                        `institution_staff`.`end_date` IS NOT NULL AND `institution_staff`.`start_date` <= `academic_periods`.`end_date` AND `institution_staff`.`end_date` >= `academic_periods`.`end_date`
+                                    ) OR(
+                                        `institution_staff`.`end_date` IS NOT NULL AND `institution_staff`.`start_date` >= `academic_periods`.`start_date` AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`
+                                    )
+                                ) OR(
+                                    `institution_staff`.`end_date` IS NULL AND `institution_staff`.`start_date` <= `academic_periods`.`end_date` 
+                                )
+                            )
+                        WHERE
+                            staff_status_id = 1 AND academic_periods.academic_period_level_id != -1 AND staff_position_titles.type = 0 AND `institution_staff`.`institution_id` IN ($institution_id) AND academic_periods.id = $academic_period
+                        ORDER BY
+                            institution_staff.staff_id ASC");
+    
+        return count($NonTeachingStaffData);
+    }
+    //POCOR-6481 ends  
 }
