@@ -105,6 +105,7 @@ class InstitutionClassStudentsTable extends AppTable
                     $this->aliasField('education_grade_id') => $student->education_grade_id,
                     $this->aliasField('student_id') => $student->student_id,
                 ])->first();
+                // echo "<pre>"; print_r($student); die();
 
             if (!empty($classStudent) && $classStudent->student_status_id != $student->student_status_id) {
                 if ($student->next_institution_class_id > 0) {
@@ -112,6 +113,19 @@ class InstitutionClassStudentsTable extends AppTable
                 }
                 $classStudent->student_status_id = $student->student_status_id;
                 $this->save($classStudent);
+            }
+            else{
+                $results = $this->find()
+                ->matching('InstitutionClasses')
+                ->where([
+                    'InstitutionClasses.academic_period_id' => $student->academic_period_id,
+                    $this->aliasField('education_grade_id') => $student->education_grade_id,
+                    $this->aliasField('student_id') => $student->student_id,
+                ])->first();
+                
+                $results->student_status_id = 1;
+                $this->save($results);
+            
             }
         }
     }
