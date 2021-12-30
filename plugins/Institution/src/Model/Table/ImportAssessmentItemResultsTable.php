@@ -452,7 +452,14 @@ class ImportAssessmentItemResultsTable extends AppTable {
                         ->first();
         $tempRow['assessment_id'] = $assessment->assessment_id;
         $tempRow['institution_classes_id'] = $tempRow['class_id'];
-        
+        /*POCOR-6486 starts*/
+        $enteredMarks = $tempRow['marks'];
+        if (!empty(enteredMarks) && $enteredMarks > 100) {
+            $rowInvalidCodeCols['marks'] = __('Marks Should be between 0 to 100');
+            $tempRow['marks'] = false;
+            return false;
+        }
+        /*POCOR-6486 ends*/
         return true;
     }
 }
