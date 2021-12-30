@@ -92,7 +92,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         ]);
 
         $this->setDeleteStrategy('restrict');
-		$this->addBehavior('SubjectExcel', ['excludes' => ['security_group_id','identity_number','identity_type','student_status','openEMIS_ID','gender'], 'pages' => ['view']]);
+		$this->addBehavior('SubjectExcel', ['excludes' => ['security_group_id','identity_number','identity_type','student_status','openEMIS_ID','gender','student_name'], 'pages' => ['view']]);
     }
 
     public function implementedEvents()
@@ -1917,7 +1917,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
       //echo "<pre>";  print_r($cloneFields); exit;
         foreach ($cloneFields as $key => $value) {
             $newFields[] = $value;
-            if($value['field'] == 'student_name'){
+            if($value['field'] == 'subject_name'){
 
                 $newFields[] = [
                     'key' => 'InstitutionSubjects.total_male_students',
@@ -1959,7 +1959,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'total_female_students' => 'InstitutionSubjects.total_female_students',
             'institution_subject_id' => 'InstitutionSubjects.id'
         ])
-        ->group($this->aliasField('id'))    
+        ->group('InstitutionSubjects.id')    
         ->where([
             $this->aliasField('academic_period_id = ').$selectedAcademicPeriodId,
             $this->aliasField('institution_id = ').$institutionId,
