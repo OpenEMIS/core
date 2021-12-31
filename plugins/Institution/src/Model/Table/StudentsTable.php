@@ -224,8 +224,15 @@ class StudentsTable extends ControllerActionTable
         $UserContact = TableRegistry::get('User.Contacts');
         $StudentStatuses = TableRegistry::get('student_statuses');
 
+
+        /* $subquery = $this->Users->find()->select([
+            'guartdian_name' => "CONCAT(Users.first_name,' ',Users.last_name)"
+        ])
+        ->where([
+            'Users.id = StudentGurdians.guardian_id'
+        ]); */
         $query
-            ->where([$this->aliasField('institution_id') => $institutionId])
+       ->where([$this->aliasField('institution_id') => $institutionId])
             ->contain([
                 'Users.Genders',
                 'Institutions',
@@ -329,51 +336,51 @@ class StudentsTable extends ControllerActionTable
                 [
                     $ContactTypes->aliasField('id = ') . $UserContact->aliasField('contact_type_id')
                 ]
-            );
+            )// POCOR-6338 starts
+            ->leftJoin(
+                [$StudentStatuses->alias() => $StudentStatuses->table()],
+                [
+                    $StudentStatuses->aliasField('id != ') => 3
+                ]
+            );// POCOR-6338 ends
 
         if ($periodId > 0) {
-            $query->where([$this->aliasField('academic_period_id') => $periodId]);
-            $query ->group([$this->Users->aliasField('openemis_no')]);// POCOR-6338 
+            $query->where([$this->aliasField('academic_period_id') => $periodId,
+                            'StudentStatuses.id !='=> 3
+                            ]);
+            $query->group('student_id');// POCOR-6338 
         }
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($periodId) {
+            return $results->map(function ($row) use($periodId) {
                 // POCOR-6338 starts
                 $Users = TableRegistry::get('security_users');
                 $institutionStudents = TableRegistry::get('institution_students');
-                /*POCOR-6400 starts*/
-                $InstitutionStudents = TableRegistry::get('InstitutionStudents');
-                $InstitutionStudentsCurrentData = $InstitutionStudents
-                ->find()
-                ->select([
-                    'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
-                ])
-                ->where([
-                    $InstitutionStudents->aliasField('student_id') => $row->student_id
-                ])
-                ->order([$InstitutionStudents->aliasField('InstitutionStudents.created') => 'DESC'])
-                ->autoFields(true)
-                ->first();
-                
-                if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id)) {
-                    $previousInstStdId = $InstitutionStudents
-                                        ->find()
-                                        ->select([
-                                            'InstitutionStudents.id', 'InstitutionStudents.student_status_id'
-                                        ])
-                                        ->where([
-                                            $InstitutionStudents->aliasField('student_id') => $row->student_id,
-                                            $InstitutionStudents->aliasField('id') => $InstitutionStudentsCurrentData->previous_institution_student_id
-                                        ])->first();
-                    if (!empty($previousInstStdId) && $previousInstStdId->student_status_id == 8) {
-                        $row['student_status'] = "Enrolled (Repeater)";
-                    } else {
-                        $StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
-                        $statusName = $StudentStatusesTable->get($InstitutionStudentsCurrentData->student_status_id)->name;
-                        $row['student_status'] = $statusName ;
-                    }
-                }
-                /*POCOR-6400 ends*/
-                
+                $user_data= $Users
+                            ->find()
+                            ->select([
+                                        'student_status'=>'(case 
+                                            when StudentStatuses.name = "Repeated" then "Enrolled (Repeater)"
+                                            when StudentStatuses.name = "Enrolled" then "Enrolled"
+                                            when StudentStatuses.name = "Transferred" then "Transferred"
+                                            when StudentStatuses.name = "Withdrawn" then "Withdrawn"
+                                            when StudentStatuses.name = "Graduated" then "Graduated"
+                                            else "Promoted" end
+                                        )'
+                            ])
+                            ->leftJoin(['InstitutionStudents' => 'institution_students'], [
+                                'InstitutionStudents.student_id = '.$Users->aliasField('id')
+                            ]) 
+                            ->leftJoin(['StudentStatuses' => 'student_statuses'], [
+                                'StudentStatuses.id = InstitutionStudents.student_status_id'
+                            ])
+                            ->where([
+                                'security_users.openemis_no' => $row->openemis_no,
+                                'InstitutionStudents.institution_id'=> $row->institution_id,
+                                'InstitutionStudents.academic_period_id'=> $periodId //POCOR-6487
+                            ])
+                            ->order(['InstitutionStudents.created' => DESC])
+                            ->first();
+                $row['student_status'] = $user_data->student_status;
                 // POCOR-6338 ends                
                 // POCOR-6129 custome fields code
                 $Guardians = TableRegistry::get('student_custom_field_values');
@@ -391,7 +398,7 @@ class StudentsTable extends ControllerActionTable
                     'textarea_value'                 => $Guardians->aliasField('textarea_value'),
                     'date_value'                     => $Guardians->aliasField('date_value'),
                     'time_value'                     => $Guardians->aliasField('time_value'),
-                    'checkbox_value_text'            => 'studentCustomFieldOptions.name',
+                    'checkbox_value_text'            => $studentCustomFieldOptions->aliasField('name'),
                     'question_name'                  => 'studentCustomField.name',
                     'field_type'                     => 'studentCustomField.field_type',
                     'field_description'              => 'studentCustomField.description',
@@ -401,10 +408,10 @@ class StudentsTable extends ControllerActionTable
                     [
                         'studentCustomField.id = '.$Guardians->aliasField('student_custom_field_id')
                     ]
-                )->leftJoin(
-                    ['studentCustomFieldOptions' => 'student_custom_field_options'],
+                ) ->leftJoin(
+                    [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
                     [
-                        'studentCustomFieldOptions.id = '.$Guardians->aliasField('number_value')
+                        $studentCustomFieldOptions->aliasField('student_custom_field_id') => $Guardians->aliasField('student_custom_field_id')
                     ]
                 )
                 ->where([
@@ -417,8 +424,37 @@ class StudentsTable extends ControllerActionTable
                     if ($fieldType == 'TEXT') {
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->text_value;
                     } else if ($fieldType == 'CHECKBOX') {
-                        $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = trim($existingCheckboxValue, ',');
+                        $Guardians_data_for_checkbox = TableRegistry::get('student_custom_field_values');
+                        $studentCustomFieldOptions_for_checkbox = TableRegistry::get('student_custom_field_options');
+
+                        $Guardians_data_for_checkbox_data = $Guardians_data_for_checkbox->find()
+                            ->select([
+                                $Guardians_data_for_checkbox->aliasField('student_custom_field_id'),
+                                $Guardians_data_for_checkbox->aliasField('student_id'),
+                                $Guardians_data_for_checkbox->aliasField('number_value'),
+                            ])
+                            ->where([
+                                $Guardians_data_for_checkbox->aliasField('student_custom_field_id') => $guadionRow->student_custom_field_id,
+                                $Guardians_data_for_checkbox->aliasField('student_id') => $guadionRow->student_id,
+                            ])->toArray();
+
+                        
+                        $checkbox_data_arr = [];
+                        foreach($Guardians_data_for_checkbox_data AS $Guardians_data_for_checkbox_data_value){
+                            $studentCustomFieldOptions_Data = $studentCustomFieldOptions_for_checkbox->find()
+                                ->select([
+                                    $studentCustomFieldOptions_for_checkbox->aliasField('id'),
+                                    $studentCustomFieldOptions_for_checkbox->aliasField('name'),
+                                    
+                                ])
+                                ->where([
+                                    $studentCustomFieldOptions_for_checkbox->aliasField('id') => $Guardians_data_for_checkbox_data_value->number_value
+                                ])->first();
+                            $checkbox_data_arr[] = $studentCustomFieldOptions_Data->name;
+                        }
+
+                        // $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = implode(',', $checkbox_data_arr) ;
                     } else if ($fieldType == 'NUMBER') {
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->number_value;
                     } else if ($fieldType == 'DECIMAL') {
@@ -426,7 +462,14 @@ class StudentsTable extends ControllerActionTable
                     } else if ($fieldType == 'TEXTAREA') {
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->textarea_value;
                     } else if ($fieldType == 'DROPDOWN') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->checkbox_value_text;
+                        $studentCustomFieldOptionsData = $studentCustomFieldOptions->find()
+                        ->select([
+                            'dropdown_value_text' => $studentCustomFieldOptions->aliasField('name')
+                        ])
+                        ->where([
+                            $studentCustomFieldOptions->aliasField('id') => $guadionRow->number_value,
+                        ])->toArray();
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $studentCustomFieldOptionsData[0]->dropdown_value_text;
                     } else if ($fieldType == 'DATE') {
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
                     } else if ($fieldType == 'TIME') {
@@ -437,6 +480,7 @@ class StudentsTable extends ControllerActionTable
                         $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->field_description;
                     }
                 }
+                // echo "<pre>";print_r($row);die;
                 // POCOR-6129 custome fields code
 
                 return $row;
@@ -1434,6 +1478,9 @@ class StudentsTable extends ControllerActionTable
 
 
 			if (!empty($bodyData)) {
+
+               // echo "<pre>";
+               // print_r($bodyData); exit;
 				foreach ($bodyData as $key => $value) {
 					$user_id = $value->user->id;
 					$openemis_no = $value->user->openemis_no;
@@ -1444,17 +1491,22 @@ class StudentsTable extends ControllerActionTable
 					$preferred_name = $value->user->preferred_name;
 					$gender = $value->user->gender->name;
 					$nationality = $value->user->main_nationality->name;
+                    // POCOR-6283 start
+					$dateOfBirth = $value->user->date_of_birth; 
 
-					if(!empty($value->user->date_of_birth)) {
+                    // commented because date can be converted directly no need to use loop
+					/* if(!empty($value->user->date_of_birth)) {
 						foreach ($value->user->date_of_birth as $key => $date) {
 							$dateOfBirth = $date;
 						}
-					}
+					} */
+                    // POCOR-6283 end
 
 					$address = $value->user->address;
 					$postalCode = $value->user->postal_code;
 					$addressArea = $value->user->address_area->name;
 					$birthplaceArea = $value->user->birthplace_area->name;
+                    $role = $value->user->is_student;
 
 					$contactValue = [];
 					$contactType = [];
@@ -1484,14 +1536,21 @@ class StudentsTable extends ControllerActionTable
 					$studentStatus = $value->student_status->name;
 
 					if(!empty($value->start_date)) {
+                        $i=0;
+
 						foreach ($value->start_date as $key => $date) {
-							$startDate = $date;
-						}
+                            if($i==0){
+        							$startDate = $date;
+                                }
+						$i++;}
 					}
 
 					if(!empty($value->end_date)) {
+                        $i=0;
 						foreach ($value->end_date as $key => $date) {
-							$endDate = $date;
+                            if($i==0){
+							  $endDate = $date;
+                           $i++; }
 						}
 					}
 
@@ -1528,6 +1587,7 @@ class StudentsTable extends ControllerActionTable
 				'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
 				'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
 				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
+                'role_name' => ($role == 1) ? 'student' : NULL
 			];
 
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
@@ -2160,7 +2220,11 @@ class StudentsTable extends ControllerActionTable
 
         foreach ($StudentAttendances as $key => $attendances) {
 
-			$total_present = $total_absent = $total_late = 0;
+            // START: POCOR-6382
+			// $total_present = $total_absent = $total_late = 0;
+            $total_absent = $total_late = 0;
+            $total_present = -1;
+            // END: POCOR-6382
 
 			foreach ($attendances as $key => $attendance) {
 
