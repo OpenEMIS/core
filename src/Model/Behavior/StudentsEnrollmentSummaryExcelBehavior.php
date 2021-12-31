@@ -251,8 +251,14 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                                                 $StudentsEnrollmentSummary->aliasfield('academic_period_id').' = ' . 'AcademicPeriods.id'
                                             ])
-                                ->where(['Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId, $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id, $StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus])
-                                ->group(['EducationGrades.id', 'Genders.id'])->toArray();
+                                ->where([
+                                    'Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId,
+                                    $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id
+                                ]);
+                                if ($institutionId > 0) {
+                                    $instStudData->where([$StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus]);
+                                }
+                                $instStudData->group(['EducationGrades.id', 'Genders.id'])->toArray();
                 
                 if(!empty($instStudData)){
                     foreach ($instStudData as $key => $value) {
@@ -277,22 +283,35 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                     $result[$i][] = $AcademicPeriodData->name;
                     $result[$i][] = '';
                     $result[$i][] = '';
-                    $result[$i][] = ' 0';
+                    $result[$i][] = 0;
                     $i++;
                 }                
             }
         }
-
-        $check_grade_exist = [];
-        $updated_result= [];
-        foreach ($result AS $grade_data) {
-            if (!in_array($grade_data[4].$grade_data[3], $check_grade_exist)) {
-                $updated_result[] = $grade_data;
+        /* START : POCOR-6469
+        if ($institutionId == '' || $institutionId == null || $institutionId < 1) {
+        * END : POCOR-6469 */
+            $updated_result = [];
+            foreach ($result AS $grade_data) {
+                $check_key = $grade_data[0].$grade_data[1].$grade_data[2].$grade_data[3].$grade_data[4];
+                if ($grade_data[5] != 0) {
+                    $updated_result[$check_key] = $grade_data;
+                }
             }
-            $check_grade_exist[] = $grade_data[4].$grade_data[3];
+            return $updated_result;
+        /* START : POCOR-6469
+        } else {
+            $check_grade_exist = [];
+            $updated_result= [];
+            foreach ($result AS $grade_data) {
+                if (!in_array($grade_data[4].$grade_data[3], $check_grade_exist)) {
+                    $updated_result[] = $grade_data;
+                }
+                $check_grade_exist[] = $grade_data[4].$grade_data[3];
+            }
+            return $updated_result;
         }
-
-        return $updated_result;
+        * END : POCOR-6469 */
     }
     //POCOR-5863 ends
     private function getFields($table, $settings, $label)
