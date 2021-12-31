@@ -184,7 +184,10 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             )
             ->group([
                 $ClassGrades->aliasField('institution_class_id'),
+                /** Ticket : POCOR-6480
+                 * Added because showing same records multiple time
                 $Assessments->aliasField('id')
+                **/
             ])
             ->autoFields(true)
             ;
