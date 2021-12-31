@@ -31,6 +31,11 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             icon: 'fa fa-circle-o',
             color: '#CC5C5C'
         },
+        'NoScheduledClicked': {
+            code: 'NoScheduledClicked',
+            icon: '',
+            color: 'black',
+        }
     };
 
     const icons = {
@@ -92,6 +97,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         getSubjectOptions: getSubjectOptions,
         getPeriodOptions: getPeriodOptions,
         getIsMarked: getIsMarked,
+        getNoScheduledClassMarked : getNoScheduledClassMarked,
         getClassStudent: getClassStudent,
 
         getSingleDayColumnDefs: getSingleDayColumnDefs,
@@ -392,6 +398,38 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             .ajax({success: success, defer: true});
     }
 
+    function getNoScheduledClassMarked(params) {
+        console.log("parms", params)
+        var extra = {
+            institution_id: params.institution_id,
+            institution_class_id: params.institution_class_id,
+            education_grade_id: params.education_grade_id,
+            academic_period_id: params.academic_period_id,
+            day_id: params.day_id,
+            attendance_period_id: params.attendance_period_id,
+            subject_id: params.subject_id
+        };
+
+        if (extra.day_id == ALL_DAY_VALUE) {
+            return $q.resolve(false);
+        }
+
+        var success = function(response, deferred) {
+            var count = response.data.total;
+            console.log("response.data", response.data)
+            if (angular.isDefined(count)) {
+                var isMarked = count > 0;
+                deferred.resolve(isMarked);
+            } else {
+                deferred.reject('There was an error when retrieving the is_marked record');
+            }
+        };
+
+        return StudentAttendanceMarkedRecords
+            .find('NoScheduledClass', extra)
+            .ajax({success: success, defer: true});
+    }
+
     // save error
     function clearError(data, skipKey) {
         if (angular.isUndefined(data.save_error)) {
@@ -523,7 +561,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return columnDefs;
     }
 
-    function getSingleDayColumnDefs(period) {
+    function getSingleDayColumnDefs(period, noScheduledClicked) {
         var columnDefs = [];
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
@@ -571,7 +609,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                     var data = params.data;
 
                     if (mode == 'view') {
-                        return getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed);
+                        return getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed, noScheduledClicked);
                     }
                     else if (mode == 'edit') {
                         var api = params.api;
@@ -896,12 +934,20 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return eSelectWrapper;
     }
 
-    function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed) {
+    function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed, noScheduledClicked) {
         if (angular.isDefined(data.institution_student_absences)) {
             var html = '';
-            if (isMarked) {
+            if (isMarked) {console.log('in')
                 var id = (data.absence_type_id === null) ? 0 : data.institution_student_absences.absence_type_id;
-                var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);
+                if(noScheduledClicked)
+                    var absenceTypeObj = {
+                        id: null,
+                        code: 'NoScheduledClicked',
+                        name: 'No Lessons'
+                    };
+                else
+                    var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);
+            
                 switch (absenceTypeObj.code) {
                     case attendanceType.PRESENT.code:
                         html = '<div style="color: ' + attendanceType.PRESENT.color + ';"><i class="' + attendanceType.PRESENT.icon + '"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
@@ -915,15 +961,22 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                     case attendanceType.EXCUSED.code:
                         html = '<div style="color: ' + attendanceType.EXCUSED.color + '"><i class="' + attendanceType.EXCUSED.icon + '"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
                         break;
+                    case attendanceType.NoScheduledClicked.code:
+                        html = '<div style="color: ' + attendanceType.NoScheduledClicked.color + '"> <span> ' + absenceTypeObj.name + ' </span></div>';
+                        break;
                     default:
                         break;
                 }
                 return html;
             } else {
-                if (isSchoolClosed) {
+                if (isSchoolClosed) {console.log('in')
                     html = '<i style="color: #999999;" class="fa fa-minus"></i>';
-                } else {
-                    html = '<i class="' + icons.PRESENT + '"></i>';
+                } else {console.log('out')
+                    if (data.is_NoClassScheduled == 1) {
+                        html = '<i style="color: #000000;"><span>No Lessons</span></i>';
+                    } else {
+                        html = '<i class="' + icons.PRESENT + '"></i>';
+                    }
                 }
             }
             return html;
