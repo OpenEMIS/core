@@ -356,6 +356,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 }
                 if (typeof userRecord[attr['identity_type_mapping']] != 'undefined') {
                     identityType = userRecord[attr['identity_type_mapping']];
+                    newUserRecord['identity_number'] = userRecord[attr['identity_number_mapping']]; //POCOR-5924
                 }
                 if (typeof userRecord[attr['address_mapping']] != 'undefined') {
                     newUserRecord['address'] = userRecord[attr['address_mapping']];

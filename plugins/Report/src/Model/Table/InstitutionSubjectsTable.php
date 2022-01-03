@@ -56,7 +56,7 @@ class InstitutionSubjectsTable extends AppTable  {
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
         $Staff = TableRegistry::get('User.Users');
-
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $query
             ->select([
                 'institution_code' => 'Institutions.code',
@@ -85,6 +85,7 @@ class InstitutionSubjectsTable extends AppTable  {
                 $this->aliasField('education_subject_id'),
                 $this->aliasField('academic_period_id'),
                 $this->aliasField('academic_period_id'),
+                'grade_name' => 'EducationGrades.name'
             ])
             ->contain([
                 'Institutions.Areas',
@@ -93,11 +94,14 @@ class InstitutionSubjectsTable extends AppTable  {
                 'EducationSubjects',
                 'AcademicPeriods'
             ])
-            ->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+            ->innerJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
                 $this->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
             ])
-            ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+            ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
                 $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
+            ])
+            ->innerJoin([$EducationGrades->alias() => $EducationGrades->table()], [
+                $EducationGrades->aliasField('id =') . $this->aliasField('education_grade_id')
             ])
             ->where($conditions);
             
@@ -281,7 +285,14 @@ class InstitutionSubjectsTable extends AppTable  {
                     'type' => 'string',
                     'label' => __('Subject Name')
                 ];
-                
+                /*POCOR-6334 starts*/
+                $newFields[] = [
+                    'key' => 'EducationGrades.name',
+                    'field' => 'grade_name',
+                    'type' => 'string',
+                    'label' => __('Eductaion Grade')
+                ];
+                /*POCOR-6334 ends*/
                 $newFields[] = [
                     'key' => 'staff_name',
                     'field' => 'staff_name',

@@ -51,7 +51,7 @@
                         'options' => $categoryOptions,
                         'url' => $baseUrl,
                         'data-named-key' => 'category',
-                        'data-named-group' => 'area, period, month', //POCOR-5695
+                        'data-named-group' => 'level, area, period, month', //POCOR-5695
                         'escape' => false //POCOR-5695
                     ];
                     if (!empty($dataNamedGroup)) {
@@ -62,6 +62,22 @@
                 }
                 //POCOR-5695 starts
                 if($this->request->params['action'] == 'Sessions' || $this->request->params['action'] == 'Results'){
+                    if (!empty($levelOptions)) {
+                        $inputOptions = [
+                            'class' => 'form-control',
+                            'label' => false,
+                            'options' => $levelOptions,
+                            'url' => $baseUrl,
+                            'data-named-key' => 'level',
+                            'data-named-group' => 'category, area, period, month',
+                            'escape' => false
+                        ];
+                        if (!empty($dataNamedGroup)) {
+                            $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
+                            $dataNamedGroup[] = 'level';
+                        }
+                        echo $this->Form->input('level', $inputOptions);
+                    }
                     if (!empty($areaOptions)) {
                         $inputOptions = [
                             'class' => 'form-control',
@@ -69,7 +85,7 @@
                             'options' => $areaOptions,
                             'url' => $baseUrl,
                             'data-named-key' => 'area',
-                            'data-named-group' => 'category, period, month',
+                            'data-named-group' => 'category, level, period, month',
                             'escape' => false
                         ];
                         if (!empty($dataNamedGroup)) {
@@ -86,7 +102,7 @@
                             'options' => $periodsOptions,
                             'url' => $baseUrl,
                             'data-named-key' => 'period',
-                            'data-named-group' => 'category, area, month',
+                            'data-named-group' => 'category, level, area, month',
                             'escape' => false
                         ];
                         if (!empty($dataNamedGroup)) {
@@ -103,7 +119,7 @@
                             'options' => $monthOptions,
                             'url' => $baseUrl,
                             'data-named-key' => 'month',
-                            'data-named-group' => 'category, area, period',
+                            'data-named-group' => 'category, level, area, period',
                             'escape' => false
                         ];
                         if (!empty($dataNamedGroup)) {
