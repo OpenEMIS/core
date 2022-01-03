@@ -256,7 +256,7 @@ $panelHeader = $this->fetch('panelHeader');
                 <div id="institution-student-attendances-table" class="table-wrapper">
                     <div ng-if="$ctrl.gridReady" kd-ag-grid="$ctrl.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
                 </div>
-            </bg-pane>z
+            </bg-pane>
 
             <bg-pane class="split-content splitter-slide-out splitter-filter" min-size-p="20" max-size-p="30" size-p="20">
                 <div class="split-content-header">
