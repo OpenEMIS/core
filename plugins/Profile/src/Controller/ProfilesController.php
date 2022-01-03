@@ -48,7 +48,7 @@ class ProfilesController extends AppController
 
         $this->ControllerAction->models = [
             // Users
-            'Accounts'              => ['className' => 'Profile.Accounts', 'actions' => $accountPermissions],
+            'Accounts'              => ['className' => 'Profile.Accounts', 'actions' => ['view', 'edit']],
             'History'               => ['className' => 'User.UserActivities', 'actions' => ['index']],
 
             // Student
@@ -81,6 +81,7 @@ class ProfilesController extends AppController
 
     // CAv4
     public function StudentAbsences()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']); }
+    public function Absences()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']); }
     public function StudentFees()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']); }
     public function StaffEmployments() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']); }
     public function StaffQualifications()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']); }
@@ -342,6 +343,11 @@ class ProfilesController extends AppController
                     $model->toggle('add', false);
                     $model->toggle('edit', false);
                     $model->toggle('remove', false);
+                    $enabledEditOperation = ['Profiles', 'Demographic', 'Identities', 'UserNationalities', 'UserLanguages', 'Attachments'];
+                    if (in_array($alias, $enabledEditOperation)) {
+                        $model->toggle('edit', true);
+                        $model->toggle('add', true);
+                    }
                 }
 
                 // redirected view feature is to cater for the link that redirected to institution
@@ -351,7 +357,7 @@ class ProfilesController extends AppController
             }
         } else if ($model instanceof \App\Model\Table\AppTable) { // CAv3
             $alias = $model->alias();
-            $excludedModel = ['Accounts', 'Extracurriculars'];
+            $excludedModel = ['Accounts', 'Extracurriculars', 'UserActivities'];
 
             if (!in_array($alias, $excludedModel)) {
                 $model->addBehavior('ControllerAction.HideButton');
