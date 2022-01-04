@@ -26,6 +26,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
     public function initialize(array $config)
     {
         parent::initialize($config);
+
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
@@ -37,7 +38,8 @@ class TrainingSessionResultsTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'assignee_id']);
         $this->addBehavior('User.AdvancedNameSearch');
         $this->toggle('add', false);
-	}
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportTrainingSessionTraineeResults']);//5695
+    }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -70,7 +72,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
     }
 
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
-	{
+	{   
         $process = function($model, $entity) use ($data) {
         	$sessionId = $data[$model->alias()]['training_session_id'];
 			$resultTypeId = $data[$model->alias()]['result_type'];
@@ -82,12 +84,15 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				if (strlen($trainee['result']) > 0) {
 					$resultData = [
 						'result' => $trainee['result'],
-						'training_result_type_id' => $resultTypeId,
+                        'attendance_days' => $trainee['attendance_days'],//5695
+                        'certificate_number' => $trainee['certificate_number'],//5695
+                        'practical' => $trainee['practical'],//5695
+						//'training_result_type_id' => $resultTypeId, //5695
 						'trainee_id' => $trainee['trainee_id'],
 						'training_session_id' => $sessionId,
 						'counterNo' => $key
 					];
-
+                    
 					if (isset($trainee['id'])) {
 						$resultData['id'] = $trainee['id'];
 					}
@@ -99,8 +104,8 @@ class TrainingSessionResultsTable extends ControllerActionTable
 					}
 				}
 			}
-
-			$success = $this->connection()->transactional(function() use ($newEntities, $entity) {
+           
+			$success = $this->connection()->transactional(function() use ($newEntities, $entity) { 
                 $return = true;
                 foreach ($newEntities as $key => $newData) {
                     $TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
@@ -111,6 +116,28 @@ class TrainingSessionResultsTable extends ControllerActionTable
 
                         $entity->errors('trainees', ['result' => $newEntity->errors('result')]);
                     }
+                    //5695 starts
+                    if ($newEntity->errors('attendance_days')) {
+                        $counterNo = $newData['counterNo'];
+                        $entity->trainees[$counterNo]['errors']['attendance_days'] = $newEntity->errors();
+                        
+                        $entity->errors('trainees', ['attendance_days' => $newEntity->errors('attendance_days')]);
+                    }
+
+                    if ($newEntity->errors('certificate_number')) {
+                        $counterNo = $newData['counterNo'];
+                        $entity->trainees[$counterNo]['errors'] = $newEntity->errors();
+
+                        $entity->errors('trainees', ['certificate_number' => $newEntity->errors('certificate_number')]);
+                    }
+
+                    if ($newEntity->errors('practical')) {
+                        $counterNo = $newData['counterNo'];
+                        $entity->trainees[$counterNo]['errors'] = $newEntity->errors();
+
+                        $entity->errors('trainees', ['practical' => $newEntity->errors('practical')]);
+                    }//5695 ends
+
                     if (!$TraineeResults->save($newEntity)) {
                         $return = false;
                     }
@@ -119,7 +146,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
                 return $return;
             });
 
-            if ($success) {
+            if ($success) { 
             	if (!empty($deleteIds)) {
             		$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
             		$TraineeResults->deleteAll([
@@ -204,14 +231,56 @@ class TrainingSessionResultsTable extends ControllerActionTable
 	}
 
 	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[])
-	{
+	{ 
         $sessionId = $entity->training_session_id;
-		$selectedResultType = $this->request->query('result_type');
+		//$selectedResultType = $this->request->query('result_type'); //5695 starts
+        
+        //5695 starts
+        $TraineesSessions = TableRegistry::get('training_sessions');
+        $TraineesSessions = $TraineesSessions->find()->where([
+                                        $TraineesSessions->aliasField('id') => $sessionId
+                                    ])->first();
+        if(!empty($TraineesSessions)){
+            $TrainingCoursesResultTypes = TableRegistry::get('training_courses_result_types');
+            $TrainingResultTypes = TableRegistry::get('training_result_types');
 
-		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Result')];
+            $TrainingCoursesResultTypes1 = $TrainingCoursesResultTypes
+                                            ->find()
+                                            ->where([
+                                                $TrainingCoursesResultTypes->aliasField('training_course_id') => $TraineesSessions->training_course_id
+                                            ])->toArray();
+            $TrainingCoursesResultArr = [];
+            $TrainingResultTypesArr = [];
+            if(!empty($TrainingCoursesResultTypes1)){
+                foreach ($TrainingCoursesResultTypes1 as $value) {
+                    $TrainingCoursesResultArr[] = $value->training_result_type_id;
+                }
+
+                if($TrainingCoursesResultArr){
+                    $TrainingResultTypesArr = $TrainingResultTypes
+                                            ->find('list', ['keyField' => 'id', 'valueField'=>'name'])
+                                            ->where([
+                                                $TrainingResultTypes->aliasField('id IN') => $TrainingCoursesResultArr
+                                            ])->toArray();
+                }
+            }
+        }
+
+		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Exam')]; //5695
+        if(in_array('Practical', $TrainingResultTypesArr)){
+            $tableHeaders[] = __('Practical'); //5695
+        }
+        if(in_array('Attendance', $TrainingResultTypesArr)){
+            $tableHeaders[] = __('Attendance Days');
+        }
+        if(in_array('Certificate', $TrainingResultTypesArr)){
+            $tableHeaders[] = __('Certificate'); //5695
+        }
+        //5695 ends       
 		$tableCells = [];
 		$alias = $this->alias();
 		$key = 'trainees';
+        $selectedResultType = array_values($TrainingCoursesResultArr);
 
 		$trainees = [];
 		if (!is_null($selectedResultType)) {
@@ -224,6 +293,9 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				->select([
 					$TraineeResults->aliasField('id'),
 					$TraineeResults->aliasField('result'),
+                    $TraineeResults->aliasField('attendance_days'), //5695
+                    $TraineeResults->aliasField('certificate_number'), //5695
+                    $TraineeResults->aliasField('practical'), //5695
 					$TraineeResults->aliasField('training_result_type_id')
 				])
 				->leftJoin(
@@ -231,7 +303,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 					[
 						$TraineeResults->aliasField('trainee_id = ') . $SessionsTrainees->aliasField('trainee_id'),
 						$TraineeResults->aliasField('training_session_id') => $sessionId,
-						$TraineeResults->aliasField('training_result_type_id') => $selectedResultType
+						//$TraineeResults->aliasField('training_result_type_id IN') => $selectedResultType
 					]
 				)
 				->where([
@@ -250,7 +322,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 		}
 
 		if ($action == 'view') {
-			foreach ($trainees as $i => $obj) {
+            foreach ($trainees as $i => $obj) {
 				$traineeObj = $obj->_matchingData['Trainees'];
 				$traineeResult = $obj->{$TraineeResults->alias()};
 
@@ -263,11 +335,22 @@ class TrainingSessionResultsTable extends ControllerActionTable
                     $this->paramsEncode(['id' => $traineeObj->id])
 				]);
 				$rowData[] = $traineeObj->name;
-				$rowData[] = strlen($traineeResult['result']) ? $traineeResult['result'] : '';
+                //5695 starts
+                $rowData[] = strlen($traineeResult['result']) ? $traineeResult['result'] : '';
+                if(in_array('Practical', $TrainingResultTypesArr)){
+                    $rowData[] = strlen($traineeResult['practical']) ? $traineeResult['practical'] : ''; //5695
+                }
+				if(in_array('Attendance', $TrainingResultTypesArr)){
+                    $rowData[] = strlen($traineeResult['attendance_days']) ? $traineeResult['attendance_days'] : ''; //5695
+                }
+                if(in_array('Certificate', $TrainingResultTypesArr)){
+                    $rowData[] = strlen($traineeResult['certificate_number']) ? $traineeResult['certificate_number'] : ''; //5695
+                }//5695 end
 				$tableCells[] = $rowData;
 			}
 		} else {
-			$Form = $event->subject()->Form;
+            $Form = $event->subject()->Form;
+
 			foreach ($trainees as $i => $obj) {
 				$fieldPrefix = $alias . '.' . $key . '.' . $i;
 				$traineeObj = $obj->_matchingData['Trainees'];
@@ -276,7 +359,6 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				$rowData = [];
 				$name = $traineeObj->name;
 				$name .= $Form->hidden("$fieldPrefix.trainee_id", ['value' => $traineeObj->id]);
-
                 if ($entity->submit == 'save') { //if come from save process.
                     $result = $Form->input("$fieldPrefix.result", ['label' => false, 'value' => $entity->trainees[$i]['result']]);
                     if (array_key_exists('errors', $entity->trainees[$i])) {
@@ -289,18 +371,84 @@ class TrainingSessionResultsTable extends ControllerActionTable
                         }
                         $result .= "</div>";
                     }
+                    //5695 starts for attandance days
+                    if(in_array('Attendance', $TrainingResultTypesArr)){
+                        $attendance_days = $Form->input("$fieldPrefix.attendance_days", ['label' => false, 'value' => $entity->trainees[$i]['attendance_days']]);
+                        if (array_key_exists('errors', $entity->trainees[$i])) {
+                            $attendance_days .= "<div class='error-message'>";
+                            $errors = [];
+                            //flattern 2 dimensional array to cater more than one error returned
+                            array_walk_recursive($entity->trainees[$i]['errors'], function($v, $k) use (&$errors){ $errors[] = $v; });
+                            foreach ($errors as $value) {
+                                $attendance_days .= $value;
+                            }
+                            $attendance_days .= "</div>";
+                        }
+                    }
+                    
+                    //5695 ends for attandance days
+                    //5695 start for certificate number
+                    if(in_array('Certificate', $TrainingResultTypesArr)){
+                        $certificate_number = $Form->input("$fieldPrefix.certificate_number", ['label' => false, 'value' => $entity->trainees[$i]['certificate_number']]);
+                        if (array_key_exists('errors', $entity->trainees[$i])) {
+                            $certificate_number .= "<div class='error-message'>";
+                            $errors = [];
+                            //flattern 2 dimensional array to cater more than one error returned
+                            array_walk_recursive($entity->trainees[$i]['errors'], function($v, $k) use (&$errors){ $errors[] = $v; });
+                            foreach ($errors as $value) {
+                                $certificate_number .= $value;
+                            }
+                            $certificate_number .= "</div>";
+                        }
+                    } //5695 ends for certificate number
+                    //5695 start for Practical
+                    if(in_array('Practical', $TrainingResultTypesArr)){
+                        $practical = $Form->input("$fieldPrefix.practical", ['label' => false, 'value' => $entity->trainees[$i]['practical']]);
+                        if (array_key_exists('errors', $entity->trainees[$i])) {
+                            $practical .= "<div class='error-message'>";
+                            $errors = [];
+                            //flattern 2 dimensional array to cater more than one error returned
+                            array_walk_recursive($entity->trainees[$i]['errors'], function($v, $k) use (&$errors){ $errors[] = $v; });
+                            foreach ($errors as $value) {
+                                $practical .= $value;
+                            }
+                            $practical .= "</div>";
+                        }
+                    } //5695 ends for Practical  
                 } else {
                     $result = $Form->input("$fieldPrefix.result", ['label' => false, 'value' => $traineeResult['result']]);
+
+                    //5695 start 
+                    if(in_array('Practical', $TrainingResultTypesArr)){
+                        $practical = $Form->input("$fieldPrefix.practical", ['label' => false, 'value' => $traineeResult['practical']]);
+                    }
+                    if(in_array('Attendance', $TrainingResultTypesArr)){
+                        $attendance_days = $Form->input("$fieldPrefix.attendance_days", ['label' => false, 'value' => $traineeResult['attendance_days']]);
+                    }
+                    if(in_array('Certificate', $TrainingResultTypesArr)){
+                        $certificate_number = $Form->input("$fieldPrefix.certificate_number", ['label' => false, 'value' => $traineeResult['certificate_number']]);
+                    }
+                    //5695 end
                 }
 
 				if (isset($traineeResult['id'])) {
 					$result .= $Form->hidden("$fieldPrefix.id", ['value' => $traineeResult['id']]);
-				}
+                }
 
 				$rowData[] = $traineeObj->openemis_no;
 				$rowData[] = $name;
 				$rowData[] = $result;
-				$tableCells[] = $rowData;
+                
+                if(in_array('Practical', $TrainingResultTypesArr)){
+                    $rowData[] = $practical; //5695
+                }
+                if(in_array('Attendance', $TrainingResultTypesArr)){
+                    $rowData[] = $attendance_days; //5695
+                }
+                if(in_array('Certificate', $TrainingResultTypesArr)){
+                    $rowData[] = $certificate_number; //5695
+                }
+                $tableCells[] = $rowData;
 			}
 		}
 
@@ -517,9 +665,9 @@ class TrainingSessionResultsTable extends ControllerActionTable
         $this->field('training_provider', [
             'attr' => ['value' => $entity->training_session_id]
         ]);
-        $this->field('result_type', [
+        /*$this->field('result_type', [
             'attr' => ['value' => $entity->training_session_id]
-        ]);
+        ]);*/
         $this->field('training_session_id', [
             'attr' => ['value' => $entity->training_session_id]
         ]);

@@ -498,17 +498,22 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 					$preferred_name = $value->user->preferred_name;
 					$gender = $value->user->gender->name;
 					$nationality = $value->user->main_nationality->name;
-					
-					if(!empty($value->user->date_of_birth)) {
+                    // POCOR-6283 start
+					$dateOfBirth = $value->user->date_of_birth; 
+
+                    // commented because date can be converted directly no need to use loop
+					/* if(!empty($value->user->date_of_birth)) {
 						foreach ($value->user->date_of_birth as $key => $date) {
 							$dateOfBirth = $date;
 						}
-					}
+					} */
+                    // POCOR-6283 end
 					
 					$address = $value->user->address;
 					$postalCode = $value->user->postal_code;
 					$addressArea = $value->user->address_area->name;
 					$birthplaceArea = $value->user->birthplace_area->name;
+                    $role = $value->user->is_student;
 					
 					$contactValue = [];
 					$contactType = [];
@@ -536,8 +541,9 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 					$academicCode = $value->academic_period->code;
 					$academicGrade = $value->academic_period->name;
 					$studentStatus = $value->student_status->name;
-					
-					if(!empty($value->start_date)) {
+					$startDate=$value->start_date;
+                    $endDate=$value->end_date;
+					/*if(!empty($value->start_date)) {
 						foreach ($value->start_date as $key => $date) {
 							$startDate = $date;
 						}
@@ -547,7 +553,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 						foreach ($value->end_date as $key => $date) {
 							$endDate = $date;
 						}
-					}
+					}*/
 					
 				}
 			}
@@ -581,7 +587,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 				'education_grade_name' => !empty($educationGrade) ? $educationGrade : NULL,
 				'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
 				'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
-				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,	
+				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
+                'role_name' => ($role == 1) ? 'student' : NULL	
 			];
 			
 			if (!$afterSaveOrDeleteEntity->isNew()) {

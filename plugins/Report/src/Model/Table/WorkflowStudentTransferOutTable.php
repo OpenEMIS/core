@@ -37,4 +37,19 @@ class WorkflowStudentTransferOutTable extends AppTable
             'autoFields' => false
         ]);
     }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+        $requestData = json_decode($settings['process']['params']);
+        $institutionId = $requestData->institution_id;
+        $reportStartDate = $requestData->report_start_date;
+        $reportEndDate = $requestData->report_end_date;
+        if ($institutionId == 0) {
+            $query
+            ->orWhere([
+                $this->aliasField('institution_id !=') => $institutionId,
+                    $this->aliasField('start_date >= "') . $reportStartDate . '"',
+                    $this->aliasField('end_date <= "') . $reportEndDate . '"'
+            ]);
+        }
+    }
 }

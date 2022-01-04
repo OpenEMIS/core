@@ -97,6 +97,8 @@ class AssessmentItemResultsTable extends AppTable
         $studentId = -1;
         if ($session->check('Student.Results.student_id')) {
             $studentId = $session->read('Student.Results.student_id');
+        }else{
+            $studentId = $session->read('Profile.StudentUser.primaryKey.id');
         }
 
        if ($options['user']['is_student'] == 1) {
@@ -147,7 +149,7 @@ class AssessmentItemResultsTable extends AppTable
      *  @return array The assessment results group field - institution id, key field - student id
      *      value field - assessment item id with array containing marks, grade name and grade code
      */
-    public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId)
+    public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId, $classId)
     {
         $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 
@@ -158,7 +160,11 @@ class AssessmentItemResultsTable extends AppTable
                 'grade_code' => 'AssessmentGradingOptions.code',
                 $this->aliasField('student_id'),
                 $this->aliasField('assessment_period_id'),
-                $this->aliasField('marks')
+                $this->aliasField('marks'),
+                $this->aliasField('academic_period_id'),//POCOR-6479 
+                $this->aliasField('education_subject_id'),//POCOR-6479
+                $this->aliasField('education_grade_id'),//POCOR-6479
+                $this->aliasField('assessment_id'),//POCOR-6479 
             ])
             ->contain(['AssessmentGradingOptions'])
             ->innerJoin([$SubjectStudents->alias() => $SubjectStudents->table()], [
@@ -172,19 +178,44 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('assessment_id') => $assessmentId,
                 $this->aliasField('education_subject_id') => $subjectId,
-                $this->aliasField('student_id') => $studentId,
-            ])
+                $this->aliasField('student_id') => $studentId
+            ])//POCOR-6479 starts
+            ->group([
+                $this->aliasField('assessment_period_id')
+            ])//POCOR-6479 ends
             ->hydrate(false);
-
-        $results = $query->toArray();
+        $results = $query->toArray(); 
+        //
         $returnArray = [];
+        //POCOR-6479 starts
         foreach ($results as $result) {
+            $assessmentItemResults = TableRegistry::get('assessment_item_results');
+            $assessmentItemResultsData = $assessmentItemResults->find()
+                    ->select([
+                        $assessmentItemResults->aliasField('marks')
+                    ])
+                    ->order([
+                        $assessmentItemResults->aliasField('modified') => 'DESC',
+                        $assessmentItemResults->aliasField('created') => 'DESC'
+                        
+                    ])
+                    ->where([
+                        $assessmentItemResults->aliasField('student_id') => $result['student_id'],
+                        $assessmentItemResults->aliasField('academic_period_id') => $result['academic_period_id'],
+                        $assessmentItemResults->aliasField('education_grade_id') => $result['education_grade_id'],
+                        $assessmentItemResults->aliasField('assessment_period_id') => $result['assessment_period_id'],
+                        $assessmentItemResults->aliasField('education_subject_id') => $result['education_subject_id'],
+                    ])
+                    ->first();
+
+            $result['marks'] = $assessmentItemResultsData->marks;
+
             $returnArray[$result['student_id']][$subjectId][$result['assessment_period_id']] = [
                     'marks' => $result['marks'],
                     'grade_name' => $result['grade_name'],
                     'grade_code' => $result['grade_code']
                 ];
-        }
+        }//POCOR-6479 ends
         return $returnArray;
     }
 
@@ -285,30 +316,56 @@ class AssessmentItemResultsTable extends AppTable
         }
     }
 
-    public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId)
-    {
+    public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId)
+    {   
         $query = $this->find();
         $totalMarks = $query
-            ->select([
-                'calculated_total' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)')
-            ])
+            // ->select([
+            //     'calculated_total' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)')
+            // ])//POCOR-6479 comment code
             ->matching('Assessments')
             ->matching('AssessmentPeriods')
             ->matching('AssessmentGradingOptions.AssessmentGradingTypes')
+            ->order([
+                $this->aliasField('created') => 'DESC'
+            ])
             ->where([
                 $this->aliasField('student_id') => $studentId,
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('education_subject_id') => $educationSubjectId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
-                $this->AssessmentGradingOptions->AssessmentGradingTypes->aliasField('result_type') => 'MARKS',
+                // $this->AssessmentGradingOptions->AssessmentGradingTypes->aliasField('result_type') => 'MARKS',//POCOR-6479 comment code
             ])
             ->group([
-                $this->aliasField('student_id'),
-                $this->aliasField('assessment_id'),
-                $this->aliasField('education_subject_id')
-            ])
-            ->first();
-
-        return $totalMarks;
+                // $this->aliasField('student_id'),//POCOR-6479 comment code
+                // $this->aliasField('assessment_id'),//POCOR-6479 comment code
+                $this->aliasField('assessment_period_id')//POCOR-6479 
+            ])->toArray(); 
+            //POCOR-6479 starts
+            $sumMarks = [];
+            foreach ($totalMarks as $result) {
+                $assessmentItemResults = TableRegistry::get('assessment_item_results');
+                $assessmentItemResultsData = $assessmentItemResults->find()
+                        ->select([
+                            $assessmentItemResults->aliasField('marks')
+                        ])
+                        ->order([
+                            $assessmentItemResults->aliasField('modified') => 'DESC',
+                            $assessmentItemResults->aliasField('created') => 'DESC'
+                            
+                        ])
+                        ->where([
+                            $assessmentItemResults->aliasField('student_id') => $result['student_id'],
+                            $assessmentItemResults->aliasField('academic_period_id') => $result['academic_period_id'],
+                            $assessmentItemResults->aliasField('education_grade_id') => $result['education_grade_id'],
+                            $assessmentItemResults->aliasField('assessment_period_id') => $result['assessment_period_id'],
+                            $assessmentItemResults->aliasField('education_subject_id') => $result['education_subject_id'],
+                        ])
+                        ->first();
+                    
+                    $sumMarks[] = $assessmentItemResultsData->marks*$result->_matchingData['AssessmentPeriods']->weight; 
+            }
+            $sumMarks = array_sum($sumMarks);
+            return $sumMarks;//POCOR-6479 ends
     }
 }

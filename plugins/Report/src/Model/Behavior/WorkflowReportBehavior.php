@@ -80,21 +80,65 @@ class WorkflowReportBehavior extends Behavior
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
-    {   
+    { 
         $requestData = json_decode($settings['process']['params']);
-        if($requestData->model == 'Report.WorkflowStudentTransferIn'){
-            $category = $requestData->category;
-            $institution_id = $requestData->institution_id;
+        /*POCOR-6296 starts*/
+        $academicPeriodId = $requestData->academic_period_id;
+        $areaId = $requestData->area;
+        $institution_id = $requestData->institution_id;
+        $conditions = [];
+        if ($areaId != 0) {
+            $conditions['Institutions.area_id'] = $areaId;
+        }
+        if ($institution_id > 0) {
+            $conditions['Institutions.id'] = $institution_id;
+        }
+        $superAdmin = $requestData->super_admin;
+        $userId = $requestData->user_id;
+        $institutionIds = [];
+        if (!$superAdmin) {
+            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $instituitionData = $InstitutionsTable->find('byAccess', ['userId' => $userId])->toArray();
+            if (isset($instituitionData)) {
+                foreach ($instituitionData as $key => $value) {
+                    $institutionIds[] = $value->id;
+                }
+            }
+        }
+        if ($institution_id == 0) {
+            $conditions['Institutions.id IN'] = $institutionIds;
+        }   
 
+        //echo "<pre>";print_r($conditions);die();  
+        /*POCOR-6296 ends*/
+        if($requestData->model == 'Report.WorkflowStudentTransferIn' || $requestData->model == 'Report.WorkflowStudentTransferOut'){
+            $category = $requestData->category;
+            $where = [];
+                if ($areaId != 0) {
+                    $where['OR'][] = ['Institutions.area_id' => $areaId];
+                    $where['OR'][] = ['PreviousInstitutions.area_id' => $areaId]; 
+                }
+                if (!empty($institution_id) && $institution_id > 0) {
+                    $where['OR'][] = ['Institutions.id' => $institution_id];
+                    $where['OR'][] = ['PreviousInstitutions.id' => $institution_id];
+                }
             if ($category != -1) {
                 $query
-                    ->contain('Statuses')
-                    ->where(['Statuses.category' => $category, 'WorkflowStudentTransferIn.institution_id'=>$institution_id])
-                    ->toArray();
-                if(!empty($query)){
-                    $query
-                    ->contain('Statuses')
-                    ->where(['Statuses.category' => $category, 'WorkflowStudentTransferIn.institution_id'=>$institution_id]);
+                    ->contain('Statuses', 'Institutions', 'PreviousInstitutions')
+                    ->where(['Statuses.category' => $category, 
+                        $where, 
+                        'AcademicPeriods.id' => $academicPeriodId
+                    ]);
+                $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                        return $results->map(function ($row) {
+                            $row['openemis_no'] = $row->user->openemis_no;
+                            return $row;
+                        });
+                });
+            } else {
+                $query
+                    ->contain('Statuses', 'Institutions', 'PreviousInstitutions')
+                    ->where([$where, 'AcademicPeriods.id' => $academicPeriodId]);
 
                     $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                         return $results->map(function ($row) {
@@ -103,102 +147,51 @@ class WorkflowReportBehavior extends Behavior
                             return $row;
                         });
                     });
-                }
-                else{
-                    return true;
-                }
-            }else if($category == -1){
-                $query
-                    ->contain('Statuses')
-                    ->where(['WorkflowStudentTransferIn.institution_id'=>$institution_id]);
+            }
+        } 
 
-                    $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-                        return $results->map(function ($row) {
-                                      
-                            $row['openemis_no'] = $row->user->openemis_no;
-                            return $row;
-                        });
-                    });
-            }
-            else{
-                return true;
-            }
-        }else{
+        if ($requestData->model == 'Report.WorkflowInstitutionCase') {
             $category = $requestData->category;
             if ($category != -1) {
                 $query
-                    ->contain('Statuses')
-                    ->where(['Statuses.category' => $category]);
-            }
-        }
-
-        if($requestData->model == 'Report.WorkflowStudentTransferOut'){
-            $category = $requestData->category;
-            $institution_id = $requestData->institution_id;
-
-            if ($category != -1) {
+                    ->contain('Statuses', 'Institutions')
+                    ->where(['Statuses.category' => $category, $conditions]);
+            } else { //POCOR-6296
                 $query
-                    ->contain('Statuses')
-                    ->where(['Statuses.category' => $category, 'WorkflowStudentTransferOut.institution_id'=>$institution_id])
-                    ->toArray();
-                if(!empty($query)){
+                    ->contain('Statuses', 'Institutions')
+                    ->where([$conditions]);
+            }
+        } /*POCOR-6296 starts*/elseif ($requestData->model == 'Report.WorkflowStaffTransferIn' || $requestData->model == 'Report.WorkflowStaffTransferOut') {
+                $category = $requestData->category;
+                $newConditions = [];
+                if ($areaId != 0) {
+                    $newConditions['OR'][] = ['NewInstitutions.area_id' => $areaId];
+                    $newConditions['OR'][] = ['PreviousInstitutions.area_id' => $areaId]; 
+                }
+                if (!empty($institution_id) && $institution_id > 0) {
+                    $newConditions['OR'][] = ['NewInstitutions.id' => $institution_id];
+                    $newConditions['OR'][] = ['PreviousInstitutions.id' => $institution_id];
+                }
+                if ($category != -1) {
                     $query
-                    ->contain('Statuses')
-                    ->where(['Statuses.category' => $category, 'WorkflowStudentTransferOut.institution_id'=>$institution_id]);
-                }
-                else{
-                    return true;
-                }
-            }else if($category == -1){
-                $query
-                    ->contain('Statuses')
-                    ->where(['WorkflowStudentTransferOut.institution_id'=>$institution_id]);
-            }
-            else{
-                return true;
-            }
-        }else{
-            $category = $requestData->category;
-            if ($category != -1) {
-                $query
-                    ->contain('Statuses')
-                    ->where(['Statuses.category' => $category]);
-            }
-        }
-
-        if($requestData->model == 'Report.WorkflowInstitutionCase'){
-            $category = $requestData->category;
-            $institution_id = $requestData->institution_id;
-
-            if ($category != -1) {
-                $query
-                    ->contain('Statuses')
-                    ->where(['Statuses.category' => $category, 'WorkflowInstitutionCase.institution_id'=>$institution_id])
-                    ->toArray();
-                if(!empty($query)){
+                        ->contain('Statuses', 'NewInstitutions', 'PreviousInstitutions')
+                        ->where(['Statuses.category' => $category, $newConditions]);
+                } else { //POCOR-6296
                     $query
-                    ->contain('Statuses')
-                    ->where(['Statuses.category' => $category, 'WorkflowInstitutionCase.institution_id'=>$institution_id]);
+                        ->contain('Statuses', 'NewInstitutions', 'PreviousInstitutions')
+                        ->where([$newConditions]);
                 }
-                else{
-                    return true;
+            } else {
+                $category = $requestData->category;
+                if ($category != -1) {
+                    $query
+                        ->contain('Statuses', 'Institutions')
+                        ->where(['Statuses.category' => $category, $conditions]);
+                } else { //POCOR-6296
+                    $query
+                        ->contain(['Statuses', 'Institutions'])
+                        ->where([$conditions]);
                 }
-            }else if($category == -1){
-                $query
-                    ->contain('Statuses')
-                    ->where(['WorkflowInstitutionCase.institution_id'=>$institution_id]);
-            }
-            else{
-                return true;
-            }
-        }else{
-            $category = $requestData->category;
-            if ($category != -1) {
-                $query
-                    ->contain('Statuses')
-                    ->where(['Statuses.category' => $category]);
-            }
+            }/*POCOR-6296 ends*/
         }
-
-    }
 }
