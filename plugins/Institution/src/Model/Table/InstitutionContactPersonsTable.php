@@ -7,14 +7,18 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class InstitutionContactPersonsTable extends AppTable {
-    
+class InstitutionContactPersonsTable extends ControllerActionTable {
+
     public function initialize(array $config)
     {
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->addBehavior('Excel', [
+            'pages' => ['index']
+        ]);
     }
 
     public function validationDefault(Validator $validator)
