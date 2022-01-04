@@ -105,6 +105,11 @@ $this->start('panelBody');
 								'file_path' => $obj->file_path,
 								'module' => $obj->module,
 							];
+							$deleteUrl = ['plugin' => $params['plugin'],
+								'controller' => $params['controller'],
+								'action' =>  $ControllerAction['table']->alias(),
+								'removeReport',$obj->id
+							];
 						?>	
 											
 						<ul class="dropdown-menu action-dropdown" role="menu" aria-labelledby="action-menu">
@@ -113,11 +118,38 @@ $this->start('panelBody');
 									<a href="<?php echo $this->Url->build($viewUrl); ?>" role="menuitem" tabindex="-1"><i class="fa fa-eye"></i>View</a>			
 								</li>
 								<li role="presentation">
-									<a href="<?php echo $this->Url->build($downloadUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-download"></i>Download</a>			
-								</li>							
-						</ul>						
+									<a href="<?php echo $this->Url->build($downloadUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-download"></i>Download</a>
+								</li>
+								<?php if ($UsersCheck['super_admin'] == 1) { ?>
+									<li role="presentation">
+										<a href="<?php echo $this->Url->build($deleteUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-trash"></i>Delete</a>	
+								    </li>
+								<?php }?>
+								<?php if (!empty($AccessCheck) && $AccessCheck == 1) {?>
+									<li role="presentation">
+										<a href="<?php echo $this->Url->build($deleteUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-trash"></i>Delete</a>	
+								    </li>
+								<?php }?>		
+						    </ul>						
 						</div>
-						<?php }?>
+						<?php } else if (!empty($AccessCheck) && $AccessCheck == 1 || $UsersCheck['super_admin'] == 1) {?>
+							<div class="dropdown">
+								<button class="btn btn-dropdown action-toggle" type="button" id="action-menu" data-toggle="dropdown" aria-expanded="false">Select<span class="caret-down"></span></button>
+								<?php
+									$deleteUrl = ['plugin' => $params['plugin'],
+										'controller' => $params['controller'],
+										'action' =>  $ControllerAction['table']->alias(),
+										'removeReport',$obj->id
+									];
+								?>
+								<ul class="dropdown-menu action-dropdown" role="menu" aria-labelledby="action-menu">
+									<div class="dropdown-arrow"><i class="fa fa-caret-up"></i></div>
+									<li role="presentation">
+										<a href="<?php echo $this->Url->build($deleteUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-trash"></i>Delete</a>
+									</li>
+								</ul>
+							</div>
+						<?php } ?>
 					</td>
 				</tr>
 				<?php endforeach; ?>
@@ -125,6 +157,5 @@ $this->start('panelBody');
 		</table>
 	</div>
 </div>
-
 <?php
 $this->end();

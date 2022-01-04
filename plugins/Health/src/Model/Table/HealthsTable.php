@@ -24,7 +24,10 @@ class HealthsTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
+        // $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
+        
         $this->addBehavior('Health.Health');
+
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
@@ -32,6 +35,10 @@ class HealthsTable extends ControllerActionTable
             'contentEditable' => true,
             'allowable_file_types' => 'all',
             'useDefaultName' => true
+        ]);
+        $this->addBehavior('Excel',[
+            'excludes' => ['security_user_id'],
+            'pages' => ['index','view'],
         ]);
     }
 
@@ -105,5 +112,69 @@ class HealthsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator->allowEmpty('file_content');
         return $validator;
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'blood_type',
+            'field' => 'blood_type',
+            'type'  => 'string',
+            'label' => __('Blood Type')
+        ];
+
+        $extraField[] = [
+            'key'   => 'doctor_name',
+            'field' => 'doctor_name',
+            'type'  => 'string',
+            'label' => __('Doctor Name')
+        ];
+
+        $extraField[] = [
+            'key'   => 'doctor_contact',
+            'field' => 'doctor_contact',
+            'type'  => 'string',
+            'label' => __('Doctor Contact')
+        ];
+
+        $extraField[] = [
+            'key'   => 'medical_facility',
+            'field' => 'medical_facility',
+            'type'  => 'string',
+            'label' => __('Medical Facility')
+        ];
+
+        $extraField[] = [
+            'key'   => 'health_insurance_new',
+            'field' => 'health_insurance_new',
+            'type'  => 'integer',
+            'label' => __('Health Insurance')
+        ];
+
+        $extraField[] = [
+            'key'   => 'file_name',
+            'field' => 'file_name',
+            'type'  => 'string',
+            'label' => __('File Name')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
+    //POCOR-6131
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+        $session = $this->request->session();
+        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        $studentUserId = $session->read('Student.Students.id');
+
+        $query
+        ->select([
+            'health_insurance_new' => "(CASE WHEN health_insurance = 1 THEN 'Yes'
+            ELSE 'No' END)"
+        ])
+        ->where([
+            // $this->aliasField('security_user_id = ').$staffUserId
+            $this->aliasField('security_user_id') => $studentUserId
+        ]);
     }
 }

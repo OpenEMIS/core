@@ -34,6 +34,7 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('TrainingFieldStudies', ['className' => 'Training.TrainingFieldStudies', 'foreignKey' => 'training_field_of_study_id']);
         $this->belongsTo('TrainingCourseTypes', ['className' => 'Training.TrainingCourseTypes', 'foreignKey' => 'training_course_type_id']);
+        $this->belongsTo('TrainingCourseCategories', ['className' => 'Training.TrainingCourseCategories', 'foreignKey' => 'training_course_category_id']);//POCOR-5695
         $this->belongsTo('TrainingModeDeliveries', ['className' => 'Training.TrainingModeDeliveries', 'foreignKey' => 'training_mode_of_delivery_id']);
         $this->belongsTo('TrainingRequirements', ['className' => 'Training.TrainingRequirements', 'foreignKey' => 'training_requirement_id']);
         $this->belongsTo('TrainingLevels', ['className' => 'Training.TrainingLevels', 'foreignKey' => 'training_level_id']);
@@ -169,6 +170,13 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->field('training_course_type_id', [
             'type' => 'select',
             'visible' => $visible
+        ]);
+        $this->field('training_course_category_id', [
+            'type' => 'select',
+            'visible' => $visible,
+            'attr' => [
+                'label' =>['text' => __('Course Category')]
+            ]
         ]);
         $this->field('training_mode_of_delivery_id', [
             'type' => 'select',
@@ -423,7 +431,7 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->setFieldOrder([
             'code', 'name', 'description', 'objective', 'credit_hours', 'duration', 'number_of_months', 'special_education_needs',
             'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id', 'target_population_selection',
-            'target_populations', 'training_providers', 'course_prerequisites', 'specialisations', 'result_types',
+            'target_populations', 'training_providers', 'course_prerequisites', 'specialisations','training_course_category_id', 'result_types',
             'file_name', 'file_content'
         ]);
     }
@@ -505,7 +513,7 @@ class TrainingCoursesTable extends ControllerActionTable
             return $entity->special_education_needs == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
         } elseif ($this->action == 'view') {
             $SENOptions = $this->getSelectOptions('general.yesno');
-            return $SENOptions[$entity->special_education_needs];    
+            return $SENOptions[$entity->special_education_needs];
         }
     }
 
