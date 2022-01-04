@@ -537,6 +537,8 @@ class InstitutionClassesTable extends ControllerActionTable
             $this->Students->alias(),
             $this->InstitutionSubjects->alias()
         ];
+        $homeRoomTeacher = ( isset($entity->staff_id) && $entity->staff_id > 0 ) ? 1 : 0;
+        $extra['associatedRecords'][] = ['model' => 'HomeRoomTeacher', 'count' => $homeRoomTeacher];
     }
 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -1898,11 +1900,26 @@ class InstitutionClassesTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
+    /* public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
         $query
         ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students']);
+
+        $query->group(['InstitutionClasses.id']);
+    } */
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
+    {
+        $requestQuery = $this->request->query;
+        $institutionID = $_SESSION['Institution']['Institutions']['id'];
+        $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        
+        $query
+        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'])
+        ->where([
+            $this->aliasField('academic_period_id ='). $selectedAcademicPeriodId,
+            $this->aliasField('Institutions.id ='). $institutionID,
+        ])
+        ->group(['InstitutionClasses.id']);
     }
-
-
 }

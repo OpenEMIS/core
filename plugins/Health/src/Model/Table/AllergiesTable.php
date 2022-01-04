@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
-
+use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
@@ -31,6 +31,10 @@ class AllergiesTable extends ControllerActionTable
             'contentEditable' => true,
             'allowable_file_types' => 'all',
             'useDefaultName' => true
+        ]);
+        $this->addBehavior('Excel',[
+            'excludes' => [],
+            'pages' => ['index'],
         ]);
     }
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -77,5 +81,63 @@ class AllergiesTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator->allowEmpty('file_content');
         return $validator;
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'description',
+            'field' => 'description',
+            'type'  => 'string',
+            'label' => __('Description')
+        ];
+
+        $extraField[] = [
+            'key'   => 'severe_new',
+            'field' => 'severe_new',
+            'type'  => 'integer',
+            'label' => __('Severe')
+        ];
+
+        $extraField[] = [
+            'key'   => 'comment',
+            'field' => 'comment',
+            'type'  => 'string',
+            'label' => __('Comment')
+        ];
+
+        $extraField[] = [
+            'key'   => 'health_allergy_type_id',
+            'field' => 'health_allergy_type_id',
+            'type'  => 'string',
+            'label' => __('Health Allergy Type')
+        ];
+
+        $extraField[] = [
+            'key'   => 'file_name',
+            'field' => 'file_name',
+            'type'  => 'string',
+            'label' => __('File Name')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
+    //POCOR-6131
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+        $session = $this->request->session();
+        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        $studentUserId = $session->read('Student.Students.id');
+
+        // dump($_SESSION); die;
+        $query
+        ->select([
+            'severe_new' => "(CASE WHEN severe = 1 THEN 'Yes'
+            ELSE 'No' END)"
+        ])
+        ->where([
+            // $this->aliasField('security_user_id = ').$staffUserId
+            $this->aliasField('security_user_id') => $studentUserId
+        ]);
     }
 }
