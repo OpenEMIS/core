@@ -87,7 +87,7 @@ class FieldOptionComponent extends Component
         'SalaryDeductionTypes' => ['className' => 'Staff.SalaryDeductionTypes', 'parent' => 'Salary'],
 
     // Training
-        'TrainingAchievementTypes' => ['className' => 'Training.TrainingAchievementTypes', 'parent' => 'Training'],
+        // 'TrainingAchievementTypes' => ['className' => 'Training.TrainingAchievementTypes', 'parent' => 'Training'],
         'TrainingCourseTypes' => ['className' => 'Training.TrainingCourseTypes', 'parent' => 'Training'],
         'TrainingFieldStudies' => ['className' => 'Training.TrainingFieldStudies', 'parent' => 'Training'],
         'TrainingLevels' => ['className' => 'Training.TrainingLevels', 'parent' => 'Training'],
@@ -99,8 +99,11 @@ class FieldOptionComponent extends Component
         'TrainingPriorities' => ['className' => 'Training.TrainingPriorities', 'parent' => 'Training'],
         'TrainingProviders' => ['className' => 'Training.TrainingProviders', 'parent' => 'Training'],
         'TrainingRequirements' => ['className' => 'Training.TrainingRequirements', 'parent' => 'Training'],
+        /* START: POCOR-6391
         'TrainingResultTypes' => ['className' => 'Training.TrainingResultTypes', 'parent' => 'Training'],
+        /* END: POCOR-6391  */
         'TrainingSpecialisations' => ['className' => 'Training.TrainingSpecialisations', 'parent' => 'Training'],
+        'TrainingCourseCategories' => ['className' => 'Training.TrainingCourseCategories', 'parent' => 'Training'],//POCOR-5695 add Training Courses Categories
 
     // Others
         'ContactTypes' => ['className' => 'User.ContactTypes', 'parent' => 'Others'],

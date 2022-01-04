@@ -11,27 +11,31 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class StaffTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('security_users');
-		parent::initialize($config);
-		
-		$this->belongsTo('Genders', ['className' => 'User.Genders']);
-		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
-		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
-		
-		$this->addBehavior('Excel', [
-			'excludes' => ['is_student', 'is_staff', 'is_guardian', 'photo_name', 'super_admin', 'status'],
-			'pages' => false
-		]);
-		$this->addBehavior('Report.ReportList');
-		$this->addBehavior('Report.CustomFieldList', [
-			'model' => 'Staff.Staff',
-			'formFilterClass' => null,
-			'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
-		]);
-	}
-    
+    public function initialize(array $config) {
+        $this->table('security_users');
+        parent::initialize($config);
+
+        $this->belongsTo('Genders', ['className' => 'User.Genders']);
+        $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
+        $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+        $this->belongsTo('AreaLevels', ['className' => 'AreaLevel.AreaLevels']);
+
+        $this->belongsTo('Areas', ['className' => 'Area.Areas']);
+        $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
+        $this->addBehavior('Excel', [
+            'excludes' => ['is_student', 'is_staff', 'is_guardian', 'photo_name', 'super_admin', 'status'],
+            'pages' => false
+        ]);
+
+        $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.CustomFieldList', [
+            'model' => 'Staff.Staff',
+            'formFilterClass' => null,
+            'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+        ]);
+    }
+
     public function validationStaffLeaveReport(Validator $validator)
 
     {
@@ -41,8 +45,8 @@ class StaffTable extends AppTable  {
             ->notEmpty('institution_id');
         return $validator;
     }
-	
-	public function validationStaffDuties(Validator $validator)
+
+    public function validationStaffDuties(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
         $validator = $validator
@@ -61,9 +65,9 @@ class StaffTable extends AppTable  {
 
      public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-		if ($data[$this->alias()]['feature'] == 'Report.StaffDuties') {
+        if ($data[$this->alias()]['feature'] == 'Report.StaffDuties') {
             $options['validate'] = 'StaffDuties';
-        } 
+        }
         if ($data[$this->alias()]['feature'] == 'Report.StaffLeaveReport') {
             $options['validate'] = 'StaffLeaveReport';
         }else if ($data[$this->alias()]['feature'] == 'Report.StaffHealthReports') {
@@ -72,26 +76,36 @@ class StaffTable extends AppTable  {
     }
 
 
-	public function beforeAction(Event $event) 
-	{
-		$this->fields = [];
-		$this->ControllerAction->field('feature', ['select' => false]);
-        $this->ControllerAction->field('system_usage', ['type' => 'hidden']);
-        $this->ControllerAction->field('status', ['type' => 'hidden']);
+    public function beforeAction(Event $event)
+    {
+        $this->fields = [];
+
+        $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('status', ['type' => 'hidden']);
+        $this->ControllerAction->field('system_usage', ['type' => 'hidden']);
         $this->ControllerAction->field('staff_leave_type_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('format');
         $this->ControllerAction->field('health_report_type',['type' => 'hidden']);
-        
-	}
-	
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
+        $this->ControllerAction->field('format');
+
+    }
+
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+        $attr['options'] = $this->controller->getFeatureOptions($this->alias());
         $attr['onChangeReload'] = true;
-		return $attr;
-	}
+        /*POCOR-6176 starts*/
+        if (!(isset($this->request->data[$this->alias()]['feature']))) {
+                $option = $attr['options'];
+                reset($option);
+                $this->request->data[$this->alias()]['feature'] = key($option);
+        }
+        /*POCORO-6176 ends*/
+        return $attr;
+    }
 
     public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, Request $request)
     {
@@ -105,14 +119,14 @@ class StaffTable extends AppTable  {
                         ]);
 
                $staffLeaveTypeList = $staffLeaveTypeOptions->toArray();
-                
+
                if (empty($staffLeaveTypeList)) {
                     $staffLeaveTypeOptions = ['' => $this->getMessage('general.select.noOptions')];
                     $attr['type'] = 'select';
                     $attr['options'] = $staffLeaveTypeOptions;
                     $attr['attr']['required'] = true;
                 } else {
-                    
+
                     if (in_array($feature, [
                         'Report.StaffLeaveReport'
                     ])) {
@@ -129,16 +143,24 @@ class StaffTable extends AppTable  {
                 }
             }
         }
-        
+
         return $attr;
     }
-    
+
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.StaffSalaries',
-                                    'Report.StaffLeaveReport','Report.StaffDuties','Report.StaffHealthReports'])) {
+                                    'Report.StaffLeaveReport',
+                'Report.StaffDuties',
+                'Report.StaffHealthReports',
+                'Report.Staff','Report.StaffPhoto',
+                'Report.StaffIdentities','Report.StaffContacts',
+                'Report.StaffQualifications','Report.StaffLicenses',
+                'Report.StaffEmploymentStatuses',
+                'Report.StaffTrainingReports','Report.StaffPositions','Report.PositionSummary',
+                'Report.StaffExtracurriculars'])) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
 
@@ -153,6 +175,83 @@ class StaffTable extends AppTable  {
                 return $attr;
             }
         }
+    }
+
+    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+
+            if ((in_array($feature, ['Report.Staff',
+                'Report.StaffPhoto','Report.StaffIdentities',
+                'Report.StaffContacts','Report.StaffQualifications',
+                'Report.StaffLicenses','Report.StaffEmploymentStatuses',
+                'Report.StaffHealthReports','Report.StaffSalaries','Report.StaffTrainingReports',
+                'Report.StaffLeaveReport','Report.StaffPositions','Report.PositionSummary',
+                'Report.StaffDuties','Report.StaffExtracurriculars']))) {
+                $Areas = TableRegistry::get('AreaLevel.AreaLevels');
+                $entity = $attr['entity'];
+
+                if ($action == 'add') {
+                    $areaOptions = $Areas
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                        ->order([$Areas->aliasField('level')]);
+
+                    $attr['type'] = 'chosenSelect';
+                    $attr['attr']['multiple'] = false;
+                    $attr['select'] = true;
+                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas Level')] + $areaOptions->toArray();
+                    $attr['onChangeReload'] = true;
+                } else {
+                    $attr['type'] = 'hidden';
+                }
+            }
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            $areaLevelId = $this->request->data[$this->alias()]['area_level_id'];//POCOR-6333
+            if (in_array($feature, ['Report.Staff'
+            ,'Report.StaffPhoto','Report.StaffIdentities',
+                'Report.StaffContacts','Report.StaffQualifications',
+                'Report.StaffLicenses','Report.StaffEmploymentStatuses',
+                'Report.StaffHealthReports','Report.StaffSalaries','Report.StaffTrainingReports',
+                'Report.StaffLeaveReport','Report.StaffPositions','Report.PositionSummary',
+                'Report.StaffDuties','Report.StaffExtracurriculars'])) {
+                $Areas = TableRegistry::get('Area.Areas');
+                $entity = $attr['entity'];
+
+                if ($action == 'add') {
+                    $where = [];
+                        if ($areaLevelId != -1) {
+                            $where[$Areas->aliasField('area_level_id')] = $areaLevelId;
+                        }
+                        $areas = $Areas
+                            ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                            ->where([$where])
+                            ->order([$Areas->aliasField('order')]);
+                        $areaOptions = $areas->toArray();
+                        $attr['type'] = 'chosenSelect';
+                        $attr['attr']['multiple'] = false;
+                        $attr['select'] = true;
+                        /*POCOR-6333 starts*/
+                        if (count($areaOptions) > 1) {
+                            $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions;
+                        } else {
+                            $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions;
+                        }
+                        /*POCOR-6333 ends*/
+                        $attr['onChangeReload'] = true;
+                } else {
+                    $attr['type'] = 'hidden';
+                }
+            }
+        }
+        return $attr;
     }
 
     public function onUpdateFieldSystemUsage(Event $event, array $attr, $action, Request $request)
@@ -190,17 +289,85 @@ class StaffTable extends AppTable  {
         }
     }
 
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-		$query->where([$this->aliasField('is_staff') => 1]);
-	}
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+        $areaId = $requestData->area_education_id;
+        $institutionId = $requestData->institution_id;
+        $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $periodEntity = $AcademicPeriods->get($academicPeriodId);
+        $startDate = $periodEntity->start_date->format('Y-m-d');
+        $endDate = $periodEntity->end_date->format('Y-m-d');
+        $userId = $requestData->user_id;
+        $superAdmin = $requestData->super_admin;
+        $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->order([
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
-		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        if (!$superAdmin) { // if user is not super admin, the list will be filtered
+            $institutionQuery->find('byAccess', ['userId' => $userId]);
+        }
+        $institutionList = $institutionQuery->toArray();
+        $conditions = [];
+        if (!empty($academicPeriodId)) {
+                $conditions['OR'] = [
+                    'OR' => [
+                        [
+                            'InstitutionStaff.end_date' . ' IS NOT NULL',
+                            'InstitutionStaff.start_date' . ' <=' => $startDate,
+                            'InstitutionStaff.end_date' . ' >=' => $startDate
+                        ],
+                        [
+                            'InstitutionStaff.end_date' . ' IS NOT NULL',
+                            'InstitutionStaff.start_date' . ' <=' => $endDate,
+                            'InstitutionStaff.end_date' . ' >=' => $endDate
+                        ],
+                        [
+                            'InstitutionStaff.end_date' . ' IS NOT NULL',
+                            'InstitutionStaff.start_date' . ' >=' => $startDate,
+                            'InstitutionStaff.end_date' . ' <=' => $endDate
+                        ]
+                    ],
+                    [
+                        'InstitutionStaff.end_date' . ' IS NULL',
+                        'InstitutionStaff.start_date' . ' <=' => $endDate
+                    ]
+                ];
+        }
+        if ($institutionId == 0 && !$superAdmin) {
+            $conditions['InstitutionStaff.institution_id IN'] = array_keys($institutionList);
+        }
+        if (!empty($institutionId) && $institutionId > 0) {
+            $conditions['InstitutionStaff.institution_id'] = $institutionId;
+        }
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId; 
+        }
+        $query
+            ->innerJoin(['InstitutionStaff' => 'institution_staff'], [
+                'InstitutionStaff.staff_id = ' . $this->aliasField('id')
+            ])
+            ->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
+                $InstitutionsTable->aliasField('id = ') . 'InstitutionStaff.institution_id'
+            ])
+            ->where([$this->aliasField('is_staff') => 1, $conditions]);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
-        
-        foreach ($fields as $key => $field) { 
-        	//get the value from the table, but change the label to become default identity type.
-            if ($field['field'] == 'identity_number') { 
+
+        foreach ($fields as $key => $field) {
+            //get the value from the table, but change the label to become default identity type.
+            if ($field['field'] == 'identity_number') {
                 $fields[$key] = [
                     'key' => 'Staff.identity_number',
                     'field' => 'identity_number',
@@ -210,15 +377,15 @@ class StaffTable extends AppTable  {
                 break;
             }
         }
-	}
+    }
 
     public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 
-            if (in_array($feature, ['Report.StaffPositions', 'Report.PositionSummary',
-                  ])) { 
+            if (in_array($feature, [
+                  ])) {
                     $Areas = TableRegistry::get('Area.Areas');
                     $entity = $attr['entity'];
 
@@ -241,64 +408,27 @@ class StaffTable extends AppTable  {
     }
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 
-            if (in_array($feature, ['Report.StaffPositions', 'Report.StaffHealthReports',
-                                    'Report.StaffLeaveReport','Report.StaffDuties','Report.PositionSummary'])) { 
-                $area_id = $this->request->data[$this->alias()]['area_id'];
-                $area_ids = [];
-                
-                if(!empty($area_id)) {
-                    $AreaTable = TableRegistry::get('Area.Areas');
-                    $areaData = [];
-                    $areaData = $AreaTable
-                        ->find()
-                        ->select([
-                            $AreaTable->aliasField('id'),
-                        ])
-                        ->where([
-                            $AreaTable->aliasField('parent_id') => $area_id,
-                        ])
-                        ->hydrate(false)
-                        ->toArray();
-                    
-                    if(!empty($areaData)) {
-                        foreach($areaData as $data) {
-                            $area_ids[] = $data['id'];
-                        }
-                        
-                        $areaIds = [];
-                        if(!empty($area_ids)) {
-                            $areaIds = $AreaTable
-                                ->find()
-                                ->select([
-                                    $AreaTable->aliasField('id'),
-                                ])
-                                ->where([
-                                    $AreaTable->aliasField('parent_id').' IN'  => $area_ids,
-                                ])
-                                ->hydrate(false)
-                                ->toArray();
-                        }
-                        if(!empty($areaIds)) {
-                            foreach($areaIds as $area) {
-                                $area_ids[] = $area['id'];
-                            }
-                        }
-                    } else {
-                        $area_ids[] = $area_id;
-                    }
-                }
-                
-                $institutionList = [];
-
-                if ($area_id == 0) {
-                    $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            if (in_array($feature, ['Report.StaffPositions', 'Report.StaffHealthReports','Report.StaffLeaveReport',
+                'Report.StaffDuties',
+                'Report.PositionSummary',
+                'Report.Staff','Report.StaffPhoto',
+                'Report.StaffIdentities','Report.StaffContacts',
+                'Report.StaffQualifications','Report.StaffQualifications',
+                'Report.StaffLicenses','Report.StaffEmploymentStatuses','Report.StaffSalaries',
+                'Report.StaffTrainingReports','Report.StaffExtracurriculars'])) {
+                $areaId = $this->request->data[$this->alias()]['area_education_id'];
+                if(!empty($areaId) && $areaId != -1) {
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
                             'valueField' => 'code_name'
+                        ])
+                        ->where([
+                                $InstitutionsTable->aliasField('area_id') => $areaId
                         ])
                         ->order([
                             $InstitutionsTable->aliasField('code') => 'ASC',
@@ -313,15 +443,10 @@ class StaffTable extends AppTable  {
 
                     $institutionList = $institutionQuery->toArray();
                 } else {
-
-                    $InstitutionsTable = TableRegistry::get('Institution.Institutions');
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
                             'valueField' => 'code_name'
-                        ])
-                        ->where([
-                                $InstitutionsTable->aliasField('area_id').' IN' => $area_ids
                         ])
                         ->order([
                             $InstitutionsTable->aliasField('code') => 'ASC',
@@ -335,27 +460,37 @@ class StaffTable extends AppTable  {
                     }
 
                     $institutionList = $institutionQuery->toArray();
-                    }
-
-                
+                }
                 if (empty($institutionList)) {
                     $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
                     $attr['type'] = 'select';
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-                    
                     if (in_array($feature, [
                         'Report.StaffPositions',
                         'Report.StaffLeaveReport',
                         'Report.StaffDuties',
-                        'Report.PositionSummary'
+                        'Report.PositionSummary',
+                        'Report.Staff',
+                        'Report.StaffPhoto',
+                        'Report.StaffIdentities',
+                        'Report.StaffContacts',
+                        'Report.StaffQualifications',
+                        'Report.StaffLicenses',
+                        'Report.StaffEmploymentStatuses',
+                        'Report.StaffHealthReports',
+                        'Report.StaffSalaries',
+                        'Report.StaffTrainingReports',
+                        'Report.StaffExtracurriculars'
                     ])) {
-                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
-                    }elseif (in_array($feature, ['Report.StaffHealthReports'])) {
-                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions'),'-1' => __('No Institutions')] + $institutionList;
-                    }
-                    else {
+                        if (!empty($institutionList) && count($institutionList) > 1) {
+                           $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                        } else {
+                            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                        }
+                        
+                    } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
                     }
 
@@ -391,11 +526,9 @@ class StaffTable extends AppTable  {
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 $attr['onChangeReload'] = true;
-                
+
                 return $attr;
             }
         }
-		
-
-}
+    }
 }
