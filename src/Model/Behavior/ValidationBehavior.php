@@ -2122,6 +2122,7 @@ class ValidationBehavior extends Behavior
                 $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'"
             ])
             ->first();
+
         // Check if staff aattendance exists
         if ($staffAttendances) {
             return false;
@@ -3296,4 +3297,24 @@ class ValidationBehavior extends Behavior
         }
     }
     //POCOR-5975 ends
+    //POCOR-5924 starts
+    public static function checkUniqueIdentityNumber($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $data = $globalData['data'];
+        $userIdentities = TableRegistry::get('user_identities');
+        $IdentitiesEntity = $userIdentities->find()
+            ->where([
+                $userIdentities->aliasField('number') => $data['identity_number'],
+                $userIdentities->aliasField('identity_type_id') => $data['identity_type_id']
+            ])
+            ->count()
+            ;
+        if($IdentitiesEntity > 0){
+            $validationErrorMsg = $model->getMessage('Institution.Students.identity_number.ruleCheckUniqueIdentityNumber');
+            return $validationErrorMsg;
+        }
+
+        return true;
+    }//POCOR-5924 ends
 }

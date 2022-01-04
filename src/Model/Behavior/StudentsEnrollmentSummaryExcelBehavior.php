@@ -161,9 +161,14 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
 
     //POCOR-5863 starts
     private function getData($settings) {
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $areaEducationId = $requestData->area_education_id;
+        $institutionId = $requestData->institution_id;
+        $AcademicPeriods = TableRegistry::get('academic_periods');
+        $Institutions = TableRegistry::get('institutions');
+        $StudentsEnrollmentSummary = TableRegistry::get('institution_students');
         $area_id_array=[];
         if(!empty($areaEducationId)){
             $Areas = TableRegistry::get('Areas');
@@ -195,14 +200,13 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
             }
         }
         $areaEducationId = $area_id_array;    
-        $condArea = array();
+        $conditions = [];
         if($areaEducationId != -1){
-            $condArea = ['Areas.id IN ' =>  $areaEducationId];
+            $conditions['Areas.id IN '] = $areaEducationId;
         }
-
-        $AcademicPeriods = TableRegistry::get('academic_periods');
-        $Institutions = TableRegistry::get('institutions');
-        $StudentsEnrollmentSummary = TableRegistry::get('institution_students');
+        if(!empty($institutionId) && $institutionId > 0){
+            $conditions[$Institutions->aliasfield('id')] = $institutionId;
+        }
         $institutionsList = $Institutions
                                 ->find()
                                 ->select([
@@ -214,7 +218,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ->leftJoin(['Areas' => 'areas'], [
                                     $Institutions->aliasfield('area_id').' = ' . 'Areas.id'
                                 ])
-                                ->where($condArea)
+                                ->where($conditions)
                                 ->toArray();
         $result = [];
         if(!empty($institutionsList)){
@@ -247,7 +251,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                                                 $StudentsEnrollmentSummary->aliasfield('academic_period_id').' = ' . 'AcademicPeriods.id'
                                             ])
-                                ->where(['Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId, $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id])
+                                ->where(['Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId, $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id, $StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus])
                                 ->group(['EducationGrades.id', 'Genders.id'])->toArray();
                 
                 if(!empty($instStudData)){
@@ -279,7 +283,16 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
             }
         }
 
-        return $result;
+        $check_grade_exist = [];
+        $updated_result= [];
+        foreach ($result AS $grade_data) {
+            if (!in_array($grade_data[4].$grade_data[3], $check_grade_exist)) {
+                $updated_result[] = $grade_data;
+            }
+            $check_grade_exist[] = $grade_data[4].$grade_data[3];
+        }
+
+        return $updated_result;
     }
     //POCOR-5863 ends
     private function getFields($table, $settings, $label)

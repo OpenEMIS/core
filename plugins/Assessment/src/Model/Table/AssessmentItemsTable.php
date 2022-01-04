@@ -128,7 +128,7 @@ class AssessmentItemsTable extends AppTable
             $classId = $options['class_id'];
             $staffId = $options['staff_id'];
             $query
-                    ->contain('EducationSubjects.InstitutionSubjects')
+                    //->contain('EducationSubjects.InstitutionSubjects')
                     ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
                         $ClassSubjects->aliasField('institution_class_id') => $classId
                     ])
@@ -194,18 +194,25 @@ class AssessmentItemsTable extends AppTable
         $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $educationSubject = TableRegistry::get('Education.EducationSubjects');
+        $Assessments = TableRegistry::get('Assessment.Assessments');
         $assessmentId = $options['assessment_id'];
         $classId = $options['class_id'];
         $staffSubject = TableRegistry::get('Institution.InstitutionSubjectStaff');
                 
         $query
                     ->contain('EducationSubjects')
+                    /*POCOR-6183 Starts*/
+                    ->leftJoin([$Assessments->alias() => $Assessments->table()], [
+                        $Assessments->aliasField('id = ') . $this->aliasField('assessment_id')
+                    ])
+                    /*POCOR-6183 Ends*/
                     ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
                         $ClassSubjects->aliasField('institution_class_id') => $classId
                     ])
                     ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
                         $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
                         $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
+                        $InstitutionSubjects->aliasField('education_grade_id = ') . $Assessments->aliasField('education_grade_id') //POCOR-6183
                     ])
                     ->select([
                         $this->aliasField('education_subject_id'),

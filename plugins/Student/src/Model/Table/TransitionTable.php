@@ -208,14 +208,38 @@ class TransitionTable extends ControllerActionTable
                 $cycleId[] = $value->id;
             }
         }
+        // Start: POCOR-6344
+        $institution_id = (isset($attr['entity']->institution_id)) ? $attr['entity']->institution_id : 0;
+        $instacademic_period_iditution_id = (isset($attr['entity']->academic_period_id)) ? $attr['entity']->academic_period_id : 0;
+        $InstitutionGrades = TableRegistry::get('institution_grades');
+        $entity = $InstitutionGrades->find()->select(['programme_id'  => 'EducationProgrammes.id'])
+                    ->innerJoin(['EducationGrades' => 'education_grades'], ['EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')])
+                    ->LeftJoin(['EducationProgrammes' => 'education_programmes'],['EducationProgrammes.id = EducationGrades.education_programme_id'])
+                    ->LeftJoin(['EducationCycles' => 'education_cycles'],['EducationCycles.id = EducationProgrammes.education_cycle_id'])
+                    ->LeftJoin(['EducationLevels' => 'education_levels'],['EducationLevels.id = EducationCycles.education_level_id'])
+                    ->LeftJoin(['EducationSystems' => 'education_systems'],['EducationSystems.id = EducationLevels.education_system_id'])
+                    ->where([
+                        $InstitutionGrades->aliasField('institution_id') => $institution_id,
+                        'EducationSystems.academic_period_id' => $instacademic_period_iditution_id
+                    ])->hydrate(false)->toArray();
+        if (empty($entity)) {
+            $programmeOptions = [];
+        } else {
         $programmeOptions = $EducationProgrammes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                 ->contain(['EducationCycles'])
                 //->where([$EducationProgrammes->aliasField('education_cycle_id IN') => $cycleId])
+                ->where([$EducationProgrammes->aliasField('id IN') => array_unique(array_column($entity, 'programme_id'))])
                 ->toArray();
 
+        }
+        // End: POCOR-6344
         if ($action == 'edit') {
-            $programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
+            if ($attr['entity']->education_grade_id < 0 || $attr['entity']->education_grade_id == null) {
+                $programmeId = $this->EducationGrades->find()->first()->education_programme_id;
+            } else {
+                $programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
+            }
             $attr['type'] = 'select';
             $attr['options'] = $programmeOptions;
             $attr['default'] = $programmeId;
@@ -242,28 +266,46 @@ class TransitionTable extends ControllerActionTable
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
     {
+        $institution_id = (isset($attr['entity']->institution_id)) ? $attr['entity']->institution_id : 0;
+        $instacademic_period_iditution_id = (isset($attr['entity']->academic_period_id)) ? $attr['entity']->academic_period_id : 0;
+        $InstitutionGrades = TableRegistry::get('institution_grades');
+        $entity = $InstitutionGrades->find()->select(['grade_id' => $InstitutionGrades->aliasField('education_grade_id')])
+                    ->innerJoin(['EducationGrades' => 'education_grades'], ['EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')])
+                    ->LeftJoin(['EducationProgrammes' => 'education_programmes'],['EducationProgrammes.id = EducationGrades.education_programme_id'])
+                    ->LeftJoin(['EducationCycles' => 'education_cycles'],['EducationCycles.id = EducationProgrammes.education_cycle_id'])
+                    ->LeftJoin(['EducationLevels' => 'education_levels'],['EducationLevels.id = EducationCycles.education_level_id'])
+                    ->LeftJoin(['EducationSystems' => 'education_systems'],['EducationSystems.id = EducationLevels.education_system_id'])
+                    ->where([
+                        $InstitutionGrades->aliasField('institution_id') => $institution_id,
+                        'EducationSystems.academic_period_id' => $instacademic_period_iditution_id
+                    ])->hydrate(false)->toArray();
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
         $selectedProgramme = $EducationProgrammes
                              ->find()
-                             ->where([$EducationProgrammes->aliasField('id') => $programmeId])->first()->id;
+                            //  ->where([$EducationProgrammes->aliasField('id') => $request['data']['Transition']['education_programme_id']])->first()->id;
+                             ->where([$EducationProgrammes->aliasField('id') => $request['data']['Transition']['education_programme_id']])->first()->id;
         if (!empty($request['data'])) {//die("if");
             $programmeId = $request['data']['Transition']['education_programme_id'];
             $gradeOptions = $EducationGrades
                         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                         ->contain(['EducationProgrammes'])
-                        ->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
+                        ->where([$EducationGrades->aliasField('education_programme_id') => $programmeId, $EducationGrades->aliasField('id IN') => array_unique(array_column($entity, 'grade_id'))])
                         ->toArray();
         } else {//die("else");
             $programmeId = $attr['entity']['education_grade']->education_programme_id;
             $gradeOptions = $EducationGrades
                         ->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
                         ->contain(['EducationProgrammes'])
-                        ->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
+                        ->where([$EducationGrades->aliasField('education_programme_id') => $programmeId, $EducationGrades->aliasField('id IN') => array_unique(array_column($entity, 'grade_id'))])
                         ->toArray();
         }
         if ($action == 'edit') {
-            $gradeId = $this->EducationGrades->get($attr['entity']->education_grade_id);
+            if ($attr['entity']->education_grade_id < 1 || $attr['entity']->education_grade_id == null) {
+                $gradeId = $this->EducationGrades->find()->first();
+            } else {
+                $gradeId = $this->EducationGrades->get($attr['entity']->education_grade_id);
+            }
             $attr['type'] = 'select';
             $attr['options'] = $gradeOptions;
             $attr['default'] = $gradeId;

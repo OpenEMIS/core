@@ -100,104 +100,107 @@ class StaffAttendancesTable extends ControllerActionTable
         $requestData = json_decode($settings['process']['params']);        
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
+        $conditions = [];
         
-		$conditions = [];
-		
-		if (!empty($institutionId)) {
-			$query->where([$this->aliasField('institution_id') => $institutionId]);
-		}
+        if (!empty($institutionId) && $institutionId != 0) {
+            $query->where([$this->aliasField('institution_id') => $institutionId]);
+        }
+        if ($areaId != -1) {
+            $query->where(['Institutions.area_id' => $areaId]);
+        }
 
         $query
-			->select([
-				'institution_code' => 'Institutions.code',
-				'institution_name' => 'Institutions.name',
-				'position_title' =>  $query->func()->concat([
-					'InstitutionPositions.position_no' => 'literal',
-					" - ",
-					'StaffPositionTitles.name' => 'literal'
-				]),
-				'identity_type' => 'IdentityTypes.name',
-				'identity_number' => 'UserIdentity.number',
-			])
-			->leftJoin(['Institutions' => 'institutions'], [
-				'Institutions.id = ' . $this->aliasfield('institution_id'),
-			])
-			->leftJoin(['InstitutionPositions' => 'institution_positions'], [
-				'InstitutionPositions.id = ' . $this->aliasfield('institution_position_id'),
-			])
-			->leftJoin(['StaffPositionTitles' => 'staff_position_titles'], [
-				'StaffPositionTitles.id = InstitutionPositions.staff_position_title_id',
-			])
-			->leftJoin(['UserNationalities' => 'user_nationalities'], [
-				'UserNationalities.security_user_id = ' . $this->aliasfield('staff_id'),
-			])
-			->leftJoin(['Nationalities' => 'nationalities'], [
-			   'Nationalities.id = UserNationalities.nationality_id',
-			   'AND' => [
-					'Nationalities.default = 1',
-				]
-			])
-			->leftJoin(['IdentityTypes' => 'identity_types'], [
-				'IdentityTypes.id = Nationalities.identity_type_id',
-			])
-			->leftJoin(['UserIdentity' => 'user_identities'], [
-				'UserIdentity.security_user_id = ' . $this->aliasfield('staff_id'),
-			])
+            ->select([
+                'institution_code' => 'Institutions.code',
+                'institution_name' => 'Institutions.name',
+                'position_title' =>  $query->func()->concat([
+                    'InstitutionPositions.position_no' => 'literal',
+                    " - ",
+                    'StaffPositionTitles.name' => 'literal'
+                ]),
+                'identity_type' => 'IdentityTypes.name',
+                'identity_number' => 'UserIdentity.number',
+            ])
+            ->leftJoin(['Institutions' => 'institutions'], [
+                'Institutions.id = ' . $this->aliasfield('institution_id'),
+            ])
+            ->leftJoin(['InstitutionPositions' => 'institution_positions'], [
+                'InstitutionPositions.id = ' . $this->aliasfield('institution_position_id'),
+            ])
+            ->leftJoin(['StaffPositionTitles' => 'staff_position_titles'], [
+                'StaffPositionTitles.id = InstitutionPositions.staff_position_title_id',
+            ])
+            ->leftJoin(['UserNationalities' => 'user_nationalities'], [
+                'UserNationalities.security_user_id = ' . $this->aliasfield('staff_id'),
+            ])
+            ->leftJoin(['Nationalities' => 'nationalities'], [
+               'Nationalities.id = UserNationalities.nationality_id',
+               'AND' => [
+                    'Nationalities.default = 1',
+                ]
+            ])
+            ->leftJoin(['IdentityTypes' => 'identity_types'], [
+                'IdentityTypes.id = Nationalities.identity_type_id',
+            ])
+            ->leftJoin(['UserIdentity' => 'user_identities'], [
+                'UserIdentity.security_user_id = ' . $this->aliasfield('staff_id'),
+            ])
             ->distinct([$this->aliasField('staff_id')])
             // ->find('academicPeriod', ['academic_period_id' => $academicPeriodId])
             ;
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-				return $results->map(function ($row) {
+                return $results->map(function ($row) {
                     
-					
-					$StaffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
-					
-					$customFieldData = $StaffCustomFieldValues->find()
-						->select([
-							'custom_field_id' => 'StaffCustomFields.id',
-							'staff_custom_field_values.text_value',
-							'staff_custom_field_values.number_value',
-							'staff_custom_field_values.decimal_value',
-							'staff_custom_field_values.textarea_value',
-							'staff_custom_field_values.date_value'
-						])
-						->innerJoin(
-							['StaffCustomFields' => 'staff_custom_fields'],
-							[
-								'StaffCustomFields.id = staff_custom_field_values.staff_custom_field_id'
-							]
-						)
-						->where(['staff_custom_field_values.staff_id' => $row->staff_id])
-						->toArray();
-					
-					foreach($customFieldData as $data) {
-						if(!empty($data->text_value)) {
-							$row[$data->custom_field_id] = $data->text_value;
-						} 
-						if(!empty($data->number_value)) {
-							$row[$data->custom_field_id] = $data->number_value;
-						}
-						if(!empty($data->decimal_value)) {
-							$row[$data->custom_field_id] = $data->decimal_value;
-						}
-						if(!empty($data->textarea_value)) {
-							$row[$data->custom_field_id] = $data->textarea_value;
-						}
-						if(!empty($data->date_value)) {
-							$row[$data->custom_field_id] = $data->date_value;
-							
-						}
-						
-					}
-					return $row;
-				});
-			});
+                    
+                    $StaffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
+                    
+                    $customFieldData = $StaffCustomFieldValues->find()
+                        ->select([
+                            'custom_field_id' => 'StaffCustomFields.id',
+                            'staff_custom_field_values.text_value',
+                            'staff_custom_field_values.number_value',
+                            'staff_custom_field_values.decimal_value',
+                            'staff_custom_field_values.textarea_value',
+                            'staff_custom_field_values.date_value'
+                        ])
+                        ->innerJoin(
+                            ['StaffCustomFields' => 'staff_custom_fields'],
+                            [
+                                'StaffCustomFields.id = staff_custom_field_values.staff_custom_field_id'
+                            ]
+                        )
+                        ->where(['staff_custom_field_values.staff_id' => $row->staff_id])
+                        ->toArray();
+                    
+                    foreach($customFieldData as $data) {
+                        if(!empty($data->text_value)) {
+                            $row[$data->custom_field_id] = $data->text_value;
+                        } 
+                        if(!empty($data->number_value)) {
+                            $row[$data->custom_field_id] = $data->number_value;
+                        }
+                        if(!empty($data->decimal_value)) {
+                            $row[$data->custom_field_id] = $data->decimal_value;
+                        }
+                        if(!empty($data->textarea_value)) {
+                            $row[$data->custom_field_id] = $data->textarea_value;
+                        }
+                        if(!empty($data->date_value)) {
+                            $row[$data->custom_field_id] = $data->date_value;
+                            
+                        }
+                        
+                    }
+                    return $row;
+                });
+            });
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $newArray = [];
-		$newArray[] = [
+        $newArray[] = [
             'key' => '',
             'field' => 'institution_code',
             'type' => 'string',
@@ -221,7 +224,7 @@ class StaffAttendancesTable extends ControllerActionTable
             'type' => 'string',
             'label' => __('Identity Number')
         ];
-		$newArray[] = [
+        $newArray[] = [
             'key' => '',
             'field' => 'position_title',
             'type' => 'string',
@@ -246,7 +249,7 @@ class StaffAttendancesTable extends ControllerActionTable
                 'label' => __($custom_field)
             ];
         }
-		$newArray[] = [
+        $newArray[] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
