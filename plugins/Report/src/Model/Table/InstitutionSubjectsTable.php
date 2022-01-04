@@ -10,42 +10,44 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 
 class InstitutionSubjectsTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('institution_subjects');
-		parent::initialize($config);
+    public function initialize(array $config) {
+        $this->table('institution_subjects');
+        parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         
-	$this->addBehavior('Excel', [
+    $this->addBehavior('Excel', [
             'autoFields' => false
         ]);
-		$this->addBehavior('Report.ReportList');
-		$this->addBehavior('Report.InstitutionSecurity');
-	}
+        $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity');
+    }
 
-	public function beforeAction(Event $event) {
-		$this->fields = [];
-		$this->ControllerAction->field('feature');
-		$this->ControllerAction->field('format');
-	}
+    public function beforeAction(Event $event) {
+        $this->fields = [];
+        $this->ControllerAction->field('feature');
+        $this->ControllerAction->field('format');
+    }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
-        
+        $areaId = $requestData->area_education_id;
         $conditions = [];
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        if (!empty($institutionId)) {
+        if (!empty($institutionId) && $institutionId > 0) {
             $conditions['Institutions.id'] = $institutionId;
         }
-        
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
+        }
         if (!empty($requestData->education_subject_id)) {
             $conditions[$this->aliasField('education_subject_id')] = $requestData->education_subject_id;
         }
@@ -54,7 +56,7 @@ class InstitutionSubjectsTable extends AppTable  {
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
         $Staff = TableRegistry::get('User.Users');
-
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $query
             ->select([
                 'institution_code' => 'Institutions.code',
@@ -83,6 +85,7 @@ class InstitutionSubjectsTable extends AppTable  {
                 $this->aliasField('education_subject_id'),
                 $this->aliasField('academic_period_id'),
                 $this->aliasField('academic_period_id'),
+                'grade_name' => 'EducationGrades.name'
             ])
             ->contain([
                 'Institutions.Areas',
@@ -91,11 +94,14 @@ class InstitutionSubjectsTable extends AppTable  {
                 'EducationSubjects',
                 'AcademicPeriods'
             ])
-            ->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+            ->innerJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
                 $this->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
             ])
-            ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+            ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
                 $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
+            ])
+            ->innerJoin([$EducationGrades->alias() => $EducationGrades->table()], [
+                $EducationGrades->aliasField('id =') . $this->aliasField('education_grade_id')
             ])
             ->where($conditions);
             
@@ -279,7 +285,14 @@ class InstitutionSubjectsTable extends AppTable  {
                     'type' => 'string',
                     'label' => __('Subject Name')
                 ];
-                
+                /*POCOR-6334 starts*/
+                $newFields[] = [
+                    'key' => 'EducationGrades.name',
+                    'field' => 'grade_name',
+                    'type' => 'string',
+                    'label' => __('Eductaion Grade')
+                ];
+                /*POCOR-6334 ends*/
                 $newFields[] = [
                     'key' => 'staff_name',
                     'field' => 'staff_name',
