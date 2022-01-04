@@ -112,7 +112,7 @@ $this->end();
     }	
 </style>
 <div class="" ng-init="$ctrl.timetableId=<?= $timetable_id; ?>;$ctrl.institutionId=<?= $institutionDefaultId; ?>;$ctrl.academicPeriodId=<?= $academicPeriodId; ?>;$ctrl.studentId=<?= $userId; ?>;">
-<div class="alert alert-info" ng-show="$ctrl.dayOfWeekList.length <= 0">There are no records.</div>                        
+<div class="alert alert-info" ng-show="$ctrl.dayOfWeekList.length <= 0"><?= __('There are no records.') ?></div>                        
 <table id="tblTimetable" ng-if="$ctrl.tableReady" class="timetable-table" ng-show="$ctrl.dayOfWeekList.length > 0">   
                     <thead>
                         <tr class="timetable-header">

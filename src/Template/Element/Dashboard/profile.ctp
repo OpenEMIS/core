@@ -29,7 +29,7 @@ if(!$isAdmin): ?>
 		<div class="data-section section_custom_1 single-day">
 			<i class="kd-staff icon"></i>
 			<div class="data-field">
-				<h4>Percent Complete:</h4>
+				<h4><?= __('Percent Complete'); ?>:</h4>
 				<h1 class="data-header ng-binding"><?= $profileCompletness['percentage'];?>%</h1>
 			</div>
 		</div>
