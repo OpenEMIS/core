@@ -418,7 +418,8 @@ trait MessagesTrait
         ],
         'StaffBehaviours' => [
             'date_of_behaviour' => 'Date',
-            'time_of_behaviour' => 'Time'
+            'time_of_behaviour' => 'Time',
+            'restrictDelete' => 'Behaviour cannot be deleted until after configured days'
         ],
         'SystemGroups' => [
             'tabTitle' => 'System Groups'
@@ -514,6 +515,7 @@ trait MessagesTrait
             'date_of_behaviour' => [
                 'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
             ],
+            'cannotDelete' => 'Behaviour cannot be deleted until after configured days'
         ],
         'StudentPromotion' => [
             'noGrades' => 'No Available Grades',
@@ -1119,7 +1121,10 @@ trait MessagesTrait
                     'ageRangeHint' => 'The student should be between %s to %s years old',
                     'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.',
                     'studentNotExists' => 'This student does not exist in the system.'
-                ],
+                ],//POCOR-5924 starts
+                'identity_number' => [
+                    'ruleCheckUniqueIdentityNumber' => 'This identity has already existed in the system.'
+                ],//POCOR-5924 ends
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
@@ -2498,6 +2503,12 @@ trait MessagesTrait
             'testConnectionFail' => 'Please configure correct Connection to Archive Database.',
             'transferConnectionFail' => 'Please configure connection to Archive Database.',
             'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.'
+        ],
+        'CopyData' => [
+            'genralerror' => 'To and from academic period can not be same.',
+            'alreadyexist' => 'There are existing data in the selected To Academic Period.',
+            'nodataexist' => 'Data does not exist for seleceted from academic period.',
+            'nodataexisteducationsystem' => 'Data does not exist in education system for seleceted to academic period.'
         ],
         'UserNationalities' => [
             'ValidateNumberSuccess' => 'Identity number validate successfully.',

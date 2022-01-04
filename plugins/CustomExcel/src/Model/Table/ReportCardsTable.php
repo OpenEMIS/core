@@ -1037,7 +1037,12 @@ class ReportCardsTable extends AppTable
                 ->innerJoin([$StudentSubjects->alias() => $StudentSubjects->table()], [
                     $StudentSubjects->aliasField('education_subject_id = ') . $AssessmentItems->aliasField('education_subject_id')
                 ])
-                ->where([$StudentSubjects->aliasField('student_id') => $params['student_id']])
+                ->where([
+                    $StudentSubjects->aliasField('student_id') => $params['student_id'],
+                    // POCOR-6462
+                    $StudentSubjects->aliasField('education_grade_id') => $params['education_grade_id']
+                    // POCOR-6462
+                ])
                 //POCOR-5056 end
 
                 ->toArray();
@@ -1066,6 +1071,11 @@ class ReportCardsTable extends AppTable
                 ->group('education_subject_id')
 
                 ->toArray();
+            //POCOR-6327 starts
+            if(empty($AssessmentItemData)){
+                $entity = [];
+                return $entity;
+            }//POCOR-6327 ends
 			foreach ($AssessmentItemData as $value) {
 				$StudentSubjectStaff = TableRegistry::get('institution_subject_staff');
 				$StudentSubjectStaffData = $StudentSubjectStaff->find()

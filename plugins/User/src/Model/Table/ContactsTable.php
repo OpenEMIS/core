@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\ORM\Query;
 use App\Model\Traits\OptionsTrait;
 
 use App\Model\Table\ControllerActionTable;
@@ -365,4 +366,19 @@ class ContactsTable extends ControllerActionTable
             }
         }
     }
+
+    /*POCOR-6267 Starts*/
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $session = $this->request->session();
+        $queryString = $this->getQueryString();
+        if (!empty($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
+        } else {
+            $userId = $session->read('Student.Students.id');
+        }
+
+        $query->where([$this->aliasField('security_user_id') => $userId]);
+    }
+    /*POCOR-6267 Ends*/
 }

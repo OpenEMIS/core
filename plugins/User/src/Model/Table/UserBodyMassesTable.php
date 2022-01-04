@@ -7,12 +7,15 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class UserBodyMassesTable extends AppTable
+class UserBodyMassesTable extends ControllerActionTable
 {
+    const POWER = 2;
     public function initialize(array $config)
     {
         $this->table('user_body_masses');
@@ -20,7 +23,37 @@ class UserBodyMassesTable extends AppTable
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
+        
+        $this->addBehavior('Health.Health');
+
+        $this->toggle('search', false);
+
+        $this->addBehavior('Excel',[
+            'excludes' => ['comment, security_user_id'],
+            'pages' => ['index'],
+        ]);
+        //POCOR-6255 start
+        // $this->addBehavior('Page.FileUpload', [
+        //     'fieldMap' => ['file_name' => 'file_content'],
+        //     'size' => '2MB'
+        // ]);//POCOR-6255 end
     }
+    //POCOR-6255 start
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
+        return $events;
+    }
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'download' || $action == 'image') {
+            // check for the user permission to download here
+            $event->stopPropagation();
+            return true;
+        }
+    }//POCOR-6255 end
 
     public function validationDefault(Validator $validator)
     {
@@ -87,7 +120,7 @@ class UserBodyMassesTable extends AppTable
                             return true;
                         }
                     },
-                ],    
+                ],
             ]);
     }
 
@@ -118,5 +151,121 @@ class UserBodyMassesTable extends AppTable
 
             $data['body_mass_index'] = $bmi;
         }
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $modelAlias = 'UserBodyMasses';
+        $userType = '';
+        $this->controller->changeStudentHealthHeader($this, $modelAlias, $userType);
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
+        $this->field('comment',['visible' => false]);
+        $this->field('security_user_id',['visible' => false]);
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['visible' => false]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $session = $this->request->session();
+        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
+        $query->where([$this->aliasField('security_user_id') => $studentUserId])
+        ->orderDesc($this->aliasField('id'));
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query){
+        $session = $this->request->session();
+        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
+        $query->where([$this->aliasField('security_user_id') => $studentUserId])
+        ->orderDesc($this->aliasField('created'));
+    }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+
+        $this->fields['academic_period_id']['type'] = 'select';
+        $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
+        $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
+
+        $this->field('date');
+
+        $this->fields['height']['type'] = 'integer';
+        $this->field('height', ['attr' => ['label' => __('Height') . $this->tooltipMessage(__('Within 0 to 300 centimetres'))]]);
+
+        $this->fields['weight']['type'] = 'integer';
+        $this->field('weight', ['attr' => ['label' => __('Weight') . $this->tooltipMessage(__('Within 0 to 500 kilograms'))]]);
+
+        $this->field('body_mass_index', ['visible' => false]);
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    }
+
+    protected function tooltipMessage($message)
+    {
+        $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
+        return $tooltipMessage;
+    }
+
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+        $weight =  $entity['weight'];
+        //convert height centimeter to meter
+        $height =  ($entity['height'] / 100);
+        //get power of the height
+        $height = pow($height, self::POWER);
+
+        $body_mass_index = ($weight / $height);
+        $entity['body_mass_index'] = $body_mass_index;
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'academic_period_id',
+            'field' => 'academic_period_id',
+            'type'  => 'string',
+            'label' => __('Academic Period')
+        ];
+
+        $extraField[] = [
+            'key'   => 'date',
+            'field' => 'date',
+            'type'  => 'date',
+            'label' => __('Date')
+        ];
+
+        $extraField[] = [
+            'key'   => 'height',
+            'field' => 'height',
+            'type'  => 'string',
+            'label' => __('Height')
+        ];
+
+        $extraField[] = [
+            'key'   => 'weight',
+            'field' => 'weight',
+            'type'  => 'string',
+            'label' => __('Weight')
+        ];
+
+        $extraField[] = [
+            'key'   => 'body_mass_index',
+            'field' => 'body_mass_index',
+            'type'  => 'integer',
+            'label' => __('Body Mass Index
+            ')
+        ];
+
+        $fields->exchangeArray($extraField);
     }
 }
