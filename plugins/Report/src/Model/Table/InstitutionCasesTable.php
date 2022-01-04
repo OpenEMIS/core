@@ -61,7 +61,15 @@ class InstitutionCasesTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
-
+        $institution_id = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
+        $where = [];
+        if ($institution_id != 0) {
+            $where['Institutions.id'] = $institution_id;
+        }
+        if ($areaId != -1) {
+            $where['Institutions.area_id'] = $areaId;
+        }
         $module = $requestData->module;
         $listener = TableRegistry::get($this->features[$module]);
         $query
@@ -71,6 +79,7 @@ class InstitutionCasesTable extends AppTable
                 'area_administrative_code' => 'AreaAdministratives.code',
                 'area_administrative_name' => 'AreaAdministratives.name',
                 'institution_code' => 'Institutions.code',
+                'institution_name' => 'Institutions.name',
                 'status_from' => 'WorkflowTransitions.prev_workflow_step_name',
                 'status_to' => 'WorkflowTransitions.workflow_step_name',
                 'action' => 'WorkflowTransitions.workflow_action_name',
@@ -90,6 +99,7 @@ class InstitutionCasesTable extends AppTable
                 'Institutions.Areas',
                 'Institutions.AreaAdministratives'
             ])
+            ->where([$where])
             ->order([$this->aliasField('case_number')])
             ->formatResults(function ($results) {
                 $arrayRes = $results->toArray();
@@ -165,8 +175,8 @@ class InstitutionCasesTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionCases.institution_id',
-            'field' => 'institution_id',
+            'key' => 'Institutions.institution_name',
+            'field' => 'institution_name',
             'type' => 'integer',
             'label' => __('Institution Name')
         ];
