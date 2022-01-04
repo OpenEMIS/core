@@ -65,7 +65,7 @@ class GuardiansTable extends ControllerActionTable
                     $options['type'] = 'student';
                     $tabElements = $this->controller->getStudentGuardianTabElements($options);
                 } else {
-                    $tabElements = $this->controller->getUserTabElements();
+                    //$tabElements = $this->controller->getUserTabElements();
                 }
             } elseif ($this->action == 'view') {
                 if ($this->controller->name == 'Directories') {
@@ -106,10 +106,12 @@ class GuardiansTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->controller->name == 'Directories') {
             $studentId = $this->Session->read('Directory.Directories.id');
+        } elseif ($this->controller->name == 'Guardians' || $this->controller->name == 'GuardianNavs') {
+            $studentId = $this->Session->read('Auth.User.id');
         } else {
             $studentId = $this->Session->read('Student.Students.id');
         }
@@ -144,7 +146,7 @@ class GuardiansTable extends ControllerActionTable
         ]);
     }
 
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('photo_content', ['type' => 'image', 'order' => 0]);
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);

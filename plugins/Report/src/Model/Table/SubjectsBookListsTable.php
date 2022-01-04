@@ -58,6 +58,7 @@ class SubjectsBookListsTable extends AppTable
        $institutionId = $requestData->institution_id;
        $educationGradeId = $requestData->education_grade_id;
        $educationSubjectId = $requestData->education_subject_id;
+       $areaId = $requestData->area_education_id;
        $conditions = [];
        
         if (!empty($educationSubjectId)) {
@@ -66,7 +67,12 @@ class SubjectsBookListsTable extends AppTable
         if (!empty($institutionId)) {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
         }
-       
+        if (!empty($academicPeriodId)) {
+            $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
+        }
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
+        }
        $query
             ->select([   
                 'student_id' =>'Users.id',             
