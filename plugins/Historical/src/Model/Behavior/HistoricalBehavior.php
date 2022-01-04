@@ -282,6 +282,9 @@ class HistoricalBehavior extends Behavior
         } elseif ($model->controller->name === 'Profiles') {
             $originUrl['plugin'] = 'Profile';
             $originUrl['controller'] = $model->controller->name;
+        } elseif ($model->controller->name === 'Guardians') {
+            $originUrl['plugin'] = 'Guardian';
+            $originUrl['controller'] = $model->controller->name;
         }
         return $originUrl;
     }

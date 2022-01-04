@@ -90,18 +90,18 @@ class StudentWithdrawalReportTable extends AppTable
         return implode(' ', $studentName);
     }
 
-     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-       
-
-        $requestData = json_decode($settings['process']['params']);
+       $requestData = json_decode($settings['process']['params']);
         $academic_period_id = $requestData->academic_period_id;
         $institution_id = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $Statuses = TableRegistry::get('Workflow.WorkflowSteps');
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $StudentWithdrawReasons = TableRegistry::get('Student.StudentWithdrawReasons');
         $Users = TableRegistry::get('User.Users');
+        $Institutions = TableRegistry::get('Institution.Institutions');
         $where = [];
         if ( $institution_id > 0) {
             $where = [$this->aliasField('institution_id = ') => $institution_id];
@@ -112,7 +112,9 @@ class StudentWithdrawalReportTable extends AppTable
         if (!empty($academic_period_id)) {
             $where[$this->aliasField('academic_period_id')] = $academic_period_id;
         }
-
+         if ($areaId != -1) {
+            $where[$Institutions->aliasField('area_id')] = $areaId;
+        }
         $query            
             ->select([
                  'openemis_no' => 'Users.openemis_no',
@@ -151,9 +153,13 @@ class StudentWithdrawalReportTable extends AppTable
                         $Statuses->aliasField('id = ') . $this->aliasField('status_id')
                     ]
                 )
+            ->leftJoin(
+                 [$Institutions->alias() => $Institutions->table()],
+                    [
+                         $Institutions->aliasField('id = ') . $this->aliasField('institution_id')
+                     ]
+             ) 
             ->where([$where]);
-            
-        
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
