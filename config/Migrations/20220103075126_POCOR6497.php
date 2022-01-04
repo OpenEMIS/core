@@ -126,6 +126,11 @@ class POCOR6497 extends AbstractMigration
                 'en' => 'Staff Attendance',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Institution Completeness',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
             
         ];
@@ -173,7 +178,7 @@ class POCOR6497 extends AbstractMigration
 
                 $locale_content_translations_data = [
                     [
-                        'translation' => 'إكمال:',
+                        'translation' => 'إكمال',
                         'locale_content_id' => $localeContentsId,
                         'locale_id' => $localeId1,
                         'modified_user_id' => NULL,
@@ -362,7 +367,7 @@ class POCOR6497 extends AbstractMigration
 
                 $locale_content_translations_data = [
                     [
-                        'translation' => 'مستخدم الطالب'
+                        'translation' => 'مستخدم الطالب',
                         'locale_content_id' => $localeContentsId,
                         'locale_id' => $localeId1,
                         'modified_user_id' => NULL,
@@ -646,6 +651,30 @@ class POCOR6497 extends AbstractMigration
             }
         }
         //
+        $getLocaleContents = $this->query("SELECT * FROM locale_contents WHERE `en` = 'Institution Completeness'");
+        $getLocaleContentsId = $getLocaleContents->fetchAll();
+        if(!empty($getLocaleContentsId)){
+            $localeContentsId = $getLocaleContentsId[0]['id'];
+
+            $localeContentTranslations = $this->query("SELECT * FROM locale_content_translations WHERE `locale_content_id` = $localeContentsId");
+            $localeContentTranslationsData = $localeContentTranslations->fetchAll();
+            if(empty($localeContentTranslationsData)){
+
+                $locale_content_translations_data = [
+                    [
+                        'translation' => 'اكتمال المؤسسة',
+                        'locale_content_id' => $localeContentsId,
+                        'locale_id' => $localeId1,
+                        'modified_user_id' => NULL,
+                        'modified' => NULL,
+                        'created_user_id' => 1,
+                        'created' => date('Y-m-d H:i:s')
+                    ]
+                ];
+
+                $this->insert('locale_content_translations', $locale_content_translations_data);
+            }
+        }
 
         //////
         $getLocaleContents = $this->query("SELECT * FROM locale_contents WHERE `en` = 'Institutions Completeness'");
