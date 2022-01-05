@@ -1142,6 +1142,11 @@ class WorkflowBehavior extends Behavior
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;
             }
+            else if($model->alias() == 'InstitutionCases'){
+                $attr['type'] = 'chosenSelect';
+                $attr['attr']['multiple'] = false;
+                $attr['options'] = $assigneeOptions;
+            }
             else {
                 $attr['type'] = 'hidden';
             }
