@@ -103,7 +103,6 @@ class InstitutionSubjectStudentsTable extends AppTable
                 ->toArray();
 
             $subjectStudent = $student->toArray();
-
             foreach ($classSubjectsData as $classSubject) {
                 $isAutoAddSubject = $this->isAutoAddSubject($classSubject);
                 $subjectEducationGradeId = $classSubject['education_grade_id'];
@@ -112,9 +111,11 @@ class InstitutionSubjectStudentsTable extends AppTable
                 if ($isAutoAddSubject && $subjectEducationGradeId == $studentEducationGradeId) {
                     $subjectStudent['education_subject_id'] = $classSubject['education_subject_id'];
                     $subjectStudent['institution_subject_id'] = $classSubject['institution_subject_id'];
-
                     $entity = $this->newEntity($subjectStudent);
                     $this->save($entity);
+                    $countMale=$this->getMaleCountBySubject($classSubject['institution_subject_id']);
+                    $countFemale=$this->getFemaleCountBySubject($classSubject['institution_subject_id']);
+                    $this->InstitutionSubjects->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $classSubject['institution_subject_id']]);
                 }
             }
         }
