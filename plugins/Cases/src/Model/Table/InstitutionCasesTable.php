@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
+use Cake\Utility\Text;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -34,7 +35,7 @@ class InstitutionCasesTable extends ControllerActionTable
             'Dashboard' => ['index']
         ]);
 
-        $this->toggle('add', false);
+        // $this->toggle('add', false);
 
         $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
         $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
@@ -60,11 +61,27 @@ class InstitutionCasesTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
+            $linkedRecord = TableRegistry::get('Institution.InstitutionCaseRecords');
             $newCaseNumber = $entity->case_number . "-" . $entity->id;
             $this->updateAll(
                 ['case_number' => $newCaseNumber],
                 ['id' => $entity->id]
             );
+            if ($entity->submit == 'save') {
+                if (is_null($this->request->query('feature'))) {
+                   $this->request->query['feature'] = 'StudentAttendances';
+                }
+                $features = $this->request->query['feature'];
+
+                $params['feature'] = $features;
+                $params['institution_case_id'] =  $entity->id;
+                $params['record_id'] =  0;
+                $params['id'] = Text::uuid();
+                $params['created_user_id'] = $entity->created_user_id;
+                $params['created'] = date('Y-m-d H:i:s');
+                $newEntity = $linkedRecord->newEntity($params);
+                $linkedRecord->save($newEntity);                
+            }
         }
     }
 
@@ -104,6 +121,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
         $featureOptions = $newFeatureOption;
 
+        $featureOptions = ['-1' => '-- ' . __('All') . ' --'] + $featureOptions;
         if (!is_null($this->request->query('feature')) && array_key_exists($this->request->query('feature'), $featureOptions)) {
             $selectedFeature = $this->request->query('feature');
         } else {
@@ -149,8 +167,8 @@ class InstitutionCasesTable extends ControllerActionTable
         //     $userId = $session->read('Auth.User.id');
         // }
         $userId = $session->read('Auth.User.id');
-
-        $query
+        if ($selectedFeature == -1) {
+             $query
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('case_number'),
@@ -179,9 +197,44 @@ class InstitutionCasesTable extends ControllerActionTable
             )
             //->where([$this->aliasField('assignee_id') => $userId])
             ->group($this->aliasField('id'));
+        }
+        else{
+            $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('case_number'),
+                $this->aliasField('title'),
+                $this->aliasField('description'),
+                $this->aliasField('status_id'),
+                $this->aliasField('assignee_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('modified_user_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created_user_id'),
+                $this->aliasField('created'),
+                $this->Assignees->aliasField('first_name'),
+                $this->Assignees->aliasField('middle_name'),
+                $this->Assignees->aliasField('last_name'),
+                $this->Assignees->aliasField('third_name'),
+                $this->Assignees->aliasField('preferred_name')
+            ])
+            ->contain(['LinkedRecords'])
+            ->innerJoin(
+                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                [
+                    [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
+                    [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                ]
+            )
+            ->group($this->aliasField('id'));
+        }
+       
 
 
-        $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+        // $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+            if ($selectedFeature != 'StudentAttendances') {
+               $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+            }
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -202,6 +255,9 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         $this->field('case_number', ['type' => 'readonly']);
         $this->field('title', ['type' => 'readonly']);
+        $this->setFieldOrder([
+            'title','assignee_id', 'description'
+        ]);
     }
 
     public function onGetCustomLinkedRecordsElement(Event $mainEvent, $action, $entity, $attr, $options = [])
@@ -608,5 +664,13 @@ class InstitutionCasesTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
     // POCOR-6170
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {    
+        $this->field('case_number',['visible' => false]);
+        $this->setFieldOrder([
+            'title', 'description', 'assignee_id'
+        ]);
+    }
 
 }
