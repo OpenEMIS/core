@@ -390,6 +390,7 @@ class InstitutionsTable extends ControllerActionTable
         $instituteType = $sheetData['institute_tabs_type'];
         $cloneFields = $fields->getArrayCopy();
         $newFields = [];
+       // echo "<pre>"; print_r($cloneFields); exit;
         foreach ($cloneFields as $key => $value) {          
             if($instituteType=='Map'){
                   if ($value['field'] == 'longitude') {
@@ -557,7 +558,7 @@ class InstitutionsTable extends ControllerActionTable
                     foreach($customFieldData as $data) {
                         $custom_field_id = $data->custom_field_id;
                         $custom_field = $data->custom_field;
-                            if ($value['field'] == 'area_id') {
+                            if ($value['field'] == 'institution_gender_id') {
                             $newFields[] = [
                                 'key' => '',
                                 'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
