@@ -319,10 +319,10 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 </div>
                 <div class="input string" ng-show="InstitutionStaffController.StaffIdentities != 2">
                     <label><?= __('Identity Number') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" disabled="disabled">
-                    <div ng-if="InstitutionStaffController.postResponse.error.identities[0].number" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].number">{{ error }}</p>
-                    </div>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" disabled="disabled"><!--POCOR-5924 starts-->
+                    <div ng-if="((InstitutionStaffController.postResponse.error.identities[0].number) || (InstitutionStaffController.postResponse.error.identity_number))" class="error-message">
+                        <p ng-repeat="error in ((InstitutionStaffController.postResponse.error.identities[0].number) || (InstitutionStaffController.postResponse.error.identity_number))">{{ error }}</p>
+                    </div><!--POCOR-5924 ends-->
                 </div>
                 <div class="input string">
                     <label><?= __('Date Of Birth') ?></label>
