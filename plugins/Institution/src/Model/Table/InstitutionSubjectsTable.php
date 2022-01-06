@@ -1917,7 +1917,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
       //echo "<pre>";  print_r($cloneFields); exit;
         foreach ($cloneFields as $key => $value) {
             $newFields[] = $value;
-            if($value['field'] == 'subject_name'){
+            if($value['field'] == 'rooms'){
 
                 $newFields[] = [
                     'key' => 'InstitutionSubjects.total_male_students',
