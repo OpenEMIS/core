@@ -1882,9 +1882,10 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         $cloneFields = $fields->getArrayCopy();
         $newFields = [];
+        //echo "<pre>"; print_r($cloneFields); exit;
         foreach ($cloneFields as $key => $value) {
             $newFields[] = $value;
-            if($value['field'] == 'homeroom_teacher'){
+            if($value['field'] == 'secondary_teacher'){
                 
 
                 $newFields[] = [
