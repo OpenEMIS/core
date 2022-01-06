@@ -55,6 +55,9 @@ class TrainingResultsTable extends AppTable
         $query
             ->select([
                 'result' => $this->aliasField('result'),
+                'attendance_days' => $this->aliasField('attendance_days'),//5695
+                'practical' => $this->aliasField('practical'),//5695
+                'certificate_number' => $this->aliasField('certificate_number'),//5695
                 'workflow_step_name' => $WorkflowSteps->aliasField('name'),
                 'openemis_no' => 'Trainees.openemis_no',
                 'course_code' => 'Courses.code',
@@ -62,14 +65,14 @@ class TrainingResultsTable extends AppTable
                 'credit_hours' => 'Courses.credit_hours',
                 'session_code' => 'Sessions.code',
                 'identity_type_name' => 'IdentityTypes.name',
-                'identity_number' => 'Trainees.identity_number',
-                'result_type' => 'ResultTypes.name'
+                'identity_number' => 'Trainees.identity_number'
+                //'result_type' => 'ResultTypes.name'//5695 
             ])
             ->contain(['Sessions.Courses'])
-            ->innerJoin(
+            /*->innerJoin(
                 ['ResultTypes' => 'training_result_types'],
                 ['ResultTypes.id = ' . $this->aliasField('training_result_type_id')]
-            )
+            )*///5695
 			->innerJoin(
                 [$TrainingSessionResults->alias() => $TrainingSessionResults->table()],
                 [$TrainingSessionResults->aliasField('training_session_id = ') . $this->aliasField('training_session_id')]
@@ -199,12 +202,12 @@ class TrainingResultsTable extends AppTable
             'label' => '',
         ];
 		
-        $newFields[] = [
+        /*$newFields[] = [
             'key' => 'result_type',
             'field' => 'result_type',
             'type' => 'string',
             'label' => __('Result Type'),
-        ];
+        ];*///5695 starts
 		
         $newFields[] = [
             'key' => 'result',
@@ -212,7 +215,28 @@ class TrainingResultsTable extends AppTable
             'type' => 'string',
             'label' => __('Result'),
         ];
+        //5695 starts
+        $newFields[] = [
+            'key' => 'practical',
+            'field' => 'practical',
+            'type' => 'string',
+            'label' => __('Practical'),
+        ];
 
+        $newFields[] = [
+            'key' => 'attendance_days',
+            'field' => 'attendance_days',
+            'type' => 'string',
+            'label' => __('Attendance Days'),
+        ];
+
+        $newFields[] = [
+            'key' => 'certificate_number',
+            'field' => 'certificate_number',
+            'type' => 'string',
+            'label' => __('Certificate Number'),
+        ];
+        //5695 ends
         $fields->exchangeArray($newFields);
     }
 

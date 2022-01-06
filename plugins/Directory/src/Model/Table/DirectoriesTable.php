@@ -274,9 +274,47 @@ class DirectoriesTable extends ControllerActionTable
 
         $query->where($conditions)
             ->order($orders);
-
         $options['auto_search'] = true;
-
+        //POCOR-6248 starts
+        $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
+        if ($userType == self::STAFF || $userType == self::STUDENT) {
+            $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+            $UserIdentities = TableRegistry::get('User.Identities');
+            $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItem =   $ConfigItemTable
+                                ->find()
+                                ->where([
+                                    $ConfigItemTable->aliasField('code') => 'directory_identity_number',
+                                    $ConfigItemTable->aliasField('value') => 1
+                                ])
+                                ->first();
+            if(!empty($ConfigItem)){
+                //value_selection
+                //get data from Identity Type table 
+                $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
+                if(!empty($typesIdentity)){                
+                    $query
+                        ->select([
+                            'identity_type' => $IdentityTypes->aliasField('name'),
+                            $typesIdentity->identity_type => $UserIdentities->aliasField('number')
+                        ])
+                        ->leftJoin(
+                                    [$UserIdentities->alias() => $UserIdentities->table()],
+                                    [
+                                        $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('id'),
+                                        $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
+                                    ]
+                                )
+                        ->leftJoin(
+                            [$IdentityTypes->alias() => $IdentityTypes->table()],
+                            [
+                                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
+                                $IdentityTypes->aliasField('id = ') . $typesIdentity->id
+                            ]
+                        );
+                }
+            }   
+        }//POCOR-6248 ends
         $this->dashboardQuery = clone $query;
     }
 
@@ -915,6 +953,67 @@ class DirectoriesTable extends ControllerActionTable
     {
         if ($this->action == 'index') {
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
+            //POCOR-6248 starts    
+            if ($userType == self::STAFF || $userType == self::STUDENT) {
+               $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+                $ConfigItem =   $ConfigItemTable
+                                    ->find()
+                                    ->where([
+                                        $ConfigItemTable->aliasField('type') => 'Columns for Directory List Page'
+                                    ])
+                                    ->all();
+                foreach ($ConfigItem as $item) {
+                    if($item->code == 'directory_photo'){
+                        $this->field('photo_name', ['visible' => false]);
+                        if($item->value == 1){
+                            $this->field('photo_content', ['visible' => true]);
+                        }else{
+                            $this->field('photo_content', ['visible' => false]);
+                        }
+                    }
+                    if($item->code == 'directory_openEMIS_ID'){
+                        if($item->value == 1){
+                            $this->field('openemis_no', ['visible' => true, 'before' => 'name']);
+                        }else{
+                            $this->field('openemis_no', ['visible' => false, 'before' => 'name']);
+                        }
+                    }
+                    if($item->code == 'directory_name'){
+                        if($item->value == 1){
+                            $this->field('name', ['visible' => true, 'before' => 'institution']);
+                        }else{
+                            $this->field('name', ['visible' => false, 'before' => 'institution']);
+                        } 
+                    }
+                    if($item->code == 'directory_institution'){
+                        if($item->value == 1){
+                            $this->field('institution', ['visible' => true, 'before' => 'date_of_birth']);
+                        }else{
+                            $this->field('institution', ['visible' => false, 'before' => 'date_of_birth']);
+                        } 
+                    }
+                    if($item->code == 'directory_date_of_birth'){
+                        if($item->value == 1){
+                            $this->field('date_of_birth', ['visible' => true, 'before' => 'student_status']);
+                        }else{
+                            $this->field('date_of_birth', ['visible' => false, 'before' => 'student_status']);
+                        } 
+                    }
+                    if($item->code == 'directory_identity_number'){
+                        if($item->value == 1){
+                            if(!empty($item->value_selection)){
+                                //get data from Identity Type table 
+                                $typesIdentity = $this->getIdentityTypeData($item->value_selection);
+                                $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'date_of_birth']);
+                            }
+                        }else{
+                            $this->field($typesIdentity->identity_type, ['visible' => false, 'after' => 'date_of_birth']);
+                        }
+                    }
+                }
+            }
+            $this->field('student_status', ['visible' => false]);
+            //POCOR-6248 ends    
 
             switch ($userType) {
                 case self::ALL:
@@ -934,6 +1033,23 @@ class DirectoriesTable extends ControllerActionTable
             }
         }
     }
+
+    //POCOR-6248 starts
+    public function getIdentityTypeData($value_selection)
+    {
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $typesIdentity =   $IdentityTypes
+                            ->find()
+                            ->select([
+                                'id' => $IdentityTypes->aliasField('id'),
+                                'identity_type' => $IdentityTypes->aliasField('name')
+                            ])
+                            ->where([
+                                $IdentityTypes->aliasField('id') => $value_selection
+                            ])
+                            ->first();
+        return  $typesIdentity;
+    }//POCOR-6248 ends
 
     public function onGetStudentStatus(Event $event, Entity $entity)
     {
@@ -1071,6 +1187,7 @@ class DirectoriesTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        //POCOR-6332 commented due to this function some error was occuring
         $isSet = $this->setSessionAfterAction($event, $entity);
         if ($isSet) {
             $reload = $this->Session->read('Directory.Directories.reload');

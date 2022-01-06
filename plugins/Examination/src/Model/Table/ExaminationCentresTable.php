@@ -705,20 +705,21 @@ class ExaminationCentresTable extends ControllerActionTable {
                 if (empty($entity->errors())) {
                     if (!empty($requestData[$this->alias()]['academic_period_id'])) {
                         $academicPeriodId = $requestData[$model->alias()]['academic_period_id'];
-                        $institutionTypeId = !empty($requestData[$model->alias()]['institution_type']) ? $requestData[$model->alias()]['institution_type'] : '';
+                        $institutionTypeId = $requestData['ExaminationCentres']['institution_type'];
+                        $institutionTypeId = !empty($requestData[$model->alias()]['institution_type']) ? $requestData[$model->alias()]['institution_type'] : $institutionTypeId;
 
                         $specialNeedIds = [];
                         if (isset($requestData[$model->alias()]['examination_centre_special_needs'])) {
                             $specialNeedIds = array_column($requestData[$model->alias()]['examination_centre_special_needs'], 'special_need_type_id');
                         }
-
                         // put special needs into System Processes params
                         $SystemProcesses = TableRegistry::get('SystemProcesses');
                         $name = 'AddAllInstitutionsExamCentre';
                         $pid = '';
                         $processModel = $model->registryAlias();
                         $eventName = '';
-                        $passArray = ['special_needs' => $specialNeedIds];
+                        $passArray = ['special_needs' => $specialNeedIds, 'institution_type_id' => $institutionTypeId];
+                        //$passArray = ['special_needs' => $specialNeedIds];
                         $params = json_encode($passArray);
                         $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
 
@@ -785,9 +786,22 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $query->where(['ExaminationCentres.institution_id' => 0]);
 
                 } else {
-                    $query
+                    /*POCOR-5737 starts*/
+                    $SystemProcesses = TableRegistry::get('SystemProcesses');
+                    $getCentreTypeId = $SystemProcesses->find()
+                                    ->where([$SystemProcesses->aliasField('name') => 'AddAllInstitutionsExamCentre'])
+                                    ->order([$SystemProcesses->aliasField('created') => 'DESC'])
+                                    ->first();
+                    $convertData = json_decode($getCentreTypeId->params);
+                    $lastInsertedTypeId = $convertData->institution_type_id;
+                    if (!empty($lastInsertedTypeId) && $lastInsertedTypeId == $type) {
+                        $query->where(['ExaminationCentres.institution_id' => 0]);
+                    } else {
+                        $query
                         ->matching('Institutions')
                         ->where(['Institutions.institution_type_id' => $type]);
+                    }
+                    /*POCOR-5737 ends*/
                 }
             }
 

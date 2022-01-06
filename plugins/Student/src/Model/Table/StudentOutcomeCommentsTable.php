@@ -144,14 +144,24 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
 		
 		$userData = $this->Session->read();
 		$studentId = $userData['Auth']['User']['id'];
-		
-		if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
+		/*POCOR-6267 starts*/
+        if (isset($this->controller->name) && $this->controller->name == 'GuardianNavs') {
+            $session = $this->request->session();
+            $studentId = $session->read('Student.Students.id');
+        }
 
-		} else {
-			if (!empty($studentId)) {
-				$conditions[$this->aliasField('student_id')] = $studentId;
-			}
-		}
+        //setting up condition for listing
+        if (isset($this->controller->name) && $this->request->controller == 'GuardianNavs') {
+            $conditions[$this->aliasField('student_id')] = $studentId;
+        }/*POCOR-6267 ends*/else {
+            if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
+
+            } else {
+                if (!empty($studentId)) {
+                    $conditions[$this->aliasField('student_id')] = $studentId;
+                }
+            }
+        }
 		
         $query->where($conditions);
     }

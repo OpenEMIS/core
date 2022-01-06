@@ -226,6 +226,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
             'contact_number'
         ];
 
+        /** START: Removed to resolve the tiket "POCOR-6367"
+         *
+         * Note: This code is commented due to remove the advanced search filter temporary base Because it is blocking the page.
+         * Author : Anand Malvi
         $this->addBehavior('AdvanceSearch', [
             'exclude' => [
                 'staff_id',
@@ -237,6 +241,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             ],
             'order' => $advancedSearchFieldOrder
         ]);
+        ** END : Removed to resolve the tiket "POCOR-6367" */
         $this->addBehavior('User.AdvancedIdentitySearch', [
             'associatedKey' => $this->aliasField('staff_id')
         ]);
@@ -689,7 +694,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
-            if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_STAFF_TYPE']) {
+            if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+                $attr['visible'] = false;
+            }else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_STAFF_TYPE'] || $request->data[$this->alias()]['staff_change_type_id'] == 3) {
                 $attr['visible'] = true;
                 $attr['type'] = 'disabled';
                 if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
@@ -707,7 +714,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
-            if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_STAFF_TYPE']) {
+            if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+                $attr['visible'] = false;
+            }else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_STAFF_TYPE'] || $request->data[$this->alias()]['staff_change_type_id'] == 3) {
                 $attr['type'] = 'select';
                 $options = $this->StaffTypes->getList()->toArray();
                 if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
@@ -733,7 +742,12 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
             if (isset($request->data[$this->alias()])) {
-                if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE']) {
+                // echo "<pre>";print_r($request->data);die;
+                if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+                    $attr['visible'] = false;
+                }
+                // else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE']) {
+                else if ($request->data[$this->alias()]['staff_change_type_id'] != '' && $request->data[$this->alias()]['staff_change_type_id'] == 2) {
                     $attr['visible'] = true;
                     if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                         $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
@@ -753,7 +767,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
             if (isset($request->data[$this->alias()])) {
-                if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE']) {
+                if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+                    $attr['visible'] = false;
+                }
+                else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE'] || $request->data[$this->alias()]['staff_change_type_id'] == 2) {
                     $attr['type'] = 'select';
                     if (isset($attr['options'])) {
                         $options = $attr['options'];
@@ -781,7 +798,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
-            if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE']) {
+            if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+                $attr['visible'] = false;
+            }
+            else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE'] || $request->data[$this->alias()]['staff_change_type_id'] == 2) {
                 $attr['type'] = 'date';
                 if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
@@ -799,6 +819,36 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
     {
+        // $entity = $attr['entity'];
+
+        // // start_date
+        // if (!$entity->has('start_date')) {
+        //     $requestData = $this->request->data;
+        //     $startDate = new Date($requestData[$this->alias()]['start_date']);
+        // } else {
+        //     $startDate = $entity->start_date;
+        // }
+
+        // $staffChangeTypes = $this->staffChangeTypesList;
+        // // echo "<pre>";print_r($request->data);die;
+        // if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+        //     $attr['visible'] = false;
+        // }
+        // else if($request->data[$this->alias()]['staff_change_type_id'] == '' || ($request->data[$this->alias()]['staff_change_type_id'] == 1 || $request->data[$this->alias()]['staff_change_type_id'] == 2)){
+        //     $attr['type'] = 'date';
+        //     $attr['value'] = $startDate->format('Y-m-d');
+        // }else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
+        //     $attr['type'] = 'date';
+        //     $attr['value'] = $startDate->format('Y-m-d');
+        // } else {
+        //     $attr['value'] = $startDate->format('Y-m-d');
+        //     $attr['attr']['value'] = $this->formatDate($startDate);
+        // }
+
+        // return $attr;
+
+
+
         $entity = $attr['entity'];
 
         // start_date
@@ -810,12 +860,27 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
 
         $staffChangeTypes = $this->staffChangeTypesList;
-        if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
+        if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+            $attr['visible'] = false;
+        }
+        else if($request->data[$this->alias()]['staff_change_type_id'] == '' || ($request->data[$this->alias()]['staff_change_type_id'] == 4)){
             $attr['type'] = 'date';
             $attr['value'] = $startDate->format('Y-m-d');
+            $attr['attr']['value'] = $this->formatDate($startDate);
         } else {
+            $getStaffStartData = TableRegistry::get('institution_staff');
+            $getStaffStartDateData = $getStaffStartData->find()
+            ->where([
+                $getStaffStartData->aliasField('staff_id') => $entity->staff_id,
+                $getStaffStartData->aliasField('institution_id') => $entity->institution_id
+            ])
+            ->order([$getStaffStartData->aliasField('start_date') => 'DESC'])
+            ->first();
+            $startDate = $getStaffStartDateData->start_date;
+
             $attr['value'] = $startDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($startDate);
+            $attr['type'] = 'hidden';
         }
 
         return $attr;
@@ -825,7 +890,12 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
-            if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['END_OF_ASSIGNMENT']) {
+            // echo "<pre>";print_r($request->data);die;
+            if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+                $attr['visible'] = false;
+            }
+            // else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['END_OF_ASSIGNMENT']) {
+            else if ($request->data[$this->alias()]['staff_change_type_id'] == 1) {
                 $attr['type'] = 'date';
                 if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
@@ -848,6 +918,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     }
 
                     $attr['date_options']['startDate'] = $earliestEndDate->format('d-m-Y');
+                    if(isset($entity->end_date)){
+                        $attr['value'] = $entity->end_date;
+                    }
                 }
             } else {
                 $attr['type'] = 'hidden';

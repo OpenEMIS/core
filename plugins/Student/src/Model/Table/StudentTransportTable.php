@@ -70,8 +70,16 @@ class StudentTransportTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $session = $this->request->session();
+        $queryString = $this->getQueryString();
+        if (!empty($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
+        } else {
+            $userId = $session->read('Student.Students.id');
+        }
         $query
-            ->contain(['InstitutionTrips.TripTypes','InstitutionTrips.InstitutionBuses','InstitutionTrips.InstitutionTransportProviders']);
+            ->contain(['InstitutionTrips.TripTypes','InstitutionTrips.InstitutionBuses','InstitutionTrips.InstitutionTransportProviders'])
+            ->where([$this->aliasField('student_id') => $userId]);
     }
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {

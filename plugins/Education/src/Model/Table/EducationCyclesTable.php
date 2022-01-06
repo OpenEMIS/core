@@ -94,9 +94,9 @@ class EducationCyclesTable extends ControllerActionTable
         if($entity->isNew()){
             $body = array();
             $body = [
-                'education_level_id' =>$entity->education_level_id,
-                'cycle_name' =>$entity->name,
-                'cycle_id' =>$entity->id,
+				'education_level_id'   => $entity->education_level_id,
+                'education_cycle_id'   => $entity->id,
+                'education_cycle_name' => $entity->name,
             ];
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
@@ -109,9 +109,9 @@ class EducationCyclesTable extends ControllerActionTable
         if(!$entity->isNew()){
             $body = array();
             $body = [
-                'education_level_id' =>$entity->education_level_id,
-                'education_cycle_id' =>$entity->education_level_id,
-                'education_cycle_name' =>$entity->name,
+                'education_level_id'   => $entity->education_level_id,
+                'education_cycle_id'   => $entity->id,
+                'education_cycle_name' => $entity->name,
             ];
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
