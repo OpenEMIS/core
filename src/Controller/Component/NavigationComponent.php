@@ -601,32 +601,18 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-
-            'Institutions.InstitutionProfiles' => [
+            'Institutions.InstitutionProfiles.index' => [
                 'title' => 'Institutions',
                 'parent' => 'Profile',
                 'selected' => ['Institutions.InstitutionProfiles'],
-                'params' => ['plugin' => 'Institution','controller' => 'Institutions', 'action' => 'InstitutionProfiles', 0 => 'index', $institutionId],
-
-			'Institutions.Profiles.index' => [
-				'title' => 'Profiles',
-				'parent' => 'Institution.General',
-				'selected' => ['Institutions.Profiles'],
-				'params' => ['plugin' => 'Institution']
-			],
-            'Institutions.Shifts' => [
-                'title' => 'Shifts',
-                'parent' => 'Institution.General',
-                'selected' => ['Institutions.Shifts'],
-                'params' => ['plugin' => 'Institution']
-
+                'params' => ['plugin' => 'Institution', 0 => $institutionId],
             ],
-
+		    
             'Institutions.StaffProfiles' => [
                 'title' => 'Staff',
                 'parent' => 'Profile',
                 'selected' => ['Institutions.StaffProfiles'],
-                'params' => ['plugin' => 'Institution','controller' => 'Institutions', 'action' => 'StaffProfiles', 0 => 'index', $institutionId],
+                'params' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffProfiles', 0 => 'index', $institutionId],
             ],
 
             'Institutions.StudentProfiles' => [
@@ -636,13 +622,19 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution','controller' => 'Institutions', 'action' => 'StudentProfiles', 0 => 'index', $institutionId],
             ],
             /*POCOR-6286 ends*/
+            'Institutions.Shifts' => [
+                'title' => 'Shifts',
+                'parent' => 'Institution.General',
+                'selected' => ['Institutions.Shifts'],
+                'params' => ['plugin' => 'Institution']
+
+            ],
             'Institution.Academic' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
-
-
+            
             'Institutions.Programmes' => [
                 'title' => 'Programmes',
                 'parent' => 'Institution.Academic',
@@ -1442,6 +1434,12 @@ class NavigationComponent extends Component
                 'selected' => ['Profiles.ScheduleTimetable'],
                 'params' => ['plugin' => 'Profile']
             ],
+            'Profiles.StaffProfiles' => [
+                'title' => 'Profiles',
+                'parent' => 'Profiles.Staff',
+                'params' => ['plugin' => 'Profile',],
+                'selected' => ['Profiles.StaffProfiles']
+            ]
         ];
         return $navigation;
     }
@@ -1479,6 +1477,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Profile', 'type' => 'student'],
                 'selected' => ['Profiles.StudentBankAccounts', 'Profiles.StudentFees']
             ],
+            'Profiles.StudentProfiles' => [
+                'title' => 'Profiles',
+                'parent' => 'Profiles.Student',
+                'params' => ['plugin' => 'Profile', 'type' => 'student'],
+                'selected' => ['Profiles.StudentProfiles']
+            ]
         ];
         return $navigation;
     }
@@ -1540,7 +1544,7 @@ class NavigationComponent extends Component
         $session = $this->request->session();
         $id = $session->read('Guardian.Guardians.id');
 
-        $navigation = [
+        $nav = [
             'Directories.Staff' => [
                 'title' => 'Staff',
                 'parent' => 'Directories.Directories.index',
@@ -1564,14 +1568,20 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.TrainingNeeds', 'Directories.TrainingResults', 'Directories.Courses']
             ],
-
-            'Directories.StaffProfiles' => [
-                'title' => 'Profile',
-                'parent' => 'Directories.Staff',
-                'params' => ['plugin' => 'Directory'],
-                'selected' => ['Directories.StaffProfiles']
-            ]
         ];
+
+        if ($this->AccessControl->check(['Institutions', 'StaffProfiles'])) {
+            $newNav = [
+                'Directories.StaffProfiles' => [
+                    'title' => 'Profiles',
+                    'parent' => 'Directories.Staff',
+                    'params' => ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'StaffProfiles'],
+                    'selected' => ['Directories.StaffProfiles.index', 'Directories.StaffProfiles.view']
+                ]
+            ];
+        }
+        $navigation = array_merge($nav, $newNav);
+        //echo "<pre>";print_r($mergedNav);die();
         return $navigation;
     }
 

@@ -103,13 +103,7 @@ class InstitutionsProfileTable extends ControllerActionTable
             ];
 		
             // Download button, status must be generated or published
-            if ($this->AccessControl->check(['ProfileTemplates', 'InstitutionProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
-                $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
-                $buttons['download'] = [
-                    'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
-                    'attr' => $indexAttr,
-                    'url' => $downloadUrl
-                ];
+            if ($this->AccessControl->check(['Institutions', 'InstitutionProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
 				$downloadPdfUrl = $this->setQueryString($this->url('downloadPDF'), $params);
                 $buttons['downloadPdf'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
@@ -119,7 +113,7 @@ class InstitutionsProfileTable extends ControllerActionTable
             }
 
             // Generate button, all statuses
-            if ($this->AccessControl->check(['ProfileTemplates', 'InstitutionProfiles', 'generate'])) {
+            if ($this->AccessControl->check(['Institutions', 'InstitutionProfiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->ReportCards
@@ -152,35 +146,6 @@ class InstitutionsProfileTable extends ControllerActionTable
                             'url' => 'javascript:void(0)'
                             ];
                 } 
-            }
-
-            // Publish button, status must be generated
-            if ($this->AccessControl->check(['ProfileTemplates', 'InstitutionProfiles', 'publish']) && $entity->has('report_card_status') 
-                    && ( $entity->report_card_status == self::GENERATED 
-                         || $entity->report_card_status == '12' 
-                       )
-                ) {
-                $publishUrl = $this->setQueryString($this->url('publish'), $params);
-                $buttons['publish'] = [
-                    'label' => '<i class="fa kd-publish"></i>'.__('Publish'),
-                    'attr' => $indexAttr,
-                    'url' => $publishUrl
-                ];
-            }
-
-            // Unpublish button, status must be published
-            if ($this->AccessControl->check(['ProfileTemplates', 'InstitutionProfiles', 'unpublish']) 
-                    && $entity->has('report_card_status') 
-                    && ( $entity->report_card_status == self::PUBLISHED 
-                          || $entity->report_card_status == '16'
-                        )
-                    ) {
-                $unpublishUrl = $this->setQueryString($this->url('unpublish'), $params);
-                $buttons['unpublish'] = [
-                    'label' => '<i class="fa kd-unpublish"></i>'.__('Unpublish'),
-                    'attr' => $indexAttr,
-                    'url' => $unpublishUrl
-                ];
             }
         }
         return $buttons;
@@ -329,25 +294,6 @@ class InstitutionsProfileTable extends ControllerActionTable
                     'report_card_id' => $reportCardId
                 ];
 
-                // Download all button
-                if ($generatedCount > 0 || $publishedCount > 0) {
-                    $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
-                    $downloadButtonPdf['type'] = 'button';
-                    $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
-                    $downloadButtonPdf['attr'] = $toolbarAttr;
-                    $downloadButtonPdf['attr']['title'] = __('Download All PDF');
-                    $extra['toolbarButtons']['downloadAllPdf'] = $downloadButtonPdf;
-                }
-
-                if ($generatedCount > 0 || $publishedCount > 0) {
-                    $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
-                    $downloadButton['type'] = 'button';
-                    $downloadButton['label'] = '<i class="fa kd-download"></i>';
-                    $downloadButton['attr'] = $toolbarAttr;
-                    $downloadButton['attr']['title'] = __('Download All Excel');
-                    $extra['toolbarButtons']['downloadAll'] = $downloadButton;
-                }
-
                 // Generate all button
                 $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
                 $generateButton['type'] = 'button';
@@ -384,26 +330,6 @@ class InstitutionsProfileTable extends ControllerActionTable
                     $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('ReportCardStatuses.date_closed'));
                     $generateButton['url'] = 'javascript:void(0)';
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
-                }
-
-                // Publish all button
-                if ($generatedCount > 0) {
-                    $publishButton['url'] = $this->setQueryString($this->url('publishAll'), $params);
-                    $publishButton['type'] = 'button';
-                    $publishButton['label'] = '<i class="fa kd-publish"></i>';
-                    $publishButton['attr'] = $toolbarAttr;
-                    $publishButton['attr']['title'] = __('Publish All');
-                    $extra['toolbarButtons']['publishAll'] = $publishButton;
-                }
-
-                // Unpublish all button
-                if ($publishedCount > 0) {
-                    $unpublishButton['url'] = $this->setQueryString($this->url('unpublishAll'), $params);
-                    $unpublishButton['type'] = 'button';
-                    $unpublishButton['label'] = '<i class="fa kd-unpublish"></i>';
-                    $unpublishButton['attr'] = $toolbarAttr;
-                    $unpublishButton['attr']['title'] = __('Unpublish All');
-                    $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
                 }
             }
         }
