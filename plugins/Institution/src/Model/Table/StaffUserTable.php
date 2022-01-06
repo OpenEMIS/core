@@ -157,7 +157,7 @@ class StaffUserTable extends ControllerActionTable
     // POCOR-5684
     public function onGetIdentityNumber(Event $event, Entity $entity){
 
-        // Case 1: if user has only one identity, show the same, 
+        // Case 1: if user has only one identity, show the same,
         // Case 2: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
         // Case 3: if user has more than one identity (no one is linked to nationality), show the first
 
@@ -168,11 +168,11 @@ class StaffUserTable extends ControllerActionTable
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->all();
-        
+
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -201,14 +201,14 @@ class StaffUserTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -217,7 +217,7 @@ class StaffUserTable extends ControllerActionTable
                     array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
-            
+
             if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
                 return $entity->identity_number = $nationality_based_ids[0]['number'];
@@ -238,11 +238,11 @@ class StaffUserTable extends ControllerActionTable
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->all();
-        
+
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number', 'identity_type_id'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -278,14 +278,14 @@ class StaffUserTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -506,15 +506,15 @@ class StaffUserTable extends ControllerActionTable
                                     'Users.Identities.IdentityTypes',
                                     'Users.AddressAreas',
                                     'Users.BirthplaceAreas',
-                                    'Users.Contacts.ContactTypes'                   
+                                    'Users.Contacts.ContactTypes'
                                 ],
                     ])->where([
                         $staff->aliasField('staff_id') => $entity->id
                     ]);
 
-        
-            if (!empty($bodyData)) { 
-                foreach ($bodyData as $key => $value) { 
+
+            if (!empty($bodyData)) {
+                foreach ($bodyData as $key => $value) {
                     $user_id = $value->user->id;
                     $openemis_no = $value->user->openemis_no;
                     $first_name = $value->user->first_name;
@@ -525,12 +525,12 @@ class StaffUserTable extends ControllerActionTable
                     $gender = $value->user->gender->name;
                     $nationality = $value->user->main_nationality->name;
                     $dateOfBirth = $value->user->date_of_birth;
-                    
+
                     $address = $value->user->address;
                     $postalCode = $value->user->postal_code;
                     $addressArea = $value->user->address_area->name;
                     $birthplaceArea = $value->user->birthplace_area->name;
-                    
+                    $role = $value->user->is_staff;
                     $contactValue = [];
                     $contactType = [];
                     if(!empty($value->user['contacts'])) {
@@ -539,7 +539,7 @@ class StaffUserTable extends ControllerActionTable
                             $contactType[] = $contact->contact_type->name;
                         }
                     }
-                    
+
                     $identityNumber = [];
                     $identityType = [];
                     if(!empty($value->user['identities'])) {
@@ -548,7 +548,7 @@ class StaffUserTable extends ControllerActionTable
                             $identityType[] = $identity->identity_type->name;
                         }
                     }
-                    
+
                     $username = $value->user->username;
                     $institution_id = $value->institution->id;
                     $institutionName = $value->institution->name;
@@ -557,7 +557,7 @@ class StaffUserTable extends ControllerActionTable
                     $position_no = $value->position->position_no;
                     $staff_position_titles_type = $value->position->staff_position_title->type;
                     $staff_types_name = $value->staff_type->name;
-                    
+
                     if($staff_position_titles_type == 1 ){
                         $class= 'Teaching';
                     } else {
@@ -567,25 +567,41 @@ class StaffUserTable extends ControllerActionTable
                     $institutionStaffId = $value->id;
                     $startDate = $value->start_date;
                     $endDate = $value->end_date;
-                    
+
                 }
             }
-            $shift =  TableRegistry::get('Institution.InstitutionShifts');
-            $shiftData = $shift->find('all',
-                                [ 'contain' => [
-                                    'ShiftOptions'                   
-                                ],
-                    ])->where([
-                        $shift->aliasField('id') => $entity->id
-                    ]);
+       $institutionShifts = TableRegistry::get('institution_shifts');
+       $shiftOptions = TableRegistry::get('shift_options'); 
+       $institutionStaffShifts = TableRegistry::get('institution_staff_shifts');
+       $res=$institutionShifts->find()->select(['name'=> 'shift_options.name' ])
+                                ->leftJoin(
+                                        [$shiftOptions->alias() => $shiftOptions->table()],
+                                        [
+                                            $shiftOptions->aliasField('id = ') . $institutionShifts->aliasField('shift_option_id')
+                                        ]
+                                    )
+                                    ->leftJoin(
+                                        [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
+                                        [
+                                            $institutionStaffShifts->aliasField('shift_id = ') . $institutionShifts->aliasField('id')
+                                        ]
+                                    )
+                              
+                               
+                                ->where([$institutionStaffShifts->aliasField('staff_id')=> $entity->id])->order($institutionShifts->aliasField('id'))->group('shift_options.name')->order('shift_options.name')->toArray();
+                                $shift='';
+                                foreach ($res as $key => $value) {
+                                    $shift.=$value['name'].','; 
+                                }
+                               $shiftName=rtrim($shift,',');    
             if (!empty($shiftData)) {
                 foreach ($shiftData as $k => $val) {
                     $shiftName =  $val->shift_option->name;
                 }
             }
             $body = array();
-                   
-            $body = [   
+
+            $body = [
                 'security_users_id' => !empty($user_id) ? $user_id : NULL,
                 'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
                 'security_users_first_name' =>  !empty($first_name) ? $first_name : NULL,
@@ -608,18 +624,19 @@ class StaffUserTable extends ControllerActionTable
                 'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
                 'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
                 'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-                'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
+                //'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
                 'institution_staff_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
-                'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL, 
+                'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
                 'institution_positions_position_no'=>!empty($position_no) ? $position_no : NULL,
                 'staff_position_titles_type'=>!empty($class) ? $class : NULL,
                 'staff_position_titles_name'=>!empty($staff_position_titles_name) ? $staff_position_titles_name : NULL,
                 'staff_types_name'=>!empty($staff_types_name) ? $staff_types_name : NULL,
-                'shift_options_name' => !empty($shiftName) ? $shiftName : NULL
+                'shift_options_name' => !empty($shiftName) ? $shiftName : NULL,
+                'role_name' => ($role == 1) ? 'staff' : NULL
             ];
               $Webhooks = TableRegistry::get('Webhook.Webhooks');
               $Webhooks->triggerShell('staff_update', ['username' => ''], $body);
-        }   
+        }
     }
 
     private function setupTabElements($entity)
@@ -650,18 +667,258 @@ class StaffUserTable extends ControllerActionTable
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
-        foreach ($fields as $key => $field) {
-            //get the value from the table, but change the label to become default identity type.
-            if ($field['field'] == 'identity_number') {
-                $fields[$key] = [
-                    'key' => 'StudentUser.identity_number',
-                    'field' => 'identity_number',
-                    'type' => 'string',
-                    'label' => __($identity->name)
-                ];
-                break;
-            }
-        }
+        $extraField[] = [
+            "key" => "StaffUser.username",
+            "field" => "username",
+            "type" => "string",
+            "label" => "Username"
+        ];
+
+        $extraField[] = [
+            "key" => "StaffUser.openemis_no",
+            "field" => "openemis_no",
+            "type" => "string",
+            "label" => "OpenEMIS ID"
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.first_name',
+            'field' => 'first_name',
+            'type' => 'string',
+            'label' => 'First Name'
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.middle_name',
+            'field' => 'middle_name',
+            'type' => 'string',
+            'label' => 'Middle Name'
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.third_name',
+            'field' => 'third_name',
+            'type' => 'string',
+            'label' => 'Third Name'
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.last_name',
+            'field' => 'last_name',
+            'type' => 'string',
+            'label' => 'Last Name'
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.preferred_name',
+            'field' => 'preferred_name',
+            'type' => 'string',
+            'label' => __('Preferred Name')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.email',
+            'field' => 'email',
+            'type' => 'string',
+            'label' => __('Email')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.address',
+            'field' => 'address',
+            'type' => 'string',
+            'label' => __('Address')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.postal_code',
+            'field' => 'postal_code',
+            'type' => 'string',
+            'label' => __('Postal Code')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.address_area_id',
+            'field' => 'address_area_id',
+            'type' => 'string',
+            'label' => __('Address Area')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.birthplace_area_id',
+            'field' => 'birthplace_area_id',
+            'type' => 'string',
+            'label' => __('Birthplace Area')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.gender_id',
+            'field' => 'gender_id',
+            'type' => 'integer',
+            'label' => 'Gender'
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.date_of_birth',
+            'field' => 'date_of_birth',
+            'type' => 'date',
+            'label' => 'Date Of Birth'
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.nationality_id',
+            'field' => 'nationality_id',
+            'type' => 'integer',
+            'label' => __('Nationality')
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'number',
+            'type' => 'string',
+            'label' => __($identity->name)
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'contact_number',
+            'type' => 'string',
+            'label' => __('Contact Number')
+        ];
+
+        /* $extraField[] = [
+            'key' => 'StaffUser.external_reference',
+            'field' => 'external_reference',
+            'type' => 'string',
+            'label' => __('External Reference')
+        ]; */
+        $extraField[] = [
+            'key' => 'StaffUser.status',
+            'field' => 'status',
+            'type' => 'integer',
+            'label' => __('Status')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.last_login',
+            'field' => 'last_login',
+            'type' => 'datetime',
+            'label' => __('Last Login')
+        ];
+        $extraField[] = [
+            'key' => 'StaffUser.preferred_language',
+            'field' => 'preferred_language',
+            'type' => 'string',
+            'label' => __('Preferred Language')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+        $session = $this->request->session();
+        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        $userNationalities = TableRegistry::get('StaffUser.userNationalities');
+        $userContacts = TableRegistry::get('StaffUser.userContacts');
+        $contactTypes = TableRegistry::get('StaffUser.ContactTypes  ');
+        $contactOptions = TableRegistry::get('StaffUser.contactOptions  ');
+        $institutionStaff = TableRegistry::get('StaffUser.InstitutionStaff');
+
+
+        $query
+        ->select([
+            'staff_id' => $this->aliasField('id'),
+        ])
+        ->leftjoin(
+            [$institutionStaff->alias() => $institutionStaff->table()],
+            [$institutionStaff->aliasField('staff_id = ').$this->aliasField('id')]
+        )
+        ->where([
+            $this->aliasField('id = ').$staffUserId
+        ]);
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $userContacts = TableRegistry::get('StaffUser.userContacts');
+                $contactTypes = TableRegistry::get('StaffUser.ContactTypes ');
+                $contactOptions = TableRegistry::get('StaffUser.contactOptions');
+
+                $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+
+                $userContactsData = $userContacts
+                ->find()
+                ->select([
+                    'contact_number' => 'userContacts.value','userContacts.preferred','userContacts.contact_type_id',
+                ])
+                ->leftjoin(
+                    [$contactTypes->alias() => $contactTypes->table()],
+                    [$contactTypes->aliasField('id=').$userContacts->aliasField('contact_type_id')]
+                )
+                ->leftjoin(
+                    [$contactOptions->alias() => $contactOptions->table()],
+                    [$contactOptions->aliasField('id=').$contactTypes->aliasField('contact_option_id')]
+                )
+                ->where([
+                    $userContacts->aliasField('security_user_id') => $row->staff_id,'userContacts.preferred' => 1
+                ]);
+
+                $arr = $userContactsData->toArray();
+
+                $contacct = array_filter($arr, function ($var){
+                    return ($var['preferred'] == 1);
+                });
+
+                $row['contact_number'] = '';
+                if($contacct){
+                    $d = implode(', ',array_column($contacct, 'contact_number'));
+                    
+                    $row['contact_number'] = $d;
+                }
+
+                $userIdentities = TableRegistry::get('StaffUser.userIdentities');
+                $identityType = TableRegistry::get('StaffUser.IdentityTypes  ');
+                $nationalities = TableRegistry::get('StaffUser.Nationalities');
+
+                $userIdentitiesData = $userIdentities
+                ->find()
+                ->select([
+                    'identity_type' => 'IdentityTypes.name',
+                    'nationality' => 'Nationalities.name',
+                    'number' => 'userIdentities.number',
+                    'issue_date' => 'userIdentities.issue_date',
+                    'expiry_date' => 'userIdentities.expiry_date',
+                    'issuer' => 'userIdentities.issue_location',
+                ])
+                ->leftjoin(
+                    [$identityType->alias() => $identityType->table()],
+                    [$identityType->aliasField('id = ').$userIdentities->aliasField('identity_type_id')]
+                )
+                ->leftjoin(
+                    [$nationalities->alias() => $nationalities->table()],
+                    [$userIdentities->aliasField('nationality_id = ').$nationalities->aliasField('id')]
+                )
+                ->where([
+                    $userIdentities->aliasField('security_user_id') => $row->staff_id,
+                ]);
+
+                $arr1 = $userIdentitiesData->toArray();
+
+                $identy_num = array_filter($arr1, function ($var){
+                    return ($var['identity_type'] == 'Birth Certificate');
+                });
+
+                $row['number'] = '';
+                if($identy_num){
+                    $d = array_shift(array_values($identy_num));
+                    
+                    $row['number'] = $d->number;
+                }else{
+                    $row['number'] = $arr1[0]->number;
+                }
+                return $row;
+            });
+        });
+
     }
 
     public function findStaff(Query $query, array $options = [])

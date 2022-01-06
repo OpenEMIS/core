@@ -29,8 +29,6 @@ class POCOR5829b extends AbstractMigration
         $apiScope = $getApiScope->fetchAll();
         $apiScopeId = $apiScope[0]['id'];
         
-        $todayDate = Date::now();
-
         $checkDataExist = $this->query("SELECT * FROM api_securities_scopes WHERE api_security_id = $securityValue");
        
         $data = $checkDataExist->fetchAll();
@@ -45,7 +43,7 @@ class POCOR5829b extends AbstractMigration
                 'delete' => 0,
                 'execute' => 1,
                 'created_user_id' => 1,
-                'created' => $todayDate,
+                'created' => date('Y-m-d H:i:s'),
             ]);
         }
         else{

@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-
+use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -31,6 +31,11 @@ class HistoriesTable extends ControllerActionTable
             'contentEditable' => true,
             'allowable_file_types' => 'all',
             'useDefaultName' => true
+        ]);
+
+        $this->addBehavior('Excel',[
+            'excludes' => [],
+            'pages' => ['index'],
         ]);
     }
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -77,5 +82,55 @@ class HistoriesTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator->allowEmpty('file_content');
         return $validator;
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key'   => 'current_new',
+            'field' => 'current_new',
+            'type'  => 'string',
+            'label' => __('Current')
+        ];
+
+        $extraField[] = [
+            'key'   => 'comment',
+            'field' => 'comment',
+            'type'  => 'string',
+            'label' => __('Comment')
+        ];
+
+        $extraField[] = [
+            'key'   => 'health_condition_id',
+            'field' => 'health_condition_id',
+            'type'  => 'string',
+            'label' => __('Health Condition')
+        ];
+
+        $extraField[] = [
+            'key'   => 'file_name',
+            'field' => 'file_name',
+            'type'  => 'string',
+            'label' => __('File Name')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
+    // POCOR-6131
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+        $session = $this->request->session();
+        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        $studentUserId = $session->read('Student.Students.id');
+
+        $query
+        ->select([
+            'current_new' => "(CASE WHEN current = 1 THEN 'Yes'
+            ELSE 'No' END)"
+        ])
+        ->where([
+            // $this->aliasField('security_user_id = ').$staffUserId
+            $this->aliasField('security_user_id') => $studentUserId
+        ]);
     }
 }

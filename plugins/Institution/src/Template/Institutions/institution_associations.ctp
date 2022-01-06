@@ -22,7 +22,7 @@ $institutionId = $session->read('Institution.Institutions.id');
         direction: ltr !important;
     }
 </style>
-<?= $this->Html->link('<i class="fa kd-back"></i>', $viewUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escapeTitle' => false]) ?>
+<?= $this->Html->link('<i class="fa kd-back"></i>', $indexUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escapeTitle' => false]) ?>
 
 <?= $this->Html->link('<i class="fa kd-lists"></i>', $indexUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('List'), 'escapeTitle' => false]) ?>
 <?php
@@ -82,7 +82,7 @@ $this->start('panelBody');
                 <i class="fa fa-check"></i> <?= __('Save') ?>
                 <input type="hidden"  ng-model="InstitutionAssociationsController.institutionId"  ng-init="InstitutionAssociationsController.institutionId=<?= $institutionId; ?>; "/>
             </button>
-            <?= $this->Html->link('<i class="fa fa-close"></i> '.__('Cancel'), $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
+            <?= $this->Html->link('<i class="fa fa-close"></i> '.__('Cancel'), $indexUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
             <button id="reload" type="submit" name="submit" value="reload" class="hidden">reload</button>
         </div>
     </div>
