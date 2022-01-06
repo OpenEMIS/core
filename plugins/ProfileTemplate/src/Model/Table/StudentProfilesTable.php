@@ -301,44 +301,91 @@ class StudentProfilesTable extends ControllerActionTable
 			->toArray();
        
 
-        $reportCardOptions = ['-1' => '-- '.__('Select Staff Template').' --'] + $reportCardOptions;
+        $reportCardOptions = ['-1' => '-- '.__('Select Student Template').' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->query('student_profile_template_id')) ? $this->request->query('student_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
-		//End	
-		
+		//End
+        
+        // Area Level filter
+		$AreaLevel = TableRegistry::get('Area.AreaLevels');
+
+		$areaLevelOptions = [];
+		$areaLevelOptions = $AreaLevel->find('list')->toArray();
+       
+        $areaLevelOptions = ['-1' => '-- '.__('Select Area Level').' --'] + $areaLevelOptions;
+        $selectedAreaLevel = !is_null($this->request->query('area_level_id')) ? $this->request->query('area_level_id') : -1;
+        $this->controller->set(compact('areaLevelOptions', 'selectedAreaLevel'));
+        //End
+        
 		// Area filter
 		$Areas = TableRegistry::get('Area.Areas');
 
 		$areaOptions = [];
-		$areaOptions = $Areas->find('list')->toArray();
-       
-        $areaOptions = ['-1' => '-- '.__('Select Area').' --'] + $areaOptions;
+        if($selectedAreaLevel != -1){
+            $areaOptions = $Areas->find('list')
+                            ->where([
+                                $Areas->aliasField('area_level_id') => $selectedAreaLevel
+                            ]) 
+                             ->toArray();  
+        } else{
+            $areaOptions = $Areas->find('list')
+            // ->where([
+            //     $Areas->aliasField('area_level_id') => $selectedAreaLevel
+            // ]) 
+             ->toArray();  
+        }                
+        $areaOptions = ['-1' => __('--Select Area--')] + $areaOptions;
         $selectedArea = !is_null($this->request->query('area_id')) ? $this->request->query('area_id') : -1;
         $this->controller->set(compact('areaOptions', 'selectedArea'));
-        //End
+        //End                    
+        foreach($areaOptions AS $key => $areaOptionsData){
+            $areaKey[$key] = $key;
+        }
 		
         // Institution filter
 		$Institutions = TableRegistry::get('Institutions');
 
 		$institutionOptions = [];
-		$institutionOptions = $Institutions->find('list')
-								->where([
-									$Institutions->aliasField('area_id') => $selectedArea
+        if($selectedArea == -1){
+            $institutionOptions = $Institutions->find('list')
+								// ->where([
+								// 	$Institutions->aliasField('area_id IN ') => $areaKey
+								// ])
+                                ->where([
+									$Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
 								])
 								->toArray();
+        }
+        else{
+            $institutionOptions = $Institutions->find('list')
+								->where([
+									$Institutions->aliasField('area_id') => $selectedArea,
+                                    $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
+								])
+								->toArray();
+        }
+        if(!empty($institutionOptions)){
+            foreach($institutionOptions AS $institutionOptionsDataKey => $institutionOptionsData){
+                $institutionOptionsKey[$institutionOptionsDataKey] = $institutionOptionsDataKey;
+            }
+        }
        
-        $institutionOptions = ['-1' => '-- '.__('Select Institution').' --'] + $institutionOptions;
+        $institutionOptions = ['-1' => '-- '.__('All Institution').' --'] + $institutionOptions;
         $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
-		$where[$this->aliasField('institution_id')] = $selectedInstitution;
+        if($selectedInstitution != -1){
+            $where[$this->aliasField('institution_id')] = $selectedInstitution;
+        }
+        if(!empty($institutionOptionsKey)){
+            $where[$this->aliasField('institution_id IN ')] = $institutionOptionsKey;
+        }  
         //End
 	
 		// Class filter
 		$Grades = $this->EducationGrades;
         $educationGradeOptions = [];
         $selectedGrade = !is_null($this->request->query('education_grade_id')) ? $this->request->query('education_grade_id') : -1;
-
-        if ($selectedInstitution != -1) {
+        if ($selectedInstitution == -1) {
 			// Education Grades
 			$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
 
@@ -351,12 +398,29 @@ class StudentProfilesTable extends ControllerActionTable
 						'EducationGrades.id', 'EducationGrades.name'
 					])
 				->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
-				->where(['institution_id' => $selectedInstitution])
+				// ->where(['institution_id IN' => $institutionOptionsKey])
                 ->where(['EducationSystems.academic_period_id' => $selectedAcademicPeriod])
 				->group('education_grade_id')
 				->toArray();
         }
-    
+        else{
+            // Education Grades
+			$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
+
+			$educationGradeOptions = $InstitutionEducationGrades
+				->find('list', [
+						'keyField' => 'EducationGrades.id',
+						'valueField' => 'EducationGrades.name'
+					])
+				->select([
+						'EducationGrades.id', 'EducationGrades.name'
+					])
+				->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+				->where(['institution_id ' => $selectedInstitution])
+                ->where(['EducationSystems.academic_period_id' => $selectedAcademicPeriod])
+				->group('education_grade_id')
+				->toArray();
+        }
         $educationGradeOptions = ['-1' => '-- '.__('Select Grade').' --'] + $educationGradeOptions;
         $this->controller->set(compact('educationGradeOptions', 'selectedGrade'));
         $where[$this->aliasField('education_grade_id')] = $selectedGrade;
@@ -396,8 +460,9 @@ class StudentProfilesTable extends ControllerActionTable
                 $this->aliasField('student_status_id')
             ])
             ->where($where)
-            ->where([$this->aliasField('student_status_id') => 1])
+            // ->where([$this->aliasField('student_status_id') => 1])
             ->all();
+            Log::write('debug',$query);
         if (is_null($this->request->query('sort'))) {
             $query
                 ->contain('Users')
@@ -512,7 +577,7 @@ class StudentProfilesTable extends ControllerActionTable
                     
                 } else { 
                     $generateButton['attr']['data-html'] = true;
-                    $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('StaffProfiles.date_closed'));
+                    $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('StudentProfiles.date_closed'));
                     $generateButton['url'] = 'javascript:void(0)';
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
                 }
@@ -1016,6 +1081,7 @@ class StudentProfilesTable extends ControllerActionTable
         $where = [];
         $where[$institutionClassStudents->aliasField('education_grade_id')] = $educationGradeId;
         $where[$institutionClassStudents->aliasField('academic_period_id')] = $academicPeriodId;
+        $where[$institutionClassStudents->aliasField('institution_id')] = $institutionId;
         if (!is_null($studentId)) {
             $where[$institutionClassStudents->aliasField('student_id')] = $studentId;
         }

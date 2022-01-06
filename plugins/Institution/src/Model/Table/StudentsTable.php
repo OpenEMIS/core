@@ -28,6 +28,9 @@ class StudentsTable extends ControllerActionTable
     const IN_QUEUE = -10;
 
     private $dashboardQuery = null;
+    // POCOR-6129 custome fields code
+    private $_dynamicFieldName = 'custom_field_data';
+    // POCOR-6129 custome fields code
 
     public function initialize(array $config)
     {
@@ -219,6 +222,7 @@ class StudentsTable extends ControllerActionTable
         $UserIdentities = TableRegistry::get('User.Identities');
         $ContactTypes = TableRegistry::get('FieldOption.ContactTypes');
         $UserContact = TableRegistry::get('User.Contacts');
+        $StudentStatuses = TableRegistry::get('student_statuses');
 
 
         /* $subquery = $this->Users->find()->select([
@@ -267,6 +271,7 @@ class StudentsTable extends ControllerActionTable
                 'identity_number' => $UserIdentities->aliasField('number'),
                 'contact_type' => $ContactTypes->aliasField('name'),
                 'contact_number' => $UserContact->aliasField('value'),
+                'institution_id' => 'Institutions.id',//POCOR-6338
             ])
             ->leftJoin(
                 [$ClassStudents->alias() => $ClassStudents->table()],
@@ -331,38 +336,153 @@ class StudentsTable extends ControllerActionTable
                 [
                     $ContactTypes->aliasField('id = ') . $UserContact->aliasField('contact_type_id')
                 ]
-            );
+            )// POCOR-6338 starts
+            ->leftJoin(
+                [$StudentStatuses->alias() => $StudentStatuses->table()],
+                [
+                    $StudentStatuses->aliasField('id != ') => 3
+                ]
+            );// POCOR-6338 ends
 
         if ($periodId > 0) {
-            $query->where([$this->aliasField('academic_period_id') => $periodId]);
+            $query->where([$this->aliasField('academic_period_id') => $periodId,
+                            'StudentStatuses.id !='=> 3
+                            ]);
+            $query->group('student_id');// POCOR-6338 
         }
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($periodId) {
+            return $results->map(function ($row) use($periodId) {
+                // POCOR-6338 starts
+                $Users = TableRegistry::get('security_users');
+                $institutionStudents = TableRegistry::get('institution_students');
+                $user_data= $Users
+                            ->find()
+                            ->select([
+                                        'student_status'=>'(case 
+                                            when StudentStatuses.name = "Repeated" then "Enrolled (Repeater)"
+                                            when StudentStatuses.name = "Enrolled" then "Enrolled"
+                                            when StudentStatuses.name = "Transferred" then "Transferred"
+                                            when StudentStatuses.name = "Withdrawn" then "Withdrawn"
+                                            when StudentStatuses.name = "Graduated" then "Graduated"
+                                            else "Promoted" end
+                                        )'
+                            ])
+                            ->leftJoin(['InstitutionStudents' => 'institution_students'], [
+                                'InstitutionStudents.student_id = '.$Users->aliasField('id')
+                            ]) 
+                            ->leftJoin(['StudentStatuses' => 'student_statuses'], [
+                                'StudentStatuses.id = InstitutionStudents.student_status_id'
+                            ])
+                            ->where([
+                                'security_users.openemis_no' => $row->openemis_no,
+                                'InstitutionStudents.institution_id'=> $row->institution_id,
+                                'InstitutionStudents.academic_period_id'=> $periodId //POCOR-6487
+                            ])
+                            ->order(['InstitutionStudents.created' => DESC])
+                            ->first();
+                $row['student_status'] = $user_data->student_status;
+                // POCOR-6338 ends                
+                // POCOR-6129 custome fields code
+                $Guardians = TableRegistry::get('student_custom_field_values');
+                $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
+                $studentCustomFields = TableRegistry::get('student_custom_fields');
 
-                $InstitutionStudents = TableRegistry::get('InstitutionStudents');
-
-                $InstitutionStudentsCurrentData = $InstitutionStudents
-                ->find()
+                $guardianData = $Guardians->find()
                 ->select([
-                    'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
-                ])
+                    'id'                             => $Guardians->aliasField('id'),
+                    'student_id'                     => $Guardians->aliasField('student_id'),
+                    'student_custom_field_id'        => $Guardians->aliasField('student_custom_field_id'),
+                    'text_value'                     => $Guardians->aliasField('text_value'),
+                    'number_value'                   => $Guardians->aliasField('number_value'),
+                    'decimal_value'                  => $Guardians->aliasField('decimal_value'),
+                    'textarea_value'                 => $Guardians->aliasField('textarea_value'),
+                    'date_value'                     => $Guardians->aliasField('date_value'),
+                    'time_value'                     => $Guardians->aliasField('time_value'),
+                    'checkbox_value_text'            => $studentCustomFieldOptions->aliasField('name'),
+                    'question_name'                  => 'studentCustomField.name',
+                    'field_type'                     => 'studentCustomField.field_type',
+                    'field_description'              => 'studentCustomField.description',
+                    'question_field_type'            => 'studentCustomField.field_type',
+                ])->leftJoin(
+                    ['studentCustomField' => 'student_custom_fields'],
+                    [
+                        'studentCustomField.id = '.$Guardians->aliasField('student_custom_field_id')
+                    ]
+                ) ->leftJoin(
+                    [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                    [
+                        $studentCustomFieldOptions->aliasField('student_custom_field_id') => $Guardians->aliasField('student_custom_field_id')
+                    ]
+                )
                 ->where([
-                    $InstitutionStudents->aliasField('student_id') => $row->student_id
-                ])
-                ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
-                ->autoFields(true)
-                ->first();
-                if($row->student_status == "Enrolled"){
-                    if(($InstitutionStudentsCurrentData->student_status_id == 8)){
-                        $student_status = "Enrolled (Repeater)";
-                    }else{
-                        $student_status = $row->student_status;
-                    }
-                }else{
-                        $student_status = $row->student_status;
-                }
+                    $Guardians->aliasField('student_id') => $row['student_id'],
+                ])->toArray();
 
-                $row['student_status'] = $student_status;
+                $existingCheckboxValue = '';
+                foreach ($guardianData as $guadionRow) {
+                    $fieldType = $guadionRow->field_type;
+                    if ($fieldType == 'TEXT') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->text_value;
+                    } else if ($fieldType == 'CHECKBOX') {
+                        $Guardians_data_for_checkbox = TableRegistry::get('student_custom_field_values');
+                        $studentCustomFieldOptions_for_checkbox = TableRegistry::get('student_custom_field_options');
+
+                        $Guardians_data_for_checkbox_data = $Guardians_data_for_checkbox->find()
+                            ->select([
+                                $Guardians_data_for_checkbox->aliasField('student_custom_field_id'),
+                                $Guardians_data_for_checkbox->aliasField('student_id'),
+                                $Guardians_data_for_checkbox->aliasField('number_value'),
+                            ])
+                            ->where([
+                                $Guardians_data_for_checkbox->aliasField('student_custom_field_id') => $guadionRow->student_custom_field_id,
+                                $Guardians_data_for_checkbox->aliasField('student_id') => $guadionRow->student_id,
+                            ])->toArray();
+
+                        
+                        $checkbox_data_arr = [];
+                        foreach($Guardians_data_for_checkbox_data AS $Guardians_data_for_checkbox_data_value){
+                            $studentCustomFieldOptions_Data = $studentCustomFieldOptions_for_checkbox->find()
+                                ->select([
+                                    $studentCustomFieldOptions_for_checkbox->aliasField('id'),
+                                    $studentCustomFieldOptions_for_checkbox->aliasField('name'),
+                                    
+                                ])
+                                ->where([
+                                    $studentCustomFieldOptions_for_checkbox->aliasField('id') => $Guardians_data_for_checkbox_data_value->number_value
+                                ])->first();
+                            $checkbox_data_arr[] = $studentCustomFieldOptions_Data->name;
+                        }
+
+                        // $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = implode(',', $checkbox_data_arr) ;
+                    } else if ($fieldType == 'NUMBER') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->number_value;
+                    } else if ($fieldType == 'DECIMAL') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->decimal_value;
+                    } else if ($fieldType == 'TEXTAREA') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->textarea_value;
+                    } else if ($fieldType == 'DROPDOWN') {
+                        $studentCustomFieldOptionsData = $studentCustomFieldOptions->find()
+                        ->select([
+                            'dropdown_value_text' => $studentCustomFieldOptions->aliasField('name')
+                        ])
+                        ->where([
+                            $studentCustomFieldOptions->aliasField('id') => $guadionRow->number_value,
+                        ])->toArray();
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $studentCustomFieldOptionsData[0]->dropdown_value_text;
+                    } else if ($fieldType == 'DATE') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
+                    } else if ($fieldType == 'TIME') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
+                    } else if ($fieldType == 'COORDINATES') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->text_value;
+                    } else if ($fieldType == 'NOTE') {
+                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->field_description;
+                    }
+                }
+                // echo "<pre>";print_r($row);die;
+                // POCOR-6129 custome fields code
+
                 return $row;
             });
         });
@@ -510,8 +630,30 @@ class StudentsTable extends ControllerActionTable
             'label' => __('Contact Number')
         ];
 
+        // POCOR-6129 custome fields code
+        $InfrastructureCustomFields = TableRegistry::get('student_custom_fields');
+        $customFieldData = $InfrastructureCustomFields->find()->select([
+            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+            'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+        ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
+
+        if(!empty($customFieldData)) {
+            foreach($customFieldData as $data) {
+                $custom_field_id = $data->custom_field_id;
+                $custom_field = $data->custom_field;
+                $extraField[] = [
+                    'key' => '',
+                    'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
+                    'type' => 'string',
+                    'label' => __($custom_field)
+                ];
+            }
+        }
+        // POCOR-6129 custome fields code
+
         $fields->exchangeArray($extraField);
     }
+
 
     // public function onExcelRenderIdentities(Event $event, Entity $entity, array $attr) {
     //     $str = '';
@@ -704,6 +846,11 @@ class StudentsTable extends ControllerActionTable
     {
         $this->field('previous_institution_student_id', ['type' => 'hidden']);
         $this->triggerAutomatedStudentWithdrawalShell();
+
+        $session = $this->request->session();
+        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $assignedStudentToInstitution = $this->find()->where(['institution_id'=>$institutionId])->count();
+        $session->write('is_any_student', $assignedStudentToInstitution);
     }
 
     public function beforeDelete(Event $event, Entity $entity)
@@ -830,6 +977,80 @@ class StudentsTable extends ControllerActionTable
                 $extra['toolbarButtons'][$key] = $button;
             }
         }
+
+        //POCOR-6248 starts    
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemTable
+                            ->find()
+                            ->where([
+                                $ConfigItemTable->aliasField('type') => 'Columns for Student List Page'
+                            ])
+                            ->all();
+        if(!empty($ConfigItem)){
+            foreach ($ConfigItem as $item) {
+                if($item->code == 'student_photo'){
+                    $this->field('photo_name', ['visible' => false]);
+                    if($item->value == 1){
+                        $this->field('photo_content', ['visible' => true]);
+                    }else{
+                        $this->field('photo_content', ['visible' => false]);
+                    }
+                }
+
+                if($item->code == 'student_openEMIS_ID'){
+                    if($item->value == 1){
+                        $this->field('openemis_no', ['visible' => true, 'before' => 'student_id']);
+                    }else{
+                        $this->field('openemis_no', ['visible' => false, 'before' => 'student_id']);
+                    }
+                }
+
+                if($item->code == 'student_name'){
+                    if($item->value == 1){
+                        $this->field('student_id', ['visible' => true, 'before' => 'education_grade_id']);
+                    }else{
+                        $this->field('student_id', ['visible' => false, 'before' => 'education_grade_id']);
+                    } 
+                }
+
+                if($item->code == 'student_education_code'){
+                    if($item->value == 1){
+                        $this->field('education_grade_id', ['visible' => true, 'before' => 'class']);
+                    }else{
+                        $this->field('education_grade_id', ['visible' => false, 'before' => 'class']);
+                    } 
+                }
+
+                if($item->code == 'student_class'){
+                    if($item->value == 1){
+                        $this->field('class', ['visible' => true, 'before' => 'student_status_id']);
+                    }else{
+                        $this->field('class', ['visible' => false, 'before' => 'student_status_id']);
+                    } 
+                }
+
+                if($item->code == 'student_status'){
+                    if($item->value == 1){
+                        $this->field('student_status_id', ['visible' => true, 'after' => 'class']);
+                    }else{
+                        $this->field('student_status_id', ['visible' => false, 'after' => 'class']);
+                    } 
+                }
+
+                if($item->code == 'student_identity_number'){
+                    if($item->value == 1){
+                        if(!empty($item->value_selection)){
+                            //get data from Identity Type table 
+                            $typesIdentity = $this->getIdentityTypeData($item->value_selection);
+                            $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'student_status_id']);
+                        }
+                    }else{
+                        $this->field($typesIdentity->identity_type, ['visible' => false, 'after' => 'student_status_id']);
+                    }
+                }
+            }    
+        }   
+        //POCOR-6248 ends
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -941,7 +1162,54 @@ class StudentsTable extends ControllerActionTable
 
         //select specific field that is used on the page, photo_content is generated by LazyEagerLoader (javascript)
         //the rest of fields are called by onGet function.
-        $query->select([
+        //POCOR-6248 starts
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $UserIdentities = TableRegistry::get('User.Identities');
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemTable
+                            ->find()
+                            ->where([
+                                $ConfigItemTable->aliasField('code') => 'student_identity_number',
+                                $ConfigItemTable->aliasField('value') => 1
+                            ])
+                            ->first();
+
+        if(!empty($ConfigItem)){
+            //value_selection
+            //get data from Identity Type table 
+            $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
+            if(!empty($typesIdentity)){                
+                $query
+                    ->select([
+                        $this->aliasField('id'),
+                        'Users.id',
+                        'Users.openemis_no',
+                        'Users.first_name',
+                        'Users.middle_name',
+                        'Users.third_name',
+                        'Users.last_name',
+                        'Users.preferred_name',
+                        'student_status_id',
+                        'identity_type' => $IdentityTypes->aliasField('name'),
+                        $typesIdentity->identity_type => $UserIdentities->aliasField('number')
+                    ])
+                    ->leftJoin(
+                                [$UserIdentities->alias() => $UserIdentities->table()],
+                                [
+                                    $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('student_id'),
+                                    $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
+                                ]
+                            )
+                    ->leftJoin(
+                        [$IdentityTypes->alias() => $IdentityTypes->table()],
+                        [
+                            $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
+                            $IdentityTypes->aliasField('id = ') . $typesIdentity->id
+                        ]
+                    );
+            }
+        }else{
+            $query->select([
                 $this->aliasField('id'),
                 'Users.id',
                 'Users.openemis_no',
@@ -952,7 +1220,8 @@ class StudentsTable extends ControllerActionTable
                 'Users.preferred_name',
                 'student_status_id'
             ]);
-
+        }//POCOR-6248 ends
+  
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
         $query->group([$this->aliasField('student_id'), $this->aliasField('academic_period_id'), $this->aliasField('institution_id'), $this->aliasField('education_grade_id'), $this->aliasField('student_status_id')]);
 
@@ -963,6 +1232,22 @@ class StudentsTable extends ControllerActionTable
 
         $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
     }
+    //POCOR-6248 starts
+    public function getIdentityTypeData($value_selection)
+    {
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $typesIdentity =   $IdentityTypes
+                            ->find()
+                            ->select([
+                                'id' => $IdentityTypes->aliasField('id'),
+                                'identity_type' => $IdentityTypes->aliasField('name')
+                            ])
+                            ->where([
+                                $IdentityTypes->aliasField('id') => $value_selection
+                            ])
+                            ->first();
+        return  $typesIdentity;
+    }//POCOR-6248 ends
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
     {
@@ -978,13 +1263,25 @@ class StudentsTable extends ControllerActionTable
             ->where([
                 $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id
             ])
-            ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
+            ->order([$InstitutionStudents->aliasField('InstitutionStudents.created') => 'DESC'])
             ->autoFields(true)
             ->first();
-            if($value['student_status']->name == "Enrolled"){
-                if($InstitutionStudentsCurrentData->student_status_id == 8)
+            /*POCOR-6400 starts*/
+            if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id)) {
+                $previousInstStdId = $InstitutionStudents
+                                    ->find()
+                                    ->select([
+                                        'InstitutionStudents.id', 'InstitutionStudents.student_status_id'
+                                    ])
+                                    ->where([
+                                        $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id,
+                                        $InstitutionStudents->aliasField('id') => $InstitutionStudentsCurrentData->previous_institution_student_id
+                                    ])->first();
+                if (!empty($previousInstStdId) && $previousInstStdId->student_status_id == 8) {
                     $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
+                }
             }
+            /*POCOR-6400 ends*/
         }
         $this->dashboardQuery = clone $query;
     }
@@ -1181,6 +1478,9 @@ class StudentsTable extends ControllerActionTable
 
 
 			if (!empty($bodyData)) {
+
+               // echo "<pre>";
+               // print_r($bodyData); exit;
 				foreach ($bodyData as $key => $value) {
 					$user_id = $value->user->id;
 					$openemis_no = $value->user->openemis_no;
@@ -1191,17 +1491,22 @@ class StudentsTable extends ControllerActionTable
 					$preferred_name = $value->user->preferred_name;
 					$gender = $value->user->gender->name;
 					$nationality = $value->user->main_nationality->name;
+                    // POCOR-6283 start
+					$dateOfBirth = $value->user->date_of_birth; 
 
-					if(!empty($value->user->date_of_birth)) {
+                    // commented because date can be converted directly no need to use loop
+					/* if(!empty($value->user->date_of_birth)) {
 						foreach ($value->user->date_of_birth as $key => $date) {
 							$dateOfBirth = $date;
 						}
-					}
+					} */
+                    // POCOR-6283 end
 
 					$address = $value->user->address;
 					$postalCode = $value->user->postal_code;
 					$addressArea = $value->user->address_area->name;
 					$birthplaceArea = $value->user->birthplace_area->name;
+                    $role = $value->user->is_student;
 
 					$contactValue = [];
 					$contactType = [];
@@ -1231,14 +1536,21 @@ class StudentsTable extends ControllerActionTable
 					$studentStatus = $value->student_status->name;
 
 					if(!empty($value->start_date)) {
+                        $i=0;
+
 						foreach ($value->start_date as $key => $date) {
-							$startDate = $date;
-						}
+                            if($i==0){
+        							$startDate = $date;
+                                }
+						$i++;}
 					}
 
 					if(!empty($value->end_date)) {
+                        $i=0;
 						foreach ($value->end_date as $key => $date) {
-							$endDate = $date;
+                            if($i==0){
+							  $endDate = $date;
+                           $i++; }
 						}
 					}
 
@@ -1275,6 +1587,7 @@ class StudentsTable extends ControllerActionTable
 				'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
 				'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
 				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
+                'role_name' => ($role == 1) ? 'student' : NULL
 			];
 
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
@@ -1907,7 +2220,11 @@ class StudentsTable extends ControllerActionTable
 
         foreach ($StudentAttendances as $key => $attendances) {
 
-			$total_present = $total_absent = $total_late = 0;
+            // START: POCOR-6382
+			// $total_present = $total_absent = $total_late = 0;
+            $total_absent = $total_late = 0;
+            $total_present = -1;
+            // END: POCOR-6382
 
 			foreach ($attendances as $key => $attendance) {
 
@@ -1955,7 +2272,6 @@ class StudentsTable extends ControllerActionTable
             ])
             ->count()
             ;
-
         return !($completedGradeCount == 0);
     }
 

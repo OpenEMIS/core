@@ -34,6 +34,19 @@
                         'data-named-group' => 'academic_period_id'
                     ));
                 }
+
+                if (!empty($areaLevelOptions)) {
+                    echo $this->Form->input('area_level_id', array(
+                        'type' => 'select',
+                        'class' => 'form-control',
+                        'label' => false,
+                        'options' => $areaLevelOptions,
+                        'default' => $selectedAreaLevel,
+                        'url' => $baseUrl,
+                        'data-named-key' => 'area_level_id',
+                        'data-named-group' => 'academic_period_id,student_profile_template_id'
+                    ));
+                }
 				
 				if (!empty($areaOptions)) {
                     echo $this->Form->input('area_id', array(
@@ -44,7 +57,7 @@
                         'default' => $selectedArea,
                         'url' => $baseUrl,
                         'data-named-key' => 'area_id',
-                        'data-named-group' => 'academic_period_id,student_profile_template_id'
+                        'data-named-group' => 'academic_period_id,student_profile_template_id, area_level_id'
                     ));
                 }
 
@@ -57,7 +70,7 @@
                         'default' => $selectedInstitution,
                         'url' => $baseUrl,
                         'data-named-key' => 'institution_id',
-                        'data-named-group' => 'academic_period_id,student_profile_template_id,area_id'
+                        'data-named-group' => 'academic_period_id,student_profile_template_id,area_id, area_level_id'
                     ));
                 }
 				
@@ -70,7 +83,7 @@
                         'default' => $selectedGrade,
                         'url' => $baseUrl,
                         'data-named-key' => 'education_grade_id',
-                        'data-named-group' => 'academic_period_id,student_profile_template_id,area_id,institution_id'
+                        'data-named-group' => 'academic_period_id,student_profile_template_id,area_id,institution_id, area_level_id'
                     ));
                 }
             ?>
