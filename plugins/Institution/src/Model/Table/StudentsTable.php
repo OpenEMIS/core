@@ -350,8 +350,8 @@ class StudentsTable extends ControllerActionTable
                             ]);
             $query->group('student_id');// POCOR-6338 
         }
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($periodId) {
+            return $results->map(function ($row) use($periodId) {
                 // POCOR-6338 starts
                 $Users = TableRegistry::get('security_users');
                 $institutionStudents = TableRegistry::get('institution_students');
@@ -367,23 +367,18 @@ class StudentsTable extends ControllerActionTable
                                             else "Promoted" end
                                         )'
                             ])
-                            ->leftJoin(
-                            ['InstitutionStudents' => 'institution_students'],
-                            [
+                            ->leftJoin(['InstitutionStudents' => 'institution_students'], [
                                 'InstitutionStudents.student_id = '.$Users->aliasField('id')
-                            ]
-                            ) 
-                            ->leftJoin(
-                                ['StudentStatuses' => 'student_statuses'],
-                                [
-                                    'StudentStatuses.id = InstitutionStudents.student_status_id'
-                                ]
-                            )
-                            ->where(['security_users.openemis_no' => $row->openemis_no,
-                            'InstitutionStudents.institution_id'=> $row->institution_id])
-                            ->order([
-                                'InstitutionStudents.created' => DESC
+                            ]) 
+                            ->leftJoin(['StudentStatuses' => 'student_statuses'], [
+                                'StudentStatuses.id = InstitutionStudents.student_status_id'
                             ])
+                            ->where([
+                                'security_users.openemis_no' => $row->openemis_no,
+                                'InstitutionStudents.institution_id'=> $row->institution_id,
+                                'InstitutionStudents.academic_period_id'=> $periodId //POCOR-6487
+                            ])
+                            ->order(['InstitutionStudents.created' => DESC])
                             ->first();
                 $row['student_status'] = $user_data->student_status;
                 // POCOR-6338 ends                
