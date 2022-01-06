@@ -1,3 +1,12 @@
+### [3.72.5] - 2021-12-30
+- Bug Fixed: Institutions: Move "Shifts" out from "Academic" and place it under "General"
+- Bug Fixed: Institution>Performance>Outcome: Students that are transferred are showing in Performance>Outcome>Students
+- Bug Fixed: Institutions>Performance>Assessments: Subject teachers can view their classes twice from Performance > Assessment
+- Bug Fixed: Administration > Security > Roles > Permissions > Administration: No permission for Administration > Meals
+- Bug Fixed: Institution>Appointment>Duties: Report should include institution name
+- Bug Fixed: Institutions>Performance>Assessments: Able to import higher than max marks
+- Bug Fixed: Institutions>Students: Enrolled (Repeater) status is not displayed in the Export Report
+
 ### [3.72.4] - 2021-12-29
 - Bug Fixed: Institutions > Performance > Assessments : Assessment Marks Display
 
