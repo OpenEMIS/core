@@ -119,13 +119,13 @@ class StudentProfilesTable extends ControllerActionTable
             ];
 			
             // Download button, status must be generated or published
-			if ($this->AccessControl->check(['ProfileTemplates', 'StudentProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
-                $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
-                $buttons['download'] = [
-                    'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
-                    'attr' => $indexAttr,
-                    'url' => $downloadUrl
-                ];
+			if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+                // $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
+                // $buttons['download'] = [
+                //     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+                //     'attr' => $indexAttr,
+                //     'url' => $downloadUrl
+                // ];
 				$downloadPdfUrl = $this->setQueryString($this->url('downloadPDF'), $params);
                 $buttons['downloadPdf'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
@@ -135,7 +135,7 @@ class StudentProfilesTable extends ControllerActionTable
             }
 
             // Generate button, all statuses
-            if ($this->AccessControl->check(['ProfileTemplates', 'StudentProfiles', 'generate'])) {
+            if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->StudentTemplates
@@ -168,53 +168,6 @@ class StudentProfilesTable extends ControllerActionTable
                             'url' => 'javascript:void(0)'
                             ];
                 } 
-            }
-
-            // Publish button, status must be generated
-            if ($this->AccessControl->check(['ProfileTemplates', 'StudentProfiles', 'publish']) && $entity->has('report_card_status') 
-                    && ( $entity->report_card_status == self::GENERATED 
-                         || $entity->report_card_status == '12' 
-                       )
-                ) {
-                $publishUrl = $this->setQueryString($this->url('publish'), $params);
-                $buttons['publish'] = [
-                    'label' => '<i class="fa kd-publish"></i>'.__('Publish'),
-                    'attr' => $indexAttr,
-                    'url' => $publishUrl
-                ];
-            }
-
-            // Unpublish button, status must be published
-            if ($this->AccessControl->check(['ProfileTemplates', 'StudentProfiles', 'unpublish']) 
-                    && $entity->has('report_card_status') 
-                    && ( $entity->report_card_status == self::PUBLISHED 
-                          || $entity->report_card_status == '16'
-                        )
-                    ) {
-                $unpublishUrl = $this->setQueryString($this->url('unpublish'), $params);
-                $buttons['unpublish'] = [
-                    'label' => '<i class="fa kd-unpublish"></i>'.__('Unpublish'),
-                    'attr' => $indexAttr,
-                    'url' => $unpublishUrl
-                ];
-            }
-
-            // Single email button, status must be published
-            if ($this->AccessControl->check(['ProfileTemplates', 'StudentProfiles', 'email']) 
-                    && $entity->has('report_card_status')
-                    && ( $entity->report_card_status == self::PUBLISHED 
-                            || $entity->report_card_status == '16' 
-                        )
-               )
-               {
-                if (empty($entity->email_status_id) || ($entity->has('email_status_id') && $entity->email_status_id != $this->StudentReportCardEmailProcesses::SENDING)) {
-                    $emailUrl = $this->setQueryString($this->url('email'), $params);
-                    $buttons['email'] = [
-                        'label' => '<i class="fa fa-envelope"></i>'.__('Email'),
-                        'attr' => $indexAttr,
-                        'url' => $emailUrl
-                    ];
-                }
             }
         }
         return $buttons;
@@ -494,6 +447,8 @@ class StudentProfilesTable extends ControllerActionTable
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $params = $this->request->query;
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
 
         $query
             ->select([
@@ -507,16 +462,15 @@ class StudentProfilesTable extends ControllerActionTable
             ->leftJoin([$this->InstitutionStudentsProfileTemplates->alias() => $this->InstitutionStudentsProfileTemplates->table()],
                 [
                     $this->InstitutionStudentsProfileTemplates->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $this->InstitutionStudentsProfileTemplates->aliasField('institution_id = ') . $params['institution_id'],
-                    $this->InstitutionStudentsProfileTemplates->aliasField('academic_period_id = ') . $params['academic_period_id'],
+                    $this->InstitutionStudentsProfileTemplates->aliasField('institution_id = ') . $this->aliasField('institution_id')
                 ]
             )
             ->leftJoin([$this->StudentReportCardEmailProcesses->alias() => $this->StudentReportCardEmailProcesses->table()],
                 [
                     $this->StudentReportCardEmailProcesses->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $this->StudentReportCardEmailProcesses->aliasField('institution_id = ') . $params['institution_id'],
-                    $this->StudentReportCardEmailProcesses->aliasField('academic_period_id = ') . $params['academic_period_id'],
-                    $this->StudentReportCardEmailProcesses->aliasField('student_profile_template_id = ') . $params['student_profile_template_id']
+                    $this->StudentReportCardEmailProcesses->aliasField('institution_id = ') . $this->InstitutionStudentsProfileTemplates->aliasField('institution_id'),
+                    $this->StudentReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->InstitutionStudentsProfileTemplates->aliasField('academic_period_id'),
+                    $this->StudentReportCardEmailProcesses->aliasField('student_profile_template_id = ') . $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id')
                 ]
             )
             ->autoFields(true);
