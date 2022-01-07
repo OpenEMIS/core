@@ -1,3 +1,46 @@
+### [3.72.5] - 2021-12-30
+- Bug Fixed: Institutions: Move "Shifts" out from "Academic" and place it under "General"
+- Bug Fixed: Institution>Performance>Outcome: Students that are transferred are showing in Performance>Outcome>Students
+- Bug Fixed: Institutions>Performance>Assessments: Subject teachers can view their classes twice from Performance > Assessment
+- Bug Fixed: Administration > Security > Roles > Permissions > Administration: No permission for Administration > Meals
+- Bug Fixed: Institution>Appointment>Duties: Report should include institution name
+- Bug Fixed: Institutions>Performance>Assessments: Able to import higher than max marks
+- Bug Fixed: Institutions>Students: Enrolled (Repeater) status is not displayed in the Export Report
+
+### [3.72.4] - 2021-12-29
+- Bug Fixed: Institutions > Performance > Assessments : Assessment Marks Display
+
+### [3.72.3] - 2021-12-22
+- Implemented: Develop Attendance > Student > No Scheduled Class function
+- Implemented: Development of Institution Profile placeholder
+- Implemented: Create a batch / background process to generate reports
+- Bug Fixed: Institutions > Committee : Permissions are enabled but user is unable to view in menu
+- Bug Fixed: Personal > Students > Academic > Extracurriculars: Extracurriculars tab is missing
+
+### [3.72.2] - 2021-12-21
+- Bug Fixed: Institution>Performance>Report Cards: The Report Card Reflects Subjects that the Student is not Assigned to
+- Bug Fixed: Institutions>Students>Student1>Academic>Extracurriculars: View and edit showing the oldest record instead of the current one
+- Bug Fixed: Institutions > Attendances > Students : Student is no longer enrolled in school however he is showing up in this page
+
+### [3.72.1] - 2021-12-16
+- Implemented: Add Export button function - Institutions > Risks
+- Implemented: Add Export button function - Institutions > Examinations > Results
+- Implemented: Add "Area Level", "From Date" and "To Date" fields and "All Institutions" option to Reports > Workflows > Institution > Student Transfers > Sending / Receiving
+- Implemented: Develop institution statistics feature
+- Bug Fixed: Administration>System Setup>System Configuration>Webhooks:Add Role Names column from security_roles table to Student/Staff Create and Update webhooks
+- Bug Fixed: Institutions > Student > Academic > Absences Tab : Absence record is not showing
+- Bug Fixed: Institutions>Academic>Subjects-Unable to add same subject with a different name
+- Bug Fixed: Institutions>Staff: Able to repeatedly add same position of same shift
+- Bug Fixed: Institutions>Attendance>Students-attendance for withdrawn students is allowed to be added
+- Bug Fixed: Institution>Performance>Assessments: Total Marks is showing the total marks for both class(Student1 is moved from Class 1A to Class 1B)
+- Bug Fixed: Institution>Performance>Assessments: Export(button) report is showing total marks and marks for previous class(Student 1 is moved from Class 1A to Class 1B)
+
+### [3.72.0] - 2021-12-10
+- Implemented: Institutions > Staff > Career > Positions tab: To add Shift column on the list page
+- Bug Fixed: Institutions>Transport>Buses: 404 Error
+- Bug Fixed: Administration > Security > Roles > Permissions > Institutions: Meal component not available in Institution
+- Bug Fixed: Institutions>Students>Student1>Academic>Extracurriculars:Unable to save record when added
+
 ### [3.71.4] - 2021-12-08
 - Bug Fixed: Institutions>Dashboard: Modifying or adding absence, it is not reflected on the dashboard
 - Bug Fixed: Personal>Account: Account permission should allow user to edit username

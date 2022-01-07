@@ -1037,7 +1037,12 @@ class ReportCardsTable extends AppTable
                 ->innerJoin([$StudentSubjects->alias() => $StudentSubjects->table()], [
                     $StudentSubjects->aliasField('education_subject_id = ') . $AssessmentItems->aliasField('education_subject_id')
                 ])
-                ->where([$StudentSubjects->aliasField('student_id') => $params['student_id']])
+                ->where([
+                    $StudentSubjects->aliasField('student_id') => $params['student_id'],
+                    // POCOR-6462
+                    $StudentSubjects->aliasField('education_grade_id') => $params['education_grade_id']
+                    // POCOR-6462
+                ])
                 //POCOR-5056 end
 
                 ->toArray();

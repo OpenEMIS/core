@@ -105,6 +105,7 @@ class InstitutionClassStudentsTable extends AppTable
                     $this->aliasField('education_grade_id') => $student->education_grade_id,
                     $this->aliasField('student_id') => $student->student_id,
                 ])->first();
+                // echo "<pre>"; print_r($student); die();
 
             if (!empty($classStudent) && $classStudent->student_status_id != $student->student_status_id) {
                 if ($student->next_institution_class_id > 0) {
@@ -112,6 +113,19 @@ class InstitutionClassStudentsTable extends AppTable
                 }
                 $classStudent->student_status_id = $student->student_status_id;
                 $this->save($classStudent);
+            }
+            else{
+                $results = $this->find()
+                ->matching('InstitutionClasses')
+                ->where([
+                    'InstitutionClasses.academic_period_id' => $student->academic_period_id,
+                    $this->aliasField('education_grade_id') => $student->education_grade_id,
+                    $this->aliasField('student_id') => $student->student_id,
+                ])->first();
+                
+                $results->student_status_id = 1;
+                $this->save($results);
+            
             }
         }
     }
@@ -293,6 +307,7 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
         $sheet = $settings['sheet'];
         $institutionId = $sheet['institutionId'];
         $allClassesPermission = $sheet['allClassesPermission'];
@@ -390,6 +405,7 @@ class InstitutionClassStudentsTable extends AppTable
     public function onExcelRenderSubject(Event $event, Entity $entity, array $attr)
     {
         $studentId = $entity->student_id;
+        $classId = $entity->institution_class_id;
         $subjectId = $attr['subjectId'];
         $assessmentId = $attr['assessmentId'];
         $academicPeriodId = $attr['academicPeriodId'];
@@ -404,7 +420,7 @@ class InstitutionClassStudentsTable extends AppTable
         if (!array_key_exists($subjectId, $this->assessmentItemResults[$studentId])) {
             $AssessmentItemResultsTable = TableRegistry::get('Assessment.AssessmentItemResults');
 
-            $studentResults = $AssessmentItemResultsTable->getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId);
+            $studentResults = $AssessmentItemResultsTable->getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId, $classId);
             if (isset($studentResults[$studentId][$subjectId])) {
                 $this->assessmentItemResults[$studentId][$subjectId] = $studentResults[$studentId][$subjectId];
             }
