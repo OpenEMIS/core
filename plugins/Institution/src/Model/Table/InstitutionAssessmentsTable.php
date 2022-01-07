@@ -184,7 +184,10 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             )
             ->group([
                 $ClassGrades->aliasField('institution_class_id'),
+                /** Ticket : POCOR-6480
+                 * Added because showing same records multiple time
                 $Assessments->aliasField('id')
+                **/
             ])
             ->autoFields(true)
             ;
@@ -377,5 +380,79 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         }
 
         return $buttons;
+    }
+
+    /**
+     * Function to get Total Male Students on index page - POCOR-6183
+     * @param Entity $entity and Event $event
+     * @return int 
+     */
+    public function onGetTotalMaleStudents(Event $event, Entity $entity) {
+        $grade = $entity->education_grade_id;
+        $class = $entity->institution_class_id;
+        $institutionId = $entity->institution->id;
+        $period = $entity->academic_period->id;
+        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Users = TableRegistry::get('Security.Users');
+        $Genders = TableRegistry::get('User.Genders');
+        $count = $InstitutionClassStudentsTable->find()
+                ->leftJoin([$Users->alias() => $Users->table()], [
+                    $Users->aliasField('id').' = ' . $InstitutionClassStudentsTable->aliasField('student_id')
+                ])
+                ->leftJoin([$Genders->alias() => $Genders->table()], [
+                    $Genders->aliasField('id').' = ' . $Users->aliasField('gender_id')
+                ])
+                ->where([
+                    $InstitutionClassStudentsTable->aliasField('institution_class_id') => $class,
+                    $InstitutionClassStudentsTable->aliasField('education_grade_id') => $grade,
+                    $InstitutionClassStudentsTable->aliasField('academic_period_id') => $period,
+                    $InstitutionClassStudentsTable->aliasField('institution_id') => $institutionId,
+                    $Genders->aliasField('code') => 'M'
+                ])->count();
+        
+        return $count;
+    }
+
+    /**
+     * Function to get Total Female Students on index page - POCOR-6183
+     * @param Entity $entity and Event $event
+     * @return int 
+     */
+    public function onGetTotalFemaleStudents(Event $event, Entity $entity) {
+        $grade = $entity->education_grade_id;
+        $class = $entity->institution_class_id;
+        $institutionId = $entity->institution->id;
+        $period = $entity->academic_period->id;
+        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Users = TableRegistry::get('Security.Users');
+        $Genders = TableRegistry::get('User.Genders');
+        $count = $InstitutionClassStudentsTable->find()
+                ->leftJoin([$Users->alias() => $Users->table()], [
+                    $Users->aliasField('id').' = ' . $InstitutionClassStudentsTable->aliasField('student_id')
+                ])
+                ->leftJoin([$Genders->alias() => $Genders->table()], [
+                    $Genders->aliasField('id').' = ' . $Users->aliasField('gender_id')
+                ])
+                ->where([
+                    $InstitutionClassStudentsTable->aliasField('institution_class_id') => $class,
+                    $InstitutionClassStudentsTable->aliasField('education_grade_id') => $grade,
+                    $InstitutionClassStudentsTable->aliasField('academic_period_id') => $period,
+                    $InstitutionClassStudentsTable->aliasField('institution_id') => $institutionId,
+                    $Genders->aliasField('code') => 'F'
+                ])->count();
+        
+        return $count;
+    }
+
+    /**
+     * Function to get class name on index page - POCOR-6183
+     * @param Entity $entity and Event $event
+     * @return string 
+     */
+    public function onGetName(Event $event, Entity $entity) {
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $class = $InstitutionClasses->get($entity->institution_class_id);
+
+        return $class->name;
     }
 }

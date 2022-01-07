@@ -54,6 +54,7 @@ class StudentNotAssignedClassTable extends AppTable
        $requestData = json_decode($settings['process']['params']);
        $academicPeriodId = $requestData->academic_period_id;
        $institutionId = $requestData->institution_id;
+       $areaId = $requestData->area_education_id;
        $insClassStudent = TableRegistry::get('Institution.InstitutionClassStudents');
        $analysis = '';
 
@@ -64,7 +65,9 @@ class StudentNotAssignedClassTable extends AppTable
         if (!empty($institutionId)) {
             $conditions['Institutions.id'] = $institutionId;
         }
-
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
+        }
         $newConditions = [];
         if (!empty($academicPeriodId)) {
             $newConditions[$insClassStudent->aliasField('academic_period_id')] = $academicPeriodId;

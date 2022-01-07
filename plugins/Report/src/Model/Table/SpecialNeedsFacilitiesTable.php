@@ -86,10 +86,8 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
         $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
         $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
         $requestData = json_decode($settings['process']['params']);
-      
-        $institutionTypeId = $requestData->institution_type_id;
         $institution_id = $requestData->institution_id;
-
+        $areaId = $requestData->area_education_id;
         $conditionsLands = [];
         $conditionsFloors = [];
         $conditionsRooms = [];
@@ -105,22 +103,22 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                         ->toArray();
         
       
-        if (!empty($institutionTypeId) && $institution_id == 0) {
+        if (!empty($areaId) && $areaId != -1) {
 
             if($query->repository['registryAlias'] ='Report.SpecialNeedsFacilities' ){
-                $conditionsLands[$this->aliasField('institution_id IN')] = $institutionIds;
+                $conditionsLands['Institutions.area_id'] = $areaId;
             }
             
             if($InstitutionFloors){
-                $conditionsFloors[$InstitutionFloors->aliasField('institution_id IN')] = $institutionIds;
+                $conditionsFloors['Institutions.area_id'] = $areaId;
             }  
 
             if($InstitutionRooms ){
-                $conditionsRooms[$InstitutionRooms->aliasField('institution_id IN')] = $institutionIds;
+                $conditionsRooms['Institutions.area_id'] = $areaId;
             } 
 
             if($InstitutionBuildings){
-                $conditionsBuildings[$InstitutionBuildings->aliasField('institution_id IN')] = $institutionIds;
+                $conditionsBuildings['Institutions.area_id'] = $areaId;
             } 
         }
 

@@ -4,6 +4,7 @@ namespace Profile\Controller;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use App\Controller\PageController;
+use Page\Model\Entity\PageElement;//POCOR-6255
 
 class BodyMassesController extends PageController
 {
@@ -20,7 +21,7 @@ class BodyMassesController extends PageController
     public function index()
     {
         $page = $this->Page;
-        $page->exclude(['comment', 'security_user_id']);
+        $page->exclude(['comment', 'security_user_id', 'file_name', 'file_content']);//POCOR-6255
 
         $requestQuery = $this->request->query;
         if (array_key_exists('sort', $requestQuery)) {
@@ -35,6 +36,12 @@ class BodyMassesController extends PageController
     {
         $page = $this->Page;
         parent::beforeFilter($event);
+        //POCOR-6255 start
+        if ($page->is(['view', 'add', 'edit'])) {
+            $page->exclude(['file_name']);
+            $page->move('file_content')->after('comment');
+
+        }//POCOR-6255 end
     }
 
     public function add()
@@ -52,7 +59,10 @@ class BodyMassesController extends PageController
             ->setId('academic_period_id')
             ->setOptions($periodOptions);
         // end Academic Period Field
-
+        //POCOR-6255 start
+        $page->get('file_content')
+            ->setLabel('Attachment')
+            ->setAttributes('fileNameField', 'file_name');//POCOR-6255 end
         parent::add();
     }
 
@@ -63,6 +73,21 @@ class BodyMassesController extends PageController
 
         parent::edit($id);
     }
+    //POCOR-6255 start
+    public function view($id)
+    {
+        $page = $this->Page;
+        $page->exclude(['file_name']);
+
+        // set the file download for attachment
+        $page->get('file_content')
+            ->setLabel('Attachment')
+            ->setAttributes('fileNameField', 'file_name');
+
+        parent::view($id);
+
+        $entity = $page->getData();
+    }//POCOR-6255 end
 
     public function setBreadCrumb($options)
     {

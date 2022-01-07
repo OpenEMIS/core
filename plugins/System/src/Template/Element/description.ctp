@@ -32,7 +32,7 @@ You can review these changes in the latest version of OpenEMIS Core:
 <a href="https://demo.openemis.org/core/CHANGELOG.md" target="_blank">https://demo.openemis.org/core/CHANGELOG.md</a>
 </p>
 <p>
-Please click the upgrade button to approve for the OpenEMIS lab to upgrade your instance of OpenEMIS Core to the latest version.
+Please click the upgrade button to approve for the OpenEMIS lab to upgrade your cloud instance of OpenEMIS Core to the latest version.This feature is not relevant for locally hosted instances of OpenEMIS Core.
 </p>
 <p>
 Note that it will take 2-3 working days to complete the upgrade and data migration.
