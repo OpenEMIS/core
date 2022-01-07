@@ -132,6 +132,47 @@ class StaffContactsTable extends AppTable  {
     }
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+        $requestData = json_decode($settings['process']['params']);
+        $areaId = $requestData->area_education_id;
+        $institutionId = $requestData->institution_id;
+        $academicPeriodId = $requestData->academic_period_id;
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $periodEntity = $AcademicPeriods->get($academicPeriodId);
+        $startDate = $periodEntity->start_date->format('Y-m-d');
+        $endDate = $periodEntity->end_date->format('Y-m-d');
+        $conditions = [];
+        if (!empty($academicPeriodId)) {
+                $conditions['OR'] = [
+                    'OR' => [
+                        [
+                            'InstitutionStaff.end_date' . ' IS NOT NULL',
+                            'InstitutionStaff.start_date' . ' <=' => $startDate,
+                            'InstitutionStaff.end_date' . ' >=' => $startDate
+                        ],
+                        [
+                            'InstitutionStaff.end_date' . ' IS NOT NULL',
+                            'InstitutionStaff.start_date' . ' <=' => $endDate,
+                            'InstitutionStaff.end_date' . ' >=' => $endDate
+                        ],
+                        [
+                            'InstitutionStaff.end_date' . ' IS NOT NULL',
+                            'InstitutionStaff.start_date' . ' >=' => $startDate,
+                            'InstitutionStaff.end_date' . ' <=' => $endDate
+                        ]
+                    ],
+                    [
+                        'InstitutionStaff.end_date' . ' IS NULL',
+                        'InstitutionStaff.start_date' . ' <=' => $endDate
+                    ]
+                ];
+        }
+        if (!empty($institutionId) && $institutionId > 0) {
+            $conditions['InstitutionStaff.institution_id'] = $institutionId; 
+        }
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId; 
+        }
         $query
             ->contain([
                 'Users' => [
@@ -146,8 +187,14 @@ class StaffContactsTable extends AppTable  {
                     ]
                 ],
             ])
+            ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
+                'InstitutionStaff.staff_id = ' . $this->aliasField('security_user_id')
+            ])
+            ->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
+                $InstitutionsTable->aliasField('id = ') . 'InstitutionStaff.institution_id'
+            ])
             ->order([$this->aliasField('security_user_id')])
-            ->where(['Users.is_staff' => 1]);
+            ->where(['Users.is_staff' => 1, $conditions]);
 
 	}
 

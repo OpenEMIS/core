@@ -9,6 +9,7 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
+use Cake\ORM\TableRegistry;
 
 class InstitutionRubricsTable extends AppTable {
 	const EXPIRED = -1;
@@ -43,13 +44,13 @@ class InstitutionRubricsTable extends AppTable {
 		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
 		$this->fields = [];
 		$this->ControllerAction->field('feature', ['select' => false]);
-		$this->ControllerAction->field('format');
-	}
-
-	public function addBeforeAction(Event $event) {
-		$this->ControllerAction->field('rubric_template_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
-		$this->ControllerAction->field('status', ['type' => 'hidden']);
+		$this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('institution_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('rubric_template_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('status', ['type' => 'select']);
+		$this->ControllerAction->field('format');
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -69,6 +70,16 @@ class InstitutionRubricsTable extends AppTable {
 		if ($action == 'add') {
 			if (isset($this->request->data[$this->alias()]['feature'])) {
 				$feature = $this->request->data[$this->alias()]['feature'];
+				$periodId = $this->request->data[$this->alias()]['academic_period_id'];
+				$institutionId = $this->request->data[$this->alias()]['institution_id'];
+				$areaId = $this->request->data[$this->alias()]['area_education_id'];
+				$Institutions = TableRegistry::get('Institution.Institutions');
+				$Areas = TableRegistry::get('Institution.Institutions');
+				//echo "<pre>";print_r($areaId);die();
+				$where = [];
+				if (!empty($institutionId) && $institutionId != 0) {
+					$where[$this->aliasField('institution_id')] = $institutionId;
+				}
 				if ($feature == $this->registryAlias()) {
 					$templateOptions = $this
 						->find('list', [
@@ -76,6 +87,16 @@ class InstitutionRubricsTable extends AppTable {
 							'valueField' => 'template_name'
 						])
 						->matching('RubricTemplates')
+						->leftJoin([$Institutions->alias() => $Institutions->table()], [
+                            $Institutions->aliasField('id') . ' = '. $this->aliasField('institution_id')
+                        ])
+                        ->leftJoin([$Areas->alias() => $Areas->table()], [
+                            $Institutions->aliasField('area_id') . ' = '. $Areas->aliasField('id')
+                        ])
+						->where([
+							$this->aliasField('academic_period_id') => $periodId,
+							$where
+						])
 						->select(['rubric_template_id' => $this->aliasField('rubric_template_id'), 'template_name' => 'RubricTemplates.name'])
 						->group([$this->aliasField('rubric_template_id')])
 						->toArray();
@@ -95,26 +116,12 @@ class InstitutionRubricsTable extends AppTable {
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
-			if (isset($this->request->data[$this->alias()]['feature']) && isset($this->request->data[$this->alias()]['rubric_template_id'])) {
+			if (isset($this->request->data[$this->alias()]['feature'])) {
 				$feature = $this->request->data[$this->alias()]['feature'];
-				$templateId = $this->request->data[$this->alias()]['rubric_template_id'];
-				if ($feature == $this->registryAlias() && !empty($templateId)) {
-					$academicPeriodOptions = $this
-						->find('list', [
-							'keyField' => 'id',
-							'valueField' => 'name'
-						])
-						->contain(['AcademicPeriods'])
-						->select(['id' => 'AcademicPeriods.id', 'name' => 'AcademicPeriods.name'])
-						->where([
-							$this->aliasField('rubric_template_id') => $templateId
-						])
-						->group([
-							$this->aliasField('rubric_template_id'),
-							$this->aliasField('academic_period_id')
-						])
-						->order(['AcademicPeriods.order'])
-						->toArray();
+				$periodId = $this->request->data[$this->alias()]['academic_period_id'];
+				if ($feature == $this->registryAlias()) {
+					$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+					$academicPeriodOptions = $AcademicPeriodTable->getYearList();
 					$attr['options'] = $academicPeriodOptions;
 					$attr['onChangeReload'] = true;
 					$attr['type'] = 'select';
@@ -131,6 +138,7 @@ class InstitutionRubricsTable extends AppTable {
 
 	public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
+
 			if (isset($this->request->data[$this->alias()]['feature'])
 				&& isset($this->request->data[$this->alias()]['rubric_template_id'])
 				&& isset($this->request->data[$this->alias()]['academic_period_id'])) {
@@ -196,4 +204,114 @@ class InstitutionRubricsTable extends AppTable {
 				break;
 		}
 	}
+	/*POCOR-6176 starts*/
+	public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
+    {
+    	if ($action == 'add') {
+    		$Areas = TableRegistry::get('AreaLevel.AreaLevels');
+            $entity = $attr['entity'];
+            $areaOptions = $Areas
+                           ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                           ->order([$Areas->aliasField('level')])
+                           ->toArray();
+         
+                $attr['type'] = 'chosenSelect';
+                $attr['attr']['multiple'] = false;
+                $attr['select'] = true;
+                $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas Level')] + $areaOptions;
+                $attr['onChangeReload'] = true;
+            } else {
+                $attr['type'] = 'hidden';
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, Request $request)
+    {
+    	$Areas = TableRegistry::get('Area.Areas');
+        $entity = $attr['entity'];
+
+        if ($action == 'add') {
+            $areaOptions = $Areas
+                            ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                            ->order([$Areas->aliasField('order')]);
+
+                $attr['type'] = 'chosenSelect';
+                $attr['attr']['multiple'] = false;
+                $attr['select'] = true;
+                $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions->toArray();
+                $attr['onChangeReload'] = true;
+            } else {
+                $attr['type'] = 'hidden';
+            }
+        return $attr;
+    }
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+		$institutionList = [];
+		$areaId = $request->data[$this->alias()]['area_education_id'];
+        if (array_key_exists('area_education_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['area_education_id']) && $areaId != -1) {
+            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->where([
+                            $InstitutionsTable->aliasField('area_id') => $areaId
+                        ])
+                        ->order([
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+			$superAdmin = $this->Auth->user('super_admin');
+            if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                $userId = $this->Auth->user('id');
+                $institutionQuery->find('byAccess', ['userId' => $userId]);
+            }
+			$institutionList = $institutionQuery->toArray();
+            } else {
+				$InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                           'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->order([
+                           $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+                $superAdmin = $this->Auth->user('super_admin');
+                if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                    $userId = $this->Auth->user('id');
+                    $institutionQuery->find('byAccess', ['userId' => $userId]);
+                }
+
+                    $institutionList = $institutionQuery->toArray();
+                }
+
+                if (empty($institutionList)) {
+                    $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
+                    $attr['type'] = 'select';
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+                	/*POCOR-6296 starts*/
+                	if (count($institutionList) > 1) {
+                		$institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                	} else {
+                		$institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                	}
+                	/*POCOR-6296 ends*/
+                    $attr['type'] = 'chosenSelect';
+                    $attr['onChangeReload'] = true;
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                }
+            return $attr;
+    }
+    /*POCOR-6176 ends*/
 }

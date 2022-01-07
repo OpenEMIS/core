@@ -38,15 +38,31 @@ class InstitutionBehavior extends Behavior
 
 	public function findByAccess(Query $query, array $options)
 	{
+		$apiSecuritiesScopes = TableRegistry::get('AcademicPeriod.ApiSecuritiesScopes');
+        $apiSecurities = TableRegistry::get('AcademicPeriod.ApiSecurities');
+        $apiSecuritiesData = $apiSecurities->find('all')
+        ->select([
+            'ApiSecurities.id','ApiSecurities.name','ApiSecurities.execute'
+        ])
+        ->where([
+            'ApiSecurities.name' => 'Institutions',
+            'ApiSecurities.model' => 'Institution.Institutions'
+        ])
+        ->first();
+        $apiSecuritiesScopesData = $apiSecuritiesScopes->find('all')
+        ->where([
+            'ApiSecuritiesScopes.api_security_id' => $apiSecuritiesData->id
+        ])
+        ->first();
 
 	$userId = (!empty($options['userId']))?$options['userId']:$options['user']['id'];
 		
-	if ((isset($options["super_admin"]) && $options["super_admin"])
-		||
-	   (isset($options['user']["super_admin"]) && $options['user']["super_admin"])
-	   ) {
-			return $query;
-		}
+	if ((isset($options["super_admin"]) && $options["super_admin"] && $apiSecuritiesScopesData->view == 1 && $apiSecuritiesScopesData->index == 1)
+        ||
+       (isset($options['user']["super_admin"]) && $options['user']["super_admin"] && $apiSecuritiesScopesData->view == 1 && $apiSecuritiesScopesData->index == 1)
+       ) {
+            return $query;
+        }
 
 		$institutionTableClone1 = clone $this->_table;
 		$institutionTableClone1->alias('InstitutionSecurityArea');

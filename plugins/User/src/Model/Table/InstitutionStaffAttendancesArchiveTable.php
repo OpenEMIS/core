@@ -89,7 +89,20 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
             }
         }
 
-        $periodOptions = $AcademicPeriod->getArchivedYearList($archived_academic_period_arr);
+        $transfer_logs = TableRegistry::get('transfer_logs');
+        $transfer_logs_academic_period_result =$transfer_logs->find('all', array(
+            'fields'=>'academic_period_id',
+            'group' => 'academic_period_id'
+        ));
+        if(!empty($transfer_logs_academic_period_result)){
+            foreach($transfer_logs_academic_period_result AS $transfer_logs_academic_period_data){
+                $transfer_logs_archived_academic_period_arr[] = $transfer_logs_academic_period_data['academic_period_id'];
+            }
+        }
+        $merged_array = array_merge($archived_academic_period_arr, $transfer_logs_archived_academic_period_arr);
+        $uniqu_array = array_unique($merged_array);
+
+        $periodOptions = $AcademicPeriod->getArchivedYearList($uniqu_array);
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
         }

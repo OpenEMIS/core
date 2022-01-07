@@ -70,22 +70,24 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         return InstitutionClassStudents
             .select()
             .contain(['Users','StudentStatuses'])
-            .where({institution_class_id: classId})
+            .where({institution_class_id: classId ,
+                student_status_id : 1})
             .order(['Users.first_name', 'Users.last_name'])
             .ajax({success: success, defer:true});
     }
 
-    function getSubjectOptions(classId, institutionId, academicPeriodId, gradeId) {
-        var success = function(response, deferred) {
+    function getSubjectOptions(classId, institutionId, academicPeriodId, gradeId, studentId) { //6198 studentId 
+        var success = function(response, deferred) { 
             deferred.resolve(response.data.data);
         };
-
+        
         return InstitutionSubjects
             .find('bySubjectsInClass', {
                 institution_class_id: classId,
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId,
-                education_grade_id: gradeId
+                education_grade_id: gradeId,
+                student_id : studentId //6198 studentId 
             })
             .ajax({success: success, defer: true});
     }

@@ -12,7 +12,7 @@ class POCOR5209 extends AbstractMigration
         $this->execute('INSERT INTO `z_5209_institution_lands` SELECT * FROM `institution_lands`');
 
         // Alter Table.
-		$this->execute('UPDATE institution_lands set year_acquired = start_year where year_acquired IS NULL');
+		$this->execute('UPDATE institution_lands INNER JOIN institutions ON institutions.id = institution_lands.institution_id SET institution_lands.year_acquired = institutions.year_opened WHERE year_acquired IS NULL');
         $this->execute('ALTER TABLE `institution_lands` CHANGE `year_acquired` `year_acquired` INT(4) NOT NULL;');
     }
 

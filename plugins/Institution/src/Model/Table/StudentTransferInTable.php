@@ -41,7 +41,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
                 ],
                 'ruleCompareDateReverse' => [
-                    'rule' => ['compareDateReverse', 'requested_date', false],
+                    'rule' => ['compareDateReverse', 'requested_date', []],
                     'on' => function ($context) {
                         return array_key_exists('requested_date', $context['data']) && !empty($context['data']['requested_date']);
                     }
@@ -191,6 +191,10 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
+
+        //$entity->start_date = $selectedAcademicPeriodData->start_date;
+        $entity->end_date = $selectedAcademicPeriodData->end_date;
         $this->addSections();
         if (empty($entity->requested_date)) {
             $this->field('requested_date', ['type' => 'hidden']);
@@ -221,7 +225,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                     'data-placement' => 'bottom',
                     'escape' => false
                 ];
-                
+
                 $extraButtons = [
                     'edit' => [
                         'Institution' => ['Institutions', 'Institutions', 'index'],
@@ -235,7 +239,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                         $button = [
                             'type' => 'hidden',
                             'attr' => $btnAttr,
-                            'url' => [0 => 'index'] 
+                            'url' => [0 => 'index']
                         ];
                         $button['url']['action'] = $attr['action'];
                         $button['attr']['title'] = $attr['title'];
@@ -253,7 +257,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                     'data-placement' => 'bottom',
                     'escape' => false
                 ];
-                
+
                 $extraButtons = [
                     'remove' => [
                         'Institution' => ['Institutions', 'Institutions', 'index'],
@@ -267,7 +271,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                         $button = [
                             'type' => 'hidden',
                             'attr' => $btnAttr,
-                            'url' => [0 => 'index'] 
+                            'url' => [0 => 'index']
                         ];
                         $button['url']['action'] = $attr['action'];
                         $button['attr']['title'] = $attr['title'];
@@ -288,6 +292,10 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
+
+        //$entity->start_date = $selectedAcademicPeriodData->start_date;
+        $entity->end_date = $selectedAcademicPeriodData->end_date;
         $this->addSections();
         $this->field('student_id', [
             'type' => 'readonly',
@@ -338,7 +346,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
-    {   
+    {
         $studentId = $entity->student_id;
         $institutionId = $entity->institution_id;
         $academicPeriodId = $entity->academic_period_id;
@@ -351,6 +359,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 ->set(['start_date' => $newDate])
                 ->where(['institution_id' => $institutionId, 'student_id' => $studentId, 'academic_period_id' => $academicPeriodId])
                 ->execute();
+
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)

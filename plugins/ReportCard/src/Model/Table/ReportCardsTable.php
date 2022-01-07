@@ -104,12 +104,20 @@ class ReportCardsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->setupNewTabElements();
         $this->fields['excel_template_name']['visible'] = false;
         $this->field('start_date', ['type' => 'date']);
         $this->field('end_date', ['type' => 'date']);
         $this->field('generate_start_date', ['type' => 'date']);
         $this->field('generate_end_date', ['type' => 'date']);
         $this->field('excel_template');
+    }
+
+    private function setupNewTabElements()
+    {
+        $tabElements = $this->controller->getReportTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'Templates');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)

@@ -40,7 +40,15 @@ class InstitutionPositionsTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
-        
+        $institution_id = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
+        $where = [];
+        if ($institution_id != 0) {
+            $where[$this->aliasField('institution_id')] = $institution_id;
+        }
+        if ($areaId != -1) {
+            $where['Institutions.area_id'] = $areaId;
+        }
         $query
             ->select([
                 'workflow_steps_name' => 'Statuses.name',
@@ -102,8 +110,8 @@ class InstitutionPositionsTable extends AppTable
                     ]
                 ]
             ])
+            ->where([$where]) 
             ->order(['institution_name', 'position_no']);
-
 
         if ($positionFilter == self::POSITION_WITH_STAFF) {
             $query = $this->onExcelBeforePositionWithStaffQuery($query);

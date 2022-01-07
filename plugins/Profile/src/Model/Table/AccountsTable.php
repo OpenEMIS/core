@@ -34,7 +34,7 @@ class AccountsTable extends AppTable
 
     public function editAfterAction(Event $event, Entity $entity)
     {
-        $this->ControllerAction->field('username', ['type' => 'readonly']);
+        $this->ControllerAction->field('username');
         $this->ControllerAction->field('current_password', ['type' => 'password']);
         $this->ControllerAction->setFieldOrder(['username', 'current_password', 'password', 'retype_password']);
     }

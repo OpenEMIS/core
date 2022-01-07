@@ -18,24 +18,24 @@ use Cake\Database\Connection;
 
 class InfrastructureNeedsTable extends AppTable  {
     public function initialize(array $config) {
-		$this->table('infrastructure_needs');
-		parent::initialize($config);
+        $this->table('infrastructure_needs');
+        parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('InfrastructureNeedTypes', ['className' => 'InfrastructureNeedTypes.infrastructure_need_types']);
         
-	    $this->addBehavior('Excel', [
+        $this->addBehavior('Excel', [
             'autoFields' => false
         ]);
-		$this->addBehavior('Report.ReportList');
-		$this->addBehavior('Report.InstitutionSecurity');
+        $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity');
     }
 
     public function beforeAction(Event $event) {
-		$this->fields = [];
-		$this->ControllerAction->field('feature');
-		$this->ControllerAction->field('format');
-	}
+        $this->fields = [];
+        $this->ControllerAction->field('feature');
+        $this->ControllerAction->field('format');
+    }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
@@ -43,10 +43,13 @@ class InfrastructureNeedsTable extends AppTable  {
         
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
-        
+        $areaId = $requestData->area_education_id;
         $conditions = [];
-        if (!empty($institutionId)) {
+        if (!empty($institutionId) && $institutionId > 0) {
             $conditions['InfrastructureNeeds.institution_id'] = $institutionId;
+        }
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
         }
         
         $infrastructureNeeds = TableRegistry::get('Institutions.InfrastructureNeeds');

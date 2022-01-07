@@ -42,8 +42,9 @@ class InstitutionCommitteesTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        //POCOR-5394 starts
         $institutions = TableRegistry::get('institutions');
+        $areaId = $requestData->area_education_id;
+        $where = [];
         if($requestData->institution_id == 0){
             $institutions_Arr = $institutions
                                     ->find('list', [
@@ -60,6 +61,9 @@ class InstitutionCommitteesTable extends AppTable
         }else{
             $institutions = $requestData->institution_id;
         }
+        if ($areaId != -1) {
+            $where['Institutions.area_id'] = $areaId;
+        }
 
         $query
             ->select([
@@ -69,10 +73,13 @@ class InstitutionCommitteesTable extends AppTable
                 'chairperson' => $this->aliasField('chairperson'),
                 'telephone' => $this->aliasField('telephone'),
                 'instituion_name' => 'Institutions.name',
-                'area_id' => 'Institutions.area_id'
+                'area_id' => 'Institutions.area_id',
+                'area_name' => 'Areas.name',
+                'area_code' => 'Areas.code',
             ])
             ->contain([
                 'Institutions',
+                'Institutions.Areas',
                 'AcademicPeriods' => [
                     'fields' => [
                         'AcademicPeriods.name'
@@ -86,77 +93,9 @@ class InstitutionCommitteesTable extends AppTable
             ])
             ->where([
                 $this->aliasField('academic_period_id') => $requestData->academic_period_id,
-                $this->aliasField('institution_id').' IN ('.$institutions. ')'
+                $this->aliasField('institution_id').' IN ('.$institutions. ')',
+                $where
             ]);
-            
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
-                
-                $areaLevel = '';
-                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-                $areaLevelId = $ConfigItems->value('institution_area_level_id');
-                $row['area_level'] = '';
-                if($areaLevelId != 1){
-                    $AreaTable = TableRegistry::get('Area.AreaLevels');
-                    $value = $AreaTable->find()
-                                ->where([$AreaTable->aliasField('level') => $areaLevelId])
-                                ->first();
-                
-                    if (!empty($value->name)) {
-                        $areaLevel = $value->name;
-                    }
-
-                    $row['area_level'] = $areaLevel;
-                }
-                return $row;
-            });
-        });
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
-                $areas1 = TableRegistry::get('areas');
-                $areasData = $areas1
-                            ->find()
-                            ->where([$areas1->alias('id')=>$row->area_id])
-                            ->first();
-                $row['area_code'] = '';            
-                $row['area_name'] = '';
-                if(!empty($areasData)){
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
-                    $val = $areas
-                                ->find()
-                                ->select([
-                                    $areas->aliasField('code'),
-                                    $areas->aliasField('name'),
-                                    ])
-                                ->leftJoin(
-                                    [$areaLevels->alias() => $areaLevels->table()],
-                                    [
-                                        $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
-                                    ]
-                                )
-                                ->leftJoin(
-                                    [$institutions->alias() => $institutions->table()],
-                                    [
-                                        $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
-                                    ]
-                                )    
-                                ->where([
-                                    $areaLevels->aliasField('level !=') => 1,
-                                    $areas->aliasField('id') => $areasData->parent_id
-                                ])->first();
-                    
-                    if (!empty($val->name) && !empty($val->code)) {
-                        $row['area_code'] = $val->code;
-                        $row['area_name'] = $val->name;
-                    }
-                }            
-                
-                return $row;
-            });
-        });
-        //POCOR-5394 ends
     }
 
     public function onExcelRenderStartTime(Event $event, Entity $entity, array $attr)
@@ -197,14 +136,14 @@ class InstitutionCommitteesTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'area_code',
+            'key' => 'Areas.code',
             'field' => 'area_code',
             'type' => 'string',
             'label' => __('Area Code')
         ];
         
         $newFields[] = [
-            'key' => 'area_name',
+            'key' => 'Areas.name',
             'field' => 'area_name',
             'type' => 'string',
             'label' => __('Area Name')

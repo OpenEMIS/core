@@ -79,10 +79,15 @@ class InstitutionClassesTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
         $where = [];
         if ($institution_id != 0) {
             $where['Institutions.id'] = $institution_id;
         }
+        if ($areaId != -1) {
+            $where['Institutions.area_id'] = $areaId;
+        }
+        
         $academic_period_id = $requestData->academic_period_id;
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');

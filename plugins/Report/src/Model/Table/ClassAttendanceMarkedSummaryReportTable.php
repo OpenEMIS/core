@@ -268,7 +268,9 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $education_grade_id = $requestData->education_grade_id;
         $attendance_type = $requestData->attendance_type; 
         $periods = $requestData->periods; 
+        $areaId = $requestData->area_education_id;
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $attendanceTypeCode = '';
         if (!empty($attendance_type)) {
                 $attendanceTypeData = $StudentAttendanceTypes
                                         ->find()
@@ -299,6 +301,9 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
 
         if ($periods != 0) {
             $where['StudentAttendanceMarkedRecords.period'] = $periods;
+        }
+        if ($areaId != -1) {
+            $where['Institutions.area_id'] = $areaId;
         }
         $academic_period_id = $requestData->academic_period_id;
 

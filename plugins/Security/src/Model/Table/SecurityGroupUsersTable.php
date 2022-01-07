@@ -213,7 +213,7 @@ class SecurityGroupUsersTable extends AppTable {
         $where = array_key_exists('where', $options) ? $options['where'] : [];
         $area = array_key_exists('area', $options) ? $options['area'] : null;
 
-        $query->find('list', [/*'keyField' => $this->Users->aliasField('id'),*/ 'valueField' => $this->Users->aliasField('name_with_id_role')])
+        $query->find('list', ['keyField' => $this->Users->aliasField('id'), 'valueField' => $this->Users->aliasField('name_with_id_role')])
                 ->select([
                     $this->Users->aliasField('id'),
                     $this->Users->aliasField('openemis_no'),
@@ -251,9 +251,9 @@ class SecurityGroupUsersTable extends AppTable {
          
         return $query;
     }
-
+    
     // IMPORTANT: when editing this method, need to consider impact on getFirstAssignee()
-    public function getAssigneeList($params = []) {
+    public function getAssigneeList($params = []) { 
         $isSchoolBased = array_key_exists('is_school_based', $params) ? $params['is_school_based'] : null;
         $stepId = array_key_exists('workflow_step_id', $params) ? $params['workflow_step_id'] : null;
         $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : null;
@@ -306,8 +306,7 @@ class SecurityGroupUsersTable extends AppTable {
                         // Region based assignee
                         $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                         $regionBasedAssigneeQuery = $SecurityGroupUsers
-                                ->find('userList', ['where' => $where, 'area' => $areaObj]);
-
+                                    ->find('UserList', ['where' => $where, 'area' => $areaObj]);
                         Log::write('debug', 'Region based assignee query:');
                         Log::write('debug', $regionBasedAssigneeQuery->sql());
 

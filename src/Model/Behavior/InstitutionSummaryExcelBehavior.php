@@ -141,7 +141,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 		}
 		//echo '<pre>';print_r($headerRow);die('aa');
 		
-		$data = $this->getData();
+		$data = $this->getData($settings);
 
 		$j = 0; //start column
 		for ($i=0; $i<12; $i++) {
@@ -175,9 +175,16 @@ class InstitutionSummaryExcelBehavior extends Behavior
         return $_settings;
     }
 	
-    public function getData()
+    public function getData($settings)
     {
-		$Institutions = TableRegistry::get('Institutions');
+    	$Institutions = TableRegistry::get('Institutions');
+    	$requestData = json_decode($settings['process']['params']);
+    	$institution_id = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
+        $where = [];
+        if ($areaId != -1) {
+            $where[$Institutions->aliasField('area_id')] = $areaId;
+        }
 		$institutionData = $Institutions->find()
                     ->select([
                         'ownership_name' => 'Ownerships.name',
@@ -239,6 +246,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 						'Localities.id = '. $Institutions->aliasField('institution_locality_id')
 					]
 					)
+					->where([$where])
 					;
 					
 		$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
