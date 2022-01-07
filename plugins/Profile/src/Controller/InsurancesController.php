@@ -4,6 +4,7 @@ namespace Profile\Controller;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use App\Controller\PageController;
+use Page\Model\Entity\PageElement;//POCOR-6255
 
 class InsurancesController extends PageController
 {
@@ -14,12 +15,13 @@ class InsurancesController extends PageController
         $this->loadModel('Health.InsuranceTypes');
         $this->loadModel('User.UserInsurances');
         $this->Page->loadElementsFromTable($this->UserInsurances);
+        $this->Page->enable(['download']);
     }
 
     public function index()
     {
         $page = $this->Page;
-        $page->exclude(['comment', 'security_user_id']);
+        $page->exclude(['comment', 'security_user_id', 'file_name', 'file_content']);//POCOR-6255
 
         $requestQuery = $this->request->query;
         if (array_key_exists('sort', $requestQuery)) {
@@ -38,12 +40,22 @@ class InsurancesController extends PageController
             ->setLabel('Provider');
         $page->get('insurance_type_id')
             ->setLabel('Type');
+        //POCOR-6255 start
+        if ($page->is(['view', 'add', 'edit'])) {
+            $page->exclude(['file_name']);
+           // $page->move('file_content')->after('comment');
+        }//POCOR-6255 end
     }
 
     public function add()
     {
+        $page = $this->Page;//POCOR-6255 end
         parent::add();
         $this->addEditInsurances();
+        //POCOR-6255 start
+        $page->get('file_content')
+            ->setLabel('Attachment')
+            ->setAttributes('fileNameField', 'file_name');//POCOR-6255 end
     }
 
     public function edit($id)
@@ -51,6 +63,22 @@ class InsurancesController extends PageController
         parent::edit($id);
         $this->addEditInsurances();
     }
+
+    //POCOR-6255 start
+    public function view($id)
+    {
+        $page = $this->Page;
+        $page->exclude(['file_name']);
+
+        // set the file download for attachment
+        $page->get('file_content')
+            ->setLabel('Attachment')
+            ->setAttributes('fileNameField', 'file_name');
+
+        parent::view($id);
+
+        $entity = $page->getData();
+    }//POCOR-6255 end
 
     private function addEditInsurances()
     {

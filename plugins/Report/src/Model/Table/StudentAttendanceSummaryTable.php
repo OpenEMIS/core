@@ -80,6 +80,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $educationGradeId = $requestData->education_grade_id;
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
+        $areaId = $requestData->area_education_id;
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
 
         $reportStartDate = new DateTime($requestData->report_start_date);
@@ -107,6 +108,9 @@ class StudentAttendanceSummaryTable extends AppTable
 
         if (!empty($academicPeriodId)) {
             $conditions['StudentAttendanceSummary.academic_period_id'] = $academicPeriodId;
+        }
+        if (!empty($areaId) && $areaId  != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
         }
         
         $query

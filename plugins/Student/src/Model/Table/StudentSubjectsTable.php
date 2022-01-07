@@ -161,26 +161,67 @@ class StudentSubjectsTable extends ControllerActionTable
             $where['ClassGrades.education_grade_id'] = $selectedGrade;
         }
         // End
-		
-		
-		$userData = $this->Session->read();
+        
+        
+        $userData = $this->Session->read();
+        $session = $this->request->session();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) {
-            $sId = $userData['Student']['ExaminationResults']['student_id'];
-            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+            //$sId = $userData['Student']['ExaminationResults']['student_id'];//POCOR-6267
+            //$studentId = $this->ControllerAction->paramsDecode($sId)['id'];//POCOR-6267
+            $studentId = $session->read('Student.Students.id');
         } else {
             $studentId = $userData['Auth']['User']['id'];
         }
-		if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
 
-		} else {
-			if (!empty($studentId)) {
-				$where[$this->aliasField('student_id')] = $studentId;
-			}
-		}
-		
+        /*POCOR-6267*/
+        if ($userData['Auth']['User']['is_guardian'] == 1) {
+            if (!empty($studentId)) {
+                $where[$this->aliasField('student_id')] = $studentId;
+            }
+        } /*POCOR-6267*/else {
+            if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
+
+            } else {
+                if (!empty($studentId)) {
+                    $where[$this->aliasField('student_id')] = $studentId;
+                }
+            }
+        }
+        //POCOR-6468
+        if(isset($userData['Institution']['StudentUser']['primaryKey']['id'])){
+            $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');//POCOR-6468 starts
+            $InstitutionClassStudents = TableRegistry::get('institution_class_students');
+            $InstitutionClassStudentsQuery = $InstitutionClassStudents->find()
+                                ->where([
+                                    $InstitutionClassStudents->aliasField('student_id') => $userData['Institution']['StudentUser']['primaryKey']['id'],
+                                    $InstitutionClassStudents->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                                    $InstitutionClassStudents->aliasField('institution_id') => $selectedInstitution,
+                                    $InstitutionClassStudents->aliasField('student_status_id') => $enrolledStatus,
+                                ])
+                                ->first();
+            if($InstitutionClassStudentsQuery){
+                $where[$this->aliasField('institution_class_id')] = $InstitutionClassStudentsQuery->institution_class_id;
+            }
+        }
+        $InstitutionClassStudents = TableRegistry::get('institution_class_students');
+        //POCOR-6468
         $query
             ->matching('InstitutionClasses.ClassGrades')
-            ->where($where);
+            ->innerJoin(//POCOR-6468
+                [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()],
+                [
+                    $InstitutionClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $InstitutionClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $InstitutionClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $InstitutionClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
+                ]
+            )//POCOR-6468
+            ->where($where)
+            ->group([
+                $this->aliasField('education_subject_id'), 
+                $this->aliasField('education_grade_id'), 
+                $this->aliasField('institution_id')
+            ]);  
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)

@@ -277,10 +277,11 @@ class AccessControlComponent extends Component
 
         // exclude profile controllers
         /*commenting Profiles, ProfileInsurances and ProfileBodyMasses as per task POCOR-5312 permission requirement*/
-        //For POCOR-6202 uncomment the profile module  
-        $excludedController = ['ProfileApplicationAttachments', 'ProfileApplicationInstitutionChoices' /*'ProfileBodyMasses'*/, 'ProfileComments', /*'ProfileInsurances', 'Profiles', */ 'Profiles', 'ScholarshipsDirectory'];
-        if (isset($url['controller']) && in_array($url['controller'], $excludedController)) {
-            return true;
+        if($this->request->params['action'] == 'TrainingNeeds'){//POCOR-6292 starts
+           $excludedController = ['ProfileApplicationAttachments', 'ProfileApplicationInstitutionChoices' /*'ProfileBodyMasses'*/, 'ProfileComments', /*'ProfileInsurances', 'Profiles', */ 'ScholarshipsDirectory'];//POCOR-6292 ends
+        }else{
+            //For POCOR-6202 uncomment the profile module  
+            $excludedController = ['ProfileApplicationAttachments', 'ProfileApplicationInstitutionChoices' /*'ProfileBodyMasses'*/, 'ProfileComments', /*'ProfileInsurances', 'Profiles', */ 'Profiles', 'ScholarshipsDirectory'];
         }
 
         if (array_key_exists('controller', $url)) {
