@@ -38,7 +38,7 @@ class InstitutionContactsTable extends ControllerActionTable {
 
         $this->toggle('add', false);
         $this->toggle('remove', false);
-    }
+        $this->addBehavior('Excel', ['excludes' => ['name','alternative_name','code','address','postal_code','contact_person','date_opened','year_opened','date_closed','year_closed','longitude','latitude','logo_name','logo_content','shift_type','classification','area_id','area_administrative_id','institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','security_group_id'], 'pages' => ['view']]);    }
 
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
@@ -83,7 +83,7 @@ class InstitutionContactsTable extends ControllerActionTable {
     {
         $session = $this->request->session();
         $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
-        
+
         $Institutions = TableRegistry::get('Institution.Institutions');
         $entity = $Institutions->get($institutionId);
         $institutionName = $entity->name;

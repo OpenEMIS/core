@@ -6,6 +6,8 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
+use Cake\I18n\Time;
+use Cake\ORM\Query;
 
 class DemographicTable extends ControllerActionTable
 {
@@ -17,7 +19,7 @@ class DemographicTable extends ControllerActionTable
         $this->belongsTo('DemographicTypes', ['className' => 'Student.DemographicTypes', 'foreignKey' => 'demographic_types_id']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->addBehavior('User.SetupTab');
-
+        $this->excludeDefaultValidations(['security_user_id']);
         $this->toggle('remove', false);
     }
 
@@ -58,6 +60,7 @@ class DemographicTable extends ControllerActionTable
         $gradeOptions = $this->getIndigenousOptions();
         $this->fields['indigenous']['type'] = 'select';
         $this->fields['indigenous']['options'] = $gradeOptions;
+        $this->fields['security_user_id']['visible'] = false;
     }
 
     public function getIndigenousOptions() {
@@ -79,4 +82,20 @@ class DemographicTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+    /*POCOR-6395 starts*/
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
+    {   
+        $requestQuery = $this->request->query;
+        $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        $entity['security_user_id'] = $userId;
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $requestQuery = $this->request->query;
+        $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        $query->where([$this->aliasField('security_user_id') => $userId])
+        ->orderDesc($this->aliasField('id'));
+    }
+    /*POCOR-6395 ends*/
 }

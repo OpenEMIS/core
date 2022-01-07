@@ -113,23 +113,23 @@ class InstitutionExaminationsTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key' => 'InstitutionExaminations.name',
+            'key'   => 'InstitutionExaminations.name',
             'field' => 'name',
-            'type' => 'string',
+            'type'  => 'string',
             'label' => __('Name')
         ];
 
         $extraField[] = [
-            'key' => 'InstitutionExaminations.registration_start_date',
+            'key'   => 'InstitutionExaminations.registration_start_date',
             'field' => 'registration_start_date',
-            'type' => 'date',
+            'type'  => 'date',
             'label' => __('Registration Start Date')
         ];
 
         $extraField[] = [
-            'key' => 'InstitutionExaminations.registration_end_date',
+            'key'   => 'InstitutionExaminations.registration_end_date',
             'field' => 'registration_end_date',
-            'type' => 'date',
+            'type'  => 'date',
             'label' => __('Registration End Date')
         ];
 
@@ -147,7 +147,6 @@ class InstitutionExaminationsTable extends ControllerActionTable
             'label' => __('Academic Period')
         ];
 
-       
         $fields->exchangeArray($extraField);
     }
 

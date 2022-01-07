@@ -182,6 +182,59 @@ class AreasTable extends ControllerActionTable
         $this->setfieldOrder($this->fieldsOrder);
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
+        // Webhook Education Area create -- start
+        if ($this->associations()->has('usergroups') != '1') {            
+            if($entity->isNew()){
+                $body = array();
+                $body = [
+                    'area_id' =>$entity->id,
+                    'area_name' =>$entity->name,
+                    'area_code' =>$entity->code,
+                    'area_parent_id' =>$entity->parent_id,
+                    'area_level_id' =>$entity->area_level_id
+                ];
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                if ($this->Auth->user()) {
+                    $Webhooks->triggerShell('area_education_create', ['username' => $username], $body);
+                }
+            }
+            // Webhook Education Area create -- end
+
+            //webhook Education Area update -- start
+            if(!$entity->isNew()){
+                $body = array();
+                $body = [
+                    'area_id' =>$entity->id,
+                    'area_name' =>$entity->name,
+                    'area_code' =>$entity->code,
+                    'area_parent_id' =>$entity->parent_id,
+                    'area_level_id' =>$entity->area_level_id
+                ];
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                if ($this->Auth->user()) {
+                    $Webhooks->triggerShell('area_education_update', ['username' => $username], $body);
+                }
+            }
+            //webhook Education Area update -- end
+        }
+
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options){
+
+        // Webhook Education Grade Subject Delete -- Start
+        $body = array();
+        $body = [
+            'area_id' => $entity->id
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('area_education_delete', ['username' => $username], $body);
+        }
+        // Webhook Education Grade Subject Delete -- End
+    }
+
     public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
     {
         $level = $entity->area_level_id;

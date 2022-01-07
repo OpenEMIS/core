@@ -106,8 +106,9 @@ class ImportAssessmentItemResultsTable extends AppTable {
         $this->dependency["class_name"] = ["select_file"];
 
         $this->ControllerAction->field('class_name', ['type' => 'select']);
+        $this->ControllerAction->field('education_subject', ['type' => 'select']);
         $this->ControllerAction->field('select_file', ['visible' => false]);
-        $this->ControllerAction->setFieldOrder(['class_name', 'select_file']);
+        $this->ControllerAction->setFieldOrder(['class_name', 'education_subject', 'select_file']);
 
         //Assumption - onChangeReload must be named in this format: change<field_name>. E.g changeClass
         $currentFieldName = strtolower(str_replace("change", "", $entity->submit));
@@ -173,9 +174,49 @@ class ImportAssessmentItemResultsTable extends AppTable {
         return $attr;
     }
 
+    public function onUpdateFieldEducationSubject(Event $event, array $attr, $action, Request $request) {
+        if ($action == 'add') {
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+            $classId = $request->data['ImportAssessmentItemResults']['class_name'];
+            $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+            $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+            $superAdmin = $this->Auth->user('super_admin');
+            $where = [];
+            if ($superAdmin != 1) {
+                $where[$InstitutionSubjectStaff->aliasField('staff_id')] =  $this->Auth->user('id');
+            }
+
+            $educationSubjectOption = $this->EducationSubjects->find('list', [
+                                        'keyField' => 'id',
+                                        'valueField' => 'name'
+                                    ])
+                                    ->leftJoin([$this->InstitutionSubjects->alias() => $this->InstitutionSubjects->table()],[
+                                         $this->InstitutionSubjects->aliasField('education_subject_id = ') . $this->EducationSubjects->aliasField('id')
+                                    ])
+                                    ->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()],[
+                                         $InstitutionClassSubjects->aliasField('institution_subject_id = ') . $this->InstitutionSubjects->aliasField('id')
+                                    ])
+                                    ->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()],[
+                                         $InstitutionSubjectStaff->aliasField('institution_subject_id = ') . $this->InstitutionSubjects->aliasField('id')
+                                    ])
+                                    ->where([
+                                       $InstitutionClassSubjects->aliasField('institution_class_id') => $classId,
+                                       $where
+                                    ])
+                                    ->toArray();
+            
+            $attr['options'] = $educationSubjectOption;
+            // using onChangeReload to do visible
+            $attr['onChangeReload'] = 'changeEducationSubject';
+        }
+        
+        return $attr;
+    }
+
     public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $classId = $this->request->query['class_name'];
+        $subjectId = $this->request->query['education_subject'];
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
         $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
 
@@ -185,20 +226,8 @@ class ImportAssessmentItemResultsTable extends AppTable {
                             $this->EducationSubjects->aliasField('code'),
                             $this->EducationSubjects->aliasField('name')
                         ])
-                        ->leftJoin([$this->AssessmentItems->alias() => $this->AssessmentItems->table()],
-                            [
-                                $this->EducationSubjects->aliasField('id = ') . $this->AssessmentItems->aliasField('education_subject_id')
-                        ])
-                        ->leftJoin([$this->Assessments->alias() => $this->Assessments->table()],
-                            [
-                                $this->AssessmentItems->aliasField('assessment_id = ') . $this->Assessments->aliasField('id')
-                        ])
-                        ->where([
-                            $this->Assessments->aliasField('academic_period_id') => $academicPeriodId,
-                            //$this->InstitutionSubjects->aliasField('education_grade_id') => $educationGradeId
-                        ]); 
-
-               
+                        ->where([$this->EducationSubjects->aliasField('id') => $subjectId]); 
+        
         $translatedReadableCol = $this->getExcelLabel($EducationSubjectsResults, 'Name');
 
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -302,9 +331,19 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportGetAssessmentPeriodsId(Event $event, $cellValue)
     {
-        
-        $dataRecord = $this->AssessmentPeriods->find()->select([$this->AssessmentPeriods->aliasField('id')])->where([$this->AssessmentPeriods->aliasField('code') => $cellValue])->first();
-        
+        /*POCOR-6377 starts*/
+        $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $dataRecord = $this->AssessmentPeriods->find()
+                    ->select([$this->AssessmentPeriods->aliasField('id')])
+                    ->leftJoin([$Assessments->alias() => $Assessments->table()], [
+                        $this->AssessmentPeriods->aliasField('assessment_id = ') . $Assessments->aliasField('id')
+                    ])
+                    ->where([
+                        $Assessments->aliasField('academic_period_id') => $academicPeriodId,
+                        $this->AssessmentPeriods->aliasField('code') => $cellValue
+                    ])->first();
+        /*POCOR-6377 ends*/
         $assessmentPeriodsId = $dataRecord->id;
         
         return $assessmentPeriodsId;
@@ -318,7 +357,6 @@ class ImportAssessmentItemResultsTable extends AppTable {
                 ->first();
 
         $classId = $record->id;
-
         return $classId;
     }
 
@@ -395,7 +433,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
     }
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-        
+       
         $educationGradeId = $this->request->query['education_grade'];
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
@@ -413,7 +451,15 @@ class ImportAssessmentItemResultsTable extends AppTable {
                         ->where([$this->AssessmentPeriods->aliasField('id') => $tempRow['assessment_period_id']])
                         ->first();
         $tempRow['assessment_id'] = $assessment->assessment_id;
-        
+        $tempRow['institution_classes_id'] = $tempRow['class_id'];
+        /*POCOR-6486 starts*/
+        $enteredMarks = $tempRow['marks'];
+        if (!empty(enteredMarks) && $enteredMarks > 100) {
+            $rowInvalidCodeCols['marks'] = __('Marks Should be between 0 to 100');
+            $tempRow['marks'] = false;
+            return false;
+        }
+        /*POCOR-6486 ends*/
         return true;
     }
 }

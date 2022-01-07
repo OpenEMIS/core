@@ -340,20 +340,26 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     vm.setRowDatas = function(studentList) {
         studentList.forEach(function (dataItem, index) {
-            if(dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
-                dataItem.rowHeight = 60;
+            if(dataItem.hasOwnProperty('institution_student_absences')) {
+                if(dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
+                    dataItem.rowHeight = 60;
+                } else {
+                    dataItem.rowHeight = 60;
+                }
             } else {
-                dataItem.rowHeight = 120;
+                dataItem.rowHeight = 80;
             }
         });
         vm.gridOptions.api.setRowData(studentList);
         
     }
 
-    vm.setColumnDef = function() {
+    vm.setColumnDef = function(noScheduledClicked) {
+        if(!noScheduledClicked)
+            noScheduledClicked=false;
         var columnDefs = [];
         if (vm.selectedDay != -1) {
-            columnDefs = InstitutionStudentAttendancesSvc.getSingleDayColumnDefs(vm.selectedAttendancePeriod, vm.selectedSubject);
+            columnDefs = InstitutionStudentAttendancesSvc.getSingleDayColumnDefs(vm.selectedAttendancePeriod, noScheduledClicked, vm.selectedSubject);
         } else {
             columnDefs = InstitutionStudentAttendancesSvc.getAllDayColumnDefs(vm.dayListOptions, vm.attendancePeriodOptions);
         }
@@ -771,6 +777,22 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         .then(function(isMarked) {
             vm.updateIsMarked(isMarked);
             vm.setColumnDef();
+            vm.countStudentData();
+            AlertSvc.reset($scope);
+        }, vm.error)
+        .finally(function() {
+            UtilsSvc.isAppendLoader(false);
+        });
+    };
+    vm.onNoScheduledClick = function() {
+        vm.action = 'view';
+        vm.gridOptions.context.mode = vm.action;
+        UtilsSvc.isAppendLoader(true);
+
+        InstitutionStudentAttendancesSvc.getNoScheduledClassMarked(vm.getIsMarkedParams())
+        .then(function(isMarked) {
+            vm.updateIsMarked(isMarked);
+            vm.setColumnDef(isMarked);
             vm.countStudentData();
             AlertSvc.reset($scope);
         }, vm.error)
