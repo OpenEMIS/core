@@ -763,7 +763,10 @@ class InstitutionClassesTable extends ControllerActionTable
                     'sort' => ['Users.first_name', 'Users.last_name']
                 ],
                 'ClassStudents.StudentStatuses' => function ($q) {
-                    return $q->where([('StudentStatuses.code NOT IN ') => ['TRANSFERRED', 'WITHDRAWN']]);
+                    // return $q->where([('StudentStatuses.code NOT IN ') => ['TRANSFERRED', 'WITHDRAWN']]);
+                    // POCOR-6454[START]
+                    return $q->where([('StudentStatuses.code NOT IN ') => ['TRANSFERRED', 'WITHDRAWN', 'REPEATED']]);
+                    // POCOR-6454[END]
                 },
                 'ClassStudents.Users.Genders',
                 'ClassStudents.EducationGrades',
