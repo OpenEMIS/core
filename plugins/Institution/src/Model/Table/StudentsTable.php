@@ -350,8 +350,8 @@ class StudentsTable extends ControllerActionTable
                             ]);
             $query->group('student_id');// POCOR-6338 
         }
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($periodId) {
+            return $results->map(function ($row) use($periodId) {
                 // POCOR-6338 starts
                 $Users = TableRegistry::get('security_users');
                 $institutionStudents = TableRegistry::get('institution_students');
@@ -367,23 +367,18 @@ class StudentsTable extends ControllerActionTable
                                             else "Promoted" end
                                         )'
                             ])
-                            ->leftJoin(
-                            ['InstitutionStudents' => 'institution_students'],
-                            [
+                            ->leftJoin(['InstitutionStudents' => 'institution_students'], [
                                 'InstitutionStudents.student_id = '.$Users->aliasField('id')
-                            ]
-                            ) 
-                            ->leftJoin(
-                                ['StudentStatuses' => 'student_statuses'],
-                                [
-                                    'StudentStatuses.id = InstitutionStudents.student_status_id'
-                                ]
-                            )
-                            ->where(['security_users.openemis_no' => $row->openemis_no,
-                            'InstitutionStudents.institution_id'=> $row->institution_id])
-                            ->order([
-                                'InstitutionStudents.created' => DESC
+                            ]) 
+                            ->leftJoin(['StudentStatuses' => 'student_statuses'], [
+                                'StudentStatuses.id = InstitutionStudents.student_status_id'
                             ])
+                            ->where([
+                                'security_users.openemis_no' => $row->openemis_no,
+                                'InstitutionStudents.institution_id'=> $row->institution_id,
+                                'InstitutionStudents.academic_period_id'=> $periodId //POCOR-6487
+                            ])
+                            ->order(['InstitutionStudents.created' => DESC])
                             ->first();
                 $row['student_status'] = $user_data->student_status;
                 // POCOR-6338 ends                
@@ -1483,6 +1478,9 @@ class StudentsTable extends ControllerActionTable
 
 
 			if (!empty($bodyData)) {
+
+               // echo "<pre>";
+               // print_r($bodyData); exit;
 				foreach ($bodyData as $key => $value) {
 					$user_id = $value->user->id;
 					$openemis_no = $value->user->openemis_no;
@@ -1493,17 +1491,22 @@ class StudentsTable extends ControllerActionTable
 					$preferred_name = $value->user->preferred_name;
 					$gender = $value->user->gender->name;
 					$nationality = $value->user->main_nationality->name;
+                    // POCOR-6283 start
+					$dateOfBirth = $value->user->date_of_birth; 
 
-					if(!empty($value->user->date_of_birth)) {
+                    // commented because date can be converted directly no need to use loop
+					/* if(!empty($value->user->date_of_birth)) {
 						foreach ($value->user->date_of_birth as $key => $date) {
 							$dateOfBirth = $date;
 						}
-					}
+					} */
+                    // POCOR-6283 end
 
 					$address = $value->user->address;
 					$postalCode = $value->user->postal_code;
 					$addressArea = $value->user->address_area->name;
 					$birthplaceArea = $value->user->birthplace_area->name;
+                    $role = $value->user->is_student;
 
 					$contactValue = [];
 					$contactType = [];
@@ -1533,14 +1536,21 @@ class StudentsTable extends ControllerActionTable
 					$studentStatus = $value->student_status->name;
 
 					if(!empty($value->start_date)) {
+                        $i=0;
+
 						foreach ($value->start_date as $key => $date) {
-							$startDate = $date;
-						}
+                            if($i==0){
+        							$startDate = $date;
+                                }
+						$i++;}
 					}
 
 					if(!empty($value->end_date)) {
+                        $i=0;
 						foreach ($value->end_date as $key => $date) {
-							$endDate = $date;
+                            if($i==0){
+							  $endDate = $date;
+                           $i++; }
 						}
 					}
 
@@ -1577,6 +1587,7 @@ class StudentsTable extends ControllerActionTable
 				'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
 				'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
 				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
+                'role_name' => ($role == 1) ? 'student' : NULL
 			];
 
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
