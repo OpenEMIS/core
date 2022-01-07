@@ -66,7 +66,6 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $sheetData = $settings['sheet']['sheetData'];
-
         $academicPeriodId = $requestData->academic_period_id;
         $educationGradesId = $requestData->education_grade_id;
         $year = $sheetData['year'];
@@ -74,7 +73,15 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $startDay = $sheetData['startDay'];
         $endDay = $sheetData['endDay'];
         $schoolClosedDays = $this->schoolClosedDays;
-
+        $institution_id = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
+        $where = [];
+        if ($institution_id != 0) {
+            $where['Institutions.id'] = $institution_id;
+        }
+        if ($areaId != -1) {
+            $where['Institutions.area_id'] = $areaId;
+        }
         $query
             ->find('byGrades', [
                 'education_grade_id' => $educationGradesId,
@@ -154,7 +161,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 'education_stage_order' => $query->func()->min('EducationStages.order')
             ])
             ->where([
-                $this->aliasField('academic_period_id') => $academicPeriodId
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $where
             ])
             ->group([
                 $this->aliasField('id')

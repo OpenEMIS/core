@@ -421,7 +421,8 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         // Do not show expired records
         $extra['auto_contain'] = false;
-
+		$todayDate = date("Y-m-d");
+		
         $query
             ->contain([
                 'Statuses' => [
@@ -451,14 +452,27 @@ class InstitutionSurveysTable extends ControllerActionTable
                     ]
                 ]
             ])
+			->innerJoin(
+                ['SurveyForms' => 'survey_forms'],
+                [
+                    'SurveyForms.id = '.$this->aliasField('survey_form_id')
+                ]
+            )
+			->innerJoin(
+                ['surveyStatuses' => 'survey_statuses'],
+                [
+                    'surveyStatuses.survey_form_id = SurveyForms.id'
+                ]
+            )
             ->where([
             $this->aliasField('status_id <> ') => self::EXPIRED,
             //POCOR-5666 Condition[START]
             //Survey should only show for the active institution
-            $this->aliasField('Institutions.institution_status_id = ') => 1
+            $this->aliasField('Institutions.institution_status_id = ') => 1,
             //POCOR-5666 Condition[END]
+            'surveyStatuses.date_enabled <=' => $todayDate,
+            'surveyStatuses.date_disabled >=' => $todayDate
         ]);
-
         // POCOR-4027 fixed search function (search assignee and survey form)
         $search = $this->getSearchKey();
         if (!empty($search)) {

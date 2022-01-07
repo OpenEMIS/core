@@ -842,4 +842,41 @@ class UserGroupsTable extends ControllerActionTable
         $this->request->data['institution_search'] = '';
         $this->request->data['user_search'] = '';
     }
+
+        // task POCOR-5299 starts
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+
+        if(!empty($this->request->data['UserGroups']['users'])){
+            $users = $this->request->data['UserGroups']['users'];
+            // $security_group_id = $this->request->data['UserGroups']['id'];
+            $security_group_id = isset($entity->id) ? $entity->id : $this->request->data['UserGroups']['id'];
+            $userId = $this->Auth->user('id');
+            foreach ($users as $key => $value) {
+                $securityGroup = TableRegistry::get('security_group_users');
+                $securityGroupUsers = $securityGroup
+                                        ->find()
+                                        ->where([
+                                            $securityGroup->aliasField('security_group_id') => $security_group_id,
+                                            $securityGroup->aliasField('security_user_id') => $value['_joinData']['security_user_id'],
+                                            $securityGroup->aliasField('security_role_id') => $value['_joinData']['security_role_id']
+                                             ])
+                                        ->first();
+                if(!empty($securityGroupUsers)){
+                    unset($value);
+                } else{
+                    $userData = [
+                        'security_group_id' => $security_group_id,
+                        'security_user_id' => $value['_joinData']['security_user_id'],
+                        'security_role_id' => $value['_joinData']['security_role_id'],
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+      
+                    $securityGroupEntity = $securityGroup->newEntity($userData);
+                    $securityGroup->save($securityGroupEntity); 
+                }                      
+            }
+        }
+    }
+    // task POCOR-5299 ends
 }

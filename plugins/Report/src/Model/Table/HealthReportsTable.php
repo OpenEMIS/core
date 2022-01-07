@@ -38,14 +38,14 @@ class HealthReportsTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function beforeAction(Event $event) 
+    public function beforeAction(Event $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) 
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
         return $attr;
@@ -56,20 +56,20 @@ class HealthReportsTable extends AppTable
         $healthInsurance = ($entity->health_insurance == 1)?'Yes':'No';
         return $healthInsurance;
     }
-    
+
     public function onExcelGetSevere(Event $event, Entity $entity)
     {
         $severe = ($entity->severe == 1)?'Yes':'No';
         return $severe;
     }
-    
+
     public function onExcelGetCurrent(Event $event, Entity $entity)
     {
         $current = ($entity->current == 1)?'Yes':'No';
         return $current;
     }
-    
-    
+
+
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
         $identityTypeName = '';
@@ -79,7 +79,7 @@ class HealthReportsTable extends AppTable
         }
         return $identityTypeName;
     }
-    
+
     public function onExcelGetGender(Event $event, Entity $entity)
     {
         $gender = '';
@@ -88,7 +88,7 @@ class HealthReportsTable extends AppTable
         }
 
         return $gender;
-    }    
+    }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
@@ -96,9 +96,9 @@ class HealthReportsTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $healthReportType = $requestData->health_report_type;
-        
+        $areaId = $requestData->area_education_id;
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
-        
+
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 
@@ -106,43 +106,49 @@ class HealthReportsTable extends AppTable
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        
-        if (!empty($institutionId) && $institutionId =='-1') {            
+
+        if (!empty($institutionId) && $institutionId == '-1') {
             $conditions[$ClassStudents->aliasField('student_status_id != ')] = '1';
         }
-        
-        if (!empty($institutionId) && $institutionId !='-1') {
+
+        if (!empty($institutionId) && $institutionId != '-1') {
             $conditions['Institutions.id'] = $institutionId;
         }
-        
+        if ($areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
+        }
         if($healthReportType == 'Overview'){
-            $query
+            
+			$conditions[$this->aliasField('student_status_id')] = '1';
+            
+			$query
                 ->select([
                     $this->aliasField('student_id'),
                     $this->aliasField('education_grade_id'),
                     $this->aliasField('institution_id'),
-                    $this->aliasField('academic_period_id'),                
+                    $this->aliasField('academic_period_id'),
                     'class_name' => 'InstitutionClasses.name',
                     'code_name' => 'Institutions.code',
-                    'student_name' => $query->func()->concat([
-                        'Users.first_name' => 'literal',
-                        " ",
-                        'Users.middle_name' => 'literal',
-                        " ",
-                        'Users.third_name' => 'literal',
-                        " ",
-                        'Users.last_name' => 'literal'
-                    ]),
-                    // 'first_name' =>'Users.first_name',
-                    // 'middle_name' => 'Users.middle_name',
-                    // 'last_name' => 'Users.last_name',
+//                    'student_name' => $query->func()->concat([
+//                        'Users.first_name' => 'literal',
+//                        " ",
+//                        'Users.middle_name' => 'literal',
+//                        " ",
+//                        'Users.third_name' => 'literal',
+//                        " ",
+//                        'Users.last_name' => 'literal'
+//                    ]),
+                     'first_name' =>'Users.first_name',
+                     'middle_name' => 'Users.middle_name',
+                     'third_name' => 'Users.third_name',
+                     'last_name' => 'Users.last_name',
                     'blood_type' => 'UserHealths.blood_type',
                     'doctor_name' => 'UserHealths.doctor_name',
                     'doctor_contact' => 'UserHealths.doctor_contact',
                     'medical_facility' => 'UserHealths.medical_facility',
                     'health_insurance' => 'UserHealths.health_insurance'
                 ])
-                ->contain([                
+                ->contain([
                     'Users' => [
                         'fields' => [
                             'openemis_no' => 'Users.openemis_no',
@@ -195,25 +201,25 @@ class HealthReportsTable extends AppTable
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ])
                  ->where($conditions);
-            
+
         }elseif($healthReportType == 'Allergies'){
             $query
                 ->select([
                     $this->aliasField('student_id'),
                     $this->aliasField('education_grade_id'),
                     $this->aliasField('institution_id'),
-                    $this->aliasField('academic_period_id'),                
+                    $this->aliasField('academic_period_id'),
                     'class_name' => 'InstitutionClasses.name',
                     'code_name' => 'Institutions.code',
-                    'student_name' => $query->func()->concat([
-                        'Users.first_name' => 'literal',
-                        " ",
-                        'Users.middle_name' => 'literal',
-                        " ",
-                        'Users.third_name' => 'literal',
-                        " ",
-                        'Users.last_name' => 'literal'
-                    ]),
+//                    'student_name' => $query->func()->concat([
+//                        'Users.first_name' => 'literal',
+//                        " ",
+//                        'Users.middle_name' => 'literal',
+//                        " ",
+//                        'Users.third_name' => 'literal',
+//                        " ",
+//                        'Users.last_name' => 'literal'
+//                    ]),
                     // 'name' => $query->func()->concat([
                     //     'Users.first_name' => 'literal',
                     //     " ",
@@ -221,16 +227,17 @@ class HealthReportsTable extends AppTable
                     //     " ",
                     //     'Users.last_name' => 'literal'
                     // ]),
-                    // 'first_name' =>'Users.first_name',
-                    // 'middle_name' => 'Users.middle_name',
-                    // 'last_name' => 'Users.last_name',
+                     'first_name' =>'Users.first_name',
+                     'middle_name' => 'Users.middle_name',
+                    'third_name' => 'Users.third_name',
+                     'last_name' => 'Users.last_name',
                     'description' => 'UserHealthAllergies.description',
                     'severe' => 'UserHealthAllergies.severe',
                     'comment' => 'UserHealthAllergies.comment',
                     'health_allergy_type_id' => 'UserHealthAllergies.health_allergy_type_id',
                     'health_allergy_type_name' => 'HealthAllergyTypes.name'
                 ])
-                ->contain([                
+                ->contain([
                     'Users' => [
                         'fields' => [
                             'openemis_no' => 'Users.openemis_no',
@@ -295,28 +302,29 @@ class HealthReportsTable extends AppTable
                     $this->aliasField('student_id'),
                     $this->aliasField('education_grade_id'),
                     $this->aliasField('institution_id'),
-                    $this->aliasField('academic_period_id'),                
+                    $this->aliasField('academic_period_id'),
                     'class_name' => 'InstitutionClasses.name',
                     'code_name' => 'Institutions.code',
-                    'student_name' => $query->func()->concat([
-                        'Users.first_name' => 'literal',
-                        " ",
-                        'Users.middle_name' => 'literal',
-                        " ",
-                        'Users.third_name' => 'literal',
-                        " ",
-                        'Users.last_name' => 'literal'
-                        ]),
-                    // 'first_name' =>'Users.first_name',
-                    // 'middle_name' => 'Users.middle_name',
-                    // 'last_name' => 'Users.last_name',
+//                    'student_name' => $query->func()->concat([
+//                        'Users.first_name' => 'literal',
+//                        " ",
+//                        'Users.middle_name' => 'literal',
+//                        " ",
+//                        'Users.third_name' => 'literal',
+//                        " ",
+//                        'Users.last_name' => 'literal'
+//                        ]),
+                     'first_name' =>'Users.first_name',
+                     'middle_name' => 'Users.middle_name',
+                    'third_name' => 'Users.third_name',
+                     'last_name' => 'Users.last_name',
                     'health_consultation_date' => 'UserHealthConsultations.date',
                     'health_consultation_description' => 'UserHealthConsultations.description',
                     'health_consultation_treatment' => 'UserHealthConsultations.treatment',
                     'health_consultation_type_id' => 'UserHealthConsultations.health_consultation_type_id',
                     'health_consultation_type_name' => 'HealthConsultationTypes.name'
                 ])
-                ->contain([                
+                ->contain([
                     'Users' => [
                         'fields' => [
                             'openemis_no' => 'Users.openemis_no',
@@ -381,27 +389,28 @@ class HealthReportsTable extends AppTable
                     $this->aliasField('student_id'),
                     $this->aliasField('education_grade_id'),
                     $this->aliasField('institution_id'),
-                    $this->aliasField('academic_period_id'),                
+                    $this->aliasField('academic_period_id'),
                     'class_name' => 'InstitutionClasses.name',
                     'code_name' => 'Institutions.code',
-                    'student_name' => $query->func()->concat([
-                        'Users.first_name' => 'literal',
-                        " ",
-                        'Users.middle_name' => 'literal',
-                        " ",
-                        'Users.third_name' => 'literal',
-                        " ",
-                        'Users.last_name' => 'literal'
-                        ]),
-                    // 'first_name' =>'Users.first_name',
-                    // 'middle_name' => 'Users.middle_name',
-                    // 'last_name' => 'Users.last_name',
+//                    'student_name' => $query->func()->concat([
+//                        'Users.first_name' => 'literal',
+//                        " ",
+//                        'Users.middle_name' => 'literal',
+//                        " ",
+//                        'Users.third_name' => 'literal',
+//                        " ",
+//                        'Users.last_name' => 'literal'
+//                        ]),
+                     'first_name' =>'Users.first_name',
+                     'middle_name' => 'Users.middle_name',
+                    'third_name' => 'Users.third_name',
+                     'last_name' => 'Users.last_name',
                     'current' => 'UserHealthFamilies.current',
                     'user_health_family_comment' => 'UserHealthFamilies.comment',
                     'user_health_family_relationship_name' => 'HealthRelationships.name',
                     'user_health_family_condition_name' => 'HealthConditions.name'
                 ])
-                ->contain([                
+                ->contain([
                     'Users' => [
                         'fields' => [
                             'openemis_no' => 'Users.openemis_no',
@@ -472,26 +481,27 @@ class HealthReportsTable extends AppTable
                     $this->aliasField('student_id'),
                     $this->aliasField('education_grade_id'),
                     $this->aliasField('institution_id'),
-                    $this->aliasField('academic_period_id'),                
+                    $this->aliasField('academic_period_id'),
                     'class_name' => 'InstitutionClasses.name',
                     'code_name' => 'Institutions.code',
-                    'student_name' => $query->func()->concat([
-                        'Users.first_name' => 'literal',
-                        " ",
-                        'Users.middle_name' => 'literal',
-                        " ",
-                        'Users.third_name' => 'literal',
-                        " ",
-                        'Users.last_name' => 'literal'
-                        ]),
-                    // 'first_name' =>'Users.first_name',
-                    // 'middle_name' => 'Users.middle_name',
-                    // 'last_name' => 'Users.last_name',
+//                    'student_name' => $query->func()->concat([
+//                        'Users.first_name' => 'literal',
+//                        " ",
+//                        'Users.middle_name' => 'literal',
+//                        " ",
+//                        'Users.third_name' => 'literal',
+//                        " ",
+//                        'Users.last_name' => 'literal'
+//                        ]),
+                     'first_name' =>'Users.first_name',
+                     'middle_name' => 'Users.middle_name',
+                    'third_name' => 'Users.third_name',
+                     'last_name' => 'Users.last_name',
                     'current' => 'UserHealthHistories.current',
                     'user_health_history_comment' => 'UserHealthHistories.comment',
                     'user_health_history_condition_name' => 'HealthConditions.name'
                 ])
-                ->contain([                
+                ->contain([
                     'Users' => [
                         'fields' => [
                             'openemis_no' => 'Users.openemis_no',
@@ -556,27 +566,28 @@ class HealthReportsTable extends AppTable
                     $this->aliasField('student_id'),
                     $this->aliasField('education_grade_id'),
                     $this->aliasField('institution_id'),
-                    $this->aliasField('academic_period_id'),                
+                    $this->aliasField('academic_period_id'),
                     'class_name' => 'InstitutionClasses.name',
                     'code_name' => 'Institutions.code',
-                    'student_name' => $query->func()->concat([
-                        'Users.first_name' => 'literal',
-                        " ",
-                        'Users.middle_name' => 'literal',
-                        " ",
-                        'Users.third_name' => 'literal',
-                        " ",
-                        'Users.last_name' => 'literal'
-                        ]),
-                    // 'first_name' =>'Users.first_name',
-                    // 'middle_name' => 'Users.middle_name',
-                    // 'last_name' => 'Users.last_name',
+//                    'student_name' => $query->func()->concat([
+//                        'Users.first_name' => 'literal',
+//                        " ",
+//                        'Users.middle_name' => 'literal',
+//                        " ",
+//                        'Users.third_name' => 'literal',
+//                        " ",
+//                        'Users.last_name' => 'literal'
+//                        ]),
+                     'first_name' =>'Users.first_name',
+                     'middle_name' => 'Users.middle_name',
+                    'third_name' => 'Users.third_name',
+                     'last_name' => 'Users.last_name',
                     'user_health_immunization_current' => 'UserHealthImmunizations.date',
                     'user_health_immunization_comment' => 'UserHealthImmunizations.comment',
                     'user_health_immunization_dosage' => 'UserHealthImmunizations.dosage',
                     'user_health_immunization_type_name' => 'HealthImmunizationTypes.name'
                 ])
-                ->contain([                
+                ->contain([
                     'Users' => [
                         'fields' => [
                             'openemis_no' => 'Users.openemis_no',
@@ -641,27 +652,28 @@ class HealthReportsTable extends AppTable
                     $this->aliasField('student_id'),
                     $this->aliasField('education_grade_id'),
                     $this->aliasField('institution_id'),
-                    $this->aliasField('academic_period_id'),                
+                    $this->aliasField('academic_period_id'),
                     'class_name' => 'InstitutionClasses.name',
                     'code_name' => 'Institutions.code',
-                    'student_name' => $query->func()->concat([
-                        'Users.first_name' => 'literal',
-                        " ",
-                        'Users.middle_name' => 'literal',
-                        " ",
-                        'Users.third_name' => 'literal',
-                        " ",
-                        'Users.last_name' => 'literal'
-                        ]),
-                    // 'first_name' =>'Users.first_name',
-                    // 'middle_name' => 'Users.middle_name',
-                    // 'last_name' => 'Users.last_name',
+//                    'student_name' => $query->func()->concat([
+//                        'Users.first_name' => 'literal',
+//                        " ",
+//                        'Users.middle_name' => 'literal',
+//                        " ",
+//                        'Users.third_name' => 'literal',
+//                        " ",
+//                        'Users.last_name' => 'literal'
+//                        ]),
+                     'first_name' =>'Users.first_name',
+                     'middle_name' => 'Users.middle_name',
+                    'third_name' => 'Users.third_name',
+                     'last_name' => 'Users.last_name',
                     'user_health_medication_name' => 'UserHealthMedications.name',
                     'user_health_medication_dosage' => 'UserHealthMedications.dosage',
                     'user_health_medication_start_date' => 'UserHealthMedications.start_date',
                     'user_health_medication_end_date' => 'UserHealthMedications.end_date'
                 ])
-                ->contain([                
+                ->contain([
                     'Users' => [
                         'fields' => [
                             'openemis_no' => 'Users.openemis_no',
@@ -720,27 +732,28 @@ class HealthReportsTable extends AppTable
                     $this->aliasField('student_id'),
                     $this->aliasField('education_grade_id'),
                     $this->aliasField('institution_id'),
-                    $this->aliasField('academic_period_id'),                
+                    $this->aliasField('academic_period_id'),
                     'class_name' => 'InstitutionClasses.name',
                     'code_name' => 'Institutions.code',
-                    'student_name' => $query->func()->concat([
-                        'Users.first_name' => 'literal',
-                        " ",
-                        'Users.middle_name' => 'literal',
-                        " ",
-                        'Users.third_name' => 'literal',
-                        " ",
-                        'Users.last_name' => 'literal'
-                        ]),
-                    // 'first_name' =>'Users.first_name',
-                    // 'middle_name' => 'Users.middle_name',
-                    // 'last_name' => 'Users.last_name',
+//                    'student_name' => $query->func()->concat([
+//                        'Users.first_name' => 'literal',
+//                        " ",
+//                        'Users.middle_name' => 'literal',
+//                        " ",
+//                        'Users.third_name' => 'literal',
+//                        " ",
+//                        'Users.last_name' => 'literal'
+//                        ]),
+                     'first_name' =>'Users.first_name',
+                     'middle_name' => 'Users.middle_name',
+                    'third_name' => 'Users.third_name',
+                     'last_name' => 'Users.last_name',
                     'user_health_test_date' => 'UserHealthTests.date',
                     'user_health_test_result' => 'UserHealthTests.result',
                     'user_health_test_comment' => 'UserHealthTests.comment',
                     'user_health_test_type_name' => 'HealthTestTypes.name'
                 ])
-                ->contain([                
+                ->contain([
                     'Users' => [
                         'fields' => [
                             'openemis_no' => 'Users.openemis_no',
@@ -805,28 +818,29 @@ class HealthReportsTable extends AppTable
                     $this->aliasField('student_id'),
                     $this->aliasField('education_grade_id'),
                     $this->aliasField('institution_id'),
-                    $this->aliasField('academic_period_id'),                
+                    $this->aliasField('academic_period_id'),
                     'class_name' => 'InstitutionClasses.name',
                     'code_name' => 'Institutions.code',
-                    'student_name' => $query->func()->concat([
-                        'Users.first_name' => 'literal',
-                        " ",
-                        'Users.middle_name' => 'literal',
-                        " ",
-                        'Users.third_name' => 'literal',
-                        " ",
-                        'Users.last_name' => 'literal'
-                        ]),
-                    // 'first_name' =>'Users.first_name',
-                    // 'middle_name' => 'Users.middle_name',
-                    // 'last_name' => 'Users.last_name',
+//                    'student_name' => $query->func()->concat([
+//                        'Users.first_name' => 'literal',
+//                        " ",
+//                        'Users.middle_name' => 'literal',
+//                        " ",
+//                        'Users.third_name' => 'literal',
+//                        " ",
+//                        'Users.last_name' => 'literal'
+//                        ]),
+                     'first_name' =>'Users.first_name',
+                     'middle_name' => 'Users.middle_name',
+                    'third_name' => 'Users.third_name',
+                     'last_name' => 'Users.last_name',
                     'user_insurance_start_date' => 'UserInsurances.start_date',
                     'user_insurance_end_date' => 'UserInsurances.end_date',
                     'user_insurance_comment' => 'UserInsurances.comment',
                     'user_insurance_provider_name' => 'InsuranceProviders.name',
                     'user_insurance_type_name' => 'InsuranceTypes.name'
                 ])
-                ->contain([                
+                ->contain([
                     'Users' => [
                         'fields' => [
                             'openemis_no' => 'Users.openemis_no',
@@ -898,7 +912,7 @@ class HealthReportsTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $healthReportType = $requestData->health_report_type;
-        
+
         $extraFields = [];
         $extraFields[] = [
             'key' => 'HealthReports.code_name',
@@ -914,33 +928,33 @@ class HealthReportsTable extends AppTable
             'type' => 'string',
             'label' => __('Institution')
         ];
-        
+
         $extraFields[] = [
             'key' => 'HealthReports.education_grade_id',
             'field' => 'education_grade_id',
             'type' => 'string',
             'label' => __('Education Grade')
         ];
-        
+
         $extraFields[] = [
             'key' => 'InstitutionClasses.name',
             'field' => 'class_name',
             'type' => 'string',
             'label' => ''
         ];
-        
+
         $extraFields[] = [
             'key' => 'openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
             'label' => __('OpenEMIS ID')
         ];
-        
+
         $extraFields[] = [
             'key' => 'student_name',
             'field' => 'student_name',
             'type' => 'string',
-            'label' => __('Name')
+            'label' => __('Student Name')
         ];
 
         // $extraFields[] = [
@@ -962,28 +976,28 @@ class HealthReportsTable extends AppTable
         //     'field' => 'last_name',
         //     'type' => 'string',
         //     'label' => __('Last Name')
-        // ];        
+        // ];
         $extraFields[] = [
             'key' => 'Users.date_of_birth',
             'field' => 'date_of_birth',
             'type' => 'date',
             'label' => __('Date Of Birth')
         ];
-        
+
         // $extraFields[] = [
         //     'key' => 'Users.identity_type_id',
         //     'field' => 'identity_type',
         //     'type' => 'string',
         //     'label' => __('Identity Type')
-        // ];  
-        
+        // ];
+
         $extraFields[] = [
             'key' => 'Users.identity_number',
             'field' => 'identity_number',
             'type' => 'string',
             'label' => __('Identity Number')
         ];
-        
+
         if($healthReportType == 'Overview'){
             $extraFields[] = [
                 'key' => 'blood_type',
@@ -1054,7 +1068,7 @@ class HealthReportsTable extends AppTable
                 'type' => 'date',
                 'label' => __('Date')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'health_consultation_description',
                 'field' => 'health_consultation_description',
@@ -1067,8 +1081,8 @@ class HealthReportsTable extends AppTable
                 'field' => 'health_consultation_treatment',
                 'type' => 'string',
                 'label' => __('Treatment')
-            ]; 
-            
+            ];
+
             $extraFields[] = [
                 'key' => 'health_consultation_type_name',
                 'field' => 'health_consultation_type_name',
@@ -1082,7 +1096,7 @@ class HealthReportsTable extends AppTable
                 'type' => 'string',
                 'label' => __('Current')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'user_health_family_comment',
                 'field' => 'user_health_family_comment',
@@ -1095,13 +1109,13 @@ class HealthReportsTable extends AppTable
                 'field' => 'user_health_family_relationship_name',
                 'type' => 'string',
                 'label' => __('Health Relationship')
-            ]; 
+            ];
             $extraFields[] = [
                 'key' => 'user_health_family_condition_name',
                 'field' => 'user_health_family_condition_name',
                 'type' => 'string',
                 'label' => __('Health Condition')
-            ]; 
+            ];
         }elseif($healthReportType == 'Histories'){
             $extraFields[] = [
                 'key' => 'current',
@@ -1109,7 +1123,7 @@ class HealthReportsTable extends AppTable
                 'type' => 'string',
                 'label' => __('Current')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'user_health_history_comment',
                 'field' => 'user_health_history_comment',
@@ -1122,7 +1136,7 @@ class HealthReportsTable extends AppTable
                 'field' => 'user_health_history_condition_name',
                 'type' => 'string',
                 'label' => __('Health Condition')
-            ]; 
+            ];
         }elseif($healthReportType == 'Immunizations'){
             $extraFields[] = [
                 'key' => 'user_health_immunization_current',
@@ -1143,7 +1157,7 @@ class HealthReportsTable extends AppTable
                 'field' => 'user_health_immunization_type_name',
                 'type' => 'string',
                 'label' => __('Vaccination Type')
-            ]; 
+            ];
 
             $extraFields[] = [
                 'key' => 'user_health_immunization_comment',
@@ -1159,7 +1173,7 @@ class HealthReportsTable extends AppTable
                 'type' => 'string',
                 'label' => __('Name')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'user_health_medication_dosage',
                 'field' => 'user_health_medication_dosage',
@@ -1173,7 +1187,7 @@ class HealthReportsTable extends AppTable
                 'type' => 'date',
                 'label' => __('Start Date')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'user_health_medication_end_date',
                 'field' => 'user_health_medication_end_date',
@@ -1187,7 +1201,7 @@ class HealthReportsTable extends AppTable
                 'type' => 'date',
                 'label' => __('Date')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'user_health_test_result',
                 'field' => 'user_health_test_result',
@@ -1201,7 +1215,7 @@ class HealthReportsTable extends AppTable
                 'type' => 'string',
                 'label' => __('Comment')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'user_health_test_type_name',
                 'field' => 'user_health_test_type_name',
@@ -1215,21 +1229,21 @@ class HealthReportsTable extends AppTable
                 'type' => 'date',
                 'label' => __('Start Date')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'user_insurance_end_date',
                 'field' => 'user_insurance_end_date',
                 'type' => 'date',
                 'label' => __('End Date')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'user_insurance_provider_name',
                 'field' => 'user_insurance_provider_name',
                 'type' => 'string',
                 'label' => __('Provider')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'user_insurance_type_name',
                 'field' => 'user_insurance_type_name',
@@ -1244,7 +1258,19 @@ class HealthReportsTable extends AppTable
                 'label' => __('Comment')
             ];
         }
-      
+
         $fields->exchangeArray($extraFields);
+    }
+
+    public function onExcelGetStudentName(Event $event, Entity $entity)
+    {
+        //cant use $this->Users->get() since it will load big data and cause memory allocation problem
+        $studentName = [];
+        ($entity->first_name) ? $studentName[] = $entity->first_name : '';
+        ($entity->middle_name) ? $studentName[] = $entity->middle_name : '';
+        ($entity->third_name) ? $studentName[] = $entity->third_name : '';
+        ($entity->last_name) ? $studentName[] = $entity->last_name : '';
+
+        return implode(' ', $studentName);
     }
 }

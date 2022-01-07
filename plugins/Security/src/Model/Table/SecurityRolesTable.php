@@ -61,6 +61,66 @@ class SecurityRolesTable extends ControllerActionTable
         ]);
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    {
+      
+        // webhook create role starts
+         if($entity->isNew()) {
+          
+            $body = array();
+            $createRole = [
+                'role_id' =>$entity->id,
+                'role_name' =>$entity->name,
+               
+            ];
+          
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('role_create', [], $createRole);
+            }
+        }
+
+        // webhook create role ends
+
+        // webhook update role starts
+         if(!$entity->isNew()) {
+          
+           
+            $updateRole = [
+                'role_id' =>$entity->id,
+                'role_name' =>$entity->name,
+               
+            ];
+          
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            // if ($this->Auth->user()) { commented beacuse its causing error while updating permission
+            // if ($this->Auth->user()) { commented because its causing error while updating the permission
+            //Commented Auth as it is casuing error while updating role POCOR-6133
+            //if ($this->Auth->user()) {
+                $Webhooks->triggerShell('role_update', [], $updateRole);
+            // }
+        }
+
+        // webhook update role ends
+
+      
+
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // Webhook role delete -- Start
+       
+        $deleteBody = [
+            'role_id' => $entity->id
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if($this->Auth->user()){
+            $Webhooks->triggerShell('role_delete', [], $deleteBody);
+        }
+        // Webhook role delete -- Ends
+    }
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
@@ -69,7 +129,8 @@ class SecurityRolesTable extends ControllerActionTable
             ->add('name', 'ruleUnique', [
                 'rule' => 'validateUnique',
                 'provider' => 'table'
-            ]);
+            ])
+            ->notEmpty('code');
 
         return $validator;
     }
@@ -320,13 +381,33 @@ class SecurityRolesTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->setupFields($entity, $extra);
+        /*POCOR-5782 starts*/
+        if ($this->request->params['pass'][0] == 'edit') {
+            $this->field('code', [
+                'type' => 'readonly',
+                'entity' => $entity
+            ]);
+            $this->field('name', [
+                'type' => 'readonly',
+                'entity' => $entity
+            ]);
+            $this->field('security_group_id', [
+                'entity' => $entity
+            ]);
+            
+            $this->setFieldOrder([
+                'name', 'code', 'order', 'visible', 'security_group_id'
+            ]);
+        } else {
+           $this->setupFields($entity, $extra);
+        }
+        /*POCOR-5782 ends*/
     }
 
     private function setupFields(Entity $entity, ArrayObject $extra)
     {
         $this->field('code', [
-            'type' => 'hidden'
+            'entity' => $entity //POCOR-5782
         ]);
         $this->field('name', [
             'entity' => $entity
