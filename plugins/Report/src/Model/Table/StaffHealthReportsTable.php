@@ -97,25 +97,50 @@ class StaffHealthReportsTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $healthReportType = $requestData->health_report_type;
-        
+        $areaId = $requestData->area_education_id;
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
-        
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $periodEntity = $AcademicPeriods->get($academicPeriodId);
+        $startDate = $periodEntity->start_date->format('Y-m-d');
+        $endDate = $periodEntity->end_date->format('Y-m-d');
         $conditions = [];
         if (!empty($academicPeriodId)) {
-            //$conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
+                $conditions['OR'] = [
+                    'OR' => [
+                        [
+                            $this->aliasField('end_date') . ' IS NOT NULL',
+                            $this->aliasField('start_date') . ' <=' => $startDate,
+                            $this->aliasField('end_date') . ' >=' => $startDate
+                        ],
+                        [
+                            $this->aliasField('end_date') . ' IS NOT NULL',
+                            $this->aliasField('start_date') . ' <=' => $endDate,
+                            $this->aliasField('end_date') . ' >=' => $endDate
+                        ],
+                        [
+                            $this->aliasField('end_date') . ' IS NOT NULL',
+                            $this->aliasField('start_date') . ' >=' => $startDate,
+                            $this->aliasField('end_date') . ' <=' => $endDate
+                        ]
+                    ],
+                    [
+                        $this->aliasField('end_date') . ' IS NULL',
+                        $this->aliasField('start_date') . ' <=' => $endDate
+                    ]
+                ];
         }
-        
-        if (!empty($institutionId) && $institutionId =='-1') {            
+        if (!empty($institutionId) && $institutionId == 0) {            
             $conditions[$ClassStudents->aliasField('student_status_id != ')] = '1';
         }
         
-        if (!empty($institutionId) && $institutionId !='-1') {
+        if (!empty($institutionId) && $institutionId > 0) {
             $conditions['Institutions.id'] = $institutionId;
         }
-        
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions['Institutions.area_id'] = $areaId;
+        }
         if($healthReportType == 'Overview'){
             $query
                 ->select([
@@ -270,7 +295,7 @@ class StaffHealthReportsTable extends AppTable
                 ->leftJoin([$Class->alias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ])
-                 ->where($conditions);
+                ->where($conditions);
         }elseif($healthReportType == 'Consultations'){
             $query
                 ->select([

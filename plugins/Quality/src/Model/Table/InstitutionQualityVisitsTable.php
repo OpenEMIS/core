@@ -119,41 +119,6 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         $identity = $IdentityType->getDefaultEntity();
 
         $extraField[] = [
-            'key' => 'Institutions.code',
-            'field' => 'code',
-            'type' => 'string',
-            'label' => 'Institution Code',
-        ];
-
-        $extraField[] = [
-            'key' => 'Institutions.name',
-            'field' => 'institution_name',
-            'type' => 'string',
-            'label' => __('Institution Name')
-        ];
-
-        $extraField[] = [
-            'key' => 'Areas.code',
-            'field' => 'area_code',
-            'type' => 'string',
-            'label' => __('Area Code')
-        ];
-
-        $extraField[] = [
-            'key' => 'Areas.name',
-            'field' => 'area_name',
-            'type' => 'string',
-            'label' => __('Area Name')
-        ];
-
-        $extraField[] = [
-            'key' => 'AcademicPeriods.name',
-            'field' => 'academic_periods',
-            'type' => 'string',
-            'label' => __('Academic Period')
-        ];
-
-        $extraField[] = [
             'key' => 'date',
             'field' => 'date',
             'type' => 'date',
@@ -175,27 +140,12 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key' => 'evaluator',
-            'field' => 'evaluator',
-            'type' => 'string',
-            'label' => __('Evaluator')
-        ];
-
-        $extraField[] = [
             'key' => 'QualityVisitTypes.name',
             'field' => 'visit_type',
             'type' => 'string',
             'label' => __('Visit Type')
         ];
-
-        $extraField[] = [
-            'key' => 'comment',
-            'field' => 'comment',
-            'type' => 'string',
-            'label' => __('Comment')
-        ];
         
-
         $fields->exchangeArray($extraField);
     }
 

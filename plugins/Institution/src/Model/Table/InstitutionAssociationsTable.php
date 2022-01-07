@@ -256,7 +256,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
                 }
                 return implode(', ', $staffList);
             } else {
-                return $this->getMessage($this->aliasField('noTeacherAssigned'));
+                //return $this->getMessage($this->aliasField('noTeacherAssigned'));
             }
         }
     }
