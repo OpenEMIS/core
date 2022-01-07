@@ -22,7 +22,7 @@ class POCOR6210 extends AbstractMigration
        $this->execute('UPDATE `institution_cases` SET `description` = "" WHERE `description`IS NULL');
 
         $this->execute('UPDATE `security_functions` SET `_add` = "Cases.add" WHERE `name` = "Cases"');
-        $this->execute('ALTER TABLE `institution_cases` CHANGE `description` `description` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+        $this->execute('ALTER TABLE `institution_cases` CHANGE `description` `description` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci  NULL');
 
     }
 
