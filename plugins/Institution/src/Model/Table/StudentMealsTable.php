@@ -164,14 +164,15 @@ class StudentMealsTable extends ControllerActionTable
                                         $StudentMealMarkedRecords->aliasField('date = ') => $findDay,
                                     ])
                                     ->first();
+                                    
 
                         $data = [                    
                             'date' =>!empty($isMarkedRecords->date) ? $isMarkedRecords->date : $findDay,
                             // 'paid' => null,
                             'meal_benefit_id' => $isMarkedRecords->meal_benefit_id,
                             'meal_benefit' => $isMarkedRecords->meal_benefit->name,
-                            'meal_received_id' => !empty($isMarkedRecords) ?  "1"  : null,
-                            'meal_received' => !empty($isMarkedRecords) ? "Received" : "None"
+                            'meal_received_id' => !empty($isMarkedRecords) ?  "2"  : null,
+                            'meal_received' => !empty($isMarkedRecords) ? "No" : "None"
                         ];
                      }
                      
@@ -322,75 +323,111 @@ class StudentMealsTable extends ControllerActionTable
     {
         
         $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
+        $StudentMealMarkedRecords = TableRegistry::get('Meal.StudentMealMarkedRecords');
+
 
         $conditions = [
-                            $InstitutionMealStudents->aliasField('academic_period_id = ') => $entity->academic_period_id,
-                            $InstitutionMealStudents->aliasField('institution_class_id = ') => $entity->institution_class_id,
-                            $InstitutionMealStudents->aliasField('student_id = ') => $entity->student_id,
-                            $InstitutionMealStudents->aliasField('institution_id = ') => $entity->institution_id,
-                            $InstitutionMealStudents->aliasField('date = ') => $entity->institution_student_meal['date'],
-                        ];
+            $InstitutionMealStudents->aliasField('academic_period_id = ') => $entity->academic_period_id,
+            $InstitutionMealStudents->aliasField('institution_class_id = ') => $entity->institution_class_id,
+            $InstitutionMealStudents->aliasField('student_id = ') => $entity->student_id,
+            $InstitutionMealStudents->aliasField('institution_id = ') => $entity->institution_id,
+            $InstitutionMealStudents->aliasField('date = ') => $entity->institution_student_meal['date'],
+        ];
 
         $benefit = '';
         $benefit = $InstitutionMealStudents
-                            ->find()
-                            ->contain(['MealBenefit','MealReceived'])
-                            ->select([
-                                $InstitutionMealStudents->aliasField('meal_received_id'),
-                                'MealReceived.name',
-                                $InstitutionMealStudents->aliasField('meal_benefit_id'),
-                                'MealBenefit.name'
-                            ])
-                            ->where($conditions)
-                            ->first();
-                     
-                            if ($benefit->meal_received_id == "2" || $benefit->meal_received_id == "3" || empty($benefit->meal_received_id)) {
-                                 $benefit = "Null";
-                                
-                            }
-                            else{
-                                $benefit = $benefit->meal_benefit->name;
-                            }
-    
+        ->find()
+        ->contain(['MealBenefit','MealReceived'])
+        ->select([
+            $InstitutionMealStudents->aliasField('meal_received_id'),
+            'MealReceived.name',
+            $InstitutionMealStudents->aliasField('meal_benefit_id'),
+            'MealBenefit.name'
+        ])
+        ->where($conditions)
+        ->first();
+        if (isset($benefit)) {
+            $benefit = $benefit->meal_benefit->name;
+
+        }
+        else{
+            $isMarkedRecords = $StudentMealMarkedRecords
+            ->find()
+            ->contain(['MealBenefit'])
+            ->select([
+                $StudentMealMarkedRecords->aliasField('meal_benefit_id'),
+                'MealBenefit.name'
+            ])
+
+            ->where([
+                $StudentMealMarkedRecords->aliasField('academic_period_id = ') => $entity->academic_period_id,
+                $StudentMealMarkedRecords->aliasField('institution_class_id = ') => $entity->institution_class_id,
+                $StudentMealMarkedRecords->aliasField('date = ') => $entity->institution_student_meal['date'],
+                $StudentMealMarkedRecords->aliasField('institution_id = ') => $entity->institution_id,
+            ])
+            ->first();
+            if (!empty($isMarkedRecords)) {
+                $benefit = $isMarkedRecords->meal_benefit->name;
+            }
+        }
         return $benefit;
     } 
 
     public function onExcelGetMealReceived(Event $event, Entity $entity)
     {
-        
+
         $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
+        $StudentMealMarkedRecords = TableRegistry::get('Meal.StudentMealMarkedRecords');
 
         $conditions = [
-                            $InstitutionMealStudents->aliasField('academic_period_id = ') => $entity->academic_period_id,
-                            $InstitutionMealStudents->aliasField('institution_class_id = ') => $entity->institution_class_id,
-                            $InstitutionMealStudents->aliasField('student_id = ') => $entity->student_id,
-                            $InstitutionMealStudents->aliasField('institution_id = ') => $entity->institution_id,
-                             $InstitutionMealStudents->aliasField('date = ') => $entity->institution_student_meal['date'],
-                        ];
-           
+            $InstitutionMealStudents->aliasField('academic_period_id = ') => $entity->academic_period_id,
+            $InstitutionMealStudents->aliasField('institution_class_id = ') => $entity->institution_class_id,
+            $InstitutionMealStudents->aliasField('student_id = ') => $entity->student_id,
+            $InstitutionMealStudents->aliasField('institution_id = ') => $entity->institution_id,
+            $InstitutionMealStudents->aliasField('date = ') => $entity->institution_student_meal['date'],
+        ];
+
 
         $mealReceived = '';
         $mealReceived = $InstitutionMealStudents
-                            ->find()
-                            ->contain(['MealBenefit','MealReceived'])
-                            ->select([
-                                $InstitutionMealStudents->aliasField('meal_received_id'),
-                                'MealReceived.name',
-                                $InstitutionMealStudents->aliasField('meal_benefit_id'),
-                                'MealBenefit.name'
-                            ])
-                            ->where($conditions)
-                            ->first();
-                            if (empty($mealReceived)) {
-                                $mealReceived = "None";
-                            }
-                            else{
-                                $mealReceived = $mealReceived->meal_received->name;
-                            }
-                            
-    
+        ->find()
+        ->contain(['MealBenefit','MealReceived'])
+        ->select([
+            $InstitutionMealStudents->aliasField('meal_received_id'),
+            'MealReceived.name',
+            $InstitutionMealStudents->aliasField('meal_benefit_id'),
+            'MealBenefit.name'
+        ])
+        ->where($conditions)
+        ->first();
+            if (empty($mealReceived)) {
+                   $isMarkedRecords = $StudentMealMarkedRecords
+                   ->find()
+                   ->contain(['MealBenefit'])
+                   ->select([
+                    $StudentMealMarkedRecords->aliasField('meal_benefit_id'),
+                    'MealBenefit.name'
+                    ])
+
+                   ->where([
+                    $StudentMealMarkedRecords->aliasField('academic_period_id = ') => $entity->academic_period_id,
+                    $StudentMealMarkedRecords->aliasField('institution_class_id = ') => $entity->institution_class_id,
+                    $StudentMealMarkedRecords->aliasField('date = ') => $entity->institution_student_meal['date'],
+                    $StudentMealMarkedRecords->aliasField('institution_id = ') => $entity->institution_id,
+                ])
+               ->first();
+                if (empty($mealReceived) && empty($isMarkedRecords)) {
+                    $mealReceived = "None";
+                }
+                else{
+                    $mealReceived = "Received";
+                }
+            }
+        else{
+            $mealReceived = $mealReceived->meal_received->name;
+        }    
         return $mealReceived;
-    } 
+    }
 
     
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)

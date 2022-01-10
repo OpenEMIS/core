@@ -14,10 +14,12 @@ class InstitutionAssessment extends Entity
         if ($this->has('institution_class_subjects')) {
             $value = count($this->institution_class_subjects);
         } else {
-            $table = TableRegistry::get('Institution.InstitutionClassSubjects');
+            $grade = $this->education_grade_id;
+            $class = $this->institution_class_id;
+            $table = TableRegistry::get('Education.EducationGradesSubjects');
             $value = $table
-                        ->find()
-                        ->where([$table->aliasField('institution_class_id') => $this->id])
+                       ->find()
+                        ->where([$table->aliasField('education_grade_id') => $grade])
                         ->count();
         }
         return $value;

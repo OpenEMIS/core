@@ -32,7 +32,6 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
     public function main()
     {  
 		$academicPeriodId = $this->AcademicPeriods->getCurrent();
-		
 		$workflowRules = $this->WorkflowRules->find()->where(['feature' => 'StudentUnmarkedAttendances'])->hydrate(false)->toArray();
 		
 		$getWorkingDaysOfWeek = $this->AcademicPeriods->getWorkingDaysOfWeek();
@@ -73,7 +72,6 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 										'academic_period_id' => $academicPeriodId,
 										'institution_class_id' => $classAttendanceRecord['institution_class']['id']
 									])->all();
-
 					if(!empty($studentRecords)){
 						$getDay =[];
 						foreach ($studentRecords as $studentRecord) {
@@ -92,12 +90,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 						}
 						$get_unmarked_dates = implode(',',$unmarked_dates_arr);
 						//count unmarked dates for month
-						$number_of_unmarked_day_in_month = 0;
-						for($k = 1; $k <= $day; $k++){
-							if(!in_array($k, $getDay)){
-								$number_of_unmarked_day_in_month++;
-							}
-						}
+						$number_of_unmarked_day_in_month = $daysUnmarked;
 					}
 					
 					$mailed_data = [

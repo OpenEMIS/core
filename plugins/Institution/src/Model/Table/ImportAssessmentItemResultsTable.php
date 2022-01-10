@@ -331,9 +331,19 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportGetAssessmentPeriodsId(Event $event, $cellValue)
     {
-        
-        $dataRecord = $this->AssessmentPeriods->find()->select([$this->AssessmentPeriods->aliasField('id')])->where([$this->AssessmentPeriods->aliasField('code') => $cellValue])->first();
-        
+        /*POCOR-6377 starts*/
+        $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $dataRecord = $this->AssessmentPeriods->find()
+                    ->select([$this->AssessmentPeriods->aliasField('id')])
+                    ->leftJoin([$Assessments->alias() => $Assessments->table()], [
+                        $this->AssessmentPeriods->aliasField('assessment_id = ') . $Assessments->aliasField('id')
+                    ])
+                    ->where([
+                        $Assessments->aliasField('academic_period_id') => $academicPeriodId,
+                        $this->AssessmentPeriods->aliasField('code') => $cellValue
+                    ])->first();
+        /*POCOR-6377 ends*/
         $assessmentPeriodsId = $dataRecord->id;
         
         return $assessmentPeriodsId;
@@ -442,7 +452,14 @@ class ImportAssessmentItemResultsTable extends AppTable {
                         ->first();
         $tempRow['assessment_id'] = $assessment->assessment_id;
         $tempRow['institution_classes_id'] = $tempRow['class_id'];
-        
+        /*POCOR-6486 starts*/
+        $enteredMarks = $tempRow['marks'];
+        if (!empty(enteredMarks) && $enteredMarks > 100) {
+            $rowInvalidCodeCols['marks'] = __('Marks Should be between 0 to 100');
+            $tempRow['marks'] = false;
+            return false;
+        }
+        /*POCOR-6486 ends*/
         return true;
     }
 }

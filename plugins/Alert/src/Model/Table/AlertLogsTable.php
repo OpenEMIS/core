@@ -170,8 +170,12 @@ class AlertLogsTable extends ControllerActionTable
                 'message' => $message,
                 'checksum' => $checksum
             ]);
-
-            $this->save($entity);
+            //POCOR-6023 starts
+            $saveData = $this->save($entity);
+            if(!empty($saveData)){
+                $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
+                $this->triggerSendingAlertShell('SendingAlert', $result->feature, $result->id);
+            }//POCOR-6023 ends
         }
     }
 
@@ -229,6 +233,14 @@ class AlertLogsTable extends ControllerActionTable
         return $this->statusTypes[$entity->status];
     }
 
+    //6023 starts
+    public function onGetProcessedDate(Event $event, Entity $entity)
+    {
+        if(!empty($entity->processed_date)){
+            return date('Y-m-d', strtotime($entity->processed_date));
+        }
+    }//6023 ends
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('status', ['after' => 'message']);
@@ -271,7 +283,8 @@ class AlertLogsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // trigger the send email shell
-        $this->triggerSendingAlertShell('SendingAlert', $entity->feature, $entity->id);
+        //$this->triggerSendingAlertShell('SendingAlert', $entity->feature, $entity->id);
+        //comment this shell because of POCOR-6023 ticket. Not receiving data from entity->id
     }
 
     public function getFeatureOptions()
