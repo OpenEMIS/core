@@ -48,50 +48,54 @@ class InstitutionAssociationsTable extends AppTable
         $InstitutionAssociationStaff = TableRegistry::get('Institution.InstitutionAssociationStaff');
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
+        $periodId = $requestData->academic_period_id;
+        $areaId = $requestData->area_education_id;
         $where = [];
         if ($institution_id != 0) {
-            $where['InstitutionAssociations.institution_id'] = $institution_id;
+            $where[$this->aliasField('institution_id')] = $institution_id;
         }
-
+        if ($areaId != -1) {
+            $where['Institutions.area_id'] = $areaId;
+        }
            $query 
-				->select([
-					'academic_period_id' =>  $this->aliasField('academic_period_id'),
-					'institution_code' => 'Institutions.code',
-					'institution_name' => 'Institutions.name',
+                ->select([
+                    'academic_period_id' =>  $this->aliasField('academic_period_id'),
+                    'institution_code' => 'Institutions.code',
+                    'institution_name' => 'Institutions.name',
                     'name' => $this->aliasField('name'),
                     'association_staff' => $query->func()->group_concat([
-						'SecurityUsers.openemis_no' => 'literal',
-						" - ",
-						'SecurityUsers.first_name' => 'literal',
-						" ",
-						'SecurityUsers.last_name' => 'literal'
-					]),
+                        'SecurityUsers.openemis_no' => 'literal',
+                        " - ",
+                        'SecurityUsers.first_name' => 'literal',
+                        " ",
+                        'SecurityUsers.last_name' => 'literal'
+                    ]),
                     'total_male_students' => $this->aliasField('total_male_students'),
                     'total_female_students' => $this->aliasField('total_female_students'),
                     'total_students' => $query->newExpr('InstitutionAssociations.total_male_students + InstitutionAssociations.total_female_students')
-				])
+                ])
                 ->contain([
-					'AcademicPeriods' => [
-						'fields' => [
-							'AcademicPeriods.name'
-						]
-					],
-					'Institutions'
-				])
+                    'AcademicPeriods' => [
+                        'fields' => [
+                            'AcademicPeriods.name'
+                        ]
+                    ],
+                    'Institutions'
+                ])
                 ->leftJoin(
-				['InstitutionAssociationStaff' => 'institution_association_staff'],
-				[
-					'InstitutionAssociationStaff.institution_association_id = '. $this->aliasField('id')
-				])
+                ['InstitutionAssociationStaff' => 'institution_association_staff'],
+                [
+                    'InstitutionAssociationStaff.institution_association_id = '. $this->aliasField('id')
+                ])
                 ->leftJoin(
-				['SecurityUsers' => 'security_users'],
-				[
-					'SecurityUsers.id = '. $InstitutionAssociationStaff->aliasField('security_user_id')
-				]) 
-                ->where($where) 
+                ['SecurityUsers' => 'security_users'],
+                [
+                    'SecurityUsers.id = '. $InstitutionAssociationStaff->aliasField('security_user_id')
+                ]) 
+                ->where([$this->aliasField('academic_period_id') => $periodId, $where]) 
                 ->group([
-					'InstitutionAssociationStaff.institution_association_id'
-				]);
+                    'InstitutionAssociationStaff.institution_association_id'
+                ]);
                 
     }
 
