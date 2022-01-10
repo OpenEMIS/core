@@ -565,7 +565,7 @@ class AssessmentResultsTable extends AppTable
                             END
                     )',
                     'academic_term_value' => $AssessmentPeriods->aliasField('academic_term'),
-                    'academic_term_total_weighted_marks1' => $query->func()->sum($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight')),
+                    'academic_term_total_weighted_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight')),
                 ])
                 ->innerJoin(
                     [$this->alias() => $this->table()],
@@ -585,7 +585,6 @@ class AssessmentResultsTable extends AppTable
                 ->contain([$AssessmentGradingOptions->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
                 ->where([
                     $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id'],
-                    $AssessmentItemResults->aliasField('student_id') => 12011,
                     $AssessmentPeriods->aliasField('academic_term <> ') => ""
                 ])
                 ->group([
@@ -623,7 +622,6 @@ class AssessmentResultsTable extends AppTable
                     $withTerm[$key]['academic_term_total_weighted_marks'] = $assessmentItemResultsData->marks*$value['assessment_period']['weight'];
                     //POCOR-6479 ends
                 }
-                // echo "<pre>";print_r($withTerm);die;
             if (!empty($withTerm)) { // If academic_term is setup, to use the academic_term to calculate the average
                 // $recordsToUse = $withTerm->toArray();
                 $recordsToUse = $withTerm;
@@ -631,43 +629,40 @@ class AssessmentResultsTable extends AppTable
                 // $recordsToUse = $withoutTerm->toArray();
                 $recordsToUse = $withoutTerm; 
             }
-            $i = 0;
+
+            //POCOR-6506[START]
             foreach ($recordsToUse as $record) {
-                foreach($recordsToUse AS $newRecord){
-                    if( ($newRecord['institution_id'] == $record['institution_id'] &&
-                    $newRecord['academic_period_id'] == $record['academic_period_id'] &&
-                    $newRecord['assessment_id'] == $record['assessment_id'] &&
-                    $newRecord['student_id'] == $record['student_id'] &&
-                    $newRecord['education_subject_id'] == $record['education_subject_id'] &&
-                    $newRecord['education_grade_id'] == $record['education_grade_id'] &&
-                    $newRecord['subject_classification'] == $record['subject_classification'] &&
-                    $newRecord['academic_term_value'] == $record['academic_term_value'] &&
-                    $newRecord['assessment_period_id'] != $record['assessment_period_id']
-                    
-                    
-                    ) ){
-                        $sum += $record['marks'] + $newRecord['marks'];
-                        
-                    }
-                }
-                $newArra[$i]['marks'] = $sum;
-                $newArra[$i] = $record;
-                $i++;
+                $studentId = $record['student_id'];
+                $academic_term_value = $record['academic_term_value'];
+                $subjectClassification = Inflector::slug($record['subject_classification']);
+                $totalSum[$studentId][$subjectClassification][$academic_term_value][] = $record;
             }
-            echo "<pre>";print_r($newArra);die;
-            $newTotal = [];
-            foreach($totalSum AS $key => $value){
-                foreach($value AS $key1 => $value1){
-                    foreach($value1 AS $key2 => $value2){
-                        foreach($value2 AS $key3 => $value3){
-                            $newTotal[$key3]['sfvsfv'] = [
-                                'marks' => $value3['marks']
-                            ];
-                        }
-                    }
+
+            $mainArray = [];
+            $i = 0;
+            foreach ($totalSum as $tkey => $tval) {
+                $subjectArr = [];
+                foreach ($tval as $subkey => $subval) {
+                    $mainArray[$i][$tkey][$subkey] = $subval; 
+                    $halfArr = [];
+                    foreach ($subval as $halfkey => $halfval) {
+                        $mainArray[$i][$tkey][$subkey][$halfkey] = $halfval; 
+                        $sum = 0;
+                        $weighted_marks = 0;
+                        foreach ($halfval as $markkey => $markval) {
+                            $sum = $sum + $markval['marks'];
+                            $weighted_marks = $weighted_marks + $markval['marks'] * $markval['assessment_period']['weight'];
+                            $mainArray[$i] = $markval;
+                        } 
+                        $mainArray[$i]['marks'] = $sum;
+                        $mainArray[$i]['academic_term_total_weighted_marks'] = $weighted_marks;
+                        $i++; 
+                    }  
+
                 }
             }
-            
+            $withTerm = $mainArray;
+            //POCOR-6506[END]
             $averageStudentSubjectResults = [];
             foreach ($recordsToUse as $record) {
                 $studentId = $record['student_id'];
@@ -685,7 +680,7 @@ class AssessmentResultsTable extends AppTable
                     ];
                 }
             }
-            
+
             $averageRecords = [];
             foreach ($averageStudentSubjectResults as $studentId => $studentRecord) {
                 foreach ($studentRecord as $subjectId => $result) {
@@ -704,7 +699,7 @@ class AssessmentResultsTable extends AppTable
             }
             // $studentSubjectResults = array_merge($withoutTerm->toArray(), $withTerm->toArray(), $averageRecords);
             $studentSubjectResults = array_merge($withoutTerm, $withTerm, $averageRecords);
-            // echo "<pre>";print_r($studentSubjectResults);die;
+
             return $studentSubjectResults;
         }
     }
