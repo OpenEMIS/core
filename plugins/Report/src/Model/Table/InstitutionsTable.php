@@ -113,11 +113,12 @@ class InstitutionsTable extends AppTable
                     ->notEmpty('area_level_id')
                     ->notEmpty('area_education_id');
         }
+        /*POCOR-6333 ends*/
       if (in_array($feature, ['Report.WashReports'])) {
             $validator = $validator
                     ->notEmpty('institution_id');
         }
-        /*POCOR-6333 ends*/
+        
 
         return $validator;
     }
