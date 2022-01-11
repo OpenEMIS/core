@@ -27,6 +27,7 @@ use Cake\Utility\Hash;
 
 class StaffTable extends ControllerActionTable
 {
+    private $_dynamicFieldName = 'custom_field_data';
     use OptionsTrait;
 
     private $assigned;
@@ -59,6 +60,7 @@ class StaffTable extends ControllerActionTable
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffRelease', ['className' => 'Institution.StaffRelease', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+       // $this->hasMany('Contacts', ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('SecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'foreignKey' => 'secondary_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Security.SecurityAccess');
@@ -87,7 +89,7 @@ class StaffTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('HighChart', [
-			'staff_attendance' => [
+            'staff_attendance' => [
                 '_function' => 'getNumberOfStaffByAttendanceType',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
@@ -255,13 +257,14 @@ class StaffTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        $userContacts = TableRegistry::get('user_contacts');
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $query->where([$this->aliasField('institution_id') => $institutionId]);
         $periodId = $this->request->query['academic_period_id'];
         if ($periodId > 0) {
             $query->find('academicPeriod', ['academic_period_id' => $periodId]);
         }
-        $query
+        $res=$query
             ->contain([
                 'Users' => [
                     'fields' => [
@@ -291,6 +294,7 @@ class StaffTable extends ControllerActionTable
                         'identity_number' => 'Users.identity_number'
                     ]
                 ],
+                
                 'StaffTypes' => [
                     'fields' => [
                         'staff_type_name' => 'StaffTypes.name',
@@ -314,17 +318,97 @@ class StaffTable extends ControllerActionTable
             ])
             ->select([
                 'openemis_no' => 'Users.openemis_no',
+                'staff_id' =>'Users.id',
                 'institution_position_id' => 'Staff.institution_position_id',
                 'FTE' => 'Staff.FTE',
                 'start_date' => 'Staff.start_date',
                 'end_date' => 'Staff.end_date',
             ]);
+
+             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+
+                return $results->map(function ($row) {
+                    
+                    // POCOR-6130 custome fields code
+                    $userContacts = TableRegistry::get('user_contacts');
+                    $contact=$userContacts->find()->select(['contact_number' => 'group_concat(DISTINCT(user_contacts.value))'])->where(['security_user_id' => $row->staff_id,'preferred'=> 1])->group('security_user_id')->first();
+                    $row['contact_number']=$contact['contact_number'];
+                    $Guardians = TableRegistry::get('staff_custom_field_values');
+                    $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
+                    $staffCustomFields = TableRegistry::get('staff_custom_fields');
+                    $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
+    
+                    $guardianData = $Guardians->find()
+                    ->select([
+                        'id'                             => $Guardians->aliasField('id'),
+                        'staff_id'                     => $Guardians->aliasField('staff_id'),
+                        'staff_custom_field_id'        => $Guardians->aliasField('staff_custom_field_id'),
+                        'text_value'                     => $Guardians->aliasField('text_value'),
+                        'number_value'                   => $Guardians->aliasField('number_value'),
+                        'decimal_value'                  => $Guardians->aliasField('decimal_value'),
+                        'textarea_value'                 => $Guardians->aliasField('textarea_value'),
+                        'date_value'                     => $Guardians->aliasField('date_value'),
+                        'time_value'                     => $Guardians->aliasField('time_value'),
+                        'checkbox_value_text'            => 'staffCustomFieldOptions.name',
+                        'question_name'                  => 'staffCustomField.name',
+                        'field_type'                     => 'staffCustomField.field_type',
+                        'field_description'              => 'staffCustomField.description',
+                        'question_field_type'            => 'staffCustomField.field_type',
+                    ])->leftJoin(
+                        ['staffCustomField' => 'staff_custom_fields'],
+                        [
+                            'staffCustomField.id = '.$Guardians->aliasField('staff_custom_field_id')
+                        ]
+                    )->leftJoin(
+                        ['staffCustomFieldOptions' => 'staff_custom_field_options'],
+                        [
+                            'staffCustomFieldOptions.id = '.$Guardians->aliasField('number_value')
+                        ]
+                    )
+                    ->where([
+                        $Guardians->aliasField('staff_id') => $row->user['id'],
+                    ])->toArray();   
+                      //print_r($guardianData); exit;
+                    $existingCheckboxValue = '';
+                    foreach ($guardianData as $guadionRow) {
+                        $fieldType = $guadionRow->field_type;
+
+                        if ($fieldType == 'TEXT') {
+                            //die($guadionRow->text_value);
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->text_value;
+                        } else if ($fieldType == 'CHECKBOX') {
+                            $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = trim($existingCheckboxValue, ',');
+                        } else if ($fieldType == 'NUMBER') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->number_value;
+                        } else if ($fieldType == 'DECIMAL') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->decimal_value;
+                        } else if ($fieldType == 'TEXTAREA') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->textarea_value;
+                        } else if ($fieldType == 'DROPDOWN') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->checkbox_value_text;
+                        } else if ($fieldType == 'DATE') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
+                        } else if ($fieldType == 'TIME') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
+                        } else if ($fieldType == 'COORDINATES') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->text_value;
+                        } else if ($fieldType == 'NOTE') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->field_description;
+                        }
+                    }
+                    // POCOR-6130 custome fields code
+                    return $row;
+                });
+            });
     }
 
     public function onExcelGetFTE(Event $event, Entity $entity)
     {
         return ($entity->FTE * 100) . '%';
     }
+
+    
 
     public function onExcelGetPositionTitleTeaching(Event $event, Entity $entity)
     {
@@ -377,6 +461,13 @@ class StaffTable extends ControllerActionTable
             'label' => __('Teaching')
         ];
 
+       $extraField[] = [
+            'key' => 'user_contacts.value',
+            'field' => 'contact_number',
+            'type' => 'string',
+            'label' => __('Contact Number')
+        ];
+
         $extraField[] = [
             'key' => 'StaffStatuses.name',
             'field' => 'staff_status_name',
@@ -418,6 +509,32 @@ class StaffTable extends ControllerActionTable
             'type' => 'string',
             'label' => __('Identity Number')
         ];
+
+        $InfrastructureCustomFields = TableRegistry::get('staff_custom_fields');
+        $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
+            $customFieldData = $InfrastructureCustomFields->find()->select([
+                'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+                'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+            ])->innerJoin(
+                        ['staffCustomFormsFields' => 'staff_custom_forms_fields'],
+                        [
+                            'staffCustomFormsFields.staff_custom_field_id = '.$InfrastructureCustomFields->aliasField('id')
+                        ]
+                    )->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
+
+            if(!empty($customFieldData)) {
+              // echo "<pre>"; print_r($customFieldData); exit;
+                foreach($customFieldData as $data) {
+                    $custom_field_id = $data->custom_field_id;
+                    $custom_field = $data->custom_field;
+                    $extraField[] = [
+                        'key' => '',
+                        'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
+                        'type' => 'string',
+                        'label' => __($custom_field)
+                    ];
+                }
+            }
 
         // $newFields = array_merge($fieldArray, $extraField);
         $fields->exchangeArray($extraField);
@@ -932,7 +1049,7 @@ class StaffTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {	
+    {   
         $institutionPositionId = $entity->institution_position_id;
         $staffId = $entity->staff_id;
         $institutionId = $entity->institution_id;
@@ -987,7 +1104,7 @@ class StaffTable extends ControllerActionTable
             } else {
                 $this->updateStaffStatus($entity, $this->endOfAssignment);
             }
-		}
+        }
 
         $listeners = [
             TableRegistry::get('Institution.InstitutionSubjectStaff'),
@@ -1709,72 +1826,72 @@ class StaffTable extends ControllerActionTable
         $params['dataSet'] = $dataSet->getArrayCopy();
         return $params;
     }
-	
-	public function getNumberOfStaffByAttendanceType($params = [])
+    
+    public function getNumberOfStaffByAttendanceType($params = [])
     {
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$_conditions = [];
+        $_conditions = [];
         foreach ($conditions as $key => $value) {
             $_conditions[$this->alias().'.'.$key] = $value;
         }
 
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentYearId = $AcademicPeriod->getCurrent();
-		
-		if (!empty($currentYearId)) {
+        
+        if (!empty($currentYearId)) {
             $currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
         } else {
             $currentYear = __('Not Defined');
         }
-		
-		if (!empty($currentYearId)) {
+        
+        if (!empty($currentYearId)) {
             $currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
         } else {
             $currentYear = __('Not Defined');
         }
-		
-		$institutionStaff = TableRegistry::get('institution_staff');
+        
+        $institutionStaff = TableRegistry::get('institution_staff');
 
         $staffAttendances = $institutionStaff->find('all')
             ->select([
-				'date' => 'CURDATE()',
-				'start_time' => 'MIN(institutionShifts.start_time)',
-				'institution_staff.start_date',
-				'institution_staff.end_date',
-				'present' => '(IF((institutionStaffAttendances.time_in <= start_time) OR (institutionStaffAttendances.time_in > start_time),1,0))',
-				'absent' => '(IF(institutionStaffAttendances.time_in IS NULL,1,0))',
-				'late' => '(IF(institutionStaffAttendances.time_in > start_time, 1,0))',
+                'date' => 'CURDATE()',
+                'start_time' => 'MIN(institutionShifts.start_time)',
+                'institution_staff.start_date',
+                'institution_staff.end_date',
+                'present' => '(IF((institutionStaffAttendances.time_in <= start_time) OR (institutionStaffAttendances.time_in > start_time),1,0))',
+                'absent' => '(IF(institutionStaffAttendances.time_in IS NULL,1,0))',
+                'late' => '(IF(institutionStaffAttendances.time_in > start_time, 1,0))',
             ])
-			->innerJoin(
-			['institutionStaffShifts' => 'institution_staff_shifts'],
-			[
-				'institutionStaffShifts.staff_id = institution_staff.staff_id ',
-			]
-			)
-			->innerJoin(
-			['institutionShifts' => 'institution_shifts'],
-			[
-				'institutionShifts.id = institutionStaffShifts.shift_id ',
-				'institution_staff.institution_id = institutionShifts.institution_id',
-			]
-			)
-			->leftJoin(
-			['institutionStaffAttendances' => 'institution_staff_attendances'],
-			[
-				'institutionStaffAttendances.date' => date('Y-m-d'),
-				'institutionStaffAttendances.staff_id = institutionStaffShifts.staff_id '
-			]
-			)
-			->where([
-				//'institutionStaffAttendances.academic_period_id' => $currentYearId,
+            ->innerJoin(
+            ['institutionStaffShifts' => 'institution_staff_shifts'],
+            [
+                'institutionStaffShifts.staff_id = institution_staff.staff_id ',
+            ]
+            )
+            ->innerJoin(
+            ['institutionShifts' => 'institution_shifts'],
+            [
+                'institutionShifts.id = institutionStaffShifts.shift_id ',
+                'institution_staff.institution_id = institutionShifts.institution_id',
+            ]
+            )
+            ->leftJoin(
+            ['institutionStaffAttendances' => 'institution_staff_attendances'],
+            [
+                'institutionStaffAttendances.date' => date('Y-m-d'),
+                'institutionStaffAttendances.staff_id = institutionStaffShifts.staff_id '
+            ]
+            )
+            ->where([
+                //'institutionStaffAttendances.academic_period_id' => $currentYearId,
                 'institutionShifts.institution_id' => $conditions['institution_id'],
                 'institution_staff.start_date <= CURDATE() AND (institution_staff.end_date IS NULL OR institution_staff.end_date >= CURDATE())',
             ])
-			->group([
-				'institutionShifts.institution_id',
-				'institutionStaffShifts.staff_id',
+            ->group([
+                'institutionShifts.institution_id',
+                'institutionStaffShifts.staff_id',
             ])
-			->toArray()
+            ->toArray()
             ;
 
         $attendanceData = [];
@@ -1782,22 +1899,22 @@ class StaffTable extends ControllerActionTable
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
         $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
         $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
-		
-		$total_present = $total_absent = $total_late = 0;
-		
+        
+        $total_present = $total_absent = $total_late = 0;
+        
         foreach ($staffAttendances as $key => $attendance) {
-		
-			$total_present = $attendance->present + $total_present;
-			$total_absent = $attendance->absent + $total_absent;
-			$total_late = $attendance->late + $total_late;
+        
+            $total_present = $attendance->present + $total_present;
+            $total_absent = $attendance->absent + $total_absent;
+            $total_late = $attendance->late + $total_late;
         }
-		if(!empty($currentYear)) {
-			$attendanceData[$currentYear] = $currentYear;
-			$dataSet['Present']['data'][$currentYear] = $total_present;
-			$dataSet['Absent']['data'][$currentYear] = $total_absent;
-			$dataSet['Late']['data'][$currentYear] = $total_late;
-		}
-		
+        if(!empty($currentYear)) {
+            $attendanceData[$currentYear] = $currentYear;
+            $dataSet['Present']['data'][$currentYear] = $total_present;
+            $dataSet['Absent']['data'][$currentYear] = $total_absent;
+            $dataSet['Late']['data'][$currentYear] = $total_late;
+        }
+        
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => __('For Today'));
         $params['options']['xAxis']['categories'] = array_values($attendanceData);
@@ -2071,7 +2188,7 @@ class StaffTable extends ControllerActionTable
     //         foreach($staffList as $staffVal) {
     //             $nonTeacherIds[] = $staffVal->staff_id;
     //         }
-	// 	}
+    //  }
     //    if (in_array($staffId,$nonTeacherIds)) {
     //        $isNonTeacher = true;
     //    }       
@@ -2405,7 +2522,7 @@ class StaffTable extends ControllerActionTable
         $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
-		$ownAttendanceView = $options['own_attendance_view'];
+        $ownAttendanceView = $options['own_attendance_view'];
         $otherAttendanceView = $options['other_attendance_view'];
 
         $weekStartDate = $options['week_start_day'];
@@ -2504,8 +2621,8 @@ class StaffTable extends ControllerActionTable
                 ]
             ];
         }
-		
-		if ($options['user']['super_admin'] == 0) {
+        
+        if ($options['user']['super_admin'] == 0) {
             if($ownAttendanceView == 1 && $otherAttendanceView == 0){
                 $staffId = $options['user']['id'];
                 $conditionQuery[$this->aliasField('staff_id')] = $options['user']['id'];
@@ -2513,12 +2630,12 @@ class StaffTable extends ControllerActionTable
                 $staffId = $options['user']['id'];
                 $conditionQuery[$this->aliasField('staff_id != ')] = $options['user']['id'];
             }elseif($ownAttendanceView == 0 && $otherAttendanceView == 0){
-				$staffId = "";
+                $staffId = "";
                 $conditionQuery[$this->aliasField('staff_id = ')] = "";
             }
          }
-		
-		
+        
+        
         $query = $query
             ->matching('Users')
             ->where(
@@ -2538,11 +2655,11 @@ class StaffTable extends ControllerActionTable
                     $staffId = $row->staff_id;
                     $staffRecords = [];
                     $staffLeaveRecords = [];
-					
-					if(!empty($row->_matchingData['Users']->photo_name)){
+                    
+                    if(!empty($row->_matchingData['Users']->photo_name)){
                         $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
                     } 
-					
+                    
                     if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
                         $staffRecords = $attendanceByStaffIdRecords[$staffId];
                     }
@@ -2637,7 +2754,7 @@ class StaffTable extends ControllerActionTable
             $query->formatResults(function($results) {
                 return $results->map(function($row) { 
                     $row['user_avatar'] = null;
-					
+                    
                     if (!empty($row->user->photo_name)) {                    
                         $row['user_avatar'] = base64_encode(stream_get_contents($row->user->photo_content));
                     }               

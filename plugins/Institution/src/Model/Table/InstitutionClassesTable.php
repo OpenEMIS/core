@@ -22,6 +22,7 @@ use App\Model\Traits\MessagesTrait;
 
 class InstitutionClassesTable extends ControllerActionTable
 {
+
     use MessagesTrait;
 
     public function initialize(array $config)
@@ -87,7 +88,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
 
-		$this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
+		$this->addBehavior('ClassExcel', ['excludes' => ['security_group_id','identity_number','identity_type','student_status','student_name','gender','institution_classes_staff_openemis_no','special_need','openEMIS_ID'], 'pages' => ['view']]);
     }
 
     public function validationDefault(Validator $validator)
@@ -537,6 +538,8 @@ class InstitutionClassesTable extends ControllerActionTable
             $this->Students->alias(),
             $this->InstitutionSubjects->alias()
         ];
+        $homeRoomTeacher = ( isset($entity->staff_id) && $entity->staff_id > 0 ) ? 1 : 0;
+        $extra['associatedRecords'][] = ['model' => 'HomeRoomTeacher', 'count' => $homeRoomTeacher];
     }
 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -761,7 +764,10 @@ class InstitutionClassesTable extends ControllerActionTable
                     'sort' => ['Users.first_name', 'Users.last_name']
                 ],
                 'ClassStudents.StudentStatuses' => function ($q) {
-                    return $q->where([('StudentStatuses.code NOT IN ') => ['TRANSFERRED', 'WITHDRAWN']]);
+                    // return $q->where([('StudentStatuses.code NOT IN ') => ['TRANSFERRED', 'WITHDRAWN']]);
+                    // POCOR-6454[START]
+                    return $q->where([('StudentStatuses.code NOT IN ') => ['TRANSFERRED', 'WITHDRAWN', 'REPEATED']]);
+                    // POCOR-6454[END]
                 },
                 'ClassStudents.Users.Genders',
                 'ClassStudents.EducationGrades',
@@ -1203,6 +1209,11 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
     public function onGetTotalStudents(Event $event, Entity $entity)
+    {
+        return $entity->total_male_students + $entity->total_female_students;
+    }
+
+    public function onExcelGetTotalStudents(Event $event, Entity $entity)
     {
         return $entity->total_male_students + $entity->total_female_students;
     }
@@ -1874,9 +1885,11 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         $cloneFields = $fields->getArrayCopy();
         $newFields = [];
+        //echo "<pre>"; print_r($cloneFields); exit;
         foreach ($cloneFields as $key => $value) {
             $newFields[] = $value;
-            if($value['field'] == 'homeroom_teacher'){
+            if($value['field'] == 'secondary_teacher'){
+                
 
                 $newFields[] = [
                     'key' => 'InstitutionClasses.total_male_students',
@@ -1891,6 +1904,13 @@ class InstitutionClassesTable extends ControllerActionTable
                     'type' => 'string',
                     'label' => 'Total Female Student'
                 ];
+                $newFields[] = [
+                    'key' => '',
+                    'field' => 'total_students',
+                    'type' => 'integer',
+                    'label' => 'Total Students'
+                ];
+                
             }
 
         }
@@ -1898,22 +1918,18 @@ class InstitutionClassesTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    /* public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
-    {
-        $query
-        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students']);
-
-        $query->group(['InstitutionClasses.id']);
-    } */
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
         $requestQuery = $this->request->query;
         $institutionID = $_SESSION['Institution']['Institutions']['id'];
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-        
+        //$query->group($overwrite = false);
+        //print_r($query->sql()); exit;
+        //$query=str_replace('GROUP BY `ClassesStudents`.`id`', '', $query);
         $query
-        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'])
+        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'
+            ])
         ->where([
             $this->aliasField('academic_period_id ='). $selectedAcademicPeriodId,
             $this->aliasField('Institutions.id ='). $institutionID,
