@@ -407,12 +407,12 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                             setTimeout(()=>{
                                 var identityTypeId = identityTypeData.$$state['value'];
                                 vm.addUserIdentityNew(userId, identityTypeId, identityNumber, mainNationalityId);
-                            },1);
+                            },6000);
 
                             setTimeout(()=>{
                                 var nationalityTypeId = nationalityTypeData.$$state['value'];
                                 vm.addUserNationality(userId, nationalityTypeId);
-                            },1);
+                            },2000);
                         }
 
                         
@@ -425,7 +425,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                                 deferred.reject(error);
                                 console.log(error);
                             });
-                        },1);
+                        },2000);
                         //POCOR-6460[END]
                     } else {
 
