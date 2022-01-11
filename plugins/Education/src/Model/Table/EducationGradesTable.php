@@ -228,17 +228,20 @@ class EducationGradesTable extends ControllerActionTable
         $gradeObj = $this->get($gradeId);
         $programmeId = $gradeObj->education_programme_id;
         if (!empty($gradeId)) {
+            $i = 0;
             $gradeOptionsData = $this
                 ->find()
                 ->select([
                     'id' => 'ToGrades.id',
                     'grade_name' => 'ToGrades.name',
-                    'programme' => 'ToProgrammes.name'
+                    'programme' => 'ToProgrammes.name',
+                    'is_visible' => 'ToGrades.visible'
                 ])
                 ->innerJoin(
                     ['EducationProgrammes' => 'education_programmes'],
                     [
                         'EducationProgrammes.id = ' . $this->aliasField('education_programme_id'),
+                        'EducationProgrammes.visible = ' . 1
                     ]
                 )
                 ->innerJoin(
@@ -310,14 +313,16 @@ class EducationGradesTable extends ControllerActionTable
                     ]
                 )
                 ->where([
-                    $this->aliasField('id') => $gradeId,
-                    'ToAcademicPeriods.id' => $academicPeriodId,
+                    //$this->aliasField('id') => $gradeId,
+                    'NextGrades.visible' => 1,
+                    'ToGrades.visible' => 1,//POCOR-6498
+                    'ToAcademicPeriods.id' => $academicPeriodId
                 ])
                 ->order([$this->aliasField('id')])
                 ->toArray();
             
             $gradeOptions = [];
-            foreach($gradeOptionsData as $data) {
+            foreach($gradeOptionsData as $key => $data) {
                 $gradeOptions[$data->id] = $data->programme . ' - ' .$data->grade_name;
             }   
                 
@@ -974,4 +979,41 @@ class EducationGradesTable extends ControllerActionTable
         return $gradeOptions;
     }
     /*POCOR-6257 ends*/
+
+    /*POCOR-6498 starts*/
+    public function getNextEducationGrades($gradeId, $getNextProgrammeGrades = false, $firstGradeOnly = false) {
+        if (!empty($gradeId)) {
+            $gradeObj = $this->get($gradeId);
+            $programmeId = $gradeObj->education_programme_id;
+            $order = $gradeObj->order;
+            $gradeOptions = $this->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'programme_grade_name'
+                ])
+                ->find('visible')
+                ->find('order')
+                ->where([
+                    $this->aliasField('education_programme_id') => $programmeId,
+                    $this->aliasField('order').' > ' => $order
+                ])
+                ->order([$this->aliasField('order')])
+                ->toArray();
+            
+            // Default is to get the list of grades with the next programme grades
+            if ($getNextProgrammeGrades) {
+                if ($firstGradeOnly) {
+                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
+                } else {
+                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+                }
+                $results = $gradeOptions + $nextProgrammesGradesOptions;
+            } else {
+                $results = $gradeOptions;
+            }
+            return $results;
+        } else {
+            return [];
+        }
+    }
+    /*POCOR-6498 ends*/
 }
