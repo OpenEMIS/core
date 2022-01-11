@@ -1865,7 +1865,18 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function onGetTotalStudents(Event $event, Entity $entity)
     {
-        return $entity->total_male_students + $entity->total_female_students;
+        /*POCOR-6463 starts*/
+        $array_data = [];
+        if ($entity) {
+            foreach ($entity->subject_students as $key => $data) {
+                if ($data->student_status_id == 1) {
+                    $array_data[$data->student_status_id] = ++$array_data[$data->student_status_id];
+                }
+            }
+        }
+        
+        return $array_data;
+        /*POCOR-6463 ends*/
     }
 
     //called by ControllerActionHelper incase extra search highlighted
