@@ -15,10 +15,7 @@ class POCOR6497 extends AbstractMigration
         // Backup locale_contents table
         $this->execute('CREATE TABLE `z_6497_locale_contents` LIKE `locale_contents`');
         $this->execute('INSERT INTO `z_6497_locale_contents` SELECT * FROM `locale_contents`');
-        $this->execute('CREATE TABLE `z_6497_locale_content_translations` LIKE `locale_content_translations`');
-        $this->execute('INSERT INTO `z_6497_locale_content_translations` SELECT * FROM `locale_content_translations`');
         // End
-
 
         $localeContent = [
 
@@ -142,7 +139,5 @@ class POCOR6497 extends AbstractMigration
     {
         $this->execute('DROP TABLE IF EXISTS `locale_contents`');
         $this->execute('RENAME TABLE `z_6497_locale_contents` TO `locale_contents`');
-        $this->execute('DROP TABLE IF EXISTS `locale_content_translations`');
-        $this->execute('RENAME TABLE `z_6497_locale_content_translations` TO `locale_content_translations`');
     }
 }
