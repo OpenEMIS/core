@@ -55,6 +55,19 @@ class ProfilesTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $toolbarButtons = $extra['toolbarButtons'];
+        if ($this->action == 'edit') {
+            if ($toolbarButtons->offsetExists('back')) {
+                $toolbarButtons['back']['url'][0] = 'view';
+                $toolbarButtons['back']['url'][1] = $this->paramsPass(0);
+                $toolbarButtons['back']['url']['action'] = 'Personal';
+                $toolbarButtons['back']['attr']['title'] = 'Back';
+            }
+        }
+    }
+
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
         $validator

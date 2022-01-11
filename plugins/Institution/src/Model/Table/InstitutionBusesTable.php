@@ -1,12 +1,17 @@
 <?php
 namespace Institution\Model\Table;
 
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use Transport\Model\Table\TransportStatusesTable as TransportStatuses;
 
-class InstitutionBusesTable extends AppTable
+class InstitutionBusesTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -28,6 +33,12 @@ class InstitutionBusesTable extends AppTable
 		]);
 
         $this->displayField('plate_number');
+        $this->addBehavior('Excel', [
+            'excludes' => ['comment', 'institution_id'],
+            'pages' => ['index'],
+            'autoFields' => false
+        ]); 
+        
     }
 
 	public function validationDefault(Validator $validator)
@@ -70,4 +81,127 @@ class InstitutionBusesTable extends AppTable
 
         return parent::findOptionList($query, $options);
     }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        // POCOR-6168 start
+        $session = $this->request->session();
+        $institutionId  = $session->read('Institution.Institutions.id');
+
+        // provider filter
+        $transportProviders = $this->InstitutionTransportProviders
+        ->find('optionList', [
+            'defaultOption' => false,
+            'institution_id' => $institutionId
+        ])
+        ->toArray();
+        $transportProviderOptions = [-1 => __('All Providers')] + $transportProviders;
+        $extra['transportProviders'] = $this->request->query('provider');  
+        // provider filter end
+          
+        // Transport Statuses
+        $transportStatuses = $this->TransportStatuses
+        ->find('optionList', ['defaultOption' => false])
+        ->toArray();
+
+        $transportStatusOptions = [-1 => __('All Statuses')] + $transportStatuses;
+        $extra['transportStatuses'] = $this->request->query('status');    
+        // Transport Statuses end
+
+        $extra['elements']['control'] = [
+            'name' => 'Institution.Transport/controls',
+            'data' => [
+                'transportProviderOptions'=> $transportProviderOptions,
+                'selectedtransportProvider'=> $extra['transportProviders'],
+                'transportStatusOptions'=> $transportStatusOptions,
+                'selectedtransportStatuses'=> $extra['transportStatuses']
+            ],
+            'order' => 3
+        ];
+        // provider control end
+        
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+
+        $this->field('comment',['visible' => false]);
+        
+    }
+
+    // POCOR-6168 For Filters
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $transportProviderId = $this->request->query('provider');
+        $transportStatusId = $this->request->query('status');
+        
+        if($transportProviderId > 0){
+            $query
+            ->where([
+                $this->aliasField('institution_transport_provider_id') => $transportProviderId
+            ]);
+        }
+        
+        if($transportStatusId > 0){
+            $query
+            ->where([
+                $this->aliasField('transport_status_id') => $transportStatusId 
+            ]);
+        }
+    }
+    // POCOR-6168 For Filters
+
+    // POCOR-6168 For excel Filters
+    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
+    {
+        $session = $this->request->session();
+        $institutionId  = $session->read('Institution.Institutions.id');
+        $transportProviderId = $this->request->query('provider');
+        $transportStatusId = $this->request->query('status');
+
+        $query
+        ->where([
+            $this->aliasField('institution_id') => $institutionId
+        ]);
+
+        if($transportProviderId > 0){
+            $query
+            ->where([
+                $this->aliasField('institution_transport_provider_id') => $transportProviderId
+            ]);
+        }
+        
+        if($transportStatusId > 0){
+            $query
+            ->where([
+                $this->aliasField('transport_status_id') => $transportStatusId 
+            ]);
+        }
+    }
+    // POCOR-6168 For excel Filters
+
+   public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('institution_transport_provider_id', ['type' => 'select', 'after' => 'comment']);
+        $this->field('bus_type_id', ['type' => 'select', 'after' => 'institution_transport_provider_id']);
+        $this->field('transport_status_id', ['type' => 'select', 'after' => 'bus_type_id']);
+        /*$modelAlias = 'InstitutionBuses';
+        $userType = '';
+        $this->controller->changePageHeader($this, $modelAlias, $userType);*/
+    } 
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+         
+         switch ($field) {
+            case 'institution_transport_provider_id':
+                return __('Provider');
+            case 'transport_status_id': 
+                return __('Status');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public  function onUpdateStatus(){
+    }
+
 }

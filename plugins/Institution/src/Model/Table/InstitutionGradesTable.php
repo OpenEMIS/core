@@ -1381,4 +1381,70 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         return $count;
         }
     }
+
+    public function getNextAvailableEducationGradesForTransfer($nextPeriodId){
+        if (!empty($nextPeriodId)) {
+            $EducationGradesSubjects = TableRegistry::get('institution_grades');
+            $gradeOptionsData =   $EducationGradesSubjects
+            ->find('all')
+             ->select([
+                    'id' => 'EducationGrades.id',
+                    'grade_name' => 'EducationGrades.name',
+                    'programme' => 'EducationProgrammes.name'
+                ])
+            ->leftJoin(
+                ['EducationGrades' => 'education_grades'],
+                [
+                    'EducationGrades.id = ' . $EducationGradesSubjects->aliasField('education_grade_id'),
+                ]
+            )
+            ->leftJoin(
+                ['EducationProgrammes' => 'education_programmes'],
+                [
+                    'EducationProgrammes.id = ' . 'EducationGrades.education_programme_id',
+                ]
+            )
+            ->leftJoin(
+                ['EducationCycles' => 'education_cycles'],
+                [
+                    'EducationCycles.id = EducationProgrammes.education_cycle_id',
+                ]
+            )
+            ->leftJoin(
+                ['EducationLevels' => 'education_levels'],
+                [
+                    'EducationLevels.id = EducationCycles.education_level_id',
+                ]
+            )
+            ->leftJoin(
+                ['EducationSystems' => 'education_systems'],
+                [
+                    'EducationSystems.id = EducationLevels.education_system_id',
+                ]
+            )
+
+            ->where([
+                // $EducationGradesSubjects->aliasField('institution_id') => 6,
+                'EducationSystems.academic_period_id' => $nextPeriodId,
+            ])
+            ->toArray();
+            $gradeOptions = [];
+            foreach($gradeOptionsData as $data) {
+                $gradeOptions[$data->id] = $data->programme . ' - ' .$data->grade_name;
+            }
+            if ($getNextProgrammeGrades) {
+                if ($firstGradeOnly) {
+                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
+                } else {
+                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+                }
+                $results = $gradeOptions + $nextProgrammesGradesOptions;
+            } else {
+                $results = $gradeOptions;
+            }
+            return $results;
+        } else {
+            return [];
+        }
+    }
 }
