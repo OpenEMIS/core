@@ -75,9 +75,12 @@ class ExtracurricularsTable extends AppTable {
 		$this->setupTabElements();
 	}
 
+	/*POCOR-6474 - commenting function because this function was enabling users to edit and view correct record*/
 	public function beforeFind( Event $event, Query $query )
 	{   
 		//if ($this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
+		$session = $this->request->session();
+		$studentId = $session->read('Student.Students.id');
 		if ($this->alias() == 'Extracurriculars') {
 			if ($this->controller->name == 'Profiles') {
 				if ($this->Session->read('Auth.User.is_guardian') == 1) {
@@ -94,7 +97,15 @@ class ExtracurricularsTable extends AppTable {
 			}
 			/*POCOR-6267 ends*/
 			$conditions[$this->aliasField('security_user_id')] = $studentId;
-			$query->where($conditions, [], true);           
+			/*POCOR-6474 starts*/	
+			if ($this->action == 'view' || $this->action == 'edit') {
+				$id = $this->ControllerAction->paramsDecode($this->request->params['pass'][1])['id'];
+    			$conditions[$this->aliasField('id')] = $id;
+				$query->where($conditions, [], true);
+			} else {
+			    $query->where($conditions, [], true);
+			}
+			/*POCOR-6474 ends*/	
 		}
 	}
 }

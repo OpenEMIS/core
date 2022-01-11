@@ -577,7 +577,7 @@ class StudentProfilesTable extends ControllerActionTable
                     
                 } else { 
                     $generateButton['attr']['data-html'] = true;
-                    $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('StaffProfiles.date_closed'));
+                    $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('StudentProfiles.date_closed'));
                     $generateButton['url'] = 'javascript:void(0)';
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
                 }

@@ -1,3 +1,160 @@
+### [3.73.0] - 2022-01-07
+- Implemented: Add Export button function - Institutions > Visits (include all tabs)
+- Bug Fixed: Institution>Students: Enrolled(Repeated) students are not able to be found in classes and there are duplicate students
+- Bug Fixed: Institution>Performance>Report Cards: Subject Teachers Names are not reflected on the Report Card for some users
+- Bug Fixed: Development of Institution Profile placeholder: Contains Non-Teaching Staff placeholder in Extra Details tab
+- Bug Fixed: Institution>Overview: Institution Overview Page should contain custom fields
+- Bug Fixed: Institution>Infrastructure>Utilities: Report should include all the utilities(Electricity,Internet and Telephone)
+- Bug Fixed: Institutions>Performance>Outcomes: Homeroom teacher is unable to see UKG Kindness even though he is the homeroom teacher
+- Bug Fixed: Institutions>Academic>Classes: Changes to export button where student information are removed
+- Bug Fixed: Institutions>Academic>Subject: Changes to export button where teacher information is removed
+- Bug Fixed: Institutions>Staff>Overview>Export: Extra custom fields are showing even though one of them is removed
+
+### [3.72.5] - 2021-12-30
+- Bug Fixed: Institutions: Move "Shifts" out from "Academic" and place it under "General"
+- Bug Fixed: Institution>Performance>Outcome: Students that are transferred are showing in Performance>Outcome>Students
+- Bug Fixed: Institutions>Performance>Assessments: Subject teachers can view their classes twice from Performance > Assessment
+- Bug Fixed: Administration > Security > Roles > Permissions > Administration: No permission for Administration > Meals
+- Bug Fixed: Institution>Appointment>Duties: Report should include institution name
+- Bug Fixed: Institutions>Performance>Assessments: Able to import higher than max marks
+- Bug Fixed: Institutions>Students: Enrolled (Repeater) status is not displayed in the Export Report
+
+### [3.72.4] - 2021-12-29
+- Bug Fixed: Institutions > Performance > Assessments : Assessment Marks Display
+
+### [3.72.3] - 2021-12-22
+- Implemented: Develop Attendance > Student > No Scheduled Class function
+- Implemented: Development of Institution Profile placeholder
+- Implemented: Create a batch / background process to generate reports
+- Bug Fixed: Institutions > Committee : Permissions are enabled but user is unable to view in menu
+- Bug Fixed: Personal > Students > Academic > Extracurriculars: Extracurriculars tab is missing
+
+### [3.72.2] - 2021-12-21
+- Bug Fixed: Institution>Performance>Report Cards: The Report Card Reflects Subjects that the Student is not Assigned to
+- Bug Fixed: Institutions>Students>Student1>Academic>Extracurriculars: View and edit showing the oldest record instead of the current one
+- Bug Fixed: Institutions > Attendances > Students : Student is no longer enrolled in school however he is showing up in this page
+
+### [3.72.1] - 2021-12-16
+- Implemented: Add Export button function - Institutions > Risks
+- Implemented: Add Export button function - Institutions > Examinations > Results
+- Implemented: Add "Area Level", "From Date" and "To Date" fields and "All Institutions" option to Reports > Workflows > Institution > Student Transfers > Sending / Receiving
+- Implemented: Develop institution statistics feature
+- Bug Fixed: Administration>System Setup>System Configuration>Webhooks:Add Role Names column from security_roles table to Student/Staff Create and Update webhooks
+- Bug Fixed: Institutions > Student > Academic > Absences Tab : Absence record is not showing
+- Bug Fixed: Institutions>Academic>Subjects-Unable to add same subject with a different name
+- Bug Fixed: Institutions>Staff: Able to repeatedly add same position of same shift
+- Bug Fixed: Institutions>Attendance>Students-attendance for withdrawn students is allowed to be added
+- Bug Fixed: Institution>Performance>Assessments: Total Marks is showing the total marks for both class(Student1 is moved from Class 1A to Class 1B)
+- Bug Fixed: Institution>Performance>Assessments: Export(button) report is showing total marks and marks for previous class(Student 1 is moved from Class 1A to Class 1B)
+
+### [3.72.0] - 2021-12-10
+- Implemented: Institutions > Staff > Career > Positions tab: To add Shift column on the list page
+- Bug Fixed: Institutions>Transport>Buses: 404 Error
+- Bug Fixed: Administration > Security > Roles > Permissions > Institutions: Meal component not available in Institution
+- Bug Fixed: Institutions>Students>Student1>Academic>Extracurriculars:Unable to save record when added
+
+### [3.71.4] - 2021-12-08
+- Bug Fixed: Institutions>Dashboard: Modifying or adding absence, it is not reflected on the dashboard
+- Bug Fixed: Personal>Account: Account permission should allow user to edit username
+- Bug Fixed: Institutions>Academic>Subjects-User remains on the same page after adding new subjects.
+- Bug Fixed: Special Needs : Set Default Academic Period filter to All Academic Periods
+- Bug Fixed: Institutions > Students > Export : Students should not be appearing more then once in report
+
+### [3.71.3] - 2021-12-03
+- Bug Fixed: Institutions>Staff>Staff1>Career>Staff Leave: Unable to create leave even when attendance is deleted
+- Bug Fixed: Institutions>Staff>Staff1> Career >Subjects: Discrepancies in the number of students displayed in the Academic > Subjects and Staff > Career > Subjects pages
+- Bug Fixed: Administrations > Profiles > Students : Incorrect message upon hover
+- Bug Fixed: Institutions > Attendances > Students : System does not fully populate the list of subjects
+- Bug Fixed: Institutions > Performance > Report Cards : Unable to generate report cards
+- Bug Fixed: Institutions > Students > Transfer : Next grade should only show one grade and not all grades
+- Bug Fixed: Institutions > Students > Undo : System does not display list of students that are not assigned to any class
+- Bug Fixed: Institution > Infrastructure > Export : System returns 404 error
+- Bug Fixed: Reports> Student: Enrollment summary support is not showing correct record of students
+- Bug Fixed: Institutions>Staff>Staff1>Finance: Unable to add payslips
+- Bug Fixed: Institutions>Report Cards>Comments:Total Mark and the Overall Average are not showing
+
+### [3.71.2] - 2021-11-26
+- Implemented: Add Export button function - Institutions > Infrastructures > Needs
+- Bug Fixed: Institutions>Performance>Assessments: Unable to import assessment item result
+- Bug Fixed: Institutions>Staff>Staff1> Career >Subjects: Start date is changed when students are added or removed from subjects
+- Bug Fixed: Administration>Meals: Active Institutions should be displayed and Institution should be filtered by the area education
+- Bug Fixed: Institutions>Students>Transfer: Education grade is repeated and next education grade is showing all grades
+- Bug Fixed: Institution>Overview: Institution Overview Page should contain export information for Map, Contacts and Shifts
+- Bug Fixed: Institution>Staff: Report does not include custom fields and contact
+- Bug Fixed: Institution>Infrastructure>Wash: Report should include all Wash modules and include institution name, code and field directorate name
+- Bug Fixed: Add Export button function - Institutions > Students > Student1-Remove External Reference
+- Bug Fixed: Institutions>Infrastructure>Overview: Execute Permission not working for Export
+- Bug Fixed: Administrations > Training > Results : Duplicate result types
+- Bug Fixed: Institutions>Performance>Assessments: Only System admin can see the classes
+
+### [3.71.1] - 2021-11-18
+- Implemented: Add Export button function - Institutions > Students > Student1 (include grades classes assessment item results and absences)
+- Implemented: Implement placeholder in assessment report template for area administrative name
+- Bug Fixed: Administration>Security>Roles: Permission for student transition is missing under Directory Tab
+- Bug Fixed: Institutions>Academic>Subjects:Subjects with duplicated names can be added
+- Bug Fixed: Administrations > Training > Results : System should display the Result types
+- Bug Fixed: Institutions > Staff > Training > Results: 404 Error is given when trying to access Institutions -> Staff -> Training -> Results.
+- Bug Fixed: Staff>Home Page: User Completeness is not reflecting correctly
+- Bug Fixed: Institutions>Students: Students that are repeated should show repeated not promoted
+- Bug Fixed: Report > Institutions > Students > Export : Custom fields (dropdown/checkboxes) results are not showing in export file
+- Bug Fixed: Institutions > Performance > Assessments > Results : To provide queries for subject teachers and principal when accessing assessment > results page
+
+### [3.71.0] - 2021-11-13
+- Implemented: Improvement of the "Undo" operations linked to the basic student workflow procedures
+- Implemented: Add Export button function - Institutions > General > Calendar
+- Implemented: Update Export button function - Institutions > Staff (include custom fields phone number identity types)
+- Bug Fixed: Institutions>Infrastructure>Overview: Add the available custom fields to the report
+- Bug Fixed: Administration > Meals: When adding a programme, add fields for the beneficiary Field Directorates and the beneficiary institutions.
+- Bug Fixed: Institution > Meals > Students: Ask the user to choose if the meal is received or not
+- Bug Fixed: Institutions > Students > Export : Custom fields (dropdown/checkboxes) results are not showing in export file
+- Bug Fixed: Report>Institution>Infrastructure: Custom fields not showing properly
+- Bug Fixed: Institutions/ Directory > User 1 > Identities : Clicking Add Identities will return a 404 error
+- Bug Fixed: Institution/Directory > User 1 > Nationalities: Getting 404 Error
+
+### [3.70.5] - 2021-11-05
+- Implemented: Add Export button function - Institutions > Students > Student1 > Special Needs (include all tabs)
+- Implemented: Add Export button function - Institutions > Staff > Staff1 > Training (include all tabs)
+- Implemented: Add Export button function - Institutions > Infrastructures > WASH > Sanitation
+- Implemented: Add Export button function - Institutions > Infrastructures > WASH > Waste
+- Implemented: Add Export button function - Institutions > Infrastructures > WASH > Sewage
+- Implemented: Add Export button function - Institutions > Cases
+- Bug Fixed: Institutions>Academic>Subjects/Classes: Exported records are showing incorrectly when student is transferred from School A to School B and back to School A
+- Bug Fixed: Institutions>Students>Import: 404 error when trying to download the Student Import template.
+- Bug Fixed: Institutions>Students>Transfer: Wrong academic period when promoted and not visible in Bulk Transfer
+- Bug Fixed: Institutions > Staff > Pending Change in Assignment : Query is taking too long to process - To optimize query
+- Bug Fixed: Administration > System Setup > System Configuration > Coordinates: Changes limits of latitude and longitude
+- Bug Fixed: Directory>Staff>Careers:Career is missing for Staffs with Guardian role
+- Bug Fixed: Reports>Maps: Inactive Institutions should not be show
+
+### [3.70.4] - 2021-10-30
+- Implemented: Update Export button function - Institutions > Academic > Subjects (include grade class subject teacher room and number of students by gender)
+- Implemented: Add Export button function - Institutions > Staff > Staff1 > Special Needs (include all tabs)
+- Bug Fixed: Administration > Profiles > Institutions: Placeholders are not working across all environments
+- Bug Fixed: Institutions>General>Calendar: 404 Error
+- Bug Fixed: Institutions>Students>Student1>Promotion/Repeat:Grades that are both above and lower appears for Promotion/Repeat
+- Bug Fixed: Institutions > Performance > Assessments : Allow user to generate report by Student status
+- Bug Fixed: Institutions > Students > Undo : Education Grades should be filtered by the Academic Period selected above
+
+### [3.70.3] - 2021-10-22
+- Bug Fixed: Institution > Student > Add: There is no validation if a new student added has the same Identity Number as an existing student
+- Bug Fixed: Institutions > Students > Export : Issues with Student export file
+
+### [3.70.2] - 2021-10-15
+- Implemented: Improvement of School Shift functions
+- Implemented: Update Export button function - Institutions > Students (include custom fields phone number identity types and name of the guardian)
+- Implemented: Add Export button function - Institutions > Students > Student1 > Health (include all tabs)
+- Implemented: Add Export button function - Institutions > Transport > Buses
+- Implemented: Copy data from one academic period to another
+- Bug Fixed: Institutions > Performance > Outcomes: Outcome template is empty even when template is created in the Administration > Performance > Outcomes > Templates and is linked correctly in the Institutions > Performance > Outcomes
+- Bug Fixed: Report>Institutions>Subject: Grade column is missing and Remove Subjects that are not linked to Classes
+- Bug Fixed: Reports > Institution > Student Body Masses: Academic Period filter is not functioning
+- Bug Fixed: Report>Institution>Subjects: Subjects should filter according to the Institutions that are selected under Institution
+- Bug Fixed: Institution>Academic>Classes: Staffs are assigned to subjects even though class is already deleted
+- Bug Fixed: Personal>General: Edit Permission working only for Account tab and add permission not working except for Contact
+- Bug Fixed: Students > Academic > Programmes > Transition: Student can transition to a Education Grade that does not exist in current institution
+- Bug Fixed: Institutions>Advanced Search>Shift Type:Shift type is empty even though there is data in the database
+- Bug Fixed: Institutions>Students: System shows more than one row for students who has more than one identity number
+
 ### [3.70.1] - 2021-10-08
 - Implemented: OpenEMIS Core: Webhook Education Structure System - Create
 - Implemented: OpenEMIS Core: Webhook Academic Period - Delete
