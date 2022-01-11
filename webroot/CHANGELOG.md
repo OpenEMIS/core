@@ -1,3 +1,15 @@
+### [3.73.0] - 2022-01-07
+- Implemented: Add Export button function - Institutions > Visits (include all tabs)
+- Bug Fixed: Institution>Students: Enrolled(Repeated) students are not able to be found in classes and there are duplicate students
+- Bug Fixed: Institution>Performance>Report Cards: Subject Teachers Names are not reflected on the Report Card for some users
+- Bug Fixed: Development of Institution Profile placeholder: Contains Non-Teaching Staff placeholder in Extra Details tab
+- Bug Fixed: Institution>Overview: Institution Overview Page should contain custom fields
+- Bug Fixed: Institution>Infrastructure>Utilities: Report should include all the utilities(Electricity,Internet and Telephone)
+- Bug Fixed: Institutions>Performance>Outcomes: Homeroom teacher is unable to see UKG Kindness even though he is the homeroom teacher
+- Bug Fixed: Institutions>Academic>Classes: Changes to export button where student information are removed
+- Bug Fixed: Institutions>Academic>Subject: Changes to export button where teacher information is removed
+- Bug Fixed: Institutions>Staff>Overview>Export: Extra custom fields are showing even though one of them is removed
+
 ### [3.72.5] - 2021-12-30
 - Bug Fixed: Institutions: Move "Shifts" out from "Academic" and place it under "General"
 - Bug Fixed: Institution>Performance>Outcome: Students that are transferred are showing in Performance>Outcome>Students
