@@ -93,7 +93,6 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $examinationId = ($this->request->query['examination_id']) ? $this->request->query['examination_id'] : 0 ;
         $session = $this->request->session();
         $institutionId  = $session->read('Institution.Institutions.id'); 
-
         $query
         ->select([
             'registration_number' => 'InstitutionExaminationStudents.registration_number', 
@@ -107,6 +106,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             'education_grade_id' =>$examinations->aliasField('education_grade_id'),
             'student_name' => $User->find()->func()->concat([
                 'first_name' => 'literal',
+                " ",
+                'middle_name' => 'literal',
                 " ",
                 'last_name' => 'literal'
             ])
