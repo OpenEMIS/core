@@ -923,14 +923,18 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->aliasField('marks IS NOT NULL')
                                     ])
                                     ->all();
-                                    
+                                    $studentSubArray = [];//POCOR-6501 
                                     if (!$assessmentItemResultsEntities->isEmpty()) {
                                     foreach ($assessmentItemResultsEntities as $entity) {
                                         foreach ($reportCardSubjectsEntity as $reportCardSubjectEntity) {
                                             if($entity['education_subject_id'] === $reportCardSubjectEntity['education_subject_id']) {
                                                 $total_mark += $entity->marks * $entity->weightage;
                                                 // Plus one to the subject so that we can keep track how many subject does this student is taking within the report card template.
-                                                $subjectTaken++;
+                                                //POCOR-6501 starts
+                                                if((!in_array($entity['education_subject_id'], $studentSubArray))){
+                                                    $studentSubArray [] = $entity['education_subject_id'];
+                                                    $subjectTaken++;
+                                                }//POCOR-6501 ends
                                             }
                                         }
 
@@ -1061,14 +1065,18 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->aliasField('marks IS NOT NULL')
                                     ])
                                     ->all();
-                               
+                                $studentSubArray = [];//POCOR-6501 
                                 if (!$assessmentItemResultsEntities->isEmpty()) {
                                     foreach ($assessmentItemResultsEntities as $entity) {
                                         foreach ($reportCardSubjectsEntity as $reportCardSubjectEntity) {
                                             if($entity['education_subject_id'] === $reportCardSubjectEntity['education_subject_id']) {
                                                 $total_mark += $entity->marks * $entity->weightage;
                                                 // Plus one to the subject so that we can keep track how many subject does this student is taking within the report card template.
-                                                $subjectTaken++;
+                                                //POCOR-6501 starts
+                                                if((!in_array($entity['education_subject_id'], $studentSubArray))){
+                                                    $studentSubArray [] = $entity['education_subject_id'];
+                                                    $subjectTaken++;
+                                                }//POCOR-6501 ends
                                             }
                                         }
 
