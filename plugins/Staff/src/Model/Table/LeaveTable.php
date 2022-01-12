@@ -56,7 +56,9 @@ class LeaveTable extends ControllerActionTable
             'auto_contain' => false,
             'autoFields' => false,
         ]);
-        $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffLeave']);
+        /** START: POCOR-6505 => Keep enabled the line */
+            $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffLeave']);  // POCOR-6505
+        /** END: POCOR-6505 => Keep enabled the line */
         $this->fullDayOptions = $this->getSelectOptions('general.yesno');
     }
 
