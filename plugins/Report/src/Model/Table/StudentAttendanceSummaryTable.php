@@ -117,7 +117,6 @@ class StudentAttendanceSummaryTable extends AppTable
                 'subject' => $this->aliasField('subject_name'),
                 'period' => $this->aliasField('period_name'),
                 'date' => $this->aliasField('attendance_date'),
-                'mark_status' => $this->aliasField('mark_status'),
                 'total_female_students' => $this->aliasField('female_count'),
                 'total_male_students' => $this->aliasField('male_count'),
                 'total_students' => $this->aliasField('total_count'),
@@ -218,12 +217,6 @@ class StudentAttendanceSummaryTable extends AppTable
             'field' => 'date',
             'type' => 'string',
             'label' => __('Date')
-        ];
-        $extraField[] = [
-           'key' => '',
-            'field' => 'mark_status',
-            'type' => 'string',
-            'label' => __('Mark Status')
         ];
         $extraField[] = [
             'key' => '',
