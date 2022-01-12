@@ -92,6 +92,15 @@ class ReportCardCommentsTable extends ControllerActionTable
         }
         //End
 
+        /*POCOR-6508 starts - checking class permission*/
+        $isSuperAdmin = $this->Auth->user()['super_admin'];
+        $staffId = $this->Auth->user()['id'];
+        $allclassesPermission = TableRegistry::get('Institution.InstitutionClasses')->getRolePermissionAccessForAllClasses($staffId, $institutionId);
+        $myClassesPermission = TableRegistry::get('Institution.InstitutionClasses')->getRolePermissionAccessForMyClasses($staffId, $institutionId);
+        if (!$isSuperAdmin && $myClassesPermission && !$allclassesPermission) {
+            $where[$this->aliasField('staff_id')] = $staffId;
+        }
+        /*POCOR-6508 ends*/
         $query
             ->select([
                 'name' => $this->aliasField('name'),
