@@ -308,6 +308,13 @@ class GuardiansTable extends ControllerActionTable
         $newButtons = [];
         if (array_key_exists('view', $buttons)) {
             $newButtons['view'] = $buttons['view'];
+            $newButtons['view']['url'] = [
+                'plugin' => $this->controller->plugin,
+                'controller' => $this->controller->name,
+                'action' => $this->editButtonAction(),
+                'view',
+                $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'StudentGuardians.id' => $entity->id])
+            ];
         }
 
         if (array_key_exists('edit', $buttons)) {
