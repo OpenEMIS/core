@@ -240,8 +240,10 @@ class InstitutionSubjectStudentsTable extends AppTable
                 [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()],
                 [
                     $InstitutionClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $InstitutionClassStudents->aliasField('institution_class_id =') . $this->aliasField('institution_class_id'),
-                    $InstitutionClassStudents->aliasField('student_status_id') => $enrolledStatus,
+                    $InstitutionClassStudents->aliasField('institution_class_id =') . $this->aliasField('institution_class_id')
+                    //POCOR-6503[START]
+                    //$InstitutionClassStudents->aliasField('student_status_id') => $enrolledStatus,
+                    //POCOR-6503[END]
                 ]
             )//POCOR-6468 ends
             ->where([
