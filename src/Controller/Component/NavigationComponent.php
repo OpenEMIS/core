@@ -819,7 +819,7 @@ class NavigationComponent extends Component
             ],
 
             'Institutions.Positions' => [
-                'title' => 'Positions ',
+                'title' => 'Positions',
                 'parent' => 'Institutions.Appointment',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Institutions.Positions', 'Institutions.ImportInstitutionPositions'],
