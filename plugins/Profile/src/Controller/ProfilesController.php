@@ -900,4 +900,6 @@ class ProfilesController extends AppController
         $this->set('institutionDefaultId', $institutionId);
         $this->set('ngController', 'StudentTimetableCtrl as $ctrl');
     }
+
+    public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffProfiles']); }
 }
