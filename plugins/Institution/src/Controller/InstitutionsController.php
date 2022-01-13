@@ -4152,4 +4152,8 @@ class InstitutionsController extends AppController
     public function InstitutionBuses(){
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBuses']);
     }
+
+    public function Distributions(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDistributions']);
+    }
 }
