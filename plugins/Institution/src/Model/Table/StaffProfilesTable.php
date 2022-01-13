@@ -215,6 +215,7 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //echo "<pre>";print_r();die();
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
@@ -226,20 +227,25 @@ class StaffProfilesTable extends ControllerActionTable
 		//End 
 
         // Report Cards filter
-        $reportCardOptions = [];
-		$reportCardOptions = $this->StaffTemplates->find('list')
-			->where([
-				$this->StaffTemplates->aliasField('academic_period_id') => $selectedAcademicPeriod
-			])
-			->toArray();
-       
+        if ($this->request->params['plugin'] != 'Profile') {
+            $reportCardOptions = [];
+            $reportCardOptions = $this->StaffTemplates->find('list')
+                ->where([
+                    $this->StaffTemplates->aliasField('academic_period_id') => $selectedAcademicPeriod
+                ])
+                ->toArray();
+           
 
-        $reportCardOptions = ['-1' => '-- '.__('Select Staff Template').' --'] + $reportCardOptions;
-        $selectedReportCard = !is_null($this->request->query('staff_profile_template_id')) ? $this->request->query('staff_profile_template_id') : -1;
-        $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
-		//End	
-		$where[$this->aliasField('institution_id')] = $institutionId;
-        $query
+            $reportCardOptions = ['-1' => '-- '.__('Select Staff Template').' --'] + $reportCardOptions;
+            $selectedReportCard = !is_null($this->request->query('staff_profile_template_id')) ? $this->request->query('staff_profile_template_id') : -1;
+            $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
+        }
+        //End	
+        if ($this->request->params['plugin'] != 'Profile') {  
+		    $where[$this->aliasField('institution_id')] = $institutionId;
+        }
+        if ($this->request->params['plugin'] != 'Profile') {
+            $query
             ->select([
                 'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
                 'report_card_status' => $this->StaffReportCards->aliasField('status'),
@@ -248,29 +254,29 @@ class StaffProfilesTable extends ControllerActionTable
                 'email_status_id' => $this->StaffReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->StaffReportCardEmailProcesses->aliasField('error_message')
             ])
-			->innerJoin([$AcademicPeriod->alias() => $AcademicPeriod->table()],
+            ->innerJoin([$AcademicPeriod->alias() => $AcademicPeriod->table()],
                 [
-					'OR' => [[
-					array(
-						$this->aliasField('end_date').' IS NOT NULL',
-						$this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('start_date'),
-						$this->aliasField('end_date >= ') . $AcademicPeriod->aliasField('start_date'),
-					),
-					array(
-						$this->aliasField('end_date').' IS NOT NULL',
-						$this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('end_date'),
-						$this->aliasField('end_date >= ') . $AcademicPeriod->aliasField('end_date'),
-					),
-					array(
-						$this->aliasField('end_date').' IS NOT NULL',
-						$this->aliasField('start_date >= ') . $AcademicPeriod->aliasField('start_date'),
-						$this->aliasField('end_date <= ') . $AcademicPeriod->aliasField('end_date'),
-					)],
-					array(
-						$this->aliasField('end_date').' IS NULL',
-						$this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('end_date'),
-					)
-					]
+                    'OR' => [[
+                    array(
+                        $this->aliasField('end_date').' IS NOT NULL',
+                        $this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('start_date'),
+                        $this->aliasField('end_date >= ') . $AcademicPeriod->aliasField('start_date'),
+                    ),
+                    array(
+                        $this->aliasField('end_date').' IS NOT NULL',
+                        $this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('end_date'),
+                        $this->aliasField('end_date >= ') . $AcademicPeriod->aliasField('end_date'),
+                    ),
+                    array(
+                        $this->aliasField('end_date').' IS NOT NULL',
+                        $this->aliasField('start_date >= ') . $AcademicPeriod->aliasField('start_date'),
+                        $this->aliasField('end_date <= ') . $AcademicPeriod->aliasField('end_date'),
+                    )],
+                    array(
+                        $this->aliasField('end_date').' IS NULL',
+                        $this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('end_date'),
+                    )
+                    ]
                 ]
             )
             ->leftJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
@@ -292,6 +298,61 @@ class StaffProfilesTable extends ControllerActionTable
             ->autoFields(true)
             ->where($where)
             ->all();
+        } else {
+            $query
+            ->select([
+                'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
+                'report_card_status' => $this->StaffReportCards->aliasField('status'),
+                'report_card_started_on' => $this->StaffReportCards->aliasField('started_on'),
+                'report_card_completed_on' => $this->StaffReportCards->aliasField('completed_on'),
+                'email_status_id' => $this->StaffReportCardEmailProcesses->aliasField('status'),
+                'email_error_message' => $this->StaffReportCardEmailProcesses->aliasField('error_message')
+            ])
+            ->innerJoin([$AcademicPeriod->alias() => $AcademicPeriod->table()],
+                [
+                    'OR' => [[
+                    array(
+                        $this->aliasField('end_date').' IS NOT NULL',
+                        $this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('start_date'),
+                        $this->aliasField('end_date >= ') . $AcademicPeriod->aliasField('start_date'),
+                    ),
+                    array(
+                        $this->aliasField('end_date').' IS NOT NULL',
+                        $this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('end_date'),
+                        $this->aliasField('end_date >= ') . $AcademicPeriod->aliasField('end_date'),
+                    ),
+                    array(
+                        $this->aliasField('end_date').' IS NOT NULL',
+                        $this->aliasField('start_date >= ') . $AcademicPeriod->aliasField('start_date'),
+                        $this->aliasField('end_date <= ') . $AcademicPeriod->aliasField('end_date'),
+                    )],
+                    array(
+                        $this->aliasField('end_date').' IS NULL',
+                        $this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('end_date'),
+                    )
+                    ]
+                ]
+            )
+            ->leftJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
+                [
+                    $this->StaffReportCards->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+                    //$this->StaffReportCards->aliasField('institution_id = ') . $institutionId,
+                    $this->StaffReportCards->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
+                    //$this->StaffReportCards->aliasField('staff_profile_template_id = ') . $selectedReportCard
+                ]
+            )
+            ->leftJoin([$this->StaffReportCardEmailProcesses->alias() => $this->StaffReportCardEmailProcesses->table()],
+                [
+                    $this->StaffReportCardEmailProcesses->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+                    //$this->StaffReportCardEmailProcesses->aliasField('institution_id = ') . $institutionId,
+                    $this->StaffReportCardEmailProcesses->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
+                    //$this->StaffReportCardEmailProcesses->aliasField('staff_profile_template_id = ') . $selectedReportCard
+                ]
+            )
+            ->autoFields(true)
+            ->where($where)
+            ->all();
+        }
         if (is_null($this->request->query('sort'))) {
             $query
                 ->contain('Users')
