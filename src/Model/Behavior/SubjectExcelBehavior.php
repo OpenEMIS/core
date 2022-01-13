@@ -302,14 +302,17 @@ class SubjectExcelBehavior extends Behavior
                 //POCOR-5852 starts
                 ->where($conditions)
                 //POCOR-5852 ends
-				->group([
-					'SubjectStudents.id'
-				])
+				
 				->order([
 					'AcademicPeriods.order',
 					'Institutions.code',
 					'InstitutionSubjects.id'
 				]);
+                if($table->alias!='Subjects'){
+                    $query->group([
+                    'SubjectStudents.id'
+                 ]);
+                }
           
                 $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
 					return $results->map(function ($row) {
