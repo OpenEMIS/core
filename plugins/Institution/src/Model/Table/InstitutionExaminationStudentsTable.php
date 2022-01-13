@@ -109,6 +109,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 " ",
                 'middle_name' => 'literal',
                 " ",
+                 'third_name' => 'literal',
+                " ",
                 'last_name' => 'literal'
             ])
         ])
