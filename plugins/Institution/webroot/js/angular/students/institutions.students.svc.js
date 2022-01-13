@@ -406,13 +406,19 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                             var nationalityTypeData = vm.getNationalitiesExternalSave(nationalityTypeName);
                             setTimeout(()=>{
                                 var identityTypeId = identityTypeData.$$state['value'];
-                                vm.addUserIdentityNew(userId, identityTypeId, identityNumber, mainNationalityId);
-                            },6000);
+                                vm.addUserIdentityNew(userId, identityTypeId, identityNumber, mainNationalityId)
+                                .then(function(promiseArr) {
+                                    }, function(error) {
+                                });
+                            },100);
 
                             setTimeout(()=>{
                                 var nationalityTypeId = nationalityTypeData.$$state['value'];
-                                vm.addUserNationality(userId, nationalityTypeId);
-                            },2000);
+                                vm.addUserNationality(userId, nationalityTypeId)
+                                .then(function(promiseArr) {
+                                    }, function(error) {
+                                });
+                            },100);
                         }
 
                         
@@ -425,7 +431,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                                 deferred.reject(error);
                                 console.log(error);
                             });
-                        },2000);
+                        },100);
                         //POCOR-6460[END]
                     } else {
 
