@@ -26,6 +26,7 @@ use Institution\Model\Behavior\LatLongBehavior as LatLongOptions;
 class InstitutionsTable extends ControllerActionTable
 {
     use OptionsTrait;
+    private $_dynamicFieldName = 'custom_field_data';
     private $dashboardQuery = null;
     private $studentsTabsData = [
         0 => "Overview",
@@ -146,6 +147,7 @@ class InstitutionsTable extends ControllerActionTable
             'through' => 'Security.SecurityGroupInstitutions',
             'dependent' => true
         ]);
+       if(Router::getRequest()->params['pass'][0]!='excel'){
 
         $this->addBehavior('CustomField.Record', [
             'fieldKey' => 'institution_custom_field_id',
@@ -160,6 +162,7 @@ class InstitutionsTable extends ControllerActionTable
             'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
         ]);
+      }
         $this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionActivities', 'key' => 'institution_id', 'session' => 'Institution.Institutions.id']);
 
@@ -387,7 +390,7 @@ class InstitutionsTable extends ControllerActionTable
         $instituteType = $sheetData['institute_tabs_type'];
         $cloneFields = $fields->getArrayCopy();
         $newFields = [];
-    
+       // echo "<pre>"; print_r($cloneFields); exit;
         foreach ($cloneFields as $key => $value) {          
             if($instituteType=='Map'){
                   if ($value['field'] == 'longitude') {
@@ -415,6 +418,7 @@ class InstitutionsTable extends ControllerActionTable
                         'label' => ''
                     ];
                 }
+
             }
         if($instituteType=='Shifts'){
             if($value['field'] == 'shift_type'){
@@ -544,6 +548,27 @@ class InstitutionsTable extends ControllerActionTable
                 ];
           }
          }
+         if($instituteType=='Overview'){
+         $InfrastructureCustomFields = TableRegistry::get('institution_custom_fields');
+            $customFieldData = $InfrastructureCustomFields->find()->select([
+                'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+                'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+            ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
+            if(!empty($customFieldData)) {
+                    foreach($customFieldData as $data) {
+                        $custom_field_id = $data->custom_field_id;
+                        $custom_field = $data->custom_field;
+                            if ($value['field'] == 'institution_gender_id') {
+                            $newFields[] = [
+                                'key' => '',
+                                'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
+                                'type' => 'string',
+                                'label' => __($custom_field)
+                            ];
+                          }
+                    }
+                }
+        }
         $fields->exchangeArray($newFields);
      }
     }
@@ -568,7 +593,7 @@ class InstitutionsTable extends ControllerActionTable
         $institutionId = $this->Session->read('Institution.Institutions.id');
         if($instituteType!='Contact People' && $instituteType!='Shifts'){
         $query
-        ->select(['area_code' => 'Areas.code','shift_name' => 'ShiftOptions.name','Owner' => 'Institutions.name','Occupier' => 'Institutions.name','shift_start_time' => 'InstitutionShifts.start_time','shift_end_time' => 'InstitutionShifts.end_time','custom_field_name' =>'InstitutionCustomFields.name','custom_field_value' =>'InstitutionCustomFieldValues.text_value'])
+        ->select(['area_code' => 'Areas.code','shift_name' => 'ShiftOptions.name','Owner' => 'Institutions.name','Occupier' => 'Institutions.name','shift_start_time' => 'InstitutionShifts.start_time','shift_end_time' => 'InstitutionShifts.end_time'])
         ->LeftJoin([$this->Areas->alias() => $this->Areas->table()],[
             $this->Areas->aliasField('id').' = ' . 'Institutions.area_id'
         ])
@@ -598,6 +623,7 @@ class InstitutionsTable extends ControllerActionTable
         ->group([
             $this->aliasField('id'),
         ]);
+       
       }
         if($instituteType=='Contact People'){
 
@@ -611,7 +637,6 @@ class InstitutionsTable extends ControllerActionTable
                 'faxs'=>$institutionContactPersons->aliasField('fax'),
                 'contact_email'=>$institutionContactPersons->aliasField('email'),
                 'preferred'=>$institutionContactPersons->aliasField('preferred'),
-
             ])
                ->leftJoin([$institutionContactPersons->alias() => $institutionContactPersons->table()],[
                 $this->aliasField('id = ').$institutionContactPersons->aliasField('institution_id')
@@ -637,7 +662,74 @@ class InstitutionsTable extends ControllerActionTable
             ])
                ->where(['InstitutionShifts.institution_id' => $institutionId,'InstitutionShifts.academic_period_id' => $academicPeriod]); 
                     
-      }
+      } $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+
+                return $results->map(function ($row) {
+                    $Guardians = TableRegistry::get('institution_custom_field_values');
+                    $institutionCustomFieldOptions = TableRegistry::get('institution_custom_field_options');
+                    $institutionCustomFields = TableRegistry::get('institution_custom_fields');
+    
+                    $guardianData = $Guardians->find()
+                    ->select([
+                        'id'                             => $Guardians->aliasField('id'),
+                        'institution_id'                     => $Guardians->aliasField('institution_id'),
+                        'institution_custom_field_id'        => $Guardians->aliasField('institution_custom_field_id'),
+                        'text_value'                     => $Guardians->aliasField('text_value'),
+                        'number_value'                   => $Guardians->aliasField('number_value'),
+                        'decimal_value'                  => $Guardians->aliasField('decimal_value'),
+                        'textarea_value'                 => $Guardians->aliasField('textarea_value'),
+                        'date_value'                     => $Guardians->aliasField('date_value'),
+                        'time_value'                     => $Guardians->aliasField('time_value'),
+                        'checkbox_value_text'            => 'institutionCustomFieldOptions.name',
+                        'question_name'                  => 'institutionCustomField.name',
+                        'field_type'                     => 'institutionCustomField.field_type',
+                        'field_description'              => 'institutionCustomField.description',
+                        'question_field_type'            => 'institutionCustomField.field_type',
+                    ])->leftJoin(
+                        ['institutionCustomField' => 'institution_custom_fields'],
+                        [
+                            'institutionCustomField.id = '.$Guardians->aliasField('institution_custom_field_id')
+                        ]
+                    )->leftJoin(
+                        ['institutionCustomFieldOptions' => 'institution_custom_field_options'],
+                        [
+                            'institutionCustomFieldOptions.id = '.$Guardians->aliasField('number_value')
+                        ]
+                    )
+                    ->where([
+                        $Guardians->aliasField('institution_id') => $row->id,
+                    ])->toArray(); 
+
+                    $existingCheckboxValue = '';
+                    foreach ($guardianData as $guadionRow) {
+                        $fieldType = $guadionRow->field_type;
+                        if ($fieldType == 'TEXT') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->text_value;
+                        } else if ($fieldType == 'CHECKBOX') {
+                            $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = trim($existingCheckboxValue, ',');
+                        } else if ($fieldType == 'NUMBER') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->number_value;
+                        } else if ($fieldType == 'DECIMAL') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->decimal_value;
+                        } else if ($fieldType == 'TEXTAREA') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->textarea_value;
+                        } else if ($fieldType == 'DROPDOWN') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->checkbox_value_text;
+                        } else if ($fieldType == 'DATE') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
+                        } else if ($fieldType == 'TIME') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
+                        } else if ($fieldType == 'COORDINATES') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->text_value;
+                        } else if ($fieldType == 'NOTE') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->field_description;
+                        }
+                    }
+                    return $row;
+                });
+            });
+
     }
 
     public function onGetName(Event $event, Entity $entity)
