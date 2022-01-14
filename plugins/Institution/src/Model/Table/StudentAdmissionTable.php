@@ -17,6 +17,7 @@ use Cake\ORM\RulesChecker;
 use App\Model\Table\ControllerActionTable;
 use Workflow\Model\Behavior\WorkflowBehavior;
 use Cake\Log\Log;
+use Cake\Utility\Text;
 
 class StudentAdmissionTable extends ControllerActionTable
 {
@@ -353,20 +354,135 @@ class StudentAdmissionTable extends ControllerActionTable
     }
 
     public function studentsAfterSave(Event $event, $student)
-    {
+    { 
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $statusList = $StudentStatuses->findCodeList();
         $Enrolled = $statusList['CURRENT'];
         $Promoted = $statusList['PROMOTED'];
         $Graduated = $statusList['GRADUATED'];
         $Withdraw = $statusList['WITHDRAWN'];
+        //get student role
+        $securityRolesTbl = TableRegistry::get('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+                                ->where([
+                                    $securityRolesTbl->aliasField('code') => 'STUDENT',
+                                ])
+                                ->first();
+        //get student institution
+        $institutionTbl = TableRegistry::get('institutions');
+        $institutions = $institutionTbl->find()
+                                ->where([
+                                    $institutionTbl->aliasField('id') => $student->institution_id
+                                ])
+                                ->first();
 
         if ($student->isNew()) { // add
             // close other pending admission applications (in same education system) if the student is successfully enrolled in one school
             if ($student->student_status_id == $Enrolled) {
                 $educationSystemId = $this->EducationGrades->getEducationSystemId($student->education_grade_id);
                 $educationGradesToUpdate = $this->EducationGrades->getEducationGradesBySystem($educationSystemId);
-
+                //POCOR-6500 starts
+                if(!empty($institutions) && $institutions->security_group_id !=''){
+                    $securityGroupInstitutionsTbl = TableRegistry::get('security_group_institutions');
+                    $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
+                                            ->where([
+                                                $securityGroupInstitutionsTbl->aliasField('security_group_id') => $institutions->security_group_id,
+                                                $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
+                                            ])
+                                            ->first();
+                    //save security group for institution
+                    if(empty($securityGroupInstitutions)){
+                        $security_group_ins_data = [
+                                    'security_group_id' => $institutions->security_group_id,
+                                    'institution_id' => $institutions->id,
+                                    'created_user_id' => 1,
+                                    'created' => new Time('NOW')
+                            ];
+                        $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
+                        $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
+                    }
+                    //check user already exist or not
+                    $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+                    $checkSecurityGroupUser = $securityGroupUsersTbl->find()
+                                            ->where([
+                                                $securityGroupUsersTbl->aliasField('security_user_id') => $student->student_id,
+                                                $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id
+                                            ])
+                                            ->first();
+                                   
+                    //check user_id with role is available or not in `security_group_users` group                       
+                    if(empty($checkSecurityGroupUser)){
+                        $securityGroupUsers = $securityGroupUsersTbl->find()
+                                                ->where([
+                                                    $securityGroupUsersTbl->aliasField('security_group_id') => $institutions->security_group_id,
+                                                    $securityGroupUsersTbl->aliasField('security_user_id') => $student->student_id,
+                                                    $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id,
+                                                ])
+                                                ->first();
+                        if(empty($securityGroupUsers)){
+                            //save user in security_group_users table first time 
+                            $id = Text::uuid();
+                            $security_group_data = [
+                                        'id' => $id,
+                                        'security_group_id' => $institutions->security_group_id,
+                                        'security_user_id' => $student->student_id,
+                                        'security_role_id' => $securityRoles->id,
+                                        'created_user_id' => 1,
+                                        'created' => new Time('NOW')
+                                ];
+                            $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
+                            $securityGroupUsersTbl->save($securityGroupUsersEntity);
+                        }                        
+                    }else{
+                        //update user's security_group_id in security_group_users table 
+                        $InstitutionStudentsTbl = TableRegistry::get('institution_students');
+                        $InstitutionStudentTransfersTbl = TableRegistry::get('institution_student_transfers');
+                        $InstitutionStudents = $InstitutionStudentsTbl
+                                                ->find()
+                                                ->select([
+                                                    $InstitutionStudentsTbl->aliasField('student_id'),
+                                                    $InstitutionStudentTransfersTbl->aliasField('institution_id'),
+                                                    $InstitutionStudentTransfersTbl->aliasField('previous_institution_id')
+                                                ])
+                                                ->leftJoin([$InstitutionStudentTransfersTbl->alias() => $InstitutionStudentTransfersTbl->table()],
+                                                    [
+                                                        $InstitutionStudentTransfersTbl->aliasField('student_id').'='.$InstitutionStudentsTbl->aliasField('student_id'),
+                                                        $InstitutionStudentTransfersTbl->aliasField('institution_id')=>$institutions->id
+                                                    ]
+                                                )
+                                                ->where([
+                                                    $InstitutionStudentsTbl->aliasField('student_id') => $checkSecurityGroupUser->security_user_id,
+                                                    $InstitutionStudentsTbl->aliasField('institution_id') => $institutions->id,
+                                                    $InstitutionStudentsTbl->aliasField('student_status_id') => 1//for enrolled status
+                                                ])
+                                                ->first();
+                        
+                        if(!empty($InstitutionStudents)){
+                            if(!empty($InstitutionStudents->institution_student_transfers['previous_institution_id'])){
+                                $PreviousInstitutions = $institutionTbl->find()
+                                        ->where([
+                                            $institutionTbl->aliasField('id') => $InstitutionStudents->institution_student_transfers['previous_institution_id']
+                                        ])
+                                        ->first();
+                                       
+                                if($PreviousInstitutions->security_group_id == $checkSecurityGroupUser->security_group_id){
+                                    $securityGroupUsersTbl->updateAll(
+                                        [
+                                            'security_group_id' => $institutions->security_group_id,
+                                            'created' => new Time('NOW')
+                                        ],
+                                        [
+                                            'security_group_id' => $PreviousInstitutions->security_group_id,
+                                            'security_user_id' => $checkSecurityGroupUser->security_user_id,
+                                            'security_role_id' => $checkSecurityGroupUser->security_role_id
+                                        ]
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+                //POCOR-6500 ends
                 // get the first step in 'REJECTED' workflow statuses
                 $workflowEntity = $this->getWorkflow($this->registryAlias());
                 $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
@@ -415,7 +531,9 @@ class StudentAdmissionTable extends ControllerActionTable
                     }
                 }
             }
+            
         } else { // edit
+
             // to cater logic if during undo promoted / graduate (without immediate enrolled record), there is still pending admission / transfer
             if ($student->dirty('student_status_id')) {
                 $oldStatus = $student->getOriginal('student_status_id');
@@ -423,10 +541,58 @@ class StudentAdmissionTable extends ControllerActionTable
                 $UndoPromotion = $oldStatus == $Promoted && $newStatus == $Enrolled;
                 $UndoGraduation = $oldStatus == $Graduated && $newStatus == $Enrolled;
                 $UndoWithdraw = $oldStatus == $Withdraw && $newStatus == $Enrolled;
-
+                
                 if ($UndoPromotion || $UndoGraduation || $UndoWithdraw) {
                     $this->removePendingAdmission($student->student_id, $student->institution_id);
                 }
+
+                $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
+                $WorkflowStepsTable = TableRegistry::get('workflow_steps');
+                $WorkflowsTable = TableRegistry::get('workflows');
+                $WithdrawStudents = $StudentWithdrawTable
+                                    ->find()
+                                    ->leftJoin([$WorkflowStepsTable->alias() => $WorkflowStepsTable->table()],
+                                        [ $WorkflowStepsTable->aliasField('workflow_id').'='.$StudentWithdrawTable->aliasField('status_id')]
+                                    )
+                                    ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+                                        [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id'),
+                                            $WorkflowsTable->aliasField('code') =>'STUDENT-WITHDRAW-001']
+                                    )
+                                    ->where([
+                                        $StudentWithdrawTable->aliasField('student_id') => $student->student_id,
+                                        $StudentWithdrawTable->aliasField('institution_id') => $student->institution_id
+                                        
+                                    ])
+                                    ->first();
+                if(!empty($WithdrawStudents)){
+                    //delete user from security_group_users table
+                    if(!empty($institutions) && $institutions->security_group_id !=''){
+                        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+                        $securityGroupUsers = $securityGroupUsersTbl->find()
+                                                ->where([
+                                                    $securityGroupUsersTbl->aliasField('security_group_id') => $institutions->security_group_id,
+                                                    $securityGroupUsersTbl->aliasField('security_user_id') => $student->student_id,
+                                                    $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id,
+                                                ])
+                                                ->first();
+
+                        if(!empty($securityGroupUsers)){
+                            try{
+                                $SecurityGroupUsersTable1 = TableRegistry::get('Security.SecurityGroupUsers');
+                               // $SecurityGroupUsersTable1->deleteAll(['id' => 'fb23ffbd-3a3e-4c9d-adab-1f8ae7a9c25b' ]);
+                                $SecurityGroupUsersTable1->delete($securityGroupUsers);
+                                echo "<pre>"; print_r($SecurityGroupUsersTable); die;
+                            }catch(Exception $e){
+                                echo "<pre>"; print_r($e); die;
+                            }
+                            
+                            //echo "<pre>"; print_r($securityGroupUsers); die;
+                        }
+                        //echo "<pre>"; print_r($securityGroupUsers); die;
+                    }
+                }
+
+
             }
         }
     }
