@@ -87,7 +87,7 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 	}
 
 	/*POCOR-6498 starts*/
-	public function getNextProgrammeGradeList($id) {
+	public function getNextProgrammeGradeList($id, $periodId) {
 		$EducationGrades = TableRegistry::get('Education.EducationGrades');
 
 		$nextProgrammeList = $this->getNextProgrammeList($id);
@@ -103,8 +103,10 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 					->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
 					->find('visible')
 					->find('order')
+					->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
 					->where([
-						$EducationGrades->aliasField('education_programme_id IN ') => $ids
+						$EducationGrades->aliasField('education_programme_id IN ') => $ids,
+						'EducationSystems.academic_period_id' => $periodId
 					])
 					->order([$EducationGrades->aliasField('order')])
 					->toArray();
