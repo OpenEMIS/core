@@ -58,7 +58,11 @@ class StaffTrainingResultsTable extends ControllerActionTable
                               ->find()
                               ->where([$training_sessions->aliasField('id') => $entity->training_session_id])
                               ->toArray();
-		return $attendanceType[0]['start_date']->format('F d,Y');
+
+		if ($attendanceType) {
+			return $attendanceType[0]['start_date']->format('F d,Y');
+        }
+        return '';
 	}
 	
 
@@ -69,7 +73,11 @@ class StaffTrainingResultsTable extends ControllerActionTable
                               ->find()
                               ->where([$training_sessions->aliasField('id') => $entity->training_session_id])
                               ->toArray();
-		return $attendanceType[0]['end_date']->format('F d,Y');
+                              
+		if ($attendanceType) {
+			return $attendanceType[0]['end_date']->format('F d,Y');
+        }
+        return '';
 	}
 
 	public function onGetCreditHours(Event $event, Entity $entity)

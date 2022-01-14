@@ -140,7 +140,7 @@ class GuardiansTable extends ControllerActionTable
     public function editAfterAction(Event $event, Entity $entity)
     {
         $this->field('guardian_id', [
-            'type' => 'readonly',
+            //'type' => 'readonly',
             'order' => 10,
             'attr' => ['value' => $entity->user->name_with_id]
         ]);

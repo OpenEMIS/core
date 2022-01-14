@@ -82,11 +82,14 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
     {
         // Academic Periods Filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : '-1';
 
-        $query->where([
-            $this->aliasField('academic_period_id') => $selectedAcademicPeriod
-        ]);
+        $academicPeriodOptions = ['-1' => 'All Academic Period'] + $academicPeriodOptions;
+        if ($selectedAcademicPeriod != '-1') {
+            $query->where([
+                $this->aliasField('academic_period_id') => $selectedAcademicPeriod
+            ]);
+        }
 
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Referrals/controls', 'data' => [], 'options' => [], 'order' => 1];
@@ -98,7 +101,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         if (is_null($this->request->query('academic_period_id'))) {
             $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
             $url = $this->ControllerAction->url($this->alias());
-            $url['academic_period_id'] = $currentAcademicPeriod;
+            $url['academic_period_id'] = '-1';
             $this->controller->redirect($url);
         }
 
@@ -140,6 +143,9 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                 }
             }
 
+            if ($selectedAcademicPeriodId == '-1') {
+                $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
+            }
             $academicPeriodName = $this->AcademicPeriods
                 ->get($selectedAcademicPeriodId)
                 ->name;
