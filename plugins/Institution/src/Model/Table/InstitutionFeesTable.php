@@ -41,6 +41,8 @@ class InstitutionFeesTable extends ControllerActionTable
         $this->hasMany('StudentFees', ['className' => 'Institution.StudentFeesAbstract']);
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('RestrictAssociatedDelete', ['message' => 'InstitutionFees.fee_payments_exists']);
+
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function validationDefault(Validator $validator)
@@ -289,7 +291,7 @@ class InstitutionFeesTable extends ControllerActionTable
             $this->InstitutionFeeTypes->alias()
         ];
     }
-    
+
     /******************************************************************************************************************
     **
     ** field specific methods
@@ -370,5 +372,76 @@ class InstitutionFeesTable extends ControllerActionTable
             }
             $data[$this->alias()]['total'] = $total;
         }
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $academicPeriod = $this->request->query('academic_period_id');
+
+        if (empty($academicPeriod)) {
+            $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+            if (empty($request->query['academic_period_id'])) {
+                $request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+            }
+
+            $selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
+            $Fees = $this;
+
+            $this->advancedSelectOptions($academicPeriodOptions, $selectedOption, [
+                'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noProgrammeGradeFees')),
+                'callable' => function ($id) use ($Fees, $institutionId) {
+                    return $Fees->find()->where(['institution_id'=>$institutionId, 'academic_period_id'=>$id])->count();
+                }
+            ]);
+
+            $academicPeriod = $selectedOption;
+        }
+
+		$educationProgrammes = TableRegistry::get('EducationProgrammes');
+		$query
+		->select([
+            'total_fee' => 'InstitutionFees.total',
+            'education_grade' => 'EducationGrades.name',
+            'education_programme' => 'EducationProgrammes.name'
+        ])
+		->LeftJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()],[
+			$this->EducationGrades->aliasField('id = '). 'InstitutionFees.education_grade_id'
+		])
+
+		->LeftJoin([$educationProgrammes->alias() => $educationProgrammes->table()],[
+			$educationProgrammes->aliasField('id = '). 'EducationGrades.education_programme_id '
+		])
+        ->where([
+            'InstitutionFees.academic_period_id' =>  $academicPeriod,
+            'InstitutionFees.institution_id' =>  $institutionId
+        ]);
+    }
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+
+        $extraField[] = [
+            'key' => 'EducationProgrammes.name',
+            'field' => 'education_programme',
+            'type' => 'string',
+            'label' => __('Education Programme')
+        ];
+
+        $extraField[] = [
+            'key' => 'EducationGrades.name',
+            'field' => 'education_grade',
+            'type' => 'string',
+            'label' => __('Education Grade')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionFees.total',
+            'field' => 'total_fee',
+            'type' => 'integer',
+            'label' => __('Total Fee')
+        ];
+
+        $fields->exchangeArray($extraField);
     }
 }
