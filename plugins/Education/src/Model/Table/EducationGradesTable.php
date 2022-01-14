@@ -981,10 +981,23 @@ class EducationGradesTable extends ControllerActionTable
     /*POCOR-6257 ends*/
 
     /*POCOR-6498 starts*/
-    public function getNextEducationGrades($gradeId, $getNextProgrammeGrades = false, $firstGradeOnly = false) {
+    public function getNextEducationGrades($gradeId, $periodId, $getNextProgrammeGrades = false, $firstGradeOnly = false) {
         if (!empty($gradeId)) {
             $gradeObj = $this->get($gradeId);
             $programmeId = $gradeObj->education_programme_id;
+            $programmeObj = $this->EducationProgrammes->get($programmeId);
+            $programmeCode = $programmeObj->code;
+            $programmeName = $programmeObj->name;
+            $nextProgrammeId = $this->EducationProgrammes->find()
+                                ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                                ->where([
+                                    'EducationSystems.academic_period_id' => $periodId,
+                                    $this->EducationProgrammes->aliasField('code') => $programmeCode,
+                                    'OR' => [
+                                        $this->EducationProgrammes->aliasField('name') => $programmeName
+                                    ]
+                                ])
+                                ->first()->id;
             $order = $gradeObj->order;
             $gradeOptions = $this->find('list', [
                     'keyField' => 'id',
@@ -1002,7 +1015,7 @@ class EducationGradesTable extends ControllerActionTable
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
                 if ($firstGradeOnly) {
-                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeGradeList($programmeId);
+                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeGradeList($nextProgrammeId, $periodId);
                 } else {
                     $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
                 }
