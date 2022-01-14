@@ -428,6 +428,11 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
     }
 
+    public function InstitutionTransportProviders()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTransportProviders']);
+    }
+
     // public function AssessmentsArchive()
     // {
     //     if (!empty($this->request->param('institutionId'))) {
@@ -453,7 +458,7 @@ class InstitutionsController extends AppController
     //     $this->set('ngController', 'InstitutionAssessmentsArchiveCtrl as $ctrl');
     // }
 
-    public function Distributions()
+    public function Distribution()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDistributions']);
     }
@@ -4146,5 +4151,9 @@ class InstitutionsController extends AppController
 
     public function InstitutionBuses(){
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBuses']);
+    }
+
+    public function Distributions(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDistributions']);
     }
 }
