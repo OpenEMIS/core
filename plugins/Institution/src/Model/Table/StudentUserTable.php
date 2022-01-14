@@ -17,6 +17,16 @@ use Cake\Database\Exception as DatabaseException;
 
 class StudentUserTable extends ControllerActionTable
 {
+    private $studentsTabsData = [
+        0 => "General",
+        1 => "Academic",
+        2 => "Assessment",
+        3 => "Absence"
+    ];
+    // POCOR-6130 custome fields code
+    private $_dynamicFieldName = 'custom_field_data';
+    // POCOR-6130 custome fields code
+
     public function initialize(array $config)
     {
         $this->table('security_users');
@@ -28,6 +38,7 @@ class StudentUserTable extends ControllerActionTable
 
         // Behaviors
         $this->addBehavior('User.User');
+        // this code is commented in POCOR-6130 because custome fields were coming in every tab so now custome fields function has been changed to custome
         if (!in_array('Custom Fields', (array) Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('CustomField.Record', [
                 'model' => 'Student.Students',
@@ -449,6 +460,40 @@ class StudentUserTable extends ControllerActionTable
         $this->Session->write('Student.Students.name', $entity->name);
         $this->setupTabElements($entity);
         $this->setupToolbarButtons($entity, $extra);
+
+        $btnAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        
+        $session = $this->request->session();
+        $institutionId = $this->request->pass[1];
+        $queryString = $this->request->query('queryString');
+        
+        $extraButtons = [
+            'export' => [
+                'Institution' => ['Institutions', 'StudentUserExport', $institutionId],
+                'action' => 'StudentUserExport',
+                'icon' => '<i class="fa kd-export"></i>',
+                'title' => __('Export')
+            ]
+        ];
+        foreach ($extraButtons as $key => $attr) {
+            if ($this->AccessControl->check($attr['permission'])) {
+                $button = [
+                    'type' => 'button',
+                    'attr' => $btnAttr,
+                    'url' => [0 => 'excel', 1 => $institutionId,'queryString' => $queryString] 
+                ];
+                $button['url']['action'] = $attr['action'];
+                $button['attr']['title'] = $attr['title'];
+                $button['label'] = $attr['icon'];
+
+                $extra['toolbarButtons'][$key] = $button;
+            }
+        }
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -711,23 +756,535 @@ class StudentUserTable extends ControllerActionTable
         return $permission;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    // POCOR-6130 adding tabs in sheet
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-        $identity = $IdentityType->getDefaultEntity();
+        unset($sheets[0]);
+        $studentsTabsData = $this->studentsTabsData;
+        $InstitutionStudents = TableRegistry::get('User.InstitutionStudents');
+        $institutionStudentId = $settings['id'];
 
-        foreach ($fields as $key => $field) {
-            //get the value from the table, but change the label to become default identity type.
-            if ($field['field'] == 'identity_number') {
-                $fields[$key] = [
-                    'key' => 'StudentUser.identity_number',
-                    'field' => 'identity_number',
-                    'type' => 'string',
-                    'label' => __($identity->name)
-                ];
-                break;
-            }
+        foreach($studentsTabsData as $key => $val) {  
+            $tabsName = $val.'s';
+            $sheets[] = [
+                'sheetData' => [
+                    'student_tabs_type' => $val
+                ],
+                'name' => $tabsName,
+                'table' => $this,
+                'query' => $this
+                    ->find()
+                    /* ->leftJoin([$InstitutionStudents->alias() => $InstitutionStudents->table()],[
+                        $this->aliasField('id = ').$InstitutionStudents->aliasField('student_id')
+                    ])
+                    ->where([
+                        $InstitutionStudents->aliasField('student_id = ').$institutionStudentId,
+                    ]) */,
+                'orientation' => 'landscape'
+            ];
         }
+    }
+    // POCOR-6130 
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {  
+        $sheetData = $settings['sheet']['sheetData'];
+        $StudentType = $sheetData['student_tabs_type'];
+
+        $newFields = [];
+        if($StudentType == 'General'){
+            $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+            $identity = $IdentityType->getDefaultEntity();
+
+            $extraField[] = [
+                "key" => "StudentUser.username",
+                "field" => "username",
+                "type" => "string",
+                "label" => "Username"
+            ];
+    
+            $extraField[] = [
+                "key" => "StudentUser.openemis_no",
+                "field" => "openemis_no",
+                "type" => "string",
+                "label" => "OpenEMIS ID"
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.first_name',
+                'field' => 'first_name',
+                'type' => 'string',
+                'label' => 'First Name'
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.middle_name',
+                'field' => 'middle_name',
+                'type' => 'string',
+                'label' => 'Middle Name'
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.third_name',
+                'field' => 'third_name',
+                'type' => 'string',
+                'label' => 'Third Name'
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.last_name',
+                'field' => 'last_name',
+                'type' => 'string',
+                'label' => 'Last Name'
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.preferred_name',
+                'field' => 'preferred_name',
+                'type' => 'string',
+                'label' => __('Preferred Name')
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.email',
+                'field' => 'email',
+                'type' => 'string',
+                'label' => __('Email')
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.address',
+                'field' => 'address',
+                'type' => 'string',
+                'label' => __('Address')
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.postal_code',
+                'field' => 'postal_code',
+                'type' => 'string',
+                'label' => __('Postal Code')
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.address_area_id',
+                'field' => 'address_area_id',
+                'type' => 'string',
+                'label' => __('Address Area')
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.birthplace_area_id',
+                'field' => 'birthplace_area_id',
+                'type' => 'string',
+                'label' => __('Birthplace Area')
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.gender_id',
+                'field' => 'gender_id',
+                'type' => 'integer',
+                'label' => 'Gender'
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.date_of_birth',
+                'field' => 'date_of_birth',
+                'type' => 'date',
+                'label' => 'Date Of Birth'
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.nationality_id',
+                'field' => 'nationality_id',
+                'type' => 'integer',
+                'label' => __('Nationality')
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.identity_number',
+                'field' => 'identity_number',
+                'type' => 'string',
+                'label' => __($identity->name)
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.external_reference',
+                'field' => 'external_reference',
+                'type' => 'string',
+                'label' => __('External Reference')
+            ];
+            $extraField[] = [
+                'key' => 'StudentUser.status',
+                'field' => 'status',
+                'type' => 'integer',
+                'label' => __('Status')
+            ];
+    
+            $extraField[] = [
+                'key' => 'StudentUser.last_login',
+                'field' => 'last_login',
+                'type' => 'datetime',
+                'label' => __('Last Login')
+            ];
+            $extraField[] = [
+                'key' => 'StudentUser.preferred_language',
+                'field' => 'preferred_language',
+                'type' => 'string',
+                'label' => __('Preferred Language')
+            ];
+
+            // POCOR-6129 custome fields code
+            $InfrastructureCustomFields = TableRegistry::get('student_custom_fields');
+            $customFieldData = $InfrastructureCustomFields->find()->select([
+                'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+                'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+            ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
+
+            if(!empty($customFieldData)) {
+                foreach($customFieldData as $data) {
+                    $custom_field_id = $data->custom_field_id;
+                    $custom_field = $data->custom_field;
+                    $extraField[] = [
+                        'key' => '',
+                        'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
+                        'type' => 'string',
+                        'label' => __($custom_field)
+                    ];
+                }
+            }
+            // POCOR-6129 custome fields code
+
+            $fields->exchangeArray($extraField);
+        }
+        
+        if($StudentType == 'Academic'){
+            $newFields[] = [
+                'key' => '',
+                'field' => 'academic_period_name',
+                'type' => 'string',
+                'alias' => 'academic_period_name',
+                'label' => __('Academic Period')
+            ];
+
+            $newFields[] = [
+                'key' => '',
+                'field' => 'institution_name',
+                'type' => 'string',
+                'label' => __('Institution')
+            ];
+            $newFields[] = [
+                'key' => '',
+                'field' => 'education_programme',
+                'type' => 'string',
+                'label' => __('Education Programme')
+            ];
+            $newFields[] = [
+                'key' => '',
+                'field' => 'education_grade_name',
+                'type' => 'string',
+                'label' => __('Education Grade')
+            ];
+            $newFields[] = [
+                'key' => '',
+                'field' => 'start_date_name',
+                'type' => 'date',
+                'label' => __('Start Date')
+            ];
+
+            $newFields[] = [
+                'key' => '',
+                'field' => 'end_date_name',
+                'type' => 'date',
+                'label' => __('End Date')
+            ];
+
+            $newFields[] = [
+                'key' => '',
+                'field' => 'current_class_name',
+                'type' => 'string',
+                'label' => __('Current Class')
+            ];
+
+            $newFields[] = [
+                'key' => '',
+                'field' => 'student_status_name',
+                'type' => 'string',
+                'label' => __('Student Status')
+            ];
+
+            $fields->exchangeArray($newFields);
+        }
+
+        if($StudentType == 'Assessment'){
+            $newFields[] = [
+                'key' => '',
+                'field' => 'asses_academic_period',
+                'type' => 'string',
+                'label' => __('Academic Period')
+            ];
+
+            $newFields[] = [
+                'key' => '',
+                'field' => 'asses_institution_name',
+                'type' => 'string',
+                'label' => __('Institution')
+            ];
+            $newFields[] = [
+                'key' => '',
+                'field' => 'assesment_period',
+                'type' => 'string',
+                'label' => __('Assessment Periods')
+            ];
+            $newFields[] = [
+                'key' => '',
+                'field' => 'education_subject',
+                'type' => 'string',
+                'label' => __('Subject')
+            ];
+            $newFields[] = [
+                'key' => '',
+                'field' => 'marks',
+                'type' => 'string',
+                'label' => __('Mark')
+            ];
+
+            $fields->exchangeArray($newFields);
+        }
+
+        if($StudentType == 'Absence'){
+            $newFields[] = [
+                'key' => '',
+                'field' => 'absense_date',
+                'type' => 'date',
+                'label' => __('Date')
+            ];
+
+            $newFields[] = [
+                'key' => '',
+                'field' => 'absense',
+                'type' => 'string',
+                'label' => __('Absense')
+            ];
+
+            $fields->exchangeArray($newFields);
+        }
+
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+        $InstitutionStudents = TableRegistry::get('User.InstitutionStudents');
+        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $studentAbsenceDays = TableRegistry::get('InstitutionStudentAbsenceDays');
+        $Subjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $institutionStudentId = $settings['id'];
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $periodId = $this->request->query['academic_period_id'];
+        $currDateTime = date("Y-m-d");
+
+        // for Academic Tab
+        $AcademicPeriods = TableRegistry::get('academic_periods');
+        $institutions = TableRegistry::get('institutions');
+        $EducationGrades = TableRegistry::get('education_grades');
+        $EducationProgrammes = TableRegistry::get('education_programmes');
+        $StudentStatuses = TableRegistry::get('student_statuses');
+        // for Academic Tab
+
+        // for abesense
+        $institutionStudentAbsenses = TableRegistry::get('institution_student_absences');
+        $absensesTypes = TableRegistry::get('absence_types');
+        // for abesense
+
+        // for assessments
+        $Assessments = TableRegistry::get('Assessments');
+        $AssessmentPeriods = TableRegistry::get('assessment_periods');
+        $AssessmentItemResults = TableRegistry::get('assessment_item_results');
+        $EducationSubjects = TableRegistry::get('education_subjects');
+        // for assessments
+
+        $sheetData = $settings['sheet']['sheetData'];
+        $StudentType = $sheetData['student_tabs_type'];
+
+        // for Generals Tab
+        if($StudentType == 'General'){
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {          
+                    // POCOR-6130 custome fields code
+                    $Guardians = TableRegistry::get('student_custom_field_values');
+                    $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
+                    $studentCustomFields = TableRegistry::get('student_custom_fields');
+    
+                    $guardianData = $Guardians->find()
+                    ->select([
+                        'id'                             => $Guardians->aliasField('id'),
+                        'student_id'                     => $Guardians->aliasField('student_id'),
+                        'student_custom_field_id'        => $Guardians->aliasField('student_custom_field_id'),
+                        'text_value'                     => $Guardians->aliasField('text_value'),
+                        'number_value'                   => $Guardians->aliasField('number_value'),
+                        'decimal_value'                  => $Guardians->aliasField('decimal_value'),
+                        'textarea_value'                 => $Guardians->aliasField('textarea_value'),
+                        'date_value'                     => $Guardians->aliasField('date_value'),
+                        'time_value'                     => $Guardians->aliasField('time_value'),
+                        'checkbox_value_text'            => 'studentCustomFieldOptions.name',
+                        'question_name'                  => 'studentCustomField.name',
+                        'field_type'                     => 'studentCustomField.field_type',
+                        'field_description'              => 'studentCustomField.description',
+                        'question_field_type'            => 'studentCustomField.field_type',
+                    ])->leftJoin(
+                        ['studentCustomField' => 'student_custom_fields'],
+                        [
+                            'studentCustomField.id = '.$Guardians->aliasField('student_custom_field_id')
+                        ]
+                    )->leftJoin(
+                        ['studentCustomFieldOptions' => 'student_custom_field_options'],
+                        [
+                            'studentCustomFieldOptions.id = '.$Guardians->aliasField('number_value')
+                        ]
+                    )
+                    ->where([
+                        $Guardians->aliasField('student_id') => $row['id'],
+                    ])->toArray();   
+    
+                    $existingCheckboxValue = '';
+                    foreach ($guardianData as $guadionRow) {
+                        $fieldType = $guadionRow->field_type;
+                        if ($fieldType == 'TEXT') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->text_value;
+                        } else if ($fieldType == 'CHECKBOX') {
+                            $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = trim($existingCheckboxValue, ',');
+                        } else if ($fieldType == 'NUMBER') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->number_value;
+                        } else if ($fieldType == 'DECIMAL') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->decimal_value;
+                        } else if ($fieldType == 'TEXTAREA') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->textarea_value;
+                        } else if ($fieldType == 'DROPDOWN') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->checkbox_value_text;
+                        } else if ($fieldType == 'DATE') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
+                        } else if ($fieldType == 'TIME') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
+                        } else if ($fieldType == 'COORDINATES') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->text_value;
+                        } else if ($fieldType == 'NOTE') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->field_description;
+                        }
+                    }
+                    // POCOR-6130 custome fields code
+    
+                    return $row;
+                });
+            });
+        }
+        // for Generals Tab
+        // for Academics Tab
+        if($StudentType == 'Academic'){
+            $query
+            ->select([
+                'id' => $InstitutionStudents->aliasField('id'),
+                'academic_period_name' => $AcademicPeriods->aliasField('name'),
+                'institution_name' => $institutions->find()->func()->concat([
+                    $institutions->aliasField('code') => 'literal',
+                    " - ",
+                    $institutions->aliasField('name') => 'literal'
+                ]),
+                'education_programme' => $EducationProgrammes->aliasField('name'),
+                'education_grade_name' => $EducationGrades->aliasField('name'),
+                'start_date_name' => $InstitutionStudents->aliasField('start_date'),
+                'end_date_name' => $InstitutionStudents->aliasField('end_date'),
+                'student_status_name' => $StudentStatuses->aliasField('name'),
+                'current_class_name' => $Classes->aliasField('name'),
+            ])
+            ->leftJoin([$InstitutionStudents->alias() => $InstitutionStudents->table()],[
+                $this->aliasField('id = ').$InstitutionStudents->aliasField('student_id')
+            ])
+            ->innerJoin([$AcademicPeriods->alias() => $AcademicPeriods->table()],[
+                $InstitutionStudents->aliasField('academic_period_id = ') .$AcademicPeriods->aliasField('id')
+            ])
+            ->innerJoin([$institutions->alias() => $institutions->table()],[
+                $InstitutionStudents->aliasField('institution_id = ') .$institutions->aliasField('id')
+            ])
+            ->innerJoin([$EducationGrades->alias() => $EducationGrades->table()],[
+                $InstitutionStudents->aliasField('education_grade_id = ') .$EducationGrades->aliasField('id')
+            ])
+            ->innerJoin([$EducationProgrammes->alias() => $EducationProgrammes->table()],[
+                $EducationGrades->aliasField('education_programme_id = ') .$EducationProgrammes->aliasField('id')
+            ])
+            ->innerJoin([$StudentStatuses->alias() => $StudentStatuses->table()],[
+                $InstitutionStudents->aliasField('student_status_id = ') .$StudentStatuses->aliasField('id')
+            ])
+            ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()],[
+                $this->InstitutionStudents->aliasField('student_id = ').$ClassStudents->aliasField('student_id')
+            ])
+            ->leftJoin([$Classes->alias() => $Classes->table()],[
+                $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
+            ])
+            ->where([
+                $InstitutionStudents->aliasField('student_id =').$institutionStudentId,
+            ]);
+        }
+        // for Academic Tab
+        // for Assessments Tab
+        if($StudentType == 'Assessment'){
+            $query
+            ->select([
+                'asses_academic_period' => $AcademicPeriods->aliasField('name'),
+                'asses_institution_name' => $institutions->aliasField('name'),
+                'assesment_period' => $AssessmentPeriods->find()->func()->concat([
+                    $AssessmentPeriods->aliasField('code') => 'literal',
+                    " - ",
+                    $AssessmentPeriods->aliasField('name') => 'literal'
+                ]),
+                'education_subject' => $EducationSubjects->aliasField('name'),
+                'marks' => $AssessmentItemResults->aliasField('marks'),
+            ])
+            ->leftJoin([$AssessmentItemResults->alias() => $AssessmentItemResults->table()],[
+                $this->aliasField('id = ').$AssessmentItemResults->aliasField('student_id')
+            ])
+            ->leftJoin([$Assessments->alias() => $Assessments->table()],[
+                $AssessmentItemResults->aliasField('assessment_id = ').$Assessments->aliasField('id')
+            ])
+            ->leftJoin([$EducationSubjects->alias() => $EducationSubjects->table()],[
+                $AssessmentItemResults->aliasField('education_subject_id = ').$EducationSubjects->aliasField('id')
+            ])
+            ->innerJoin([$AcademicPeriods->alias() => $AcademicPeriods->table()],[
+                $AssessmentItemResults->aliasField('academic_period_id = ') .$AcademicPeriods->aliasField('id')
+            ])
+            ->innerJoin([$AssessmentPeriods->alias() => $AssessmentPeriods->table()],[
+                $AssessmentItemResults->aliasField('assessment_period_id = ') .$AssessmentPeriods->aliasField('id')
+            ])
+            ->innerJoin([$institutions->alias() => $institutions->table()],[
+                $AssessmentItemResults->aliasField('institution_id = ') .$institutions->aliasField('id')
+            ])
+            ->where([
+                $AssessmentItemResults->aliasField('student_id =').$institutionStudentId,
+            ]);
+        }
+        // for Assessments Tab
+        // for Absenses Tab
+        if($StudentType == 'Absence'){
+            $query
+            ->select([
+                'absense_date' => $institutionStudentAbsenses->aliasField('date'),
+                'absense' => $absensesTypes->aliasField('name'),
+            ])
+            ->leftJoin([$institutionStudentAbsenses->alias() => $institutionStudentAbsenses->table()],[
+                $this->aliasField('id = ').$institutionStudentAbsenses->aliasField('student_id')
+            ])
+            ->leftJoin([$absensesTypes->alias() => $absensesTypes->table()],[
+                $institutionStudentAbsenses->aliasField('absence_type_id = ').$absensesTypes->aliasField('id')
+            ])
+            ->where([
+                $institutionStudentAbsenses->aliasField('student_id =').$institutionStudentId,
+            ]);
+        }
+        // for Absenses Tab
+
+        // dump($query);die;
+
     }
 
     public function getAcademicTabElements($options = [])
