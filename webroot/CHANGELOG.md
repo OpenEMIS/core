@@ -1,3 +1,19 @@
+### [3.73.3] - 2022-01-14
+- Implemented: Add Export button function - Institutions > Finances > Institution Fees
+- Implemented: Add Export button function - Institutions > Transport > Providers
+- Bug Fixed: Institution > Attendance > Staff : System still allows user to set time in/out when school is closed
+- Bug Fixed: Reports > Institution > WASH Reports : System does not validate when there are mandatory fields
+- Bug Fixed: Improvement of School Shift functions-Edit function for School Shift(Owner-Other Institution)
+- Bug Fixed: Institutions>General>Calendar: Unable to add calendar
+- Bug Fixed: Personal > Staff > Careers : System should allow user to Edit, Add and Delete Leave
+- Bug Fixed: Report>Custom: institution_id filter is not populating
+- Bug Fixed: Reports> Student: Enrollment summary support is not showing for all institutions
+- Bug Fixed: Institutions>Undo: Students are not showing out in the withdrawn list
+- Bug Fixed: Administration>System Setup>Localisation>Translation: Words not reflected and existed
+- Bug Fixed: Personal > Guardians : Remove Guardians sub-menu under Personal Menu
+- Bug Fixed: Institutions>Report Cards>Comments:Overall average in report card>comment which is showing 0 even though there is data and overall average/total marks does not tally
+- Bug Fixed: Institutions: No record found in Institution
+
 ### [3.73.2] - 2022-01-12
 - Bug Fixed: Institutions>Academic>Classes: Students that are assigned to a different grade(Primary 1 to Primary 2) will get a change in grade
 
