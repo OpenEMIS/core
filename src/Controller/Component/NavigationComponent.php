@@ -307,6 +307,11 @@ class NavigationComponent extends Component
 			$encodedParam = $this->request->params['pass'][1];
 			if(!empty($encodedParam)) {
 				$securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
+                /*POCOR-STARTS*/
+                if (empty($securityUserId)) {
+                    $securityUserId = $this->controller->paramsDecode($encodedParam)['security_user_id'];
+                }
+                /*POCOR-ENDS*/
             }
             if(!empty($encodedParam)) {
                 //POCOR-6202 start
@@ -589,6 +594,12 @@ class NavigationComponent extends Component
 				'selected' => ['Institutions.Profiles'],
 				'params' => ['plugin' => 'Institution']
 			],
+            'Institutions.Shifts' => [
+                'title' => 'Shifts',
+                'parent' => 'Institution.General',
+                'selected' => ['Institutions.Shifts'],
+                'params' => ['plugin' => 'Institution']
+            ],
 
             'Institution.Academic' => [
                 'title' => 'Academic',
@@ -596,12 +607,6 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.Shifts' => [
-                'title' => 'Shifts',
-                'parent' => 'Institution.Academic',
-                'selected' => ['Institutions.Shifts'],
-                'params' => ['plugin' => 'Institution']
-            ],
 
             'Institutions.Programmes' => [
                 'title' => 'Programmes',
@@ -895,12 +900,14 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.InstitutionLands', 'Institutions.InstitutionBuildings', 'Institutions.InstitutionFloors', 'Institutions.InstitutionRooms']
             ],
 
-            'InfrastructureNeeds.index' => [
+            // POCOR-6150 start
+            'Institutions.InfrastructureNeeds' => [
                 'title' => 'Needs',
                 'parent' => 'Infrastructures',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InfrastructureNeeds.view', 'InfrastructureNeeds.add', 'InfrastructureNeeds.edit', 'InfrastructureNeeds.delete']
+                'selected' => ['InfrastructureNeeds','Institutions.InfrastructureNeeds.view', 'Institutions.InfrastructureNeeds.add', 'Institutions.InfrastructureNeeds.edit', 'Institutions.InfrastructureNeeds.delete']
             ],
+            // POCOR-6150 end
 
             'InfrastructureProjects.index' => [
                 'title' => 'Projects',
@@ -1067,7 +1074,13 @@ class NavigationComponent extends Component
                     //'selected' => ['Institutions.Committees','InstitutionCommitteeAttachments.add', 'InstitutionCommitteeAttachments.edit', 'InstitutionCommitteeAttachments.view', 'InstitutionCommitteeAttachments.index','InstitutionCommitteeAttachments.delete'],
                     'selected' => ['Institutions.Committees','Institutions.CommitteeAttachments'],
                     'params' => ['plugin' => 'Institution']
-                ],
+            ],
+            'Institutions.InstitutionStatistics' => [
+                    'title' => 'Statistics',
+                    'parent' => 'Institutions.Institutions.index',
+                    'params' => ['plugin' => 'Institution', 0 => $institutionId],
+                    'selected' => ['Institutions.InstitutionStatistics.index', 'Institutions.InstitutionStatistics.view', 'Institutions.InstitutionStatistics.edit', 'Institutions.InstitutionStatistics.remove', 'Institutions.InstitutionStatistics.download', 'Institutions.InstitutionStatistics.excel']
+                ]
         ];
 
         foreach ($navigation as &$n) {
@@ -1480,7 +1493,7 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.ProfileStudents.index',
                 'params' =>  ['plugin' => 'Profile', 'controller' => 'Profiles', $studentId],
                 'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours', 'Profiles.StudentCompetencies','Profiles.StudentCompetencies.index',
-                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes', 'Profiles.StudentRisks', 'Profiles.StudentAssociations']
+                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes', 'Profiles.StudentRisks', 'Profiles.StudentAssociations', 'Profiles.Absences']
             ],
         ];
 
@@ -1542,7 +1555,7 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Student',
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.StudentProgrammes.index', 'Directories.StudentSubjects', 'Directories.StudentClasses', 'Directories.StudentAbsences', 'Directories.StudentBehaviours',
-                'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentReportCards', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks', 'Directories.StudentOutcomes', 'Directories.StudentRisks','Directories.StudentAssociations']
+                'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentReportCards', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks', 'Directories.StudentOutcomes', 'Directories.StudentRisks','Directories.StudentAssociations', 'Directories.Absences']
             ],
             'Directories.StudentBankAccounts' => [
                 'title' => 'Finance',

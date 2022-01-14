@@ -241,6 +241,18 @@ class UsersTable extends AppTable
         }
     }
 
+    //POCOR-6454[START]
+    // public function getCorrectEducationGrade($institutionClassId){
+    //     $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+    //     $gradeId = $InstitutionClassGrades
+    //     ->find()
+    //     ->where([$InstitutionClassGrades->aliasField('institution_class_id') =>$institutionClassId])
+    //     ->extract('education_grade_id')
+    //     ->first();
+    //     return $gradeId;
+    // }
+    //POCOR-6454[END]
+
     public function findInstitutionStudentsNotInClass(Query $query, array $options)
     {
         $educationGradeIds = null;
