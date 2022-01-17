@@ -361,6 +361,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $Promoted = $statusList['PROMOTED'];
         $Graduated = $statusList['GRADUATED'];
         $Withdraw = $statusList['WITHDRAWN'];
+        //POCOR-6500 starts 
         //get student role
         $securityRolesTbl = TableRegistry::get('security_roles');
         $securityRoles = $securityRolesTbl->find()
@@ -375,7 +376,7 @@ class StudentAdmissionTable extends ControllerActionTable
                                     $institutionTbl->aliasField('id') => $student->institution_id
                                 ])
                                 ->first();
-
+        //POCOR-6500 ends                         
         if ($student->isNew()) { // add
             // close other pending admission applications (in same education system) if the student is successfully enrolled in one school
             if ($student->student_status_id == $Enrolled) {
@@ -409,7 +410,6 @@ class StudentAdmissionTable extends ControllerActionTable
                                                 $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id
                                             ])
                                             ->first();
-                                   
                     //check user_id with role is available or not in `security_group_users` group                       
                     if(empty($checkSecurityGroupUser)){
                         $securityGroupUsers = $securityGroupUsersTbl->find()
@@ -545,54 +545,6 @@ class StudentAdmissionTable extends ControllerActionTable
                 if ($UndoPromotion || $UndoGraduation || $UndoWithdraw) {
                     $this->removePendingAdmission($student->student_id, $student->institution_id);
                 }
-
-                $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
-                $WorkflowStepsTable = TableRegistry::get('workflow_steps');
-                $WorkflowsTable = TableRegistry::get('workflows');
-                $WithdrawStudents = $StudentWithdrawTable
-                                    ->find()
-                                    ->leftJoin([$WorkflowStepsTable->alias() => $WorkflowStepsTable->table()],
-                                        [ $WorkflowStepsTable->aliasField('workflow_id').'='.$StudentWithdrawTable->aliasField('status_id')]
-                                    )
-                                    ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
-                                        [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id'),
-                                            $WorkflowsTable->aliasField('code') =>'STUDENT-WITHDRAW-001']
-                                    )
-                                    ->where([
-                                        $StudentWithdrawTable->aliasField('student_id') => $student->student_id,
-                                        $StudentWithdrawTable->aliasField('institution_id') => $student->institution_id
-                                        
-                                    ])
-                                    ->first();
-                if(!empty($WithdrawStudents)){
-                    //delete user from security_group_users table
-                    if(!empty($institutions) && $institutions->security_group_id !=''){
-                        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
-                        $securityGroupUsers = $securityGroupUsersTbl->find()
-                                                ->where([
-                                                    $securityGroupUsersTbl->aliasField('security_group_id') => $institutions->security_group_id,
-                                                    $securityGroupUsersTbl->aliasField('security_user_id') => $student->student_id,
-                                                    $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id,
-                                                ])
-                                                ->first();
-
-                        if(!empty($securityGroupUsers)){
-                            try{
-                                $SecurityGroupUsersTable1 = TableRegistry::get('Security.SecurityGroupUsers');
-                               // $SecurityGroupUsersTable1->deleteAll(['id' => 'fb23ffbd-3a3e-4c9d-adab-1f8ae7a9c25b' ]);
-                                $SecurityGroupUsersTable1->delete($securityGroupUsers);
-                                echo "<pre>"; print_r($SecurityGroupUsersTable); die;
-                            }catch(Exception $e){
-                                echo "<pre>"; print_r($e); die;
-                            }
-                            
-                            //echo "<pre>"; print_r($securityGroupUsers); die;
-                        }
-                        //echo "<pre>"; print_r($securityGroupUsers); die;
-                    }
-                }
-
-
             }
         }
     }
