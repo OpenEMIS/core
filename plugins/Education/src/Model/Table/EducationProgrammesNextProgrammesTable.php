@@ -96,22 +96,20 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 			$results = [];
 			$ids = [];
 			foreach ($nextProgrammeList as $key => $nextProgrammeId) {
-               $ids[] = $nextProgrammeId;
-			}
-			
-			$nextProgrammeGradeResults = $EducationGrades
+               $nextProgrammeGradeResults = $EducationGrades
 					->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
 					->find('visible')
 					->find('order')
 					->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
 					->where([
-						$EducationGrades->aliasField('education_programme_id IN ') => $ids,
+						$EducationGrades->aliasField('education_programme_id') => $nextProgrammeId,
 						'EducationSystems.academic_period_id' => $periodId
 					])
 					->order([$EducationGrades->aliasField('order')])
 					->toArray();
-			
-			$results = $nextProgrammeGradeResults;
+					
+				$results = $results + [key($nextProgrammeGradeResults) => current($nextProgrammeGradeResults)];
+			}
 		} else {
 			$results = [];
 		}
