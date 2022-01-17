@@ -99,6 +99,7 @@ class ReportCardCommentsTable extends ControllerActionTable
         $myClassesPermission = TableRegistry::get('Institution.InstitutionClasses')->getRolePermissionAccessForMyClasses($staffId, $institutionId);
         if (!$isSuperAdmin && $myClassesPermission && !$allclassesPermission) {
             $where[$this->aliasField('staff_id')] = $staffId;
+            $orWhere['InstitutionClassesSecondaryStaff.secondary_staff_id'] = $staffId;
         }
         /*POCOR-6508 ends*/
         $query
@@ -136,6 +137,9 @@ class ReportCardCommentsTable extends ControllerActionTable
                 [$EducationProgrammes->alias() => $EducationProgrammes->table()],
                 [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
             )
+            ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+               'InstitutionClassesSecondaryStaff.institution_class_id  = '. $this->aliasField('id')
+            ])
             ->where([
                 $where,
                 // only show record if at least one comment type is needed
@@ -145,6 +149,7 @@ class ReportCardCommentsTable extends ControllerActionTable
                     $ReportCards->aliasField('teacher_comments_required') => 1
                 ]
             ])
+            ->orWhere([$orWhere])
             ->group([
                 $ClassGrades->aliasField('institution_class_id'),
                 $ReportCards->aliasField('id')
