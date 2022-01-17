@@ -123,6 +123,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                 academic_period_id: academicPeriodId,
                 week_id: weekId,
                 institution_id: institutionId,
+                school_closed_required: true
             })
             .ajax({success: success, defer: true});
     }
