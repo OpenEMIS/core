@@ -115,7 +115,8 @@ class PageController extends AppController
                 $page->attachPrimaryKey($table, $entity);
             }
             if (count($data) == 0) {
-                $page->setAlert('There are no records.', 'info');
+                $norecordmsg = __('There are no records.');
+                $page->setAlert($norecordmsg, 'info');
             }
             $page->setVar('data', $data);
         }
