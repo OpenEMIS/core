@@ -306,13 +306,33 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 ->group(['class_id'])
                 ->hydrate(false)
                 ->toArray();
+
+            /*POCOR-6508 starts - Staff should be able to assigned classes subjects*/
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $myClassesPermission = $InstitutionClasses->getRolePermissionAccessForMyClasses($userId, $institutionId);
+            if (empty($classOptions) && $myClassesPermission) {
+                $classOptions = $InstitutionClasses->find('list', ['keyField' => 'class_id', 'valueField' => 'class_name'])
+                                ->select([
+                                    'class_id' => $InstitutionClasses->aliasField('id'), 
+                                    'class_name' => $InstitutionClasses->aliasField('name')
+                                ])
+                                ->where([
+                                    $InstitutionClasses->aliasField('academic_period_id') => $selectedAcademicPeriodId,
+                                    $InstitutionClasses->aliasField('staff_id') => $userId,
+                                    $InstitutionClasses->aliasField('institution_id') => $institutionId
+                                ])
+                                ->group(['class_id'])
+                                ->hydrate(false)
+                                ->toArray();
+            }
+            /*POCOR-6508 ends*/
         }
 
         if (empty($classOptions) && !isset($extra['noProgrammes'])) {
             $this->Alert->warning('Institutions.noClassRecords');
         }
         $selectedClassId = $this->queryString('class_id', $classOptions);
-
+        
         $this->advancedSelectOptions($classOptions, $selectedClassId, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSubjects')),
             'callable' => function ($id) use ($Subjects, $institutionId, $selectedAcademicPeriodId, $AccessControl, $userId, $controller) {
@@ -331,6 +351,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         $Subjects->aliasField('institution_id') => $institutionId,
                         $Subjects->aliasField('academic_period_id') => $selectedAcademicPeriodId,
                     ]);
+
                 return $query->count();
             }
         ]);
@@ -468,7 +489,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ->find('byClasses', ['selectedClassId' => $extra['selectedClassId']])
             ->contain(['Teachers', 'Rooms', 'EducationSubjects', 'EducationGrades', 'Classes'])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
-
+        
         // search function to search education grade and education subject
         $searchKey = $this->getSearchKey();
         if (!empty($searchKey)) {
@@ -495,7 +516,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     'EducationSubjects.order',
                     'EducationGrades.order'
                 ]);
-        }
+        } 
     }
 
     public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
