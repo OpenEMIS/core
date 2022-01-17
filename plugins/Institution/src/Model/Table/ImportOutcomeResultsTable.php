@@ -193,7 +193,10 @@ class ImportOutcomeResultsTable extends AppTable
                         $query->where(['1 = 0'], [], true);
                     } else {
                         $query->innerJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                            'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
+                            'OR' => [
+                                'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id',
+                                'ClassesSecondaryStaff.secondary_staff_id = InstitutionClasses.staff_id',
+                            ]
                         ]);
                         // If only class permission is available but no subject permission available
                         if ($classPermission && !$subjectPermission) {
