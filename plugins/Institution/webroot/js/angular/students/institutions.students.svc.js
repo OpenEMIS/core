@@ -399,26 +399,34 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                             userId = modifiedUser['id'];
                             identityTypeId = modifiedUser['identity_type_id'];
                             identityNumber = modifiedUser['identity_number'];
-                            mainNationalityId = modifiedUser['main_nationality_id'];
+                            mainNationalityId = modifiedUser['nationality_id'];
                             identityTypeName = modifiedUser['identity_type_name'];
                             nationalityTypeName = modifiedUser['main_nationality_name'];
-                            var identityTypeData = vm.getIdentityTypesExternalSave(identityTypeName);
-                            var nationalityTypeData = vm.getNationalitiesExternalSave(nationalityTypeName);
                             setTimeout(()=>{
-                                var identityTypeId = identityTypeData.$$state['value'];
-                                vm.addUserIdentityNew(userId, identityTypeId, identityNumber, mainNationalityId)
+                                var identityTypeData = vm.getIdentityTypesExternalSave(identityTypeName)
                                 .then(function(promiseArr) {
-                                    }, function(error) {
+                                        identityTypeId = promiseArr;
+                                        vm.addUserIdentityNew(userId, identityTypeId, identityNumber, mainNationalityId)
+                                            .then(function(promiseArr) {
+                                                }, function(error) {
+                                            });
+                                }, function(error) {
                                 });
-                            },100);
+                            },1000);
+
 
                             setTimeout(()=>{
-                                var nationalityTypeId = nationalityTypeData.$$state['value'];
-                                vm.addUserNationality(userId, nationalityTypeId)
-                                .then(function(promiseArr) {
+                            var nationalityTypeData = vm.getNationalitiesExternalSave(nationalityTypeName)
+                            .then(function(promiseArr) {
+                                var nationalityTypeId = promiseArr;
+                                    vm.addUserNationality(userId, nationalityTypeId)
+                                    .then(function(promiseArr) {
+                                        }, function(error) {
+                                    });
                                     }, function(error) {
-                                });
+                            });
                             },100);
+
                         }
 
                         
@@ -434,7 +442,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         },100);
                         //POCOR-6460[END]
                     } else {
-
                         newUserRecord['date_of_birth'] = vm.formatDateForSaving(newUserRecord['date_of_birth']);
                         newUserRecord['is_student'] = 1;
 
@@ -446,6 +453,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                             newUserRecord['nationality_id'] = promiseArr[1];
                             newUserRecord['identity_type_id'] = promiseArr[2];
                             newUserRecord['username'] = newUserRecord['openemis_no'];
+                            identityNumber = newUserRecord['identity_number'];
                             delete newUserRecord['password'];
                             var identityTypeId = promiseArr[2];
                             StudentUser.reset();
@@ -460,7 +468,12 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                                     var promises = [];
                                     // Import identity
                                     if (identityTypeId != null && identityNumber != null && identityNumber != '') {
-                                        vm.addUserIdentity(userId, identityTypeId, identityNumber);
+                                        // vm.addUserIdentity(userId, identityTypeId, identityNumber);
+                                        var nationalityId = userEntity.nationality_id;
+                                        vm.addUserIdentityNew(userId, identityTypeId, identityNumber, nationalityId)
+                                            .then(function(promiseArr) {
+                                                }, function(error) {
+                                            });
                                     }
                                     // Import nationality
                                     if (userEntity.nationality_id != null) {
