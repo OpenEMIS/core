@@ -444,6 +444,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                             newUserRecord['identity_type_id'] = promiseArr[2];
                             newUserRecord['username'] = newUserRecord['openemis_no'];
                             var identityTypeId = promiseArr[2];
+                            identityNumber = newUserRecord['identity_number'];
                             StaffUser.reset();
                             StaffUser.save(newUserRecord)
                             .then(function(studentRecord) {
@@ -455,8 +456,16 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                                     var userId = userEntity.id;
                                     var promises = [];
                                     // Import identity
-                                    if (newUserRecord['identity_type_id'] != null && newUserRecord['identity_number'] != null && newUserRecord['identity_number'] != '') {
-                                        vm.addUserIdentity(userId, newUserRecord['identity_type_id'], newUserRecord['identity_number']);
+                                    // if (newUserRecord['identity_type_id'] != null && newUserRecord['identity_number'] != null && newUserRecord['identity_number'] != '') {
+                                    //     vm.addUserIdentity(userId, newUserRecord['identity_type_id'], newUserRecord['identity_number']);
+                                    // }
+                                    if (identityTypeId != null && identityNumber != null && identityNumber != '') {
+                                        // vm.addUserIdentity(userId, identityTypeId, identityNumber);
+                                        var nationalityId = userEntity.nationality_id;
+                                        vm.addUserIdentityNew(userId, identityTypeId, identityNumber, nationalityId)
+                                            .then(function(promiseArr) {
+                                                }, function(error) {
+                                            });
                                     }
                                     // Import nationality
                                     if (userEntity.nationality_id != null) {
