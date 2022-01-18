@@ -4035,7 +4035,7 @@ class InstitutionsController extends AppController
 
     public function getEducationGrade()
     {
-        $requestData = $this->request->input('json_decode', true) ;
+        $requestData = $this->request->input('json_decode', true);
        /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
         echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
         $institution_name = $this->request->session()->read('Institution.Institutions.name');
@@ -4122,7 +4122,8 @@ class InstitutionsController extends AppController
 
     public function getClassOptions()
     {
-        $requestData = json_decode($this->request->data(), true);
+        $requestData = $this->request->input('json_decode', true);
+        //$requestData = json_decode($this->request->data(), true);
         $academic_period = $requestData['academic_periods'];
         $grade_id = $requestData['grade_id'];
         $institution_id = $this->request->session()->read('Institution.Institutions.id');
@@ -4245,7 +4246,8 @@ class InstitutionsController extends AppController
 
     public function getPositions()
     {
-        $requestData = json_decode($this->request->data(), true);
+        //$requestData = json_decode($this->request->data(), true);
+        $requestData = $this->request->input('json_decode', true);
         $fte = $requestData['fte'];
         $startDate = $requestData['startDate'];
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
@@ -4260,7 +4262,8 @@ class InstitutionsController extends AppController
     public function postSaveStudentsData()
     {
         $this->autoRender = false;
-        $requestData = json_decode($this->request->data(), true);
+        //$requestData = json_decode($this->request->data(), true);
+        $requestData = $this->request->input('json_decode', true);
         /*$requestData = json_decode('{"openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021","end_date":"31-12-2021","institution_class_id":"524","student_status_id":1}', true);*/
         
         if(!empty($requestData)){
