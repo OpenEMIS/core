@@ -80,13 +80,21 @@ class ReportShell extends Shell {
 			$params = json_decode($entity->params, true);
 			$feature = $params['feature'];
 			$name = $entity->name;
-
+			
 			if ($entity->module == 'CustomReports') {
 				$table = TableRegistry::get('Report.CustomReports');
 				echo date('d-m-Y H:i:s') . ': Start Processing ' . $name . "\n";
 				$table->generateCSV(['process' => $entity, 'requestQuery' => $params]);
 				echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";
 			}
+			/*PCORO-6403 Starts*/
+			if ($entity->module == 'InstitutionStatistics') {
+				$table = TableRegistry::get('Institution.InstitutionStatistics');
+				echo date('d-m-Y H:i:s') . ': Start Processing ' . $name . "\n";
+				$table->generateCSV(['process' => $entity, 'requestQuery' => $params]);
+				echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";
+			}
+			/*POCOR--6403 Ends*/
 		} catch (Exception $e) {
 			$error = $e->getMessage();
 			pr($error);
