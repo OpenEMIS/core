@@ -1,10 +1,10 @@
 angular
     .module('directory.directoryadd.svc', ['kd.orm.svc', 'alert.svc'])
-    .service('DirectoryaddSvc', DirectoryaddSvc);
+    .service('DirectoryaddguardianSvc', DirectoryaddguardianSvc);
 
-DirectoryaddSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc', 'AlertSvc', 'UtilsSvc'];
+DirectoryaddguardianSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc', 'AlertSvc', 'UtilsSvc'];
 
-function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
+function DirectoryaddguardianSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
 
     var models = {
         Genders: 'User.Genders',
@@ -22,7 +22,6 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
         getInternalSearchData: getInternalSearchData,
         getExternalSearchData: getExternalSearchData,
         getContactTypes: getContactTypes,
-        getRelationType: getRelationType,
         getRedirectToGuardian: getRedirectToGuardian
     };
     return service;
@@ -123,7 +122,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
     function getInternalSearchData(params) {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Directories/directoryInternalSearch';
-        $http.get(url, {params: params})
+        $http.get(url, params)
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
@@ -136,18 +135,6 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Directories/directoryExternalSearch';
         $http.get(url, {params: params})
-        .then(function(response){
-            deferred.resolve(response);
-        }, function(error) {
-            deferred.reject(error);
-        });
-        return deferred.promise;
-    };
-
-    function getRelationType() {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getRelationshipType';
-        $http.get(url)
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {

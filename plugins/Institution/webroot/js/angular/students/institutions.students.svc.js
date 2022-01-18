@@ -180,10 +180,10 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         return deferred.promise;
     };
 
-    function saveStudentDetails(params) {
+    function saveStudentDetails(param) {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getRedirectToGuardian';
-        $http.post(url, params)
+        var url = angular.baseUrl + '/Institutions/postSaveStudentsData';
+        $http.get(url, {params: param})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
@@ -741,13 +741,10 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         return deferred.promise;
     };
 
-    function getEducationGrades(academic_period) {
-        var params = {
-            academic_periods: academic_period
-        };
+    function getEducationGrades(param) {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/getEducationGrade';
-        $http.get(url, {params: params})
+        $http.get(url, {params: param})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {

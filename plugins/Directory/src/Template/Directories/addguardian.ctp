@@ -1,14 +1,15 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Directory.angular/directoryaddguardian/directory.directoryaddguardian.svc', ['block' => true]); ?>
 <?= $this->Html->script('Directory.angular/directoryaddguardian/directory.directoryaddguardian.ctrl', ['block' => true]); ?>
-<?= $this->Html->css('ControllerAction.../plugins/chosen/css/chosen.min.css', ['block' => true]); ?>
-<?= $this->Html->css('ControllerAction.../plugins/datepicker/css/bootstrap-datepicker.min', ['block' => true]); ?>
-<?= $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepicker.min', ['block' => true]); ?>
-<?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min.js', ['block' => true]); ?>
-<?= $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', ['block' => true]); ?>
+
+<script data-require="jquery@1.11.3" data-semver="1.11.3" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<link data-require="bootstrap@3.3.2" data-semver="3.3.2" rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+<script data-require="bootstrap@3.3.2" data-semver="3.3.2" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+<script data-require="angularjs@1.4.9" data-semver="1.4.9" src="https://code.angularjs.org/1.4.9/angular.min.js"></script>
+<script data-require="ui-bootstrap@*" data-semver="1.3.2" src="https://cdn.rawgit.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-1.3.2.js"></script>
 
 <div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl'>
-    <div class="stepper-content-wrapper" ng-if="!isGuardianAdding">
+    <div class="stepper-content-wrapper">
         <div class="steps-container">
             <ul class="steps" style="margin-left: 0">
                 <li ng-class="{'active': step === 'user_details'}">
@@ -58,8 +59,6 @@
                 type="button" class="btn close-btn" ng-click="cancelProcess()">Close</button>
             <button type="button" class="btn btn-default btn-next"
                 ng-if="step!=='confirmation' && step!=='summary'" ng-click="goToNextStep()">Next</button>
-            <button type="button" class="btn btn-default btn-next"
-                ng-if="step==='summary'" ng-click="addGuardian()">Add Guardian</button>
         </div>
         <div class="step-content">
             <div class="alert {{messageClass}}" ng-if="message">
@@ -68,11 +67,11 @@
             <div class="step-pane sample-pane" ng-if="step === 'user_details'">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                     <div class="input select required error">
-                        <label>User Type</label>
+                        <label>Relation Type</label>
                         <div class="input-select-wrapper">
                             <select name="User[user_type_id]" id="user-user_type_id"
-                                ng-options="option.id as option.name for option in userTypeOptions"
-                                ng-model="selectedUserData.user_type_id"
+                                ng-options="option.id as option.name for option in relationTypeOptions"
+                                ng-model="selectedGuardianData.relation_type_id"
                                 ng-change="changeUserType()"
                                 >
                                 <option value="" >-- <?= __('Select') ?> --</option>
@@ -84,40 +83,40 @@
                     </div>
                     <div class="input string">
                         <label><?= __('OpenEMIS ID') ?></label>
-                        <input ng-model="selectedUserData.openemis_no" type="string">
+                        <input ng-model="selectedGuardianData.openemis_no" type="string">
                     </div>
                     <div class="input string required">
                         <label><?= __('First Name') ?></label>
-                        <input ng-model="selectedUserData.first_name" ng-change="setName()" type="string">
+                        <input ng-model="selectedGuardianData.first_name" ng-change="setName()" type="string">
                         <div ng-if="postResponse.error.first_name" class="error-message">
                             <p ng-repeat="error in postResponse.error.first_name">{{ error }}</p>
                         </div>
                     </div>
                     <div class="input string">
                         <label><?= __('Middle Name') ?></label>
-                        <input ng-model="selectedUserData.middle_name" ng-change="setName()" type="string">
+                        <input ng-model="selectedGuardianData.middle_name" ng-change="setName()" type="string">
                     </div>
                     <div class="input string">
                         <label><?= __('Third Name') ?></label>
-                        <input ng-model="selectedUserData.third_name" ng-change="setName()" type="string">
+                        <input ng-model="selectedGuardianData.third_name" ng-change="setName()" type="string">
                     </div>
                     <div class="input string required">
                         <label><?= __('Last Name') ?></label>
-                        <input ng-model="selectedUserData.last_name" ng-change="setName()" type="string">
+                        <input ng-model="selectedGuardianData.last_name" ng-change="setName()" type="string">
                         <div ng-if="postResponse.error.last_name" class="error-message">
                             <p ng-repeat="error in postResponse.error.last_name">{{ error }}</p>
                         </div>
                     </div>
                     <div class="input string">
                         <label><?= __('Preferred Name') ?></label>
-                        <input ng-model="selectedUserData.preferred_name" type="string">
+                        <input ng-model="selectedGuardianData.preferred_name" type="string">
                     </div>
                     <div class="input select required error">
                         <label><?= __('Gender') ?></label>
                         <div class="input-select-wrapper">
                             <select name="Staff[gender_id]" id="staff-gender_id"
                                 ng-options="option.id as option.name for option in genderOptions"
-                                ng-model="selectedUserData.gender_id"
+                                ng-model="selectedGuardianData.gender_id"
                                 ng-change="changeGender()"
                                 >
                                 <option value="" >-- <?= __('Select') ?> --</option>
@@ -129,8 +128,8 @@
                     </div>
                     <div class="input date required">
                         <label for="User_date_of_birth"><?= __('Date Of Birth') ?></label>
-                        <div class="input-group date " id="User_date_of_birth" style="">
-                            <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="selectedUserData.date_of_birth">
+                        <div class="input-group date" id="User_date_of_birth" style="" datepicker="" ng-model="selectedGuardianData.date_of_birth" ng-click="isDatepickerOpen = !isDatepickerOpen">
+                            <input type="text" class="form-control " ng-model="selectedGuardianData.date_of_birth" uib-datepicker-popup="dd/MM/yyyy" is-open="isDatepickerOpen" datepicker-options="datepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" />
                             <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                         </div>
                         <div ng-if="postResponse.error.date_of_birth" class="error-message">
@@ -142,7 +141,7 @@
                         <div class="input-select-wrapper">
                             <select name="User[nationality_id]" id="user-nationality_id"
                                 ng-options="option.id as option.name for option in nationalitiesOptions"
-                                ng-model="selectedUserData.nationality_id"
+                                ng-model="selectedGuardianData.nationality_id"
                                 ng-change="changeNationality()"
                                 >
                                 <option value="" >-- <?= __('Select') ?> --</option>
@@ -157,7 +156,7 @@
                         <div class="input-select-wrapper">
                             <select name="User[identities_type_id]" id="user-identities_type_id"
                                 ng-options="option.id as option.name for option in identityTypeOptions"
-                                ng-model="selectedUserData.identity_type_id"
+                                ng-model="selectedGuardianData.identity_type_id"
                                 ng-change="changeIdentityType()"
                                 >
                                 <option value="" >-- <?= __('Select') ?> --</option>
@@ -167,9 +166,9 @@
                             <p ng-repeat="error in postResponse.error.identities[0].identity_type_id">{{ error }}</p>
                         </div>
                     </div>
-                    <div ng-class="identity_class" ng-show="selectedUserData.identity_type_name">
-                        <label><?= __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
-                        <input ng-model="selectedUserData.identity_number" type="string">
+                    <div ng-class="identity_class" ng-show="selectedGuardianData.identity_type_name">
+                        <label><?= __('{{selectedGuardianData.identity_type_name ? selectedGuardianData.identity_type_name : "Identity Number"}}') ?></label>
+                        <input ng-model="selectedGuardianData.identity_number" type="string">
                         <div ng-if="postResponse.error.identities[0].number" class="error-message">
                             <p ng-repeat="error in postResponse.error.identities[0].number">{{ error }}</p>
                         </div>
@@ -224,482 +223,6 @@
                     </div>
                     <div class="input string required">
                         <label><?= __('OpenEMIS ID') ?></label>
-                        <input ng-model="selectedUserData.openemis_no" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string required">
-                        <label><?= __('First Name') ?></label>
-                        <input ng-model="selectedUserData.first_name" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Middle Name') ?></label>
-                        <input ng-model="selectedUserData.middle_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Third Name') ?></label>
-                        <input ng-model="selectedUserData.third_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string required">
-                        <label><?= __('Last Name') ?></label>
-                        <input ng-model="selectedUserData.last_name" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Preferred Name') ?></label>
-                        <input ng-model="selectedUserData.preferred_name" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input select required">
-                        <label><?= __('Gender') ?></label>
-                        <input ng-model="selectedUserData.gender.name" ng-disabled="true" />
-                    </div>
-                    <div class="input date required">
-                        <label for="Student_date_of_birth"><?= __('Date Of Birth') ?></label>
-                        <div class="input-group date " id="Student_date_of_birth" style="">
-                            <input type="text" class="form-control " name="Student[date_of_birth]" ng-model="selectedUserData.date_of_birth" ng-disabled="true">
-                        </div>
-                    </div>
-                    <div class="row section-header header-space-lg">Location</div>
-                    <div class="input string">
-                        <label><?= __('Address') ?></label>
-                        <textarea ng-model="selectedUserData.address" type="string"></textarea>
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Postal Code') ?></label>
-                        <input ng-model="selectedUserData.postalCode" type="string">
-                    </div>
-                    <div class="row section-header header-space-lg">Address Area</div>
-                    <div class="input string">
-                        <label><?= __('Address Area') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="Staff[gender_id]" id="staff-gender_id"
-                                ng-options="option.id as option.name for option in genderOptions"
-                                ng-model="selectedUserData.addressArea"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row section-header header-space-lg">Birthplace Area</div>
-                    <div class="input string">
-                        <label><?= __('Birthplace Area') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="Staff[gender_id]" id="staff-gender_id"
-                                ng-options="option.id as option.name for option in genderOptions"
-                                ng-model="selectedUserData.birthplaceArea"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row section-header header-space-lg">Identities / Nationalities</div>
-                    <div class="input string">
-                        <label><?= __('Nationalities') ?></label>
-                        <input ng-model="selectedUserData.nationality_name" type="string" ng-disabled="true" />
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Identity Type') ?></label>
-                        <input ng-model="selectedUserData.identity_type_name" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Identity Number') ?></label>
-                        <input ng-model="selectedUserData.identity_number" type="string" ng-disabled="true">
-                    </div>
-                    <div class="row section-header header-space-lg">Other Information</div>
-                    <div class="input select">
-                        <label><?= __('Contact Type') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="Staff[gender_id]" id="staff-contact_type_id"
-                                ng-options="option.id as option.name for option in contactTypeOptions"
-                                ng-model="selectedUserData.contact_type_id"
-                                ng-change="changeContactType()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Contact Value') ?></label>
-                        <input ng-model="selectedUserData.contactValue" type="string">
-                    </div>
-                    <div class="input string required">
-                        <label><?= __('Username') ?></label>
-                        <input ng-model="selectedUserData.username" type="string">
-                        <div ng-if="postResponse.error.username" class="error-message">
-                            <p ng-repeat="error in postResponse.error.username">{{ error }}</p>
-                        </div>
-                    </div>
-                    <div class="input password required">
-                        <label><?=
-                            __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
-                        ?></label>
-                        <input ng-model="selectedUserData.password" type="string">
-                        <div ng-if="postResponse.error.password" class="error-message">
-                            <p ng-repeat="error in postResponse.error.password">{{ error }}</p>
-                        </div>
-                    </div>
-                    <div class="row section-header header-space-lg">Parents and Guardian Informations</div>
-                    <div class="input string">
-                        <label><?= __('Mother Living With Student') ?></label>
-                        <input ng-model="selectedUserData.motherLivingWithStudent" type="string" ng-disabled="true" />
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Mother Is Deceased') ?></label>
-                        <input ng-model="selectedUserData.motherDeceased" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Father Living With Student') ?></label>
-                        <input ng-model="selectedUserData.fatherLivingWithStudent" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Father Is Deceased') ?></label>
-                        <input ng-model="selectedUserData.fatherDeceased" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Guardian Living With Student') ?></label>
-                        <input ng-model="selectedUserData.guardianLivingWithStudent" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Guardian Is Deceased') ?></label>
-                        <input ng-model="selectedUserData.guardianDeceased" type="string" ng-disabled="true">
-                    </div>
-                </form>
-            </div>
-            <div class="step-pane sample-pane active" ng-if="step === 'summary'">
-                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
-                    <div class="wrapper">
-                        <div class="wrapper-child">
-                            <div class="panel">
-                                <div class="panel-body">
-                                    <div class="row section-header">Information</div>
-                                    <div class="row hidden"></div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Photo Content</div>
-                                        <div class="form-input">
-                                            <div class="table-thumb">
-                                                <div class="profile-image-thumbnail">
-                                                    <i class="kd-staff"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">OpenEMIS ID</div>
-                                        <div class="form-input">{{selectedUserData.openemis_no}}</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">First Name</div>
-                                        <div class="form-input">{{selectedUserData.first_name}}</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Middle Name</div>
-                                        <div class="form-input">{{selectedUserData.middle_name}}</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Third Name</div>
-                                        <div class="form-input">{{selectedUserData.third_name}}</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Last Name</div>
-                                        <div class="form-input">{{selectedUserData.last_name}}</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Preferred Name</div>
-                                        <div class="form-input">{{selectedUserData.preferred_name}}</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Gender</div>
-                                        <div class="form-input">{{selectedUserData.gender.name}}</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Date of Birth</div>
-                                        <div class="form-input">{{selectedUserData.dateOfBirth}}</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Email</div>
-                                        <div class="form-input">{{selectedUserData.email}}</div>
-                                    </div>
-                                    <div class="row section-header">Identities / Nationalities</div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Nationality</div>
-                                        <div class="form-input">
-                                            <div class="form-input table-full-width">
-                                                <div class="table-wrapper">
-                                                    <div class="table-in-view">
-                                                        <table class="table">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>Identity Type</th>
-                                                                    <th>Identity Number</th>
-                                                                    <th>Nationality</th>
-                                                                    <th>Preferred</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td class="vertical-align-top">Birth Certificate</td>
-                                                                    <td class="vertical-align-top">1234567890</td>
-                                                                    <td class="vertical-align-top">American</td>
-                                                                    <td class="vertical-align-top">No</td>
-                                                                </tr>
-                                                            </tbody>				
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row section-header">Location</div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Address</div>
-                                        <div class="form-input">{{selectedUserData.address}}</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Postal Code</div>
-                                        <div class="form-input">{{selectedUserData.postalCode}}</div>
-                                    </div>
-                                    <div class="row section-header">Address Area</div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Address Area</div>
-                                        <div class="form-input">{{selectedUserData.addressArea}}</div>
-                                    </div>
-                                    <div class="row section-header">Birthplace Area</div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Birthplace Area</div>
-                                        <div class="form-input">{{selectedUserData.birthplaceArea}}</div>
-                                    </div>
-                                    <div class="row section-header">Other Information</div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Modified By</div>
-                                        <div class="form-input">System Administrator</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Modified On</div>
-                                        <div class="form-input">August 12, 2021 - 04:48:48</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Created By</div>
-                                        <div class="form-input">System Administrator</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Created On</div>
-                                        <div class="form-input">SApril 05, 2018 - 18:20:27</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <div class="actions bottom">
-        </div>
-    </div>
-    <div class="stepper-content-wrapper" ng-if="isGuardianAdding">
-        <div class="steps-container">
-            <ul class="steps" style="margin-left: 0">
-                <li ng-class="{'active': guardianStep === 'user_details'}">
-                    <div class="stepper-steps-wrapper">
-                        User Details
-                        <span class="chevron"></span>
-                    </div>
-                </li>
-                <li ng-class="{'active': guardianStep === 'internal_search'}">
-                    <div class="stepper-steps-wrapper">
-                        Internal Search
-                        <span class="chevron"></span>
-                    </div>
-                </li>
-                <li ng-class="{'active': guardianStep === 'external_search'}">
-                    <div class="stepper-steps-wrapper">
-                        External Search
-                        <span class="chevron"></span>
-                    </div>
-                </li>
-                <li ng-class="{'active': guardianStep === 'confirmation'}">
-                    <div class="stepper-steps-wrapper">
-                        Confirmation
-                        <span class="chevron"></span>
-                    </div>
-                </li>
-                <li ng-class="{'active': guardianStep === 'summary'}">
-                    <div class="stepper-steps-wrapper">
-                        Summary
-                        <span class="chevron"></span>
-                    </div>
-                </li>
-            </ul>
-        </div>
-        <div class="actions top">
-            <button
-                ng-if="(guardianStep === 'user_details')"
-                type="button" class="btn close-btn" ng-click="cancelProcess()">Cancel</button>
-            <button
-                ng-if="(guardianStep !== 'user_details' && guardianStep !== 'summary')"
-                type="button" class="btn btn-prev close-btn" ng-click="goToPrevStep()">Back</button>
-            <button
-                ng-if="(guardianStep === 'confirmation' && guardianStep !== 'summary')"
-                type="button" class="btn btn-default" ng-click="confirmUser()">Confirm</button>
-            <button
-                ng-if="(guardianStep === 'summary')"
-                type="button" class="btn close-btn" ng-click="goToFirstStep()">Close</button>
-            <button type="button" class="btn btn-default btn-next"
-                ng-if="guardianStep !== 'confirmation' && guardianStep !== 'summary'" ng-click="goToNextStep()">Next</button>
-        </div>
-        <div class="step-content">
-            <div class="alert alert-success">
-                <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>Student guardian successfully added.
-            </div>
-            <div class="step-pane sample-pane" ng-if="guardianStep === 'user_details'">
-                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                    <div class="row section-header header-space-lg">Information</div>
-                    <div class="input select required error">
-                        <label>Relation Type</label>
-                        <div class="input-select-wrapper">
-                            <select name="Guardian[relation_type_id]" id="guardian-relation_type_id"
-                                ng-options="option.id as option.name for option in relationTypeOptions"
-                                ng-model="selectedGuardianData.relation_type_id"
-                                ng-change="changeRelationType()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                        <div ng-if="postResponse.error.relation_type_id" class="error-message">
-                            <p ng-repeat="error in postResponse.error.relation_type_id">{{ error }}</p>
-                        </div>
-                    </div>
-                    <div class="input string required">
-                        <label><?= __('OpenEMIS ID') ?></label>
-                        <input ng-model="selectedGuardianData.openemis_no" type="string">
-                    </div>
-                    <div class="input string required">
-                        <label><?= __('First Name') ?></label>
-                        <input ng-model="selectedGuardianData.first_name" ng-change="setName()" type="string">
-                        <div ng-if="postResponse.error.first_name" class="error-message">
-                            <p ng-repeat="error in postResponse.error.first_name">{{ error }}</p>
-                        </div>
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Middle Name') ?></label>
-                        <input ng-model="selectedGuardianData.middle_name" ng-change="setName()" type="string">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Third Name') ?></label>
-                        <input ng-model="selectedGuardianData.third_name" ng-change="setName()" type="string">
-                    </div>
-                    <div class="input string required">
-                        <label><?= __('Last Name') ?></label>
-                        <input ng-model="selectedGuardianData.last_name" ng-change="setName()" type="string">
-                        <div ng-if="postResponse.error.last_name" class="error-message">
-                            <p ng-repeat="error in postResponse.error.last_name">{{ error }}</p>
-                        </div>
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Preferred Name') ?></label>
-                        <input ng-model="selectedGuardianData.preferred_name" type="string">
-                    </div>
-                    <div class="input select required error">
-                        <label><?= __('Gender') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="Staff[gender_id]" id="staff-gender_id"
-                                ng-options="option.id as option.name for option in genderOptions"
-                                ng-model="selectedGuardianData.gender_id"
-                                ng-change="changeGender()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                        <div ng-if="postResponse.error.gender_id" class="error-message">
-                            <p ng-repeat="error in postResponse.error.gender_id">{{ error }}</p>
-                        </div>
-                    </div>
-                    <div class="input date required">
-                        <label for="Guardian_date_of_birth"><?= __('Date Of Birth') ?></label>
-                        <div class="input-group date " id="Guardian_date_of_birth" style="">
-                            <input type="text" class="form-control " name="Guardian[date_of_birth]" ng-model="selectedGuardianData.date_of_birth">
-                            <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
-                        </div>
-                        <div ng-if="postResponse.error.date_of_birth" class="error-message">
-                            <p ng-repeat="error in postResponse.error.date_of_birth">{{ error }}</p>
-                        </div>
-                    </div>
-                    <div class="row section-header header-space-lg">Location</div>
-                    <div class="input string">
-                        <label><?= __('Address') ?></label>
-                        <input ng-model="selectedGuardianData.address" type="string">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Postal Code') ?></label>
-                        <input ng-model="selectedGuardianData.postalCode" type="string">
-                    </div>
-                    <div class="row section-header header-space-lg">Identities / Nationalities</div>
-                    <div ng-class="nationality_class">
-                        <label><?= __('Nationality') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="Guardian[nationality_id]" id="guardian-nationality_id"
-                                ng-options="option.id as option.name for option in nationalitiesOptions"
-                                ng-model="selectedGuardianData.nationality_id"
-                                ng-change="changeNationality()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                        <div ng-if="postResponse.error.nationalities[0].nationality_id" class="error-message">
-                            <p ng-repeat="error in postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
-                        </div>
-                    </div>
-                    <div ng-class="identity_type_class">
-                        <label><?= __('Identity Type') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="User[identities_type_id]" id="user-identities_type_id"
-                                ng-options="option.id as option.name for option in identityTypeOptions"
-                                ng-model="selectedGuardianData.identity_type_id"
-                                ng-change="changeIdentityType()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                        <div ng-if="postResponse.error.identities[0].identity_type_id" class="error-message">
-                            <p ng-repeat="error in postResponse.error.identities[0].identity_type_id">{{ error }}</p>
-                        </div>
-                    </div>
-                    <div ng-class="identity_class" ng-show="selectedGuardianData.identity_type_name">
-                        <label><?= __('{{selectedGuardianData.identity_type_name ? selectedGuardianData.identity_type_name : "Identity Number"}}') ?></label>
-                        <input ng-model="selectedGuardianData.identity_number" type="string">
-                        <div ng-if="postResponse.error.identities[0].number" class="error-message">
-                            <p ng-repeat="error in postResponse.error.identities[0].number">{{ error }}</p>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="step-pane sample-pane" ng-if="guardianStep === 'internal_search'">
-                <div class="table-wrapper">
-                    <div>
-                        <div class="scrolltabs">
-                            <div id="institution-student-table" class="table-wrapper">
-                                <div ng-if="internalGridOptions" kd-ag-grid="internalGridOptions" ag-selection-type="radio" class="ag-height-fixed"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="step-pane sample-pane" ng-if="guardianStep === 'external_search'">
-                <div class="table-wrapper">
-                    <div>
-                        <div class="scrolltabs sticky-content">
-                            <div id="institution-student-table" class="table-wrapper">
-                                <div ng-if="externalGridOptions" kd-ag-grid="externalGridOptions" ag-selection-type="radio" class="ag-height-fixed"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="step-pane sample-pane" ng-if="guardianStep === 'confirmation'">
-                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                    <div class="row section-header header-space-lg">Information</div>
-                    <div class="input string required">
-                        <label><?= __('Relation Type') ?></label>
-                        <input ng-model="selectedGuardianData.openemis_no" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string required">
-                        <label><?= __('OpenEMIS ID') ?></label>
                         <input ng-model="selectedGuardianData.openemis_no" type="string" ng-disabled="true">
                     </div>
                     <div class="input string required">
@@ -745,9 +268,9 @@
                     <div class="input string">
                         <label><?= __('Address Area') ?></label>
                         <div class="input-select-wrapper">
-                            <select name="Guardian[address_area_id]" id="guardian-address_area_id"
-                                ng-options="option.id as option.name for option in addressAreaOption"
-                                ng-model="selectedGuardianData.address_area_id"
+                            <select name="Staff[gender_id]" id="staff-gender_id"
+                                ng-options="option.id as option.name for option in genderOptions"
+                                ng-model="selectedGuardianData.addressArea"
                                 >
                                 <option value="" >-- <?= __('Select') ?> --</option>
                             </select>
@@ -757,9 +280,9 @@
                     <div class="input string">
                         <label><?= __('Birthplace Area') ?></label>
                         <div class="input-select-wrapper">
-                            <select name="Guardian[birthplace_area_id]" id="guardian-birthplace_area_id"
-                                ng-options="option.id as option.name for option in birthplaceAreaOption"
-                                ng-model="selectedGuardianData.birthplace_area_id"
+                            <select name="Staff[gender_id]" id="staff-gender_id"
+                                ng-options="option.id as option.name for option in genderOptions"
+                                ng-model="selectedGuardianData.birthplaceArea"
                                 >
                                 <option value="" >-- <?= __('Select') ?> --</option>
                             </select>
@@ -811,9 +334,34 @@
                             <p ng-repeat="error in postResponse.error.password">{{ error }}</p>
                         </div>
                     </div>
+                    <div class="row section-header header-space-lg">Parents and Guardian Informations</div>
+                    <div class="input string">
+                        <label><?= __('Mother Living With Student') ?></label>
+                        <input ng-model="selectedGuardianData.motherLivingWithStudent" type="string" ng-disabled="true" />
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Mother Is Deceased') ?></label>
+                        <input ng-model="selectedGuardianData.motherDeceased" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Father Living With Student') ?></label>
+                        <input ng-model="selectedGuardianData.fatherLivingWithStudent" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Father Is Deceased') ?></label>
+                        <input ng-model="selectedGuardianData.fatherDeceased" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Guardian Living With Student') ?></label>
+                        <input ng-model="selectedGuardianData.guardianLivingWithStudent" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string">
+                        <label><?= __('Guardian Is Deceased') ?></label>
+                        <input ng-model="selectedGuardianData.guardianDeceased" type="string" ng-disabled="true">
+                    </div>
                 </form>
             </div>
-            <div class="step-pane sample-pane active" ng-if="guardianStep === 'summary'">
+            <div class="step-pane sample-pane active" ng-if="step === 'summary'">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
                     <div class="wrapper">
                         <div class="wrapper-child">
@@ -944,22 +492,6 @@
         </div>
     </div>
 </div>
-
-<script>
-    $(function () {
-        var datepicker1 = $('#Users_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
-        var datepicker2 = $('#User_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
-        var datepicker3 = $('#Guardian_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
-        $( document ).on('DOMMouseScroll mousewheel scroll', function(){
-            window.clearTimeout( t );
-            t = window.setTimeout( function(){
-                datepicker1.datepicker('place');
-                datepicker2.datepicker('place');
-                datepicker3.datepicker('place');
-            });
-        });
-    });
-</script>
 
 <style>
     .pd-10 {
@@ -1261,4 +793,38 @@
         }
     }
 
+    .uib-title {
+        background-color: #fff !important;
+        color: #333 !important;
+        margin-top: -22px;
+        border-color: #ccc !important;
+    }
+
+    .uib-left, .uib-right {
+        background-color: #fff !important;
+        color: #333 !important;
+        border-color: #ccc !important;
+    }
+
+    .uib-day .btn-sm {
+        background-color: #fff !important;
+        color: #333 !important;
+        border-color: #ccc !important;
+    }
+
+    .uib-month .btn-default {
+        background-color: #fff !important;
+        color: #333 !important;
+        border-color: #ccc !important;
+    }
+
+    .uib-years .btn-default {
+        background-color: #fff !important;
+        color: #333 !important;
+        border-color: #ccc !important;
+    }
+
+    .uib-datepicker-popup {
+        padding: 5px 10px;
+    }
 </style>

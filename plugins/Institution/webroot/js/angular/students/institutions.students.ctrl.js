@@ -35,6 +35,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.guardianStep = 'user_details';
     StudentController.redirectToGuardian = false;
     StudentController.error = {};
+    StudentController.institutionId = null;
+
+    StudentController.datepickerOptions = {
+        maxDate: new Date(),
+        showWeeks: false
+    };
 
     //controller function
     StudentController.getUniqueOpenEmisId = getUniqueOpenEmisId;
@@ -74,8 +80,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
-        StudentController.initGrid();
         InstitutionsStudentsSvc.init(angular.baseUrl);
+        StudentController.institutionId = Number($window.localStorage.getItem("institution_id"));
         StudentController.translateFields = {
             'openemis_no': 'OpenEMIS ID',
             'name': 'Name',
@@ -86,6 +92,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             'identity_number': 'Identity Number',
             'account_type': 'Account Type'
         };
+        StudentController.initGrid();
         StudentController.getGenders();
     });
 
@@ -283,7 +290,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function getEducationGrades() {
         UtilsSvc.isAppendLoader(true);
-        InstitutionsStudentsSvc.getEducationGrades(StudentController.selectedStudentData.academic_period_id).then(function(resp){
+        var param = {
+            academic_periods: StudentController.selectedStudentData.academic_period_id,
+            institution_id: StudentController.institutionId
+        };
+        InstitutionsStudentsSvc.getEducationGrades(param).then(function(resp){
             StudentController.educationGradeOptions = resp.data;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
@@ -295,7 +306,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function getClasses() {
         var params = {
             academic_period: StudentController.selectedStudentData.academic_period_id,
-            institution_id: 6,
+            institution_id: StudentController.institutionId,
             grade_id: StudentController.selectedStudentData.education_grade_id
         };
         UtilsSvc.isAppendLoader(true);
@@ -743,15 +754,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             birthplace_area_id: 2,
             address_area_id: 2,
             identity_type_id: StudentController.selectedStudentData.identity_type_id,
-            education_grade_id: StudentController.selectedStudentData.education_grade_id,
+            education_grade_id: 59,
             academic_period_id: StudentController.selectedStudentData.academic_period_id,
             start_date: StudentController.selectedStudentData.startDate,
             end_date: StudentController.selectedStudentData.endDate,
-            institution_class_id: StudentController.selectedStudentData.class_id,
+            institution_class_id: 524,
             student_status_id: 1,
         };
         UtilsSvc.isAppendLoader(true);
-        InstitutionsStudentsSvc.saveStudentDetails().then(function(resp){
+        InstitutionsStudentsSvc.saveStudentDetails(params).then(function(resp){
             StudentController.message = (StudentController.selectedStudentData && StudentController.selectedStudentData.userType ? StudentController.selectedStudentData.userType.name : 'Student') + ' successfully added.';
             StudentController.messageClass = 'alert-success';
             StudentController.step = "summary";
