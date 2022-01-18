@@ -371,7 +371,7 @@ class SurveysTable extends AppTable
 
             if($settings['renderNotComplete'] === true && $settings['renderNotOpen'] === true){
                 $statusCondition = [
-                    $this->aliasField('status_id').' IN ('.self::COMPLETED.')'
+                    $this->aliasField('status_id').' IN ('.self::OPEN.')'
                 ];
             }elseif($settings['renderNotComplete'] === true && $settings['renderNotOpen'] === false){
                 $statusCondition = [
@@ -574,9 +574,20 @@ class SurveysTable extends AppTable
 
     public function onExcelGetStatusId(Event $event, Entity $entity)
     {
-        $surveyStatuses = $this->surveyStatuses;
         $status = $entity->status_id;
-        return __($surveyStatuses[$status]);
+        if($status==1){
+            return "Open";
+        }
+        if($status==2){
+            return "PENDINGAPPROVAL";
+        }
+        if($status==3){
+            return "COMPLETED";
+        }
+        if($status==-1){
+            return "SURVEY_DISABLED";
+        }
+       
     }
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
     {
