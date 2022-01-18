@@ -1,3 +1,10 @@
+### [3.73.2] - 2022-01-12
+- Bug Fixed: Institutions>Academic>Classes: Students that are assigned to a different grade(Primary 1 to Primary 2) will get a change in grade
+
+### [3.73.1] - 2022-01-12
+- Bug Fixed: Institutions>Performance>Assessments: Assessments are showing empty when the student's status is not enrolled status
+- Bug Fixed: Institutions > Performance > Assessments: Export should show only enrolled student and individual school filter should show same grades as all institution filter
+
 ### [3.73.0] - 2022-01-07
 - Implemented: Add Export button function - Institutions > Visits (include all tabs)
 - Bug Fixed: Institution>Students: Enrolled(Repeated) students are not able to be found in classes and there are duplicate students
