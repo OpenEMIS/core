@@ -572,6 +572,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
                 ]
             ]);
+        //echo "<pre>";print_r($query);die();
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -1867,7 +1868,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         /*POCOR-6463 starts*/
         $array_data = [];
-        if ($entity) {
+        if ($this->action == 'index') {
+            $array_data = $entity->total_male_students + $entity->total_female_students;
+        } else {
             foreach ($entity->subject_students as $key => $data) {
                 if ($data->student_status_id == 1) {
                     $array_data[$data->student_status_id] = ++$array_data[$data->student_status_id];
