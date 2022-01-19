@@ -1,3 +1,12 @@
+### [3.73.4] - 2022-01-19
+- Implemented: Add Export button function - Institutions > Examinations > Students
+- Implemented: Add Export button function - Institutions > Committees
+- Bug Fixed: Institution>Student/Staff: Identity in External Search is not saved after staff/student is added
+- Bug Fixed: Institution > Statistics > View page : System shows 404 error page
+- Bug Fixed: Updating security_group_users table for student transactions
+- Bug Fixed: Personal > Staff > Careers : Edit and add button page should be the same as Institution>Staff
+- Bug Fixed: Institutions>Students>Export: Issues with export
+
 ### [3.73.3] - 2022-01-14
 - Implemented: Add Export button function - Institutions > Finances > Institution Fees
 - Implemented: Add Export button function - Institutions > Transport > Providers
