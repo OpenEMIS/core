@@ -1029,4 +1029,40 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
     /*POCOR-6498 ends*/
+
+    /*POCOR-6498 Starts*/
+    public function getNextEducationGradesForTransfer($gradeId, $academicPeriodId, $getNextProgrammeGrades = true, $firstGradeOnly = false) {
+        $gradeObj = $this->get($gradeId);
+        $programmeId = $gradeObj->education_programme_id;
+        $programmeObj = $this->EducationProgrammes->get($programmeId);
+        $programmeCode = $programmeObj->code;
+        $programmeName = $programmeObj->name;
+        $nextProgrammeId = $this->EducationProgrammes->find()
+                                ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                                ->where([
+                                    'EducationSystems.academic_period_id' => $academicPeriodId,
+                                    $this->EducationProgrammes->aliasField('code') => $programmeCode,
+                                    'OR' => [
+                                        $this->EducationProgrammes->aliasField('name') => $programmeName
+                                    ]
+                                ])
+                                ->first()->id;
+        $order = $gradeObj->order;
+        $gradeOptions = $this->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'programme_grade_name'
+                ])
+                ->find('visible')
+                ->find('order')
+                ->where([
+                    $this->aliasField('education_programme_id') => $nextProgrammeId,
+                    $this->aliasField('order').' > ' => $order
+                ])
+                ->order([$this->aliasField('order')])
+                ->limit(1)
+                ->toArray();
+
+        return $gradeOptions;
+    }
+    /*POCOR-6498 ends*/
 }
