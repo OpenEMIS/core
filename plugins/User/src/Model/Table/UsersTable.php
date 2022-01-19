@@ -241,6 +241,18 @@ class UsersTable extends AppTable
         }
     }
 
+    //POCOR-6454[START]
+    public function getCorrectEducationGrade($institutionClassId){
+        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $gradeId = $InstitutionClassGrades
+        ->find()
+        ->where([$InstitutionClassGrades->aliasField('institution_class_id') =>$institutionClassId])
+        ->extract('education_grade_id')
+        ->first();
+        return $gradeId;
+    }
+    //POCOR-6454[END]
+
     public function findInstitutionStudentsNotInClass(Query $query, array $options)
     {
         $educationGradeIds = null;
@@ -254,6 +266,34 @@ class UsersTable extends AppTable
             $institutionClassRecord = TableRegistry::get('Institution.InstitutionClasses')->get($institutionClassId, ['contain' => ['EducationGrades']])->toArray();
             $academicPeriodId = $institutionClassRecord['academic_period_id'];
             $institutionId = $institutionClassRecord['institution_id'];
+             //POCOR-6454[START]
+             $correctEducationGrade = $this->getCorrectEducationGrade($institutionClassId);
+             $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+             $InstitutionStudents = TableRegistry::get('institution_students');
+             $InstitutionStudentsGradeId = $InstitutionStudents
+                     ->find()
+                     ->where([$InstitutionStudents->aliasField('academic_period_id') =>$academicPeriodId,
+                             $InstitutionStudents->aliasField('institution_id') =>$institutionId,
+                             $InstitutionStudents->aliasField('student_status_id') =>$enrolledStatus
+                     ])
+                     ->extract('education_grade_id')
+                     ->first();
+            if(!empty($InstitutionStudentsGradeId)){
+                if($correctEducationGrade != $InstitutionStudentsGradeId){
+                    // update InstitutionStudents with correct education grade
+                    $InstitutionStudents->updateAll(
+                        ['education_grade_id' => $correctEducationGrade],
+                        [
+                            'academic_period_id' => $academicPeriodId,
+                            'institution_id' => $institutionId,
+                            'student_status_id' => $enrolledStatus
+                        ]
+                    );
+                }
+            }
+            $institutionClassId = $options['institution_class_id'];
+            $institutionClassRecord = TableRegistry::get('Institution.InstitutionClasses')->get($institutionClassId, ['contain' => ['EducationGrades']])->toArray();
+             //POCOR-6454[END]
             $educationGradeIds = array_column($institutionClassRecord['education_grades'], 'id');
             if (empty($educationGradeIds)) {
                 return $query->where(['1 = 0']);
@@ -626,15 +666,19 @@ class UsersTable extends AppTable
                 ->order(['id' => 'DESC'])
                 ->first();
            $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
-           $newOpenemisNo = $resultOpenemisNoTemp + 1;
+           if($resultOpenemisNoTemp){
+            $newOpenemisNo = $resultOpenemisNoTemp + 1;
+        }else{
+            $newOpenemisNo='';
         }       
-        
-        $openemisTemp = $openemisTemps->newEntity();
-        $openemisTemp->openemis_no = $newOpenemisNo;
-        $openemisTemp->ip_address = $_SERVER['REMOTE_ADDR'];
-        $openemisTemps->save($openemisTemp);
-        
+        if($newOpenemisNo){
+            $openemisTemp = $openemisTemps->newEntity();
+            $openemisTemp->openemis_no = $newOpenemisNo;
+            $openemisTemp->ip_address = $_SERVER['REMOTE_ADDR'];
+            $openemisTemps->save($openemisTemp);
+        }
         return $newOpenemisNo;
+        }
     }
 
     public function validationDefault(Validator $validator)
