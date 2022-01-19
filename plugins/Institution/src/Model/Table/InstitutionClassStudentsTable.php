@@ -122,10 +122,11 @@ class InstitutionClassStudentsTable extends AppTable
                     $this->aliasField('education_grade_id') => $student->education_grade_id,
                     $this->aliasField('student_id') => $student->student_id,
                 ])->first();
-                
-                $results->student_status_id = 1;
-                $this->save($results);
-            
+                //POCOR-6500 starts 
+                if(!empty($results)){
+                   $results->student_status_id = 1;
+                   $this->save($results);     
+                }//POCOR-6500 ends
             }
         }
     }
