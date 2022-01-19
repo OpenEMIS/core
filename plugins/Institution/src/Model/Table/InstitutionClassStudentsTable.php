@@ -123,8 +123,10 @@ class InstitutionClassStudentsTable extends AppTable
                     $this->aliasField('student_id') => $student->student_id,
                 ])->first();
                 
-                $results->student_status_id = 1;
-                $this->save($results);
+                if(isset($results)){
+                    $results->student_status_id = 1;
+                    $this->save($results);
+                }
             
             }
         }
