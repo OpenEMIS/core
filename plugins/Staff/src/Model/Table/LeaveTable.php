@@ -56,7 +56,7 @@ class LeaveTable extends ControllerActionTable
             'auto_contain' => false,
             'autoFields' => false,
         ]);
-        $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffLeave']);
+        // $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffLeave']);
         $this->fullDayOptions = $this->getSelectOptions('general.yesno');
     }
 
@@ -603,6 +603,15 @@ class LeaveTable extends ControllerActionTable
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
+        $all_instittutions = $this->Institutions->find('list', [
+            'keyField' => 'id',
+            'valueField' => 'name'
+        ])->select([
+            $this->Institutions->aliasField('id'),
+            $this->Institutions->aliasField('name')
+        ])->order([
+            $this->Institutions->aliasField('name ASC')
+        ])->toArray();
         if ($action == 'add') {
             // at the point of doing, only Profiles can add staff leave
             if ($this->controller->name === 'Profiles') {
@@ -622,7 +631,7 @@ class LeaveTable extends ControllerActionTable
                 ])
                 ->toArray();
             $attr['type'] = 'select';
-            $attr['options'] = $institutionOptions;
+            $attr['options'] =  (empty($institutionOptions)) ? $all_instittutions : $institutionOptions;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
             $institutionId = $entity->institution_id;
