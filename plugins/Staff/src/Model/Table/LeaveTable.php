@@ -56,7 +56,9 @@ class LeaveTable extends ControllerActionTable
             'auto_contain' => false,
             'autoFields' => false,
         ]);
-        // $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffLeave']);
+        /** START: POCOR-6505 => Keep enabled the line */
+            $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffLeave']);  // POCOR-6505
+        /** END: POCOR-6505 => Keep enabled the line */
         $this->fullDayOptions = $this->getSelectOptions('general.yesno');
     }
 
@@ -106,6 +108,11 @@ class LeaveTable extends ControllerActionTable
         if ($this->controller->name !== 'Profiles') {
             $this->removeBehavior('Workflow');
         }
+
+        if ($this->controller->name == 'Profiles' && $this->action == 'index') {
+            $this->removeBehavior('Workflow');
+        }
+
         // $this->field('institution_id', ['visible' => ['index' => false, 'add' => true, 'view' => true, 'edit' => false]]);
         $this->field('number_of_days', ['visible' => ['index' => true, 'view' => true, 'edit' => false]]);
         $this->field('file_name', ['visible' => false]);
