@@ -13,6 +13,7 @@ class InstitutionExaminationsTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
+   
         $this->table('examinations');
         parent::initialize($config);
 
@@ -105,9 +106,9 @@ class InstitutionExaminationsTable extends ControllerActionTable
     {
      
         $extraField[] = [
-            'key'   => 'InstitutionExaminations.code',
+            'key' => 'InstitutionExaminations.code',
             'field' => 'code',
-            'type'  => 'string',
+            'type' => 'string',
             'label' => __('Code')
         ];
 
@@ -133,17 +134,17 @@ class InstitutionExaminationsTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key'   => 'AcademicPeriods.name',
-            'field' => 'academic_period',
-            'type'  => 'string',
-            'label' => __('Academic Period')
+            'key' => 'EducationGrades.code',
+            'field' => 'grade',
+            'type' => 'string',
+            'label' => __('Education Grade')
         ];
 
         $extraField[] = [
-            'key'   => 'EducationGrades.code',
-            'field' => 'grade',
-            'type'  => 'string',
-            'label' => __('Education Grade')
+            'key' => 'AcademicPeriods.name',
+            'field' => 'academic_period',
+            'type' => 'string',
+            'label' => __('Academic Period')
         ];
 
         $fields->exchangeArray($extraField);
