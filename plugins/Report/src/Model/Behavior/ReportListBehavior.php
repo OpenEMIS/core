@@ -61,12 +61,25 @@ class ReportListBehavior extends Behavior {
 		                $roles[] = $value->security_role_id;
 		            }
 	        	} 
-	        	$function = $securityFunctions->find()
+	   
+	        	if ($this->_table->alias() == 'InstitutionStatistics') {
+	        		$function = $securityFunctions->find()
+	        				->select([$securityFunctions->aliasField('id')])
+	        				->where([
+	        					$securityFunctions->aliasField('module') => 'Institutions',
+	        					$securityFunctions->aliasField('_delete') => $this->_table->alias() .'.'.'remove'
+	        				])
+	        				->first();
+	        	} else {
+	        		$function = $securityFunctions->find()
 	        				->select([$securityFunctions->aliasField('id')])
 	        				->where([
 	        					$securityFunctions->aliasField('module') => 'Reports',
 	        					$securityFunctions->aliasField('_delete') => $this->_table->alias() .'.'.'delete'
-	        				])->first();
+	        				])
+	        				->first();
+	        	}
+	        	
 	        	if (!empty($function)) {
 	        		$functionId = $function->id;
 	        		$data = $SecurityRoleFunctions->find()
@@ -295,9 +308,19 @@ class ReportListBehavior extends Behavior {
 
 			$name .= ' - '.$filterStr;
 		}
+		/*POCOR-6304 starts*/
+		if (array_key_exists('institution_id', $data['InstitutionStatistics'])) {
+			$institutionId = $data['InstitutionStatistics']['institution_id'];
+	        $Institutions = TableRegistry::get('Institution.Institutions');
+	        $institutionData = $Institutions->get($institutionId);
+	        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStatistics']['academic_period_id']);
+			$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
+		}
+		/*POCOR-6304 ends*/		
 
 		$params = $data[$alias];
-
+		
 		$ReportProgress = TableRegistry::get('Report.ReportProgress');
 		$obj = ['name' => $name, 'module' => $alias, 'params' => $params];
 		$id = $ReportProgress->addReport($obj);

@@ -42,6 +42,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getUserContactTypes: getUserContactTypes,
         getIdentityTypes: getIdentityTypes,
         getNationalities: getNationalities,
+        getIdentityTypesExternalSave: getIdentityTypesExternalSave,
+        getNationalitiesExternalSave: getNationalitiesExternalSave,
         getSpecialNeedTypes: getSpecialNeedTypes,
         getExternalSourceAttributes: getExternalSourceAttributes,
         getNationalityRecord: getNationalityRecord,
@@ -56,7 +58,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getInstitution: getInstitution,
         addStaffTransferRequest: addStaffTransferRequest,
         generatePassword: generatePassword,
-        translate: translate
+        translate: translate,
+        addUserIdentityNew: addUserIdentityNew,
     };
 
     var models = {
@@ -378,13 +381,56 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                         delete modifiedUser['modified'];
                         modifiedUser['is_staff'] = 1;
                         modifiedUser['start_date'] = userRecord['start_date'];
-                        StaffUser.edit(modifiedUser)
-                        .then(function(response) {
-                            deferred.resolve([response.data, userData]);
-                        }, function(error) {
-                            deferred.reject(error);
-                            console.log(error);
-                        });
+                        modifiedUser['identity_number'] = userRecord['identity_number'];
+                        modifiedUser['identity_type_id'] = userRecord['identity_type_id'];
+
+                        modifiedUser['main_nationality_id'] = userRecord['main_nationality.id'];
+                        modifiedUser['main_nationality_name'] = userRecord['main_nationality.name'];
+                        modifiedUser['security_user_id'] = userRecord['id'];
+
+                        modifiedUser['identity_type_name'] = userRecord['identity_type_name'];
+                        modifiedUser['identity_type_order'] = userRecord['main_identity_type.order'];
+                        modifiedUser['identity_type_visible'] = userRecord['main_identity_type.visible'];
+                        modifiedUser['identity_type_editable'] = userRecord['main_identity_type.editable'];
+                        modifiedUser['identity_type_default'] = userRecord['main_identity_type.default'];
+                        modifiedUser['identity_type_created_user_id'] = userRecord['main_identity_type.created_user_id'];
+                        modifiedUser['identity_type_created'] = vm.formatDateForSaving(userRecord['main_identity_type.created']);
+
+                        if (modifiedUser['identity_type_id'] != null && modifiedUser['identity_number'] != null && modifiedUser['identity_number'] != '') {
+                            userId = modifiedUser['id'];
+                            identityTypeId = modifiedUser['identity_type_id'];
+                            identityNumber = modifiedUser['identity_number'];
+                            mainNationalityId = modifiedUser['main_nationality_id'];
+                            identityTypeName = modifiedUser['identity_type_name'];
+                            nationalityTypeName = modifiedUser['main_nationality_name'];
+                            var identityTypeData = vm.getIdentityTypesExternalSave(identityTypeName);
+                            var nationalityTypeData = vm.getNationalitiesExternalSave(nationalityTypeName);
+                            setTimeout(()=>{
+                                var identityTypeId = identityTypeData.$$state['value'];
+                                vm.addUserIdentityNew(userId, identityTypeId, identityNumber, mainNationalityId)
+                                .then(function(promiseArr) {
+                                    }, function(error) {
+                                });
+                            },100);
+
+                            setTimeout(()=>{
+                                var nationalityTypeId = nationalityTypeData.$$state['value'];
+                                vm.addUserNationality(userId, nationalityTypeId)
+                                .then(function(promiseArr) {
+                                    }, function(error) {
+                                });
+                            },100);
+                        }
+
+                        setTimeout(()=>{
+                            StaffUser.edit(modifiedUser)
+                            .then(function(response) {
+                                deferred.resolve([response.data, userData]);
+                            }, function(error) {
+                                deferred.reject(error);
+                                console.log(error);
+                            });
+                    },100);
                     } else {
                         newUserRecord['date_of_birth'] = vm.formatDateForSaving(newUserRecord['date_of_birth']);
                         newUserRecord['is_staff'] = 1;
@@ -398,6 +444,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                             newUserRecord['identity_type_id'] = promiseArr[2];
                             newUserRecord['username'] = newUserRecord['openemis_no'];
                             var identityTypeId = promiseArr[2];
+                            identityNumber = newUserRecord['identity_number'];
                             StaffUser.reset();
                             StaffUser.save(newUserRecord)
                             .then(function(studentRecord) {
@@ -409,8 +456,16 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                                     var userId = userEntity.id;
                                     var promises = [];
                                     // Import identity
-                                    if (newUserRecord['identity_type_id'] != null && newUserRecord['identity_number'] != null && newUserRecord['identity_number'] != '') {
-                                        vm.addUserIdentity(userId, newUserRecord['identity_type_id'], newUserRecord['identity_number']);
+                                    // if (newUserRecord['identity_type_id'] != null && newUserRecord['identity_number'] != null && newUserRecord['identity_number'] != '') {
+                                    //     vm.addUserIdentity(userId, newUserRecord['identity_type_id'], newUserRecord['identity_number']);
+                                    // }
+                                    if (identityTypeId != null && identityNumber != null && identityNumber != '') {
+                                        // vm.addUserIdentity(userId, identityTypeId, identityNumber);
+                                        var nationalityId = userEntity.nationality_id;
+                                        vm.addUserIdentityNew(userId, identityTypeId, identityNumber, nationalityId)
+                                            .then(function(promiseArr) {
+                                                }, function(error) {
+                                            });
                                     }
                                     // Import nationality
                                     if (userEntity.nationality_id != null) {
@@ -471,6 +526,17 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         data['security_user_id'] = userId;
         data['identity_type_id'] = identityTypeId;
         data['number'] = identityNumber;
+        return Identities
+            .save(data);
+    }
+
+    function addUserIdentityNew(userId, identityTypeId, identityNumber, nationality_id)
+    {
+        var data = {};
+        data['security_user_id'] = userId;
+        data['identity_type_id'] = identityTypeId;
+        data['number'] = identityNumber;
+        data['nationality_id'] = nationality_id;
         return Identities
             .save(data);
     }
@@ -687,6 +753,28 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
             .ajax({success: success, defer: true});
     };
 
+    //POCOR-6460[START]
+    function getIdentityTypesExternalSave(identityTypesName) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data[0]['id']);
+        }
+        return IdentityTypes
+            .select(['id'])
+            .where({name: identityTypesName})
+            .ajax({success: success, defer: true});
+    };
+
+    function getNationalitiesExternalSave(nationalityTypesName) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data[0]['id']);
+        }
+        return Nationalities
+            .select(['id'])
+            .where({name: nationalityTypesName})
+            .ajax({success: success, defer: true});
+    };
+    //POCOR-6460[END]
+
     function getColumnDefs() {
         var filterParams = {
             cellHeight: 30
@@ -700,7 +788,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         });
     };
 
-    function getPositionList(fte, startDate, endDate, openemisNo) {
+    function getPositionList(fte, startDate, endDate, openemisNo, staffUserPriId = 0) {
         var vm = this;
         var institutionId = vm.getInstitutionId();
         var deferred = $q.defer();
@@ -710,7 +798,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         }
         // only 4 parameters is passed to getInstitutionPositions function. Parameters openemisNo is added but not in use.
         // var url = angular.baseUrl + '/Institution/Institutions/getInstitutionPositions/' + institutionId + '/' + fte + '/' + startDate + '/' + endDate + '/' + openemisNo;
-        var url = angular.baseUrl + '/Institution/Institutions/getInstitutionPositions/' + institutionId + '/' + fte + '/' + startDate + '/' + endDate;
+        var url = angular.baseUrl + '/Institution/Institutions/getInstitutionPositions/' + institutionId + '/' + fte + '/' + startDate + '/' + endDate + '/' + staffUserPriId;
 
         $http.get(url)
         .then(function(response){
