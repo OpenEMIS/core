@@ -4123,7 +4123,6 @@ class InstitutionsController extends AppController
     public function getClassOptions()
     {
         $requestData = $this->request->input('json_decode', true);
-        //$requestData = json_decode($this->request->data(), true);
         $academic_period = $requestData['academic_periods'];
         $grade_id = $requestData['grade_id'];
         $institution_id = $this->request->session()->read('Institution.Institutions.id');
@@ -4163,7 +4162,6 @@ class InstitutionsController extends AppController
         foreach($postype AS $result){
              $result_array[] = array("id" => $result, "name" => $result);
         }
-        
         echo json_encode($result_array);die;
     }
 
@@ -4178,7 +4176,6 @@ class InstitutionsController extends AppController
         foreach($ftetype AS $k=>$v){
            $result_array[] = array("id" => $k, "name" => $v);
         }
-    
         echo json_encode($result_array);die;
     }
 
@@ -4193,13 +4190,11 @@ class InstitutionsController extends AppController
         foreach($staff_types_result AS $result){
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);
         }
-    
         echo json_encode($result_array);die;
     }
 
     public function getShifts()
-    {   
-        //get current academic period
+    {   //get current academic period
         $academic_periods = TableRegistry::get('academic_periods');
         $academic_periods_result = $academic_periods
             ->find()
@@ -4208,22 +4203,7 @@ class InstitutionsController extends AppController
             ->first();
 
         $academic_period_id = !empty($academic_periods_result) ? $academic_periods_result->id : 0;
-        
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
-        /*$encodedInstitution = '';
-        if(!empty($institutionId)){
-            $params = [];
-            $params['id'] = $institutionId;
-            $sessionId = Security::hash('session_id', 'sha256');
-            $params[$sessionId] = session_id();
-            $jsonParam = json_encode($params);
-            $base64Param = str_replace('=', '', strtr(base64_encode($jsonParam), '+/', '-_'));
-            $signature = Security::hash($jsonParam, 'sha256', true);
-            $base64Signature = str_replace('=', '', strtr(base64_encode($signature), '+/', '-_'));
-            $encodedInstitution = "$base64Param.$base64Signature";
-        }
-        $result_array['encodedInstitution'] = $encodedInstitution;
-        */
         $shift =  TableRegistry::get('Institution.InstitutionShifts');
         $shiftData = $shift->find('all',
                             [ 'contain' => [
@@ -4239,14 +4219,11 @@ class InstitutionsController extends AppController
                 $result_array[] = array("id" => $val['id'], "name" => $val->shift_option->name);
             }
         }
-        
-        
         echo json_encode($result_array);die;
     }
 
     public function getPositions()
     {
-        //$requestData = json_decode($this->request->data(), true);
         $requestData = $this->request->input('json_decode', true);
         $fte = $requestData['fte'];
         $startDate = $requestData['startDate'];
@@ -4262,9 +4239,8 @@ class InstitutionsController extends AppController
     public function postSaveStudentsData()
     {
         $this->autoRender = false;
-        //$requestData = json_decode($this->request->data(), true);
         $requestData = $this->request->input('json_decode', true);
-        /*$requestData = json_decode('{"openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021","end_date":"31-12-2021","institution_class_id":"524","student_status_id":1}', true);*/
+        /*$requestData = json_decode('{"login_user_id":"1","openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021","end_date":"31-12-2021","institution_class_id":"524","student_status_id":1,"custom":[{"student_custom_field_id":17,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":27,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":29,"text_value":"test.jpg","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":28,"text_value":"","number_value":2,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":3,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":26,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":4,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":8,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":9,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":30,"text_value":"{\"latitude\":\"11.1\",\"longitude\":\"2.22\"}","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":18,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"}]}', true);*/
         
         if(!empty($requestData)){
             $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
@@ -4293,7 +4269,8 @@ class InstitutionsController extends AppController
             
             $institutionId = $this->request->session()->read('Institution.Institutions.id');
             $studentStatusId = (array_key_exists('student_status_id', $requestData))? $requestData['student_status_id'] : null;
-            $userId = $this->Auth->user('id');
+            $userId = (array_key_exists('login_user_id', $requestData))? $requestData['login_user_id'] : 1;
+            $custom = (array_key_exists('custom', $requestData))? $requestData['custom'] : "";
             
             //get academic period data
             $academicPeriods = TableRegistry::get('academic_periods');
@@ -4530,6 +4507,29 @@ class InstitutionsController extends AppController
                         }
                     }        
                 }
+                
+                if(!empty($custom)){
+                    $studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
+                    foreach ($custom as $skey => $sval) {
+                        $entityCustomData = [
+                            'id' => Text::uuid(),
+                            'text_value' => $sval->text_value,
+                            'number_value' => $sval->number_value,
+                            'decimal_value' => $sval->decimal_value,
+                            'textarea_value' => $sval->textarea_value,
+                            'time_value' => $sval->time_value,
+                            'file' => $sval->file,
+                            'student_custom_field_id' => $sval->student_custom_field_id,
+                            'student_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('y-m-d H:i:s')
+                        ];
+                        //save in student_custom_field_values table
+                        $entityCustomData = $studentCustomFieldValues->newEntity($entitySubjectsData);
+                        $studentCustomFieldsResult = $studentCustomFieldValues->save($entityCustomData);
+                        unset($studentCustomFieldsResult);
+                    }
+                }
             }else{
                 return false;
             }
@@ -4621,5 +4621,60 @@ class InstitutionsController extends AppController
             $SectionArr[$skey][$sval->section] = $fieldsArr;
         }
         echo json_encode($SectionArr);die;
+    }
+
+    public function customFieldsUseJustForExample()
+    {
+        /*$studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
+        $SectionData = $studentCustomFieldValues->find()
+                            ->where([
+                                $studentCustomFieldValues->aliasField('student_id') => 13077
+                            ])
+                            ->toArray();
+        
+        $SectionArr = [];
+        foreach ($SectionData as $skey => $sval) {
+            $SectionArr[$skey]['student_custom_field_id'] = $sval->student_custom_field_id;
+            $SectionArr[$skey]['text_value'] = !empty($sval->text_value) ? $sval->text_value : '';
+            $SectionArr[$skey]['number_value'] = !empty($sval->number_value) ? $sval->number_value : '';
+            $SectionArr[$skey]['decimal_value'] = !empty($sval->decimal_value) ? $sval->decimal_value : '';
+            $SectionArr[$skey]['textarea_value'] = !empty($sval->textarea_value) ? $sval->textarea_value : '';
+            $SectionArr[$skey]['time_value'] = !empty($sval->time_value) ? $sval->time_value : '';
+            $SectionArr[$skey]['file'] = "";
+            $SectionArr[$skey]['created_user_id'] = 1;
+            $SectionArr[$skey]['created'] = date('y-m-d H:i:s');
+        }
+
+        $newarry['custom'] = $SectionArr;
+        //echo "<pre>"; print_r($SectionArr); die;
+        echo json_encode($newarry);die;*/
+
+        $this->autoRender = false;
+        $requestData = json_decode('{"login_user_id":"1","openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021","end_date":"31-12-2021","institution_class_id":"524","student_status_id":1,"custom":[{"student_custom_field_id":17,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":27,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":29,"text_value":"test.jpg","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":28,"text_value":"","number_value":2,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":3,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":26,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":4,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":8,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":9,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":30,"text_value":"{\"latitude\":\"11.1\",\"longitude\":\"2.22\"}","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":18,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"}]}', true);
+        
+        $custom = $requestData['custom'];
+        //echo "<pre>"; print_r($custom); die;
+        if(!empty($custom)){
+            $studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
+            foreach ($custom as $skey => $sval) {
+                $entityCustomData = [
+                    'id' => Text::uuid(),
+                    'text_value' => $sval->text_value,
+                    'number_value' => $sval->number_value,
+                    'decimal_value' => $sval->decimal_value,
+                    'textarea_value' => $sval->textarea_value,
+                    'time_value' => $sval->time_value,
+                    'file' => $sval->file,
+                    'student_custom_field_id' => $sval->student_custom_field_id,
+                    'student_id' => $user_record_id,
+                    'created_user_id' => $userId,
+                    'created' => date('y-m-d H:i:s')
+                ];
+                //save in student_custom_field_values table
+                $entityCustomData = $studentCustomFieldValues->newEntity($entitySubjectsData);
+                $studentCustomFieldsResult = $studentCustomFieldValues->save($entityCustomData);
+                unset($studentCustomFieldsResult);
+            }
+        }
     }
 }
