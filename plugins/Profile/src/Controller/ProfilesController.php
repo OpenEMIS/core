@@ -81,6 +81,7 @@ class ProfilesController extends AppController
 
     // CAv4
     public function StudentAbsences()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']); }
+    public function Absences()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']); }
     public function StudentFees()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']); }
     public function StaffEmployments() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']); }
     public function StaffQualifications()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']); }
@@ -333,7 +334,7 @@ class ProfilesController extends AppController
 
             if (!in_array($alias, $excludedModel)) {
                 ## Enabled in POCOR-6314
-                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications'];
+                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications', 'EmploymentStatuses', 'Leave'];
                 if (in_array($alias, $enabledCrudOperation)) {
                     $model->toggle('add', true);
                     $model->toggle('edit', true);
