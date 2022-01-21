@@ -2223,7 +2223,7 @@ class StaffTable extends ControllerActionTable
                 $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
             ])
             ->where([
-                //$InstitutionClasses->aliasField('id') => $classId,
+                $InstitutionClasses->aliasField('id') => $classId,//POCOR-6508
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('staff_id') => $staffId
             ])
