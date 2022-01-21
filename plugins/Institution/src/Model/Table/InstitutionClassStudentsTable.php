@@ -644,7 +644,7 @@ class InstitutionClassStudentsTable extends AppTable
                 $this->aliasField('institution_class_id').' IN ' => $institutionClassIds,
                 $this->aliasField('education_grade_id') => $educationGradeId,
                 $this->aliasField('academic_period_id') => $academicPeriodId,
-                'StudentStatuses.id !=' => 4,
+                'StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN', 'GRADUATED', 'PROMOTED', 'REPEATED'], //POCOR-6463
                 //'SubjectStudents.education_subject_id' => $educationSubjectId['education_subject_id'],
                 'SubjectStudents.student_id IS NULL'
             ])
