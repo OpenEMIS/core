@@ -411,23 +411,29 @@ class SurveysTable extends AppTable
         $query->select([
                  'code' => 'Institutions.code',
                  'area' => 'Areas.name',
-                 'area_administrative' => 'AreaAdministratives.name'
+                 'area_administrative' => 'AreaAdministratives.name',
+                 'Statuses_name' => 'Statuses.name'
              ])
-              ->leftJoin(['SurveyForms' => 'survey_forms'], [
-                        $this->aliasField('id') = 'SurveyForms.id'
+              ->innerJoin(['SurveyForms' => 'survey_forms'], [
+                        'Surveys.id = SurveyForms.id'
                     ])
-              ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+              ->innerJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
                         'SurveyFormsFilters.survey_form_id = SurveyForms.id'
                     ])
-              ->leftJoin(['InstitutionTypes' => 'institution_types'], [
+              ->innerJoin(['InstitutionTypes' => 'institution_types'], [
                         'surveyFormsFilters.survey_filter_id = InstitutionTypes.id'
                     ])
-              ->leftJoin(['Institutions' => 'institutions'], [
+              ->innerJoin(['Institutions' => 'institutions'], [
                         'InstitutionTypes.id = Institutions.institution_type_id'
-                    ]);
+                    ])
+              ->contain([
+                 'Institutions.Areas',
+                 'Institutions.AreaAdministratives',
+                 'Institutions.Statuses'
+             ])->group('Institutions.name');
 
 
-        //print_r($query->sql()); exit;
+        //print_r($res->sql()); exit;
         // $query
         //     ->select([
         //         'code' => 'Institutions.code',
@@ -451,7 +457,6 @@ class SurveysTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
 
         $institutionStatus = $requestData->institution_status;
-
 
         // To update to this code when upgrade server to PHP 5.5 and above
         // unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
@@ -493,8 +498,8 @@ class SurveysTable extends AppTable
         ];
 
         $fields[] = [
-            'key' => 'institution_status'. $institutionStatus,
-            'field' =>'institution_status'. $institutionStatus,
+            'key' => 'Statuses_name',
+            'field' =>'Statuses_name',
             'type' => 'string',
             'label' => __('Institution Status')
         ];
