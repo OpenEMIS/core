@@ -41,13 +41,16 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         getAddNewStudentConfig: getAddNewStudentConfig,
         getUserContactTypes: getUserContactTypes,
         getIdentityTypes: getIdentityTypes,
+        getIdentityTypesExternalSave: getIdentityTypesExternalSave,
         getNationalities: getNationalities,
+        getNationalitiesExternalSave: getNationalitiesExternalSave,
         getSpecialNeedTypes: getSpecialNeedTypes,
         getExternalSourceAttributes: getExternalSourceAttributes,
         getNationalityRecord: getNationalityRecord,
         getIdentityTypeRecord: getIdentityTypeRecord,
         importMappingObj: importMappingObj,
         addUserIdentity: addUserIdentity,
+        addUserIdentityNew: addUserIdentityNew,
         addUserNationality: addUserNationality,
         getExternalSourceMapping: getExternalSourceMapping,
         generatePassword: generatePassword,
@@ -377,16 +380,68 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         modifiedUser['institution_id'] = vm.getInstitutionId();
                         modifiedUser['academic_period_id'] = userRecord['academic_period_id'];
                         modifiedUser['education_grade_id'] = userRecord['education_grade_id'];
-                        modifiedUser['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
-                        StudentUser.edit(modifiedUser)
-                        .then(function(response) {
-                            deferred.resolve([response.data, userData]);
-                        }, function(error) {
-                            deferred.reject(error);
-                            console.log(error);
-                        });
-                    } else {
+                        //POCOR-6460[START]
+                        modifiedUser['identity_number'] = userRecord['identity_number'];
+                        modifiedUser['identity_type_id'] = userRecord['identity_type_id'];
 
+                        modifiedUser['main_nationality_id'] = userRecord['main_nationality.id'];
+                        modifiedUser['main_nationality_name'] = userRecord['main_nationality.name'];
+                        modifiedUser['security_user_id'] = userRecord['id'];
+
+                        modifiedUser['identity_type_name'] = userRecord['identity_type_name'];
+                        modifiedUser['identity_type_order'] = userRecord['main_identity_type.order'];
+                        modifiedUser['identity_type_visible'] = userRecord['main_identity_type.visible'];
+                        modifiedUser['identity_type_editable'] = userRecord['main_identity_type.editable'];
+                        modifiedUser['identity_type_default'] = userRecord['main_identity_type.default'];
+                        modifiedUser['identity_type_created_user_id'] = userRecord['main_identity_type.created_user_id'];
+                        modifiedUser['identity_type_created'] = vm.formatDateForSaving(userRecord['main_identity_type.created']);
+                        if (modifiedUser['identity_type_id'] != null && modifiedUser['identity_number'] != null && modifiedUser['identity_number'] != '') {
+                            userId = modifiedUser['id'];
+                            identityTypeId = modifiedUser['identity_type_id'];
+                            identityNumber = modifiedUser['identity_number'];
+                            mainNationalityId = modifiedUser['nationality_id'];
+                            identityTypeName = modifiedUser['identity_type_name'];
+                            nationalityTypeName = modifiedUser['main_nationality_name'];
+                            setTimeout(()=>{
+                                var identityTypeData = vm.getIdentityTypesExternalSave(identityTypeName)
+                                .then(function(promiseArr) {
+                                        identityTypeId = promiseArr;
+                                        vm.addUserIdentityNew(userId, identityTypeId, identityNumber, mainNationalityId)
+                                            .then(function(promiseArr) {
+                                                }, function(error) {
+                                            });
+                                }, function(error) {
+                                });
+                            },1000);
+
+
+                            setTimeout(()=>{
+                            var nationalityTypeData = vm.getNationalitiesExternalSave(nationalityTypeName)
+                            .then(function(promiseArr) {
+                                var nationalityTypeId = promiseArr;
+                                    vm.addUserNationality(userId, nationalityTypeId)
+                                    .then(function(promiseArr) {
+                                        }, function(error) {
+                                    });
+                                    }, function(error) {
+                            });
+                            },100);
+
+                        }
+
+                        
+                        setTimeout(()=>{
+                            modifiedUser['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
+                            StudentUser.edit(modifiedUser)
+                            .then(function(response) {
+                                deferred.resolve([response.data, userData]);
+                            }, function(error) {
+                                deferred.reject(error);
+                                console.log(error);
+                            });
+                        },100);
+                        //POCOR-6460[END]
+                    } else {
                         newUserRecord['date_of_birth'] = vm.formatDateForSaving(newUserRecord['date_of_birth']);
                         newUserRecord['is_student'] = 1;
 
@@ -398,6 +453,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                             newUserRecord['nationality_id'] = promiseArr[1];
                             newUserRecord['identity_type_id'] = promiseArr[2];
                             newUserRecord['username'] = newUserRecord['openemis_no'];
+                            identityNumber = newUserRecord['identity_number'];
                             delete newUserRecord['password'];
                             var identityTypeId = promiseArr[2];
                             StudentUser.reset();
@@ -412,7 +468,12 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                                     var promises = [];
                                     // Import identity
                                     if (identityTypeId != null && identityNumber != null && identityNumber != '') {
-                                        vm.addUserIdentity(userId, identityTypeId, identityNumber);
+                                        // vm.addUserIdentity(userId, identityTypeId, identityNumber);
+                                        var nationalityId = userEntity.nationality_id;
+                                        vm.addUserIdentityNew(userId, identityTypeId, identityNumber, nationalityId)
+                                            .then(function(promiseArr) {
+                                                }, function(error) {
+                                            });
                                     }
                                     // Import nationality
                                     if (userEntity.nationality_id != null) {
@@ -467,6 +528,17 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         data['security_user_id'] = userId;
         data['identity_type_id'] = identityTypeId;
         data['number'] = identityNumber;
+        return Identities
+            .save(data);
+    }
+
+    function addUserIdentityNew(userId, identityTypeId, identityNumber, nationality_id)
+    {
+        var data = {};
+        data['security_user_id'] = userId;
+        data['identity_type_id'] = identityTypeId;
+        data['number'] = identityNumber;
+        data['nationality_id'] = nationality_id;
         return Identities
             .save(data);
     }
@@ -679,6 +751,28 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .find('SchoolAcademicPeriod')
             .ajax({success: success, defer: true});
     };
+
+    //POCOR-6460[START]
+    function getIdentityTypesExternalSave(identityTypesName) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data[0]['id']);
+        }
+        return IdentityTypes
+            .select(['id'])
+            .where({name: identityTypesName})
+            .ajax({success: success, defer: true});
+    };
+
+    function getNationalitiesExternalSave(nationalityTypesName) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data[0]['id']);
+        }
+        return Nationalities
+            .select(['id'])
+            .where({name: nationalityTypesName})
+            .ajax({success: success, defer: true});
+    };
+    //POCOR-6460[END]
 
     function getEducationGrades(options) {
         var success = function(response, deferred) {
