@@ -404,21 +404,46 @@ class SurveysTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
-        $query
-            ->select([
-                'code' => 'Institutions.code',
-                'area' => 'Areas.name',
-                'area_administrative' => 'AreaAdministratives.name'
-            ])
-            ->contain([
-                'Institutions.Areas',
-                'Institutions.AreaAdministratives',
-                'Institutions.Statuses'
-            ])
-            //Only Active schools are able to generate survey
-            ->where([
-                'Statuses.code' => 'ACTIVE'
-            ]);
+        $surveyForms = TableRegistry::get('survey_forms');
+        $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
+        $institutionTypes = TableRegistry::get('institution_types');
+        $institutions = TableRegistry::get('institutions');
+        $query->select([
+                 'code' => 'Institutions.code',
+                 'area' => 'Areas.name',
+                 'area_administrative' => 'AreaAdministratives.name'
+             ])
+              ->leftJoin(['SurveyForms' => 'survey_forms'], [
+                        $this->aliasField('id') = 'SurveyForms.id'
+                    ])
+              ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+                        'SurveyFormsFilters.survey_form_id = SurveyForms.id'
+                    ])
+              ->leftJoin(['InstitutionTypes' => 'institution_types'], [
+                        'surveyFormsFilters.survey_filter_id = InstitutionTypes.id'
+                    ])
+              ->leftJoin(['Institutions' => 'institutions'], [
+                        'InstitutionTypes.id = Institutions.institution_type_id'
+                    ]);
+
+
+        //print_r($query->sql()); exit;
+        // $query
+        //     ->select([
+        //         'code' => 'Institutions.code',
+        //         'area' => 'Areas.name',
+        //         'area_administrative' => 'AreaAdministratives.name'
+        //     ])
+        //     ->contain([
+        //         'Institutions.Areas',
+        //         'Institutions.AreaAdministratives',
+        //         'Institutions.Statuses'
+        //     ])
+        //     //Only Active schools are able to generate survey
+        //     ->where([
+        //         'Statuses.code' => 'ACTIVE'
+        //     ]);
+
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
