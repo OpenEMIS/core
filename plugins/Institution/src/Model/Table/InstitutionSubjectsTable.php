@@ -306,26 +306,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 ->group(['class_id'])
                 ->hydrate(false)
                 ->toArray();
-
-            /*POCOR-6508 starts - Staff should be able to assigned classes subjects*/
-            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-            $myClassesPermission = $InstitutionClasses->getRolePermissionAccessForMyClasses($userId, $institutionId);
-            if (empty($classOptions) && $myClassesPermission) {
-                $classOptions = $InstitutionClasses->find('list', ['keyField' => 'class_id', 'valueField' => 'class_name'])
-                                ->select([
-                                    'class_id' => $InstitutionClasses->aliasField('id'), 
-                                    'class_name' => $InstitutionClasses->aliasField('name')
-                                ])
-                                ->where([
-                                    $InstitutionClasses->aliasField('academic_period_id') => $selectedAcademicPeriodId,
-                                    $InstitutionClasses->aliasField('staff_id') => $userId,
-                                    $InstitutionClasses->aliasField('institution_id') => $institutionId
-                                ])
-                                ->group(['class_id'])
-                                ->hydrate(false)
-                                ->toArray();
-            }
-            /*POCOR-6508 ends*/
         }
 
         if (empty($classOptions) && !isset($extra['noProgrammes'])) {
