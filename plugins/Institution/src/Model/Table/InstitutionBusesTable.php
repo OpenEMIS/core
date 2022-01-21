@@ -95,7 +95,6 @@ class InstitutionBusesTable extends ControllerActionTable
             'institution_id' => $institutionId
         ])
         ->toArray();
-
         $transportProviderOptions = [-1 => __('All Providers')] + $transportProviders;
         $extra['transportProviders'] = $this->request->query('provider');  
         // provider filter end
@@ -179,12 +178,15 @@ class InstitutionBusesTable extends ControllerActionTable
     }
     // POCOR-6168 For excel Filters
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+   public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $modelAlias = 'InstitutionBuses';
+        $this->field('institution_transport_provider_id', ['type' => 'select', 'after' => 'comment']);
+        $this->field('bus_type_id', ['type' => 'select', 'after' => 'institution_transport_provider_id']);
+        $this->field('transport_status_id', ['type' => 'select', 'after' => 'bus_type_id']);
+        /*$modelAlias = 'InstitutionBuses';
         $userType = '';
-        $this->controller->changePageHeader($this, $modelAlias, $userType);
-    }
+        $this->controller->changePageHeader($this, $modelAlias, $userType);*/
+    } 
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
@@ -197,6 +199,9 @@ class InstitutionBusesTable extends ControllerActionTable
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public  function onUpdateStatus(){
     }
 
 }
