@@ -638,17 +638,16 @@ class UsersTable extends AppTable
                 ->order(['id' => 'DESC'])
                 ->first();
            $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
-           if($resultOpenemisNoTemp){
-            $newOpenemisNo = $resultOpenemisNoTemp + 1;
-        }else{
-            $newOpenemisNo='';
-        }       
         if($newOpenemisNo){
+            $newOpenemisNo = $resultOpenemisNoTemp+1;
+            $newOpenemisNo=$prefix.$newOpenemisNo; 
             $openemisTemp = $openemisTemps->newEntity();
             $openemisTemp->openemis_no = $newOpenemisNo;
             $openemisTemp->ip_address = $_SERVER['REMOTE_ADDR'];
             $openemisTemps->save($openemisTemp);
         }
+        $newOpenemisNo = $resultOpenemisNoTemp;
+        $newOpenemisNo=$prefix.$newOpenemisNo;  
         return $newOpenemisNo;
         }
     }
