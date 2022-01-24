@@ -1525,13 +1525,34 @@ class InstitutionsController extends AppController
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
-        //for api purpose starts
+        //for api purpose POCOR-5672 starts
         if($this->request->params['action'] == 'getEducationGrade'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getEducationGrade';
         }
         if($this->request->params['action'] == 'getClassOptions'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getClassOptions';
-        }//for api purpose ends
+        }
+        if($this->request->params['action'] == 'getPositionType'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getPositionType';
+        }
+        if($this->request->params['action'] == 'getFTE'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getFTE';
+        }
+        if($this->request->params['action'] == 'getShifts'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getShifts';
+        }
+        if($this->request->params['action'] == 'getPositions'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getPositions';
+        }
+        if($this->request->params['action'] == 'getStaffType'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStaffType';
+        }
+        if($this->request->params['action'] == 'studentCustomFields'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'studentCustomFields';
+        }
+        if($this->request->params['action'] == 'postSaveStudentsData'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'postSaveStudentsData';
+        }//for api purpose POCOR-5672 ends
         return $events;
     }
 
