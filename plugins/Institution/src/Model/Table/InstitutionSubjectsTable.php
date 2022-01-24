@@ -1867,21 +1867,47 @@ class InstitutionSubjectsTable extends ControllerActionTable
     public function onGetTotalStudents(Event $event, Entity $entity)
     {
         /*POCOR-6463 starts*/
-        $array_data = [];
-        if ($this->action == 'index') {
-            $array_data = $entity->total_male_students + $entity->total_female_students;
-        } else {
-            foreach ($entity->subject_students as $key => $data) {
-                if ($data->student_status_id == 1) {
-                    $array_data[$data->student_status_id] = ++$array_data[$data->student_status_id];
-                }
-            }
-        }
+        // $array_data = [];
+        // echo "<pre>"; print_r($entity); exit;
+        // foreach ($entity->subject_students as $key => $data) {
+        //     if ($data->student_status_id == 1) {
+        //         $array_data[$data->student_status_id] = ++$array_data[$data->student_status_id];
+        //     }
+        // }
         
-        return $array_data;
+        return $entity->classes[0]['total_male_students'] + $entity->classes[0]['total_female_students'];
         /*POCOR-6463 ends*/
     }
 
+    /*POCOR-6463 starts*/
+    public function onGetTotalMaleStudents(Event $event, Entity $entity)
+    { 
+        // $array_data = [];
+        // echo "<pre>"; print_r(); exit;
+        // foreach ($entity->subject_students as $key => $data) {
+        //     echo "<pre>";print_r($data);die();
+        //     if ($data->student_status_id == 1) {
+        //         $array_data[$data->student_status_id] = ++$array_data[$data->student_status_id];
+        //     }
+        // }
+        
+        return $entity->classes[0]['total_male_students'];
+    }
+
+    public function onGetTotalFemaleStudents(Event $event, Entity $entity)
+    { 
+        // $array_data = [];
+        // echo "<pre>"; print_r(); exit;
+        // foreach ($entity->subject_students as $key => $data) {
+        //     echo "<pre>";print_r($data);die();
+        //     if ($data->student_status_id == 1) {
+        //         $array_data[$data->student_status_id] = ++$array_data[$data->student_status_id];
+        //     }
+        // }
+        
+        return $entity->classes[0]['total_female_students'];
+    }
+    /*POCOR-6463 ends*/
     public function onExcelGetTotalStudents(Event $event, Entity $entity)
     {
         return $entity->total_male_students + $entity->total_female_students;
