@@ -628,28 +628,27 @@ class UsersTable extends AppTable
         
         $newOpenemisNo = $prefix.$newStamp;
         $openemisTemps = TableRegistry::get('User.OpenemisTemps');        
+        $SecurityUser = TableRegistry::get('security_users');
         
-        $resultOpenemisTemps = $openemisTemps->find('all')
+           $resultOpenemisTemp = $SecurityUser->find('all')                
+                ->order(['id' => 'DESC'])
+                ->first();
+
+           $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
+            $newOpenemisNo = $resultOpenemisNoTemp+1;
+            $newOpenemisNo=$prefix.$newOpenemisNo;
+            $resultOpenemisTemps = $openemisTemps->find('all')
                 ->where(['openemis_no' => $newOpenemisNo])
                 ->first();
        
-        if(!empty($resultOpenemisTemps->openemis_no)){  
-           $resultOpenemisTemp = $openemisTemps->find('all')                
-                ->order(['id' => 'DESC'])
-                ->first();
-           $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
-        if($newOpenemisNo){
-            $newOpenemisNo = $resultOpenemisNoTemp+1;
-            $newOpenemisNo=$prefix.$newOpenemisNo; 
+        if(empty($resultOpenemisTemps->openemis_no)){   
             $openemisTemp = $openemisTemps->newEntity();
             $openemisTemp->openemis_no = $newOpenemisNo;
             $openemisTemp->ip_address = $_SERVER['REMOTE_ADDR'];
             $openemisTemps->save($openemisTemp);
-        }
-        $newOpenemisNo = $resultOpenemisNoTemp;
-        $newOpenemisNo=$prefix.$newOpenemisNo;  
+          }
         return $newOpenemisNo;
-        }
+        
     }
 
     public function validationDefault(Validator $validator)
