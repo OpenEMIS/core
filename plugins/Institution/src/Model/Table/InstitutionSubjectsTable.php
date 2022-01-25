@@ -572,7 +572,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
                 ]
             ]);
-        //echo "<pre>";print_r($query);die();
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -1867,45 +1866,75 @@ class InstitutionSubjectsTable extends ControllerActionTable
     public function onGetTotalStudents(Event $event, Entity $entity)
     {
         /*POCOR-6463 starts*/
-        // $array_data = [];
-        // echo "<pre>"; print_r($entity); exit;
+        $array_data = [];
+        $subjectId = $entity->id;
+        $institutionId = $entity->institution_id;
+        $periodId = $entity->academic_period_id;
+        $institutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $totalStudentCount = $institutionSubjectStudents->find()
+                            ->where([
+                                $institutionSubjectStudents->aliasField('institution_subject_id') => $subjectId,
+                                $institutionSubjectStudents->aliasField('institution_id') => $institutionId,
+                                $institutionSubjectStudents->aliasField('academic_period_id') => $periodId,
+                                $institutionSubjectStudents->aliasField('student_status_id') => 1,
+                            ])->count();
+        //echo "<pre>"; print_r($totalStudentCount); exit;
         // foreach ($entity->subject_students as $key => $data) {
         //     if ($data->student_status_id == 1) {
         //         $array_data[$data->student_status_id] = ++$array_data[$data->student_status_id];
         //     }
         // }
         
-        return $entity->classes[0]['total_male_students'] + $entity->classes[0]['total_female_students'];
+        //return $entity->classes[0]['total_male_students'] + $entity->classes[0]['total_female_students'];
+        return $totalStudentCount;
         /*POCOR-6463 ends*/
     }
 
     /*POCOR-6463 starts*/
     public function onGetTotalMaleStudents(Event $event, Entity $entity)
     { 
-        // $array_data = [];
-        // echo "<pre>"; print_r(); exit;
-        // foreach ($entity->subject_students as $key => $data) {
-        //     echo "<pre>";print_r($data);die();
-        //     if ($data->student_status_id == 1) {
-        //         $array_data[$data->student_status_id] = ++$array_data[$data->student_status_id];
-        //     }
-        // }
+        $subjectId = $entity->id;
+        $genderId = 1; // male
+        $institutionId = $entity->institution_id;
+        $periodId = $entity->academic_period_id;
+        $institutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $users = TableRegistry::get('User.Users');
+        $totalMaleStudentCount = $institutionSubjectStudents->find()
+                            ->leftJoin([$users->alias() => $users->table()], [
+                                $users->aliasField('id = ') . $institutionSubjectStudents->aliasField('student_id')
+                            ])
+                            ->where([
+                                $institutionSubjectStudents->aliasField('institution_subject_id') => $subjectId,
+                                $institutionSubjectStudents->aliasField('institution_id') => $institutionId,
+                                $institutionSubjectStudents->aliasField('academic_period_id') => $periodId,
+                                $institutionSubjectStudents->aliasField('student_status_id') => 1,
+                                $users->aliasField('gender_id') => $genderId
+                            ])->count();
         
-        return $entity->classes[0]['total_male_students'];
+        return $totalMaleStudentCount;
     }
 
     public function onGetTotalFemaleStudents(Event $event, Entity $entity)
     { 
-        // $array_data = [];
-        // echo "<pre>"; print_r(); exit;
-        // foreach ($entity->subject_students as $key => $data) {
-        //     echo "<pre>";print_r($data);die();
-        //     if ($data->student_status_id == 1) {
-        //         $array_data[$data->student_status_id] = ++$array_data[$data->student_status_id];
-        //     }
-        // }
+        $subjectId = $entity->id;
+        $genderId = 2; // female
+        $institutionId = $entity->institution_id;
+        $periodId = $entity->academic_period_id;
+        $institutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $users = TableRegistry::get('User.Users');
+        $totalFemaleStudentCount = $institutionSubjectStudents->find()
+                            ->leftJoin([$users->alias() => $users->table()], [
+                                $users->aliasField('id = ') . $institutionSubjectStudents->aliasField('student_id')
+                            ])
+                            ->where([
+                                $institutionSubjectStudents->aliasField('institution_subject_id') => $subjectId,
+                                $institutionSubjectStudents->aliasField('institution_id') => $institutionId,
+                                $institutionSubjectStudents->aliasField('academic_period_id') => $periodId,
+                                $institutionSubjectStudents->aliasField('student_status_id') => 1,
+                                $users->aliasField('gender_id') => $genderId
+                            ])->count();
         
-        return $entity->classes[0]['total_female_students'];
+        return $totalFemaleStudentCount;
     }
     /*POCOR-6463 ends*/
     public function onExcelGetTotalStudents(Event $event, Entity $entity)
