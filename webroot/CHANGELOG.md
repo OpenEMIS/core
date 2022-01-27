@@ -1,3 +1,9 @@
+### [3.73.6] - 2022-01-27
+- Bug Fixed: Institutions>Report Cards>Comments: Homeroom Teachers are able to comment as Homeroom Teachers under other persons Homeroom classes
+- Bug Fixed: Directory > Import: Getting 404 Error
+- Bug Fixed: Institutions>Students>Export: Issues with export
+- Bug Fixed: Institution>Students>Add: Adds error message when not adding start date
+
 ### [3.73.5] - 2022-01-21
 - Bug Fixed: Institutions>Staff>Career>Attendances:Able to record staff time-in and time-out even if there is staff leave on the specified dates
 - Bug Fixed: Institutions>Students>Transfer: Validation for next education grade not to show not visible programmes and grades in education structure
