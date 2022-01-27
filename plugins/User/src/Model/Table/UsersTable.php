@@ -1072,27 +1072,31 @@ class UsersTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // This logic is meant for Import
-        if ($entity->has('customColumns')) {
-            foreach ($entity->customColumns as $column => $value) {
-                switch ($column) {
-                    case 'Identity':
+        //comment for ticket POCOR-6512
+            /*if ($entity->has('customColumns')) {
+                foreach ($entity->customColumns as $column => $value) {
+                    switch ($column) {
+                        case 'Identity':*/
+        //comment for ticket POCOR-6512
                         $userIdentitiesTable = TableRegistry::get('User.Identities');
 
                         $defaultValue = $userIdentitiesTable->IdentityTypes->getDefaultValue();
 
-                        if ($defaultValue) {
+                      //  if ($defaultValue) {
                             $userIdentityData = $userIdentitiesTable->newEntity([
-                                'identity_type_id' => $defaultValue,
-                                'number' => $value,
-                                'security_user_id' => $entity->id
+                                'identity_type_id' => $entity->identity_type_id,
+                                'number' => $entity->identity_number,
+                                'security_user_id' => $entity->id,
+                                'nationality_id' =>$entity->nationality_id
                             ]);
                             $userIdentitiesTable->save($userIdentityData);
-                        }
-                        break;
+                       // }
+        //comment for ticket POCOR-6512
+                      /*  break;
                 }
             }
         }
-
+*/      //comment for ticket POCOR-6512
         // This is for import contact from Import User excel
         if ($entity->has('action_type') && $entity->action_type == 'imported') {
             if (!$entity->has('contact_error')) {
