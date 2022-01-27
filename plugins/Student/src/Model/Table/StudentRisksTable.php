@@ -159,7 +159,20 @@ class StudentRisksTable extends ControllerActionTable
                 $studentId = $session->read('Student.Students.id');
             }/*POCOR-6267 ends*/ else{
                 $sId = $session->read('Student.ExaminationResults.student_id');
+                /**
+                 * Need to add current login id as param when no data found in existing variable
+                 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+                 * @ticket POCOR-6548
+                 */
+                //# START: [POCOR-6548] Check if user data not found then add current login user data
+                if ( is_int($sId) ) {
+                    $studentId = $sId;
+                } else if ($sId == null || empty($sId) || $sId == '') {
+                        $studentId = $user['id'];
+                } else {
                 $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+                }
+                //# END: [POCOR-6548] Check if user data not found then add current login user data
             }
         } else {
             $studentId = $session->read('Student.Students.id');
