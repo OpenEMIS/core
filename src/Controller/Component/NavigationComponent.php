@@ -416,14 +416,6 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileStudentNavigation());
                 $session->write('Profile.Profiles.reload', true);
             }
-
-            if ($isGuardian) {
-                $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileGuardianNavigation());
-
-                $navigations = $this->appendNavigation('Profiles.ProfileStudents.index', $navigations, $this->getProfileGuardianStudentNavigation());
-
-                $this->checkClassification($navigations);
-            }
         } elseif (($controller->name == 'GuardianNavs' && $action != 'index')) {
             $navigations = $this->appendNavigation('GuardianNavs.GuardianNavs.index', $navigations, $this->getGuardianNavNavigation());
             $this->checkClassification($navigations);
@@ -827,7 +819,7 @@ class NavigationComponent extends Component
             ],
 
             'Institutions.Positions' => [
-                'title' => 'Positions ',
+                'title' => 'Positions',
                 'parent' => 'Institutions.Appointment',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Institutions.Positions', 'Institutions.ImportInstitutionPositions'],
@@ -1042,11 +1034,11 @@ class NavigationComponent extends Component
                 'link' => false,
             ],
 
-            'InstitutionTransportProviders.index' => [
+            'Institutions.InstitutionTransportProviders.index' => [
                 'title' => 'Providers',
                 'parent' => 'Institutions.Transport',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionTransportProviders.add', 'InstitutionTransportProviders.edit', 'InstitutionTransportProviders.view', 'InstitutionTransportProviders.delete']
+                'selected' => ['Institutions.InstitutionTransportProviders.add', 'Institutions.InstitutionTransportProviders.edit', 'Institutions.InstitutionTransportProviders.view', 'Institutions.InstitutionTransportProviders.delete']
             ],
 
             'Institutions.InstitutionBuses.index' => [
@@ -1445,25 +1437,6 @@ class NavigationComponent extends Component
                 'selected' => ['Profiles.StudentBankAccounts', 'Profiles.StudentFees']
             ],
         ];
-        return $navigation;
-    }
-
-    public function getProfileGuardianNavigation()
-    {
-        $navigation = [
-            'Profiles.Guardian' => [
-                'title' => 'Guardian',
-                'parent' => 'Profiles.Personal',
-                'link' => false,
-            ],
-            'Profiles.ProfileStudents.index' => [
-                'title' => 'Students',
-                'parent' => 'Profiles.Guardian',
-                'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.ProfileStudents']
-            ],
-        ];
-
         return $navigation;
     }
 
