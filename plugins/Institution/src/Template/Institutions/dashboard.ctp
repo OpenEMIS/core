@@ -63,7 +63,7 @@ $this->start('panelBody');
 	</div>
     <div class="data-section section_custom_3">
 		<div class="data-field">
-			<button id="institute_profile_detail"  class="btn btn-default btn-save">Details</button>
+			<button id="institute_profile_detail"  class="btn btn-default btn-save"><?= __('Details'); ?></button>
 		</div>
 	</div>
 	</div>
@@ -97,7 +97,7 @@ $this->start('panelBody');
 <?php endif ?>
 <!---->
 <?php if(isset($haveProfilePermission) && $haveProfilePermission == 1) :?>
-<h2><?= __($instituteName.'  -  '.'Dashboard'); ?></h2>
+<h2><?= __($instituteName).'  -  '. __('Dashboard'); ?></h2>
 <hr class="ng-scope">
 <?php endif ?>
 <div class="row institution-dashboard">

@@ -30,6 +30,7 @@ class StudentBehavioursTable extends AppTable
         $this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
+        $this->belongsTo('InstitutionStudents', ['className' => 'InstitutionStudent.InstitutionStudents', 'foreignKey' => 'student_id']);
         $this->hasMany('StudentBehaviourAttachments', [
             'className' => 'Institutions.StudentBehaviourAttachments', 
             'dependent' => true,
@@ -44,6 +45,7 @@ class StudentBehavioursTable extends AppTable
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function implementedEvents()
@@ -574,6 +576,7 @@ class StudentBehavioursTable extends AppTable
 
     public function getStudentBehaviourTabElements($options = [])
     {
+  
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
 
@@ -594,6 +597,27 @@ class StudentBehavioursTable extends AppTable
         ];
 
         return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+
+       $academicPeriod = $this->request->query['academic_period_id'];  
+        $classId =  $this->request->query['class_id']; 
+        $query
+        ->select(['title' => 'StudentBehaviours.title','description' => 'StudentBehaviours.description', 'action' => 'StudentBehaviours.action','date_of_behaviour' => 'StudentBehaviours.date_of_behaviour','time_of_behaviour' => 'StudentBehaviours.time_of_behaviour','academic_period_name' => 'AcademicPeriods.name'])
+        ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+            $this->AcademicPeriods->aliasField('id').' = ' . 'StudentBehaviours.academic_period_id'
+        ])
+      
+        ->LeftJoin([$this->Institutions->alias() => $this->Institutions->table()],[
+            $this->Institutions->aliasField('id').' = ' . 'StudentBehaviours.institution_id'
+        ])
+        ->LeftJoin([$this->StudentBehaviourCategories->alias() => $this->StudentBehaviourCategories->table()],[
+            $this->StudentBehaviourCategories->aliasField('id').' = ' . 'StudentBehaviours.student_behaviour_category_id'
+        ])
+        ->where(['StudentBehaviours.academic_period_id' =>  $academicPeriod]);
+           
     }
 
     /*POCOR-5177 starts*/
@@ -630,4 +654,5 @@ class StudentBehavioursTable extends AppTable
         }
     }
     /*POCOR-5177 ends*/
+
 }

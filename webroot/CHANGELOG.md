@@ -1,3 +1,60 @@
+### [3.73.6] - 2022-01-27
+- Bug Fixed: Institutions>Report Cards>Comments: Homeroom Teachers are able to comment as Homeroom Teachers under other persons Homeroom classes
+- Bug Fixed: Directory > Import: Getting 404 Error
+- Bug Fixed: Institutions>Students>Export: Issues with export
+- Bug Fixed: Institution>Students>Add: Adds error message when not adding start date
+
+### [3.73.5] - 2022-01-21
+- Bug Fixed: Institutions>Staff>Career>Attendances:Able to record staff time-in and time-out even if there is staff leave on the specified dates
+- Bug Fixed: Institutions>Students>Transfer: Validation for next education grade not to show not visible programmes and grades in education structure
+- Bug Fixed: Institutions>Students>Promote/Repeat: Individual promotion and group promotion is not working
+- Bug Fixed: Institutions>Performance>Assessments: Students of duplicate same subject are not appearing according to Academic>Subjects
+- Bug Fixed: Institutions > Staff > Add Staff : Start Date Date picker should not be restricted
+
+### [3.73.4] - 2022-01-19
+- Implemented: Add Export button function - Institutions > Examinations > Students
+- Implemented: Add Export button function - Institutions > Committees
+- Bug Fixed: Institution>Student/Staff: Identity in External Search is not saved after staff/student is added
+- Bug Fixed: Institution > Statistics > View page : System shows 404 error page
+- Bug Fixed: Updating security_group_users table for student transactions
+- Bug Fixed: Personal > Staff > Careers : Edit and add button page should be the same as Institution>Staff
+- Bug Fixed: Institutions>Students>Export: Issues with export
+
+### [3.73.3] - 2022-01-14
+- Implemented: Add Export button function - Institutions > Finances > Institution Fees
+- Implemented: Add Export button function - Institutions > Transport > Providers
+- Bug Fixed: Institution > Attendance > Staff : System still allows user to set time in/out when school is closed
+- Bug Fixed: Reports > Institution > WASH Reports : System does not validate when there are mandatory fields
+- Bug Fixed: Improvement of School Shift functions-Edit function for School Shift(Owner-Other Institution)
+- Bug Fixed: Institutions>General>Calendar: Unable to add calendar
+- Bug Fixed: Personal > Staff > Careers : System should allow user to Edit, Add and Delete Leave
+- Bug Fixed: Report>Custom: institution_id filter is not populating
+- Bug Fixed: Reports> Student: Enrollment summary support is not showing for all institutions
+- Bug Fixed: Institutions>Undo: Students are not showing out in the withdrawn list
+- Bug Fixed: Administration>System Setup>Localisation>Translation: Words not reflected and existed
+- Bug Fixed: Personal > Guardians : Remove Guardians sub-menu under Personal Menu
+- Bug Fixed: Institutions>Report Cards>Comments:Overall average in report card>comment which is showing 0 even though there is data and overall average/total marks does not tally
+- Bug Fixed: Institutions: No record found in Institution
+
+### [3.73.2] - 2022-01-12
+- Bug Fixed: Institutions>Academic>Classes: Students that are assigned to a different grade(Primary 1 to Primary 2) will get a change in grade
+
+### [3.73.1] - 2022-01-12
+- Bug Fixed: Institutions>Performance>Assessments: Assessments are showing empty when the student's status is not enrolled status
+- Bug Fixed: Institutions > Performance > Assessments: Export should show only enrolled student and individual school filter should show same grades as all institution filter
+
+### [3.73.0] - 2022-01-07
+- Implemented: Add Export button function - Institutions > Visits (include all tabs)
+- Bug Fixed: Institution>Students: Enrolled(Repeated) students are not able to be found in classes and there are duplicate students
+- Bug Fixed: Institution>Performance>Report Cards: Subject Teachers Names are not reflected on the Report Card for some users
+- Bug Fixed: Development of Institution Profile placeholder: Contains Non-Teaching Staff placeholder in Extra Details tab
+- Bug Fixed: Institution>Overview: Institution Overview Page should contain custom fields
+- Bug Fixed: Institution>Infrastructure>Utilities: Report should include all the utilities(Electricity,Internet and Telephone)
+- Bug Fixed: Institutions>Performance>Outcomes: Homeroom teacher is unable to see UKG Kindness even though he is the homeroom teacher
+- Bug Fixed: Institutions>Academic>Classes: Changes to export button where student information are removed
+- Bug Fixed: Institutions>Academic>Subject: Changes to export button where teacher information is removed
+- Bug Fixed: Institutions>Staff>Overview>Export: Extra custom fields are showing even though one of them is removed
+
 ### [3.72.5] - 2021-12-30
 - Bug Fixed: Institutions: Move "Shifts" out from "Academic" and place it under "General"
 - Bug Fixed: Institution>Performance>Outcome: Students that are transferred are showing in Performance>Outcome>Students
