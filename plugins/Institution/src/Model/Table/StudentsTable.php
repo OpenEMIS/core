@@ -224,13 +224,6 @@ class StudentsTable extends ControllerActionTable
         $UserContact = TableRegistry::get('User.Contacts');
         $StudentStatuses = TableRegistry::get('student_statuses');
 
-
-        /* $subquery = $this->Users->find()->select([
-            'guartdian_name' => "CONCAT(Users.first_name,' ',Users.last_name)"
-        ])
-        ->where([
-            'Users.id = StudentGurdians.guardian_id'
-        ]); */
         $query
        ->where([$this->aliasField('institution_id') => $institutionId])
             ->contain([
@@ -354,34 +347,39 @@ class StudentsTable extends ControllerActionTable
             return $results->map(function ($row) use($periodId) {
                 // POCOR-6338 starts
                 $Users = TableRegistry::get('security_users');
-                $institutionStudents = TableRegistry::get('institution_students');
-                $user_data= $Users
-                            ->find()
-                            ->select([
-                                        'student_status'=>'(case 
-                                            when StudentStatuses.name = "Repeated" then "Enrolled (Repeater)"
-                                            when StudentStatuses.name = "Enrolled" then "Enrolled"
-                                            when StudentStatuses.name = "Transferred" then "Transferred"
-                                            when StudentStatuses.name = "Withdrawn" then "Withdrawn"
-                                            when StudentStatuses.name = "Graduated" then "Graduated"
-                                            else "Promoted" end
-                                        )'
-                            ])
-                            ->leftJoin(['InstitutionStudents' => 'institution_students'], [
-                                'InstitutionStudents.student_id = '.$Users->aliasField('id')
-                            ]) 
-                            ->leftJoin(['StudentStatuses' => 'student_statuses'], [
-                                'StudentStatuses.id = InstitutionStudents.student_status_id'
-                            ])
-                            ->where([
-                                'security_users.openemis_no' => $row->openemis_no,
-                                'InstitutionStudents.institution_id'=> $row->institution_id,
-                                'InstitutionStudents.academic_period_id'=> $periodId //POCOR-6487
-                            ])
-                            ->order(['InstitutionStudents.created' => DESC])
-                            ->first();
-                $row['student_status'] = $user_data->student_status;
-                // POCOR-6338 ends                
+                /*POCOR-6543 starts*/
+                $InstitutionStudents = TableRegistry::get('institution_students');
+                $InstitutionStudentsCurrentData = $InstitutionStudents
+                    ->find()
+                    ->select([
+                        $InstitutionStudents->aliasField('id'),
+                        $InstitutionStudents->aliasField('student_status_id'),
+                        $InstitutionStudents->aliasField('previous_institution_student_id')
+                    ])
+                    ->where([
+                        $InstitutionStudents->aliasField('student_id') => $row->student_id
+                    ])
+                    ->order([$InstitutionStudents->aliasField('created') => 'DESC'])
+                    ->autoFields(true)
+                    ->first();
+                    
+                    if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id)) {
+                        $previousInstStdId = $InstitutionStudents
+                                            ->find()
+                                            ->select([
+                                                $InstitutionStudents->aliasField('id'),
+                                                $InstitutionStudents->aliasField('student_status_id')
+                                            ])
+                                            ->where([
+                                                $InstitutionStudents->aliasField('student_id') => $row->student_id,
+                                                $InstitutionStudents->aliasField('id') => $InstitutionStudentsCurrentData->previous_institution_student_id
+                                            ])->first();
+                        if (!empty($previousInstStdId) && $previousInstStdId->student_status_id == 8) {
+                            $row['student_status'] = "Enrolled (Repeater)";
+                        }
+                    }
+                $row['student_status'] = $row->student_status;
+                /*POCOR-6543 ends*/               
                 // POCOR-6129 custome fields code
                 $Guardians = TableRegistry::get('student_custom_field_values');
                 $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
@@ -631,12 +629,31 @@ class StudentsTable extends ControllerActionTable
         ];
 
         // POCOR-6129 custome fields code
-        $InfrastructureCustomFields = TableRegistry::get('student_custom_fields');
-        $customFieldData = $InfrastructureCustomFields->find()->select([
-            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
-            'custom_field' => $InfrastructureCustomFields->aliasfield('name')
-        ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
+        // $InfrastructureCustomFields = TableRegistry::get('student_custom_fields');
+        // $customFieldData = $InfrastructureCustomFields->find()->select([
+        //     'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+        //     'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+        // ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
 
+
+        /**
+         * Get all those custom fields of a student which are which are selected in "Parents and Guardian Informations" in page tab
+         * Page: Administartion > System Setup > Custom Fields > Student > Page
+         * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+         * Ticket: POCOR-6531
+         */
+        // START: POCOR-6531 - Anand Malvi <anand.malvi@mail.valuecoders.com>
+        $student_custom_fields_table = TableRegistry::get('student_custom_fields');
+        $customFieldData = $student_custom_fields_table->find()->select([
+            'custom_field_id' => $student_custom_fields_table->aliasfield('id'),
+            'custom_field' => $student_custom_fields_table->aliasfield('name')
+        ])->innerJoin(
+            ['StudentCustomFormsFields' => 'student_custom_forms_fields' ], // Class Object => table_name
+            ['StudentCustomFormsFields.student_custom_field_id = ' . $student_custom_fields_table->aliasField('id'), // Where
+        ])
+        ->group($student_custom_fields_table->aliasfield('id'))
+        ->toArray();
+        // END: POCOR-6531 - Anand Malvi <anand.malvi@mail.valuecoders.com>
         if(!empty($customFieldData)) {
             foreach($customFieldData as $data) {
                 $custom_field_id = $data->custom_field_id;

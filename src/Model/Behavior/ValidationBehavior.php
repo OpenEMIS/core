@@ -3317,4 +3317,36 @@ class ValidationBehavior extends Behavior
 
         return true;
     }//POCOR-5924 ends
+
+    /*POCOR-6348 starts*/
+    public static function noStaffLeaveOverlapping($field, array $globalData)
+    {
+        $data = $globalData['data'];
+        
+        $InstitutionStaffLeave = TableRegistry::get('Institution.StaffLeave');
+        $staffId = $data['staff_id'];
+        $institutionId = $data['institution_id'];
+        $academicPeriodId = $data['academic_period_id'];
+
+        $weekStartDate = $data['date'];
+        $weekEndDate = $data['date'];
+
+        $staffLeaveExist = $InstitutionStaffLeave
+            ->find()
+            ->where([
+                $InstitutionStaffLeave->aliasField('institution_id') => $institutionId,
+                $InstitutionStaffLeave->aliasField('staff_id') => $staffId,
+                $InstitutionStaffLeave->aliasField('academic_period_id') => $academicPeriodId,
+                $InstitutionStaffLeave->aliasField("date_from <= '") . $weekStartDate . "'",
+                $InstitutionStaffLeave->aliasField("date_to >= '") . $weekEndDate . "'"
+            ])
+            ->first();
+
+        // Check if staff aattendance exists
+        if ($staffLeaveExist) {
+            return false;
+        }
+        return true;
+    }
+    /*POCOR-6348 ends*/
 }

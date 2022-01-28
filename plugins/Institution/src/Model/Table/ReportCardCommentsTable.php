@@ -92,6 +92,28 @@ class ReportCardCommentsTable extends ControllerActionTable
         }
         //End
 
+        /*POCOR-6508 starts - checking class permission*/
+        $isSuperAdmin = $this->Auth->user()['super_admin'];
+        $staffId = $this->Auth->user()['id'];
+        if (!$isSuperAdmin) {
+            $allclassesPermission = TableRegistry::get('Institution.InstitutionClasses')->getRolePermissionAccessForAllClasses($staffId, $institutionId);
+            $myClassesPermission = TableRegistry::get('Institution.InstitutionClasses')->getRolePermissionAccessForMyClasses($staffId, $institutionId);
+            if ($myClassesPermission && !$allclassesPermission) {
+                //$where[$this->aliasField('staff_id')] = $staffId;
+                $where = [
+                    'OR' => [
+                        [
+                            $this->aliasField("staff_id = '") . $staffId. "'"
+                        ],
+                        [
+                            ("InstitutionSubjectStaff.staff_id = '") . $staffId. "'"
+                        ]
+                    ]
+                ];
+                $orWhere['InstitutionClassesSecondaryStaff.secondary_staff_id'] = $staffId;
+            }
+        }
+        /*POCOR-6508 ends*/
         $query
             ->select([
                 'name' => $this->aliasField('name'),
@@ -127,6 +149,20 @@ class ReportCardCommentsTable extends ControllerActionTable
                 [$EducationProgrammes->alias() => $EducationProgrammes->table()],
                 [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
             )
+            ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+               'InstitutionClassesSecondaryStaff.institution_class_id  = '. $this->aliasField('id')
+            ])
+            ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+               'InstitutionClassSubjects.institution_class_id  = '. $this->aliasField('id')
+            ])
+            ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+               'InstitutionSubjectStaff.institution_subject_id  = '. 'InstitutionClassSubjects.institution_subject_id'
+            ])
+            ->leftJoin(['InstitutionSubjects' => 'institution_subjects'], [
+               'InstitutionSubjects.id  = '. 'InstitutionSubjectStaff.institution_subject_id',
+               'InstitutionSubjects.education_grade_id  = '. $ReportCards->aliasField('education_grade_id'),
+               'InstitutionSubjects.academic_period_id  = '. $ReportCards->aliasField('academic_period_id')
+            ])
             ->where([
                 $where,
                 // only show record if at least one comment type is needed
@@ -136,11 +172,12 @@ class ReportCardCommentsTable extends ControllerActionTable
                     $ReportCards->aliasField('teacher_comments_required') => 1
                 ]
             ])
+            ->orWhere([$orWhere])
             ->group([
                 $ClassGrades->aliasField('institution_class_id'),
                 $ReportCards->aliasField('id')
             ]);
-
+    
         if (is_null($this->request->query('sort'))) {
             $query->order([
                 $EducationProgrammes->aliasField('order'),

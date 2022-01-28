@@ -153,14 +153,16 @@ class CalendarsTable extends ControllerActionTable
             $calendarEventId = $entity->id;
     
             $datePeriod = new DatePeriod($startDate, $interval, $endDate);
-    
-            foreach ($datePeriod as $date) {
-                $dateEntity = $this->CalendarEventDates->newEntity([
-                    'calendar_event_id' => $calendarEventId,
-                    'date' => $date
-                ]);
-                $this->CalendarEventDates->save($dateEntity);
-            }
+            //POCOR-6359 starts
+            if(!empty($datePeriod)){
+                foreach ($datePeriod as $date) {
+                    $dateEntity = $this->CalendarEventDates->newEntity([
+                        'calendar_event_id' => $calendarEventId,
+                        'date' => $date
+                    ]);
+                    $this->CalendarEventDates->save($dateEntity);
+                }
+            }//POCOR-6359 ends
         }
 
         if(!$entity->isNew()){
@@ -183,14 +185,16 @@ class CalendarsTable extends ControllerActionTable
             $this->CalendarEventDates->deleteAll([
                 'calendar_event_id' => $calendarEventId
             ]);
-
-            foreach ($datePeriod as $date) {
-                $dateEntity = $this->CalendarEventDates->newEntity([
-                    'calendar_event_id' => $calendarEventId,
-                    'date' => $date
-                ]);
-                $this->CalendarEventDates->save($dateEntity);
-            }
+            //POCOR-6359 starts
+            if(!empty($datePeriod)){
+                foreach ($datePeriod as $date) {
+                    $dateEntity = $this->CalendarEventDates->newEntity([
+                        'calendar_event_id' => $calendarEventId,
+                        'date' => $date
+                    ]);
+                    $this->CalendarEventDates->save($dateEntity);
+                }
+            }//POCOR-6359 ends
         }
     }
     // POCOR-6122
@@ -338,7 +342,7 @@ class CalendarsTable extends ControllerActionTable
             $this->aliasField('academic_period_id'),
             $this->aliasField('institution_id'),
             'start_date' => $query->func()->min($calendarEventDates->aliasField('date')),
-			'end_date' => $query->func()->max($calendarEventDates->aliasField('date')),
+            'end_date' => $query->func()->max($calendarEventDates->aliasField('date')),
             'type' => $CalendarTypes->aliasField('name'),
             $this->aliasField('modified_user_id'),
             $this->aliasField('modified'), 
