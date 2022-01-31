@@ -309,7 +309,8 @@ class StudentTransferTable extends ControllerActionTable
                         //->contain(['EducationGrades.EducationProgrammes', 'EducationGrades.EducationStages'])
                         ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems', 'EducationGrades.EducationStages'])
                         ->where([
-                            'EducationSystems.academic_period_id' => $selectedPeriod
+                            'EducationSystems.academic_period_id' => $selectedPeriod,
+                            'EducationProgrammes.visible' => 1 //POCOR-6498
                         ])
                         ->where([$InstitutionGradesTable->aliasField('institution_id') => $institutionId])
                         //->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
@@ -412,15 +413,22 @@ class StudentTransferTable extends ControllerActionTable
     public function onUpdateFieldNextEducationGradeId(Event $event, array $attr, $action, Request $request)
     {
         $selectedGrade = $request->query('education_grade_id');
-        $nextPeriodId = $request->query('next_academic_period_id');
+        if (array_key_exists('next_academic_period_id', $request->query)) {
+            $nextPeriodId = $request->query('next_academic_period_id');
+        } else {
+            $nextPeriodId = $request->data[$this->alias()]['next_academic_period_id'];
+        }
 
         $nextGradeOptions = [];
-        if (!empty($selectedGrade) && $selectedGrade != -1 && !empty($nextPeriodId)) {
-            //$nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGrades($selectedGrade); //POCOR-6362 comment this code because wrong next education grade is showing wrong
-            $nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGradesForTransfer($selectedGrade,$nextPeriodId,true,true);//POCOR-6362
-
-            //$currentGradeOptions = $this->getGrandEducationOptions();//POCOR-6362 because no need of current grade options
-
+        if (!empty($selectedGrade) && !empty($nextPeriodId)) {
+            /*POCOR-6498 starts*/
+            $isLastGrade = $this->EducationGrades->isLastGradeInEducationProgrammes($selectedGrade);
+            if ($isLastGrade) {
+                $nextGradeOptions = $this->EducationGrades->getNextEducationGrades($selectedGrade, $nextPeriodId, true, true);
+            } else {
+                $nextGradeOptions = $this->EducationGrades->getNextEducationGradesForTransfer($selectedGrade,$nextPeriodId,true,true);
+            }
+            /*POCOR-6498 ends*/
             $gradeResult = $nextGradeOptions;
             $nextGradeId = $request->query('next_education_grade_id');
 
@@ -438,29 +446,6 @@ class StudentTransferTable extends ControllerActionTable
                 } else {
                     $nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
                 }
-
-                // 	$this->advancedSelectOptions($nextGradeOptions, $nextGradeId, [
-                // 		'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noInstitutions')),
-                // 		'callable' => function($id) use ($Institutions, $Grades, $institutionId, $nextPeriodStartDate) {
-                // 			return $Institutions
-                // 				->find()
-                // 				->join([
-                // 					'table' => $Grades->table(),
-                // 					'alias' => $Grades->alias(),
-                // 					'conditions' => [
-                // 						$Grades->aliasField('institution_id = ') . $this->Institutions->aliasField('id'),
-                // 						$Grades->aliasField('education_grade_id') => $id,
-                // 						$Grades->aliasField('start_date <=') => $nextPeriodStartDate,
-                // 						'OR' => [
-                // 							$Grades->aliasField('end_date IS NULL'),
-                // 							$Grades->aliasField('end_date >=') => $nextPeriodStartDate
-                // 						]
-                // 					]
-                // 				])
-                // 				->where([$this->Institutions->aliasField('id <>') => $institutionId])
-                // 				->count();
-                // 		}
-                // 	]);
             }
             $this->request->query['next_education_grade_id'] = $nextGradeId;
         }
