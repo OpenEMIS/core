@@ -1,3 +1,7 @@
+### [3.73.7] - 2022-01-31
+- Bug Fixed: Directory > General > Identities: 404 Error when viewing and editing identities
+- Bug Fixed: Personal > Student > Absences/Behaviours/Outcome/Extracurricular/Textbooks/Risks tab: 404 error when accessing
+
 ### [3.73.6] - 2022-01-27
 - Bug Fixed: Institutions>Report Cards>Comments: Homeroom Teachers are able to comment as Homeroom Teachers under other persons Homeroom classes
 - Bug Fixed: Directory > Import: Getting 404 Error
