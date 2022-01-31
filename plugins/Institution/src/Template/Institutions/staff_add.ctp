@@ -374,8 +374,8 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 </div>-->
 
                 <div class="input date required" ng-show="!InstitutionStaffController.completeDisabled">
-                    <label for="Staff_start_date"><?= __('Start Date') ?></label>
-                    <div class="input-group date " id="Staff_start_date" style="">
+                    <label for="Staff_start_date_change"><?= __('Start Date') ?></label>
+                    <div class="input-group date " id="Staff_start_date_change" style="">
                         <input type="text" class="form-control " name="Staff[start_date]" ng-model="InstitutionStaffController.startDate" ng-change="InstitutionStaffController.onChangeFTE();">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                     </div>
@@ -532,7 +532,7 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
 
 <script>
 $(function () {
-var datepicker0 = $('#Staff_start_date').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
+var datepicker0 = $('#Staff_start_date_change').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
 var datepicker1 = $('#Staff_end_date').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
 var datepicker2 = $('#Staffs_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
 var datepicker3 = $('#Staff_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});

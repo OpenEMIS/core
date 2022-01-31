@@ -98,13 +98,24 @@ $this->start('panelBody');
 								'action' =>  $ControllerAction['table']->alias(),
 								'download',$obj->id
 							];
-							$viewUrl = ['plugin' => $params['plugin'],
-								'controller' => $params['controller'],
-								'action' => 'ViewReport',
-								'report_process_id' => $obj->id,
-								'file_path' => $obj->file_path,
-								'module' => $obj->module,
-							];
+							if ($obj->module == 'InstitutionStatistics') {
+                                $viewUrl = ['plugin' => 'Report',
+                                    'controller' => 'Reports',
+                                    'action' => 'ViewReport',
+                                    'report_process_id' => $obj->id,
+                                    'file_path' => $obj->file_path,
+                                    'module' => $obj->module,
+                                ];
+                            }
+                            else{
+                                $viewUrl = ['plugin' => $params['plugin'],
+                                    'controller' => $params['controller'],
+                                    'action' => 'ViewReport',
+                                    'report_process_id' => $obj->id,
+                                    'file_path' => $obj->file_path,
+                                    'module' => $obj->module,
+                                ];
+                            }
 							$deleteUrl = ['plugin' => $params['plugin'],
 								'controller' => $params['controller'],
 								'action' =>  $ControllerAction['table']->alias(),

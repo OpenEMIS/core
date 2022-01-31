@@ -631,12 +631,31 @@ class StudentsTable extends ControllerActionTable
         ];
 
         // POCOR-6129 custome fields code
-        $InfrastructureCustomFields = TableRegistry::get('student_custom_fields');
-        $customFieldData = $InfrastructureCustomFields->find()->select([
-            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
-            'custom_field' => $InfrastructureCustomFields->aliasfield('name')
-        ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
+        // $InfrastructureCustomFields = TableRegistry::get('student_custom_fields');
+        // $customFieldData = $InfrastructureCustomFields->find()->select([
+        //     'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+        //     'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+        // ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
 
+
+        /**
+         * Get all those custom fields of a student which are which are selected in "Parents and Guardian Informations" in page tab
+         * Page: Administartion > System Setup > Custom Fields > Student > Page
+         * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+         * Ticket: POCOR-6531
+         */
+        // START: POCOR-6531 - Anand Malvi <anand.malvi@mail.valuecoders.com>
+        $student_custom_fields_table = TableRegistry::get('student_custom_fields');
+        $customFieldData = $student_custom_fields_table->find()->select([
+            'custom_field_id' => $student_custom_fields_table->aliasfield('id'),
+            'custom_field' => $student_custom_fields_table->aliasfield('name')
+        ])->innerJoin(
+            ['StudentCustomFormsFields' => 'student_custom_forms_fields' ], // Class Object => table_name
+            ['StudentCustomFormsFields.student_custom_field_id = ' . $student_custom_fields_table->aliasField('id'), // Where
+        ])
+        ->group($student_custom_fields_table->aliasfield('id'))
+        ->toArray();
+        // END: POCOR-6531 - Anand Malvi <anand.malvi@mail.valuecoders.com>
         if(!empty($customFieldData)) {
             foreach($customFieldData as $data) {
                 $custom_field_id = $data->custom_field_id;
