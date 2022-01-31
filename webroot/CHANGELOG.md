@@ -1,3 +1,19 @@
+### [3.73.5] - 2022-01-21
+- Bug Fixed: Institutions>Staff>Career>Attendances:Able to record staff time-in and time-out even if there is staff leave on the specified dates
+- Bug Fixed: Institutions>Students>Transfer: Validation for next education grade not to show not visible programmes and grades in education structure
+- Bug Fixed: Institutions>Students>Promote/Repeat: Individual promotion and group promotion is not working
+- Bug Fixed: Institutions>Performance>Assessments: Students of duplicate same subject are not appearing according to Academic>Subjects
+- Bug Fixed: Institutions > Staff > Add Staff : Start Date Date picker should not be restricted
+
+### [3.73.4] - 2022-01-19
+- Implemented: Add Export button function - Institutions > Examinations > Students
+- Implemented: Add Export button function - Institutions > Committees
+- Bug Fixed: Institution>Student/Staff: Identity in External Search is not saved after staff/student is added
+- Bug Fixed: Institution > Statistics > View page : System shows 404 error page
+- Bug Fixed: Updating security_group_users table for student transactions
+- Bug Fixed: Personal > Staff > Careers : Edit and add button page should be the same as Institution>Staff
+- Bug Fixed: Institutions>Students>Export: Issues with export
+
 ### [3.73.3] - 2022-01-14
 - Implemented: Add Export button function - Institutions > Finances > Institution Fees
 - Implemented: Add Export button function - Institutions > Transport > Providers
