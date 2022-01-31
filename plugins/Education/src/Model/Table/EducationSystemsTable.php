@@ -326,8 +326,8 @@ class EducationSystemsTable extends ControllerActionTable
                                                    $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['id'] = Text::uuid();
                                                     $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['education_programme_id'] = $program_result->id;
                                                    $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['next_programme_id'] = $value['next_programme_id'];
-
-                                                   //insert next programmes data
+                                                   
+                                                    //insert next programmes data
                                                     $newNextProgramEntites = $EducationProgrammesNextProgrammesTable->newEntity($nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]);
                                                     $nextProgramResult = $EducationProgrammesNextProgrammesTable->save($newNextProgramEntites);
                                                 }
@@ -393,7 +393,67 @@ class EducationSystemsTable extends ControllerActionTable
 					} // if educationCyclesData
 				}//level ends
 			}
-		} //if educationLevelsData     
+		} //if educationLevelsData 
+
+        /*POCOR-6463 starts*/
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $getNextProgrammeData = $EducationProgrammes->find()
+                                ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                                ->where([
+                                    'EducationSystems.academic_period_id' => $academic_period_id
+                                ])
+                                ->toArray();
+        $nextProgramme_arr = [];
+        if (!empty($getNextProgrammeData)) {
+            foreach ($getNextProgrammeData as $k => $val) {
+                $nextProgrammes = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+                $nextProgrammesData = $nextProgrammes->find()->where([
+                                        $nextProgrammes->aliasField('education_programme_id') => $val->id
+                                    ])->toArray();
+                $nextIds = [];
+                if (!empty($nextProgrammesData)) {
+                    foreach ($nextProgrammesData as $next_programme_key => $next_programme_value) { 
+                        $nextIds[] = $next_programme_value->next_programme_id;
+                    }
+                    $allData = $EducationProgrammes->find()
+                                ->where([
+                                    $EducationProgrammes->aliasField('id IN') => $nextIds
+                                ])
+                                ->toArray();
+                    $name = [];
+                    foreach ($allData as $keys => $v) {
+                        $name[] = $v->name;
+                    }
+                    $condition = [];
+                    foreach ($name as $obj) {
+                        $condition[] = $EducationProgrammes->aliasField("name"). " LIKE '%$obj%'";
+                    }
+                    $latesNextProgIds = $EducationProgrammes->find()
+                                ->select([$EducationProgrammes->aliasField('id')])
+                                ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                                ->where([
+                                    'EducationSystems.academic_period_id' => $academic_period_id,
+                                    'OR' => $condition
+                                ]);
+                    $ids = [];
+                    foreach ($latesNextProgIds->toArray() as $proId) {
+                        $ids[] = $proId->id;
+                        $data = [
+                            'education_programme_id' => $val->id,
+                            'next_programme_id' =>  $proId->id
+                        ];
+
+                        $newEntites = $nextProgrammes->newEntity($data);
+                        $storeData = $nextProgrammes->save($newEntites);
+                    }
+                    $nextProgrammes->deleteAll([
+                            $nextProgrammes->aliasField('education_programme_id') => $val->id,
+                            $nextProgrammes->aliasField('next_programme_id IN') => $nextIds,
+                        ]);  
+                }
+            }
+        }
+        /*POCOR-6463 ends*/    
 		
 		// Webhook Education Structure System create starts
 		//POCOR-6085 starts
