@@ -638,13 +638,13 @@ class InstitutionClassStudentsTable extends AppTable
                         'EducationGradesSubjects.education_subject_id = SubjectStudents.education_subject_id'
                     ])
                     ->where([
-                        'SubjectStudents.education_subject_id' => $education_subject_id,
+                        //'SubjectStudents.education_subject_id' => $education_subject_id,//POCOR-6463
                         'SubjectStudents.academic_period_id' => $academicPeriodId
                     ]);
             })
             ->where([
                 $this->aliasField('institution_class_id').' IN ' => $institutionClassIds,
-                $this->aliasField('education_grade_id') => $educationGradeId,
+                //$this->aliasField('education_grade_id') => $educationGradeId,//POCOR-6463
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 'StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN', 'GRADUATED', 'PROMOTED', 'REPEATED'], //POCOR-6463
                 //'SubjectStudents.education_subject_id' => $educationSubjectId['education_subject_id'],
