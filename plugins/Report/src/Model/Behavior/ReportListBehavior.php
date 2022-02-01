@@ -61,8 +61,11 @@ class ReportListBehavior extends Behavior {
 		                $roles[] = $value->security_role_id;
 		            }
 	        	} 
-	   
-	        	if ($this->_table->alias() == 'InstitutionStatistics') {
+				$permission_check_array = [
+					'InstitutionStatistics',
+					'InstitutionStandards',
+				];
+				if ( in_array($this->_table->alias(), $permission_check_array) ) {
 	        		$function = $securityFunctions->find()
 	        				->select([$securityFunctions->aliasField('id')])
 	        				->where([

@@ -200,6 +200,7 @@ class InstitutionsController extends AppController
             'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
             'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
             'InstitutionStatistics'              => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
+            'InstitutionStandards'              => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -2039,8 +2040,11 @@ class InstitutionsController extends AppController
            // echo '<pre>'; print_r($model->alias());die;
             if (isset($params['pass'][1])) {
                 if ($model->table() == 'security_users' && !$isDownload) {
+                    if (count(explode('.', $params['pass'][1])) != 2) {
+                    } else {
                     $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
+                    }
                 }
             } elseif (isset($requestQuery['user_id'])) {
                 // POCOR-4577 - to check if Users association existed in model - for staff leave import
