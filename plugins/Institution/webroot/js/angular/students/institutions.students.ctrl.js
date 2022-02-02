@@ -36,6 +36,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.redirectToGuardian = false;
     StudentController.error = {};
     StudentController.institutionId = null;
+    StudentController.customFields = [];
 
     StudentController.datepickerOptions = {
         maxDate: new Date(),
@@ -76,6 +77,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.getRelationType = getRelationType;
     StudentController.validateDetails = validateDetails;
     StudentController.saveStudentDetails = saveStudentDetails;
+    StudentController.getStudentCustomFields=getStudentCustomFields;
     
 
     angular.element(document).ready(function () {
@@ -244,7 +246,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.getAcademicPeriods();
             }, function(error) {
             console.log(error);
-            StudentController.getGenders();
+            StudentController.getAcademicPeriods();
         });
     }
 
@@ -281,10 +283,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function getAcademicPeriods() {
         InstitutionsStudentsSvc.getAcademicPeriods().then(function(resp){
             StudentController.academicPeriodOptions = resp.data;
-            UtilsSvc.isAppendLoader(false);
+            StudentController.getStudentCustomFields();
         }, function(error){
             console.log(error);
-            UtilsSvc.isAppendLoader(false);
+            StudentController.getStudentCustomFields();
         });
     }
 
@@ -312,6 +314,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getClasses(params).then(function(resp){
             StudentController.classOptions = resp.data;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    function getStudentCustomFields() {
+        InstitutionsStudentsSvc.getStudentCustomFields().then(function(resp){
+            StudentController.customFields = resp.data;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
