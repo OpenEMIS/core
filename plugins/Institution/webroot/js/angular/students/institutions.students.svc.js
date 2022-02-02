@@ -58,6 +58,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         getRedirectToGuardian: getRedirectToGuardian,
         getRelationType: getRelationType,
         saveStudentDetails: saveStudentDetails,
+        getStudentCustomFields: getStudentCustomFields,
     };
 
     var models = {
@@ -134,7 +135,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getInternalSearchData(param) {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/directoryInternalSearch';
+        let url = angular.baseUrl + '/Directories/directoryInternalSearch';
         $http.get(url, {params: param})
         .then(function(response){
             deferred.resolve(response);
@@ -146,7 +147,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getExternalSearchData(param) {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/directoryExternalSearch';
+        let url = angular.baseUrl + '/Directories/directoryExternalSearch';
         $http.get(url, {params: param})
         .then(function(response){
             deferred.resolve(response);
@@ -158,7 +159,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getRelationType() {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getRelationshipType';
+        let url = angular.baseUrl + '/Directories/getRelationshipType';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response);
@@ -170,7 +171,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getRedirectToGuardian() {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getRedirectToGuardian';
+        let url = angular.baseUrl + '/Directories/getRedirectToGuardian';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response);
@@ -180,9 +181,21 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         return deferred.promise;
     };
 
+    function getStudentCustomFields(){
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/studentCustomFields';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
     function saveStudentDetails(param) {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/postSaveStudentsData';
+        let url = angular.baseUrl + '/Institutions/postSaveStudentsData';
         $http.get(url, {params: param})
         .then(function(response){
             deferred.resolve(response);
@@ -202,7 +215,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             delete attr.private_key;
             delete attr.public_key;
             vm.externalSourceMapping = attr;
-            var url = angular.baseUrl + '/Configurations/getExternalUsers?page={page}&limit={limit}&first_name={first_name}&last_name={last_name}&identity_number={identity_number}&date_of_birth={date_of_birth}';
+            let url = angular.baseUrl + '/Configurations/getExternalUsers?page={page}&limit={limit}&first_name={first_name}&last_name={last_name}&identity_number={identity_number}&date_of_birth={date_of_birth}';
             var pageParams = {
                 limit: options['endRow'] - options['startRow'],
                 page: options['endRow'] / (options['endRow'] - options['startRow']),
@@ -239,7 +252,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     }
                 }
             }
-            var url = replaceURL.replace(/{\w+}/g, function(all) {
+            let url1 = replaceURL.replace(/{\w+}/g, function(all) {
                 return all in replacement ? replacement[all] : all;
             });
             externalSource = true;
@@ -247,7 +260,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             var opt = {
                 method: 'GET'
             }
-            return KdOrmSvc.customAjax(url, opt);
+            return KdOrmSvc.customAjax(url1, opt);
         }, function(error) {
             deferred.reject(error);
         })
@@ -731,7 +744,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getAcademicPeriods() {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/getAcademicPeriod';
+        let url = angular.baseUrl + '/Institutions/getAcademicPeriod';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response);
@@ -743,7 +756,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getEducationGrades(param) {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/getEducationGrade';
+        let url = angular.baseUrl + '/Institutions/getEducationGrade';
         $http.get(url, {params: param})
         .then(function(response){
             deferred.resolve(response);
@@ -755,7 +768,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getClasses(params) {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/getEducationGrade';
+        let url = angular.baseUrl + '/Institutions/getEducationGrade';
         $http.get(url, {params: params})
         .then(function(response){
             deferred.resolve(response);
@@ -780,7 +793,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getUniqueOpenEmisId() {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/getUniqueOpenemisId/Student';
+        let url = angular.baseUrl + '/Institutions/getUniqueOpenemisId/Student';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response.data.openemis_no);
@@ -792,7 +805,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function generatePassword() {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/getAutoGeneratedPassword';
+        let url = angular.baseUrl + '/Institutions/getAutoGeneratedPassword';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response.data.password);
