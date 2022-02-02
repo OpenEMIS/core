@@ -5,7 +5,7 @@ angular
 InstitutionsStaffSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc'];
 
 function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
-
+console.log('test');
     var externalSource = null;
     var externalToken = null;
     var institutionId = null;
