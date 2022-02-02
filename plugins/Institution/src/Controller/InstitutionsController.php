@@ -4344,7 +4344,8 @@ class InstitutionsController extends AppController
                     $fieldsArr[$ckey]['option'] = $OptionDataArr;
                 }
             }
-            $SectionArr[$skey][$sval->section] = $fieldsArr;
+            //$SectionArr[$skey][$sval->section] = $fieldsArr;
+            $SectionArr[$skey] = $fieldsArr;
         }
         echo json_encode($SectionArr);die;
     }
