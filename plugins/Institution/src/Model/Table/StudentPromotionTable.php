@@ -1161,6 +1161,38 @@ class StudentPromotionTable extends AppTable
                                         $this->log($entity->errors(), 'debug');
                                     }
                                 } else {
+                                    //POCOR-6500 starts check student_status_id is graduate and next_education_grade is blank so remove the system will delete the student row in security_group_users table
+                                    if(($statusToUpdate == $studentStatuses['GRADUATED']) && ($nextEducationGradeId == '')){
+                                        //get student role
+                                        $securityRolesTbl = TableRegistry::get('security_roles');
+                                        $securityRoles = $securityRolesTbl->find()
+                                                                ->where([
+                                                                    $securityRolesTbl->aliasField('code') => 'STUDENT',
+                                                                ])
+                                                                ->first();
+                                        //get student institution
+                                        $institutionTbl = TableRegistry::get('institutions');
+                                        $institutions = $institutionTbl->find()
+                                                                ->where([
+                                                                    $institutionTbl->aliasField('id') => $institutionId
+                                                                ])
+                                                                ->first();
+                                        if(!empty($institutions) && $institutions->security_group_id !=''){
+                                            $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+                                            $securityGroupUsers = $securityGroupUsersTbl->find()
+                                                                    ->where([
+                                                                        $securityGroupUsersTbl->aliasField('security_group_id') => $institutions->security_group_id,
+                                                                        $securityGroupUsersTbl->aliasField('security_user_id') => $studentObj['student_id'],
+                                                                        $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id,
+                                                                    ])->first();
+                                            if(!empty($securityGroupUsers)){
+                                                    $id = $securityGroupUsers->id;
+                                                    $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+                                                    $SecurityGroupUsersTable->deleteAll(['id' => $id ]);
+                                            }
+                                        }
+                                    }
+                                    //POCOR-6500 ends
                                     $this->Alert->success($successMessage, ['reset' => true]);
                                 }
                             } else {

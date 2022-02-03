@@ -74,6 +74,7 @@ class InstitutionStaffShiftsTable extends ControllerActionTable
                     $postalCode = $value->user->postal_code;
                     $addressArea = $value->user->address_area->name;
                     $birthplaceArea = $value->user->birthplace_area->name;
+                    $role = $value->user->is_staff;
                     
                     $contactValue = [];
                     $contactType = [];
@@ -152,14 +153,15 @@ class InstitutionStaffShiftsTable extends ControllerActionTable
                 'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
                 'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
                 'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-                'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
+                //'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
                 'institution_staff_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
                 'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL, 
                 'institution_positions_position_no'=>!empty($position_no) ? $position_no : NULL,
                 'staff_position_titles_type'=>!empty($class) ? $class : NULL,
                 'staff_position_titles_name'=>!empty($staff_position_titles_name) ? $staff_position_titles_name : NULL,
                 'staff_types_name'=>!empty($staff_types_name) ? $staff_types_name : NULL,
-                'shift_options_name' => !empty($shiftName) ? $shiftName : NULL
+                'shift_options_name' => !empty($shiftName) ? $shiftName : NULL,
+                'role_name' => ($role == 1) ? 'staff' : NULL
             ];
         
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
