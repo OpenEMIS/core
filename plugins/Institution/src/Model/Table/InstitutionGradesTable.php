@@ -241,20 +241,21 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                         $GradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
                         $getGradeSubjects = $this->EducationGrades
                                             ->find()
+                                            ->select([$GradesSubjects->aliasField('education_subject_id')])
                                             ->LeftJoin([$GradesSubjects->alias() => $GradesSubjects->table()],[
                                                     $this->EducationGrades->aliasField('id').' = ' . $GradesSubjects->aliasField('education_grade_id')
                                             ])
                                             ->where([
                                                 $this->EducationGrades->aliasField('id') => $grade['education_grade_id'],
                                                 $GradesSubjects->aliasField('auto_allocation') => 1
-                                            ])->toArray();
-                        echo "<pre>";print_r($getGradeSubjects);die();
-                        foreach($gradeSubjectEntities as $gradeSubjectId) {
-                            if ($gradeSubjectId > 0) {
-                                $institutionProgramGradeSubject = TableRegistry::get('InstitutionProgramGradeSubjects');
+                                            ]);
+                        $institutionProgramGradeSubject = TableRegistry::get('InstitutionProgramGradeSubjects');
+                        if (!empty($getGradeSubjects) && $getGradeSubjects->count() > 0) {
+                            foreach ($getGradeSubjects->toArray() as $values) {
+                                //echo "<pre>";print_r($values);die();
                                 $gradeSubject = $institutionProgramGradeSubject->newEntity();
                                 $gradeSubject->institution_grade_id = $lastInsertId;
-                                $gradeSubject->education_grade_subject_id = $gradeSubjectId;
+                                $gradeSubject->education_grade_subject_id = $values['EducationGradesSubjects']['education_subject_id'];
                                 $gradeSubject->education_grade_id = $data['grades']['education_grade_id'];
                                 $gradeSubject->institution_id = $entity->institution_id;
                                 $gradeSubject->created_user_id = $createdUserId;
@@ -262,6 +263,21 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                                 $gradeSubject->created = $today->format('Y-m-d H:i:s');
                                 $institutionProgramGradeSubject->save($gradeSubject);
                                 array_push($institutionProgramGradeSubjectID,$gradeSubject->id);
+                            }
+                        } else {
+                            foreach($gradeSubjectEntities as $gradeSubjectId) {
+                                if ($gradeSubjectId > 0) {
+                                    $gradeSubject = $institutionProgramGradeSubject->newEntity();
+                                    $gradeSubject->institution_grade_id = $lastInsertId;
+                                    $gradeSubject->education_grade_subject_id = $gradeSubjectId;
+                                    $gradeSubject->education_grade_id = $data['grades']['education_grade_id'];
+                                    $gradeSubject->institution_id = $entity->institution_id;
+                                    $gradeSubject->created_user_id = $createdUserId;
+                                    $today = new DateTime();
+                                    $gradeSubject->created = $today->format('Y-m-d H:i:s');
+                                    $institutionProgramGradeSubject->save($gradeSubject);
+                                    array_push($institutionProgramGradeSubjectID,$gradeSubject->id);
+                                }
                             }
                         }
 
