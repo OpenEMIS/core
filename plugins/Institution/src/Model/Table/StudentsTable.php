@@ -223,9 +223,11 @@ class StudentsTable extends ControllerActionTable
         $ContactTypes = TableRegistry::get('FieldOption.ContactTypes');
         $UserContact = TableRegistry::get('User.Contacts');
         $StudentStatuses = TableRegistry::get('student_statuses');
-
+        /*POCOR-6562 starts*/
+        if ($periodId > 0) {
+            $condition[$this->aliasField('academic_period_id')] = $periodId;
+        }
         $query
-       ->where([$this->aliasField('institution_id') => $institutionId])
             ->contain([
                 'Users.Genders',
                 'Institutions',
@@ -266,83 +268,52 @@ class StudentsTable extends ControllerActionTable
                 'contact_number' => $UserContact->aliasField('value'),
                 'institution_id' => 'Institutions.id',//POCOR-6338
             ])
-            ->leftJoin(
-                [$ClassStudents->alias() => $ClassStudents->table()],
-                [
-                    $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $ClassStudents->aliasField('student_status_id = ') . $this->aliasField('student_status_id'),
-                    $ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
-                ]
-            )
-            ->leftJoin(
-                [$Classes->alias() => $Classes->table()],
-                [
-                    $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
-                ]
-            )
-            ->leftJoin(
-                [$StudentGuardians->alias() => $StudentGuardians->table()],
-                [
-                    $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
-                ]
-            )
-            ->leftJoin(
-                [$this->Users->alias() => $this->Users->table()],
-                [
-                    $this->Users->aliasField('id = ') . $this->aliasField('student_id')
-                ]
-            )
+            ->innerJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                $ClassStudents->aliasField('student_status_id = ') . $this->aliasField('student_status_id'),
+                $ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
+            ])
+            ->leftJoin([$Classes->alias() => $Classes->table()], [
+                $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
+            ])
+            ->leftJoin([$StudentGuardians->alias() => $StudentGuardians->table()], [
+                $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
+            ])
+            ->leftJoin([$this->Users->alias() => $this->Users->table()], [
+                $this->Users->aliasField('id = ') . $this->aliasField('student_id')
+            ])
             ->leftJoin(['GuardianUser' => 'security_users'], [
                 'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
             ])
-            ->leftJoin(
-                [$GuardianRelations->alias() => $GuardianRelations->table()],
-                [
-                    $GuardianRelations->aliasField('id = ') . $StudentGuardians->aliasField('guardian_relation_id')
-                ]
-            )
+            ->leftJoin([$GuardianRelations->alias() => $GuardianRelations->table()], [
+                $GuardianRelations->aliasField('id = ') . $StudentGuardians->aliasField('guardian_relation_id')
+            ])
             ->leftJoin(['GuardianUser' => 'security_users'], [
                 'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
             ])
-            ->leftJoin(
-                [$UserIdentities->alias() => $UserIdentities->table()],
-                [
-                    $UserIdentities->aliasField('security_user_id = ') . $this->Users->aliasField('id')
-                ]
-            )
-            ->leftJoin(
-                [$IdentityTypes->alias() => $IdentityTypes->table()],
-                [
-                    $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
-                ]
-            )
-            ->leftJoin(
-                [$UserContact->alias() => $UserContact->table()],
-                [
-                    $UserContact->aliasField('security_user_id = ') . $this->Users->aliasField('id')
-                ]
-            )
-            ->leftJoin(
-                [$ContactTypes->alias() => $ContactTypes->table()],
-                [
-                    $ContactTypes->aliasField('id = ') . $UserContact->aliasField('contact_type_id')
-                ]
-            )// POCOR-6338 starts
-            ->leftJoin(
-                [$StudentStatuses->alias() => $StudentStatuses->table()],
-                [
-                    $StudentStatuses->aliasField('id != ') => 3
-                ]
-            );// POCOR-6338 ends
-
-        if ($periodId > 0) {
-            $query->where([$this->aliasField('academic_period_id') => $periodId,
-                            'StudentStatuses.id !='=> 3
-                            ]);
-            $query->group('student_id');// POCOR-6338 
-        }
+            ->leftJoin([$UserIdentities->alias() => $UserIdentities->table()], [
+                $UserIdentities->aliasField('security_user_id = ') . $this->Users->aliasField('id')
+            ])
+            ->leftJoin([$IdentityTypes->alias() => $IdentityTypes->table()], [
+                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
+            ])
+            ->leftJoin([$UserContact->alias() => $UserContact->table()], [
+                $UserContact->aliasField('security_user_id = ') . $this->Users->aliasField('id')
+            ])
+            ->leftJoin([$ContactTypes->alias() => $ContactTypes->table()], [
+                $ContactTypes->aliasField('id = ') . $UserContact->aliasField('contact_type_id')
+            ])// POCOR-6338 starts
+            ->leftJoin([$StudentStatuses->alias() => $StudentStatuses->table()], [
+                $StudentStatuses->aliasField('id != ') => 3
+            ])
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $condition
+            ])
+            ->group($this->aliasField('student_id'));
+        /*POCOR-6562 ends*/
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($periodId) {
             return $results->map(function ($row) use($periodId) {
                 // POCOR-6338 starts
