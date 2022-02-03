@@ -457,6 +457,15 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'infrastructure_level';
                     $fieldsOrder[] = 'format';
                     break;
+                case 'Report.InstitutionClasses':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_type_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'education_grade_id';
+                    $fieldsOrder[] = 'format';
+                    break;
                 default:
                     break;
             }
@@ -467,6 +476,7 @@ class InstitutionsTable extends AppTable
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
+
         $requestData = json_decode($settings['process']['params']);
         $feature = $requestData->feature;
         $filter = $requestData->institution_filter;
@@ -508,6 +518,8 @@ class InstitutionsTable extends AppTable
                     'label' => __('Area Administrative Code')
                 ];
             }
+            
+
         }
 
         $fields->exchangeArray($newFields);
@@ -520,6 +532,15 @@ class InstitutionsTable extends AppTable
                     unset($newFields[$key]);
                 }
             }
+            $filter = $requestData->institution_filter;
+            if($filter==2){
+                $newFields[] = [
+                        'key' => 'institutions.institution_status_id',
+                        'field' => 'institution_status',
+                        'type' => 'integer',
+                        'label' => __('Institutions Status')
+                    ];
+            }
             $fields->exchangeArray($newFields);
             $event->stopPropagation();
         }
@@ -527,12 +548,14 @@ class InstitutionsTable extends AppTable
 
     public function onExcelGetShiftType(Event $event, Entity $entity)
     {
+
         if (isset($this->shiftTypes[$entity->shift_type])) {
             return __($this->shiftTypes[$entity->shift_type]);
         } else {
             return '';
         }
     }
+
 
     public function onExcelGetClassification(Event $event, Entity $entity)
     {
@@ -555,7 +578,6 @@ class InstitutionsTable extends AppTable
 
     public function onUpdateFieldInstitutionFilter(Event $event, array $attr, $action, Request $request)
     {
-//        print_r($event);die();
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             if ($feature == 'Report.Institutions') {
@@ -967,6 +989,7 @@ class InstitutionsTable extends AppTable
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
     {
+
         if (isset($this->request->data[$this->alias()]['academic_period_id'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
@@ -976,7 +999,8 @@ class InstitutionsTable extends AppTable
                             'Report.SubjectsBookLists',
                             'Report.InstitutionSubjectsClasses',
                             'Report.StudentAttendanceSummary',
-                            'Report.ClassAttendanceMarkedSummaryReport'
+                            'Report.ClassAttendanceMarkedSummaryReport',
+                            'Report.InstitutionClasses'
                         ])
                 ) {
 
@@ -1005,7 +1029,7 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-                if (in_array($feature, ['Report.StudentAttendanceSummary', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport'])) {
+                if (in_array($feature, ['Report.StudentAttendanceSummary', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport','Report.InstitutionClasses'])) {
                     $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
                 } else {
                     $attr['options'] = $gradeOptions;
@@ -1030,7 +1054,7 @@ class InstitutionsTable extends AppTable
                 if (empty($gradeList)) {
                     $gradeOptions = ['' => $this->getMessage('general.select.noOptions')];
                 } else {
-                    if (!in_array($feature, ['Report.StudentAttendanceSummary'])) {
+                    if (!in_array($feature, ['Report.StudentAttendanceSummary','Report.InstitutionClasses'])) {
                         $gradeOptions = ['' => __('All Grades')] + $gradeList;
                     } else {
                         $gradeOptions = $gradeList;
@@ -1593,10 +1617,9 @@ class InstitutionsTable extends AppTable
             $where[$this->aliasField('area_id')] = $areaId;
         }
         $query
-            ->contain(['Areas', 'AreaAdministratives'])
-            ->select(['area_code' => 'Areas.code', 'area_administrative_code' => 'AreaAdministratives.code'])
+            ->contain(['Areas', 'AreaAdministratives','Statuses'])
+            ->select(['area_code' => 'Areas.code', 'area_administrative_code' => 'AreaAdministratives.code','institution_status'=>'Statuses.name'])
             ->where([$where]);
-
         switch ($filter) {
             case self::NO_STUDENT:
                 $StudentsTable = TableRegistry::get('Institution.Students');
