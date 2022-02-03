@@ -293,6 +293,9 @@ class ReportsController extends AppController
 
         $sheet = $objPHPExcel->getSheet(0);
         $highestRow = $sheet->getHighestRow();
+        if ($data['module'] == 'InstitutionStatistics' ) {
+             $highestRow = $sheet->getHighestRow() + 1;
+        }
         $highestColumn = $sheet->getHighestColumn();
 
         for ($row = 1; $row <= 1; $row++){

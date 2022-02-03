@@ -75,16 +75,35 @@ class ExtracurricularsTable extends AppTable {
 		$this->setupTabElements();
 	}
 
+	/*POCOR-6474 - commenting function because this function was enabling users to edit and view correct record*/
 	public function beforeFind( Event $event, Query $query )
 	{   
 		//if ($this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
 		$session = $this->request->session();
+		$userData = $this->Session->read(); //# [POCOR-6548] Check if user data not found then add current login user data
 		$studentId = $session->read('Student.Students.id');
 		if ($this->alias() == 'Extracurriculars') {
 			if ($this->controller->name == 'Profiles') {
 				if ($this->Session->read('Auth.User.is_guardian') == 1) {
 					$sId = $this->Session->read('Student.ExaminationResults.student_id');
+					/**
+					 * Need to add current login id as param when no data found in existing variable
+					 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+					 * @ticket POCOR-6548
+					 */
+					//# START: [POCOR-6548] Check if user data not found then add current login user data
+					if ( is_int($sId) ) {
+						$studentId = $sId;
+					} else if ($sId == null || empty($sId) || $sId == '') {
+						if ($studentId == null || $studentId == '' || empty($studentId)) {
+							$studentId = $userData['Auth']['User']['id'];
+						} else {
+							$studentId = $studentId;
+						}
+					} else {
 					$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+					}
+					//# END: [POCOR-6548] Check if user data not found then add current login user data
 				} else {
 					$studentId = $this->Session->read('Auth.User.id');
 				}
@@ -95,8 +114,16 @@ class ExtracurricularsTable extends AppTable {
 				$studentId = $session->read('Student.Students.id');
 			}
 			/*POCOR-6267 ends*/
-			$conditions[$this->aliasField('security_user_id')] = $studentId;		
-			$query->where($conditions, [], true);           
+			$conditions[$this->aliasField('security_user_id')] = $studentId;
+			/*POCOR-6474 starts*/	
+			if ($this->action == 'view' || $this->action == 'edit') {
+				$id = $this->ControllerAction->paramsDecode($this->request->params['pass'][1])['id'];
+    			$conditions[$this->aliasField('id')] = $id;
+				$query->where($conditions, [], true);
+			} else {
+			    $query->where($conditions, [], true);
+			}
+			/*POCOR-6474 ends*/	
 		}
 	}
 }
