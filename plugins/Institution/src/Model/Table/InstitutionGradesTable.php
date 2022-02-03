@@ -231,16 +231,26 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                     foreach ($gradeEntities as $grade) {
                         $entity->education_grade_id = $grade->education_grade_id;
                         $result = $this->save($grade);
-                        $lastInsertId=$result->id;
+                        $lastInsertId = $result->id;
 
-                            // POCOR 5001
-                        if (count($data['grades']['education_grade_subject_id']) > 0
-                    ) {
-                            $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
+                    // POCOR 5001
+                    if (count($data['grades']['education_grade_subject_id']) > 0) {
+                        $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
                         $createdUserId = $this->Session->read('Auth.User.id');
                         $institutionProgramGradeSubjectID = [];
-                        foreach($gradeSubjectEntities as $gradeSubjectId){
-                            if($gradeSubjectId > 0){
+                        $GradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+                        $getGradeSubjects = $this->EducationGrades
+                                            ->find()
+                                            ->LeftJoin([$GradesSubjects->alias() => $GradesSubjects->table()],[
+                                                    $this->EducationGrades->aliasField('id').' = ' . $GradesSubjects->aliasField('education_grade_id')
+                                            ])
+                                            ->where([
+                                                $this->EducationGrades->aliasField('id') => $grade['education_grade_id'],
+                                                $GradesSubjects->aliasField('auto_allocation') => 1
+                                            ])->toArray();
+                        echo "<pre>";print_r($getGradeSubjects);die();
+                        foreach($gradeSubjectEntities as $gradeSubjectId) {
+                            if ($gradeSubjectId > 0) {
                                 $institutionProgramGradeSubject = TableRegistry::get('InstitutionProgramGradeSubjects');
                                 $gradeSubject = $institutionProgramGradeSubject->newEntity();
                                 $gradeSubject->institution_grade_id = $lastInsertId;
