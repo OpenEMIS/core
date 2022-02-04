@@ -1270,6 +1270,7 @@ class StudentsTable extends ControllerActionTable
     {
         foreach ($query->toArray() as $key => $value)
         {
+            $periodId = $value['academic_period']['id'];//POCOR-6530
             $InstitutionStudents = TableRegistry::get('InstitutionStudents');
 
             $InstitutionStudentsCurrentData = $InstitutionStudents
@@ -1278,24 +1279,35 @@ class StudentsTable extends ControllerActionTable
                 'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
             ])
             ->where([
-                $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id
+                $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id,
+                $InstitutionStudents->aliasField('academic_period_id') => $periodId //POCOR-6530
             ])
             ->order([$InstitutionStudents->aliasField('InstitutionStudents.created') => 'DESC'])
             ->autoFields(true)
             ->first();
             /*POCOR-6400 starts*/
             if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id)) {
-                $previousInstStdId = $InstitutionStudents
-                                    ->find()
-                                    ->select([
-                                        'InstitutionStudents.id', 'InstitutionStudents.student_status_id'
-                                    ])
-                                    ->where([
-                                        $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id,
-                                        $InstitutionStudents->aliasField('id') => $InstitutionStudentsCurrentData->previous_institution_student_id
-                                    ])->first();
-                if (!empty($previousInstStdId) && $previousInstStdId->student_status_id == 8) {
-                    $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
+                $studentStatusId = $InstitutionStudentsCurrentData->student_status_id;
+                $statuses = $this->StudentStatuses->findCodeList();
+                $code = array_search($studentStatusId, $statuses);
+
+                if ($code != 'WITHDRAWN' && $code != 'TRANSFERRED' && $code != 'PROMOTED') {
+                    /**POCOR-6530 starts */
+                    $previousPeriodId = $periodId - 1;
+                    $previousInstitutionStudentId = $InstitutionStudentsCurrentData->previous_institution_student_id;
+                    $previousYearRecord = $InstitutionStudents
+                        ->find()
+                        ->select([
+                            'InstitutionStudents.id', 'InstitutionStudents.student_status_id'
+                        ])
+                        ->where([
+                            $InstitutionStudents->aliasField('academic_period_id') => $previousPeriodId,
+                            $InstitutionStudents->aliasField('id') => $previousInstitutionStudentId
+                        ])->first();
+                    /**POCOR-6530 ends */
+                    if (!empty($previousYearRecord) && $previousYearRecord->student_status_id == 8) {
+                        $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
+                    }
                 }
             }
             /*POCOR-6400 ends*/
