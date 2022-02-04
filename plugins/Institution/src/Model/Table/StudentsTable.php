@@ -232,7 +232,6 @@ class StudentsTable extends ControllerActionTable
                 'Users.Genders',
                 'Institutions',
                 'StudentStatuses',
-                'EducationGrades',
                 'AcademicPeriods',
                 'Users.MainNationalities'
             ])
@@ -245,17 +244,13 @@ class StudentsTable extends ControllerActionTable
                 'code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
                 'student_status' => 'StudentStatuses.name',
-                'education_grade' => 'EducationGrades.name',
                 'academic_period' => 'AcademicPeriods.name',
-                'start_date' => $this->aliasField('start_date'),
-                'end_date' => $this->aliasField('end_date'),
                 'previous_institution_student_id' => $this->aliasField('previous_institution_student_id'),
                 'student_first_name' => 'Users.first_name',
                 'student_middle_name' => 'Users.middle_name',
                 'student_third_name' => 'Users.third_name',
                 'student_last_name' => 'Users.last_name',
                 'nationalities' => 'MainNationalities.name',
-                'class_name' => 'InstitutionClasses.name',
                 'guardian_relation' => 'GuardianRelations.name',
                 'guardian_name' => $this->Users->find()->func()->concat([
                     'GuardianUser.first_name' => 'literal',
@@ -267,16 +262,6 @@ class StudentsTable extends ControllerActionTable
                 'contact_type' => $ContactTypes->aliasField('name'),
                 'contact_number' => $UserContact->aliasField('value'),
                 'institution_id' => 'Institutions.id',//POCOR-6338
-            ])
-            ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
-                $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
-                $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                $ClassStudents->aliasField('student_status_id = ') . $this->aliasField('student_status_id'),
-                $ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
-            ])
-            ->leftJoin([$Classes->alias() => $Classes->table()], [
-                $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
             ])
             ->leftJoin([$StudentGuardians->alias() => $StudentGuardians->table()], [
                 $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
@@ -315,22 +300,36 @@ class StudentsTable extends ControllerActionTable
             ->group($this->aliasField('student_id'))
             ->order([$this->aliasField('created') => 'DESC']);
         /*POCOR-6562 ends*/
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($periodId) {
-            return $results->map(function ($row) use($periodId) {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($periodId, $institutionId, $Classes, $ClassStudents) {
+            return $results->map(function ($row) use($periodId, $institutionId, $Classes, $ClassStudents) {
                 // POCOR-6338 starts
                 $Users = TableRegistry::get('security_users');
                 /*POCOR-6543 starts*/
                 $InstitutionStudents = TableRegistry::get('institution_students');
                 $InstitutionStudentsCurrentData = $this
                     ->find()
-                    ->contain(['StudentStatuses'])
+                    ->contain(['StudentStatuses', 'EducationGrades'])
                     ->select([
                         $this->aliasField('id'),
                         $this->aliasField('student_status_id'),
-                        $this->aliasField('previous_institution_student_id')
+                        $this->aliasField('previous_institution_student_id'),
+                        'education_grade' => 'EducationGrades.name',
+                        'class_name' => $Classes->aliasField('name')
+                    ])
+                    ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                        $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                        $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                        $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                        $ClassStudents->aliasField('student_status_id = ') . $this->aliasField('student_status_id'),
+                        $ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
+                    ])
+                    ->leftJoin([$Classes->alias() => $Classes->table()], [
+                        $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                     ])
                     ->where([
-                        $this->aliasField('student_id') => $row->student_id
+                        $this->aliasField('student_id') => $row->student_id,
+                        $this->aliasField('institution_id') => $institutionId,
+                        $this->aliasField('academic_period_id') => $periodId
                     ])
                     ->order([$this->aliasField('created') => 'DESC'])
                     ->autoFields(true)
@@ -353,7 +352,11 @@ class StudentsTable extends ControllerActionTable
                             $row['student_status'] = $InstitutionStudentsCurrentData->student_status->name;
                         }/*POCOR-6562 ends*/
                     }
-                
+                //echo "<pre>";print_r();die();
+                $row['education_grade'] = $InstitutionStudentsCurrentData->education_grade->name;
+                $row['start_date'] = $InstitutionStudentsCurrentData->start_date;
+                $row['end_date']   = $InstitutionStudentsCurrentData->end_date;
+                $row['class_name'] = $InstitutionStudentsCurrentData->class_name;
                 /*POCOR-6543 ends*/               
                 // POCOR-6129 custome fields code
                 $Guardians = TableRegistry::get('student_custom_field_values');
