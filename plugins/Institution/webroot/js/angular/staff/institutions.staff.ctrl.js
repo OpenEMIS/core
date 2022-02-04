@@ -986,7 +986,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var startDate = StaffController.startDate;
         var startDateArr = startDate.split("-");
         var shiftId = StaffController.staffShiftsId;
-        console.log("ShiftIdssss"+shiftId);
+       // console.log("ShiftIdssss"+shiftId);
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
         for(i = 0; i < startDateArr.length; i++) {
             if (startDateArr[i] == undefined || startDateArr[i] == null || startDateArr[i] == '') {
