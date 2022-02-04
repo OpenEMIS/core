@@ -1,3 +1,11 @@
+### [3.73.8] - 2022-02-05
+- Implemented: Reports > Institutions > Institutions With No Staff : Add institution_status column in the report
+- Bug Fixed: Institutions>Infrastructure>Overview: Custom fields are inaccurate and results are duplicated
+- Bug Fixed: Institutions>Students: Enrolled(Repeated) logic change
+- Bug Fixed: Institutions>Students>Bulk Transfer: Programme is still reflected even though it is invisible
+- Bug Fixed: Institution>Performance>Assessments: Marks are not saved and only Only first Assessment Period marks can be displayed from the interface
+- Bug Fixed: Institutions>Students: The report does not show the classes for some students even though they are assigned to classes
+
 ### [3.73.7] - 2022-01-31
 - Bug Fixed: Directory > General > Identities: 404 Error when viewing and editing identities
 - Bug Fixed: Personal > Student > Absences/Behaviours/Outcome/Extracurricular/Textbooks/Risks tab: 404 error when accessing
