@@ -1286,22 +1286,28 @@ class StudentsTable extends ControllerActionTable
             ->autoFields(true)
             ->first();
             /*POCOR-6400 starts*/
-            if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id) &&  $InstitutionStudentsCurrentData->student_status_id != 1 ) {
-                /**POCOR-6530 starts */
-                $previousPeriodId = $periodId - 1;
-                $previousInstitutionStudentId = $InstitutionStudentsCurrentData->previous_institution_student_id;
-                $previousYearRecord = $InstitutionStudents
-                    ->find()
-                    ->select([
-                        'InstitutionStudents.id', 'InstitutionStudents.student_status_id'
-                    ])
-                    ->where([
-                        $InstitutionStudents->aliasField('academic_period_id') => $previousPeriodId,
-                        $InstitutionStudents->aliasField('id') => $previousInstitutionStudentId
-                    ])->first();
-                /**POCOR-6530 ends */
-                if (!empty($previousYearRecord) && $previousYearRecord->student_status_id == 8) {
-                    $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
+            if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id)) {
+                $studentStatusId = $InstitutionStudentsCurrentData->student_status_id;
+                $statuses = $this->StudentStatuses->findCodeList();
+                $code = array_search($studentStatusId, $statuses);
+
+                if ($code != 'WITHDRAWN' && $code != 'TRANSFERRED' && $code != 'PROMOTED') {
+                    /**POCOR-6530 starts */
+                    $previousPeriodId = $periodId - 1;
+                    $previousInstitutionStudentId = $InstitutionStudentsCurrentData->previous_institution_student_id;
+                    $previousYearRecord = $InstitutionStudents
+                        ->find()
+                        ->select([
+                            'InstitutionStudents.id', 'InstitutionStudents.student_status_id'
+                        ])
+                        ->where([
+                            $InstitutionStudents->aliasField('academic_period_id') => $previousPeriodId,
+                            $InstitutionStudents->aliasField('id') => $previousInstitutionStudentId
+                        ])->first();
+                    /**POCOR-6530 ends */
+                    if (!empty($previousYearRecord) && $previousYearRecord->student_status_id == 8) {
+                        $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
+                    }
                 }
             }
             /*POCOR-6400 ends*/
