@@ -3269,6 +3269,9 @@ class InstitutionsController extends AppController
         if ($endDate == 'null') {
             $endDate = null;
         }
+        if ($startDate == 'null') {
+            $startDate = null;
+        }
 
         $this->autoRender= false;
         $StaffTable = TableRegistry::get('Institution.Staff');
