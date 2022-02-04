@@ -390,7 +390,10 @@ class InstitutionSubjectStudentsTable extends AppTable
                 //$StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']
             ])
             ->group([
-                $this->aliasField('student_id')
+                $this->aliasField('student_id'),
+                //Added for POCOR-6558[START]
+                $ItemResults->aliasField('assessment_period_id')
+                //Added for POCOR-6558[END]
             ])
             ->order([
                 $this->aliasField('student_id')
