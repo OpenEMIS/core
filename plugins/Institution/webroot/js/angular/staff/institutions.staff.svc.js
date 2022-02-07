@@ -334,6 +334,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
                 // Mandatory information from the form
                 newUserRecord['academic_period_id'] = userRecord['academic_period_id'];
+                newUserRecord['staff_shifts_id'] = userRecord['staff_shifts_id'];
                 newUserRecord['education_grade_id'] = userRecord['education_grade_id'];
                 newUserRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
                 newUserRecord['first_name'] = userRecord[attr['first_name_mapping']];
