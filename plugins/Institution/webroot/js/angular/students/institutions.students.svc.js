@@ -692,7 +692,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function makeDate(datetime) {
         // Only get the date part, we do not require the time portion
-        if (datetime.indexOf('T') > -1) {
+        if (datetime !== undefined && datetime.indexOf('T') > -1) {
             datetime = datetime.split('T')[0];
         }
         // Logic to handle external datasource giving the datetime in this format 2005-07-08T11:22:33+0800

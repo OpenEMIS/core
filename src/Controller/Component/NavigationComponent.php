@@ -317,6 +317,9 @@ class NavigationComponent extends Component
                 //POCOR-6202 start
                 if($action == 'GuardianStudents'){
                     $userInfo = TableRegistry::get('student_guardians')->get($securityUserId);
+                }else if($action == 'Identities'){//POCOR-6453 starts
+                    $securityUserId = $this->controller->paramsDecode($this->request->query['queryString']);
+                    $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
                 }else{
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
                 }
