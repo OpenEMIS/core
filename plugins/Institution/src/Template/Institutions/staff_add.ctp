@@ -471,7 +471,7 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 <div class="input select required"  >
                     <label><?= __('Shifts') ?></label>
 
-                        <select chosen name="staff[staff_shifts_id][_ids][]" id="staff-shifts-id" data-placeholder="<?=__('Select Shifts') ?>"  multiple="multiple"  
+                        <select chosen data-placeholder="<?=__('Select Shifts') ?>"  multiple="multiple" class="chosen-select" 
                                 ng-model="InstitutionStaffController.staffShiftsId"
                                 options="InstitutionStaffController.staffShiftsOptions"
                                 ng-options="staffShifts.id as staffShifts.name for staffShifts in InstitutionStaffController.staffShiftsOptions "
