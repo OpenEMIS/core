@@ -2113,7 +2113,7 @@ class WorkflowBehavior extends Behavior
         }
     }
 
-    public function setStatusId($entity, $requestData)
+    public function setStatusId(Entity $entity, $requestData)
     {
         $model = $this->_table;
         if ($model->hasBehavior('Workflow')) {
