@@ -312,7 +312,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $this->Alert->warning('Institutions.noClassRecords');
         }
         $selectedClassId = $this->queryString('class_id', $classOptions);
-
+        
         $this->advancedSelectOptions($classOptions, $selectedClassId, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSubjects')),
             'callable' => function ($id) use ($Subjects, $institutionId, $selectedAcademicPeriodId, $AccessControl, $userId, $controller) {
@@ -331,6 +331,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         $Subjects->aliasField('institution_id') => $institutionId,
                         $Subjects->aliasField('academic_period_id') => $selectedAcademicPeriodId,
                     ]);
+
                 return $query->count();
             }
         ]);
@@ -475,7 +476,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ->find('byClasses', ['selectedClassId' => $extra['selectedClassId']])
             ->contain(['Teachers', 'Rooms', 'EducationSubjects', 'EducationGrades', 'Classes'])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
-
+        
         // search function to search education grade and education subject
         $searchKey = $this->getSearchKey();
         if (!empty($searchKey)) {
@@ -502,7 +503,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     'EducationSubjects.order',
                     'EducationGrades.order'
                 ]);
-        }
+        } 
     }
 
     public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
