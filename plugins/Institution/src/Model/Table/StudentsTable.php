@@ -2276,19 +2276,19 @@ class StudentsTable extends ControllerActionTable
                 $this->aliasField('education_grade_id') => $educationGradeId,
                 $this->aliasField('student_id') => $studentId,
                 //POCOR-6539[START]
-                // $this->aliasField('student_status_id').' IN ' => [$statuses['GRADUATED'], $statuses['PROMOTED'], $statuses['WITHDRAWN']]
                 $this->aliasField('student_status_id').' IN ' => [$statuses['GRADUATED'], $statuses['PROMOTED'], $statuses['WITHDRAWN']]
+                // $this->aliasField('student_status_id').' IN ' => [$statuses['GRADUATED'], $statuses['PROMOTED']]
                 //POCOR-6539[END]
             ])
             ->count()
             ;
         //POCOR-6539[START]
-        //return !($completedGradeCount == 0);
-        if($completedGradeCount == 0){
-            return true;
-        }else{
-            return false;
-        }
+        return !($completedGradeCount == 0);
+        // if($completedGradeCount == 0){
+        //     return true;
+        // }else{
+        //     return false;
+        // }
         //POCOR-6539[END]
     }
 
