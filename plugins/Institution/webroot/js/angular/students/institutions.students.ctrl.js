@@ -868,6 +868,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.educationGradeOptions.selectedOption = StudentController.educationGradeOptions.availableOptions[key];
             }
         });
+        updatedGrades = updatedGrades.filter(function( element ) {
+            return element !== '';
+         });
         StudentController.educationGradeOptions.availableOptions = updatedGrades;
         //END: POCOR-6539
 
