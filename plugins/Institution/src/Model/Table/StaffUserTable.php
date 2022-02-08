@@ -353,6 +353,10 @@ class StaffUserTable extends ControllerActionTable
             ->requirePresence('position_type', 'create')
             ->requirePresence('institution_position_id', 'create')
             ->requirePresence('staff_type_id', 'create')
+            ->notEmpty('start_date', null, 'create')
+            ->requirePresence('start_date', 'create')
+            ->notEmpty('staff_shifts_id', null, 'create')
+            ->requirePresence('staff_shifts_id', 'create')
            /* ->add('start_date', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                 'on' => function ($context) {
