@@ -630,7 +630,9 @@ class InstitutionClassStudentsTable extends AppTable
                     'Users.preferred_name']);
             })
             ->matching('Users.Genders')
-            ->matching('StudentStatuses')
+            ->matching('StudentStatuses', function ($q) {
+                        return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN', 'GRADUATED', 'PROMOTED', 'REPEATED']]);
+                    })
             ->leftJoinWith('SubjectStudents', function ($q) use ($education_subject_id, $academicPeriodId) {
                 return $q
                     ->innerJoin(['EducationGradesSubjects' => 'education_grades_subjects'], [
@@ -638,15 +640,13 @@ class InstitutionClassStudentsTable extends AppTable
                         'EducationGradesSubjects.education_subject_id = SubjectStudents.education_subject_id'
                     ])
                     ->where([
-                        //'SubjectStudents.education_subject_id' => $education_subject_id,//POCOR-6463
+                        'SubjectStudents.education_subject_id' => $education_subject_id,
                         'SubjectStudents.academic_period_id' => $academicPeriodId
                     ]);
             })
             ->where([
                 $this->aliasField('institution_class_id').' IN ' => $institutionClassIds,
                 //$this->aliasField('education_grade_id') => $educationGradeId,//POCOR-6463
-                $this->aliasField('academic_period_id') => $academicPeriodId,
-                'StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN', 'GRADUATED', 'PROMOTED', 'REPEATED'], //POCOR-6463
                 //'SubjectStudents.education_subject_id' => $educationSubjectId['education_subject_id'],
                 'SubjectStudents.student_id IS NULL'
             ])
