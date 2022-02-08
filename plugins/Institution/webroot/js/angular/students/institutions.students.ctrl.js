@@ -853,11 +853,23 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.startDate = studentStartDateFormatted;
         $scope.endDate = periodEndDate;
 
+        // angular.forEach(StudentController.educationGradeOptions.availableOptions, function(value, key) {
+        //     if (value.education_grade_id == studentData['institution_students'][0]['education_grade_id']) {
+        //         StudentController.educationGradeOptions.selectedOption = StudentController.educationGradeOptions.availableOptions[key];
+        //     }
+        // });
+        //START: POCOR-6539
+        var updatedGrades = [];
         angular.forEach(StudentController.educationGradeOptions.availableOptions, function(value, key) {
+            if (value.education_grade.order >= studentData['institution_students'][0]['education_grade']['order']) {
+                updatedGrades[key] = value;
+            }
             if (value.education_grade_id == studentData['institution_students'][0]['education_grade_id']) {
                 StudentController.educationGradeOptions.selectedOption = StudentController.educationGradeOptions.availableOptions[key];
             }
         });
+        StudentController.educationGradeOptions.availableOptions = updatedGrades;
+        //END: POCOR-6539
 
         var startDatePicker = angular.element(document.getElementById('Students_transfer_start_date'));
         startDatePicker.datepicker("setStartDate", studentStartDateFormatted);
