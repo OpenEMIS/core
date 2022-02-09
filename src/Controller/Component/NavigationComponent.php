@@ -1087,6 +1087,7 @@ class NavigationComponent extends Component
                         'title' => 'Standard',
                             'parent' => 'Statistics',
                             'params' => ['plugin' => 'Institution', 3 => $institutionId],
+                            'selected' => ['Institutions.ViewReport']
                     ],
                     'Institutions.InstitutionStatistics' => [
                         'title' => 'Custom',
