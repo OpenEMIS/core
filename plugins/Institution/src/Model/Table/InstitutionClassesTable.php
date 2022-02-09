@@ -19,6 +19,7 @@ use Cake\Routing\Router;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
+use Cake\Datasource\ResultSetInterface;
 
 class InstitutionClassesTable extends ControllerActionTable
 {
@@ -849,6 +850,26 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $decodedClass = $this->paramsDecode($this->request->params['pass'][1]);
+        if (!empty($decodedClass)) {
+            $classId = $decodedClass['id'];
+        }
+        /*POCOR-6566 starts*/
+        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $grades = [];
+        $classGradeData = $this->find()
+                ->select(['grade_id' => $InstitutionClassGrades->aliasField('education_grade_id')])
+                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()], [
+                    $this->aliasField('id = ') . $InstitutionClassGrades->aliasField('institution_class_id')
+                ])
+                ->where([$InstitutionClassGrades->aliasField('institution_class_id') => $classId])
+                ->toArray();
+        if (!empty($classGradeData)) {
+            foreach ($classGradeData as $data) {
+                $grades[] = $data->grade_id;
+            }
+        }
+        /*POCOR-6566 ends*/
         $extra['selectedGrade'] = -1;
         $extra['selectedStatus'] = -1;
         $extra['selectedGender'] = -1;
@@ -911,7 +932,14 @@ class InstitutionClassesTable extends ControllerActionTable
                 'ClassStudents' => [
                     'Users.Genders',
                     'Users.SpecialNeeds',
-                    'EducationGrades',
+                     /*POCOR-6566 starts*/
+                    'EducationGrades'=> function ($q) use ($grades) {
+                        return $q
+                            ->where([
+                                ['EducationGrades.id IN' => $grades],                                
+                            ]);
+                    },
+                    /*POCOR-6566 ends*/
                     'StudentStatuses'
                 ],
             ]);
