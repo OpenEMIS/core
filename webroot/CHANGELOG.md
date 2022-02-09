@@ -1,3 +1,9 @@
+### [3.73.9] - 2022-02-09
+- Bug Fixed: Institutions>Student:Withdraw or Transfer gets 404 error
+- Bug Fixed: Institutions > Staff > Add Staff : There are no validation message when user submits Add staff without selecting values in mandatory fields
+- Bug Fixed: Institutions > Students > Export : Classes are not showing for some students
+- Bug Fixed: Institutions > Performances > Assessments : Assessment marks should not be editable if he is no longer in the same class
+
 ### [3.73.8] - 2022-02-05
 - Implemented: Reports > Institutions > Institutions With No Staff : Add institution_status column in the report
 - Bug Fixed: Institutions>Infrastructure>Overview: Custom fields are inaccurate and results are duplicated
