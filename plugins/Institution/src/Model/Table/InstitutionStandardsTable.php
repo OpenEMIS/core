@@ -86,6 +86,8 @@ class InstitutionStandardsTable extends AppTable
     {
         $options = [
             'Institution.InstitutionStandards' => __('Students') . ' ' . __('Overview'),
+            //'Institution.StudentSpecialNeeds'  => __('Student Special Needs'),
+            //'Institution.StudentHealths'  => __('Student Health'),
         ];
         $attr['options'] = $options;
         $attr['onChangeReload'] = true;
@@ -220,7 +222,7 @@ class InstitutionStandardsTable extends AppTable
             $selectable['education_programme'] = 'EducationProgrammes.name';
             $selectable['assesment_code'] = 'AssessmentPeriods.code';
             $selectable['assesment_name'] = 'AssessmentPeriods.name';
-            $group_by[] = 'EducationSubjects.id';
+            $group_by = [];
 
             $join['EducationProgrammes'] = [
                 'type' => 'inner',
@@ -235,7 +237,7 @@ class InstitutionStandardsTable extends AppTable
                 'conditions' => [
                     'AssessmentItemResults.student_id = InstitutionStudent.student_id',
                     'AssessmentItemResults.academic_period_id = InstitutionStudent.academic_period_id',
-                    'AssessmentItemResults.education_grade_id = InstitutionStudent.education_grade_id',
+                    'AssessmentItemResults.institution_id = InstitutionStudent.institution_id',
                 ],
             ];
             $join['EducationSubjects'] = [
