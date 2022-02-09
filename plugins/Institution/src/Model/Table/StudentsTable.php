@@ -331,7 +331,7 @@ class StudentsTable extends ControllerActionTable
                         $this->aliasField('institution_id') => $institutionId,
                         $this->aliasField('academic_period_id') => $periodId
                     ])
-                    ->order([$this->aliasField('start_date') => 'DESC'])
+                    ->order([$this->aliasField('created') => 'DESC'])
                     ->autoFields(true)
                     ->first();
                 
