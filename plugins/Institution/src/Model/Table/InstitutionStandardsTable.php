@@ -66,6 +66,9 @@ class InstitutionStandardsTable extends AppTable
     public function addBeforeAction(Event $event)
     {
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $session = $this->request->session();
+        $institution_id = $session->read('Institution.Institutions.id');
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institution_id]);
     }
 
     public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
@@ -120,7 +123,7 @@ class InstitutionStandardsTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheet_tabs = [
-            'General',
+            'Student',
             'Academic',
             'Assessment',
             'Absence',
@@ -196,7 +199,7 @@ class InstitutionStandardsTable extends AppTable
             ],
         ];
 
-        if ( $sheet_tab_name == 'General' ) {
+        if ( $sheet_tab_name == 'Student' ) {
             $selectable['gender'] = 'Genders.name';
             $selectable['birth_certificate'] = 'Identities.number';
             $selectable['date_of_birth'] = $this->aliasField('date_of_birth');
@@ -324,8 +327,8 @@ class InstitutionStandardsTable extends AppTable
         {
             return $results->map(function ($row) use ($sheet_tab_name)
             {
-                // START : General tab formating
-                if ( $sheet_tab_name == 'General' ) {
+                // START : Student tab formating
+                if ( $sheet_tab_name == 'Student' ) {
                     $Guardians = TableRegistry::get('student_custom_field_values');
                     $guardianData = $Guardians->find()
                         ->select([
@@ -374,7 +377,7 @@ class InstitutionStandardsTable extends AppTable
                             $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->field_description;
                         }
                     }
-                } // END : General tab formating
+                } // END : Student tab formating
 
                 else if ( $sheet_tab_name == 'Assessment' ) {
                     $row['assessment_full_name'] = $row['assesment_code'] . ' ' .  $row['assesment_name'];
@@ -400,7 +403,7 @@ class InstitutionStandardsTable extends AppTable
 
         $extraField = [];
 
-        if ( $sheet_tab_name == 'General' ) {
+        if ( $sheet_tab_name == 'Student' ) {
             $extraField = $this->getGeneralTabFields($extraField);
         
         } else if ( $sheet_tab_name == 'Academic' ) {
