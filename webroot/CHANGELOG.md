@@ -1,3 +1,10 @@
+### [3.73.10] - 2022-02-11
+- Bug Fixed: Institution>Academic>Subjects: Negative numbers are showing up under student numbers
+- Bug Fixed: Institutions > Statistics > Standard : Develop Student Overview report
+- Bug Fixed: Institutions: 404 error when deleting an institution
+- Bug Fixed: Institutions > Performance > Assessments : System does not save new mark when user updates the mark
+- Bug Fixed: Institutions > Students/Staff > Nationalities tab : Deleting a Preferred nationality should not show a [Message not found] error
+
 ### [3.73.9] - 2022-02-09
 - Bug Fixed: Institutions>Student:Withdraw or Transfer gets 404 error
 - Bug Fixed: Institutions > Staff > Add Staff : There are no validation message when user submits Add staff without selecting values in mandatory fields
