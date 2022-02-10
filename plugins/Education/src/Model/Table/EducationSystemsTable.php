@@ -326,8 +326,8 @@ class EducationSystemsTable extends ControllerActionTable
                                                    $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['id'] = Text::uuid();
                                                     $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['education_programme_id'] = $program_result->id;
                                                    $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['next_programme_id'] = $value['next_programme_id'];
-
-                                                   //insert next programmes data
+                                                   
+                                                    //insert next programmes data
                                                     $newNextProgramEntites = $EducationProgrammesNextProgrammesTable->newEntity($nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]);
                                                     $nextProgramResult = $EducationProgrammesNextProgrammesTable->save($newNextProgramEntites);
                                                 }
@@ -453,8 +453,7 @@ class EducationSystemsTable extends ControllerActionTable
                 }
             }
         }
-        /*POCOR-6544 ends*/    
-		
+        /*POCOR-6544 ends*/    		
 		// Webhook Education Structure System create starts
 		//POCOR-6085 starts
 		if($entity->isNew()) {
