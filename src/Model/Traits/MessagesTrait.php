@@ -2514,6 +2514,7 @@ trait MessagesTrait
             'ValidateNumberSuccess' => 'Identity number validate successfully.',
             'ValidateNumberFail' => 'Please enter correct identity number.',
             'IdentityNumberNotExist' => 'Identity number should not be blank.',
+            'NationalitiesRecordNoRemain' => 'There must be at least one Preferred Nationality.',
         ],
         'StudentMarkTypeStatuses' => [
             'statusAlreadyAdded' => 'Attendance for the selected Education Grade already added.',
