@@ -2266,7 +2266,7 @@ class StudentsTable extends ControllerActionTable
         return $params;
     }
 
-    public function completedGrade($educationGradeId, $studentId)
+    public function completedGrade($educationGradeId, $studentId, $academic_period_id = null)
     {
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 
@@ -2275,21 +2275,53 @@ class StudentsTable extends ControllerActionTable
             ->where([
                 $this->aliasField('education_grade_id') => $educationGradeId,
                 $this->aliasField('student_id') => $studentId,
-                //POCOR-6539[START]
-                $this->aliasField('student_status_id').' IN ' => [$statuses['GRADUATED'], $statuses['PROMOTED'], $statuses['WITHDRAWN']]
-                // $this->aliasField('student_status_id').' IN ' => [$statuses['GRADUATED'], $statuses['PROMOTED']]
-                //POCOR-6539[END]
+                $this->aliasField('student_status_id').' IN ' => [$statuses['GRADUATED'], $statuses['PROMOTED']]
             ])
             ->count()
             ;
-        //POCOR-6539[START]
+
         return !($completedGradeCount == 0);
-        // if($completedGradeCount == 0){
-        //     return true;
-        // }else{
-        //     return false;
-        // }
-        //POCOR-6539[END]
+    }
+
+    public function completedGradeNew($educationGradeId, $studentId, $academic_period_id = null)
+    {
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
+        //Check Education grade order for request educationGradeId
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationGradesData = $EducationGrades->find()
+            ->where([
+                $EducationGrades->aliasField('id') => $educationGradeId
+            ])
+            ->extract('order')
+            ->first()
+            ;
+        //get Education grade ids currently asssigned to student
+        $StudentEducationGradesData = $this->find()
+        ->where([
+            $this->aliasField('student_id') =>  $studentId,
+            $this->aliasField('student_status_id').' IN ' => [$statuses['GRADUATED'], $statuses['PROMOTED']]
+        ])
+        ->extract('education_grade_id')
+        ->toArray()
+        ;
+        
+        //Check Education grade order for currently educationGradeId
+        if(!empty($StudentEducationGradesData)){
+            $checkNotApplicable = $EducationGrades->find()
+            ->where([
+                $EducationGrades->aliasField('id IN ') => $StudentEducationGradesData
+            ])
+            ->extract('order')
+            ->toArray();
+            $flag = 1;
+            foreach($checkNotApplicable AS $val){
+                if($EducationGradesData > $val){
+                    $flag = 0;
+                }
+            }
+        }
+        return !($flag == 0);
     }
 
     public function institutionStudentRiskCalculateRiskValue(Event $event, ArrayObject $params)
