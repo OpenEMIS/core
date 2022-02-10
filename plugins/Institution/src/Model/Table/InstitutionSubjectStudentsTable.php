@@ -169,6 +169,17 @@ class InstitutionSubjectStudentsTable extends AppTable
                     //'institution_class_id' => $institutionClassesId,//POCOR-6479 comment this code of POCOR-6468  
                 ])
                 ->execute();
+            //update created date in assesment_item_results table  //POCOR-6573 starts  
+            $ItemResults->updateAll(['created' => Time::now()], 
+                                [
+                                    'student_id' => $studentId,
+                                    'academic_period_id' => $academicPeriodId,
+                                    'education_subject_id' => $educationSubjectId,
+                                    'education_grade_id' => $educationGradeId,
+                                    'institution_classes_id' => $institutionClassesId,
+                                    'assessment_period_id' => $assessmentPeriodId,
+                                    'institution_id' => $institutionId
+                                ]); //POCOR-6573 ends
         }
     }
 
@@ -340,7 +351,12 @@ class InstitutionSubjectStudentsTable extends AppTable
         return $query
             ->select([
                 $ItemResults->aliasField('id'),
-                $ItemResults->aliasField('marks'),
+                //$ItemResults->aliasField('marks'),//POCOR-6573 starts
+                $ItemResults->aliasField('academic_period_id'),
+                $ItemResults->aliasField('education_grade_id'),
+                $ItemResults->aliasField('education_subject_id'),
+                $ItemResults->aliasField('assessment_grading_option_id'),
+                $ItemResults->aliasField('assessment_period_id'),//POCOR-6573 ends
                 $ItemResults->aliasField('assessment_grading_option_id'),
                 $ItemResults->aliasField('assessment_period_id'),
                 $this->aliasField('student_id'),
@@ -410,7 +426,32 @@ class InstitutionSubjectStudentsTable extends AppTable
                     $result['student_status']['name'] = __($result['student_status']['name']);
                 }
                 return $arrResults;
-            });
+            })
+            //POCOR-6573 starts    
+            ->formatResults(function ($results1) {
+                $arrResults1 = is_array($results1) ? $results1 : $results1->toArray();
+                foreach ($arrResults1 as &$result) {
+                    $assessmentItemResults = TableRegistry::get('assessment_item_results');
+                    $assessmentItemResultsData = $assessmentItemResults->find()
+                            ->select([
+                                $assessmentItemResults->aliasField('marks')
+                            ])
+                            ->order([
+                                $assessmentItemResults->aliasField('created') => 'DESC',
+                                $assessmentItemResults->aliasField('modified') => 'DESC'
+                            ])
+                            ->where([
+                                $assessmentItemResults->aliasField('student_id') => $result['student_id'],
+                                $assessmentItemResults->aliasField('academic_period_id') => $result['AssessmentItemResults']['academic_period_id'],
+                                $assessmentItemResults->aliasField('education_grade_id') => $result['AssessmentItemResults']['education_grade_id'],
+                                $assessmentItemResults->aliasField('assessment_period_id') => $result['AssessmentItemResults']['assessment_period_id'],
+                                $assessmentItemResults->aliasField('education_subject_id') => $result['AssessmentItemResults']['education_subject_id'],
+                            ])
+                            ->first();
+                        $result['AssessmentItemResults']['marks'] = $assessmentItemResultsData->marks;
+                }
+                return $arrResults1;
+            }); //POCOR-6573 ends
     }
 
     public function findAssessmentResults(Query $query, array $options)
