@@ -18,6 +18,7 @@ use Cake\Core\Configure;
 use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
+use PHPExcel_IOFactory;
 
 class InstitutionsController extends AppController
 {
@@ -200,6 +201,7 @@ class InstitutionsController extends AppController
             'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
             'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
             'InstitutionStatistics'              => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
+            'InstitutionStandards'              => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -2039,8 +2041,11 @@ class InstitutionsController extends AppController
            // echo '<pre>'; print_r($model->alias());die;
             if (isset($params['pass'][1])) {
                 if ($model->table() == 'security_users' && !$isDownload) {
+                    if (count(explode('.', $params['pass'][1])) != 2) {
+                    } else {
                     $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
+                    }
                 }
             } elseif (isset($requestQuery['user_id'])) {
                 // POCOR-4577 - to check if Users association existed in model - for staff leave import
@@ -4158,5 +4163,86 @@ class InstitutionsController extends AppController
 
     public function Distributions(){
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDistributions']);
+    }
+
+    public function ViewReport()
+    {
+        ini_set('memory_limit', '-1');
+        $data = $_GET;
+        $explode_data = explode("/", $data['file_path']);
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $this->Navigation->addCrumb($data['module']);
+        $header = __('Reports') . ' - ' .$data['module'];
+
+        $inputFileName = WWW_ROOT. 'export/'.end($explode_data);
+
+        $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
+        $objReader = PHPExcel_IOFactory::createReader($inputFileType);
+        $objPHPExcel = $objReader->load($inputFileName);
+
+        $sheet = $objPHPExcel->getSheet(0);
+        $highestRow = $sheet->getHighestRow();
+        if ($data['module'] == 'InstitutionStatistics' ) {
+             $highestRow = $sheet->getHighestRow() + 1;
+        }
+        $highestColumn = $sheet->getHighestColumn();
+
+        for ($row = 1; $row <= 1; $row++){
+            $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
+                NULL,
+                TRUE,
+                FALSE);
+        }
+
+        $rowHeaderNew = $this->array_flatten($rowHeader);
+        for ($row = 2; $row <= $highestRow -1; $row++){
+            //  Read a row of data into an array
+            $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
+                NULL,
+                TRUE,
+                FALSE);
+            if($this->isEmptyRow(reset($rowData))) { continue; }
+            //  Insert row data array into your database of choice here
+        }
+        foreach($rowData as $newKey => $newDataVal){
+            foreach($newDataVal as $kay2 => $new_data_arr){
+                if(isset($new_data_arr)){
+                    $newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
+                }
+            }
+        }
+        $this->set('rowHeader', $rowHeader);
+        $this->set('newArr2', $newArr2);
+
+        $this->set('contentHeader', $header);
+    }
+
+    function array_flatten($array) {
+        if (!is_array($array)) {
+            return false;
+        }
+        $result = array();
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $result = array_merge($result, $this->array_flatten($value));
+            } else {
+                $result = array_merge($result, array($key => $value));
+            }
+        }
+        return $result;
+    }
+
+    function isEmptyRow($row) {
+        foreach($row as $cell){
+            if (null !== $cell) return false;
+        }
+        return true;
     }
 }
