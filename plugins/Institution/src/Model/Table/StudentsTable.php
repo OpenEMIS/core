@@ -2302,23 +2302,22 @@ class StudentsTable extends ControllerActionTable
             $this->aliasField('student_id') =>  $studentId,
             $this->aliasField('student_status_id').' IN ' => [$statuses['GRADUATED'], $statuses['PROMOTED']]
         ])
-        ->extract('education_grade_id')
-        ->toArray()
+        // ->extract('education_grade_id')
+        ->order([$this->aliasField('created DESC')])
+        ->first()
         ;
         
         //Check Education grade order for currently educationGradeId
         if(!empty($StudentEducationGradesData)){
             $checkNotApplicable = $EducationGrades->find()
             ->where([
-                $EducationGrades->aliasField('id IN ') => $StudentEducationGradesData
+                $EducationGrades->aliasField('id') => $StudentEducationGradesData->education_grade_id
             ])
             ->extract('order')
-            ->toArray();
+            ->first();
             $flag = 1;
-            foreach($checkNotApplicable AS $val){
-                if($EducationGradesData > $val){
-                    $flag = 0;
-                }
+            if($EducationGradesData > $checkNotApplicable){
+                $flag = 0;
             }
         }
         return !($flag == 0);
