@@ -240,7 +240,8 @@ class UserNationalitiesTable extends ControllerActionTable {
                 ->count();
 
         if (!$query) {
-            $this->Alert->warning('UserNationalities.noRecordRemain', ['reset'=>true]);
+            $this->Alert->warning('UserNationalities.NationalitiesRecordNoRemain', ['reset' => true]);
+            // $this->Alert->warning('UserNationalities.noRecordRemain', ['reset'=>true]);
             return false;
         }
     }
