@@ -31,6 +31,7 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
 
         return $validator
+                        ->allowEmpty('time_in')//POCOR-6559
                         ->add('time_in', 'leavePeriodOverlap', [
                             'rule' => ['noStaffLeaveOverlapping'],
                             'message' => __('Attendance applied overlaps existing records.')
