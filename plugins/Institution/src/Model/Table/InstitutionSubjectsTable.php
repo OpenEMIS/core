@@ -1600,40 +1600,41 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 foreach ($educationGradeSubjects as $gradeSubject) {
                     if (!empty($gradeSubject->education_subjects)) {
                         foreach ($gradeSubject->education_subjects as $subject) {
-                            if (!isset($educationSubjects[$gradeSubject->id.'_'.$subject->id])) {
-                                $educationSubjects[$gradeSubject->id.'_'.$subject->id] = [
-                                    'id' => $subject->id,
-                                    'education_grade_id' => $gradeSubject->id,
-                                    'name' => $subject->name
-                                ];
-                            }
-                        }
-                    } /*POCOR-6368 starts*/else {
-                        $institutionProgramGradeSubjects = TableRegistry::get('InstitutionProgramGradeSubjects')
+                            if ($subject->_joinData->auto_allocation != 1) {//POCOR-6368 starts
+                                if (!isset($educationSubjects[$gradeSubject->id.'_'.$subject->id])) {
+                                    $educationSubjects[$gradeSubject->id.'_'.$subject->id] = [
+                                        'id' => $subject->id,
+                                        'education_grade_id' => $gradeSubject->id,
+                                        'name' => $subject->name
+                                    ];
+                                }
+                            } /*POCOR-6368 starts*/else {
+                                $institutionProgramGradeSubjects = TableRegistry::get('InstitutionProgramGradeSubjects')
                                 ->find()
                                 ->where([
                                     'InstitutionProgramGradeSubjects.education_grade_id' => $gradeSubject->id,
                                     'InstitutionProgramGradeSubjects.institution_id' => $entity->institution_id
                                     ])
                                 ->toArray();
-                        if (!empty($institutionProgramGradeSubjects)) {
-                            foreach ($institutionProgramGradeSubjects as $subject) {
-                                $eduSubjects = $this->EducationSubjects->get($subject->education_grade_subject_id);
-                                $educationSubjects[$subject->education_grade_id.'_'.$subject->education_grade_subject_id] = [
-                                        'id' => $eduSubjects->id,
-                                        'education_grade_id' => $subject->education_grade_id,
-                                        'name' => $eduSubjects->name
-                                ];
-                            }
+                                if (!empty($institutionProgramGradeSubjects)) {
+                                    foreach ($institutionProgramGradeSubjects as $subject) {
+                                        $eduSubjects = $this->EducationSubjects->get($subject->education_grade_subject_id);
+                                        $educationSubjects[$subject->education_grade_id.'_'.$subject->education_grade_subject_id] = [
+                                                'id' => $eduSubjects->id,
+                                                'education_grade_id' => $subject->education_grade_id,
+                                                'name' => $eduSubjects->name
+                                        ];
+                                    }
+                                }   
+                            }/*POCOR-6368 ends*/
                         }
-                    }/*POCOR-6368 ends*/
+                    }
                     unset($subject);
                 }
                 unset($gradeSubject);
             }
 
             unset($educationGradeSubjects);
-            
             if (!empty($educationSubjects)) {
                 /**
                  * for each education subjects, find the primary key of institution_classes using (entity->academic_period_id and institution_id and education_subject_id)
@@ -1664,7 +1665,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                  */
                 $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
                 $newSchoolSubjects = [];
-
+                
                 foreach ($educationSubjects as $key => $educationSubject) {
                     $existingSchoolSubjects = false;
                     if (array_key_exists($key, $institutionSubjectsIds)) {
