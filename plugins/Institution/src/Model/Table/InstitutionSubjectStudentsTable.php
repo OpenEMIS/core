@@ -334,7 +334,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         $InstitutionSubjects = $this->InstitutionSubjects;
         $StudentStatuses = $this->StudentStatuses;
         $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-
+        $InstitutionClassStudents = TableRegistry::get('institution_class_students');//POCOR-6572
         $educationId = $InstitutionSubjects->find()->select('education_subject_id')->where(['id' => $subjectId])->first();
 
         return $query
@@ -380,17 +380,26 @@ class InstitutionSubjectStudentsTable extends AppTable
                 [
                     $this->aliasField('student_status_id') => $StudentStatuses->aliasField('id')
                 ]
-            )
+            )//POCOR-6572 starts
+            ->innerJoin(
+                [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()],
+                [
+                    $InstitutionClassStudents->aliasField('student_id = ') . $this->aliasField('student_id')
+                ]
+            )//POCOR-6572 ends
             ->where([
                 $this->aliasField('institution_subject_id') => $subjectId,
                 $this->aliasField('institution_class_id') => $classId,
                 $InstitutionSubjects->aliasField('institution_id') => $institutionId,
-                /*$InstitutionSubjects->aliasField('institution_id') => $institutionId,
-                $this->aliasField('institution_class_id') => $classId,*/
+                $InstitutionClassStudents->aliasField('institution_class_id') => $classId,//POCOR-6572
+                $InstitutionClassStudents->aliasField('institution_id') => $institutionId,//POCOR-6572
                 //$StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']
             ])
             ->group([
-                $this->aliasField('student_id')
+                $this->aliasField('student_id'),
+                //Added for POCOR-6558[START]
+                $ItemResults->aliasField('assessment_period_id')
+                //Added for POCOR-6558[END]
             ])
             ->order([
                 $this->aliasField('student_id')

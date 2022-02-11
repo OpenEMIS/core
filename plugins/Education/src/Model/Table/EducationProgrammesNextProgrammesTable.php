@@ -103,12 +103,16 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 					->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
 					->where([
 						$EducationGrades->aliasField('education_programme_id') => $nextProgrammeId,
-						'EducationSystems.academic_period_id' => $periodId
+						'EducationSystems.academic_period_id' => $periodId,
+						'EducationProgrammes.visible' => 1
 					])
 					->order([$EducationGrades->aliasField('order')])
 					->toArray();
 					
-				$results = $results + [key($nextProgrammeGradeResults) => current($nextProgrammeGradeResults)];
+				if (!is_null(key($nextProgrammeGradeResults))) {
+					$results = $results + [key($nextProgrammeGradeResults) => current($nextProgrammeGradeResults)];
+				}
+				
 			}
 		} else {
 			$results = [];
