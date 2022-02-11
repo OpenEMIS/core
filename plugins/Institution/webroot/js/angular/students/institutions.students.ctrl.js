@@ -1148,7 +1148,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         newStudentData['academic_period_id'] = academicPeriodId;
         newStudentData['education_grade_id'] = educationGradeId;
         newStudentData['education_grade_code'] = educationGradeCode;
-        console.log(newStudentData);
         newStudentData['start_date'] = startDate;
         newStudentData['institution_id'] = StudentController.institutionId;
         if (!StudentController.externalSearch) {
@@ -1159,7 +1158,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             .then(function(user) {
                 if (user[0].error.length === 0) {
                     var studentId = user[0].data.id;
-                    StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, user[1]);
+                    StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, educationGradeCode, classId, startDate, endDate, user[1]);
                 } else {
                     StudentController.postResponse = user[0];
                     console.log(user[0]);
