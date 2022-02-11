@@ -726,6 +726,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             staff_assignment: true,
             academic_period_id: academicPeriodId,
             position_type: positionType,
+            staff_shifts_id: shiftId,
             staff_type_id: staffTypeId,
             FTE: fte,
             start_date: startDate,
@@ -986,7 +987,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var startDate = StaffController.startDate;
         var startDateArr = startDate.split("-");
         var shiftId = StaffController.staffShiftsId;
-        console.log("ShiftIdssss"+shiftId);
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
         for(i = 0; i < startDateArr.length; i++) {
             if (startDateArr[i] == undefined || startDateArr[i] == null || startDateArr[i] == '') {
@@ -1061,6 +1061,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         newStaffData['institution_position_id'] = institutionPositionId;
         newStaffData['staff_type_id'] = staffTypeId;
         newStaffData['FTE'] = fte;
+        newStaffData['staff_shifts_id'] = shiftId;
         InstitutionsStaffSvc.addUser(newStaffData)
         .then(function(user){
             if (user[0].error.length === 0) {
