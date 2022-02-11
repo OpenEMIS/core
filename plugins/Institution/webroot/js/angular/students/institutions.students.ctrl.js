@@ -768,17 +768,19 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         return studentRecords;
     }
 
-    function insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, userRecord) {
+    function insertStudentData(studentId, academicPeriodId, educationGradeId, educationGradeCode, classId, startDate, endDate, userRecord) {
         UtilsSvc.isAppendLoader(true);
         AlertSvc.reset($scope);
         var data = {
             student_id: studentId,
             academic_period_id: academicPeriodId,
             education_grade_id: educationGradeId,
+            education_grade_code: educationGradeCode,
             start_date: startDate,
             end_date: endDate,
             institution_class_id: classId
         };
+        console.log(data);
 
         InstitutionsStudentsSvc.postEnrolledStudent(data)
             .then(function(postResponse) {
@@ -1018,6 +1020,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function postForm() {
         var academicPeriodId = (StudentController.academicPeriodOptions.hasOwnProperty('selectedOption')) ? StudentController.academicPeriodOptions.selectedOption.id : '';
         var educationGradeId = (StudentController.educationGradeOptions.hasOwnProperty('selectedOption')) ? StudentController.educationGradeOptions.selectedOption.education_grade_id : '';
+        var educationGradeCode = (StudentController.educationGradeOptions.hasOwnProperty('selectedOption')) ? StudentController.educationGradeOptions.selectedOption.education_grade.code : '';
         if (educationGradeId == undefined) {
             educationGradeId = '';
         }
@@ -1040,10 +1043,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 var studentData = StudentController.selectedStudentData;
                 var amendedStudentData = Object.assign({}, studentData);
                 amendedStudentData.date_of_birth = InstitutionsStudentsSvc.formatDate(amendedStudentData.date_of_birth);
-                StudentController.addStudentUser(amendedStudentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
+                StudentController.addStudentUser(amendedStudentData, academicPeriodId, educationGradeId, educationGradeCode, classId, startDate, endDate);
             } else {
                 var studentId = StudentController.selectedStudent;
-                StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, {});
+                StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, educationGradeCode, classId, startDate, endDate, {});
             }
         } else {
             if (StudentController.selectedStudentData != null) {
@@ -1076,7 +1079,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 delete studentData['modified_user_id'];
                 delete studentData['created'];
                 delete studentData['created_user_id'];
-                StudentController.addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
+                StudentController.addStudentUser(studentData, academicPeriodId, educationGradeId, addStudentUser, classId, startDate, endDate);
             }
         }
     }
@@ -1140,10 +1143,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             });
     }
 
-    function addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate) {
+    function addStudentUser(studentData, academicPeriodId, educationGradeId, educationGradeCode, classId, startDate, endDate) {
         var newStudentData = studentData;
         newStudentData['academic_period_id'] = academicPeriodId;
         newStudentData['education_grade_id'] = educationGradeId;
+        newStudentData['education_grade_code'] = educationGradeCode;
+        console.log(newStudentData);
         newStudentData['start_date'] = startDate;
         newStudentData['institution_id'] = StudentController.institutionId;
         if (!StudentController.externalSearch) {

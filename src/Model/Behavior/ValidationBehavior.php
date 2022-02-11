@@ -755,9 +755,10 @@ class ValidationBehavior extends Behavior
         $educationGradeField = isset($options['educationGradeField']) ? $options['educationGradeField'] : 'education_grade_id';
         $studentIdField = isset($options['studentIdField']) ? $options['studentIdField'] : 'student_id';
         $academic_period_id = $globalData['data']['academic_period_id'];
+        $education_grade_code = $globalData['data']['education_grade_code'];
         // return !$Students->completedGrade($globalData['data'][$educationGradeField], $globalData['data'][$studentIdField], $academic_period_id);
         //POCOR-6539[START]
-        return !$Students->completedGradeNew($globalData['data'][$educationGradeField], $globalData['data'][$studentIdField], $academic_period_id);
+        return !$Students->completedGradeNew($globalData['data'][$educationGradeField], $globalData['data'][$studentIdField], $academic_period_id, $education_grade_code);
         //POCOR-6539[END]
     }
 
