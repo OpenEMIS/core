@@ -2290,7 +2290,7 @@ class StudentsTable extends ControllerActionTable
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $StudentEducationGradesData = $this->find('all')
         ->select([
-            'education_grade' => 'educationGrades.code'
+            'education_grade' => 'EducationGrades.code'
         ])
         ->innerJoin(
         ['EducationGrades' => 'education_grades'],
