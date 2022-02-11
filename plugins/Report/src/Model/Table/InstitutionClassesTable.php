@@ -78,7 +78,6 @@ class InstitutionClassesTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        
         $institution_id = $requestData->institution_id;
         $gradesId = $requestData->education_grade_id;
         $areaId = $requestData->area_education_id;
@@ -88,6 +87,9 @@ class InstitutionClassesTable extends AppTable
         }
         if ($areaId != -1) {
             $where['Institutions.area_id'] = $areaId;
+        }
+        if ($gradesId != -1) {
+            $where['InstitutionClassGrades.education_grade_id'] = $gradesId;
         }
         
         $academic_period_id = $requestData->academic_period_id;
@@ -177,7 +179,7 @@ class InstitutionClassesTable extends AppTable
             
             ->where([
                 'InstitutionClasses.academic_period_id' => $academic_period_id,
-                'InstitutionClassGrades.education_grade_id' => $gradesId,
+               // 'InstitutionClassGrades.education_grade_id' => $gradesId,
             
                 $where
             ])
