@@ -4245,4 +4245,20 @@ class InstitutionsController extends AppController
         }
         return true;
     }
+
+    /**
+     * Get the Feature options of the Institutions Standard Report
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @return array
+     * @ticket POCOR-6493
+     */
+    public function getInstitutionStatisticStandardReportFeature() : array
+    {
+        $options = [
+            'Institution.InstitutionStandards' => __('Students') . ' ' . __('Overview'),
+            'Institution.StudentSpecialNeeds'  => __('Student Special Needs'),
+            'Institution.StudentHealths'  => __('Student Health'),
+        ];
+        return $options;
+    }
 }
