@@ -250,9 +250,9 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                                                 $GradesSubjects->aliasField('auto_allocation') => 1
                                             ]);
                         $institutionProgramGradeSubject = TableRegistry::get('InstitutionProgramGradeSubjects');
-                        if (!empty($getGradeSubjects) && $getGradeSubjects->count() > 0) {
+                        //echo "<pre>";print_r();die();
+                        if (!empty($getGradeSubjects) && $getGradeSubjects->count() > 0 && empty($gradeSubjectEntities)) {
                             foreach ($getGradeSubjects->toArray() as $values) {
-                                //echo "<pre>";print_r($values);die();
                                 $gradeSubject = $institutionProgramGradeSubject->newEntity();
                                 $gradeSubject->institution_grade_id = $lastInsertId;
                                 $gradeSubject->education_grade_subject_id = $values['EducationGradesSubjects']['education_subject_id'];
