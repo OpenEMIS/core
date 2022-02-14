@@ -117,8 +117,8 @@ class ReportCardCommentsTable extends ControllerActionTable
         $query
             ->select([
                 'name' => $this->aliasField('name'),
-                'total_male_students' => $this->aliasField('total_male_students'),
-                'total_female_students' => $this->aliasField('total_female_students'),
+                //'total_male_students' => $this->aliasField('total_male_students'),
+                //'total_female_students' => $this->aliasField('total_female_students'),
                 'institution_class_id' => $ClassGrades->aliasField('institution_class_id'),
                 'institution_id' => $this->aliasField('institution_id'),
                 'education_grade_id' => $ReportCards->aliasField('education_grade_id'),
@@ -190,6 +190,68 @@ class ReportCardCommentsTable extends ControllerActionTable
 
         $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
     }
+
+    /*POCOR-6566 starts*/
+    public function onGetTotalMaleStudents(Event $event, Entity $entity)
+    {
+        $gender_id = 1; // male
+        $classId = $entity->institution_class_id;
+        $institutionId = $entity->institution_id;
+        $periodId = $entity->academic_period_id;
+        $gradeId = $entity->education_grade_id;
+        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $totalMaleStudentRecord = $InstitutionClassStudents->find()
+                                ->contain('Users')
+                                ->matching('StudentStatuses', function ($q) {
+                                    return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                                })
+                                ->where([
+                                    $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
+                                    $InstitutionClassStudents->aliasField('institution_id') => $institutionId,
+                                    $InstitutionClassStudents->aliasField('academic_period_id') => $periodId,
+                                    $InstitutionClassStudents->aliasField('education_grade_id') => $gradeId,
+                                    $InstitutionClassStudents->Users->aliasField('gender_id') => $gender_id
+                                ]);
+        $count = 0;
+        if (!empty($totalMaleStudentRecord)) {
+            return $count = $totalMaleStudentRecord->count();
+        } else {
+            return $count;
+        }
+    }
+
+    public function onGetTotalFemaleStudents(Event $event, Entity $entity)
+    {
+        $gender_id = 2; // female
+        $classId = $entity->institution_class_id;
+        $institutionId = $entity->institution_id;
+        $periodId = $entity->academic_period_id;
+        $gradeId = $entity->education_grade_id;
+        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $totalFemaleStudentRecord = $InstitutionClassStudents->find()
+                                ->contain('Users')
+                                ->matching('StudentStatuses', function ($q) {
+                                    return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                                })
+                                ->where([
+                                    $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
+                                    $InstitutionClassStudents->aliasField('institution_id') => $institutionId,
+                                    $InstitutionClassStudents->aliasField('academic_period_id') => $periodId,
+                                    $InstitutionClassStudents->aliasField('education_grade_id') => $gradeId,
+                                    $InstitutionClassStudents->Users->aliasField('gender_id') => $gender_id
+                                ]);
+        $count = 0;
+        if (!empty($totalFemaleStudentRecord)) {
+            return $count = $totalFemaleStudentRecord->count();
+        } else {
+            return $count;
+        }
+    }
+    /*POCOR-6566 ends*/
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
