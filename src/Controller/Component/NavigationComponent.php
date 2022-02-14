@@ -1070,12 +1070,38 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.Committees','Institutions.CommitteeAttachments'],
                     'params' => ['plugin' => 'Institution']
             ],
+            /*
             'Institutions.InstitutionStatistics' => [
                     'title' => 'Statistics',
                     'parent' => 'Institutions.Institutions.index',
                     'params' => ['plugin' => 'Institution', 0 => $institutionId],
                     'selected' => ['Institutions.InstitutionStatistics.index', 'Institutions.InstitutionStatistics.view', 'Institutions.InstitutionStatistics.edit', 'Institutions.InstitutionStatistics.remove', 'Institutions.InstitutionStatistics.download', 'Institutions.InstitutionStatistics.excel']
                 ]
+            */
+            'Statistics' => [
+                'title' => 'Statistics',
+                'parent' => 'Institutions.Institutions.index',
+                'link' => false
+            ],
+                    'Institutions.InstitutionStandards' => [
+                        'title' => 'Standard',
+                            'parent' => 'Statistics',
+                            'params' => ['plugin' => 'Institution', 3 => $institutionId],
+                            'selected' => ['Institutions.ViewReport']
+                    ],
+                    'Institutions.InstitutionStatistics' => [
+                        'title' => 'Custom',
+                            'parent' => 'Statistics',
+                            'params' => ['plugin' => 'Institution', 0 => $institutionId],
+                            'selected' => [
+                                'Institutions.InstitutionStatistics.index',
+                                'Institutions.InstitutionStatistics.view',
+                                'Institutions.InstitutionStatistics.edit',
+                                'Institutions.InstitutionStatistics.remove',
+                                'Institutions.InstitutionStatistics.download',
+                                'Institutions.InstitutionStatistics.excel'
+                            ]
+                    ],
         ];
 
         foreach ($navigation as &$n) {

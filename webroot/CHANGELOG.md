@@ -1,3 +1,16 @@
+### [3.73.11] - 2022-02-11
+- Bug Fixed: Institution>Students: Students that were previously enrolled in a grade cannot be enrolled to the same grade.
+- Bug Fixed: Attendance > Students > Export: 404 error when exporting for all days
+- Bug Fixed: Institution/Directory>Staff/Student: 404 Error
+- Bug Fixed: Institutions > Students > Repeat feature : System assigns students to the previous year's education_grade_id
+
+### [3.73.10] - 2022-02-11
+- Bug Fixed: Institution>Academic>Subjects: Negative numbers are showing up under student numbers
+- Bug Fixed: Institutions > Statistics > Standard : Develop Student Overview report
+- Bug Fixed: Institutions: 404 error when deleting an institution
+- Bug Fixed: Institutions > Performance > Assessments : System does not save new mark when user updates the mark
+- Bug Fixed: Institutions > Students/Staff > Nationalities tab : Deleting a Preferred nationality should not show a [Message not found] error
+
 ### [3.73.9] - 2022-02-09
 - Bug Fixed: Institutions>Student:Withdraw or Transfer gets 404 error
 - Bug Fixed: Institutions > Staff > Add Staff : There are no validation message when user submits Add staff without selecting values in mandatory fields
