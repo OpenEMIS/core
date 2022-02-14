@@ -3341,6 +3341,24 @@ class InstitutionsController extends AppController
             $positionConditions[$StaffTable->Positions->aliasField('staff_position_title_id').' NOT IN '] = $expectedStaffStatuses;
         }
         // END : POCOR-6450
+        /**
+         * @ticket POCOR-6522
+         * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+         */
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $staff_min_role = $SecurityGroupUsers->find()
+                            ->contain('SecurityRoles')
+                            ->order(['SecurityRoles.order'])
+                            ->where([$SecurityGroupUsers->aliasField('security_user_id') => $staffUserPriId])
+                            ->first();
+        if (isset($staff_min_role->security_role->order) && $staff_min_role->security_role->order > 0) {
+            $positionConditions['SecurityRoles.order >= '] = $staff_min_role->security_role->order;
+        }
+        /**
+         * END
+         * @ticket POCOR-6522
+         */
+
         if ($selectedFTE > 0) {
             $staffPositionsOptions = $StaffTable->Positions
                 ->find()
