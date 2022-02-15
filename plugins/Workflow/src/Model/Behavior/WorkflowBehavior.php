@@ -2163,12 +2163,16 @@ class WorkflowBehavior extends Behavior
         ]);
     }
 
-    public function workflowAfterTransition(Event $event, $id = null, $requestData)
+    public function workflowAfterTransition(Event $event, $id, $requestData)
     {
         // use find instead of get to cater for models with composite keys using a hash id
         $model = $this->_table;
-
-        $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
+        
+        /*POCOR-6560 starts*/
+        $lastEntry =  $model->find()->order([$model->aliasField('id') => 'DESC'])->first();
+        $id = $lastEntry->id;
+        /*POCOR-6560 ends*/
+        $entity = $model->get($id);
         $this->setStatusId($entity, $requestData);
 
         // get the latest entity after status is updated

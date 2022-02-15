@@ -1091,7 +1091,8 @@ class StudentPromotionTable extends AppTable
             $statusToUpdate = $data[$this->alias()]['student_status_id'];
         }
         if ($statusToUpdate == $studentStatuses['REPEATED']) {
-            $nextEducationGradeId = $currentGrade;
+            $gradeId = $this->Session->read('grade_id');
+            $nextEducationGradeId = $gradeId;
         }
         if ($statusToUpdate == $studentStatuses['PROMOTED']) {
             $successMessage = $this->aliasField('success');
@@ -1265,6 +1266,10 @@ class StudentPromotionTable extends AppTable
                 $currentEntity = $this->patchEntity($currentEntity, $currentData, []);
                 return $this->savePromotion($currentEntity, new ArrayObject($currentData));
             }
+            /*POCOR-6566 starts*/
+            $gradeId = $this->Session->read('grade_id');
+            $currentEntity->grade_to_promote = $gradeId;
+            /*POCOR-6566 ends*/
             $this->controller->set('data', $currentEntity);
         } else {
             $this->Alert->warning('general.notExists');
