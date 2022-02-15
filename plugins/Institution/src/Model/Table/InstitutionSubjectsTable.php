@@ -312,7 +312,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $this->Alert->warning('Institutions.noClassRecords');
         }
         $selectedClassId = $this->queryString('class_id', $classOptions);
-
+        
         $this->advancedSelectOptions($classOptions, $selectedClassId, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSubjects')),
             'callable' => function ($id) use ($Subjects, $institutionId, $selectedAcademicPeriodId, $AccessControl, $userId, $controller) {
@@ -331,6 +331,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         $Subjects->aliasField('institution_id') => $institutionId,
                         $Subjects->aliasField('academic_period_id') => $selectedAcademicPeriodId,
                     ]);
+
                 return $query->count();
             }
         ]);
@@ -359,12 +360,18 @@ class InstitutionSubjectsTable extends ControllerActionTable
         return $query
             ->formatResults(function ($results) {
                 $arrResults = $results->toArray();
+
                 foreach ($arrResults as &$value) {
                     if (isset($value['subject_students']) && is_array($value['subject_students'])) {
-                        foreach ($value['subject_students'] as $student) {
-                            $student['student_status']['name'] = __($student['student_status']['name']);
+                        $i=0;
+                         foreach ($value['subject_students'] as $student) {
+                            //POCOR-6463- in edit page we'll only display those students who are "Enrolled"
+                            if ($student->student_status_id != 1) {
+                                unset($arrResults[0]['subject_students'][$i]); 
+                            }
+                         $i++;}
                         }
-                    }
+                    
                 }
                 return $arrResults;
             });
@@ -405,6 +412,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         // POCOR-2547 sort list of staff and student by name
         // move the contain from institution.subject.student.ctrl.js since its using finder method
+        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
         return $query
             ->find('translateItem')
             ->contain([
@@ -416,7 +424,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'SubjectStudents.Users.Genders',
                 'SubjectStudents.StudentStatuses',
                 'ClassSubjects',
-                'SubjectStudents.InstitutionClasses'
+                'SubjectStudents.InstitutionClasses',
             ]);
     }
 
@@ -468,7 +476,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ->find('byClasses', ['selectedClassId' => $extra['selectedClassId']])
             ->contain(['Teachers', 'Rooms', 'EducationSubjects', 'EducationGrades', 'Classes'])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
-
+        
         // search function to search education grade and education subject
         $searchKey = $this->getSearchKey();
         if (!empty($searchKey)) {
@@ -495,26 +503,26 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     'EducationSubjects.order',
                     'EducationGrades.order'
                 ]);
-        }
+        } 
     }
 
     public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
     {
-        $res=$this->find()->select(['InstitutionSubjects.id'])->join([
-            'institution_subject_students' => [
-                'table' => 'institution_subject_students',
-                'type' => 'LEFT',
-                'conditions' => 'institution_subject_students.institution_subject_id = InstitutionSubjects.id'
-            ]])->where(['institution_subject_students.academic_period_id'=>$entity['academic_period_id'],'institution_subject_students.education_grade_id'=>$entity['education_grade_id'],'institution_subject_students.education_subject_id'=>$entity['education_subject_id'],'institution_subject_students.institution_class_id' =>$entity['class_subjects'][0]['institution_class_id']])->group('institution_subject_students.institution_subject_id')->first();
-        $oldCount=$this->find()->select(['total_male_students','total_female_students'])->where(['id'=>$res['id']])->first();
+        $institutionClassId=$entity['class_subjects'][0]['institution_class_id'];
+        $institution_subject_id=$this->SubjectStudents->find()->select(['institution_subject_id'])->where(['education_grade_id' =>$entity->education_grade_id,'academic_period_id'=>$entity->academic_period_id,'education_subject_id' => $entity->education_subject_id,'institution_class_id'=>$institutionClassId,'institution_subject_id NOT IN '=> $entity->id])->first();
+            $institution_subject_id=$institution_subject_id['institution_subject_id'];
         $id = $entity->id;
-        $prevCount=$this->find()->select(['total_male_students','total_female_students'])->where(['id'=>$id])->first();
+      
         $countMale = $this->SubjectStudents->getMaleCountBySubject($id);
         $countFemale = $this->SubjectStudents->getFemaleCountBySubject($id);
-        $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);        
-         $totalMale=$oldCount['total_male_students']+$prevCount['total_male_students']-$countMale;
-         $totalFemale=$oldCount['total_female_students']+$prevCount['total_female_students']-$countFemale;
-         $this->updateAll(['total_male_students' => $totalMale, 'total_female_students' => $totalFemale], ['id' => $res['id']]);
+        $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]); 
+        
+           //echo $institution_subject_id; exit; 
+        $countMale = $this->SubjectStudents->getMaleCountBySubject($institution_subject_id);
+        $countFemale = $this->SubjectStudents->getFemaleCountBySubject($institution_subject_id);
+        $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $institution_subject_id]);  
+               
+         
     
     }
 
@@ -551,7 +559,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
+    { 
         $query->contain([
                 'Classes.ClassesSecondaryStaff',
                 'Teachers',
@@ -1858,9 +1866,78 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function onGetTotalStudents(Event $event, Entity $entity)
     {
-        return $entity->total_male_students + $entity->total_female_students;
+        /*POCOR-6463 starts*/
+        $array_data = [];
+        $subjectId = $entity->id;
+        $institutionId = $entity->institution_id;
+        $periodId = $entity->academic_period_id;
+        $institutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $totalStudentCount = $institutionSubjectStudents->find()
+                            ->where([
+                                $institutionSubjectStudents->aliasField('institution_subject_id') => $subjectId,
+                                $institutionSubjectStudents->aliasField('institution_id') => $institutionId,
+                                $institutionSubjectStudents->aliasField('academic_period_id') => $periodId,
+                                $institutionSubjectStudents->aliasField('student_status_id') => 1,
+                            ])->count();
+        //echo "<pre>"; print_r($totalStudentCount); exit;
+        // foreach ($entity->subject_students as $key => $data) {
+        //     if ($data->student_status_id == 1) {
+        //         $array_data[$data->student_status_id] = ++$array_data[$data->student_status_id];
+        //     }
+        // }
+        
+        //return $entity->classes[0]['total_male_students'] + $entity->classes[0]['total_female_students'];
+        return $totalStudentCount;
+        /*POCOR-6463 ends*/
     }
 
+    /*POCOR-6463 starts*/
+    public function onGetTotalMaleStudents(Event $event, Entity $entity)
+    { 
+        $subjectId = $entity->id;
+        $genderId = 1; // male
+        $institutionId = $entity->institution_id;
+        $periodId = $entity->academic_period_id;
+        $institutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $users = TableRegistry::get('User.Users');
+        $totalMaleStudentCount = $institutionSubjectStudents->find()
+                            ->leftJoin([$users->alias() => $users->table()], [
+                                $users->aliasField('id = ') . $institutionSubjectStudents->aliasField('student_id')
+                            ])
+                            ->where([
+                                $institutionSubjectStudents->aliasField('institution_subject_id') => $subjectId,
+                                $institutionSubjectStudents->aliasField('institution_id') => $institutionId,
+                                $institutionSubjectStudents->aliasField('academic_period_id') => $periodId,
+                                $institutionSubjectStudents->aliasField('student_status_id') => 1,
+                                $users->aliasField('gender_id') => $genderId
+                            ])->count();
+        
+        return $totalMaleStudentCount;
+    }
+
+    public function onGetTotalFemaleStudents(Event $event, Entity $entity)
+    { 
+        $subjectId = $entity->id;
+        $genderId = 2; // female
+        $institutionId = $entity->institution_id;
+        $periodId = $entity->academic_period_id;
+        $institutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $users = TableRegistry::get('User.Users');
+        $totalFemaleStudentCount = $institutionSubjectStudents->find()
+                            ->leftJoin([$users->alias() => $users->table()], [
+                                $users->aliasField('id = ') . $institutionSubjectStudents->aliasField('student_id')
+                            ])
+                            ->where([
+                                $institutionSubjectStudents->aliasField('institution_subject_id') => $subjectId,
+                                $institutionSubjectStudents->aliasField('institution_id') => $institutionId,
+                                $institutionSubjectStudents->aliasField('academic_period_id') => $periodId,
+                                $institutionSubjectStudents->aliasField('student_status_id') => 1,
+                                $users->aliasField('gender_id') => $genderId
+                            ])->count();
+        
+        return $totalFemaleStudentCount;
+    }
+    /*POCOR-6463 ends*/
     public function onExcelGetTotalStudents(Event $event, Entity $entity)
     {
         return $entity->total_male_students + $entity->total_female_students;
