@@ -3424,9 +3424,14 @@ class InstitutionsController extends AppController
         return $this->response;
     }
 
-    // POCOR-6450
+    /**
+     * Get staff details of specific institution
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6522
+     */
     private function getSpecificInstitutionStaff($institution_id, $staff_id)
     {
+        $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
         $institutionPositionsTable = TableRegistry::get('Institution.InstitutionPositions');
         $StaffTable = TableRegistry::get('Institution.Staff');
         $alreadyAssignedStaffs = $StaffTable->find()->select([
@@ -3438,6 +3443,7 @@ class InstitutionsController extends AppController
         ])->where([
             $StaffTable->aliasField('institution_id') => $institution_id,
             $StaffTable->aliasField('staff_id') => $staff_id,
+            $StaffTable->aliasField('staff_status_id') => $StaffStatusesTable->getIdByCode('ASSIGNED'),
         ])
         ->hydrate(false)->toArray();
         $expectedStaffStatuses = [];
