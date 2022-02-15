@@ -3349,9 +3349,9 @@ class InstitutionsController extends AppController
         $staff_min_role = $SecurityGroupUsers->find()
                             ->contain('SecurityRoles')
                             ->order(['SecurityRoles.order'])
-                            ->where([$SecurityGroupUsers->aliasField('security_user_id') => $staffUserPriId])
+                            ->where([$SecurityGroupUsers->aliasField('security_user_id') => $this->Auth->user()['id']])
                             ->first();
-        if (isset($staff_min_role->security_role->order) && $staff_min_role->security_role->order > 0) {
+        if ( $this->Auth->user()['super_admin'] != 1 && isset($staff_min_role->security_role->order) && $staff_min_role->security_role->order > 0) {
             $positionConditions['SecurityRoles.order >= '] = $staff_min_role->security_role->order;
         }
         /**
