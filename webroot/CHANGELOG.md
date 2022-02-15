@@ -1,3 +1,47 @@
+### [3.73.11] - 2022-02-11
+- Bug Fixed: Institution>Students: Students that were previously enrolled in a grade cannot be enrolled to the same grade.
+- Bug Fixed: Attendance > Students > Export: 404 error when exporting for all days
+- Bug Fixed: Institution/Directory>Staff/Student: 404 Error
+- Bug Fixed: Institutions > Students > Repeat feature : System assigns students to the previous year's education_grade_id
+
+### [3.73.10] - 2022-02-11
+- Bug Fixed: Institution>Academic>Subjects: Negative numbers are showing up under student numbers
+- Bug Fixed: Institutions > Statistics > Standard : Develop Student Overview report
+- Bug Fixed: Institutions: 404 error when deleting an institution
+- Bug Fixed: Institutions > Performance > Assessments : System does not save new mark when user updates the mark
+- Bug Fixed: Institutions > Students/Staff > Nationalities tab : Deleting a Preferred nationality should not show a [Message not found] error
+
+### [3.73.9] - 2022-02-09
+- Bug Fixed: Institutions>Student:Withdraw or Transfer gets 404 error
+- Bug Fixed: Institutions > Staff > Add Staff : There are no validation message when user submits Add staff without selecting values in mandatory fields
+- Bug Fixed: Institutions > Students > Export : Classes are not showing for some students
+- Bug Fixed: Institutions > Performances > Assessments : Assessment marks should not be editable if he is no longer in the same class
+
+### [3.73.8] - 2022-02-05
+- Implemented: Reports > Institutions > Institutions With No Staff : Add institution_status column in the report
+- Bug Fixed: Institutions>Infrastructure>Overview: Custom fields are inaccurate and results are duplicated
+- Bug Fixed: Institutions>Students: Enrolled(Repeated) logic change
+- Bug Fixed: Institutions>Students>Bulk Transfer: Programme is still reflected even though it is invisible
+- Bug Fixed: Institution>Performance>Assessments: Marks are not saved and only Only first Assessment Period marks can be displayed from the interface
+- Bug Fixed: Institutions>Students: The report does not show the classes for some students even though they are assigned to classes
+
+### [3.73.7] - 2022-01-31
+- Bug Fixed: Directory > General > Identities: 404 Error when viewing and editing identities
+- Bug Fixed: Personal > Student > Absences/Behaviours/Outcome/Extracurricular/Textbooks/Risks tab: 404 error when accessing
+
+### [3.73.6] - 2022-01-27
+- Bug Fixed: Institutions>Report Cards>Comments: Homeroom Teachers are able to comment as Homeroom Teachers under other persons Homeroom classes
+- Bug Fixed: Directory > Import: Getting 404 Error
+- Bug Fixed: Institutions>Students>Export: Issues with export
+- Bug Fixed: Institution>Students>Add: Adds error message when not adding start date
+
+### [3.73.5] - 2022-01-21
+- Bug Fixed: Institutions>Staff>Career>Attendances:Able to record staff time-in and time-out even if there is staff leave on the specified dates
+- Bug Fixed: Institutions>Students>Transfer: Validation for next education grade not to show not visible programmes and grades in education structure
+- Bug Fixed: Institutions>Students>Promote/Repeat: Individual promotion and group promotion is not working
+- Bug Fixed: Institutions>Performance>Assessments: Students of duplicate same subject are not appearing according to Academic>Subjects
+- Bug Fixed: Institutions > Staff > Add Staff : Start Date Date picker should not be restricted
+
 ### [3.73.4] - 2022-01-19
 - Implemented: Add Export button function - Institutions > Examinations > Students
 - Implemented: Add Export button function - Institutions > Committees
