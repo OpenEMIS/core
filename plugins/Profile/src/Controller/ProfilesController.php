@@ -290,7 +290,14 @@ class ProfilesController extends AppController
             
             if (!empty($studentId)) {
                 $sId = $this->ControllerAction->paramsDecode($studentId);
-                $student_id = $sId['id'];
+                // $student_id = $sId['id'];
+
+
+                if(isset($sId['id']) && !empty($sId['id'])){
+                    $student_id = $sId['id'];
+                }else{
+                    $student_id = $sId['security_user_id'];
+                }
                 
                 if ($action == 'StudentReportCards') {
                     //$student_id = $sId['student_id']; //POCOR-5979
