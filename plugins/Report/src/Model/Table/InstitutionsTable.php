@@ -941,10 +941,16 @@ class InstitutionsTable extends AppTable
                 $EducationLevel = TableRegistry::get('Education.EducationLevels');
                 $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
                 $condition = [];
-                if ($institutionId != 0) {
-                    $condition[$InstitutionGrades->aliasField('institution_id')] = $institutionId;
+                if($feature =='Report.InstitutionSubjects'){
+                    if ($institutionId != 0) {
+                        $condition[$InstitutionGrades->aliasField('institution_id')] = $institutionId;
+                    }
                 }
-                
+                if($feature =='Report.InstitutionStudents'){
+                    if ($educationlevelId != 0) {
+                        $condition['EducationCycles.education_level_id'] = $educationlevelId;
+                    }
+                }
                 /*POCOR-6337 ends*/
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
