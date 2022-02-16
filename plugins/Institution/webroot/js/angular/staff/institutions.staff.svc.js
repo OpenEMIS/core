@@ -334,6 +334,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
                 // Mandatory information from the form
                 newUserRecord['academic_period_id'] = userRecord['academic_period_id'];
+                newUserRecord['staff_shifts_id'] = userRecord['staff_shifts_id'];
                 newUserRecord['education_grade_id'] = userRecord['education_grade_id'];
                 newUserRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
                 newUserRecord['first_name'] = userRecord[attr['first_name_mapping']];
@@ -693,8 +694,10 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
     function makeDate(datetime) {
         // Only get the date part, we do not require the time portion
-        if (datetime.indexOf('T') > -1) {
-            datetime = datetime.split('T')[0];
+        if(datetime){
+            if (datetime.indexOf('T') > -1) {
+                datetime = datetime.split('T')[0];
+            }
         }
         // Logic to handle external datasource giving the datetime in this format 2005-07-08T11:22:33+0800
         if (datetime !== undefined && datetime != '' && datetime.indexOf('-') > -1) {
