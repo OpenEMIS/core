@@ -1589,7 +1589,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                         'GradesSubjects.education_grade_id IN' => $grades,
                                         'GradesSubjects.education_subject_id = EducationSubjects.id',
                                         'GradesSubjects.visible' => 1,
-                                        'GradesSubjects.auto_allocation' => 1
+                                        //'GradesSubjects.auto_allocation' => 1
                                     ]
                                 ]
                             ]);
