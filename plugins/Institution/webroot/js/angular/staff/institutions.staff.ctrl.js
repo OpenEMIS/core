@@ -1000,7 +1000,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 var staffData = StaffController.selectedStaffData;
                 var amendedStaffData = Object.assign({}, staffData);
                 amendedStaffData.date_of_birth = InstitutionsStaffSvc.formatDate(amendedStaffData.date_of_birth);
-                return StaffController.addStaffUser(amendedStaffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate);
+                //POCOR-6576 - added shiftId parameter as shiftId) was missing ealier
+                return StaffController.addStaffUser(amendedStaffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, shiftId);
             } else {
                 var staffId = StaffController.selectedStaff;
                 return StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, {}, shiftId);
