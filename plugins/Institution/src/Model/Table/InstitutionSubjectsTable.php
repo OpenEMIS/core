@@ -1607,7 +1607,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 foreach ($educationGradeSubjects as $gradeSubject) {
                     if (!empty($gradeSubject->education_subjects)) {
                         foreach ($gradeSubject->education_subjects as $subject) {
-                            if ($subject->_joinData->auto_allocation != 1) {//POCOR-6368 starts
                                 if (!isset($educationSubjects[$gradeSubject->id.'_'.$subject->id])) {
                                     $educationSubjects[$gradeSubject->id.'_'.$subject->id] = [
                                         'id' => $subject->id,
@@ -1615,25 +1614,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                         'name' => $subject->name
                                     ];
                                 }
-                            } /*POCOR-6368 starts*/else {
-                                $institutionProgramGradeSubjects = TableRegistry::get('InstitutionProgramGradeSubjects')
-                                ->find()
-                                ->where([
-                                    'InstitutionProgramGradeSubjects.education_grade_id' => $gradeSubject->id,
-                                    'InstitutionProgramGradeSubjects.institution_id' => $entity->institution_id
-                                    ])
-                                ->toArray();
-                                if (!empty($institutionProgramGradeSubjects)) {
-                                    foreach ($institutionProgramGradeSubjects as $subject) {
-                                        $eduSubjects = $this->EducationSubjects->get($subject->education_grade_subject_id);
-                                        $educationSubjects[$subject->education_grade_id.'_'.$subject->education_grade_subject_id] = [
-                                                'id' => $eduSubjects->id,
-                                                'education_grade_id' => $subject->education_grade_id,
-                                                'name' => $eduSubjects->name
-                                        ];
-                                    }
-                                }   
-                            }/*POCOR-6368 ends*/
                         }
                     }
                     unset($subject);
