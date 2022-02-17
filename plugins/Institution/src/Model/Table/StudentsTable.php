@@ -222,6 +222,8 @@ class StudentsTable extends ControllerActionTable
         $UserIdentities = TableRegistry::get('User.Identities');
         $ContactTypes = TableRegistry::get('FieldOption.ContactTypes');
         $UserContact = TableRegistry::get('User.Contacts');
+        $GuardianContact = TableRegistry::get('User.Contacts');
+        $areaAdministrative = TableRegistry::get('area_administratives');
         $StudentStatuses = TableRegistry::get('student_statuses');
         /*POCOR-6562 starts*/
         if ($periodId > 0) {
@@ -239,7 +241,12 @@ class StudentsTable extends ControllerActionTable
                 'student_id' => 'Users.id',
                 'openemis_no' => 'Users.openemis_no',
                 'identity_number' => 'Users.identity_number',
+                'username' => 'Users.username',
                 'gender_name' => 'Genders.name',
+                'birthplace_area' => $areaAdministrative->aliasField('name'),
+                'address' => 'Users.address',
+                'address_area' => $areaAdministrative->aliasField('name'),
+                'postal_code' => 'Users.postal_Code',
                 'date_of_birth' => 'Users.date_of_birth',
                 'code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
@@ -257,6 +264,7 @@ class StudentsTable extends ControllerActionTable
                     "  ",
                     'GuardianUser.last_name' => 'literal'
                 ]),
+                'guardian_contact' => 'GuardianCont.value',
                 'identity_type' => $IdentityTypes->aliasField('name'),
                 'identity_number' => $UserIdentities->aliasField('number'),
                 'contact_type' => $ContactTypes->aliasField('name'),
@@ -275,8 +283,8 @@ class StudentsTable extends ControllerActionTable
             ->leftJoin([$GuardianRelations->alias() => $GuardianRelations->table()], [
                 $GuardianRelations->aliasField('id = ') . $StudentGuardians->aliasField('guardian_relation_id')
             ])
-            ->leftJoin(['GuardianUser' => 'security_users'], [
-                'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
+            ->leftJoin(['GuardianCont' => $GuardianContact->table()], [
+                'GuardianCont.security_user_id = '. $StudentGuardians->aliasField('guardian_id')
             ])
             ->leftJoin([$UserIdentities->alias() => $UserIdentities->table()], [
                 $UserIdentities->aliasField('security_user_id = ') . $this->Users->aliasField('id')
@@ -286,6 +294,9 @@ class StudentsTable extends ControllerActionTable
             ])
             ->leftJoin([$UserContact->alias() => $UserContact->table()], [
                 $UserContact->aliasField('security_user_id = ') . $this->Users->aliasField('id')
+            ])
+            ->leftJoin([$areaAdministrative->alias() => $areaAdministrative->table()], [
+                $areaAdministrative->aliasField('id = ') . $this->Users->aliasField('address_area_id')
             ])
             ->leftJoin([$ContactTypes->alias() => $ContactTypes->table()], [
                 $ContactTypes->aliasField('id = ') . $UserContact->aliasField('contact_type_id')
@@ -299,6 +310,8 @@ class StudentsTable extends ControllerActionTable
             ])
             ->group($this->aliasField('student_id'))
             ->order([$this->aliasField('created') => 'DESC']);
+
+            // print($query);die;
         /*POCOR-6562 ends*/
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($periodId, $institutionId, $Classes, $ClassStudents) {
             return $results->map(function ($row) use($periodId, $institutionId, $Classes, $ClassStudents) {
@@ -489,6 +502,13 @@ class StudentsTable extends ControllerActionTable
             'type' => 'string',
             'label' => 'OpenEMIS ID'
         ];
+        
+        $extraField[] = [
+            'key' => 'Users.username',
+            'field' => 'username',
+            'type' => 'string',
+            'label' => __('Username')
+        ];
 
         $extraField[] = [
             'key' => 'Users.gender_id',
@@ -504,6 +524,34 @@ class StudentsTable extends ControllerActionTable
             'label' => ''
         ];
 
+        $extraField[] = [
+            'key' => 'areaAdministrative.name',
+            'field' => 'birthplace_area',
+            'type' => 'string',
+            'label' => __('Birthplace Area')
+        ];
+
+        $extraField[] = [
+            'key' => 'Users.address',
+            'field' => 'address',
+            'type' => 'string',
+            'label' => __('Address')
+        ];
+        
+        $extraField[] = [
+            'key' => 'areaAdministrative.name',
+            'field' => 'address_area',
+            'type' => 'string',
+            'label' => __('Address Area')
+        ];
+        
+        $extraField[] = [
+            'key' => 'Users.postal_code',
+            'field' => 'postal_code',
+            'type' => 'string',
+            'label' => __('Postal Code')
+        ];
+        
         $extraField[] = [
             'key' => 'Users.identity_number',
             'field' => 'identity_number',
@@ -580,6 +628,14 @@ class StudentsTable extends ControllerActionTable
             'type' => 'string',
             'label' => __('Guardian Relations')
         ];
+        
+        $extraField[] = [
+            'key' => 'GuardianCont.value',
+            'field' => 'guardian_contact',
+            'type' => 'integer',
+            'label' => __('Guardian Contact')
+        ];
+        
         $extraField[] = [
             'key' => 'IdentityTypes.name',
             'field' => 'identity_type',
@@ -605,6 +661,8 @@ class StudentsTable extends ControllerActionTable
             'type' => 'integer',
             'label' => __('Contact Number')
         ];
+
+        // dump($extraField);die;
 
         // POCOR-6129 custome fields code
         // $InfrastructureCustomFields = TableRegistry::get('student_custom_fields');
