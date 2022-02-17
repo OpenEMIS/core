@@ -296,7 +296,8 @@ class DirectoriesTable extends ControllerActionTable
                     $query
                         ->select([
                             'identity_type' => $IdentityTypes->aliasField('name'),
-                            $typesIdentity->identity_type => $UserIdentities->aliasField('number')
+                            // for POCOR-6561 changed $typesIdentity->identity_type to $typesIdentity->id below
+                            $typesIdentity->id => $UserIdentities->aliasField('number')
                         ])
                         ->leftJoin(
                                     [$UserIdentities->alias() => $UserIdentities->table()],
@@ -316,6 +317,21 @@ class DirectoriesTable extends ControllerActionTable
             }   
         }//POCOR-6248 ends
         $this->dashboardQuery = clone $query;
+    }
+
+    public function findStudentsNotInSchool(Query $query, array $options)
+    {
+        $InstitutionStudentTable = TableRegistry::get('Institution.Students');
+        $allInstitutionStudents = $InstitutionStudentTable->find()
+            ->select([
+                $InstitutionStudentTable->aliasField('student_id')
+            ])
+            ->where([
+                $InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
+            ])
+            ->bufferResults(false);
+        $query->where(['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1]);
+        return $query;
     }
 
     public function findStudentsInSchool(Query $query, array $options)
@@ -343,20 +359,6 @@ class DirectoriesTable extends ControllerActionTable
         return $query;
     }
 
-    public function findStudentsNotInSchool(Query $query, array $options)
-    {
-        $InstitutionStudentTable = TableRegistry::get('Institution.Students');
-        $allInstitutionStudents = $InstitutionStudentTable->find()
-            ->select([
-                $InstitutionStudentTable->aliasField('student_id')
-            ])
-            ->where([
-                $InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
-            ])
-            ->bufferResults(false);
-        $query->where(['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1]);
-        return $query;
-    }
 
     public function findStaffInSchool(Query $query, array $options)
     {
