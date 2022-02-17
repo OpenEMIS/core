@@ -241,23 +241,48 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                         $subjectArr = [];
                         $GradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
                         $institutionProgramGradeSubject = TableRegistry::get('InstitutionProgramGradeSubjects');
-                        foreach($gradeSubjectEntities as $gradeSubjectId) {
-                            $subjectArr[] = $gradeSubjectId;  
-                            if ($gradeSubjectId > 0) {
-                                $gradeSubject = $institutionProgramGradeSubject->newEntity();
-                                $gradeSubject->institution_grade_id = $lastInsertId;
-                                $gradeSubject->education_grade_subject_id = $gradeSubjectId;
-                                $gradeSubject->education_grade_id = $data['grades']['education_grade_id'];
-                                $gradeSubject->institution_id = $entity->institution_id;
-                                $gradeSubject->created_user_id = $createdUserId;
-                                $today = new DateTime();
-                                $gradeSubject->created = $today->format('Y-m-d H:i:s');
-                                $institutionProgramGradeSubject->save($gradeSubject);
-                                array_push($institutionProgramGradeSubjectID,$gradeSubject->id);
-                            } 
-                        }
-                        echo "<pre>";print_r($subjectArr);die();
-
+                        /*POCOR-6368 starts*/
+                        $tmpArr = array_filter($gradeSubjectEntities);
+                        if (!empty($tmpArr)) {
+                            foreach($gradeSubjectEntities as $gradeSubjectId) {
+                                $subjectArr[] = $gradeSubjectId; 
+                                if ($gradeSubjectId > 0) {
+                                    $gradeSubject = $institutionProgramGradeSubject->newEntity();
+                                    $gradeSubject->institution_grade_id = $lastInsertId;
+                                    $gradeSubject->education_grade_subject_id = $gradeSubjectId;
+                                    $gradeSubject->education_grade_id = $data['grades']['education_grade_id'];
+                                    $gradeSubject->institution_id = $entity->institution_id;
+                                    $gradeSubject->created_user_id = $createdUserId;
+                                    $today = new DateTime();
+                                    $gradeSubject->created = $today->format('Y-m-d H:i:s');
+                                    $institutionProgramGradeSubject->save($gradeSubject);
+                                    array_push($institutionProgramGradeSubjectID,$gradeSubject->id);
+                                }
+                            }
+                        }  else {
+                                $getGradeSubjects = $GradesSubjects
+                                            ->find()
+                                            ->select([$GradesSubjects->aliasField('education_subject_id')])
+                                            ->where([
+                                                $GradesSubjects->aliasField('education_grade_id') => $grade['education_grade_id'],
+                                                $GradesSubjects->aliasField('visible') => 1
+                                            ]);
+                                if (!empty($getGradeSubjects)) {
+                                        foreach ($getGradeSubjects->toArray() as $values) {
+                                            $gradeSubject = $institutionProgramGradeSubject->newEntity();
+                                            $gradeSubject->institution_grade_id = $lastInsertId;
+                                            $gradeSubject->education_grade_subject_id = $values->education_subject_id;
+                                            $gradeSubject->education_grade_id = $data['grades']['education_grade_id'];
+                                            $gradeSubject->institution_id = $entity->institution_id;
+                                            $gradeSubject->created_user_id = $createdUserId;
+                                            $today = new DateTime();
+                                            $gradeSubject->created = $today->format('Y-m-d H:i:s');
+                                            $institutionProgramGradeSubject->save($gradeSubject);
+                                            array_push($institutionProgramGradeSubjectID,$gradeSubject->id);
+                                        }
+                                }
+                            }
+                        /*POCOR-6368 ends*/
                         if(!empty($this->controllerAction) && ($this->controllerAction == 'Programmes')) {
                                $educationGrades = TableRegistry::get('Education.EducationGrades');
 
