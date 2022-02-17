@@ -14,7 +14,7 @@ use Cake\Network\Request;
 use DateTime;
 use PHPExcel_Worksheet;
 use Cake\Utility\Inflector;
-
+use Cake\Log\Log;
 class ImportAssessmentItemResultsTable extends AppTable {
     private $institutionId = false;
 
@@ -470,23 +470,27 @@ class ImportAssessmentItemResultsTable extends AppTable {
 		->InnerJoin([$this->AssessmentGradingTypes->alias() => $this->AssessmentGradingTypes->table()],[
                                     $this->AssessmentGradingTypes->aliasField('id =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
                                 ])
+		->InnerJoin([$this->AssessmentPeriods->alias() => $this->AssessmentPeriods->table()],[
+                                    $this->AssessmentPeriods->aliasField('assessment_id =') . $this->Assessments->aliasField('id')	
+                                ])									
 		->InnerJoin([$this->InstitutionClassGrades->alias() => $this->InstitutionClassGrades->table()],[
                                     $this->InstitutionClassGrades->aliasField('education_grade_id =') . $this->Assessments->aliasField('education_grade_id')
                                 ])
 		->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId])
 		->first();
+		
 		$maxval = $maxvalue->maximumvalue;
 		$value = preg_replace('~\.0+$~','',$maxval);
 		/*POCOR-6528 ends*/
         /*POCOR-6486 starts*/
         $enteredMarks = $tempRow['marks'];
-        if (!empty(enteredMarks) && $enteredMarks > 100) {
+        if (!empty($enteredMarks) && $enteredMarks > 100) {
             $rowInvalidCodeCols['marks'] = __('Marks Should be between 0 to 100');
             $tempRow['marks'] = false;
             return false;
         
 		/*POCOR-6528 starts*/
-        }elseif (!empty(enteredMarks) && $enteredMarks > $maxval) {
+        }elseif (!empty($enteredMarks) && $enteredMarks > $maxval) {
             $rowInvalidCodeCols['marks'] = __('Marks Should be less then to max Marks');
             $tempRow['marks'] = false;
             return false;
