@@ -1,3 +1,9 @@
+### [3.73.12] - 2022-02-15
+- Bug Fixed: Institution > Statistics > Standard > Student Special Needs: Develop Student Special Needs report
+- Bug Fixed: Institution>Staff>Add: Created positions are not available when assigning the staff
+- Bug Fixed: Institutions>Staff>Staff1>Career>Staff Leave: Unable to create leave even when attendance is deleted
+- Bug Fixed: Institutions > Staff > Add External Staff : System shows validation message on Shifts field when adding External Staff
+
 ### [3.73.11] - 2022-02-11
 - Bug Fixed: Institution>Students: Students that were previously enrolled in a grade cannot be enrolled to the same grade.
 - Bug Fixed: Attendance > Students > Export: 404 error when exporting for all days
