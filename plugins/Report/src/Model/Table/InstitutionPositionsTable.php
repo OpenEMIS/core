@@ -201,7 +201,32 @@ class InstitutionPositionsTable extends AppTable
             'type' => 'string',
             'label' => __('Homeroom Teacher')
         ];
-
+		/*POCOR-6534 starts*/
+        $newFields[] = [
+            'key' => 'InstitutionPositions.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+		$newFields[] = [
+            'key' => 'InstitutionPositions.staff_name',
+            'field' => 'staff_name',
+            'type' => 'string',
+            'label' => __('Staff Name')
+        ];
+		$newFields[] = [
+            'key' => 'InstitutionPositions.identity_type',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Default Identity Type')
+        ];
+		$newFields[] = [
+            'key' => 'InstitutionPositions.identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+		/*POCOR-6534 ends*/
         if ($positionFilter == self::POSITION_WITH_STAFF) {
             $staffFields = $this->onExcelUpdatePositionWithStaffFields();
             $newFields = array_merge($newFields, $staffFields);
