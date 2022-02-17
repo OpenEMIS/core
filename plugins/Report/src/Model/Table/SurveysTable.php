@@ -367,7 +367,7 @@ class SurveysTable extends AppTable
         $surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
 
         $this->surveyStatuses = $WorkflowStatusesTable->getWorkflowStepStatusNameMappings('Institution.InstitutionSurveys');
-        if (!empty($surveyStatuses) || $status == '' || $status == 'all') {
+        if (!empty($surveyStatuses) || $status == '' || $status == 'all') { 
 
             if($settings['renderNotComplete'] === true && $settings['renderNotOpen'] === true){
                 $statusCondition = [
