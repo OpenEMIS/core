@@ -105,13 +105,19 @@ class InstitutionClassStudentsTable extends AppTable
                     $this->aliasField('education_grade_id') => $student->education_grade_id,
                     $this->aliasField('student_id') => $student->student_id,
                 ])->first();
-                // echo "<pre>"; print_r($student); die();
+            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+            $statuses = $StudentStatuses->findCodeList();     
 
             if (!empty($classStudent) && $classStudent->student_status_id != $student->student_status_id) {
                 if ($student->next_institution_class_id > 0) {
                     $classStudent->next_institution_class_id = $student->next_institution_class_id;
                 }
-                $classStudent->student_status_id = $student->student_status_id;
+                if ($classStudent->student_status_id == $statuses['GRADUATED']) {
+                    $classStudent->student_status_id = $statuses['GRADUATED'];
+                } else {
+                    $classStudent->student_status_id = $student->student_status_id;
+                }
+                
                 $this->save($classStudent);
             }
             else{
