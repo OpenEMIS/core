@@ -8,8 +8,9 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Log\Log;
+/*POCOR-6534 starts*/
 use Cake\ORM\TableRegistry;
-
+/*POCOR-6534 ends*/
 class InstitutionPositionsTable extends AppTable
 {
     use OptionsTrait;
@@ -38,7 +39,8 @@ class InstitutionPositionsTable extends AppTable
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    {
+    { 
+	    /*POCOR-6534 starts*/
 		$IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
 		$UserIdentitiesTable   = TableRegistry::get('User.Identities');
 		$birth_certificate_code_id = $IdentityTypesTable->getIdByName('Birth Certificate');
@@ -153,6 +155,7 @@ class InstitutionPositionsTable extends AppTable
                 return $row;
             });
         });
+		/*POCOR-6534 ends*/
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
