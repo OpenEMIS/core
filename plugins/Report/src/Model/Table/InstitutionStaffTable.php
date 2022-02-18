@@ -152,7 +152,8 @@ class InstitutionStaffTable extends AppTable
                         'Identities.issue_date',
                         'Identities.expiry_date',
                         'Identities.issue_location',
-                        'IdentityTypes.name'
+                        'IdentityTypes.name',
+                        'IdentityTypes.default'
                     ]
                 ],
                 'Users.Genders' => [
@@ -203,6 +204,24 @@ class InstitutionStaffTable extends AppTable
         });
     }
 
+    public function onExcelGetUserIdentitiesDefault(Event $event, Entity $entity)
+    {
+        $return = [];
+        if ($entity->has('user')) {
+            if ($entity->user->has('identities')) {
+                if (!empty($entity->user->identities)) {
+                    $identities = $entity->user->identities;
+                    foreach ($identities as $key => $value) {
+                        if ($value->identity_type->default == 1) {
+                            $return[] = $value->number;
+                        }
+                    }
+                }
+            }
+        }
+        return implode(', ', array_values($return));
+    }
+
     public function onExcelGetUserIdentities(Event $event, Entity $entity)
     {
         $return = [];
@@ -211,7 +230,9 @@ class InstitutionStaffTable extends AppTable
                 if (!empty($entity->user->identities)) {
                     $identities = $entity->user->identities;
                     foreach ($identities as $key => $value) {
-                        $return[] = '([' . $value->identity_type->name . ']' . ' - ' . $value->number . ')';
+                        if ($value->identity_type->default == 0) {                            
+                            $return[] = '([' . $value->identity_type->name . ']' . ' - ' . $value->number . ')';
+                        }
                     }
                 }
             }
@@ -426,12 +447,18 @@ class InstitutionStaffTable extends AppTable
             'type' => 'string',
             'label' => ''
         ];
+        $newFields[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'user_identities_default',
+            'type' => 'string',
+            'label' => __($identity->name)
+        ];
 
         $newFields[] = [
             'key' => 'Users.identities',
             'field' => 'user_identities',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Other Identities')
         ];
 
         $newFields[] = [
