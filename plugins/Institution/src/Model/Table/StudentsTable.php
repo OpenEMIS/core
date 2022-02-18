@@ -245,8 +245,6 @@ class StudentsTable extends ControllerActionTable
                 'gender_name' => 'Genders.name',
                 'birthplace_area' => $areaAdministrative->aliasField('name'),
                 'address' => 'Users.address',
-                'address_area' => $areaAdministrative->aliasField('name'),
-                'postal_code' => 'Users.postal_Code',
                 'date_of_birth' => 'Users.date_of_birth',
                 'code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
@@ -538,25 +536,24 @@ class StudentsTable extends ControllerActionTable
             'label' => __('Address')
         ];
         
-        $extraField[] = [
-            'key' => 'areaAdministrative.name',
-            'field' => 'address_area',
-            'type' => 'string',
-            'label' => __('Address Area')
-        ];
-        
-        $extraField[] = [
-            'key' => 'Users.postal_code',
-            'field' => 'postal_code',
-            'type' => 'string',
-            'label' => __('Postal Code')
-        ];
-        
-        $extraField[] = [
+        // commented in POCOR-6578
+        /* $extraField[] = [
             'key' => 'Users.identity_number',
             'field' => 'identity_number',
             'type' => 'string',
             'label' => __($identity->name)
+        ]; */
+        $extraField[] = [
+            'key' => 'IdentityTypes.name',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];
+        $extraField[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'identity_number',
+            'type' => 'integer',
+            'label' => __('Identity Number')
         ];
 
         $extraField[] = [
@@ -634,19 +631,6 @@ class StudentsTable extends ControllerActionTable
             'field' => 'guardian_contact',
             'type' => 'integer',
             'label' => __('Guardian Contact')
-        ];
-        
-        $extraField[] = [
-            'key' => 'IdentityTypes.name',
-            'field' => 'identity_type',
-            'type' => 'string',
-            'label' => __('Identity Type')
-        ];
-        $extraField[] = [
-            'key' => 'Users.identity_number',
-            'field' => 'identity_number',
-            'type' => 'integer',
-            'label' => __('Identity Number')
         ];
 
         $extraField[] = [
