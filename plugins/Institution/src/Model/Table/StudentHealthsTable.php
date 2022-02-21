@@ -158,7 +158,8 @@ class StudentHealthsTable extends AppTable
         ];
 
         if ( $sheet_tab_name == 'Overview' ) {
-            $group_by[] = 'Healths.id';
+            $group_by = [];
+            $group_by[] = 'Healths.security_user_id';
             $selectable['overview_blood_type']       = 'Healths.blood_type';
             $selectable['overview_doctor_name']      = 'Healths.doctor_name';
             $selectable['overview_doctor_contact']   = 'Healths.doctor_contact';
