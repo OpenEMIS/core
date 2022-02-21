@@ -67,7 +67,7 @@ class InstitutionPositionsTable extends AppTable
                 'assignee_id' => 'Assignees.id',
                 'is_homeroom' => $this->aliasField('is_homeroom'),
                 'institution_name' => 'Institutions.name',
-				'assignee_openemis_no' => 'Assignees.openemis_no',
+				'assignee_openemis_no' => 'SecurityUsersStaff.openemis_no',
 				'staff_firstname' => 'SecurityUsersStaff.first_name',
 				'staff_lastname' => 'SecurityUsersStaff.last_name',
 				'birth_certificate' => 'Identities.number',
