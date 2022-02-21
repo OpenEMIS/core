@@ -334,6 +334,22 @@ class StudentsTable extends ControllerActionTable
                     ->order([$this->aliasField('created') => 'DESC'])
                     ->autoFields(true)
                     ->first();
+
+                    //POCOR-6457[START]
+                    $UserIdentities = TableRegistry::get('user_identities');
+                    $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+                    $identity = $IdentityType->getDefaultEntity();
+                    $UserIdentitiesData = $UserIdentities
+                    ->find()
+                        ->select([
+                            $UserIdentities->aliasField('number')
+                        ])
+                        ->where([
+                            $UserIdentities->aliasField('identity_type_id') => $identity->id,
+                            $UserIdentities->aliasField('security_user_id') => $row->student_id
+                        ])
+                        ->first();
+                    //POCOR-6457[END]
                 
                     if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id)) {
                         $previousInstStdId = $this
@@ -357,6 +373,9 @@ class StudentsTable extends ControllerActionTable
                 $row['start_date'] = $InstitutionStudentsCurrentData->start_date;
                 $row['end_date']   = $InstitutionStudentsCurrentData->end_date;
                 $row['class_name'] = $InstitutionStudentsCurrentData->class_name;
+                //POCOR-6457[START]
+                $row['default_identity_number'] = (!empty($UserIdentitiesData)) ? $UserIdentitiesData->number: '';
+                //POCOR-6457[END]
                 /*POCOR-6543 ends*/               
                 // POCOR-6129 custome fields code
                 $Guardians = TableRegistry::get('student_custom_field_values');
@@ -504,12 +523,21 @@ class StudentsTable extends ControllerActionTable
             'label' => ''
         ];
 
+        //POCOR-6457[START]
+        // $extraField[] = [
+        //     'key' => 'Users.identity_number',
+        //     'field' => 'identity_number',
+        //     'type' => 'string',
+        //     'label' => __($identity->name)
+        // ];
+
         $extraField[] = [
-            'key' => 'Users.identity_number',
-            'field' => 'identity_number',
+            'key' => 'default_identity_number',
+            'field' => 'default_identity_number',
             'type' => 'string',
             'label' => __($identity->name)
         ];
+        //POCOR-6457[END]
 
         $extraField[] = [
             'key' => 'MainNationalities.name',
