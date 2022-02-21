@@ -307,26 +307,44 @@ class ReportListBehavior extends Behavior {
 		$name .= ': '. $featureList[$feature];
 			
 		if (!empty($filters)) {
-			$filterStr = implode(' - ', $filters);
+			if($feature == 'Report.InstitutionStudents'){
+				$filterStr = implode(' - ', $filters);
+				//$newname = substr($filterStr, 0, -50); 
+				$newname = substr($filterStr, 0, -120); 
+				$name .= ' - '.$newname;
+			}else{
+				$filterStr = implode(' - ', $filters);
 
-			$name .= ' - '.$filterStr;
+				$name .= ' - '.$filterStr;
+			}
+
 		}
 		/*POCOR-6304 starts*/
 		if (array_key_exists('institution_id', $data['InstitutionStatistics'])) {
+			
 			$institutionId = $data['InstitutionStatistics']['institution_id'];
 	        $Institutions = TableRegistry::get('Institution.Institutions');
 	        $institutionData = $Institutions->get($institutionId);
 	        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStatistics']['academic_period_id']);
-			$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
+	        if($feature == 'Report.InstitutionStudents'){
+	        	$name .= ' - '.$newname;
+	        }else{
+				$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
+			}
 		}
 		if (array_key_exists('institution_id', $data['InstitutionStandards'])) {
+			
 			$institutionId = $data['InstitutionStandards']['institution_id'];
 	        $Institutions = TableRegistry::get('Institution.Institutions');
 	        $institutionData = $Institutions->get($institutionId);
 	        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStandards']['academic_period_id']);
-			$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
+	        if($feature == 'Report.InstitutionStudents'){
+	        	$name .= ' - '.$newname;
+	        }else{
+				$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
+			}
 		}
 		/*POCOR-6304 ends*/		
 
