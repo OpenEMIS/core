@@ -13,8 +13,7 @@ class POCOR6439 extends AbstractMigration
     public function up()
     {
         /** Create OpenEMIS Core report_student_attendance_summary table */
-        $this->execute('
-        CREATE TABLE IF NOT EXISTS `report_student_attendance_summary` (
+        $this->execute('CREATE TABLE IF NOT EXISTS `report_student_attendance_summary` (
           `education_grade_id` int(10) DEFAULT NULL,
           `education_grade_name` varchar(70) DEFAULT NULL,
           `class_id` int(10) DEFAULT NULL,
@@ -38,9 +37,7 @@ class POCOR6439 extends AbstractMigration
           `late_female_count` int(10) DEFAULT NULL,
           `late_male_count` int(10) DEFAULT NULL,
           `late_total_count` int(10) DEFAULT NULL,
-          `created` datetime NOT NULL
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8
-      ');
+          `created` datetime NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8');
 
       $this->execute('INSERT INTO report_queries (`name`, `query_sql`, `frequency`, `status`, `created_user_id`, `created`) 
       VALUES ("report_student_attendance_summary_truncate","TRUNCATE report_student_attendance_summary;","day", 1, 1, NOW())');
