@@ -136,7 +136,7 @@ class StudentHealthsTable extends AppTable
         $selectable            = [];
         $group_by              = [];
         $group_by[]            = $this->aliasField('openemis_no');
-        $group_by[]            = 'InstitutionStudent.student_status_id';
+        //$group_by[]            = 'InstitutionStudent.student_status_id';
 
         // START: JOINs & dynamically fields
         $join = [
@@ -158,8 +158,8 @@ class StudentHealthsTable extends AppTable
         ];
 
         if ( $sheet_tab_name == 'Overview' ) {
-            $group_by = [];
-            $group_by[] = 'Healths.security_user_id';
+            // $group_by = [];
+            // $group_by[] = 'Healths.security_user_id';
             $selectable['overview_blood_type']       = 'Healths.blood_type';
             $selectable['overview_doctor_name']      = 'Healths.doctor_name';
             $selectable['overview_doctor_contact']   = 'Healths.doctor_contact';
@@ -173,7 +173,7 @@ class StudentHealthsTable extends AppTable
             ];
 
         } else if ( $sheet_tab_name == 'Allergies' ) {
-            $group_by[] = 'Allergies.id';
+            // $group_by[] = 'Allergies.id';
             $selectable['allergies_description'] = 'Allergies.description';
             $selectable['allergies_severe']      = 'Allergies.severe';
             $selectable['allergies_comment']     = 'Allergies.comment';
@@ -191,7 +191,7 @@ class StudentHealthsTable extends AppTable
             ];
 
         } else if ( $sheet_tab_name == 'Consultations' ) {
-            $group_by[] = 'Consultations.id';
+            // $group_by[] = 'Consultations.id';
             $selectable['consultations_date']        = 'Consultations.date';
             $selectable['consultations_description'] = 'Consultations.description';
             $selectable['consultations_treatment']   = 'Consultations.treatment';
@@ -209,7 +209,7 @@ class StudentHealthsTable extends AppTable
             ];
 
         } else if ( $sheet_tab_name == 'Families' ) {
-            $group_by[] = 'Families.id';
+            // $group_by[] = 'Families.id';
             $selectable['families_current']           = 'Families.current';
             $selectable['families_comment']           = 'Families.comment';
             $selectable['families_relationship_name'] = 'Relationships.name';
@@ -232,7 +232,7 @@ class StudentHealthsTable extends AppTable
             ];
 
         } else if ( $sheet_tab_name == 'Histories' ) {
-            $group_by[] = 'Histories.id';
+            // $group_by[] = 'Histories.id';
             $selectable['histories_current'] = 'Histories.current';
             $selectable['histories_comment'] = 'Histories.comment';
             $selectable['histories_health_name'] = 'Conditions.name';
@@ -249,7 +249,7 @@ class StudentHealthsTable extends AppTable
             ];
 
         } else if ( $sheet_tab_name == 'Vaccinations' ) {
-            $group_by[] = 'Immunizations.id';
+            // $group_by[] = 'Immunizations.id';
             $selectable['immunizations_date']      = 'Immunizations.date';
             $selectable['immunizations_type_name'] = 'ImmunizationTypes.name';
             $selectable['immunizations_comment']   = 'Immunizations.comment';
@@ -266,7 +266,7 @@ class StudentHealthsTable extends AppTable
             ];
 
         } else if ( $sheet_tab_name == 'Medications' ) {
-            $group_by[] = 'Medications.id';
+            // $group_by[] = 'Medications.id';
             $selectable['medications_name']      = 'Medications.name';
             $selectable['medications_dosage']      = 'Medications.dosage';
             $selectable['medications_start_date']      = 'Medications.start_date';
@@ -279,7 +279,7 @@ class StudentHealthsTable extends AppTable
             ];
 
         } else if ( $sheet_tab_name == 'Tests' ) {
-            $group_by[] = 'Tests.id';
+            // $group_by[] = 'Tests.id';
             $selectable['tests_date']      = 'Tests.date';
             $selectable['tests_result']    = 'Tests.result';
             $selectable['tests_comment']   = 'Tests.comment';
@@ -297,7 +297,7 @@ class StudentHealthsTable extends AppTable
             ];
 
         } else if ( $sheet_tab_name == 'UserBodyMasses' ) {
-            $group_by[] = 'UserBodyMasses.id';
+            // $group_by[] = 'UserBodyMasses.id';
             $selectable['masses_date']            = 'UserBodyMasses.date';
             $selectable['masses_height']          = 'UserBodyMasses.height';
             $selectable['masses_weight']          = 'UserBodyMasses.weight';
@@ -309,7 +309,7 @@ class StudentHealthsTable extends AppTable
             ];
 
         } else if ( $sheet_tab_name == 'UserInsurances' ) {
-            $group_by[] = 'UserInsurances.id';
+            // $group_by[] = 'UserInsurances.id';
             $selectable['user_insurances_start_date']    = 'UserInsurances.start_date';
             $selectable['user_insurances_end_date']      = 'UserInsurances.end_date';
             $selectable['user_insurances_provider_name'] = 'InsuranceProviders.name';
