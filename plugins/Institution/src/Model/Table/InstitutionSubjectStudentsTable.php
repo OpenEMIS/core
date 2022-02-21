@@ -586,7 +586,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         
         $this->InstitutionSubjects->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
         
-        //$this->InstitutionSubjects->updateAll(['total_male_students' => $totalMale, 'total_female_students' => $totalFemale], ['id' => $res['id']]);
+        //$this->InstitutionSubjects->updateAll(['total_male_students' => $totalMale, 'total_female_students' => $totalFemale], ['id' => $res['id']]);//POCOR-6583 commented unnecessary line
         // Disabled this logic because results should never be deleted when removing students from subjects
 
         //PHPOE-2338 - implement afterDelete to delete records in AssessmentItemResultsTable
