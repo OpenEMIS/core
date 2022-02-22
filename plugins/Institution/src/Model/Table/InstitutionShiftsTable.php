@@ -468,9 +468,9 @@ class InstitutionShiftsTable extends ControllerActionTable
             $occupier = $Institutions->findById($attr['entity']->location_institution_id)->first();
             $attr['attr']['value'] = $occupier->name;
             $data = $request->data[$this->alias()];
-            // echo "<pre>";print_r($event);die;
-            //if ($event->data[0]['entity']->institution_id != $event->data[0]['entity']->location_institution_id) {
-            if ($data['location'] == 'OTHER') { //POCOR-6587
+            
+            if ($event->data[0]['entity']->institution_id != $event->data[0]['entity']->location_institution_id && $event->data[0]['entity']->location != 'CURRENT') {
+            //POCOR-6587 added one more condition to get data
                 $attr['type'] = 'autocomplete';
                 $attr['target'] = ['key' => 'location_institution_id', 'name' => $this->aliasField('location_institution_id')];
                 $attr['noResults'] = __('No Institutions found');
