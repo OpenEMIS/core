@@ -421,7 +421,7 @@ class SurveysTable extends AppTable
                         'SurveyFormsFilters.survey_form_id = SurveyForms.id'
                     ])
               ->innerJoin(['InstitutionTypes' => 'institution_types'], [
-                        'surveyFormsFilters.survey_filter_id = InstitutionTypes.id'
+                        'SurveyFormsFilters.survey_filter_id = InstitutionTypes.id'
                     ])
               ->innerJoin(['Institutions' => 'institutions'], [
                         'InstitutionTypes.id = Institutions.institution_type_id'
