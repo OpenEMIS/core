@@ -308,10 +308,10 @@ class ReportListBehavior extends Behavior {
 			
 		if (!empty($filters)) {
 			if($feature == 'Report.InstitutionStudents'){
+				unset($filters[1]);
+				unset($filters[6]);
 				$filterStr = implode(' - ', $filters);
-				//$newname = substr($filterStr, 0, -50); 
-				$newname = substr($filterStr, 0, -120); 
-				$name .= ' - '.$newname;
+				$name .= ' - '.$filterStr;
 			}else{
 				$filterStr = implode(' - ', $filters);
 
@@ -328,7 +328,7 @@ class ReportListBehavior extends Behavior {
 	        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStatistics']['academic_period_id']);
 	        if($feature == 'Report.InstitutionStudents'){
-	        	$name .= ' - '.$newname;
+	        	$name .= ' - '.$filterStr;
 	        }else{
 				$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
 			}
@@ -341,7 +341,7 @@ class ReportListBehavior extends Behavior {
 	        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStandards']['academic_period_id']);
 	        if($feature == 'Report.InstitutionStudents'){
-	        	$name .= ' - '.$newname;
+	        	$name .= ' - '.$filterStr;
 	        }else{
 				$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
 			}
