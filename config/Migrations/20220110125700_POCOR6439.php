@@ -62,6 +62,7 @@ class POCOR6439 extends AbstractMigration
     $this->execute('DROP EVENT IF EXISTS `openemis_core_year`');
     $this->execute('CREATE EVENT `openemis_core_year` ON SCHEDULE EVERY 1 YEAR STARTS '2021-12-17 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`('year')');
   
+  
     }
     //rollback
     public function down()
