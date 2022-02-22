@@ -816,7 +816,8 @@ class InstitutionReportCardsTable extends AppTable
 				->find()
 				->contain('Users')
 				->where([$InstitutionStaffs->aliasField('institution_id') => $params['institution_id']])
-				->count()
+				->group($InstitutionStaffs->aliasField('staff_id'))//POCOR-6520
+                ->count()
 			;
 			if(!empty($totalStudents) && !empty($totalStaffs)) {
 				$entity = $totalStudents/$totalStaffs;
@@ -1340,97 +1341,104 @@ class InstitutionReportCardsTable extends AppTable
             $StaffQualifications = TableRegistry::get('staff_qualifications');
 
             $QualificationTitlesData = $QualificationTitles->find()
-				->select([
-					$QualificationTitles->aliasField('id'),
-					$QualificationTitles->aliasField('name'),
-				])
-				->hydrate(false)
-				->toArray()
-			;
-			
-			$init = 1;
-			$totalStaff = 0;
-			foreach ($QualificationTitlesData as $value) {
-				
-				$NumberOfStaff = $InstitutionSubjects->find()
-					->select([
-						'number_of_staff' => 'count(InstitutionSubjectStaff.staff_id)'
-					])
-					->innerJoin(
-					['InstitutionSubjectStaff' => 'institution_subject_staff'],
-					[
-						'InstitutionSubjectStaff.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
-					]
-					)
-					->innerJoin(
-					['StaffQualifications' => 'staff_qualifications'],
-					[
-						'StaffQualifications.staff_id = InstitutionSubjectStaff.staff_id'
-					]
-					)
-					->where(['StaffQualifications.qualification_title_id' => $value['id']])
-					->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
-					->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
-					->hydrate(false)
-					->first()
-				;
-		
-				$InstitutionSubjectsData = $InstitutionSubjects->find()
-					->select([
-						$InstitutionSubjects->aliasField('name')
-					])
-					->innerJoin(
-					['InstitutionSubjectStaff' => 'institution_subject_staff'],
-					[
-						'InstitutionSubjectStaff.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
-					]
-					)
-					->innerJoin(
-					['StaffQualifications' => 'staff_qualifications'],
-					[
-						'StaffQualifications.staff_id = InstitutionSubjectStaff.staff_id'
-					]
-					)
-					->where(['StaffQualifications.qualification_title_id' => $value['id']])
-					->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
-					->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
-					->hydrate(false)
-					->toArray()
-				;
-				$result = [];
-				if(!empty($InstitutionSubjectsData)) {
-					foreach ($InstitutionSubjectsData as $data) {
-						
-						$totalStaff = $NumberOfStaff['number_of_staff'] + $totalStaff;
+                ->select([
+                    $QualificationTitles->aliasField('id'),
+                    $QualificationTitles->aliasField('name'),
+                ])
+                ->hydrate(false)
+                ->toArray()
+            ;
+            
+            $init = 1;
+            $totalStaff = 0;
+            foreach ($QualificationTitlesData as $value) {
+                
+                $InstitutionSubjectsData = $InstitutionSubjects->find()
+                    ->select([
+                        $InstitutionSubjects->aliasField('id'),
+                        $InstitutionSubjects->aliasField('name')
+                    ])
+                    ->innerJoin(
+                    ['InstitutionSubjectStaff' => 'institution_subject_staff'],
+                    [
+                        'InstitutionSubjectStaff.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
+                    ]
+                    )
+                    ->innerJoin(
+                    ['StaffQualifications' => 'staff_qualifications'],
+                    [
+                        'StaffQualifications.staff_id = InstitutionSubjectStaff.staff_id'
+                    ]
+                    )
+                    ->where(['StaffQualifications.qualification_title_id' => $value['id']])
+                    ->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
+                    ->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
+                    ->hydrate(false)
+                    ->group([$InstitutionSubjects->aliasField('name')])//POCOR-6520 starts
+                    ->toArray()
+                ;
+                $result = [];
+                if(!empty($InstitutionSubjectsData)) {
+                    foreach ($InstitutionSubjectsData as $data) {
+                        //POCOR-6520 starts
+                        $NumberOfStaff = $InstitutionSubjects->find()
+                            ->select([
+                                'number_of_staff' => 'count(InstitutionSubjectStaff.staff_id)'
+                            ])
+                            ->innerJoin(
+                            ['InstitutionSubjectStaff' => 'institution_subject_staff'],
+                            [
+                                'InstitutionSubjectStaff.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
+                            ]
+                            )
+                            ->innerJoin(
+                            ['StaffQualifications' => 'staff_qualifications'],
+                            [
+                                'StaffQualifications.staff_id = InstitutionSubjectStaff.staff_id'
+                            ]
+                            )
+                            ->where(['StaffQualifications.qualification_title_id' => $value['id']])
+                            ->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
+                            ->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
+                            ->where(['InstitutionSubjectStaff.institution_subject_id' => $data['id']])
+                            ->hydrate(false)
+                            ->first()
+                        ;
 
-						$result = [
-							'id' => $init,
-							'qualification_title' => $value['name'],
-							'name' => $data['name'],
-							'number_of_staff' => $NumberOfStaff['number_of_staff'],
-						];
-						$entity[] = $result;
-						$init++;
-					}
-				} else {
-					$result = [
-						'id' => $init,
-						'qualification_title' => $value['name'],
-						'name' => '',
-						'number_of_staff' => $NumberOfStaff['number_of_staff'],
-					];
-					$entity[] = $result;
-					$init++;
-				}
-			}
-			$totalArray = [];
-			$totalArray = [
-				'id' => $init,
-				'qualification_title' => 'Total',
-				'name' => '',
-				'number_of_staff' => $totalStaff,
-			];
-			$entity[] = $totalArray;
+                        if(!empty($NumberOfStaff)){
+                            $totalStaff = $NumberOfStaff['number_of_staff'] + $totalStaff;
+                        }else{
+                            $totalStaff = 0 + $totalStaff;
+                        }
+                        //POCOR-6520 ends
+                        $result = [
+                            'id' => $init,
+                            'qualification_title' => $value['name'],
+                            'name' => $data['name'],
+                            'number_of_staff' => $NumberOfStaff['number_of_staff'],
+                        ];
+                        $entity[] = $result;
+                        $init++;
+                    }
+                } else {
+                    $result = [
+                        'id' => $init,
+                        'qualification_title' => $value['name'],
+                        'name' => '',
+                        'number_of_staff' => 0,//POCOR-6520
+                    ];
+                    $entity[] = $result;
+                    $init++;
+                }
+            }
+            $totalArray = [];
+            $totalArray = [
+                'id' => $init,
+                'qualification_title' => 'Total',
+                'name' => '',
+                'number_of_staff' => $totalStaff,
+            ];
+            $entity[] = $totalArray;
             return $entity;
         }
     }
@@ -1546,107 +1554,115 @@ class InstitutionReportCardsTable extends AppTable
             $StaffQualifications = TableRegistry::get('staff_qualifications');
 
             $QualificationTitlesData = $QualificationTitles->find()
-				->select([
-					$QualificationTitles->aliasField('id'),
-					$QualificationTitles->aliasField('name'),
-				])
-				->hydrate(false)
-				->toArray()
-			;
-			
-			$init = 1;
-			$totalStaff = 0;
-			foreach ($QualificationTitlesData as $value) {
-				
-				$NumberOfStaff = $StaffPositionTitles->find()
-					->select([
-						'count' => 'count(InstitutionStaff.staff_id)'
-					])
-					->innerJoin(
-					['InstitutionPositions' => 'institution_positions'],
-					[
-						'InstitutionPositions.staff_position_title_id = '. $StaffPositionTitles->aliasField('id')
-					]
-					)
-					->innerJoin(
-					['InstitutionStaff' => 'institution_staff'],
-					[
-						'InstitutionStaff.institution_position_id = InstitutionPositions.id'
-					]
-					)
-					->innerJoin(
-					['StaffQualifications' => 'staff_qualifications'],
-					[
-						'StaffQualifications.staff_id = InstitutionStaff.staff_id'
-					]
-					)
-					->where(['StaffQualifications.qualification_title_id' => $value['id']])
-					->where(['InstitutionStaff.institution_id' => $params['institution_id']])
-					->hydrate(false)
-					->first()
-				;
-				
-				$StaffPositionTitlesData = $StaffPositionTitles->find()
-					->select([
-						$StaffPositionTitles->aliasField('name')
-					])
-					->innerJoin(
-					['InstitutionPositions' => 'institution_positions'],
-					[
-						'InstitutionPositions.staff_position_title_id = '. $StaffPositionTitles->aliasField('id')
-					]
-					)
-					->innerJoin(
-					['InstitutionStaff' => 'institution_staff'],
-					[
-						'InstitutionStaff.institution_position_id = InstitutionPositions.id'
-					]
-					)
-					->innerJoin(
-					['StaffQualifications' => 'staff_qualifications'],
-					[
-						'StaffQualifications.staff_id = InstitutionStaff.staff_id'
-					]
-					)
-					->where(['StaffQualifications.qualification_title_id' => $value['id']])
-					->where(['InstitutionStaff.institution_id' => $params['institution_id']])
-					->hydrate(false)
-					->toArray()
-				;
-				$result = [];
-				if(!empty($StaffPositionTitlesData)) {
-					foreach ($StaffPositionTitlesData as $data) {
-						
-						$totalStaff = $NumberOfStaff['count'] + $totalStaff;
-
-						$result = [
-							'id' => $init,
-							'qualification_title' => $value['name'],
-							'name' => $data['name'],
-							'number_of_staff' => $NumberOfStaff['count'],
-						];
-						$entity[] = $result;
-						$init++;
-					}
-				} else {
-					$result = [
-						'id' => $init,
-						'qualification_title' => $value['name'],
-						'name' => '',
-						'number_of_staff' => $NumberOfStaff['count'],
-					];
-					$entity[] = $result;
-					$init++;
-				}
-			}
-			$totalArray = [];
-			$totalArray = [
-				'id' => $init,
-				'qualification_title' => 'Total',
-				'name' => '',
-				'number_of_staff' => $totalStaff,
-			];
-			$entity[] = $totalArray;
+                ->select([
+                    $QualificationTitles->aliasField('id'),
+                    $QualificationTitles->aliasField('name'),
+                ])
+                ->hydrate(false)
+                ->toArray()
+            ;
+            
+            $init = 1;
+            $totalStaff = 0;
+            foreach ($QualificationTitlesData as $value) {
+                
+                $StaffPositionTitlesData = $StaffPositionTitles->find()
+                    ->select([
+                        'id' => 'InstitutionPositions.id', //POCOR-6520
+                        $StaffPositionTitles->aliasField('name')
+                    ])
+                    ->innerJoin(
+                    ['InstitutionPositions' => 'institution_positions'],
+                    [
+                        'InstitutionPositions.staff_position_title_id = '. $StaffPositionTitles->aliasField('id')
+                    ]
+                    )
+                    ->innerJoin(
+                    ['InstitutionStaff' => 'institution_staff'],
+                    [
+                        'InstitutionStaff.institution_position_id = InstitutionPositions.id'
+                    ]
+                    )
+                    ->innerJoin(
+                    ['StaffQualifications' => 'staff_qualifications'],
+                    [
+                        'StaffQualifications.staff_id = InstitutionStaff.staff_id'
+                    ]
+                    )
+                    ->where(['StaffQualifications.qualification_title_id' => $value['id']])
+                    ->where(['InstitutionStaff.institution_id' => $params['institution_id']])
+                    ->group([$StaffPositionTitles->aliasField('name')])//POCOR-6520 starts
+                    ->hydrate(false)
+                    ->toArray()
+                ;
+                
+                $result = [];
+                if(!empty($StaffPositionTitlesData)) {
+                    foreach ($StaffPositionTitlesData as $data) {
+                        //POCOR-6520 starts
+                        $NumberOfStaff = $StaffPositionTitles->find()
+                            ->select([
+                                'count' => 'count(InstitutionStaff.staff_id)'
+                            ])
+                            ->innerJoin(
+                            ['InstitutionPositions' => 'institution_positions'],
+                            [
+                                'InstitutionPositions.staff_position_title_id = '. $StaffPositionTitles->aliasField('id')
+                            ]
+                            )
+                            ->innerJoin(
+                            ['InstitutionStaff' => 'institution_staff'],
+                            [
+                                'InstitutionStaff.institution_position_id = InstitutionPositions.id'
+                            ]
+                            )
+                            ->innerJoin(
+                            ['StaffQualifications' => 'staff_qualifications'],
+                            [
+                                'StaffQualifications.staff_id = InstitutionStaff.staff_id'
+                            ]
+                            )
+                            ->where(['StaffQualifications.qualification_title_id' => $value['id']])
+                            ->where(['InstitutionStaff.institution_id' => $params['institution_id']])
+                            ->where(['InstitutionStaff.institution_position_id' => $data['id']])
+                            ->where(['InstitutionStaff.staff_status_id' => 1])
+                            ->hydrate(false)
+                            ->first()
+                        ;
+                        if(!empty($NumberOfStaff)){
+                            $totalStaff = $NumberOfStaff['count'] + $totalStaff;
+                        }else{
+                            $totalStaff = 0 + $totalStaff;
+                        }
+                        //POCOR-6520 ends
+                        $result = [
+                            'id' => $init,
+                            'qualification_title' => $value['name'],
+                            'name' => $data['name'],
+                            'number_of_staff' => $NumberOfStaff['count'],
+                        ];
+                        $entity[] = $result;
+                        $init++;
+                    }
+                } else {
+                    $result = [
+                        'id' => $init,
+                        'qualification_title' => $value['name'],
+                        'name' => '',
+                        'number_of_staff' => 0,//POCOR-6520
+                    ];
+                    $entity[] = $result;
+                    $init++;
+                }
+            }
+            $totalArray = [];
+            $totalArray = [
+                'id' => $init,
+                'qualification_title' => 'Total',
+                'name' => '',
+                'number_of_staff' => $totalStaff,
+            ];
+            $entity[] = $totalArray;
             return $entity;
         }
     }
@@ -1671,31 +1687,10 @@ class InstitutionReportCardsTable extends AppTable
 			$totalStaff = 0;
 			foreach ($QualificationTitlesData as $value) {
 				
-				$NumberOfStaff = $StaffTypes->find()
-					->select([
-						'count' => 'count(InstitutionStaff.staff_id)'
-					])
-					->innerJoin(
-					['InstitutionStaff' => 'institution_staff'],
-					[
-						'InstitutionStaff.staff_type_id = '. $StaffTypes->aliasField('id')
-					]
-					)
-					->innerJoin(
-					['StaffQualifications' => 'staff_qualifications'],
-					[
-						'StaffQualifications.staff_id = InstitutionStaff.staff_id'
-					]
-					)
-					->where(['StaffQualifications.qualification_title_id' => $value['id']])
-					->where(['InstitutionStaff.institution_id' => $params['institution_id']])
-					->hydrate(false)
-					->first()
-				;
-				
 				$StaffTypesData = $StaffTypes->find()
 					->select([
-						$StaffTypes->aliasField('name')
+						$StaffTypes->aliasField('id'),//POCOR-6520
+                        $StaffTypes->aliasField('name')
 					])
 					->innerJoin(
 					['InstitutionStaff' => 'institution_staff'],
@@ -1711,15 +1706,43 @@ class InstitutionReportCardsTable extends AppTable
 					)
 					->where(['StaffQualifications.qualification_title_id' => $value['id']])
 					->where(['InstitutionStaff.institution_id' => $params['institution_id']])
+                    ->group([$StaffTypes->aliasField('name')])//POCOR-6520 starts
 					->hydrate(false)
 					->toArray()
 				;
 				$result = [];
 				if(!empty($StaffTypesData)) {
 					foreach ($StaffTypesData as $data) {
-						
-						$totalStaff = $NumberOfStaff['count'] + $totalStaff;
-
+                        //POCOR-6520 starts
+                        $NumberOfStaff = $StaffTypes->find()
+                            ->select([
+                                'count' => 'count(InstitutionStaff.staff_id)'
+                            ])
+                            ->innerJoin(
+                            ['InstitutionStaff' => 'institution_staff'],
+                            [
+                                'InstitutionStaff.staff_type_id = '. $StaffTypes->aliasField('id')
+                            ]
+                            )
+                            ->innerJoin(
+                            ['StaffQualifications' => 'staff_qualifications'],
+                            [
+                                'StaffQualifications.staff_id = InstitutionStaff.staff_id'
+                            ]
+                            )
+                            ->where(['StaffQualifications.qualification_title_id' => $value['id']])
+                            ->where(['InstitutionStaff.institution_id' => $params['institution_id']])
+                            ->where(['InstitutionStaff.staff_type_id' => $data['id']])
+                            ->where(['InstitutionStaff.staff_status_id' => 1])
+                            ->hydrate(false)
+                            ->first()
+                        ;
+                        if(!empty($NumberOfStaff)){
+                            $totalStaff = $NumberOfStaff['count'] + $totalStaff;
+                        }else{
+                            $totalStaff = 0 + $totalStaff;
+                        }
+						//POCOR-6520 ends
 						$result = [
 							'id' => $init,
 							'qualification_title' => $value['name'],
@@ -1734,7 +1757,7 @@ class InstitutionReportCardsTable extends AppTable
 						'id' => $init,
 						'qualification_title' => $value['name'],
 						'name' => '',
-						'number_of_staff' => $NumberOfStaff['count'],
+						'number_of_staff' => 0,
 					];
 					$entity[] = $result;
 					$init++;
@@ -1888,7 +1911,8 @@ class InstitutionReportCardsTable extends AppTable
 				->find()
 				->contain('Users')
 				->where([$InstitutionStaff->aliasField('institution_id') => $params['institution_id']])
-				->count()
+				->group($InstitutionStaffs->aliasField('staff_id'))//POCOR-6520
+                ->count()
 			;
 			
 			if(!empty($teachingStaff) && !empty($totalStaffs)) {
