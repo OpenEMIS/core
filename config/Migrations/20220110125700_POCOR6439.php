@@ -50,17 +50,18 @@ class POCOR6439 extends AbstractMigration
 
       //fix existing events
       $this->execute('DROP EVENT IF EXISTS `openemis_core_day`');
-      $this->execute('CREATE EVENT `openemis_core_day` ON SCHEDULE EVERY 1 DAY STARTS '2021-12-17 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`('day')');
       $this->execute('DROP EVENT IF EXISTS `openemis_core_minute`');
-      $this->execute('CREATE EVENT `openemis_core_minute` ON SCHEDULE EVERY 1 MINUTE STARTS '2021-12-17 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`('minute')');
       $this->execute('DROP EVENT IF EXISTS `openemis_core_hour`');
-      $this->execute('CREATE EVENT `openemis_core_hour` ON SCHEDULE EVERY 1 HOUR STARTS '2021-12-17 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`('hour')');
       $this->execute('DROP EVENT IF EXISTS `openemis_core_month`');
-      $this->execute('CREATE EVENT `openemis_core_month` ON SCHEDULE EVERY 1 MONTH STARTS '2021-12-17 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`('month')');
       $this->execute('DROP EVENT IF EXISTS `openemis_core_week`');
-      $this->execute('CREATE EVENT `openemis_core_week` ON SCHEDULE EVERY 1 WEEK STARTS '2021-12-17 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`('week')');
       $this->execute('DROP EVENT IF EXISTS `openemis_core_year`');
-      $this->execute('CREATE EVENT `openemis_core_year` ON SCHEDULE EVERY 1 YEAR STARTS '2021-12-17 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`('year')');
+      $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_minute` ON SCHEDULE EVERY 1 MINUTE ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`("minute")');
+      $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_hour` ON SCHEDULE EVERY 1 HOUR ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`("hour")');
+      $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_day` ON SCHEDULE EVERY 1 DAY ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`("day")');
+      $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_week` ON SCHEDULE EVERY 1 WEEK ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`("week")');
+      $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_month` ON SCHEDULE EVERY 1 MONTH ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`("month")');
+      $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_year` ON SCHEDULE EVERY 1 YEAR ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`("year")');
+      
     
     }
     //rollback
