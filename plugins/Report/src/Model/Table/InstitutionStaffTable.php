@@ -285,7 +285,7 @@ class InstitutionStaffTable extends AppTable
                 SELECT institution_class_id,secondary_staff_id staff_id FROM institution_classes_secondary_staff) homeroom_or_secondary
                 ON institution_classes.id = homeroom_or_secondary.institution_class_id
                 INNER JOIN institution_class_grades ON institution_class_grades.institution_class_id = institution_classes.id
-                WHERE institution_classes.staff_id = '".$staffId."' AND institution_classes.academic_period_id = '".$academicPeriodId."'")->fetchAll(\PDO::FETCH_ASSOC);
+                WHERE homeroom_or_secondary.staff_id = '".$staffId."' AND institution_classes.academic_period_id = '".$academicPeriodId."'")->fetchAll(\PDO::FETCH_ASSOC);
              $query = [];
             foreach ($institutionClassesData as $key => $value) {
                 $query [$key] = $EducationGrades
