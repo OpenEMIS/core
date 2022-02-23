@@ -1145,6 +1145,7 @@ class InstitutionsTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+
         $this->Session->delete('Institutions.id');
 
         $plugin = $this->controller->plugin;
