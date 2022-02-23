@@ -50,4 +50,18 @@ class IdentityTypesTable extends ControllerActionTable
         $entity->prevDefaultIdentityType = $this->getDefaultValue(); //keep the current default value before it is being updated.
     }
 
+    /**
+     * Get the Identity id by name
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6492
+     */
+    public function getIdByName($name)
+    {
+        $entity = $this->find()->where([$this->aliasField('name') => $name])->first();
+        if ($entity) {
+            return $entity->id;
+        } else {
+            return '';
+        }
+    }
 }

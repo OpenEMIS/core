@@ -339,8 +339,8 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
         // resetColumnDefs
         .then(function(response) {
             if (response) {
-                return InstitutionsResultsSvc.getRowData($scope.gradingTypes, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.subject.education_subject_id, $scope.education_grade_id);
-                //return InstitutionsResultsSvc.getNewRowData($scope.gradingTypes, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.education_subject_id, $scope.education_grade_id);
+                //return InstitutionsResultsSvc.getRowData($scope.gradingTypes, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.subject.education_subject_id, $scope.education_grade_id);
+                return InstitutionsResultsSvc.getNewRowData($scope.gradingTypes, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.education_subject_id, $scope.education_grade_id);
             }
         })
         // getRowData

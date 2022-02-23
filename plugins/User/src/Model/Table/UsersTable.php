@@ -242,15 +242,15 @@ class UsersTable extends AppTable
     }
 
     //POCOR-6454[START]
-    public function getCorrectEducationGrade($institutionClassId){
-        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $gradeId = $InstitutionClassGrades
-        ->find()
-        ->where([$InstitutionClassGrades->aliasField('institution_class_id') =>$institutionClassId])
-        ->extract('education_grade_id')
-        ->first();
-        return $gradeId;
-    }
+    // public function getCorrectEducationGrade($institutionClassId){
+    //     $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+    //     $gradeId = $InstitutionClassGrades
+    //     ->find()
+    //     ->where([$InstitutionClassGrades->aliasField('institution_class_id') =>$institutionClassId])
+    //     ->extract('education_grade_id')
+    //     ->first();
+    //     return $gradeId;
+    // }
     //POCOR-6454[END]
 
     public function findInstitutionStudentsNotInClass(Query $query, array $options)
@@ -266,34 +266,6 @@ class UsersTable extends AppTable
             $institutionClassRecord = TableRegistry::get('Institution.InstitutionClasses')->get($institutionClassId, ['contain' => ['EducationGrades']])->toArray();
             $academicPeriodId = $institutionClassRecord['academic_period_id'];
             $institutionId = $institutionClassRecord['institution_id'];
-             //POCOR-6454[START]
-             $correctEducationGrade = $this->getCorrectEducationGrade($institutionClassId);
-             $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-             $InstitutionStudents = TableRegistry::get('institution_students');
-             $InstitutionStudentsGradeId = $InstitutionStudents
-                     ->find()
-                     ->where([$InstitutionStudents->aliasField('academic_period_id') =>$academicPeriodId,
-                             $InstitutionStudents->aliasField('institution_id') =>$institutionId,
-                             $InstitutionStudents->aliasField('student_status_id') =>$enrolledStatus
-                     ])
-                     ->extract('education_grade_id')
-                     ->first();
-            if(!empty($InstitutionStudentsGradeId)){
-                if($correctEducationGrade != $InstitutionStudentsGradeId){
-                    // update InstitutionStudents with correct education grade
-                    $InstitutionStudents->updateAll(
-                        ['education_grade_id' => $correctEducationGrade],
-                        [
-                            'academic_period_id' => $academicPeriodId,
-                            'institution_id' => $institutionId,
-                            'student_status_id' => $enrolledStatus
-                        ]
-                    );
-                }
-            }
-            $institutionClassId = $options['institution_class_id'];
-            $institutionClassRecord = TableRegistry::get('Institution.InstitutionClasses')->get($institutionClassId, ['contain' => ['EducationGrades']])->toArray();
-             //POCOR-6454[END]
             $educationGradeIds = array_column($institutionClassRecord['education_grades'], 'id');
             if (empty($educationGradeIds)) {
                 return $query->where(['1 = 0']);
@@ -656,25 +628,27 @@ class UsersTable extends AppTable
         
         $newOpenemisNo = $prefix.$newStamp;
         $openemisTemps = TableRegistry::get('User.OpenemisTemps');        
+        $SecurityUser = TableRegistry::get('security_users');
         
-        $resultOpenemisTemps = $openemisTemps->find('all')
+           $resultOpenemisTemp = $SecurityUser->find('all')                
+                ->order(['id' => 'DESC'])
+                ->first();
+
+           $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
+            $newOpenemisNo = $resultOpenemisNoTemp+1;
+            $newOpenemisNo=$prefix.$newOpenemisNo;
+            $resultOpenemisTemps = $openemisTemps->find('all')
                 ->where(['openemis_no' => $newOpenemisNo])
                 ->first();
        
-        if(!empty($resultOpenemisTemps->openemis_no)){  
-           $resultOpenemisTemp = $openemisTemps->find('all')                
-                ->order(['id' => 'DESC'])
-                ->first();
-           $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
-           $newOpenemisNo = $resultOpenemisNoTemp + 1;
-        }       
-        
-        $openemisTemp = $openemisTemps->newEntity();
-        $openemisTemp->openemis_no = $newOpenemisNo;
-        $openemisTemp->ip_address = $_SERVER['REMOTE_ADDR'];
-        $openemisTemps->save($openemisTemp);
-        
+        if(empty($resultOpenemisTemps->openemis_no)){   
+            $openemisTemp = $openemisTemps->newEntity();
+            $openemisTemp->openemis_no = $newOpenemisNo;
+            $openemisTemp->ip_address = $_SERVER['REMOTE_ADDR'];
+            $openemisTemps->save($openemisTemp);
+          }
         return $newOpenemisNo;
+        
     }
 
     public function validationDefault(Validator $validator)
@@ -1098,27 +1072,31 @@ class UsersTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // This logic is meant for Import
-        if ($entity->has('customColumns')) {
-            foreach ($entity->customColumns as $column => $value) {
-                switch ($column) {
-                    case 'Identity':
+        //comment for ticket POCOR-6512
+            /*if ($entity->has('customColumns')) {
+                foreach ($entity->customColumns as $column => $value) {
+                    switch ($column) {
+                        case 'Identity':*/
+        //comment for ticket POCOR-6512
                         $userIdentitiesTable = TableRegistry::get('User.Identities');
 
                         $defaultValue = $userIdentitiesTable->IdentityTypes->getDefaultValue();
 
-                        if ($defaultValue) {
+                      //  if ($defaultValue) {
                             $userIdentityData = $userIdentitiesTable->newEntity([
-                                'identity_type_id' => $defaultValue,
-                                'number' => $value,
-                                'security_user_id' => $entity->id
+                                'identity_type_id' => $entity->identity_type_id,
+                                'number' => $entity->identity_number,
+                                'security_user_id' => $entity->id,
+                                'nationality_id' =>$entity->nationality_id
                             ]);
                             $userIdentitiesTable->save($userIdentityData);
-                        }
-                        break;
+                       // }
+        //comment for ticket POCOR-6512
+                      /*  break;
                 }
             }
         }
-
+*/      //comment for ticket POCOR-6512
         // This is for import contact from Import User excel
         if ($entity->has('action_type') && $entity->action_type == 'imported') {
             if (!$entity->has('contact_error')) {

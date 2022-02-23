@@ -61,8 +61,11 @@ class ReportListBehavior extends Behavior {
 		                $roles[] = $value->security_role_id;
 		            }
 	        	} 
-	   
-	        	if ($this->_table->alias() == 'InstitutionStatistics') {
+				$permission_check_array = [
+					'InstitutionStatistics',
+					'InstitutionStandards',
+				];
+				if ( in_array($this->_table->alias(), $permission_check_array) ) {
 	        		$function = $securityFunctions->find()
 	        				->select([$securityFunctions->aliasField('id')])
 	        				->where([
@@ -315,6 +318,14 @@ class ReportListBehavior extends Behavior {
 	        $institutionData = $Institutions->get($institutionId);
 	        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStatistics']['academic_period_id']);
+			$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
+		}
+		if (array_key_exists('institution_id', $data['InstitutionStandards'])) {
+			$institutionId = $data['InstitutionStandards']['institution_id'];
+	        $Institutions = TableRegistry::get('Institution.Institutions');
+	        $institutionData = $Institutions->get($institutionId);
+	        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStandards']['academic_period_id']);
 			$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
 		}
 		/*POCOR-6304 ends*/		

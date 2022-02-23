@@ -2163,12 +2163,16 @@ class WorkflowBehavior extends Behavior
         ]);
     }
 
-    public function workflowAfterTransition(Event $event, $id = null, $requestData)
+    public function workflowAfterTransition(Event $event, $id, $requestData)
     {
         // use find instead of get to cater for models with composite keys using a hash id
         $model = $this->_table;
-
-        $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
+        
+        /*POCOR-6560 starts*/
+        $lastEntry =  $model->find()->order([$model->aliasField('id') => 'DESC'])->first();
+        $id = $lastEntry->id;
+        /*POCOR-6560 ends*/
+        $entity = $model->get($id);
         $this->setStatusId($entity, $requestData);
 
         // get the latest entity after status is updated
@@ -2195,6 +2199,63 @@ class WorkflowBehavior extends Behavior
             $id = $entity->model_reference;
 
             if ($this->WorkflowTransitions->save($entity)) {
+                //POCOR-6500 starts
+                //remove user's data from `security_group_users` table
+                $WorkflowStepsTable = TableRegistry::get('workflow_steps');
+                $WorkflowsTable = TableRegistry::get('workflows');
+                $WithdrawStudents = $WorkflowStepsTable
+                                    ->find()
+                                    ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+                                        [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id') ]
+                                    )
+                                    ->where([
+                                        $WorkflowsTable->aliasField('code') =>'STUDENT-WITHDRAW-001',
+                                        $WorkflowStepsTable->aliasField('name') => 'Withdrawn'
+                                    ])
+                                    ->first();
+                
+                if($entity->workflow_step_id == $WithdrawStudents->id){
+                    //get user's data from `institution_student_withdraw` table
+                    $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
+                    $StudentWithdrawData = $StudentWithdrawTable
+                                        ->find()
+                                        ->where([
+                                            $StudentWithdrawTable->aliasField('id') => $entity->model_reference
+                                            ])
+                                        ->first();
+                    if(!empty($StudentWithdrawData)){
+                        //get student role
+                        $securityRolesTbl = TableRegistry::get('security_roles');
+                        $securityRoles = $securityRolesTbl->find()
+                                                ->where([
+                                                    $securityRolesTbl->aliasField('code') => 'STUDENT',
+                                                ])
+                                                ->first();
+                        //get student institution
+                        $institutionTbl = TableRegistry::get('institutions');
+                        $institutions = $institutionTbl->find()
+                                                ->where([
+                                                    $institutionTbl->aliasField('id') => $StudentWithdrawData->institution_id
+                                                ])
+                                                ->first();
+                        if(!empty($institutions) && $institutions->security_group_id !=''){
+                            $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+                            $securityGroupUsers = $securityGroupUsersTbl->find()
+                                                    ->where([
+                                                        $securityGroupUsersTbl->aliasField('security_group_id') => $institutions->security_group_id,
+                                                        $securityGroupUsersTbl->aliasField('security_user_id') => $StudentWithdrawData->student_id,
+                                                        $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id,
+                                                    ])->first();
+                            if(!empty($securityGroupUsers)){
+                                    $id = $securityGroupUsers->id;
+                                    $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+                                    $SecurityGroupUsersTable->deleteAll(['id' => $id ]);
+                            }
+                        }
+                    }                    
+                }//POCOR-6500 ends
+
+
                 $this->_table->controller->Alert->success('general.edit.success', ['reset' => true]);
 
                 // Trigger workflow after save event here
