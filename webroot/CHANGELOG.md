@@ -1,3 +1,85 @@
+### [3.73.12] - 2022-02-15
+- Bug Fixed: Institution > Statistics > Standard > Student Special Needs: Develop Student Special Needs report
+- Bug Fixed: Institution>Staff>Add: Created positions are not available when assigning the staff
+- Bug Fixed: Institutions>Staff>Staff1>Career>Staff Leave: Unable to create leave even when attendance is deleted
+- Bug Fixed: Institutions > Staff > Add External Staff : System shows validation message on Shifts field when adding External Staff
+
+### [3.73.11] - 2022-02-11
+- Bug Fixed: Institution>Students: Students that were previously enrolled in a grade cannot be enrolled to the same grade.
+- Bug Fixed: Attendance > Students > Export: 404 error when exporting for all days
+- Bug Fixed: Institution/Directory>Staff/Student: 404 Error
+- Bug Fixed: Institutions > Students > Repeat feature : System assigns students to the previous year's education_grade_id
+
+### [3.73.10] - 2022-02-11
+- Bug Fixed: Institution>Academic>Subjects: Negative numbers are showing up under student numbers
+- Bug Fixed: Institutions > Statistics > Standard : Develop Student Overview report
+- Bug Fixed: Institutions: 404 error when deleting an institution
+- Bug Fixed: Institutions > Performance > Assessments : System does not save new mark when user updates the mark
+- Bug Fixed: Institutions > Students/Staff > Nationalities tab : Deleting a Preferred nationality should not show a [Message not found] error
+
+### [3.73.9] - 2022-02-09
+- Bug Fixed: Institutions>Student:Withdraw or Transfer gets 404 error
+- Bug Fixed: Institutions > Staff > Add Staff : There are no validation message when user submits Add staff without selecting values in mandatory fields
+- Bug Fixed: Institutions > Students > Export : Classes are not showing for some students
+- Bug Fixed: Institutions > Performances > Assessments : Assessment marks should not be editable if he is no longer in the same class
+
+### [3.73.8] - 2022-02-05
+- Implemented: Reports > Institutions > Institutions With No Staff : Add institution_status column in the report
+- Bug Fixed: Institutions>Infrastructure>Overview: Custom fields are inaccurate and results are duplicated
+- Bug Fixed: Institutions>Students: Enrolled(Repeated) logic change
+- Bug Fixed: Institutions>Students>Bulk Transfer: Programme is still reflected even though it is invisible
+- Bug Fixed: Institution>Performance>Assessments: Marks are not saved and only Only first Assessment Period marks can be displayed from the interface
+- Bug Fixed: Institutions>Students: The report does not show the classes for some students even though they are assigned to classes
+
+### [3.73.7] - 2022-01-31
+- Bug Fixed: Directory > General > Identities: 404 Error when viewing and editing identities
+- Bug Fixed: Personal > Student > Absences/Behaviours/Outcome/Extracurricular/Textbooks/Risks tab: 404 error when accessing
+
+### [3.73.6] - 2022-01-27
+- Bug Fixed: Institutions>Report Cards>Comments: Homeroom Teachers are able to comment as Homeroom Teachers under other persons Homeroom classes
+- Bug Fixed: Directory > Import: Getting 404 Error
+- Bug Fixed: Institutions>Students>Export: Issues with export
+- Bug Fixed: Institution>Students>Add: Adds error message when not adding start date
+
+### [3.73.5] - 2022-01-21
+- Bug Fixed: Institutions>Staff>Career>Attendances:Able to record staff time-in and time-out even if there is staff leave on the specified dates
+- Bug Fixed: Institutions>Students>Transfer: Validation for next education grade not to show not visible programmes and grades in education structure
+- Bug Fixed: Institutions>Students>Promote/Repeat: Individual promotion and group promotion is not working
+- Bug Fixed: Institutions>Performance>Assessments: Students of duplicate same subject are not appearing according to Academic>Subjects
+- Bug Fixed: Institutions > Staff > Add Staff : Start Date Date picker should not be restricted
+
+### [3.73.4] - 2022-01-19
+- Implemented: Add Export button function - Institutions > Examinations > Students
+- Implemented: Add Export button function - Institutions > Committees
+- Bug Fixed: Institution>Student/Staff: Identity in External Search is not saved after staff/student is added
+- Bug Fixed: Institution > Statistics > View page : System shows 404 error page
+- Bug Fixed: Updating security_group_users table for student transactions
+- Bug Fixed: Personal > Staff > Careers : Edit and add button page should be the same as Institution>Staff
+- Bug Fixed: Institutions>Students>Export: Issues with export
+
+### [3.73.3] - 2022-01-14
+- Implemented: Add Export button function - Institutions > Finances > Institution Fees
+- Implemented: Add Export button function - Institutions > Transport > Providers
+- Bug Fixed: Institution > Attendance > Staff : System still allows user to set time in/out when school is closed
+- Bug Fixed: Reports > Institution > WASH Reports : System does not validate when there are mandatory fields
+- Bug Fixed: Improvement of School Shift functions-Edit function for School Shift(Owner-Other Institution)
+- Bug Fixed: Institutions>General>Calendar: Unable to add calendar
+- Bug Fixed: Personal > Staff > Careers : System should allow user to Edit, Add and Delete Leave
+- Bug Fixed: Report>Custom: institution_id filter is not populating
+- Bug Fixed: Reports> Student: Enrollment summary support is not showing for all institutions
+- Bug Fixed: Institutions>Undo: Students are not showing out in the withdrawn list
+- Bug Fixed: Administration>System Setup>Localisation>Translation: Words not reflected and existed
+- Bug Fixed: Personal > Guardians : Remove Guardians sub-menu under Personal Menu
+- Bug Fixed: Institutions>Report Cards>Comments:Overall average in report card>comment which is showing 0 even though there is data and overall average/total marks does not tally
+- Bug Fixed: Institutions: No record found in Institution
+
+### [3.73.2] - 2022-01-12
+- Bug Fixed: Institutions>Academic>Classes: Students that are assigned to a different grade(Primary 1 to Primary 2) will get a change in grade
+
+### [3.73.1] - 2022-01-12
+- Bug Fixed: Institutions>Performance>Assessments: Assessments are showing empty when the student's status is not enrolled status
+- Bug Fixed: Institutions > Performance > Assessments: Export should show only enrolled student and individual school filter should show same grades as all institution filter
+
 ### [3.73.0] - 2022-01-07
 - Implemented: Add Export button function - Institutions > Visits (include all tabs)
 - Bug Fixed: Institution>Students: Enrolled(Repeated) students are not able to be found in classes and there are duplicate students

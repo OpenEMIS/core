@@ -114,6 +114,11 @@ class InstitutionsTable extends AppTable
                     ->notEmpty('area_education_id');
         }
         /*POCOR-6333 ends*/
+      if (in_array($feature, ['Report.WashReports'])) {
+            $validator = $validator
+                    ->notEmpty('institution_id');
+        }
+        
 
         return $validator;
     }
@@ -462,6 +467,7 @@ class InstitutionsTable extends AppTable
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
+
         $requestData = json_decode($settings['process']['params']);
         $feature = $requestData->feature;
         $filter = $requestData->institution_filter;
@@ -503,6 +509,8 @@ class InstitutionsTable extends AppTable
                     'label' => __('Area Administrative Code')
                 ];
             }
+            
+
         }
 
         $fields->exchangeArray($newFields);
@@ -515,6 +523,15 @@ class InstitutionsTable extends AppTable
                     unset($newFields[$key]);
                 }
             }
+            $filter = $requestData->institution_filter;
+            if($filter==2){
+                $newFields[] = [
+                        'key' => 'institutions.institution_status_id',
+                        'field' => 'institution_status',
+                        'type' => 'integer',
+                        'label' => __('Institutions Status')
+                    ];
+            }
             $fields->exchangeArray($newFields);
             $event->stopPropagation();
         }
@@ -522,12 +539,14 @@ class InstitutionsTable extends AppTable
 
     public function onExcelGetShiftType(Event $event, Entity $entity)
     {
+
         if (isset($this->shiftTypes[$entity->shift_type])) {
             return __($this->shiftTypes[$entity->shift_type]);
         } else {
             return '';
         }
     }
+
 
     public function onExcelGetClassification(Event $event, Entity $entity)
     {
@@ -1588,10 +1607,9 @@ class InstitutionsTable extends AppTable
             $where[$this->aliasField('area_id')] = $areaId;
         }
         $query
-            ->contain(['Areas', 'AreaAdministratives'])
-            ->select(['area_code' => 'Areas.code', 'area_administrative_code' => 'AreaAdministratives.code'])
+            ->contain(['Areas', 'AreaAdministratives','Statuses'])
+            ->select(['area_code' => 'Areas.code', 'area_administrative_code' => 'AreaAdministratives.code','institution_status'=>'Statuses.name'])
             ->where([$where]);
-
         switch ($filter) {
             case self::NO_STUDENT:
                 $StudentsTable = TableRegistry::get('Institution.Students');

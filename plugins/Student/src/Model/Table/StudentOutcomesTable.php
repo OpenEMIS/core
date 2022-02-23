@@ -171,8 +171,19 @@ class StudentOutcomesTable extends ControllerActionTable
             if ($this->request->controller == 'GuardianNavs') {
                 $studentId = $session->read('Student.Students.id');
             }/*POCOR-6267 ends*/else {
+                /**
+                 * Need to add current login id as param when no data found in existing variable
+                 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+				 * @ticket POCOR-6548
+                 */
+                //# START: [POCOR-6548] Check if user data not found then add current login user data
                 $sId = $userData['Student']['ExaminationResults']['student_id'];
+                if ($sId == null || empty($sId) || $sId == '') {
+                    $studentId = $userData['Student']['ExaminationResults']['student_id'];
+                } else {
                 $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+                }
+                //# END: [POCOR-6548] Check if user data not found then add current login user data
             }
         } else {
             $studentId = $userData['Auth']['User']['id'];
