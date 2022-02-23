@@ -2123,6 +2123,7 @@ class WorkflowBehavior extends Behavior
                     if ($entity->has('status_id')) {
                         // change to save instead of update all to trigger after save function.
                         $entity->status_id = $statusId;
+                        //echo "<pre>";print_r($entity);die();
                         $model->save($entity);
                     }
                 }
@@ -2167,11 +2168,7 @@ class WorkflowBehavior extends Behavior
     {
         // use find instead of get to cater for models with composite keys using a hash id
         $model = $this->_table;
-        
-        /*POCOR-6560 starts*/
-        $lastEntry =  $model->find()->order([$model->aliasField('id') => 'DESC'])->first();
-        $id = $lastEntry->id;
-        /*POCOR-6560 ends*/
+        $id = $requestData['WorkflowTransitions']['model_reference']; //POCOR-6588
         $entity = $model->get($id);
         $this->setStatusId($entity, $requestData);
 
