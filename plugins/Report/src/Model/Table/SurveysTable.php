@@ -408,6 +408,21 @@ class SurveysTable extends AppTable
         $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
         $institutionTypes = TableRegistry::get('institution_types');
         $institutions = TableRegistry::get('institutions');
+
+        // POCOR-6440 start
+        $requestData = json_decode($settings['process']['params']);
+
+        $institutionID = $requestData->institution_id;
+
+        if($institutionID == 0){
+            $condition = [];
+        }else{
+            $condition = [
+                'Institutions.id' => $institutionID
+            ];
+        }
+        // POCOR-6440 end
+
         $query->select([
                  'code' => 'Institutions.code',
                  'area' => 'Areas.name',
@@ -430,7 +445,13 @@ class SurveysTable extends AppTable
                  'Institutions.Areas',
                  'Institutions.AreaAdministratives',
                  'Institutions.Statuses'
-             ])->group('Institutions.name');
+             ])
+            //  POCOR-6440
+             ->where(
+                $condition
+            )  
+            //  POCOR-6440
+             ->group('Institutions.name');
 
 
         //print_r($res->sql()); exit;
@@ -722,6 +743,51 @@ class SurveysTable extends AppTable
                 } else {
 
                     if (in_array($feature, ['Report.Surveys']) && count($institutionList) > 1) {
+                        // POCOR-6440 starts
+                        if (array_key_exists('area_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['area_id']) && $areaId != -1) {
+                            $institutionQuery = $InstitutionsTable
+                            ->find('list', [
+                                'keyField' => 'id',
+                                'valueField' => 'code_name'
+                            ])
+                            ->where([
+                                $InstitutionsTable->aliasField('area_id') => $areaId
+                            ])
+                            ->order([
+                                $InstitutionsTable->aliasField('code') => 'ASC',
+                                $InstitutionsTable->aliasField('name') => 'ASC'
+                            ]);
+
+
+                            $superAdmin = $this->Auth->user('super_admin');
+                            if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                                $userId = $this->Auth->user('id');
+                                $institutionQuery->find('byAccess', ['userId' => $userId]);
+                            }
+
+                            $institutionList = $institutionQuery->toArray();
+                        }else{
+                            $institutionQuery = $InstitutionsTable
+                            ->find('list', [
+                                'keyField' => 'id',
+                                'valueField' => 'code_name'
+                            ])
+                            ->order([
+                                $InstitutionsTable->aliasField('code') => 'ASC',
+                                $InstitutionsTable->aliasField('name') => 'ASC'
+                            ]);
+
+
+                            $superAdmin = $this->Auth->user('super_admin');
+                            if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                                $userId = $this->Auth->user('id');
+                                $institutionQuery->find('byAccess', ['userId' => $userId]);
+                            }
+
+                            $institutionList = $institutionQuery->toArray();
+                        }
+                        // POCOR-6440 end
+
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
