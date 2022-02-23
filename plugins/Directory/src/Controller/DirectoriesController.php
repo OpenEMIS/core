@@ -755,13 +755,12 @@ class DirectoriesController extends AppController
 
         if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians') {
             $session = $this->request->session();
-            $StudentGuardianId = $session->read('Student.GuardianUser.primaryKey')['id'];
+            $StudentGuardianId = $session->read('Student.GuardianUser.primaryKey');
             //echo "<pre>";print_r($StudentGuardianId); die;
             $relationTabElements = [
                 'Guardians' => ['text' => __('Relation')],
                 'GuardianUser' => ['text' => __('Overview')]
             ];
-            
             $url = ['plugin' => 'Directory', 'controller' => 'Directories'];
             $relationTabElements['Guardians']['url'] = array_merge($url, ['action' => 'StudentGuardians', 'view', $this->paramsEncode(['id' => $StudentGuardianId])]);
             $relationTabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'StudentGuardianUser', 'view', $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])]);
