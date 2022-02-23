@@ -145,11 +145,15 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                     $previousStudentRecord->end_date = $entity->requested_date;
                     $previousStudentRecord->student_status_id = $statuses['TRANSFERRED'];
                     $Students->save($previousStudentRecord);
-                }else if($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED']){
+                } else if($previousStudentRecord->student_status_id == $statuses['PROMOTED']){
                     $previousStudentRecord->end_date = $entity->requested_date;
                     $previousStudentRecord->student_status_id = $statuses['PROMOTED'];
                     $Students->save($previousStudentRecord);
-                }
+                } /*POCOR-6542 starts*/ else if ($previousStudentRecord->student_status_id == $statuses['GRADUATED']) {
+                    $previousStudentRecord->end_date = $entity->requested_date;
+                    $previousStudentRecord->student_status_id = $statuses['GRADUATED'];
+                    $Students->save($previousStudentRecord);
+                } /*POCOR-6542 ends*/
             }
         }
     }

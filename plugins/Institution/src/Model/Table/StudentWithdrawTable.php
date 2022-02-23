@@ -167,10 +167,9 @@ class StudentWithdrawTable extends ControllerActionTable
 
     public function onApproval(Event $event, $id, Entity $workflowTransitionEntity)
     {
-        /*POCOR-6560 starts*/
-        $lastEntry =  $this->find()->order([$this->aliasField('id') => 'DESC'])->first();
-        $id = $lastEntry->id;
-        /*POCOR-6560 ends*/
+        /*POCOR-6588 starts*/
+        $id = $workflowTransitionEntity->model_reference;
+        /*POCOR-6588 ends*/
         $entity = $this->get($id);
         $Students = TableRegistry::get('Institution.Students');
         $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
