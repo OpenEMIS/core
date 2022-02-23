@@ -353,13 +353,17 @@ class StaffUserTable extends ControllerActionTable
             ->requirePresence('position_type', 'create')
             ->requirePresence('institution_position_id', 'create')
             ->requirePresence('staff_type_id', 'create')
-            ->add('start_date', 'ruleInAcademicPeriod', [
+            ->notEmpty('start_date', null, 'create')
+            ->requirePresence('start_date', 'create')
+            ->notEmpty('staff_shifts_id', null, 'create')
+            ->requirePresence('staff_shifts_id', 'create')
+           /* ->add('start_date', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                 'on' => function ($context) {
                     // check for staff add wizard on create operations - where academic_period_id exist in the context data - POCOR-4576
                     return ($context['newRecord'] && array_key_exists('academic_period_id', $context['data']));
                 }
-            ])
+            ])*/
             ;
         return $validator;
     }
