@@ -269,6 +269,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('leave_type', ['type' => 'hidden']);
         $this->ControllerAction->field('workflow_status', ['type' => 'hidden']);
         //POCOR-5762 ends
+        $this->ControllerAction->field('education_level_id', ['type' => 'hidden']);
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -356,6 +357,7 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'status';
                     $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'education_level_id';
                     $fieldsOrder[] = 'education_programme_id';
                     $fieldsOrder[] = 'format';
                     break;
@@ -931,6 +933,7 @@ class InstitutionsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             $institutionId = $this->request->data[$this->alias()]['institution_id'];
+            $educationlevelId = $this->request->data[$this->alias()]['education_level_id'];
             if (in_array($feature,
                         [
                             'Report.InstitutionStudents',
@@ -942,10 +945,19 @@ class InstitutionsTable extends AppTable
                 $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
                 /*POCOR-6337 starts*/
                 $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                $EducationCycles = TableRegistry::get('Education.EducationCycles');
+                $EducationLevel = TableRegistry::get('Education.EducationLevels');
                 $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
                 $condition = [];
-                if ($institutionId != 0) {
-                    $condition[$InstitutionGrades->aliasField('institution_id')] = $institutionId;
+                if($feature =='Report.InstitutionSubjects'){
+                    if ($institutionId != 0) {
+                        $condition[$InstitutionGrades->aliasField('institution_id')] = $institutionId;
+                    }
+                }
+                if($feature =='Report.InstitutionStudents'){
+                    if ($educationlevelId != 0) {
+                        $condition['EducationCycles.education_level_id'] = $educationlevelId;
+                    }
                 }
                 /*POCOR-6337 ends*/
                 $programmeOptions = $EducationProgrammes
@@ -959,6 +971,7 @@ class InstitutionsTable extends AppTable
                     ->leftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()], [
                         $InstitutionGrades->aliasField('education_grade_id') . ' = '. $EducationGrades->aliasField('id')
                     ])
+                    
                     /*POCOR-6337 ends*/
                     ->where([
                         'EducationSystems.academic_period_id' => $academicPeriodId,
@@ -1928,4 +1941,40 @@ class InstitutionsTable extends AppTable
         }
     }
     //POCOR-5762 ends
+
+    public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+            
+            if (in_array($feature,
+                        [
+                            'Report.InstitutionStudents'
+                        ])
+                ) {
+
+                $EducationLevels = TableRegistry::get('Education.EducationLevels');
+                $levelOptions = $EducationLevels->find('list', ['valueField' => 'system_level_name'])
+                ->find('visible')
+                ->find('order')
+                ->contain(['EducationSystems'])
+                ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+                ->toArray();
+
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                if (count($levelOptions) > 1) {
+                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', 0 => _('All Level')] + $levelOptions;
+                } else {
+                    $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $levelOptions;
+                }
+                /*POCOR-6337 starts*/
+                $attr['onChangeReload'] = true;
+            } else {
+                $attr['value'] = self::NO_FILTER;
+            }
+            return $attr;
+        }
+    }
 }
