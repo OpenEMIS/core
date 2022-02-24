@@ -60,7 +60,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getStaffTypes: getStaffTypes,
         getShifts: getShifts,
         getInternalSearchData: getInternalSearchData,
-        getExternalSearchData: getExternalSearchData
+        getExternalSearchData: getExternalSearchData,
+        saveStaffDetails: saveStaffDetails,
     };
 
     var models = {
@@ -98,6 +99,18 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         KdOrmSvc.controllerAction('ExternalAPI');
         KdOrmSvc.init(externalModels);
     };
+
+    function saveStaffDetails(param) {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/saveStaffData';
+        $http.get(url, {params: param})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
 
     function translate(data) {
         KdOrmSvc.init({translation: 'translate'});
