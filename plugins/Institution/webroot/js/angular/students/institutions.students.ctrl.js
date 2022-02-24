@@ -801,10 +801,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function addGuardian () {
-        StudentController.isGuardianAdding = true;
-        StudentController.internalGridOptions = null;
-        StudentController.externalGridOptions = null;
-        StudentController.getRelationType();
+        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
     }
 
     function getRedirectToGuardian() {
