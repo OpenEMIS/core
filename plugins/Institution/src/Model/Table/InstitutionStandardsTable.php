@@ -87,11 +87,14 @@ class InstitutionStandardsTable extends AppTable
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
+        $options = $this->controller->getInstitutionStatisticStandardReportFeature();
+        /*
         $options = [
             'Institution.InstitutionStandards' => __('Students') . ' ' . __('Overview'),
             //'Institution.StudentSpecialNeeds'  => __('Student Special Needs'),
             //'Institution.StudentHealths'  => __('Student Health'),
         ];
+        */
         $attr['options'] = $options;
         $attr['onChangeReload'] = true;
         if (!(isset($this->request->data[$this->alias()]['feature']))) {
