@@ -294,7 +294,7 @@ class StudentsTable extends ControllerActionTable
                 $UserContact->aliasField('security_user_id = ') . $this->Users->aliasField('id')
             ])
             ->leftJoin([$areaAdministrative->alias() => $areaAdministrative->table()], [
-                $areaAdministrative->aliasField('id = ') . $this->Users->aliasField('address_area_id')
+                $areaAdministrative->aliasField('id = ') . $this->Users->aliasField('birthplace_area_id')
             ])
             ->leftJoin([$ContactTypes->alias() => $ContactTypes->table()], [
                 $ContactTypes->aliasField('id = ') . $UserContact->aliasField('contact_type_id')
