@@ -1911,7 +1911,7 @@ class InstitutionReportCardsTable extends AppTable
 				->find()
 				->contain('Users')
 				->where([$InstitutionStaff->aliasField('institution_id') => $params['institution_id']])
-				->group($InstitutionStaffs->aliasField('staff_id'))//POCOR-6520
+				->group($InstitutionStaff->aliasField('staff_id'))//POCOR-6520
                 ->count()
 			;
 			
@@ -2098,11 +2098,17 @@ class InstitutionReportCardsTable extends AppTable
 				->find()
 				->contain('Users')
 				->innerJoin(
-				['SpecialNeed' => 'user_special_needs_assessments'],
-				[
-					'SpecialNeed.security_user_id = '. $InstitutionStudents->aliasField('student_id')
-				]
-				)
+    				['SpecialNeed' => 'user_special_needs_assessments'],
+    				[
+    					'SpecialNeed.security_user_id = '. $InstitutionStudents->aliasField('student_id')
+    				]
+				)//6520 starts
+                ->innerJoin(
+                    [$SpecialNeedsServices->alias() => $SpecialNeedsServices->table()],
+                    [
+                        $SpecialNeedsServices->aliasField('security_user_id = ') . $InstitutionStudents->aliasField('student_id')
+                    ]
+                )//6520 ends
 				->group([
 					'Users.id'
 				])
@@ -2116,11 +2122,17 @@ class InstitutionReportCardsTable extends AppTable
 				->find()
 				->contain('Users')
 				->innerJoin(
-				['SpecialNeed' => 'user_special_needs_assessments'],
-				[
-					'SpecialNeed.security_user_id = '. $InstitutionStudents->aliasField('student_id')
-				]
-				)
+    				['SpecialNeed' => 'user_special_needs_assessments'],
+    				[
+    					'SpecialNeed.security_user_id = '. $InstitutionStudents->aliasField('student_id')
+    				]
+				)//6520 starts
+                ->innerJoin(
+                    [$SpecialNeedsServices->alias() => $SpecialNeedsServices->table()],
+                    [
+                        $SpecialNeedsServices->aliasField('security_user_id = ') . $InstitutionStudents->aliasField('student_id')
+                    ]
+                )//6520 ends
 				->group([
 					'Users.id'
 				])
