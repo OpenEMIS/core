@@ -81,7 +81,29 @@ class InstitutionSubjectStudentsTable extends AppTable
                     }
                 }
             }
+        }/*POCOR-6542 starts*/ else {
+            //update student status in subject when student transferred to another intitution and have graducate status
+            $subjectStudent = $this->find()
+                    ->matching('InstitutionSubjects')
+                    ->where([
+                        'InstitutionSubjects.institution_id' => $student->institution_id,
+                        'InstitutionSubjects.academic_period_id' => $student->academic_period_id,
+                        $this->aliasField('education_grade_id') => $student->education_grade_id,
+                        $this->aliasField('student_id') => $student->student_id,
+                    ])->first();
+            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+            $statuses = $StudentStatuses->findCodeList();
+
+            if (!empty($subjectStudent) && $subjectStudent->student_status_id != $student->student_status_id) {
+                if ($subjectStudent->student_status_id == $statuses['GRADUATED']) {
+                    $subjectStudent->student_status_id = $statuses['GRADUATED'];
+                } else {
+                    $subjectStudent->student_status_id = $student->student_status_id;
+                } 
+                $this->save($subjectStudent);
+            }
         }
+        /*POCOR-6542 ends*/
     }
 
     public function institutionClassStudentsAfterSave(Event $event, Entity $student)
@@ -586,7 +608,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         
         $this->InstitutionSubjects->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
         
-        $this->InstitutionSubjects->updateAll(['total_male_students' => $totalMale, 'total_female_students' => $totalFemale], ['id' => $res['id']]);
+        //$this->InstitutionSubjects->updateAll(['total_male_students' => $totalMale, 'total_female_students' => $totalFemale], ['id' => $res['id']]);//POCOR-6583 commented unnecessary line
         // Disabled this logic because results should never be deleted when removing students from subjects
 
         //PHPOE-2338 - implement afterDelete to delete records in AssessmentItemResultsTable
