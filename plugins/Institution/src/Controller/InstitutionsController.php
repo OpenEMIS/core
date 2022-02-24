@@ -3341,6 +3341,24 @@ class InstitutionsController extends AppController
             $positionConditions[$StaffTable->Positions->aliasField('staff_position_title_id').' NOT IN '] = $expectedStaffStatuses;
         }
         // END : POCOR-6450
+        /**
+         * @ticket POCOR-6522
+         * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+         */
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $staff_min_role = $SecurityGroupUsers->find()
+                            ->contain('SecurityRoles')
+                            ->order(['SecurityRoles.order'])
+                            ->where([$SecurityGroupUsers->aliasField('security_user_id') => $this->Auth->user()['id']])
+                            ->first();
+        if ( $this->Auth->user()['super_admin'] != 1 && isset($staff_min_role->security_role->order) && $staff_min_role->security_role->order > 0) {
+            $positionConditions['SecurityRoles.order >= '] = $staff_min_role->security_role->order;
+        }
+        /**
+         * END
+         * @ticket POCOR-6522
+         */
+
         if ($selectedFTE > 0) {
             $staffPositionsOptions = $StaffTable->Positions
                 ->find()
@@ -3406,9 +3424,14 @@ class InstitutionsController extends AppController
         return $this->response;
     }
 
-    // POCOR-6450
+    /**
+     * Get staff details of specific institution
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6522
+     */
     private function getSpecificInstitutionStaff($institution_id, $staff_id)
     {
+        $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
         $institutionPositionsTable = TableRegistry::get('Institution.InstitutionPositions');
         $StaffTable = TableRegistry::get('Institution.Staff');
         $alreadyAssignedStaffs = $StaffTable->find()->select([
@@ -3420,6 +3443,7 @@ class InstitutionsController extends AppController
         ])->where([
             $StaffTable->aliasField('institution_id') => $institution_id,
             $StaffTable->aliasField('staff_id') => $staff_id,
+            $StaffTable->aliasField('staff_status_id') => $StaffStatusesTable->getIdByCode('ASSIGNED'),
         ])
         ->hydrate(false)->toArray();
         $expectedStaffStatuses = [];
@@ -4244,5 +4268,22 @@ class InstitutionsController extends AppController
             if (null !== $cell) return false;
         }
         return true;
+    }
+
+    /**
+     * Get the Feature options of the Institutions Standard Report
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @return array
+     * @ticket POCOR-6493
+     */
+    public function getInstitutionStatisticStandardReportFeature() : array
+    {
+        $options = [
+            'Institution.InstitutionStandards' => __('Students') . ' ' . __('Overview'),
+            'Institution.StudentSpecialNeeds'  => __('Student Special Needs'),
+            'Institution.StudentHealths'  => __('Student Health'),
+            'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
+        ];
+        return $options;
     }
 }

@@ -1,3 +1,28 @@
+### [3.74.0] - 2022-02-23
+- Implemented: Reports > Institutions > Positions : To add Staff Name, OpenEMIS ID, Default Identity Type, Identity Number
+- Implemented: Reports > Institutions > Classes : To add an Education Grade Filter
+- Implemented: Reports > Institutions > Students : To Add Education Level Filter before Education Programme Filter
+- Bug Fixed: Institutions>Academic>Subjects: Programme with one subject selected are showing multiple subjects when class is created
+- Bug Fixed: Institution>Students: Birth Certificate value should be empty if student does have any Birth Certificate Identity type
+- Bug Fixed: Institution > Statistics > Standard > Student Health: Develop Student Health report
+- Bug Fixed: Institutions>Performance>Assessments: Able to import higher marks than max marks
+- Bug Fixed: Reports > Institutions > Staff : Rename Header to default identity type and only display education grades from selected academic period
+- Bug Fixed: Institutions > Academic > Associations : Default filter should be from current academic Period
+- Bug Fixed: Institutions > Students > Transfer : If student is Graduated and Transferred out, system will change status to Promoted
+- Bug Fixed: Institutions>Statistics>Standard: Training > Needs, Applications, Results, and Courses for all staff
+- Bug Fixed: Institutions>Attendance>Staff: Unable to reset Staff Attendance back to default 0:00
+- Bug Fixed: Institution>Students: 404 error when undo promotion for Grade 6 students in 112616
+- Bug Fixed: Administration>Training>Results: 404 Error when there are more than one Result Type for one course
+- Bug Fixed: Institutions>Performance>Assessments: Marks are not grouped correctly
+- Bug Fixed: Institutions>General>Shift: Owner field should disappear when this institution field is selected
+- Bug Fixed: Institution>Students: Unable to approve in workflow
+
+### [3.73.12] - 2022-02-15
+- Bug Fixed: Institution > Statistics > Standard > Student Special Needs: Develop Student Special Needs report
+- Bug Fixed: Institution>Staff>Add: Created positions are not available when assigning the staff
+- Bug Fixed: Institutions>Staff>Staff1>Career>Staff Leave: Unable to create leave even when attendance is deleted
+- Bug Fixed: Institutions > Staff > Add External Staff : System shows validation message on Shifts field when adding External Staff
+
 ### [3.73.11] - 2022-02-11
 - Bug Fixed: Institution>Students: Students that were previously enrolled in a grade cannot be enrolled to the same grade.
 - Bug Fixed: Attendance > Students > Export: 404 error when exporting for all days
