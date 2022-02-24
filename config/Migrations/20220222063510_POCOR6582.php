@@ -13,10 +13,10 @@ class POCOR6582 extends AbstractMigration
     public function up()
     {
         // Backup api_securities table
-        // $this->execute('CREATE TABLE `zz_6582_api_securities` LIKE `api_securities`');
-        // $this->execute('INSERT INTO `zz_6582_api_securities` SELECT * FROM `api_securities`');
-        // $this->execute('CREATE TABLE `zz_6582_api_securities_scopes` LIKE `api_securities_scopes`');
-        // $this->execute('INSERT INTO `zz_6582_api_securities_scopes` SELECT * FROM `api_securities_scopes`');
+        $this->execute('CREATE TABLE `zz_6582_api_securities` LIKE `api_securities`');
+        $this->execute('INSERT INTO `zz_6582_api_securities` SELECT * FROM `api_securities`');
+        $this->execute('CREATE TABLE `zz_6582_api_securities_scopes` LIKE `api_securities_scopes`');
+        $this->execute('INSERT INTO `zz_6582_api_securities_scopes` SELECT * FROM `api_securities_scopes`');
         // End
 
         $stmt = $this->query('SELECT * FROM api_securities ORDER BY id DESC limit 1');
@@ -25,7 +25,7 @@ class POCOR6582 extends AbstractMigration
 
         $this->insert('api_securities', [
             'id' => $uniqueId +1,
-            'name' => 'SecurityGroupUsers',
+            'name' => 'Security Group Users',
             'model' => 'Security.SecurityGroupUsers',
             'index' => 1,
             'view' => 1,
@@ -35,7 +35,7 @@ class POCOR6582 extends AbstractMigration
             'execute' => 0
         ]);
 
-        $apiSecurityGroupUsersID = $this->query("SELECT * FROM api_securities WHERE `name` = 'SecurityGroupUsers' AND `model` = 'Security.SecurityGroupUsers'");
+        $apiSecurityGroupUsersID = $this->query("SELECT * FROM api_securities WHERE `name` = 'Security Group Users' AND `model` = 'Security.SecurityGroupUsers'");
         $securityGroupUsersID = $apiSecurityGroupUsersID->fetchAll();
         $securityGroupUsersValue = $securityGroupUsersID[0]['id'];
 
