@@ -755,7 +755,7 @@ class DirectoriesController extends AppController
 
         if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians') {
             $session = $this->request->session();
-            $StudentGuardianId = $session->read('Student.GuardianUser.primaryKey');
+            $StudentGuardianId = $session->read('Student.GuardianUser.primaryKey')['id'];
             //echo "<pre>";print_r($StudentGuardianId); die;
             $relationTabElements = [
                 'Guardians' => ['text' => __('Relation')],

@@ -319,21 +319,6 @@ class DirectoriesTable extends ControllerActionTable
         $this->dashboardQuery = clone $query;
     }
 
-    public function findStudentsNotInSchool(Query $query, array $options)
-    {
-        $InstitutionStudentTable = TableRegistry::get('Institution.Students');
-        $allInstitutionStudents = $InstitutionStudentTable->find()
-            ->select([
-                $InstitutionStudentTable->aliasField('student_id')
-            ])
-            ->where([
-                $InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
-            ])
-            ->bufferResults(false);
-        $query->where(['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1]);
-        return $query;
-    }
-
     public function findStudentsInSchool(Query $query, array $options)
     {
         $institutionIds = (array_key_exists('institutionIds', $options))? $options['institutionIds']: [];
@@ -359,6 +344,20 @@ class DirectoriesTable extends ControllerActionTable
         return $query;
     }
 
+    public function findStudentsNotInSchool(Query $query, array $options)
+    {
+        $InstitutionStudentTable = TableRegistry::get('Institution.Students');
+        $allInstitutionStudents = $InstitutionStudentTable->find()
+            ->select([
+                $InstitutionStudentTable->aliasField('student_id')
+            ])
+            ->where([
+                $InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
+            ])
+            ->bufferResults(false);
+        $query->where(['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1]);
+        return $query;
+    }
 
     public function findStaffInSchool(Query $query, array $options)
     {
