@@ -821,5 +821,9 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
             }
         }, log);
     }
+
+    scope.addGuardian=function(){
+        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
+    }
     
 }

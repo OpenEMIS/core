@@ -575,9 +575,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
     }
 
     scope.confirmUser = function () {
-        scope.message = (scope.selectedGuardianData && scope.selectedGuardianData.relation_type_name ? scope.selectedGuardianData.relation_type_name : 'Guardian') + ' successfully added.';
-        scope.messageClass = 'alert-success';
-        scope.step = "summary";
+        scope.saveGuardianDetails();
     }
 
     scope.goToFirstStep = function () {
@@ -797,5 +795,40 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
                 scope.selectedGuardianData = value;
             }
         }, log);
+    }
+
+    scope.saveGuardianDetails = function() {
+        var params = {
+            guardian_relation_id: scope.selectedGuardianData.relation_type_id,
+            student_id: 1,
+            openemis_no: scope.selectedGuardianData.openemis_no,
+            first_name: scope.selectedGuardianData.first_name,
+            middle_name: scope.selectedGuardianData.middle_name,
+            third_name: scope.selectedGuardianData.third_name,
+            last_name: scope.selectedGuardianData.last_name,
+            preferred_name: scope.selectedGuardianData.preferred_name,
+            gender_id: scope.selectedGuardianData.gender_id,
+            date_of_birth: scope.selectedGuardianData.date_of_birth.toLocaleDateString(),
+            identity_number: scope.selectedGuardianData.identity_number,
+            nationality_id: scope.selectedGuardianData.nationality_id,
+            username: scope.selectedGuardianData.username,
+            password: scope.selectedGuardianData.password,
+            postal_code: scope.selectedGuardianData.postalCode,
+            address: scope.selectedGuardianData.address,
+            birthplace_area_id: 2,
+            address_area_id: 2,
+            identity_type_id: scope.selectedGuardianData.identity_type_id,
+        };
+        UtilsSvc.isAppendLoader(true);
+        DirectoryaddguardianSvc.saveGuardianDetails(params)
+        .then(function(response) {
+            scope.message = (scope.selectedGuardianData && scope.selectedGuardianData.relation_type_name ? scope.selectedGuardianData.relation_type_name : 'Guardian') + ' successfully added.';
+            scope.messageClass = 'alert-success';
+            scope.step = "summary";
+            UtilsSvc.isAppendLoader(false);
+        }, function(error) {
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
     }
 }
