@@ -1,5 +1,5 @@
 angular
-    .module('institutions.staff.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.staff.svc'])
+    .module('institutions.staff.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.staff.svc', 'angular.chosen'])
     .controller('InstitutionsStaffCtrl', InstitutionStaffController);
 
 InstitutionStaffController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsStaffSvc', '$rootScope'];
@@ -72,6 +72,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.getExternalSearchData = getExternalSearchData;
     StaffController.processInternalGridUserRecord = processInternalGridUserRecord;
     StaffController.processExternalGridUserRecord = processExternalGridUserRecord;
+    StaffController.saveStaffDetails = saveStaffDetails;
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
@@ -90,6 +91,45 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         };
         StaffController.getGenders();
     });
+
+    function saveStaffDetails() {
+        var params = {
+            openemis_no: StaffController.selectedStaffData.openemis_no,
+            first_name: StaffController.selectedStaffData.first_name,
+            middle_name: StaffController.selectedStaffData.middle_name,
+            third_name: StaffController.selectedStaffData.third_name,
+            last_name: StaffController.selectedStaffData.last_name,
+            preferred_name: StaffController.selectedStaffData.preferred_name,
+            gender_id: StaffController.selectedStaffData.gender_id,
+            date_of_birth: StaffController.selectedStaffData.date_of_birth.toLocaleDateString(),
+            identity_number: StaffController.selectedStaffData.identity_number,
+            nationality_id: StaffController.selectedStaffData.nationality_id,
+            username: StaffController.selectedStaffData.username,
+            password: StaffController.selectedStaffData.password,
+            postal_code: StaffController.selectedStaffData.postalCode,
+            address: StaffController.selectedStaffData.address,
+            birthplace_area_id: 2,
+            address_area_id: 2,
+            identity_type_id: StaffController.selectedStaffData.identity_type_id,
+            education_grade_id: 59,
+            academic_period_id: StaffController.selectedStaffData.academic_period_id,
+            start_date: StaffController.selectedStaffData.startDate.toLocaleDateString(),
+            end_date: StaffController.selectedStaffData.endDate?.toLocaleDateString(),
+            institution_position_id: 1,
+            staff_type_id: StaffController.selectedStaffData.staff_type_id,
+            fte: StaffController.selectedStaffData.fte_id,
+        };
+        UtilsSvc.isAppendLoader(true);
+        InstitutionsStaffSvc.saveStaffDetails(params).then(function(resp){
+            StaffController.message = 'Staff successfully added.';
+            StaffController.messageClass = 'alert-success';
+            StaffController.step = "summary";
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
 
     function getUniqueOpenEmisId() {
         UtilsSvc.isAppendLoader(true);
@@ -242,8 +282,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var params = {
             institution_id: StaffController.institutionId,
             fte: StaffController.selectedStaffData.position_type_id === 'Full-Time' ? 1 : StaffController.selectedStaffData.fte_id,
-            startDate: StaffController.selectedStaffData.startDate,
-            endDate: StaffController.selectedStaffData.endDate,
+            startDate: StaffController.selectedStaffData.startDate ? StaffController.selectedStaffData.startDate.toLocaleDateString() : new Date().toLocaleDateString(),
+            endDate: StaffController.selectedStaffData.endDate ? StaffController.selectedStaffData.endDate.toLocaleDateString() : new Date().toLocaleDateString(),
         }
         InstitutionsStaffSvc.getPositions(params).then(function(resp){
             StaffController.institutionPositionOptions.availableOptions = resp.data;
