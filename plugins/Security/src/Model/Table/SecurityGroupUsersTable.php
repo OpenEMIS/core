@@ -23,8 +23,40 @@ class SecurityGroupUsersTable extends AppTable {
         $this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Results' => ['index']
+            'Results' => ['index', 'view']
         ]);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
+        return $events;
+    }
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'index' || $action == 'view') {
+            // check for the user permission to view here
+            $event->stopPropagation();
+            return true;
+        }
+    }
+
+    public function findAllSecurityGroupUsers(Query $query, array $options)
+    {
+        $SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        $security_user_id = $options['_controller']->request->query['security_user_id'];
+        $query
+        ->select([
+            'security_role_id',
+            'institution_id' => $SecurityInstitutions->aliasField('institution_id')
+        ])
+        ->leftJoin([$SecurityInstitutions->alias() => $SecurityInstitutions->table()], [
+            $SecurityInstitutions->aliasField('security_group_id = ') . $this->aliasField('security_group_id'),
+        ])
+        ->where(['security_user_id' => $security_user_id]);
+        return $query;
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
