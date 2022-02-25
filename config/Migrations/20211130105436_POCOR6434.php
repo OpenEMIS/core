@@ -27,6 +27,11 @@ class POCOR6434 extends AbstractMigration
             `created` datetime  DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (`id`)
           )");
+
+        //ADD INDEX
+        $this->execute("ALTER TABLE `meal_institution_programmes` ADD INDEX `meal_programme_id` (`meal_programme_id`);");
+        $this->execute("ALTER TABLE `meal_institution_programmes` ADD INDEX `institution_id` (`institution_id`);");
+        $this->execute("ALTER TABLE `meal_institution_programmes` ADD INDEX `created_user_id` (`created_user_id`);");
     }
 
     // rollback
