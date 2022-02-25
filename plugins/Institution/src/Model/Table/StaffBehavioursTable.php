@@ -44,8 +44,23 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->addBehavior('Institution.StaffProfile');
 
         $this->setDeleteStrategy('restrict');
-
-        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $roles = [1,2,3,4,5,6,7,8,9,10,11];
+        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()
+                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                    [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    ]
+                ])
+                ->where([
+                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
+                    'SecurityFunctions._execute'=>'StaffBehaviours.excel',
+                    'SecurityRoleFunctions._execute' => 1
+                ])
+                ->toArray();
+        if(!empty($QueryResult)){
+            $this->addBehavior('Excel', ['pages' => ['index']]);
+        }
+        
     }
 
     public function implementedEvents()
