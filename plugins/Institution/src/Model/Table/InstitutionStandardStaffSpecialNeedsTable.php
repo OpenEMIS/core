@@ -354,7 +354,7 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
             'key'   => 'SpecialNeedsServiceTypes.name',
             'field' => 'service_type_name',
             'type'  => 'string',
-            'label' => __('Special Needs Service Type'),
+            'label' => __('Special Needs Service Name'),
         ];
         return $extraField;
     }
@@ -372,7 +372,7 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
             'key'   => 'SpecialNeedsDeviceTypes.name',
             'field' => 'devices_type_name',
             'type'  => 'string',
-            'label' => __('Special Needs Device Type'),
+            'label' => __('Special Needs Device Name'),
         ];
         return $extraField;
     }
