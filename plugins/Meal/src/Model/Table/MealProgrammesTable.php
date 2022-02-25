@@ -43,9 +43,10 @@ class MealProgrammesTable extends ControllerActionTable
             'dependent' => true
         ]);
 
-        $this->belongsTo('Areas', ['className' => 'Area.Areas']);
-        $this->addBehavior('Area.Areapicker');
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        // $this->belongsTo('Areas', ['className' => 'Area.Areas']);
+        // $this->addBehavior('Area.Areapicker');
+        // $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->Institutions = TableRegistry::get('Institution.Institutions');
 
     }
 
@@ -94,8 +95,30 @@ class MealProgrammesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $institutionId = $entity->institution_id;
-        $entity->institution_id = $institutionId;
+        // $institutionId = $entity->institution_id;
+        // $entity->institution_id = $institutionId;
+
+        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+        $result=$this->find('all',['fields'=>'id'])->last();
+
+        $record_id=$result->id;
+        $institutionIds = $entity->institution_id;
+        $institutionIdsData = $institutionIds['_ids'];
+        foreach($institutionIdsData AS $key => $value)
+        {
+            try{
+                $data = $MealInstitutionProgrammes->newEntity([
+                    'meal_programme_id' => $record_id,
+                    'institution_id' => $value,
+                    'created_user_id' => 2
+                ]);
+    
+                $saveData = $MealInstitutionProgrammes->save($data);
+            }
+            catch (PDOException $e) {
+                echo "<pre>";print_r($e);die;
+            }
+        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -420,9 +443,9 @@ class MealProgrammesTable extends ControllerActionTable
                             ->order([$Areas->aliasField('order')]);
 
                         $attr['type'] = 'chosenSelect';
-                        $attr['attr']['multiple'] = false;
+                        $attr['attr']['multiple'] = true;
                         $attr['select'] = true;
-                        $attr['options'] = ['' => '-- ' . __('Select') . ' --', '0' => __('All Areas')] + $areaOptions->toArray();
+                        $attr['options'] = ['0' => __('All Areas')] + $areaOptions->toArray();
                         $attr['onChangeReload'] = true;
                     } else {
                         $attr['type'] = 'hidden';
@@ -434,8 +457,7 @@ class MealProgrammesTable extends ControllerActionTable
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
-
-            $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id'] : 0;
+            $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id']['_ids'] : 0;
             $institutionList = [];
             $InstitutionsTable = TableRegistry::get('Institution.Institutions');
             $InstitutionStatusesTable = TableRegistry::get('Institution.Statuses');
@@ -447,7 +469,7 @@ class MealProgrammesTable extends ControllerActionTable
                     'valueField' => 'code_name'
                 ])
                 ->where([
-                    $InstitutionsTable->aliasField('area_id') => $areaId,
+                    $InstitutionsTable->aliasField('area_id IN') => $areaId,
                     $InstitutionsTable->aliasField('institution_status_id') => $activeStatus
                 ])
                 ->order([
@@ -472,15 +494,15 @@ class MealProgrammesTable extends ControllerActionTable
             }
             $institutionList = $institutionQuery->toArray();
             if (count($institutionList) > 1) {
-             $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+             $institutionOptions = ['0' => __('All Institutions')] + $institutionList;
          } else {
-            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+            $institutionOptions =  $institutionList;
         }
 
                     // $institutionOptions = ['' => '-- '.__('Select').' --'] + $institutionList;
         $attr['type'] = 'chosenSelect';
         $attr['onChangeReload'] = true;
-        $attr['attr']['multiple'] = false;
+        $attr['attr']['multiple'] = true;
         $attr['options'] = $institutionOptions;
         $attr['attr']['required'] = true;
         

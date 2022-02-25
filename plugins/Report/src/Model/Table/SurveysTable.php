@@ -367,11 +367,11 @@ class SurveysTable extends AppTable
         $surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
 
         $this->surveyStatuses = $WorkflowStatusesTable->getWorkflowStepStatusNameMappings('Institution.InstitutionSurveys');
-        if (!empty($surveyStatuses) || $status == '' || $status == 'all') {
+        if (!empty($surveyStatuses) || $status == '' || $status == 'all') { 
 
             if($settings['renderNotComplete'] === true && $settings['renderNotOpen'] === true){
                 $statusCondition = [
-                    $this->aliasField('status_id').' IN ('.self::COMPLETED.')'
+                    $this->aliasField('status_id').' IN ('.self::OPEN.')'
                 ];
             }elseif($settings['renderNotComplete'] === true && $settings['renderNotOpen'] === false){
                 $statusCondition = [
@@ -404,21 +404,73 @@ class SurveysTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
-        $query
-            ->select([
-                'code' => 'Institutions.code',
-                'area' => 'Areas.name',
-                'area_administrative' => 'AreaAdministratives.name'
-            ])
-            ->contain([
-                'Institutions.Areas',
-                'Institutions.AreaAdministratives',
-                'Institutions.Statuses'
-            ])
-            //Only Active schools are able to generate survey
-            ->where([
-                'Statuses.code' => 'ACTIVE'
-            ]);
+        $surveyForms = TableRegistry::get('survey_forms');
+        $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
+        $institutionTypes = TableRegistry::get('institution_types');
+        $institutions = TableRegistry::get('institutions');
+
+        // POCOR-6440 start
+        $requestData = json_decode($settings['process']['params']);
+
+        $institutionID = $requestData->institution_id;
+
+        if($institutionID == 0){
+            $condition = [];
+        }else{
+            $condition = [
+                'Institutions.id' => $institutionID
+            ];
+        }
+        // POCOR-6440 end
+
+        $query->select([
+                 'code' => 'Institutions.code',
+                 'area' => 'Areas.name',
+                 'area_administrative' => 'AreaAdministratives.name',
+                 'Statuses_name' => 'Statuses.name'
+             ])
+              ->innerJoin(['SurveyForms' => 'survey_forms'], [
+                        'Surveys.id = SurveyForms.id'
+                    ])
+              ->innerJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+                        'SurveyFormsFilters.survey_form_id = SurveyForms.id'
+                    ])
+              ->innerJoin(['InstitutionTypes' => 'institution_types'], [
+                        'SurveyFormsFilters.survey_filter_id = InstitutionTypes.id'
+                    ])
+              ->innerJoin(['Institutions' => 'institutions'], [
+                        'InstitutionTypes.id = Institutions.institution_type_id'
+                    ])
+              ->contain([
+                 'Institutions.Areas',
+                 'Institutions.AreaAdministratives',
+                 'Institutions.Statuses'
+             ])
+            //  POCOR-6440
+             ->where(
+                $condition
+            )  
+            //  POCOR-6440
+             ->group('Institutions.name');
+
+
+        //print_r($res->sql()); exit;
+        // $query
+        //     ->select([
+        //         'code' => 'Institutions.code',
+        //         'area' => 'Areas.name',
+        //         'area_administrative' => 'AreaAdministratives.name'
+        //     ])
+        //     ->contain([
+        //         'Institutions.Areas',
+        //         'Institutions.AreaAdministratives',
+        //         'Institutions.Statuses'
+        //     ])
+        //     //Only Active schools are able to generate survey
+        //     ->where([
+        //         'Statuses.code' => 'ACTIVE'
+        //     ]);
+
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -426,7 +478,6 @@ class SurveysTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
 
         $institutionStatus = $requestData->institution_status;
-
 
         // To update to this code when upgrade server to PHP 5.5 and above
         // unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
@@ -468,8 +519,8 @@ class SurveysTable extends AppTable
         ];
 
         $fields[] = [
-            'key' => 'institution_status'. $institutionStatus,
-            'field' =>'institution_status'. $institutionStatus,
+            'key' => 'Statuses_name',
+            'field' =>'Statuses_name',
             'type' => 'string',
             'label' => __('Institution Status')
         ];
@@ -574,9 +625,20 @@ class SurveysTable extends AppTable
 
     public function onExcelGetStatusId(Event $event, Entity $entity)
     {
-        $surveyStatuses = $this->surveyStatuses;
         $status = $entity->status_id;
-        return __($surveyStatuses[$status]);
+        if($status==1){
+            return "Open";
+        }
+        if($status==2){
+            return "PENDINGAPPROVAL";
+        }
+        if($status==3){
+            return "COMPLETED";
+        }
+        if($status==-1){
+            return "SURVEY_DISABLED";
+        }
+       
     }
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
     {
@@ -681,6 +743,51 @@ class SurveysTable extends AppTable
                 } else {
 
                     if (in_array($feature, ['Report.Surveys']) && count($institutionList) > 1) {
+                        // POCOR-6440 starts
+                        if (array_key_exists('area_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['area_id']) && $areaId != -1) {
+                            $institutionQuery = $InstitutionsTable
+                            ->find('list', [
+                                'keyField' => 'id',
+                                'valueField' => 'code_name'
+                            ])
+                            ->where([
+                                $InstitutionsTable->aliasField('area_id') => $areaId
+                            ])
+                            ->order([
+                                $InstitutionsTable->aliasField('code') => 'ASC',
+                                $InstitutionsTable->aliasField('name') => 'ASC'
+                            ]);
+
+
+                            $superAdmin = $this->Auth->user('super_admin');
+                            if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                                $userId = $this->Auth->user('id');
+                                $institutionQuery->find('byAccess', ['userId' => $userId]);
+                            }
+
+                            $institutionList = $institutionQuery->toArray();
+                        }else{
+                            $institutionQuery = $InstitutionsTable
+                            ->find('list', [
+                                'keyField' => 'id',
+                                'valueField' => 'code_name'
+                            ])
+                            ->order([
+                                $InstitutionsTable->aliasField('code') => 'ASC',
+                                $InstitutionsTable->aliasField('name') => 'ASC'
+                            ]);
+
+
+                            $superAdmin = $this->Auth->user('super_admin');
+                            if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                                $userId = $this->Auth->user('id');
+                                $institutionQuery->find('byAccess', ['userId' => $userId]);
+                            }
+
+                            $institutionList = $institutionQuery->toArray();
+                        }
+                        // POCOR-6440 end
+
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
