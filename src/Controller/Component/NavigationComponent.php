@@ -321,7 +321,6 @@ class NavigationComponent extends Component
                     $securityUserId = $this->controller->paramsDecode($this->request->params['pass'][1]);
                     $userInfo = TableRegistry::get('Student.StudentGuardians')->get($securityUserId);//POCOR-6453 ends
                     $securityUserId = $userInfo->guardian_id;
-                    // echo "<pre>";print_r($securityUserId);die;
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
                 }else if($action == 'Identities'){//POCOR-6453 starts
                     $securityUserId = $this->controller->paramsDecode($this->request->query['queryString']);
@@ -365,7 +364,6 @@ class NavigationComponent extends Component
             $isStudent = $session->read('Directory.Directories.is_student');
             $isStaff = $session->read('Directory.Directories.is_staff');
             $isGuardian = $session->read('Directory.Directories.is_guardian');
-
 
             // POCOR-6372 (start) initially here userType was checking but it did not work for directory navigation so changed with roles
             if ($isStaff) {
