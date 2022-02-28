@@ -16,15 +16,15 @@ class POCOR6439 extends AbstractMigration
         $this->execute('
         CREATE TABLE IF NOT EXISTS `report_student_attendance_summary` (
           `education_grade_id` int(10) DEFAULT NULL,
-          `education_grade_name` varchar(70) DEFAULT NULL,
+          `education_grade_name` varchar(150) DEFAULT NULL,
           `class_id` int(10) DEFAULT NULL,
-          `class_name` varchar(70) DEFAULT NULL,
+          `class_name` varchar(150) DEFAULT NULL,
           `institution_id` int(10) DEFAULT NULL,
-          `institution_name` varchar(70) DEFAULT NULL,
+          `institution_name` varchar(150) DEFAULT NULL,
           `academic_period_id` int(10) DEFAULT NULL,
-          `academic_period_name` varchar(50) DEFAULT NULL,
+          `academic_period_name` varchar(150) DEFAULT NULL,
           `period_name` varchar(70) DEFAULT NULL,
-          `subject_name` varchar(70) DEFAULT NULL,
+          `subject_name` varchar(150) DEFAULT NULL,
           `attendance_date` date DEFAULT NULL,
           `female_count` int(10) DEFAULT NULL,
           `male_count` int(10) DEFAULT NULL,
@@ -41,6 +41,8 @@ class POCOR6439 extends AbstractMigration
           `created` datetime NOT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8
       ');
+
+      $this->execute("ALTER TABLE `report_student_attendance_summary` ADD KEY (`education_grade_id`),ADD KEY (`class_id`),ADD KEY (`institution_id`),ADD KEY (`academic_period_id`),ADD KEY (`attendance_date`)");
 
       $this->execute('INSERT INTO report_queries (`name`, `query_sql`, `frequency`, `status`, `created_user_id`, `created`) 
       VALUES ("report_student_attendance_summary_truncate","TRUNCATE report_student_attendance_summary;","day", 1, 1, NOW())');
