@@ -37,6 +37,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.error = {};
     StudentController.institutionId = null;
     StudentController.customFields = [];
+    StudentController.customFieldsArray = [];
+    StudentController.selectedSection = '';
 
     StudentController.datepickerOptions = {
         maxDate: new Date(),
@@ -78,6 +80,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.validateDetails = validateDetails;
     StudentController.saveStudentDetails = saveStudentDetails;
     StudentController.getStudentCustomFields=getStudentCustomFields;
+    StudentController.createCustomFieldsArray = createCustomFieldsArray;
+    StudentController.filterBySection = filterBySection;
+    StudentController.mapBySection = mapBySection;
     
 
     angular.element(document).ready(function () {
@@ -324,11 +329,30 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function getStudentCustomFields() {
         InstitutionsStudentsSvc.getStudentCustomFields().then(function(resp){
             StudentController.customFields = resp.data;
+            StudentController.customFieldsArray = [];
+            StudentController.createCustomFieldsArray();
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
             UtilsSvc.isAppendLoader(false);
         });
+    }
+
+    function createCustomFieldsArray() {
+        var selectedCustomField = StudentController.customFields[0];
+        var filteredSections = Array.from(new Set(StudentController.customFields[0].map((item)=> mapBySection(item))));
+        filteredSections.forEach((section)=>{
+            let filteredArray = selectedCustomField.filter((item) => StudentController.filterBySection(item, section));
+            StudentController.customFieldsArray.push({sectionName: section , data: filteredArray});
+        });
+    }
+
+    function mapBySection(item) {
+        return item.section;
+    }
+
+    function filterBySection(item, section) {
+        return section === item.section;
     }
 
     function setStudentName() {

@@ -53,7 +53,7 @@
                 type="button" class="btn btn-prev close-btn" ng-click="goToPrevStep()">Back</button>
             <button
                 ng-if="(step=='confirmation' && step!=='summary')"
-                type="button" class="btn btn-default" ng-click="confirmUser()">Confirm</button>
+                type="button" class="btn btn-default" ng-click="saveGuardianDetails()">Confirm</button>
             <button
                 ng-if="(step=='summary')"
                 type="button" class="btn close-btn" ng-click="cancelProcess()">Close</button>
