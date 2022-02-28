@@ -306,16 +306,23 @@ class CustomFieldListBehavior extends Behavior {
 		if (!(is_null($filterKey))) {
 			$query->where([$this->_table->aliasField($filterKey) => $key]);
 		}
-
+		
 		// If there is any specified query condition
 		$condition = $this->_condition;
-		$query->where($condition);
-
-		// If it is a survey
-		if (is_null($this->config('moduleKey'))) {
-			$query->where([$this->_table->aliasField($this->config('formKey')) => $key]);
+		/*POCOR-6600 start - removing where condition due to which we are unable to get open status record*/
+		if ($this->_table->alias() == 'Surveys') {
+			$query;
+		} else {
+			$query->where($condition);
 		}
-
+		
+		// If it is a survey
+		if (is_null($this->config('moduleKey')) && $this->_table->alias() != 'Surveys') {
+			$query->where([$this->_table->aliasField($this->config('formKey')) => $key]);
+		}else {
+			$query;
+		}
+		/*POCOR-6600 ends*/
 		// Getting the list of available custom field options
 		$optionsValues = $this->CustomFieldValues->CustomFields->CustomFieldOptions->find('list')->toArray();
 
