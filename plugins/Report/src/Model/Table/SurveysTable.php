@@ -109,10 +109,10 @@ class SurveysTable extends AppTable
             $institution_id = $requestData->institution_id;
             $areaId = $requestData->area_id;
             $condition = [];
-            if ($institution_id != 0) {
+            if ($institution_id > 0) {
                 $condition['Institutions.id'] = $institution_id;
             }
-            if ($areaId != -1) {
+            if ($areaId > 0) {
                 $condition['Institutions.area_id'] = $areaId;
             }
             $institutionFormStatus = [];
@@ -387,8 +387,8 @@ class SurveysTable extends AppTable
 
 
        }
-        $condition = array_merge($condition, $configCondition);
-
+        //$condition = array_merge($condition, $configCondition);
+        $condition = [];
         $this->setCondition($condition);
 
         // For Surveys only
@@ -404,73 +404,75 @@ class SurveysTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
-        $surveyForms = TableRegistry::get('survey_forms');
-        $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
-        $institutionTypes = TableRegistry::get('institution_types');
-        $institutions = TableRegistry::get('institutions');
-
-        // POCOR-6440 start
+        $SurveyFormsTable = TableRegistry::get('Survey.SurveyForms');
+        $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $SurveyStatuses = TableRegistry::get('Survey.SurveyStatuses');
+        $SurveyStatusPeriods = TableRegistry::get('Survey.SurveyStatusPeriods');
+        $institutionTypes = TableRegistry::get('Institution.Types');
+        $institutions = TableRegistry::get('Institution.Institutions');
+        $Areas = TableRegistry::get('Area.Areas');
+        $AreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
+        $Statuses = TableRegistry::get('Institution.Statuses');
         $requestData = json_decode($settings['process']['params']);
-
-        $institutionID = $requestData->institution_id;
-
-        if($institutionID == 0){
-            $condition = [];
-        }else{
-            $condition = [
-                'Institutions.id' => $institutionID
-            ];
+        $formStatusId = $requestData->status;
+        $periodId = $requestData->academic_period_id;
+        $institutionId = $requestData->institution_id;
+        $surveyFormId = $requestData->survey_form;
+        $conditions = [];
+        $where = [];
+        if($institutionId > 0){
+            $conditions['Institutions.id'] = $institutionId;
         }
-        // POCOR-6440 end
-
+        if ($formStatusId != 'all') {
+            $where[$this->aliasField('status_id')] = $formStatusId;
+        }
+        
         $query->select([
-                 'code' => 'Institutions.code',
-                 'area' => 'Areas.name',
-                 'area_administrative' => 'AreaAdministratives.name',
-                 'Statuses_name' => 'Statuses.name'
-             ])
-              ->innerJoin(['SurveyForms' => 'survey_forms'], [
-                        'Surveys.id = SurveyForms.id'
-                    ])
-              ->innerJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
-                        'SurveyFormsFilters.survey_form_id = SurveyForms.id'
-                    ])
-              ->innerJoin(['InstitutionTypes' => 'institution_types'], [
-                        'SurveyFormsFilters.survey_filter_id = InstitutionTypes.id'
-                    ])
-              ->innerJoin(['Institutions' => 'institutions'], [
-                        'InstitutionTypes.id = Institutions.institution_type_id'
-                    ])
-              ->contain([
-                 'Institutions.Areas',
-                 'Institutions.AreaAdministratives',
-                 'Institutions.Statuses'
-             ])
-            //  POCOR-6440
-             ->where(
-                $condition
-            )  
-            //  POCOR-6440
-             ->group('Institutions.name');
-
-
-        //print_r($res->sql()); exit;
-        // $query
-        //     ->select([
-        //         'code' => 'Institutions.code',
-        //         'area' => 'Areas.name',
-        //         'area_administrative' => 'AreaAdministratives.name'
-        //     ])
-        //     ->contain([
-        //         'Institutions.Areas',
-        //         'Institutions.AreaAdministratives',
-        //         'Institutions.Statuses'
-        //     ])
-        //     //Only Active schools are able to generate survey
-        //     ->where([
-        //         'Statuses.code' => 'ACTIVE'
-        //     ]);
-
+                    'code' => 'Institutions.code',
+                    'area' => 'Areas.name',
+                    'area_administrative' => 'AreaAdministratives.name',
+                    'Statuses_name' => 'Statuses.name'
+                ])
+                ->rightJoin(['SurveyForms' => 'survey_forms'], [
+                    'SurveyForms.id = '. $this->aliasField('id')
+                ])
+                ->innerJoin(['SurveyStatuses' => 'survey_statuses'], [
+                    'SurveyStatuses.survey_form_id = SurveyForms.id'
+                ])
+                ->innerJoin(['SurveyStatusPeriods' => 'survey_status_periods'], [
+                    'SurveyStatusPeriods.survey_status_id = SurveyStatuses.id'
+                ])
+                ->innerJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+                    'SurveyFormsFilters.survey_form_id = SurveyForms.id'
+                ])
+                ->innerJoin(['InstitutionTypes' => 'institution_types'], [
+                    'SurveyFormsFilters.survey_filter_id = InstitutionTypes.id'
+                ])
+                ->innerJoin(['Institutions' => 'institutions'], [
+                    'InstitutionTypes.id = Institutions.institution_type_id'
+                ])
+                ->leftJoin(['Areas' => 'areas'], [
+                    'Areas.id = Institutions.area_id'
+                ])
+                ->leftJoin(['AreaAdministratives' => 'area_administratives'], [
+                    'AreaAdministratives.id = Institutions.area_administrative_id'
+                ])
+                ->leftJoin(['Statuses' => 'institution_statuses'], [
+                    'Statuses.id = Institutions.institution_status_id'
+                ])        
+                ->where([
+                    'SurveyStatusPeriods.academic_period_id' => $periodId,
+                    'SurveyForms.id' => $surveyFormId,
+                    $conditions,
+                    'AND' => [
+                        'OR' => [
+                            [$where],
+                            [$this->aliasField('status_id').' IS NULL']
+                        ]
+                    ]
+                ])->group([
+                    'Institutions.id','SurveyForms.id' 
+                ]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
