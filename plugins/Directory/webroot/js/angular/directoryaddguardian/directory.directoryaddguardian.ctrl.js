@@ -574,10 +574,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
         }
     }
 
-    scope.confirmUser = function () {
-        scope.saveGuardianDetails();
-    }
-
     scope.goToFirstStep = function () {
         scope.step = 'user_details';
         scope.selectedGuardianData = {};
