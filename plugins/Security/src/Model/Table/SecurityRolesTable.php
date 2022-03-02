@@ -93,6 +93,8 @@ class SecurityRolesTable extends ControllerActionTable
             ];
           
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            // if ($this->Auth->user()) { commented because its causing error while updating permission
+
             // if ($this->Auth->user()) { commented beacuse its causing error while updating permission
 
             // if ($this->Auth->user()) { commented because its causing error while updating permission
