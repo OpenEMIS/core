@@ -44,7 +44,7 @@ class POCOR6518 extends AbstractMigration
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8
       ');
 
-      $this->execute("ALTER TABLE `report_student_assessment_summary` ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `area_id` (`area_id`), ADD KEY `institution_id` (`institution_id`), ADD KEY `grade_id` (`grade_id`), ADD KEY `subject_id` (`subject_id`), ADD KEY `assessment_id` (`assessment_id,`), ADD KEY `period_id` (`period_id`)");
+      $this->execute("ALTER TABLE `report_student_assessment_summary` ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `area_id` (`area_id`), ADD KEY `institution_id` (`institution_id`), ADD KEY `grade_id` (`grade_id`), ADD KEY `subject_id` (`subject_id`), ADD KEY `assessment_id` (`assessment_id`), ADD KEY `period_id` (`period_id`)");
 
       $this->execute('INSERT INTO report_queries (`name`, `query_sql`, `frequency`, `status`, `created_user_id`, `created`) 
       VALUES ("report_student_assessment_summary_truncate","TRUNCATE report_student_assessment_summary;","year", 1, 1, NOW())');
