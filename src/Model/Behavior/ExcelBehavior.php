@@ -32,7 +32,7 @@ class ExcelBehavior extends Behavior
         'folder' => 'export',
         'default_excludes' => ['modified_user_id', 'modified', 'created', 'created_user_id', 'password'],
         'excludes' => [],
-        'limit' => 100000,
+        'limit' => 200000,
         'pages' => [],
         'autoFields' => true,
         'orientation' => 'landscape', // or portrait
