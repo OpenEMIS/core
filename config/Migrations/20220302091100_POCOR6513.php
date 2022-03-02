@@ -1,7 +1,7 @@
 <?php
 use Migrations\AbstractMigration;
 
-class POCOR6439 extends AbstractMigration
+class POCOR6513 extends AbstractMigration
 {
     /**
      * Change Method.
@@ -12,67 +12,50 @@ class POCOR6439 extends AbstractMigration
      */
     public function up()
     {
-        /** Create OpenEMIS Core report_student_attendance_summary table */
+        /** Create OpenEMIS Core report_assessment_missing_mark_entry table */
         $this->execute('
-        CREATE TABLE IF NOT EXISTS `report_student_attendance_summary` (
-          `education_grade_id` int(10) DEFAULT NULL,
-          `education_grade_name` varchar(150) DEFAULT NULL,
-          `class_id` int(10) DEFAULT NULL,
-          `class_name` varchar(150) DEFAULT NULL,
-          `institution_id` int(10) DEFAULT NULL,
-          `institution_name` varchar(150) DEFAULT NULL,
-          `academic_period_id` int(10) DEFAULT NULL,
-          `academic_period_name` varchar(150) DEFAULT NULL,
-          `period_name` varchar(70) DEFAULT NULL,
-          `subject_name` varchar(150) DEFAULT NULL,
-          `attendance_date` date DEFAULT NULL,
-          `female_count` int(10) DEFAULT NULL,
-          `male_count` int(10) DEFAULT NULL,
-          `total_count` int(10) DEFAULT NULL,
-          `present_female_count` int(10) DEFAULT NULL,
-          `present_male_count` int(10) DEFAULT NULL,
-          `present_total_count` int(10) DEFAULT NULL,
-          `absent_female_count` int(10) DEFAULT NULL,
-          `absent_male_count` int(10) DEFAULT NULL,
-          `absent_total_count` int(10) DEFAULT NULL,
-          `late_female_count` int(10) DEFAULT NULL,
-          `late_male_count` int(10) DEFAULT NULL,
-          `late_total_count` int(10) DEFAULT NULL,
-          `created` datetime NOT NULL
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+        CREATE TABLE `report_assessment_missing_mark_entry`(
+            `academic_period_id` int(10) DEFAULT NULL,
+            `academic_period_name` varchar(100) DEFAULT NULL,
+            `assessment_id` int(10) DEFAULT NULL,
+            `assessment_code` varchar(100) DEFAULT NULL,
+            `assessment_name` varchar(100) DEFAULT NULL,
+            `assessment_period_id` int(10) DEFAULT NULL,
+            `assessment_period_name` varchar(100) DEFAULT NULL,
+            `education_grade_id` int(10) DEFAULT NULL,
+            `education_grade` varchar(100) DEFAULT NULL,
+            `institution_id` int(10) DEFAULT NULL,
+            `institution_code` varchar(100) DEFAULT NULL,
+            `institution_name` varchar(100) DEFAULT NULL,
+            `institution_provider_id` int(10) DEFAULT NULL,
+            `institution_provider` varchar(100) DEFAULT NULL,
+            `area_id` int(10) DEFAULT NULL,
+            `area_name` varchar(100) DEFAULT NULL,
+            `count_students` int(10) DEFAULT NULL,
+            `count_marked_students` int(10) DEFAULT NULL,
+            `missing_marks` int(10) DEFAULT NULL,
+            `created` datetime NOT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8
       ');
 
-      $this->execute("ALTER TABLE `report_student_attendance_summary` ADD KEY (`education_grade_id`),ADD KEY (`class_id`),ADD KEY (`institution_id`),ADD KEY (`academic_period_id`),ADD KEY (`attendance_date`)");
+      $this->execute("ALTER TABLE `report_assessment_missing_mark_entry` ADD KEY `academic_period_id` (`academic_period_id`),ADD KEY `assessment_id` (`assessment_id`),ADD KEY `assessment_period_id` (`assessment_period_id`),ADD KEY `education_grade_id` (`education_grade_id`),ADD KEY `institution_id` (`institution_id`),ADD KEY `institution_provider_id` (`institution_provider_id`),ADD KEY `area_id` (`area_id`)");
 
       $this->execute('INSERT INTO report_queries (`name`, `query_sql`, `frequency`, `status`, `created_user_id`, `created`) 
-      VALUES ("report_student_attendance_summary_truncate","TRUNCATE report_student_attendance_summary;","day", 1, 1, NOW())');
+      VALUES ("report_assessment_missing_mark_entry_truncate","TRUNCATE report_student_attendance_summary;","month", 1, 1, NOW())');
+
 
       $this->execute('INSERT INTO report_queries (`name`, `query_sql`, `frequency`, `status`, `created_user_id`, `created`) 
-          VALUES ("report_student_attendance_summary_insert", "INSERT INTO report_student_attendance_summary SELECT institution_class_grades.education_grade_id, education_grades.name education_grade_name, student_attendance_marked_records.institution_class_id, institution_classes.name, institutions.id institution_id, institutions.name institution_name, student_attendance_marked_records.academic_period_id, academic_periods.name academic_period_name, IF(student_attendance_marked_records.subject_id=0,student_attendance_marked_records.period,NULL) period_name, IF(student_attendance_marked_records.subject_id!=0,institution_subjects.name,NULL) subject_name, student_attendance_marked_records.date attendance_date, IF(male_count IS NULL,0,male_count), IF(female_count IS NULL,0,female_count), IF((male_count+female_count) IS NULL, 0,(male_count+female_count)) total_students, IF(absent_female_count IS NULL,IF(female_count IS NULL,0,female_count),(female_count-absent_female_count)) present_female_count, IF(absent_male_count IS NULL,IF(male_count IS NULL,0,male_count),(male_count-absent_male_count)) present_male_count, IF(absent_total_count IS NULL,IF((male_count+female_count) IS NULL, 0,(male_count+female_count)),(male_count+female_count-absent_total_count)) present_total_count, IF(absent_female_count IS NULL,0,absent_female_count) absent_female_count, IF(absent_male_count IS NULL,0,absent_male_count) absent_male_count, IF(absent_total_count IS NULL,0,absent_total_count) absent_total_count, IF(late_female_count IS NULL,0,late_female_count) late_female_count, IF(late_male_count IS NULL,0,late_male_count) late_male_count, IF(late_total_count IS NULL,0,late_total_count) late_total_count, CURRENT_TIMESTAMP FROM student_attendance_marked_records INNER JOIN institution_classes ON student_attendance_marked_records.academic_period_id = institution_classes.academic_period_id AND student_attendance_marked_records.institution_id = institution_classes.institution_id AND student_attendance_marked_records.institution_class_id = institution_classes.id INNER JOIN institution_class_grades ON institution_class_grades.institution_class_id = institution_classes.id AND student_attendance_marked_records.education_grade_id = institution_class_grades.education_grade_id LEFT JOIN(SELECT institution_class_id,education_grade_id,academic_period_id,institution_id,MAX(male_count) male_count,MAX(female_count) female_count FROM (SELECT institution_class_id,education_grade_id,academic_period_id,institution_id, IF(gender_id = 1,COUNT(DISTINCT student_id),0) male_count,IF(gender_id = 2,COUNT(DISTINCT student_id),0) female_count FROM institution_class_students INNER JOIN security_users ON security_users.id = institution_class_students.student_id GROUP BY institution_class_id,gender_id) class_student_counter_subq GROUP BY institution_class_id) class_student_counter_mainq ON class_student_counter_mainq.institution_class_id = institution_classes.id INNER JOIN academic_periods ON academic_periods.id = student_attendance_marked_records.academic_period_id LEFT JOIN institution_subjects ON institution_subjects.id = student_attendance_marked_records.subject_id INNER JOIN education_grades ON education_grades.id = student_attendance_marked_records.education_grade_id AND education_grades.id = institution_class_grades.education_grade_id INNER JOIN institutions ON institutions.id = institution_classes.institution_id LEFT JOIN (SELECT institution_class_id,education_grade_id,date,period, subject_id, absence_type_id, SUM(count_absent_male) absent_male_count, SUM(count_absent_female) absent_female_count, SUM(count_absent_total) absent_total_count, SUM(count_late_male) late_male_count, SUM(count_late_female) late_female_count, SUM(count_late_total) late_total_count FROM (SELECT institution_student_absence_details.institution_class_id,institution_student_absence_details.education_grade_id,date,period, subject_id, absence_type_id, IF(gender_id = 1 AND absence_type_id IN (1,2) ,count(*),0) count_absent_male, IF(gender_id = 2 AND absence_type_id IN (1,2),count(*),0) count_absent_female, IF(absence_type_id IN (1,2),count(*),0) count_absent_total, IF(gender_id = 1 AND absence_type_id = 3 ,count(*),0) count_late_male, IF(gender_id = 2 AND absence_type_id =3 ,count(*),0) count_late_female, IF(absence_type_id = 3,count(*),0) count_late_total FROM institution_student_absence_details INNER JOIN institution_class_students ON institution_student_absence_details.student_id = institution_class_students.student_id AND institution_student_absence_details.institution_class_id = institution_class_students.institution_class_id INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id GROUP BY institution_student_absence_details.institution_class_id,education_grade_id,date,period,subject_id,absence_type_id,gender_id) subq GROUP BY institution_class_id,education_grade_id,date,period,subject_id) student_absences ON student_absences.institution_class_id = institution_classes.id AND student_absences.education_grade_id = institution_class_grades.education_grade_id AND student_absences.date = student_attendance_marked_records.date AND student_absences.period = student_attendance_marked_records.period AND student_absences.subject_id = student_attendance_marked_records.subject_id;","day", 1, 1, NOW())');
-
-      //fix existing events
-      $this->execute('DROP EVENT IF EXISTS `openemis_core_day`');
-      $this->execute('DROP EVENT IF EXISTS `openemis_core_minute`');
-      $this->execute('DROP EVENT IF EXISTS `openemis_core_hour`');
-      $this->execute('DROP EVENT IF EXISTS `openemis_core_month`');
-      $this->execute('DROP EVENT IF EXISTS `openemis_core_week`');
-      $this->execute('DROP EVENT IF EXISTS `openemis_core_year`');
-      $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_minute` ON SCHEDULE EVERY 1 MINUTE ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`("minute")');
-      $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_hour` ON SCHEDULE EVERY 1 HOUR ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`("hour")');
-      $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_day` ON SCHEDULE EVERY 1 DAY ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`("day")');
-      $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_week` ON SCHEDULE EVERY 1 WEEK ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`("week")');
-      $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_month` ON SCHEDULE EVERY 1 MONTH ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`("month")');
-      $this->execute('CREATE EVENT IF NOT EXISTS `openemis_core_year` ON SCHEDULE EVERY 1 YEAR ON COMPLETION NOT PRESERVE ENABLE DO CALL `openemis_core_reports`("year")');
-      
+          VALUES ("report_assessment_missing_mark_entry_insert", "INSERT INTO report_assessment_missing_mark_entry SELECT academic_periods.id academic_period_id,academic_periods.name academic_period_name,get_assessments.assessment_id,assessment_code,assessment_name,assessment_periods.id assessment_period_id,assessment_periods.name assessment_period_name,education_grades.id education_grade_id,education_grades.name education_grade,institutions.id institution_id,institutions.code institution_code,institutions.name institution_name,institution_providers.id institution_provider_id,institution_providers.name institution_provider,area_edu.area_id area_id,area_edu.area_name area, IF(count_students IS NULL,0,count_students) count_students, IF(count_marked_students IS NULL,0,count_marked_students) count_marked_students, IF(count_students IS NULL,0,IF(count_marked_students IS NULL,count_students,count_students-count_marked_students)) missing_marks, CURRENT_TIMESTAMP FROM(SELECT assessments.id assessment_id,assessments.code assessment_code,assessments.name assessment_name,assessments.academic_period_id,assessments.education_grade_id,assessment_periods.id assessment_period_id FROM assessments INNER JOIN assessment_periods ON assessments.id = assessment_periods.assessment_id) get_assessments LEFT JOIN assessment_periods ON assessment_periods.id = get_assessments.assessment_period_id INNER JOIN academic_periods ON academic_periods.id = get_assessments.academic_period_id LEFT JOIN institution_grades ON institution_grades.education_grade_id = get_assessments.education_grade_id INNER JOIN institutions ON institutions.id = institution_grades.institution_id INNER JOIN institution_providers ON institution_providers.id = institutions.institution_provider_id LEFT JOIN (SELECT areas.id AS area_id,areas.name AS area_name FROM areas INNER JOIN area_levels ON area_levels.id = areas.area_level_id) AS area_edu ON institutions.area_id = area_edu.area_id INNER JOIN education_grades ON education_grades.id = get_assessments.education_grade_id LEFT JOIN (SELECT academic_period_id,institution_id,education_grade_id,count(*) AS count_students FROM institution_subject_students GROUP BY academic_period_id,institution_id,education_grade_id) AS get_total_student_subjects ON get_total_student_subjects.institution_id = institutions.id AND get_total_student_subjects.academic_period_id = get_assessments.academic_period_id AND get_total_student_subjects.education_grade_id = get_assessments.education_grade_id LEFT JOIN (SELECT academic_period_id,assessment_id,assessment_period_id,institution_id,count(*) count_marked_students FROM ( SELECT student_id,institution_id,academic_period_id,education_subject_id,assessment_id,assessment_period_id FROM assessment_item_results GROUP BY student_id,institution_id,academic_period_id,assessment_id,assessment_period_id) get_grouped_students_subjects GROUP BY institution_id,academic_period_id,assessment_period_id) get_marked_students ON get_marked_students.institution_id = institutions.id AND get_marked_students.assessment_id = get_assessments.assessment_id AND get_marked_students.assessment_period_id = assessment_periods.id AND get_marked_students.academic_period_id = academic_periods.id WHERE area_edu.area_id IS NOT NULL AND institutions.id IS NOT NULL AND education_grades.id IS NOT NULL AND get_assessments.assessment_id IS NOT NULL AND assessment_periods.id IS NOT NULL ORDER BY academic_periods.id ASC,institutions.id ASC,assessment_periods.id ASC;","month", 1, 1, NOW())');
     
     }
     //rollback
     public function down()
     {
-        /** Delete OpenEMIS Core report_student_attendance_summary table */
-        $this->execute('DROP TABLE IF EXISTS `report_student_attendance_summary`');
+        /** Delete OpenEMIS Core report_assessment_missing_mark_entry table */
+        $this->execute('DROP TABLE IF EXISTS `report_assessment_missing_mark_entry`');
         
-        /** Delete OpenEMIS Core report_student_attendance_summary row in report_queries table */
-        $this->execute('DELETE FROM report_queries WHERE report_queries.name = "report_student_attendance_summary"'); 
+        /** Delete OpenEMIS Core report_assessment_missing_mark_entry row in report_queries table */
+        $this->execute('DELETE FROM report_queries WHERE report_queries.name = "report_assessment_missing_mark_entry_truncate"'); 
+        $this->execute('DELETE FROM report_queries WHERE report_queries.name = "report_assessment_missing_mark_entry_insert"'); 
     }
 }
