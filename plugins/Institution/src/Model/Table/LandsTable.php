@@ -1664,7 +1664,8 @@ class LandsTable extends ControllerActionTable
                                             ])
                                             ->where([
                                                 $infrastructureCustomFields->alias('field_type') => 'CHECKBOX',
-                                                $infrastructureCustomFieldOptions->aliasField('id') => $data->number_value,
+                                                // $infrastructureCustomFieldOptions->aliasField('id') => $data->number_value,
+                                                'CustomFieldValues.infrastructure_custom_field_id = ' . $data->custom_field_id,
                                                 'CustomFieldValues.institution_'.lcfirst($landType->name).'_id  = ' . $row['level_id']])
                                             ->group([$infrastructureCustomFieldOptions->aliasField('name')])
                                             ->toArray();
