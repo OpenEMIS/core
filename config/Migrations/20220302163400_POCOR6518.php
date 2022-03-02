@@ -44,7 +44,7 @@ class POCOR6518 extends AbstractMigration
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8
       ');
 
-      $this->execute("ALTER TABLE `report_student_assessment_summary` ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `academic_period_code` (`academic_period_code`), ADD KEY `academic_period_name` (`academic_period_name`), ADD KEY `area_id` (`area_id`), ADD KEY `area_name` (`area_name`), ADD KEY `area_code` (`area_code`), ADD KEY `institution_id` (`institution_id`), ADD KEY `institution_code` (`institution_code`), ADD KEY `institution_name` (`institution_name`), ADD KEY `grade_id` (`grade_id`), ADD KEY `grade_code` (`grade_code`), ADD KEY `grade_name` (`grade_name`), ADD KEY `subject_id` (`subject_id`), ADD KEY `subject_code` (`subject_code`), ADD KEY `subject_name` (`subject_name`), ADD KEY `subject_weight` (`subject_weight`), ADD KEY `assessment_id,` (`assessment_id,`)  ADD KEY `assessment_code` (`assessment_code`), ADD KEY `assessment_name` (`assessment_name`), ADD KEY `period_id` (`period_id`), ADD KEY `period_code` (`period_code`), ADD KEY `period_name` (`period_name`), ADD KEY `academic_term` (`academic_term`), ADD KEY `period_weight` (`period_weight`), ADD KEY `average_marks` (`average_marks`), ADD KEY `created` (`created`)");
+      $this->execute("ALTER TABLE `report_student_assessment_summary` ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `area_id` (`area_id`), ADD KEY `institution_id` (`institution_id`), ADD KEY `grade_id` (`grade_id`), ADD KEY `subject_id` (`subject_id`), ADD KEY `assessment_id` (`assessment_id,`), ADD KEY `period_id` (`period_id`)");
 
       $this->execute('INSERT INTO report_queries (`name`, `query_sql`, `frequency`, `status`, `created_user_id`, `created`) 
       VALUES ("report_student_assessment_summary_truncate","TRUNCATE report_student_assessment_summary;","year", 1, 1, NOW())');
@@ -65,5 +65,3 @@ class POCOR6518 extends AbstractMigration
         $this->execute('DELETE FROM report_queries WHERE report_queries.name = "report_student_assessment_summary_insert"'); 
     }
 }
-
-
