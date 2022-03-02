@@ -1851,13 +1851,16 @@ class StaffTable extends ControllerActionTable
         }
         
         $institutionStaff = TableRegistry::get('institution_staff');
-
+        /* POCOR-6553 starts */
+      $date = "'".date('Y-m-d')."'";
         $staffAttendances = $institutionStaff->find('all')
             ->select([
                 'date' => 'CURDATE()',
                 'start_time' => 'MIN(institutionShifts.start_time)',
                 'institution_staff.start_date',
                 'institution_staff.end_date',
+                'institutionStaffAttendances.absence_type_id',
+                'institutionStaffAttendances.time_in',
                 'present' => '(IF((institutionStaffAttendances.time_in <= start_time) OR (institutionStaffAttendances.time_in > start_time),1,0))',
                 'absent' => '(IF(institutionStaffAttendances.time_in IS NULL,1,0))',
                 'late' => '(IF(institutionStaffAttendances.time_in > start_time, 1,0))',
@@ -1878,7 +1881,7 @@ class StaffTable extends ControllerActionTable
             ->leftJoin(
             ['institutionStaffAttendances' => 'institution_staff_attendances'],
             [
-                'institutionStaffAttendances.date' => date('Y-m-d'),
+                'institutionStaffAttendances.date' => $date,
                 'institutionStaffAttendances.staff_id = institutionStaffShifts.staff_id '
             ]
             )
@@ -1891,23 +1894,34 @@ class StaffTable extends ControllerActionTable
                 'institutionShifts.institution_id',
                 'institutionStaffShifts.staff_id',
             ])
-            ->toArray()
-            ;
-
+          ->toArray()
+          ;
+     
         $attendanceData = [];
-
+        
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
         $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
         $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
         
         $total_present = $total_absent = $total_late = 0;
-        
+       
         foreach ($staffAttendances as $key => $attendance) {
-        
-            $total_present = $attendance->present + $total_present;
-            $total_absent = $attendance->absent + $total_absent;
-            $total_late = $attendance->late + $total_late;
+           
+             if ( $attendance->time_in) {
+                        $total_present = $total_present + 1;
+             }
+             if ($attendance->absence_type_id == 3) {
+                        $total_late = $total_late + 1;
+                       
+             } 
+             if ($attendance->absent.length > 0) {
+                        $total_absent = $total_absent + 1;
+             }     
+           // $total_present = $attendance->present + $total_present;
+           // $total_absent = $attendance->absent + $total_absent;
+            //$total_late = $attendance->late + $total_late;
         }
+        /* POCOR-6553 ends */
         if(!empty($currentYear)) {
             $attendanceData[$currentYear] = $currentYear;
             $dataSet['Present']['data'][$currentYear] = $total_present;
@@ -1917,7 +1931,7 @@ class StaffTable extends ControllerActionTable
         
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => __('For Today'));
-        $params['options']['xAxis']['categories'] = array_values($attendanceData);
+        $params['options']['xxis']['categories'] = array_values($attendanceData);
         $params['dataSet'] = $dataSet;
         return $params;
     }
