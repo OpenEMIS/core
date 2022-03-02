@@ -187,11 +187,20 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
             $selectable['special_needs_assessments_comment'] = 'SpecialNeedsAssessments.comment';
             $selectable['special_needs_assessments_special_need_type_name'] = 'SpecialNeedsTypesAssessment.name';
             $selectable['special_needs_assessments_special_difficulty_name'] = 'SpecialNeedsDifficulties.name';
+            $group_by[] = 'SpecialNeedsAssessments.id';
+            $join['InstitutionStaff'] = [
+                'type' => 'inner',
+                'table' => 'institution_staff',
+                'conditions' => [
+                    'InstitutionStaff.staff_id = ' . $this->aliasField('id')
+                ],
+            ];
             $join['SpecialNeedsAssessments'] = [
                 'type' => 'inner',
                 'table' => 'user_special_needs_assessments',
                 'conditions' => [
-                    'SpecialNeedsAssessments.security_user_id = ' . $this->aliasField('id')
+                    // 'SpecialNeedsAssessments.security_user_id = ' . $this->aliasField('id')
+                    'SpecialNeedsAssessments.security_user_id = InstitutionStaff.staff_id'
                 ],
             ];
             $join['SpecialNeedsTypesAssessment'] = [
