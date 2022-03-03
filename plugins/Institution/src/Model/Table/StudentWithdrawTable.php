@@ -150,7 +150,7 @@ class StudentWithdrawTable extends ControllerActionTable
         Log::write('debug', $existingStudentEntity);
         
         if ($existingStudentEntity && $entity->status_id == $statuses['WITHDRAWN']) {
-            $existingStudentEntity->student_status_id = $statuses['WITHDRAWN'];
+            $existingStudentEntity['student_status_id'] = $statuses['WITHDRAWN'];
             $Students->save($existingStudentEntity);
         }
 
@@ -167,6 +167,9 @@ class StudentWithdrawTable extends ControllerActionTable
 
     public function onApproval(Event $event, $id, Entity $workflowTransitionEntity)
     {
+        /*POCOR-6588 starts*/
+        $id = $workflowTransitionEntity->model_reference;
+        /*POCOR-6588 ends*/
         $entity = $this->get($id);
         $Students = TableRegistry::get('Institution.Students');
         $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
@@ -177,7 +180,7 @@ class StudentWithdrawTable extends ControllerActionTable
         $periodId = $entity->academic_period_id;
         $gradeId = $entity->education_grade_id;
         Log::write('debug', 'initializing insert newEntity to student_status_updates queue: id >>>> '. $entity->student_id.' student_id >>>> '.$entity->student_id);
-        if($workflowTransitionEntity->workflow_action_name == 'Approve'){
+        if(!empty($workflowTransitionEntity) && $workflowTransitionEntity->workflow_action_name == 'Approve') {
             $newEntity = $StudentStatusUpdates->newEntity([
                 'model' => $this->registryAlias(),
                 'model_reference' => $entity->id,
@@ -188,6 +191,7 @@ class StudentWithdrawTable extends ControllerActionTable
                 'education_grade_id' => $entity->education_grade_id,
                 'status_id' => $statuses['WITHDRAWN']
             ]);
+            
             $StudentStatusUpdates->save($newEntity);           
             $StudentStatusUpdates->checkRequireUpdate();
             /* POCOR-6062 Starts*/
