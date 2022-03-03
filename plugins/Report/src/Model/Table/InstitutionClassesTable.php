@@ -79,6 +79,7 @@ class InstitutionClassesTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
+        $gradesId = $requestData->education_grade_id;
         $areaId = $requestData->area_education_id;
         $where = [];
         if ($institution_id != 0) {
@@ -87,6 +88,9 @@ class InstitutionClassesTable extends AppTable
         if ($areaId != -1) {
             $where['Institutions.area_id'] = $areaId;
         }
+        if ($gradesId != -1) {
+            $where['InstitutionClassGrades.education_grade_id'] = $gradesId;
+        }
         
         $academic_period_id = $requestData->academic_period_id;
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
@@ -94,6 +98,7 @@ class InstitutionClassesTable extends AppTable
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
         $Institutions = TableRegistry::get('Institution.Institutions');
         $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
+        $classGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $query
             ->select([
                 $this->aliasField('id'),
@@ -165,8 +170,17 @@ class InstitutionClassesTable extends AppTable
                 'SecurityUsers.id = '. $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
             ]
             )
+            ->leftJoin(
+            ['InstitutionClassGrades'=>'institution_class_grades'],
+            [
+                'InstitutionClassGrades.institution_class_id = '.  $this->aliasField('id')
+            ] 
+            )   
+            
             ->where([
                 'InstitutionClasses.academic_period_id' => $academic_period_id,
+               // 'InstitutionClassGrades.education_grade_id' => $gradesId,
+            
                 $where
             ])
             ->group([
@@ -177,7 +191,6 @@ class InstitutionClassesTable extends AppTable
                 'Institutions.code',
                 'InstitutionClasses.id'
             ]);
-
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
@@ -225,6 +238,7 @@ class InstitutionClassesTable extends AppTable
                 return $row;
             });
         });
+        
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
