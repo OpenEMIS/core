@@ -11,17 +11,14 @@ use App\Model\Table\AppTable;
 use Cake\Log\Log;
 
 /**
- * Get the Staff Training details in excel file with specific tabs
- * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
- * @ticket POCOR-6548
+ * Get the Staff  details in excel file 
  */
 class InstitutionStaffPositionProfileTable extends AppTable
 {
-    private $_type = [];
 
     public function initialize(array $config)
     {
-        $this->table('institution_staff');
+        $this->table('security_users');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
@@ -110,25 +107,17 @@ class InstitutionStaffPositionProfileTable extends AppTable
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
-        $sheet_tabs = [
-            'StaffPosition'
+        $sheets[] = [
+            'name' => $this->alias(),
+            'table' => $this,
+            'query' => $this->find(),
+            'orientation' => 'landscape'
         ];
-        foreach($sheet_tabs as $sheet_tab_name) {  
-            $sheets[] = [
-                'sheetData'   => ['student_tabs_type' => $sheet_tab_name],
-                'name'        => $sheet_tab_name,
-                'table'       => $this,
-                'query'       => $this->find(),
-                'orientation' => 'landscape'
-            ];
-        }
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData           = json_decode($settings['process']['params']);
-        $sheetData             = $settings['sheet']['sheetData'];
-        $sheet_tab_name        = $sheetData['student_tabs_type'];
         $academicPeriodId      = $requestData->academic_period_id;
         //print_r($requestData->academic_period_id);die;
         $institutionId         = $requestData->institution_id;
@@ -136,27 +125,58 @@ class InstitutionStaffPositionProfileTable extends AppTable
         $group_by              = [];
         $subject = TableRegistry::get('Institution.InstitutionSubjects');
         $academic_period = TableRegistry::get('AcademicPeriods');
-        if ( $sheet_tab_name == 'StaffPosition' ) {
+        $institution = TableRegistry::get('Institutions');
+        $staffStatus = TableRegistry::get('StaffStatuses');
+        $positions = TableRegistry::get('Institution.InstitutionPositions');
             $query
             ->select([
-                'staff_id'=> $this->aliasfield('staff_id'),
                 'academic_period'=> 'AcademicPeriods.name',
                 'class_name' => 'InstitutionClasses.name',
                 'subject_name' => 'InstitutionSubjects.name',
                 'absences_day' => $this->find()->func()->sum('InstitutionStaffLeave.number_of_days'),
+                'openemis_no'=> $this->aliasfield('openemis_no'),
+                'institution'=> 'Institutions.name',
+                'first_name'=> $this->aliasField('first_name'),
+                'last_name' => $this->aliasField('last_name'),
+                'identity_number' => $this->aliasField('identity_number'),
+                'identityType' => 'IdentityTypes.name',
+                'fte' => 'InstitutionStaff.FTE',
+                'staffStatus' => 'StaffStatuses.name',
+                'positionsNumber' => 'InstitutionPositions.position_no',
+                'is_home' => 'InstitutionPositions.is_homeroom',
+                'assigneeName' => $this->aliasField('first_name'),
             ])
             ->contain([
-                'SecurityGroupUsers' => [
+                'IdentityTypes' => [
                     'fields' => [
-                        'SecurityGroupUsers.id'
+                        'IdentityTypes.id'
                     ]
                 ],
             ])
+            ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
+                            $this->aliasfield('id') . ' = '.'InstitutionStaff.staff_id',
+                        ])
+            ->leftJoin(
+                [$institution->alias() => $institution->table()],
+                [$institution->aliasField('id = ') . 'InstitutionStaff.institution_id']
+            )
+            ->leftJoin(
+                [$staffStatus->alias() => $staffStatus->table()],
+                [$staffStatus->aliasField('id = ') . 'InstitutionStaff.staff_status_id']
+            )
+            ->leftJoin(
+                [$positions->alias() => $positions->table()],
+                [$positions->aliasField('assignee_id = ') . $this->aliasfield('id')]
+            )
+            ->leftJoin(
+                [$positions->alias() => $positions->table()],
+                [$positions->aliasField('id = ') . 'InstitutionStaff.institution_position_id']
+            )
             ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
-                            $this->aliasfield('staff_id') . ' = '.'InstitutionSubjectStaff.staff_id',
+                            $this->aliasfield('id') . ' = '.'InstitutionSubjectStaff.staff_id',
                         ])
             ->leftJoin(['InstitutionClasses' => 'institution_classes'], [
-                            $this->aliasfield('staff_id') . ' = '.'InstitutionClasses.staff_id',
+                            $this->aliasfield('id') . ' = '.'InstitutionClasses.staff_id',
                         ])
             ->leftJoin(
                 [$subject->alias() => $subject->table()],
@@ -166,26 +186,30 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 [$academic_period->alias() => $academic_period->table()],
                 [$academic_period->aliasField('id = ') . 'InstitutionClasses.academic_period_id']
             )
+
             ->leftJoin(['InstitutionStaffLeave' => ' institution_staff_leave'], [
-                            $this->aliasfield('staff_id') . ' = '.'InstitutionStaffLeave.staff_id',
+                            $this->aliasfield('id') . ' = '.'InstitutionStaffLeave.staff_id',
                         ])
-            ->group('staff_id')
+            
         ->where([
             'InstitutionClasses.academic_period_id' => $academicPeriodId,
-            $this->aliasfield('institution_id') => $institutionId,
-            'SecurityGroupUsers.security_role_id'=>[5,6]
+            'InstitutionStaff.institution_id' => $institutionId,
+           // 'SecurityGroupUsers.security_role_id'=>[5,6]
+            $this->aliasField('is_staff') => 1,
         ]);
-    }
+        print_r('pkkk');die;
+    
         
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
+       // print_r($fields);die;
         $newFields = [];
         $newFields[] = [
             'key'   => 'academic_period',
             'field' => 'academic_period',
-            'type'  => 'string',
+            'type'  => 'integer',
             'label' => __('Academic Period'),
         ];
         $newFields[] = [
