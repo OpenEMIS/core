@@ -151,11 +151,19 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
             $selectable['referrer_last_name'] = 'ReferralsSecurityUsers.last_name';
             $selectable['referrer_special_needs_referrer_types_name'] = 'SpecialNeedsReferrerTypes.name';
             $selectable['referrer_reason_type'] = 'SpecialNeedsTypes.name';
+            $group_by[] = 'SpecialNeedsReferrals.id';
+            $join['InstitutionStaff'] = [
+                'type' => 'inner',
+                'table' => 'institution_staff',
+                'conditions' => [
+                    'InstitutionStaff.staff_id = ' . $this->aliasField('id')
+                ],
+            ];
             $join['SpecialNeedsReferrals'] = [
                 'type' => 'inner',
                 'table' => 'user_special_needs_referrals',
                 'conditions' => [
-                    'SpecialNeedsReferrals.security_user_id = ' . $this->aliasField('id'),
+                    'SpecialNeedsReferrals.security_user_id = InstitutionStaff.staff_id',
                     'SpecialNeedsReferrals.academic_period_id = AcademicPeriod.id',
                 ],
             ];
@@ -224,11 +232,20 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
             $selectable['service_comment'] = 'SpecialNeedsServices.comment';
             $selectable['service_file_name'] = 'SpecialNeedsServices.file_name';
             $selectable['service_type_name'] = 'SpecialNeedsServiceTypes.name';
+            $group_by[] = 'SpecialNeedsServices.id';
+            $join['InstitutionStaff'] = [
+                'type' => 'inner',
+                'table' => 'institution_staff',
+                'conditions' => [
+                    'InstitutionStaff.staff_id = ' . $this->aliasField('id')
+                ],
+            ];
             $join['SpecialNeedsServices'] = [
                 'type' => 'inner',
                 'table' => 'user_special_needs_services',
                 'conditions' => [
-                    'SpecialNeedsServices.security_user_id = ' . $this->aliasField('id')
+                    'SpecialNeedsServices.security_user_id = InstitutionStaff.staff_id'
+                    // 'SpecialNeedsServices.security_user_id = ' . $this->aliasField('id')
                 ],
             ];
             $join['SpecialNeedsServiceTypes'] = [
@@ -242,11 +259,20 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
         } else if ( $sheet_tab_name == 'SpecialNeedsDevices' ) {
             $selectable['devices_comment'] = 'SpecialNeedsDevices.comment';
             $selectable['devices_type_name'] = 'SpecialNeedsDeviceTypes.name';
+            $group_by[] = 'SpecialNeedsDevices.id';
+            $join['InstitutionStaff'] = [
+                'type' => 'inner',
+                'table' => 'institution_staff',
+                'conditions' => [
+                    'InstitutionStaff.staff_id = ' . $this->aliasField('id')
+                ],
+            ];
             $join['SpecialNeedsDevices'] = [
                 'type' => 'inner',
                 'table' => 'user_special_needs_devices',
                 'conditions' => [
-                    'SpecialNeedsDevices.security_user_id = ' . $this->aliasField('id')
+                    'SpecialNeedsDevices.security_user_id = InstitutionStaff.staff_id',
+                    //'SpecialNeedsDevices.security_user_id = ' . $this->aliasField('id')
                 ],
             ];
             $join['SpecialNeedsDeviceTypes'] = [
@@ -261,11 +287,19 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
             $selectable['plans_name'] = 'SpecialNeedsPlans.plan_name';
             $selectable['plans_comment'] = 'SpecialNeedsPlans.comment';
             $selectable['plans_file_name'] = 'SpecialNeedsPlans.file_name';
+            $group_by[] = 'SpecialNeedsPlans.id';
+            $join['InstitutionStaff'] = [
+                'type' => 'inner',
+                'table' => 'institution_staff',
+                'conditions' => [
+                    'InstitutionStaff.staff_id = ' . $this->aliasField('id')
+                ],
+            ];
             $join['SpecialNeedsPlans'] = [
                 'type' => 'inner',
                 'table' => 'user_special_needs_plans',
                 'conditions' => [
-                    'SpecialNeedsPlans.security_user_id = ' . $this->aliasField('id')
+                    'SpecialNeedsPlans.security_user_id = InstitutionStaff.staff_id'
                 ],
             ];
         }
