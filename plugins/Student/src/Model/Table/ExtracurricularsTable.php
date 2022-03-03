@@ -80,12 +80,30 @@ class ExtracurricularsTable extends AppTable {
 	{   
 		//if ($this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
 		$session = $this->request->session();
+		$userData = $this->Session->read(); //# [POCOR-6548] Check if user data not found then add current login user data
 		$studentId = $session->read('Student.Students.id');
 		if ($this->alias() == 'Extracurriculars') {
 			if ($this->controller->name == 'Profiles') {
 				if ($this->Session->read('Auth.User.is_guardian') == 1) {
 					$sId = $this->Session->read('Student.ExaminationResults.student_id');
+					/**
+					 * Need to add current login id as param when no data found in existing variable
+					 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+					 * @ticket POCOR-6548
+					 */
+					//# START: [POCOR-6548] Check if user data not found then add current login user data
+					if ( is_int($sId) ) {
+						$studentId = $sId;
+					} else if ($sId == null || empty($sId) || $sId == '') {
+						if ($studentId == null || $studentId == '' || empty($studentId)) {
+							$studentId = $userData['Auth']['User']['id'];
+						} else {
+							$studentId = $studentId;
+						}
+					} else {
 					$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+					}
+					//# END: [POCOR-6548] Check if user data not found then add current login user data
 				} else {
 					$studentId = $this->Session->read('Auth.User.id');
 				}
