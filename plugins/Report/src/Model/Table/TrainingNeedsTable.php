@@ -72,6 +72,12 @@ class TrainingNeedsTable extends AppTable
         $newFields = [];
 
         $newFields[] = [
+            'key' => 'area_name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => 'Area'
+        ];
+        $newFields[] = [
             'key' => 'Institutions.institution_code',
             'field' => 'institution_code',
             'type' => 'string',
@@ -169,11 +175,43 @@ class TrainingNeedsTable extends AppTable
             'label' => __('OpenEMIS No')
         ];
 
+        /*
         $newFields[] = [
             'key' => 'TrainingNeeds.staff_id',
             'field' => 'staff_id',
             'type' => 'integer',
             'label' => ''
+        ];
+        */
+        $newFields[] = [
+            'key' => 'staff_full_name',
+            'field' => 'staff_full_name',
+            'type' => 'string',
+            'label' => __('Staff')
+        ];
+        $newFields[] = [
+            'key' => 'gender',
+            'field' => 'gender',
+            'type' => 'string',
+            'label' => __('Gender')
+        ];
+        $newFields[] = [
+            'key' => 'identity_type',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];
+        $newFields[] = [
+            'key' => 'identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+        $newFields[] = [
+            'key' => 'other_identity',
+            'field' => 'other_identity',
+            'type' => 'string',
+            'label' => __('Other Identites')
         ];
 
         if ($selectedNeedType == 'NEED') {
@@ -223,6 +261,85 @@ class TrainingNeedsTable extends AppTable
     {
         if ($entity->has('institution_name')) {
             return $entity->institution_name;
+        }
+    }
+
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentitiesResult = $userIdentities->find()
+                ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
+                ->select([
+                    'identity_number' => $userIdentities->aliasField('number'),
+                    'identity_type_name' => 'IdentityTypes.name',
+                ])
+                ->where([$userIdentities->aliasField('security_user_id') => $entity->staff->id])
+                ->order([$userIdentities->aliasField('id DESC')])
+                ->hydrate(false)->toArray();
+                $entity->custom_identity_number = '';
+                $other_identity_array = [];
+                if (!empty($userIdentitiesResult)) {
+                    foreach ( $userIdentitiesResult as $index => $user_identities_data ) {
+                        if ($index == 0) {
+                            $entity->custom_identity_number = $user_identities_data['identity_number'];
+                            $entity->custom_identity_name   = $user_identities_data['identity_type_name'];
+                        } else {
+                            $other_identity_array[] = '(['.$user_identities_data['identity_type_name'].'] - '.$user_identities_data['identity_number'].')';
+                        }
+                    }
+                }
+        $entity->custom_identity_other_data = implode(',', $other_identity_array);
+        return $entity->custom_identity_name;
+    }
+
+    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    {
+        return $entity->custom_identity_number;
+    }
+
+    public function onExcelGetOtherIdentity(Event $event, Entity $entity)
+    {
+        return $entity->custom_identity_other_data;
+    }
+
+    public function onExcelGetGender(Event $event, Entity $entity)
+    {
+        $gender = TableRegistry::get('User.Genders');
+        $gender_data = $gender->find()->select(['name'])->where([$gender->aliasField('id') => $entity->staff->gender_id])->first();
+        return $gender_data->name;
+    }
+
+    public function onExcelGetStaffFullName(Event $event, Entity $entity)
+    {
+        return $entity->staff->first_name .' '. $entity->staff->middle_name .' '. $entity->staff->third_name .' '. $entity->staff->last_name;
+    }
+
+    public function onExcelGetAreaName(Event $event, Entity $entity)
+    {
+        if ($entity->has('staff') && !empty($entity->staff)) {
+            $InstitutionStaff = TableRegistry::get('Institution.Staff');
+            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+            $statuses = $StaffStatuses->findCodeList();
+            $query = $InstitutionStaff->find('all')
+                    ->contain(['Institutions'])
+                    ->where([
+                        $InstitutionStaff->aliasField('staff_id') => $entity->staff->id,
+                        $InstitutionStaff->aliasField('staff_status_id') => $statuses['ASSIGNED']
+                    ])
+                    ->order([
+                        $InstitutionStaff->aliasField('start_date DESC'),
+                        $InstitutionStaff->aliasField('created DESC')
+                    ])
+                    ->first();
+            if (!empty($query)) {
+                $AreaTable = TableRegistry::get('Area.Areas');
+                $value = $AreaTable->find()->where([$AreaTable->aliasField('id') => $query->institution->area_id])->first();
+                if (empty($value)) {
+                    return ' - ';
+                } else {
+                    return $value->name;
+                }
+            }
         }
     }
 
