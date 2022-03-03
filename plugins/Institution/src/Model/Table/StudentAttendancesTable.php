@@ -476,6 +476,7 @@ class StudentAttendancesTable extends ControllerActionTable
                         $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
                         $StudentAttendanceMarkedRecords->aliasField('education_grade_id = ') => $educationGradeId,
                         $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
+                        $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId,
                         $StudentAttendanceMarkedRecords->aliasField('date >= ') => $weekStartDay,
                         $StudentAttendanceMarkedRecords->aliasField('date <= ') => $weekEndDay
                     ])
