@@ -445,12 +445,12 @@ class StaffBehavioursTable extends ControllerActionTable
             'label' => __('Staff')
         ];
 
-        /*$extraField[] = [
+        $extraField[] = [
             'key' => 'StudentBehaviour.date_of_behaviour',
             'field' => 'date_of_behaviour',
             'type' => 'date',
             'label' => __('Date Of Behaviour')
-        ];*/
+        ];
 
         $extraField[] = [
             'key' => 'StaffBehaviourCategories.name',
@@ -484,7 +484,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $User = TableRegistry::get('security_users');
         $query
         ->select([
-            'date' => 'StaffBehaviours.date_of_behaviour',
+            'date_of_behaviour' => 'StaffBehaviours.date_of_behaviour',
             'category' => 'StaffBehaviourCategories.name',
             'behaviour_classification' => 'BehaviourClassifications.name', 
             'openemis_no' => 'Staff.openemis_no', 
