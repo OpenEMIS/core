@@ -1,7 +1,7 @@
 <?php
 use Migrations\AbstractMigration;
 
-class POCOR6518 extends AbstractMigration
+class POCOR6546 extends AbstractMigration
 {
     /**
      * Change Method.
