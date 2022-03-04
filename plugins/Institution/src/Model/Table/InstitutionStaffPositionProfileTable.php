@@ -136,7 +136,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 'fname_Staff'=> $this->aliasField('first_name'),
                 'lname_Staff' => $this->aliasField('last_name'), 
                 'fte' => 'InstitutionStaff.FTE',
-                'staffStatus' => 'StaffStatuses.name',
+                'staffStatus' => $staffStatus->aliasField('name'),
                 'identityType' => 'IdentityTypes.name',
                 'identity_number' => $this->aliasField('identity_number'),
                 'academic_period'=> 'AcademicPeriods.name',
@@ -209,7 +209,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 return $row;
             });
         });
-        //print_r($query->Sql());die('pkk');
+       // print_r($query->Sql());die('pkk');
     
         
     }
@@ -274,7 +274,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
         $newFields[] = [
             'key'   => 'staffStatus',
             'field' => 'staffStatus',
-            'type'  => 'staring',
+            'type'  => 'string',
             'label' => __('staffStatus'),
         ];
         $newFields[] = [
