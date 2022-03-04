@@ -1865,13 +1865,13 @@ class StaffTable extends ControllerActionTable
                 'absent' => '(IF(institutionStaffAttendances.time_in IS NULL,1,0))',
                 'late' => '(IF(institutionStaffAttendances.time_in > start_time, 1,0))',
             ])
-            ->innerJoin(
+           ->leftJoin(
             ['institutionStaffShifts' => 'institution_staff_shifts'],
             [
                 'institutionStaffShifts.staff_id = institution_staff.staff_id ',
             ]
             )
-            ->innerJoin(
+            ->leftJoin(
             ['institutionShifts' => 'institution_shifts'],
             [
                 'institutionShifts.id = institutionStaffShifts.shift_id ',
@@ -1881,18 +1881,18 @@ class StaffTable extends ControllerActionTable
             ->leftJoin(
             ['institutionStaffAttendances' => 'institution_staff_attendances'],
             [
-                'institutionStaffAttendances.date' => $date,
+                'institutionStaffAttendances.date' => date('Y-m-d'),
                 'institutionStaffAttendances.staff_id = institutionStaffShifts.staff_id '
             ]
             )
             ->where([
                 //'institutionStaffAttendances.academic_period_id' => $currentYearId,
-                'institutionShifts.institution_id' => $conditions['institution_id'],
+                'institution_staff.institution_id' => $conditions['institution_id'],
                 'institution_staff.start_date <= CURDATE() AND (institution_staff.end_date IS NULL OR institution_staff.end_date >= CURDATE())',
             ])
             ->group([
-                'institutionShifts.institution_id',
-                'institutionStaffShifts.staff_id',
+                //'institutionShifts.institution_id',
+                'institution_staff.staff_id'
             ])
           ->toArray()
           ;
