@@ -14,7 +14,7 @@ class POCOR6546 extends AbstractMigration
     {
         /** Create OpenEMIS Core report_student_assessment_summary table */
         $this->execute('
-        CREATE TABLE `data_dictionary`(
+        CREATE TABLE IF NOT EXISTS `data_dictionary`(
             `database_name` varchar(200) DEFAULT NULL,
             `table_name` varchar(200) DEFAULT NULL,
             `table_description` varchar(200) DEFAULT NULL,
