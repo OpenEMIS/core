@@ -20,12 +20,6 @@ class InstitutionStaffPositionProfileTable extends AppTable
     {
         $this->table('security_users');
         parent::initialize($config);
-
-        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-        $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
-        $this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
-        $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
         // Behaviours
         $this->addBehavior('Excel', [
             'excludes' => [],
@@ -121,13 +115,11 @@ class InstitutionStaffPositionProfileTable extends AppTable
         $academicPeriodId      = $requestData->academic_period_id;
         //print_r($requestData->academic_period_id);die;
         $institutionId         = $requestData->institution_id;
-        $selectable            = [];
-        $group_by              = [];
         $subject = TableRegistry::get('Institution.InstitutionSubjects');
-        $academic_period = TableRegistry::get('AcademicPeriods');
+        $academic_period = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $institution = TableRegistry::get('Institutions');
-        $staffStatus = TableRegistry::get('StaffStatuses');
-        $positions = TableRegistry::get('Institution.InstitutionPositions');
+        $staffStatus = TableRegistry::get('Staff.StaffStatuses');
+       // $positions = TableRegistry::get('Institution.InstitutionPositions');
             $query
             ->select([
                 'academic_period'=> 'AcademicPeriods.name',
@@ -137,22 +129,23 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 'openemis_no'=> $this->aliasfield('openemis_no'),
                 'institution'=> 'Institutions.name',
                 'first_name'=> $this->aliasField('first_name'),
-                'last_name' => $this->aliasField('last_name'),
+               // 'last_name' => $this->aliasField('last_name'),
                 'identity_number' => $this->aliasField('identity_number'),
-                'identityType' => 'IdentityTypes.name',
+              //  'identityType' => 'IdentityTypes.name',
                 'fte' => 'InstitutionStaff.FTE',
                 'staffStatus' => 'StaffStatuses.name',
-                'positionsNumber' => 'InstitutionPositions.position_no',
-                'is_home' => 'InstitutionPositions.is_homeroom',
-                'assigneeName' => $this->aliasField('first_name'),
+               // 'positionsNumber' => 'InstitutionPositions.position_no',
+                //'is_home' => 'InstitutionPositions.is_homeroom',
+                //'assigneeName' => $this->aliasField('first_name'),
             ])
-            ->contain([
+
+            /*->contain([
                 'IdentityTypes' => [
                     'fields' => [
                         'IdentityTypes.id'
                     ]
                 ],
-            ])
+            ])*/
             ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
                             $this->aliasfield('id') . ' = '.'InstitutionStaff.staff_id',
                         ])
@@ -164,14 +157,14 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 [$staffStatus->alias() => $staffStatus->table()],
                 [$staffStatus->aliasField('id = ') . 'InstitutionStaff.staff_status_id']
             )
-            ->leftJoin(
+            /*->leftJoin(
                 [$positions->alias() => $positions->table()],
                 [$positions->aliasField('assignee_id = ') . $this->aliasfield('id')]
             )
             ->leftJoin(
                 [$positions->alias() => $positions->table()],
                 [$positions->aliasField('id = ') . 'InstitutionStaff.institution_position_id']
-            )
+            )*/
             ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
                             $this->aliasfield('id') . ' = '.'InstitutionSubjectStaff.staff_id',
                         ])
@@ -192,12 +185,12 @@ class InstitutionStaffPositionProfileTable extends AppTable
                         ])
             
         ->where([
-            'InstitutionClasses.academic_period_id' => $academicPeriodId,
-            'InstitutionStaff.institution_id' => $institutionId,
+            //'InstitutionClasses.academic_period_id' => $academicPeriodId,
+            //'InstitutionStaff.institution_id' => $institutionId,
            // 'SecurityGroupUsers.security_role_id'=>[5,6]
             $this->aliasField('is_staff') => 1,
         ]);
-        print_r('pkkk');die;
+        print_r($query->Sql());die('pkk');
     
         
     }
@@ -229,6 +222,33 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'field' => 'absences_day',
             'type'  => 'integer',
             'label' => __('Number of absences Day'),
+        ];
+        $newFields[] = [
+            'key'   => 'openemis_no',
+            'field' => 'openemis_no',
+            'type'  => 'integer',
+            'label' => __('openemis_no'),
+        ];$newFields[] = [
+            'key'   => 'institution',
+            'field' => 'institution',
+            'type'  => 'string',
+            'label' => __('institution'),
+        ];$newFields[] = [
+            'key'   => 'identity_number',
+            'field' => 'identity_number',
+            'type'  => 'integer',
+            'label' => __('identity_number'),
+        ];$newFields[] = [
+            'key'   => 'fte',
+            'field' => 'fte',
+            'type'  => 'integer',
+            'label' => __('fte'),
+        ];
+        $newFields[] = [
+            'key'   => 'staffStatus',
+            'field' => 'staffStatus',
+            'type'  => 'staring',
+            'label' => __('staffStatus'),
         ];
         $fields->exchangeArray($newFields);
     }
