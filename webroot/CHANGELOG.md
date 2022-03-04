@@ -1,3 +1,10 @@
+### [3.74.1] - 2022-02-25
+- Implemented: Develop an API for Security Group Users
+- Bug Fixed: Administration > Meals : Change fields to multi select
+- Bug Fixed: Report>Survey: Open surveys are not included
+- Bug Fixed: Directory > Guardian: 404 error in BS environments when trying to access the guardians' page from Directory
+- Bug Fixed: Institutions>Performance>Assessments>Report: Ungrouped subjects has wrong total marks
+
 ### [3.74.0] - 2022-02-23
 - Implemented: Reports > Institutions > Positions : To add Staff Name, OpenEMIS ID, Default Identity Type, Identity Number
 - Implemented: Reports > Institutions > Classes : To add an Education Grade Filter
