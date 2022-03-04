@@ -19,6 +19,9 @@ class InstitutionStaffPositionProfileTable extends AppTable
     public function initialize(array $config)
     {
         $this->table('security_users');
+        $this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
+        $this->belongsTo('Nationalities', ['className' => 'FieldOption.Nationalities']);
+        $this->belongsTo('InstitutionStaffLeave', ['className' => 'Institution.InstitutionStaffLeave']);
         parent::initialize($config);
         // Behaviours
         $this->addBehavior('Excel', [
@@ -113,39 +116,43 @@ class InstitutionStaffPositionProfileTable extends AppTable
     {
         $requestData           = json_decode($settings['process']['params']);
         $academicPeriodId      = $requestData->academic_period_id;
-        //print_r($requestData->academic_period_id);die;
         $institutionId         = $requestData->institution_id;
         $subject = TableRegistry::get('Institution.InstitutionSubjects');
         $academic_period = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $institution = TableRegistry::get('Institutions');
         $staffStatus = TableRegistry::get('Staff.StaffStatuses');
-       // $positions = TableRegistry::get('Institution.InstitutionPositions');
+        $positions = TableRegistry::get('InstitutionPositions');
+        $grade = TableRegistry::get('StaffPositionGrades');
+        $title = TableRegistry::get('StaffPositionTitles');
             $query
             ->select([
+                'positionsNumber' => 'InstitutionPositions.position_no',
+                'title' => 'StaffPositionTitles.name',
+                'grade' => 'StaffPositionGrades.name',
+                'institution'=> 'Institutions.name',
+                'assigneeName' => $this->aliasField('first_name'),
+                'is_home' => 'InstitutionPositions.is_homeroom',
+                'openemis_no'=> $this->aliasfield('openemis_no'),
+                'staff'=> $this->aliasField('first_name'),
+                'fte' => 'InstitutionStaff.FTE',
+                'staffStatus' => 'StaffStatuses.name',
+                'identityType' => 'IdentityTypes.name',
+                'identity_number' => $this->aliasField('identity_number'),
                 'academic_period'=> 'AcademicPeriods.name',
                 'class_name' => 'InstitutionClasses.name',
                 'subject_name' => 'InstitutionSubjects.name',
                 'absences_day' => $this->find()->func()->sum('InstitutionStaffLeave.number_of_days'),
-                'openemis_no'=> $this->aliasfield('openemis_no'),
-                'institution'=> 'Institutions.name',
-                'first_name'=> $this->aliasField('first_name'),
-               // 'last_name' => $this->aliasField('last_name'),
-                'identity_number' => $this->aliasField('identity_number'),
-              //  'identityType' => 'IdentityTypes.name',
-                'fte' => 'InstitutionStaff.FTE',
-                'staffStatus' => 'StaffStatuses.name',
-               // 'positionsNumber' => 'InstitutionPositions.position_no',
-                //'is_home' => 'InstitutionPositions.is_homeroom',
-                //'assigneeName' => $this->aliasField('first_name'),
-            ])
-
-            /*->contain([
+                'last_name' => $this->aliasField('last_name'),       
+        ])
+            ->contain([
                 'IdentityTypes' => [
                     'fields' => [
                         'IdentityTypes.id'
                     ]
                 ],
-            ])*/
+            ])
+            
+          //  ->contain(['InstitutionStaffLeave'])
             ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
                             $this->aliasfield('id') . ' = '.'InstitutionStaff.staff_id',
                         ])
@@ -157,14 +164,18 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 [$staffStatus->alias() => $staffStatus->table()],
                 [$staffStatus->aliasField('id = ') . 'InstitutionStaff.staff_status_id']
             )
-            /*->leftJoin(
+            ->leftJoin(
                 [$positions->alias() => $positions->table()],
                 [$positions->aliasField('assignee_id = ') . $this->aliasfield('id')]
             )
             ->leftJoin(
-                [$positions->alias() => $positions->table()],
-                [$positions->aliasField('id = ') . 'InstitutionStaff.institution_position_id']
-            )*/
+                [$grade->alias() => $grade->table()],
+                [$grade->aliasField('id = ') . 'InstitutionPositions.staff_position_grade_id']
+            )
+            ->leftJoin(
+                [$title->alias() => $title->table()],
+                [$title->aliasField('id = ') . 'InstitutionPositions.staff_position_title_id']
+            )
             ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
                             $this->aliasfield('id') . ' = '.'InstitutionSubjectStaff.staff_id',
                         ])
@@ -183,22 +194,93 @@ class InstitutionStaffPositionProfileTable extends AppTable
             ->leftJoin(['InstitutionStaffLeave' => ' institution_staff_leave'], [
                             $this->aliasfield('id') . ' = '.'InstitutionStaffLeave.staff_id',
                         ])
-            
         ->where([
-            //'InstitutionClasses.academic_period_id' => $academicPeriodId,
-            //'InstitutionStaff.institution_id' => $institutionId,
-           // 'SecurityGroupUsers.security_role_id'=>[5,6]
+            'InstitutionClasses.academic_period_id' => $academicPeriodId,
+            'InstitutionStaff.institution_id' => $institutionId,
             $this->aliasField('is_staff') => 1,
         ]);
-        print_r($query->Sql());die('pkk');
+        //print_r($query->Sql());die('pkk');
     
         
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-       // print_r($fields);die;
         $newFields = [];
+        $newFields[] = [
+            'key'   => 'positionsNumber',
+            'field' => 'positionsNumber',
+            'type'  => 'string',
+            'label' => __('Number'),
+        ];
+        $newFields[] = [
+            'key'   => 'title',
+            'field' => 'title',
+            'type'  => 'string',
+            'label' => __('Title'),
+        ];
+        $newFields[] = [
+            'key'   => 'grade',
+            'field' => 'grade',
+            'type'  => 'string',
+            'label' => __('Grade'),
+        ];
+        $newFields[] = [
+            'key'   => 'institution',
+            'field' => 'institution',
+            'type'  => 'string',
+            'label' => __('Institution'),
+        ];
+        $newFields[] = [
+            'key'   => 'assigneeName',
+            'field' => 'assigneeName',
+            'type'  => 'string',
+            'label' => __('Assignee'),
+        ];
+        $newFields[] = [
+            'key'   => 'is_home',
+            'field' => 'is_home',
+            'type'  => 'integer',
+            'label' => __('HomeroomTeacher'),
+        ];
+        $newFields[] = [
+            'key'   => 'openemis_no',
+            'field' => 'openemis_no',
+            'type'  => 'integer',
+            'label' => __('openemis_no'),
+        ];
+        $newFields[] = [
+            'key'   => 'staff',
+            'field' => 'staff',
+            'type'  => 'integer',
+            'label' => __('staff'),
+        ];
+        $newFields[] = [
+            'key'   => 'fte',
+            'field' => 'fte',
+            'type'  => 'integer',
+            'label' => __('fte'),
+        ];
+        $newFields[] = [
+            'key'   => 'staffStatus',
+            'field' => 'staffStatus',
+            'type'  => 'staring',
+            'label' => __('staffStatus'),
+        ];
+        $newFields[] = [
+            'key'   => 'identityType',
+            'field' => 'identityType',
+            'type'  => 'string',
+            'label' => __('identityType'),
+        ];
+        
+        $newFields[] = [
+            'key'   => 'identity_number',
+            'field' => 'identity_number',
+            'type'  => 'integer',
+            'label' => __('identity_number'),
+        ];
+        
         $newFields[] = [
             'key'   => 'academic_period',
             'field' => 'academic_period',
@@ -223,33 +305,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'type'  => 'integer',
             'label' => __('Number of absences Day'),
         ];
-        $newFields[] = [
-            'key'   => 'openemis_no',
-            'field' => 'openemis_no',
-            'type'  => 'integer',
-            'label' => __('openemis_no'),
-        ];$newFields[] = [
-            'key'   => 'institution',
-            'field' => 'institution',
-            'type'  => 'string',
-            'label' => __('institution'),
-        ];$newFields[] = [
-            'key'   => 'identity_number',
-            'field' => 'identity_number',
-            'type'  => 'integer',
-            'label' => __('identity_number'),
-        ];$newFields[] = [
-            'key'   => 'fte',
-            'field' => 'fte',
-            'type'  => 'integer',
-            'label' => __('fte'),
-        ];
-        $newFields[] = [
-            'key'   => 'staffStatus',
-            'field' => 'staffStatus',
-            'type'  => 'staring',
-            'label' => __('staffStatus'),
-        ];
+
         $fields->exchangeArray($newFields);
     }
 
