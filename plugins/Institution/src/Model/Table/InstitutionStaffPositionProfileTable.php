@@ -133,7 +133,8 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 'assigneeName' => $this->aliasField('first_name'),
                 'is_home' => 'InstitutionPositions.is_homeroom',
                 'openemis_no'=> $this->aliasfield('openemis_no'),
-                'staff'=> $this->aliasField('first_name'),
+                'fname_Staff'=> $this->aliasField('first_name'),
+                'lname_Staff' => $this->aliasField('last_name'), 
                 'fte' => 'InstitutionStaff.FTE',
                 'staffStatus' => 'StaffStatuses.name',
                 'identityType' => 'IdentityTypes.name',
@@ -142,7 +143,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 'class_name' => 'InstitutionClasses.name',
                 'subject_name' => 'InstitutionSubjects.name',
                 'absences_day' => $this->find()->func()->sum('InstitutionStaffLeave.number_of_days'),
-                'last_name' => $this->aliasField('last_name'),       
+                      
         ])
             ->contain([
                 'IdentityTypes' => [
@@ -199,6 +200,15 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'InstitutionStaff.institution_id' => $institutionId,
             $this->aliasField('is_staff') => 1,
         ]);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        {
+            return $results->map(function ($row)
+            {
+                    $row['referrer_full_name'] = $row['fname_Staff'] . ' ' .  $row['lname_Staff'];
+                $row['security_user_full_name'] = $row['first_name'] . ' ' .  $row['last_name'];
+                return $row;
+            });
+        });
         //print_r($query->Sql());die('pkk');
     
         
@@ -250,9 +260,9 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'label' => __('openemis_no'),
         ];
         $newFields[] = [
-            'key'   => 'staff',
-            'field' => 'staff',
-            'type'  => 'integer',
+            'key'   => 'referrer_full_name',
+            'field' => 'referrer_full_name',
+            'type'  => 'string',
             'label' => __('staff'),
         ];
         $newFields[] = [
@@ -303,7 +313,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'key'   => 'absences_day',
             'field' => 'absences_day',
             'type'  => 'integer',
-            'label' => __('Number of absences Day'),
+            'label' => __('Number of absence Day'),
         ];
 
         $fields->exchangeArray($newFields);
