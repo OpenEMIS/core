@@ -11,8 +11,8 @@ use Cake\ORM\TableRegistry;
 
 class InstitutionClassesTable extends AppTable
 {
-    public const CLASS_TEACHER = 'Home Room Teacher';
-    public const ASSISTANT_TEACHER = 'Secondary Teacher';
+    const CLASS_TEACHER = 'Home Room Teacher';
+    const ASSISTANT_TEACHER = 'Secondary Teacher';
 
     public function initialize(array $config)
     {
