@@ -843,14 +843,14 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
-
+            //POCOR-6160 start 
             'Institutions.BankAccounts' => [
                 'title' => 'Bank Accounts',
                 'parent' => 'Institution.Finance',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Institutions.BankAccounts'],
             ],
-
+            //POCOR-6160 end
             'Institutions.Budget' => [
                 'title' => 'Budget',
                 'parent' => 'Institution.Finance',
