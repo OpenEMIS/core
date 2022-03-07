@@ -367,26 +367,24 @@ class SurveysTable extends AppTable
         $surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
 
         $this->surveyStatuses = $WorkflowStatusesTable->getWorkflowStepStatusNameMappings('Institution.InstitutionSurveys');
-        if (!empty($surveyStatuses) || $status == '' || $status == 'all') { 
-
-            if($settings['renderNotComplete'] === true && $settings['renderNotOpen'] === true){
-                $statusCondition = [
-                    $this->aliasField('status_id').' IN ('.self::OPEN.')'
-                ];
-            }elseif($settings['renderNotComplete'] === true && $settings['renderNotOpen'] === false){
-                $statusCondition = [
-                    $this->aliasField('status_id').' NOT IN ('.self::OPEN.', '.self::PENDINGAPPROVAL.', '.self::COMPLETED.' )'
-                ];
-            }else{
-                $statusCondition = [
-                    $this->aliasField('status_id').' IN ' => array_keys($surveyStatuses)
-                ];
-            }
-
+        if (!empty($surveyStatuses) || $status == '' || $status == 'all') {
+            /*POCOR-6600 - removed all conditions, as report must have all status ids when all option selected*/
+            // if($settings['renderNotComplete'] === true && $settings['renderNotOpen'] === true){
+            //     $statusCondition = [
+            //         $this->aliasField('status_id').' IN ('.self::OPEN.')'
+            //     ];
+            // }elseif($settings['renderNotComplete'] === true && $settings['renderNotOpen'] === false){
+            //     $statusCondition = [
+            //         $this->aliasField('status_id').' NOT IN ('.self::OPEN.', '.self::PENDINGAPPROVAL.', '.self::COMPLETED.' )'
+            //     ];
+            // }else{
+            //     $statusCondition = [
+            //         $this->aliasField('status_id').' IN ' => array_keys($surveyStatuses)
+            //     ];
+            // }
+            $statusCondition = [];
             $condition = array_merge($condition, $statusCondition);
-
-
-       }
+        }
         $condition = array_merge($condition, $configCondition);
 
         $this->setCondition($condition);
@@ -408,69 +406,39 @@ class SurveysTable extends AppTable
         $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
         $institutionTypes = TableRegistry::get('institution_types');
         $institutions = TableRegistry::get('institutions');
-
+        $condition = [];
         // POCOR-6440 start
         $requestData = json_decode($settings['process']['params']);
-
         $institutionID = $requestData->institution_id;
-
-        if($institutionID == 0){
-            $condition = [];
-        }else{
-            $condition = [
-                'Institutions.id' => $institutionID
-            ];
+        if($institutionID > 0){
+            $condition['Institutions.id'] = $institutionID;
         }
         // POCOR-6440 end
 
-        $query->select([
-                 'code' => 'Institutions.code',
-                 'area' => 'Areas.name',
-                 'area_administrative' => 'AreaAdministratives.name',
-                 'Statuses_name' => 'Statuses.name'
-             ])
-              ->innerJoin(['SurveyForms' => 'survey_forms'], [
-                        'Surveys.id = SurveyForms.id'
-                    ])
-              ->innerJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
-                        'SurveyFormsFilters.survey_form_id = SurveyForms.id'
-                    ])
-              ->innerJoin(['InstitutionTypes' => 'institution_types'], [
-                        'SurveyFormsFilters.survey_filter_id = InstitutionTypes.id'
-                    ])
-              ->innerJoin(['Institutions' => 'institutions'], [
-                        'InstitutionTypes.id = Institutions.institution_type_id'
-                    ])
-              ->contain([
-                 'Institutions.Areas',
-                 'Institutions.AreaAdministratives',
-                 'Institutions.Statuses'
-             ])
-            //  POCOR-6440
-             ->where(
-                $condition
-            )  
-            //  POCOR-6440
-             ->group('Institutions.name');
-
-
-        //print_r($res->sql()); exit;
-        // $query
-        //     ->select([
-        //         'code' => 'Institutions.code',
-        //         'area' => 'Areas.name',
-        //         'area_administrative' => 'AreaAdministratives.name'
-        //     ])
-        //     ->contain([
-        //         'Institutions.Areas',
-        //         'Institutions.AreaAdministratives',
-        //         'Institutions.Statuses'
-        //     ])
-        //     //Only Active schools are able to generate survey
-        //     ->where([
-        //         'Statuses.code' => 'ACTIVE'
-        //     ]);
-
+          $query->select([
+                    'code' => 'Institutions.code',
+                    'area' => 'Areas.name',
+                    'area_administrative' => 'AreaAdministratives.name',
+                    'Statuses_name' => 'Statuses.name'
+                ])
+                ->leftJoin(['SurveyForms' => 'survey_forms'], [
+                    'Surveys.id = SurveyForms.id'
+                ])
+                ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+                    'SurveyFormsFilters.survey_form_id = SurveyForms.id'
+                ])
+                ->leftJoin(['InstitutionTypes' => 'institution_types'], [
+                    'SurveyFormsFilters.survey_filter_id = InstitutionTypes.id'
+                ])
+                ->leftJoin(['Institutions' => 'institutions'], [
+                    'InstitutionTypes.id = Institutions.institution_type_id'
+                ])
+                ->contain([
+                    'Institutions.Areas',
+                    'Institutions.AreaAdministratives',
+                    'Institutions.Statuses'
+                ])
+                ->where([$condition]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -626,19 +594,15 @@ class SurveysTable extends AppTable
     public function onExcelGetStatusId(Event $event, Entity $entity)
     {
         $status = $entity->status_id;
-        if($status==1){
+        if($status == 1 || $status == -1) {
             return "Open";
         }
-        if($status==2){
+        if($status ==  2){
             return "PENDINGAPPROVAL";
         }
-        if($status==3){
+        if($status == 3){
             return "COMPLETED";
         }
-        if($status==-1){
-            return "SURVEY_DISABLED";
-        }
-       
     }
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
     {
