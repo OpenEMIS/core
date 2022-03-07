@@ -594,19 +594,15 @@ class SurveysTable extends AppTable
     public function onExcelGetStatusId(Event $event, Entity $entity)
     {
         $status = $entity->status_id;
-        if($status==1){
+        if($status == 1 || $status == -1) {
             return "Open";
         }
-        if($status==2){
+        if($status ==  2){
             return "PENDINGAPPROVAL";
         }
-        if($status==3){
+        if($status == 3){
             return "COMPLETED";
         }
-        if($status==-1){
-            return "SURVEY_DISABLED";
-        }
-       
     }
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
     {
