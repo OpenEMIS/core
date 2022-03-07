@@ -18,6 +18,16 @@ class StatusesTable extends AppTable
         return $this->find('list', ['keyField' => 'code', 'valueField' => 'id'])->toArray();
     }
 
+    /**
+     * Get all statuses of Institution id as key and name as value
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6591
+     */
+    public function findIdList()
+    {
+        return $this->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();
+    }
+
     public function getIdByCode($code)
     {
         $entity = $this->find()
