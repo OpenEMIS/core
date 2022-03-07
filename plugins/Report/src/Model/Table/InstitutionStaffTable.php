@@ -532,10 +532,10 @@ class InstitutionStaffTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'Education.education_grades',
+            'key' => 'Education.name',
             'field' => 'education_grades',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Education grades')
         ];
 
         $newFields[] = [
