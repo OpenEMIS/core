@@ -130,10 +130,6 @@ class StudentAttendanceSummaryTable extends AppTable
                 'total_male_students_late' => $this->aliasField('late_male_count'),
                 'total_students_late' => $this->aliasField('late_total_count')
             ])
-            ->group([
-                $this->aliasField('subject_name'),
-                $this->aliasField('period_name')
-            ])
             ->where([$conditions])
             ->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
