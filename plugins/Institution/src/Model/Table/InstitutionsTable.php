@@ -147,7 +147,7 @@ class InstitutionsTable extends ControllerActionTable
             'through' => 'Security.SecurityGroupInstitutions',
             'dependent' => true
         ]);
-       if(Router::getRequest()->params['pass'][0]!='excel'){
+       if(isset(Router::getRequest()->params['pass'][0]) && Router::getRequest()->params['pass'][0]!='excel'){
 
         $this->addBehavior('CustomField.Record', [
             'fieldKey' => 'institution_custom_field_id',
