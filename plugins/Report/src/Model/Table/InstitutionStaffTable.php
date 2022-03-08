@@ -532,7 +532,7 @@ class InstitutionStaffTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'Education.name',
+            'key' => 'Education.name', //POCOR-6614
             'field' => 'education_grades',
             'type' => 'string',
             'label' => __('Education grades')

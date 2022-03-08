@@ -243,7 +243,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('position_filter', ['type' => 'hidden']);
-        $this->ControllerAction->field('teaching_filter', ['type' => 'hidden']);
+        $this->ControllerAction->field('teaching_filter', ['type' => 'hidden']);//POCOR-6614
         // $this->ControllerAction->field('license', ['type' => 'hidden']);
         $this->ControllerAction->field('type', ['type' => 'hidden']);
         $this->ControllerAction->field('status', ['type' => 'hidden']);
@@ -339,7 +339,7 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'area_level_id';
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'position_filter';
-                    $fieldsOrder[] = 'teaching_filter';
+                    $fieldsOrder[] = 'teaching_filter';//POCOR-6614
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'format';
                     break;
