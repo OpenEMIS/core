@@ -12,7 +12,7 @@ use Cake\Log\Log;
 
 /**
  * Get the Staff Qualifications details in excel file with specific tabs
- * @ticket POCOR-6551
+ * @ticket POCOR-6551 <Vikas.rathore@mail.valuecoders.com>
  */
 class InstitutionStandardStaffQualificationsTable extends AppTable
 {
@@ -29,6 +29,17 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
             'pages' => false,
             'autoFields' => false
         ]);
+
+        // add behaviour for calling file related function ie: getFileTypeForView();
+        $this->addBehavior('ControllerAction.FileUpload', [
+            // 'name' => 'file_name',
+            // 'content' => 'file_content',
+            'size' => '2MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
+        ]);
+
         $this->addBehavior('Report.ReportList');
 
         $this->_type = [
@@ -122,11 +133,6 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
         }
     }
 
-    public function onExcelGetFileType(Event $event, Entity $entity)
-    {
-        return (!empty($entity->file_name))? $this->getFileTypeForView($entity->file_name): '';
-    }
-
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData           = json_decode($settings['process']['params']);
@@ -136,17 +142,27 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
         $institutionId         = $requestData->institution_id;
         $qualificationTitles   = TableRegistry::get('QualificationTitles');
         $qualificationLevel    = TableRegistry::get('QualificationLevels');
+        $institutionStaff      = TableRegistry::get('institution_staff');
+        $institutions          = TableRegistry::get('institutions');
+        $fieldOfStudy          = TableRegistry::get('education_field_of_studies');
         $Users                 = TableRegistry::get('security_users');
         $selectable            = [];
         $group_by              = [];
 
         // START: JOINs
         $join = [
-            'Institution' => [
+            'institutionStaff' => [
+                'type' => 'inner',
+                'table' => 'institution_staff',
+                'conditions' => [
+                    'institutionStaff.staff_id = ' . $this->aliasField('staff_id')
+                ],
+            ],
+            'Institutions' => [
                 'type' => 'inner',
                 'table' => 'institutions',
                 'conditions' => [
-                    'Institution.id = ' . $institutionId
+                    'Institutions.id = institutionStaff.institution_id'
                 ]
             ],
             'AcademicPeriod' => [
@@ -161,18 +177,17 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
         if ( $sheet_tab_name == 'Qualifications' ) {
             $query
             ->select([
-                'institution_code'          => 'Institution.code',
-                'institution_name'          => 'Institution.name',
+                'institution_code'          => $institutions->aliasField('code'),
+                'institution_name'          => $institutions->aliasField('name'),
                 'openemis_no'               => $Users->aliasField('openemis_no'),
                 'name'                      => $Users->find()->func()->concat(['security_users.first_name' => 'literal',"  ",'security_users.last_name' => 'literal']),
                 'graduate_year'             => $this->aliasField('graduate_year'),
                 'qualification_level'       => $qualificationLevel->aliasField('name'),
-                'qualification_title_id'    => $this->aliasField('qualification_title_id'),
+                'qualification_title'       => $qualificationTitles->aliasField('name'),
                 'document_no'               => $this->aliasField('document_no'),
                 'qualification_institution' => $this->aliasField('qualification_institution'),
                 'file_name'                 => $this->aliasField('file_name'),
-                'file_content'              => $this->aliasField('file_content'),
-                'education_field_of_study_id' => $this->aliasField('education_field_of_study_id'),
+                'field_of_study'            => $fieldOfStudy->aliasField('name'),
             ])
             ->innerJoin(
                 [$Users->alias() => $Users->table() ], // Class Object => table_name
@@ -181,6 +196,10 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
             ->leftJoin(
                 [$qualificationTitles->alias() => $qualificationTitles->table()],[
                     $qualificationTitles->aliasField('id = ').$this->aliasField('qualification_title_id')
+                ])
+            ->leftJoin(
+                [$fieldOfStudy->alias() => $fieldOfStudy->table()],[
+                    $fieldOfStudy->aliasField('id = ').$this->aliasField('education_field_of_study_id')
                 ])
             ->leftJoin(
                 [$qualificationLevel->alias() => $qualificationLevel->table()],[
@@ -193,28 +212,22 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
 
         $query->where([
             'AcademicPeriod.id' => $academicPeriodId,
-            'Institution.id' => $institutionId,
+            'institutionStaff.institution_id' => $institutionId,
             $Users->aliasField('is_staff') => 1
         ]);
 
-        // echo $query; die;
+        $query->group($Users->aliasField('openemis_no'));
+        $_this = $this;
 
-        
-        // $query->group($group_by)->order([$this->aliasField('first_name'), $this->aliasField('last_name')]);
-
-        /* $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($sheet_tab_name)
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($_this)
         {
-            return $results->map(function ($row) use ($sheet_tab_name)
+            // for getting file type call function getFileTypeForView
+            return $results->map(function ($row) use ($_this)
             {
-                if ( $sheet_tab_name == 'StaffTrainingNeeds' ) {
-                    $row['needs_type']            = ($row['needs_type'] == 'CATALOGUE') ? $this->_type['CATALOGUE'] : $this->_type['NEED'];
-                    $row['needs_asssignee_name']  = $row['needs_first_name'] . ' ' .  $row['needs_last_name'];
-                    $row['needs_training_course'] = $row['needs_training_course_code'] . ' - ' . $row['needs_training_course_name'];
-                }
-                $row['security_user_full_name'] = $row['first_name'] . ' ' .  $row['last_name'];
+                $row['file_name'] = ( !empty($row['file_name']) ) ? $_this->getFileTypeForView($row['file_name']) : '' ;
                 return $row;
             });
-        }); */
+        });
     }
 
     /**
@@ -231,13 +244,13 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
 
         if ( $sheet_tab_name == 'Qualifications' ) {
             $extraField[] = [
-                'key'   => 'Institution.code',
+                'key'   => 'institutions.code',
                 'field' => 'institution_code',
                 'type'  => 'string',
                 'label' => __('Institution Code'),
             ];
             $extraField[] = [
-                'key'   => 'Institution.name',
+                'key'   => 'institutions.name',
                 'field' => 'institution_name',
                 'type'  => 'string',
                 'label' => __('Institution Name'),
@@ -272,8 +285,8 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
             ];
     
             $extraField[] = [
-                'key'   => 'qualification_title_id',
-                'field' => 'qualification_title_id',
+                'key'   => 'qualification_title',
+                'field' => 'qualification_title',
                 'type'  => 'string',
                 'label' => __('Title')
             ];
@@ -300,8 +313,8 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
             ];
     
             $extraField[] = [
-                'key'   => 'education_field_of_study_id',
-                'field' => 'education_field_of_study_id',
+                'key'   => 'field_of_study',
+                'field' => 'field_of_study',
                 'type'  => 'string',
                 'label' => __('Field Of Study')
             ];
