@@ -8,15 +8,26 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
-
+use Cake\ORM\TableRegistry;
 use App\Model\Traits\OptionsTrait;
 
+/**
+ * 
+ * This class is used to generate Performance report
+ * Where Basic details of Student will be added in report
+ * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+ * 
+ */
 class PerformanceTable extends AppTable
 {
     use OptionsTrait;
 
     public function initialize(array $config)
     {
+        /**
+         * Initializing the dependencies
+         * @param array $config
+         */
         $this->table('report_assessment_missing_mark_entry');
         parent::initialize($config);
 
@@ -24,10 +35,12 @@ class PerformanceTable extends AppTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods']);
-        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades', 'foreignKey' => 'education_grade_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Providers', ['className' => 'Institution.Providers', 'foreignKey' => 'institution_provider_id']);
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
+
+        //Behaviors
         $this->addBehavior('Excel', [
             'excludes' => [],
             'pages' => false,
@@ -40,6 +53,11 @@ class PerformanceTable extends AppTable
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
+        $this->ControllerAction->field('area_level_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('education_grade_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('assessment_period_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
@@ -58,10 +76,11 @@ class PerformanceTable extends AppTable
 
     public function addBeforeAction(Event $event)
     {
-        $this->ControllerAction->field('area_id');
-        $this->ControllerAction->field('institution_id');
-        $this->ControllerAction->field('education_grade_id');
-        $this->ControllerAction->field('assessment_period_id');
+        $this->ControllerAction->field('area_level_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('education_grade_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('assessment_period_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('academic_period_name', ['type' => 'hidden']);
@@ -78,5 +97,338 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('count_students', ['type' => 'hidden']);
         $this->ControllerAction->field('count_marked_students', ['type' => 'hidden']);
         $this->ControllerAction->field('missing_marks', ['type' => 'hidden']);
+    }
+
+    /**
+     * Fetching area's level options
+     *
+     * @param  \Cake\Network\Request  $request
+     * @return attr
+     */
+    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+                $feature = $this->request->data[$this->alias()]['feature'];
+                $Areas = TableRegistry::get('AreaLevel.AreaLevels');
+                $entity = $attr['entity'];
+
+                if ($action == 'add') {
+                    $areaOptions = $Areas
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                        ->order([$Areas->aliasField('level')]);
+
+                    $attr['type'] = 'chosenSelect';
+                    $attr['attr']['multiple'] = false;
+                    $attr['select'] = true;
+                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', 0 => _('All Areas Level')] + $areaOptions->toArray();
+                    $attr['onChangeReload'] = true;
+                } else {
+                    $attr['type'] = 'hidden';
+                }
+        }
+        return $attr;
+    }
+
+
+    /**
+     * Fetching area's options list.
+     *
+     * @param  \Cake\Network\Request  $request
+     * @return attr
+     */
+    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+            //echo "<pre>";print_r();die();
+            $areaLevel = $request->data[$this->alias()]['area_level_id'];
+            if ($areaLevel > 0) {
+                $condition[$this->Areas->aliasField('area_level_id')] = $areaLevel;
+            }
+            $areaOptions = $this->Areas->find('list', [
+                                'keyField' => 'id',
+                                'valueField' => 'code_name'
+                            ])
+                            ->where([$condition])
+                            ->toArray();
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = ['' => '-- ' . _('Select') . ' --', 0 => _('All Areas')] + $areaOptions;
+            $attr['onChangeReload'] = true;
+        }
+        return $attr;
+    }
+
+    /**
+     * Fetching Institution's options list based on area id.
+     *
+     * @param  \Cake\Network\Request  $request
+     * @return attr
+     */
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $areaId = $request->data[$this->alias()]['area_education_id'];
+            if ($areaId > 0) {
+                $condition[$this->Institutions->aliasField('area_id')] = $areaId;
+            }
+            $institutionQuery = $this->Institutions
+                            ->find('list', [
+                                'keyField' => 'id',
+                                'valueField' => 'code_name'
+                            ])
+                            ->where([$condition])
+                            ->order([
+                                $this->Institutions->aliasField('code') => 'ASC',
+                                $this->Institutions->aliasField('name') => 'ASC'
+                            ]);
+            // if user is not super admin than list will be filtered
+            $superAdmin = $this->Auth->user('super_admin');
+            if (!$superAdmin) {
+                $userId = $this->Auth->user('id');
+                $institutionQuery->find('byAccess', ['userId' => $userId]);
+            }
+            $institutionList = $institutionQuery->toArray();
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+
+            if (count($institutionList) > 1) {
+                $institutionOptions = ['' => '-- ' . _('Select') . ' --', 0 => _('All Institutions')] + $institutionList;
+            } else {
+                $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+            }
+            
+            $attr['options'] = $institutionOptions;
+            $attr['onChangeReload'] = true;
+        }
+
+        return $attr;
+    }
+
+    /**
+     * Fetching education grade's options list based on institution id.
+     *
+     * @param  \Cake\Network\Request  $request
+     * @return attr
+     */
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    {
+        $institutionId = $request->data[$this->alias()]['institution_id'];
+        $gradeTable = $this->Institutions->InstitutionGrades;
+        if ($institutionId > 0) {
+            $condition[$gradeTable->aliasField('institution_id')] = $institutionId;
+        }
+        $gradeOptions = $this->EducationGrades
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'name'
+                        ])
+                        ->leftJoin([$gradeTable->alias() => $gradeTable->table()], [
+                            $gradeTable->aliasField('education_grade_id = ') . $this->EducationGrades->aliasField('id')
+                        ])
+                        ->where([$condition])
+                        ->group([$this->EducationGrades->aliasField('name')])
+                        ->order([
+                            $this->EducationGrades->aliasField('name') => 'ASC'
+                        ])
+                        ->toArray();
+
+        $attr['type'] = 'select';
+        $attr['select'] = false;
+        if (count($gradeOptions) > 1) {
+            $grades = ['' => '-- ' . _('Select') . ' --', 0 => _('All Grades')] + $gradeOptions;
+        } else {
+            $grades = ['' => '-- ' . __('Select') . ' --'] + $gradeOptions;
+        }
+        $attr['options'] = $grades;
+        $attr['onChangeReload'] = true;
+
+        return $attr;
+    }
+
+    /**
+     * Fetching Assessment Period's options list based on grade id.
+     *
+     * @param  \Cake\Network\Request  $request
+     * @return attr
+     */
+    public function onUpdateFieldAssessmentPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        $gradeId = $request->data[$this->alias()]['education_grade_id'];
+        if ($gradeId > 0) {
+            $condition[$this->Assessments->aliasField('education_grade_id')] = $gradeId;
+        }
+        $assessmentPeriodList = $this->AssessmentPeriods
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->leftJoin([$this->Assessments->alias() => $this->Assessments->table()], [
+                            $this->Assessments->aliasField('id = ') . $this->AssessmentPeriods->aliasField('assessment_id')
+                        ])
+                        ->where([$condition])
+                        ->toArray();
+
+        $attr['type'] = 'select';
+        $attr['select'] = false;
+        if (count($assessmentPeriodList) > 1) {
+            $assessmentPeriodOption = ['' => '-- ' . _('Select') . ' --', 0 => _('All Periods')] + $assessmentPeriodList;
+        } else {
+            $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --'] + $assessmentPeriodList;
+        }
+        $attr['options'] = $assessmentPeriodOption;
+        $attr['onChangeReload'] = true;
+
+        return $attr;
+    }
+
+    /**
+     * Fetching Assessment Period's report content
+     *
+     * @param  \ArrayObject  $settings
+     * @return query
+     */
+    public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query)
+    {
+        $requestData = json_decode($settings['process']['params']);
+        $areaId = $requestData->area_id;
+        $institutionId = $requestData->institution_id;
+        $gradeId = $requestData->education_grade_id;
+        $assessmentPeriodId = $requestData->assessment_period_id;
+        $conditions = [];
+        if ($areaId > 0) {
+            $conditions[$this->aliasField('area_id')] = $areaId;
+        }
+        if ($gradeId > 0) {
+            $conditions[$this->aliasField('education_grade_id')] = $gradeId;
+        }
+        if ($institutionId > 0) {
+            $conditions[$this->aliasField('institution_id')] = $institutionId;
+        }
+        if ($assessmentPeriodId > 0) {
+            $conditions[$this->aliasField('assessment_period_id')] = $assessmentPeriodId;
+        }
+
+         $query
+            ->join([
+                'AssessmentItems' => [
+                    'type' => 'left',
+                    'table' => 'assessment_items', 
+                    'conditions' => [
+                        'AssessmentItems.assessment_id = '.$this->aliasField('assessment_id')
+                    ],
+                ],
+                'EducationSubjects' => [
+                    'type' => 'left',
+                    'table' => 'education_subjects',
+                    'conditions' => [
+                        'EducationSubjects.id = AssessmentItems.education_subject_id'
+                    ]
+                ]
+            ])
+            ->select([
+                'academic_period_name' => $this->aliasField('academic_period_name'),
+                'institution_code' => $this->aliasField('institution_code'),
+                'institution_name' => $this->aliasField('institution_name'),
+                'area_name' => $this->aliasField('area_name'),
+                'education_grade_name' => $this->aliasField('education_grade'),
+                'academic_term' => 'AssessmentPeriods.academic_term',
+                'assessment_name' => $this->aliasField('assessment_name'),
+                'assessment_period_name' => $this->aliasField('assessment_period_name'),
+                'subject_name' => 'EducationSubjects.name',
+                'total_students' =>  $this->aliasField('count_students'),
+                'marks_entered' => $this->aliasField('count_marked_students')
+            ])
+            ->contain(['AssessmentPeriods'])
+            ->where([$conditions]);
+    }
+
+    /**
+     * Display selected columns into Assessment Period's report
+     *
+     * @param  \ArrayObject  $settings
+     * @return $fields
+     */
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+        $newFields = [];
+
+        $newFields[] = [
+            'key' => 'AcademicPeriods.name',
+            'field' => 'academic_period_name',
+            'type' => 'string',
+            'label' => __('Academic Period')
+        ];
+
+        $newFields[] = [
+            'key' => 'Institutions.code',
+            'field' => 'institution_code',
+            'type' => 'integer',
+            'label' => __('Institution Code')
+        ];
+
+        $newFields[] = [
+            'key' => 'Institutions.name',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution Name')
+        ];
+
+        $newFields[] = [
+            'key' => 'Areas.name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => 'Area Name',
+        ];
+
+        $newFields[] = [
+            'key' => 'EducationGrades.name',
+            'field' => 'education_grade_name',
+            'type' => 'string',
+            'label' => 'Education Grade Name',
+        ];
+
+        $newFields[] = [
+            'key' => 'AssessmentPeriods.academic_term',
+            'field' => 'academic_term',
+            'type' => 'string',
+            'label' => 'Academic Term',
+        ];
+
+        $newFields[] = [
+            'key' => 'Assessments.name',
+            'field' => 'assessment_name',
+            'type' => 'string',
+            'label' => 'Assessment Name',
+        ];
+
+        $newFields[] = [
+            'key' => 'AssessmentPeriods.name',
+            'field' => 'assessment_period_name',
+            'type' => 'string',
+            'label' => 'Assessment Period Name',
+        ];
+
+        $newFields[] = [
+            'key' => 'EducationSubjects.name',
+            'field' => 'subject_name',
+            'type' => 'string',
+            'label' => 'Subject Name',
+        ];
+
+        $newFields[] = [
+            'key' => 'total_students',
+            'field' => 'total_students',
+            'type' => 'string',
+            'label' => 'Total Students',
+        ];
+
+        $newFields[] = [
+            'key' => 'marks_entered',
+            'field' => 'marks_entered',
+            'type' => 'string',
+            'label' => 'Marks Entered',
+        ];
+
+        $fields->exchangeArray($newFields);
     }
 }
