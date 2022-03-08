@@ -196,11 +196,12 @@ class ReportsController extends AppController
             $options = [
                 'Report.WorkflowRecords' => __('Workflow Records')
             ];
-        } elseif ($module == 'Performance') {
+        } /*POCOR-6513 starts - added feature's option for Performance report*/
+        elseif ($module == 'Performance') {
             $options = [
                 'Report.Performance' => __('Assessment Missing Mark Entry')
             ];
-        }
+        }/*POCOR-6513 ends*/
         return $options;
     }
 
