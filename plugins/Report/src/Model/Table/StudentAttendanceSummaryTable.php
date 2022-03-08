@@ -131,6 +131,12 @@ class StudentAttendanceSummaryTable extends AppTable
                 'total_students_late' => $this->aliasField('late_total_count')
             ])
             ->where([$conditions])
+            /*POCOR-6439 starts*/
+            ->group([
+                $this->aliasField('attendance_date'),
+                $this->aliasField('period_name')
+            ])
+            /*POCOR-6439 ends*/
             ->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
                     if ($row->total_female_students == 0) {
