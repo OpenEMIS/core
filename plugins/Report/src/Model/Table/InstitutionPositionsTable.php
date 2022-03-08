@@ -18,8 +18,11 @@ class InstitutionPositionsTable extends AppTable
     // position filter
     const ALL_POSITION = 0;
     const POSITION_WITH_STAFF = 1;
+    
+    //POCOR-6614 start
     const TEACHING = 1;
     const NON_TEACHING = 0;
+    //POCOR-6614 end
 
     public function initialize(array $config)
     {
