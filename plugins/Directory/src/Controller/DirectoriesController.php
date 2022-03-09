@@ -966,13 +966,16 @@ class DirectoriesController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-
-    public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffProfiles']); }
-
     public function StudentAbsences()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
     }
 
     public function Absences()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']); }
+
+    /*POCOR-6286 starts*/
+    public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffProfiles']); }
+
+    public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentProfiles']); }
+    /*POCOR-6286 ends*/
 }
