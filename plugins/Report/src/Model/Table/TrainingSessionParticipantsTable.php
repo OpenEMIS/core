@@ -46,6 +46,7 @@ class TrainingSessionParticipantsTable extends AppTable
         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $Institutions = TableRegistry::get('Institution.Institutions');
         $Positions = TableRegistry::get('Institution.InstitutionPositions');
+        $Areas = TableRegistry::get('areas'); //POCOR-6594 <vikas.rathore@mail.valuecoders.com>
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
 
         $requestData = json_decode($settings['process']['params']);
@@ -60,7 +61,8 @@ class TrainingSessionParticipantsTable extends AppTable
                 $this->aliasField('status'),
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
-                'position_name' => 'StaffPositionTitles.name'
+                'position_name' => 'StaffPositionTitles.name',
+                'participant_area' => $Areas->aliasField('name') //POCOR-6594 <vikas.rathore@mail.valuecoders.com>
             ])
             ->innerJoinWith('Sessions', function ($q) {
                 return $q->select([
@@ -79,10 +81,17 @@ class TrainingSessionParticipantsTable extends AppTable
             ->innerJoinWith('Trainees', function ($q) {
                 return $q->select([
                         'openemis_no' => 'Trainees.openemis_no',
-                        'Trainees.first_name',
-                        'Trainees.middle_name',
-                        'Trainees.third_name',
-                        'Trainees.last_name',
+                        //POCOR-6594 starts <vikas.rathore@mail.valuecoders.com> 
+                        'trainee_name' => $this->Trainees->find()->func()->concat([
+                            'Trainees.first_name' => 'literal',
+                            " ",
+                            'Trainees.middle_name' => 'literal',
+                            " ",
+                            'Trainees.third_name' => 'literal',
+                            " ",
+                            'Trainees.last_name' => 'literal'
+                        ]),
+                        //POCOR-6594 ends <vikas.rathore@mail.valuecoders.com> 
                         'Trainees.preferred_name',
                         'identity_number' => 'Trainees.identity_number'
                     ])
@@ -105,6 +114,14 @@ class TrainingSessionParticipantsTable extends AppTable
                     $Institutions->aliasField('id = ') . $Staff->aliasField('institution_id')
                 ]
             )
+            //POCOR-6594 starts <vikas.rathore@mail.valuecoders.com>
+            ->innerJoin(
+                [$Areas->alias() => $Areas->table()],
+                [
+                    $Areas->aliasField('id = ') . $Institutions->aliasField('area_id')
+                ]
+            )
+            //POCOR-6594 end <vikas.rathore@mail.valuecoders.com>
             ->leftJoin(
                 [$Positions->alias() => $Positions->table()],
                 [
@@ -185,8 +202,16 @@ class TrainingSessionParticipantsTable extends AppTable
             'key' => 'TrainingSessionParticipants.trainee_id',
             'field' => 'trainee_id',
             'type' => 'string',
-            'label' => __('Name')
+            'label' => __('Participant Name') //POCOR-6594 <vikas.rathore@mail.valuecoders.com>
         ];
+        //POCOR-6594 <vikas.rathore@mail.valuecoders.com>
+        $newFields[] = [
+            'key' => 'Areas.name',
+            'field' => 'participant_area',
+            'type' => 'string',
+            'label' => __('Participant Area')
+        ];
+        //POCOR-6594 <vikas.rathore@mail.valuecoders.com>
 
         $newFields[] = [
             'key' => 'IdentityTypes.name',
