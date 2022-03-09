@@ -13,6 +13,7 @@ use Cake\Log\Log;
 /**
  * Get the Staff Qualifications details in excel file with specific tabs
  * @ticket POCOR-6551 <Vikas.rathore@mail.valuecoders.com>
+ * this file was newly created for tiket POCOR-6551 by <Vikas.rathore@mail.valuecoders.com>
  */
 class InstitutionStandardStaffQualificationsTable extends AppTable
 {
@@ -30,7 +31,7 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
             'autoFields' => false
         ]);
 
-        // add behaviour for calling file related function ie: getFileTypeForView();
+        //pocor-6551 add behaviour for calling file related function ie: getFileTypeForView();
         $this->addBehavior('ControllerAction.FileUpload', [
             // 'name' => 'file_name',
             // 'content' => 'file_content',
@@ -39,6 +40,7 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+        //pocor-6551
 
         $this->addBehavior('Report.ReportList');
 
