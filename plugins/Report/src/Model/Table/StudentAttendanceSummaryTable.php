@@ -100,16 +100,16 @@ class StudentAttendanceSummaryTable extends AppTable
         if ($educationGradeId != -1) {
             $conditions[$this->aliasField('education_grade_id')] = $educationGradeId;
         }
-        
+        /*POCOR-6439 starts - added date condition to get data on the bases of selected date range*/
+        if (!empty($startDate)) {
+            $conditions[$this->aliasField('attendance_date >=')] = $startDate;
+        }
+
+        if (!empty($startDate)) {
+            $conditions[$this->aliasField('attendance_date <=')] = $endDate;
+        }
+        /*POCOR-6439 ends*/
         $query
-            ->leftJoin(['StudentAttendanceMarkedRecords' => 'institution_student_absence_details'], [
-                'StudentAttendanceMarkedRecords.institution_class_id = '. $this->aliasField('class_id'),
-                'StudentAttendanceMarkedRecords.academic_period_id = '.$this->aliasField('academic_period_id'),
-                'StudentAttendanceMarkedRecords.institution_id = '.$this->aliasField('institution_id'),
-                'StudentAttendanceMarkedRecords.education_grade_id = '.$this->aliasField('education_grade_id'),
-                'StudentAttendanceMarkedRecords.date >= "'.$startDate.'"',
-                'StudentAttendanceMarkedRecords.date <= "'.$endDate.'"'
-            ])
             ->select([
                 'name' => $this->aliasField('class_name'),
                 'institution_name' => $this->aliasField('institution_name'),
@@ -134,7 +134,8 @@ class StudentAttendanceSummaryTable extends AppTable
             /*POCOR-6439 starts*/
             ->group([
                 $this->aliasField('attendance_date'),
-                $this->aliasField('period_name')
+                $this->aliasField('period_name'),
+                $this->aliasField('class_id')
             ])
             /*POCOR-6439 ends*/
             ->formatResults(function (\Cake\Collection\CollectionInterface $results) {
