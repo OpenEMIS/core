@@ -380,6 +380,8 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {
+        //POCOR-6613 starts
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;// for enrolled status //POCOR-6613 ends
         $classId = $this->request->query['class_name'];
         $academicPeriodId = !is_null($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
         $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
@@ -387,38 +389,39 @@ class ImportAssessmentItemResultsTable extends AppTable {
         $studentData = $InstitutionClassStudents->find()
                         ->where([
                             $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
-                            $InstitutionClassStudents->aliasField('academic_period_id') => $academicPeriodId
+                            $InstitutionClassStudents->aliasField('academic_period_id') => $academicPeriodId,
+                            $InstitutionClassStudents->aliasField('student_status_id') => $enrolledStatus //POCOR-6613 
                         ])->toArray();
         $studentIds = [];
         if (!empty($studentData)) {
             foreach ($studentData as $value) {
-               $studentIds[] = $value->student_id;
-        }
+                $studentIds[] = $value->student_id;
+            }
 
-        $UsersData = $Users->find()
-                        ->select([
-                            $Users->aliasField('id'),
-                            $Users->aliasField('first_name'),
-                            $Users->aliasField('middle_name'),
-                            $Users->aliasField('third_name'),
-                            $Users->aliasField('last_name'),
-                            $Users->aliasField('openemis_no')
-                        ])
-                        ->where([$Users->aliasField('id IN') => $studentIds]);
+            $UsersData = $Users->find()
+                            ->select([
+                                $Users->aliasField('id'),
+                                $Users->aliasField('first_name'),
+                                $Users->aliasField('middle_name'),
+                                $Users->aliasField('third_name'),
+                                $Users->aliasField('last_name'),
+                                $Users->aliasField('openemis_no')
+                            ])
+                            ->where([$Users->aliasField('id IN') => $studentIds]);
 
-        $translatedReadableCol = $this->getExcelLabel($UsersData, 'Name');
+            $translatedReadableCol = $this->getExcelLabel($UsersData, 'Name');
 
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = ['Name', $translatedCol];
-        
-        $modelData = $UsersData->find('all')
-        ->select([ 
-            'first_name', 
-            'middle_name', 
-            'third_name', 
-            'last_name',
-            'openemis_no'
-        ]);
+            $data[$columnOrder]['lookupColumn'] = 2;
+            $data[$columnOrder]['data'][] = ['Name', $translatedCol];
+            
+            $modelData = $UsersData->find('all')
+            ->select([ 
+                'first_name', 
+                'middle_name', 
+                'third_name', 
+                'last_name',
+                'openemis_no'
+            ]);
 
             if (!empty($modelData)) {
                 foreach($modelData->toArray() as $row) {
