@@ -8,7 +8,9 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Log\Log;
-
+/*POCOR-6534 starts*/
+use Cake\ORM\TableRegistry;
+/*POCOR-6534 ends*/
 class InstitutionPositionsTable extends AppTable
 {
     use OptionsTrait;
@@ -37,7 +39,11 @@ class InstitutionPositionsTable extends AppTable
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    {
+    { 
+	    /*POCOR-6534 starts*/
+		$IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
+		$UserIdentitiesTable   = TableRegistry::get('User.Identities');
+		$birth_certificate_code_id = $IdentityTypesTable->getIdByName('Birth Certificate');
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
         $institution_id = $requestData->institution_id;
@@ -60,7 +66,11 @@ class InstitutionPositionsTable extends AppTable
                 'area_administratives_name' => 'AreaAdministratives.name',
                 'assignee_id' => 'Assignees.id',
                 'is_homeroom' => $this->aliasField('is_homeroom'),
-                'institution_name' => 'Institutions.name'
+                'institution_name' => 'Institutions.name',
+				'assignee_openemis_no' => 'SecurityUsersStaff.openemis_no',
+				'staff_firstname' => 'SecurityUsersStaff.first_name',
+				'staff_lastname' => 'SecurityUsersStaff.last_name',
+				'birth_certificate' => 'Identities.number',
             ])
             ->contain([
                 'Statuses' => [
@@ -106,16 +116,46 @@ class InstitutionPositionsTable extends AppTable
                         'Assignees.middle_name',
                         'Assignees.third_name',
                         'Assignees.last_name',
-                        'Assignees.preferred_name'
+                        'Assignees.preferred_name',
+						'Assignees.openemis_no',
                     ]
                 ]
+            ]);
+			$join['InstitutionStaffs'] = [
+                'type' => 'left',
+                'table' => 'institution_staff',
+                'conditions' => [
+                    'InstitutionStaffs.institution_position_id = ' . $this->aliasField('id'),
+                ],
+            ];
+            $join['SecurityUsersStaff'] = [
+                'type' => 'left',
+                'table' => 'security_users',
+                'conditions' => [
+                    'SecurityUsersStaff.id = InstitutionStaffs.staff_id',
+                ],
+            ];
+            
+        $query->join($join)
+		->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
+                $UserIdentitiesTable->aliasField('security_user_id = ') . ' SecurityUsersStaff.id',
+                $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id",
             ])
             ->where([$where]) 
             ->order(['institution_name', 'position_no']);
-
+       
         if ($positionFilter == self::POSITION_WITH_STAFF) {
             $query = $this->onExcelBeforePositionWithStaffQuery($query);
         }
+		$query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
+        {
+            return $results->map(function ($row)
+            {
+                $row['staff_user_full_name'] = $row['staff_firstname'] . ' ' .  $row['staff_lastname'];
+                return $row;
+            });
+        });
+		/*POCOR-6534 ends*/
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -201,7 +241,27 @@ class InstitutionPositionsTable extends AppTable
             'type' => 'string',
             'label' => __('Homeroom Teacher')
         ];
-
+		/*POCOR-6534 starts*/
+        $newFields[] = [
+            'key' => 'Assignees.openemis_no',
+            'field' => 'assignee_openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+		$newFields[] = [
+            'key' => 'staff_user_full_name',
+            'field' => 'staff_user_full_name',
+            'type' => 'string',
+            'label' => __('Staff Name')
+        ];
+		$newFields[] = [
+            'key' => 'birth_certificate',
+            'field' => 'birth_certificate',
+            'type' => 'string',
+            'label' => __('Birth Certificate')
+        ];
+	
+		/*POCOR-6534 ends*/
         if ($positionFilter == self::POSITION_WITH_STAFF) {
             $staffFields = $this->onExcelUpdatePositionWithStaffFields();
             $newFields = array_merge($newFields, $staffFields);
