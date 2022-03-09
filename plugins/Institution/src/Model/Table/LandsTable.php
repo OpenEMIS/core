@@ -1508,7 +1508,9 @@ class LandsTable extends ControllerActionTable
             if (!empty($institutionId)) {
                 $conditions['Institution'.$level.'.'.'institution_id'] = $institutionId;
                 $conditions['Institution'.$level.'.'.'academic_period_id'] = $academicPeriodId;
+                $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
             }
+
             //POCOR-6263 start
             if($landType->name == 'Room') { 
             $query
@@ -1662,6 +1664,8 @@ class LandsTable extends ControllerActionTable
                                             ])
                                             ->where([
                                                 $infrastructureCustomFields->alias('field_type') => 'CHECKBOX',
+                                                // $infrastructureCustomFieldOptions->aliasField('id') => $data->number_value,
+                                                'CustomFieldValues.infrastructure_custom_field_id = ' . $data->custom_field_id,
                                                 'CustomFieldValues.institution_'.lcfirst($landType->name).'_id  = ' . $row['level_id']])
                                             ->group([$infrastructureCustomFieldOptions->aliasField('name')])
                                             ->toArray();
@@ -1685,6 +1689,10 @@ class LandsTable extends ControllerActionTable
                                 }
                                 $row[$data->custom_field_id] = $opt;
                             }
+                        }
+                        
+                        if(!empty($data->number_value) && $data->field_type == 'NUMBER') {
+                            $row[$data->custom_field_id] = $data->number_value;
                         }
                         /*POCOR-6376 ends*/
                         if(!empty($data->decimal_value)) {
