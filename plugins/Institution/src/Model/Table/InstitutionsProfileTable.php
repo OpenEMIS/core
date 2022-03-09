@@ -14,6 +14,13 @@ use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
+/**
+ * 
+ * This class is used to manage Institutions > General > Profiles > Institutions module
+ * Ticket no : POCOR-6286
+ * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+ * 
+ */
 class InstitutionsProfileTable extends ControllerActionTable
 {
     private $statusOptions = [];
