@@ -143,6 +143,38 @@ class TrainingSessionParticipantsTable extends AppTable
         if (!empty($trainingSessionId)) {
             $query->where([$this->aliasField('training_session_id') => $trainingSessionId]);
         }
+
+        // POCOR-6594 get other identities data
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $userIdentities = TableRegistry::get('user_identities');
+                $userIdentitiesResult = $userIdentities->find()
+                    ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
+                    ->select([
+                        'identity_number' => $userIdentities->aliasField('number'),
+                        'identity_type_name' => 'IdentityTypes.name',
+                    ])
+                    ->where([$userIdentities->aliasField('security_user_id') => $row->trainee_id])
+                    ->order([$userIdentities->aliasField('id DESC')])
+                    ->hydrate(false)->toArray();
+                    $row->custom_identity_number = '';
+                    $other_identity_array = [];
+                    if (!empty($userIdentitiesResult)) {
+                        foreach ( $userIdentitiesResult as $index => $user_identities_data ) {
+                            if ($index == 0) {
+                                $row->custom_identity_number = $user_identities_data['identity_number'];
+                                $row->custom_identity_name   = $user_identities_data['identity_type_name'];
+                            } else {
+                                $other_identity_array[] = '(['.$user_identities_data['identity_type_name'].'] - '.$user_identities_data['identity_number'].')';
+                            }
+                        }
+                    }
+                $row->custom_identity_other_data = implode(',', $other_identity_array);
+                
+                return $row;
+            });
+        });
+        // POCOR-6594 get other identities data
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -214,18 +246,27 @@ class TrainingSessionParticipantsTable extends AppTable
         //POCOR-6594 <vikas.rathore@mail.valuecoders.com>
 
         $newFields[] = [
-            'key' => 'IdentityTypes.name',
+            'key' => 'MainIdentityTypes.name',//POCOR-6594 <vikas.rathore@mail.valuecoders.com> fixxed key name
             'field' => 'identity_type_name',
             'type' => 'string',
             'label' => __('Identity Type')
         ];
 
         $newFields[] = [
-            'key' => 'Trainess.identity_number',
+            'key' => 'Trainees.identity_number',//POCOR-6594 <vikas.rathore@mail.valuecoders.com> fixed key name
             'field' => 'identity_number',
             'type' => 'integer',
             'label' => ''
         ];
+
+        //POCOR-6594 <vikas.rathore@mail.valuecoders.com>
+        $newFields[] = [
+            'key' => 'custom_identity_other_data',
+            'field' => 'custom_identity_other_data',
+            'type' => 'string',
+            'label' => __('Other Identites')
+        ];
+        //POCOR-6594 <vikas.rathore@mail.valuecoders.com>
 
         $newFields[] = [
             'key' => 'institution_code',
