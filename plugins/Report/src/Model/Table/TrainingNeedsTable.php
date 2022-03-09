@@ -55,7 +55,7 @@ class TrainingNeedsTable extends AppTable
         }
 
         $query->select([
-            'user_id_id' => $this->aliasField('staff_id'),
+            'user_id_id' => $this->aliasField('staff_id'), //POCOR-6597
             'course_code' => 'TrainingCourses.code',
             'course_description' => 'TrainingCourses.description',
             'course_requirement' => 'TrainingRequirements.name',
@@ -231,7 +231,7 @@ class TrainingNeedsTable extends AppTable
 
     public function onExcelGetInstitutionCode(Event $event, Entity $entity)
     {
-        //if ($entity->has('staff') && !empty($entity->staff)) {
+        //if ($entity->has('staff') && !empty($entity->staff)) { // POCOR-6597
             $InstitutionStaff = TableRegistry::get('Institution.Staff');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
 
@@ -255,7 +255,7 @@ class TrainingNeedsTable extends AppTable
                 $entity->institution_name = $query->institution->name;
                 return $query->institution->code;
             }
-        //}
+        //} // POCOR-6597
     }
 
     public function onExcelGetInstitutionName(Event $event, Entity $entity)
@@ -274,7 +274,7 @@ class TrainingNeedsTable extends AppTable
                     'identity_number' => $userIdentities->aliasField('number'),
                     'identity_type_name' => 'IdentityTypes.name',
                 ])
-                ->where([$userIdentities->aliasField('security_user_id') => $entity->user_id_id])
+                ->where([$userIdentities->aliasField('security_user_id') => $entity->user_id_id]) // POCOR-6597
                 ->order([$userIdentities->aliasField('id DESC')])
                 ->hydrate(false)->toArray();
                 $entity->custom_identity_number = '';
@@ -306,25 +306,25 @@ class TrainingNeedsTable extends AppTable
     public function onExcelGetGender(Event $event, Entity $entity)
     {
         $gender = TableRegistry::get('User.Genders');
-        $gender_data = $gender->find()->select(['name'])->where([$gender->aliasField('id') => $entity->staff_user_gender_id])->first();
+        $gender_data = $gender->find()->select(['name'])->where([$gender->aliasField('id') => $entity->staff_user_gender_id])->first(); // POCOR-6597
         return $gender_data->name;
     }
 
     public function onExcelGetStaffFullName(Event $event, Entity $entity)
     {
-        return $entity->staff_full_name;
+        return $entity->staff_full_name; // POCOR-6597
     }
 
     public function onExcelGetAreaName(Event $event, Entity $entity)
     {
-        // if ($entity->has('staff') && !empty($entity->staff)) {
+        // if ($entity->has('staff') && !empty($entity->staff)) { // POCOR-6597
             $InstitutionStaff = TableRegistry::get('Institution.Staff');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
             $statuses = $StaffStatuses->findCodeList();
             $query = $InstitutionStaff->find('all')
                     ->contain(['Institutions'])
                     ->where([
-                        $InstitutionStaff->aliasField('staff_id') => $entity->user_id_id,
+                        $InstitutionStaff->aliasField('staff_id') => $entity->user_id_id, // POCOR-6597
                         $InstitutionStaff->aliasField('staff_status_id') => $statuses['ASSIGNED']
                     ])
                     ->order([
@@ -341,16 +341,18 @@ class TrainingNeedsTable extends AppTable
                     return $value->name;
                 }
             }
-        // }
+        // } // POCOR-6597
     }
 
     public function onExcelGetOpenemisNo(Event $event, Entity $entity)
     {
+        // START: POCOR-6597
         $Users = TableRegistry::get('User.Users');
         $user_data = $Users->findById($entity->user_id_id)->first();
         $entity->staff_full_name = $user_data->first_name .' '. $user_data->middle_name .' '. $user_data->third_name .' '. $user_data->last_name;
         $entity->staff_user_gender_id = $user_data->gender_id;
         return $user_data->openemis_no;
+        // END: POCOR-6597
     }
 
     public function onExcelGetStaffSubjects(Event $event, Entity $entity)
