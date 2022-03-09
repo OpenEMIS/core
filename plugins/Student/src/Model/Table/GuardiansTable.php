@@ -152,7 +152,7 @@ class GuardiansTable extends ControllerActionTable
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements($entity);
     }

@@ -861,7 +861,7 @@ class StaffTable extends ControllerActionTable
                         'Users.last_name',
                         'Users.preferred_name',
                         'identity_type' => $IdentityTypes->aliasField('name'),
-                        $typesIdentity->identity_type => $UserIdentities->aliasField('number')
+                        "`". $typesIdentity->identity_type . "`" => $UserIdentities->aliasField('number') //POCRO-6583 added single quote as identity_type was not working for some clients
                     ])
                     ->leftJoin(
                                 [$UserIdentities->alias() => $UserIdentities->table()],
@@ -2223,7 +2223,7 @@ class StaffTable extends ControllerActionTable
                 $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
             ])
             ->where([
-                //$InstitutionClasses->aliasField('id') => $classId,
+                $InstitutionClasses->aliasField('id') => $classId,//POCOR-6508
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('staff_id') => $staffId
             ])
