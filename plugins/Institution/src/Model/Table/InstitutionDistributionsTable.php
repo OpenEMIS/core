@@ -31,6 +31,29 @@ class InstitutionDistributionsTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
 
         $this->MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
+        //POCOR-6153 start
+        $roles = [1,2,3,4,5,6,7,8,9,10,11];
+        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()
+                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                    [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    ]
+                ])
+                ->where([
+                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
+                    'SecurityFunctions._execute'=>'Distributions.excel',
+                    'SecurityRoleFunctions._execute' => 1
+                ])
+                ->toArray();
+        if(!empty($QueryResult)){
+            // POCOR-6153 start
+            $this->addBehavior('Excel', [
+            'excludes' => ['academic_period_id', 'institution_id', 'comment'],
+            'pages' => ['index'],
+            'autoFields' => false
+            ]);
+        // POCOR-6153 end
+        }
         
     }
 
