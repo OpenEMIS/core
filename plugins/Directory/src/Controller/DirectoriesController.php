@@ -976,6 +976,6 @@ class DirectoriesController extends AppController
     /*POCOR-6286 starts*/
     public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffProfiles']); }
 
-    public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentProfiles']); }
+    public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.StudentProfiles']); }
     /*POCOR-6286 ends*/
 }
