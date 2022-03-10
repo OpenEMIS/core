@@ -54,6 +54,7 @@ class PerformanceTable extends AppTable
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
+        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
@@ -77,6 +78,7 @@ class PerformanceTable extends AppTable
 
     public function addBeforeAction(Event $event)
     {
+        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
@@ -98,6 +100,31 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('count_students', ['type' => 'hidden']);
         $this->ControllerAction->field('count_marked_students', ['type' => 'hidden']);
         $this->ControllerAction->field('missing_marks', ['type' => 'hidden']);
+    }
+
+    /**
+     * Fetching academic period's level options
+     *
+     * @param  \Cake\Network\Request  $request
+     * @return attr
+     */
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+            $currentPeriod = $this->AcademicPeriods->getCurrent();
+
+            $attr['options'] = $academicPeriodOptions;
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+
+            if (empty($request->data[$this->alias()]['academic_period_id'])) {
+                $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
+            }
+        }
+
+        return $attr;
     }
 
     /**
@@ -214,6 +241,7 @@ class PerformanceTable extends AppTable
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
     {
         $institutionId = $request->data[$this->alias()]['institution_id'];
+        $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
         $gradeTable = $this->Institutions->InstitutionGrades;
         if ($institutionId > 0) {
             $condition[$gradeTable->aliasField('institution_id')] = $institutionId;
@@ -226,7 +254,11 @@ class PerformanceTable extends AppTable
                         ->leftJoin([$gradeTable->alias() => $gradeTable->table()], [
                             $gradeTable->aliasField('education_grade_id = ') . $this->EducationGrades->aliasField('id')
                         ])
-                        ->where([$condition])
+                        ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                        ->where([
+                            'EducationSystems.academic_period_id' => $academicPeriodId,
+                            $condition
+                        ])
                         ->group([$this->EducationGrades->aliasField('name')])
                         ->order([
                             $this->EducationGrades->aliasField('name') => 'ASC'
@@ -255,8 +287,12 @@ class PerformanceTable extends AppTable
     public function onUpdateFieldAssessmentPeriodId(Event $event, array $attr, $action, Request $request)
     {
         $gradeId = $request->data[$this->alias()]['education_grade_id'];
+        $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
         if ($gradeId > 0) {
             $condition[$this->Assessments->aliasField('education_grade_id')] = $gradeId;
+        }
+        if (!empty($academicPeriodId)) {
+            $condition[$this->Assessments->aliasField('academic_period_id')] = $academicPeriodId;
         }
         $assessmentPeriodList = $this->AssessmentPeriods
                         ->find('list', [
@@ -295,6 +331,8 @@ class PerformanceTable extends AppTable
         $institutionId = $requestData->institution_id;
         $gradeId = $requestData->education_grade_id;
         $assessmentPeriodId = $requestData->assessment_period_id;
+        $assessmentPeriodId = $requestData->assessment_period_id;
+        $academicPeriodId = $requestData->academic_period_id;
         $conditions = [];
         if ($areaId > 0) {
             $conditions[$this->aliasField('area_id')] = $areaId;
@@ -307,6 +345,9 @@ class PerformanceTable extends AppTable
         }
         if ($assessmentPeriodId > 0) {
             $conditions[$this->aliasField('assessment_period_id')] = $assessmentPeriodId;
+        }
+        if (!empty($academicPeriodId)) {
+            $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
 
          $query
