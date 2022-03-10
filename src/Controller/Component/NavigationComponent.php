@@ -325,7 +325,14 @@ class NavigationComponent extends Component
                 }else if($action == 'Identities'){//POCOR-6453 starts
                     $securityUserId = $this->controller->paramsDecode($this->request->query['queryString']);
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
-                }else{
+                } 
+                /*POCOR-6286 : added condition to get selected student id */    
+                elseif ($action == 'StudentProfiles') {
+                    $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
+                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
+                } 
+                /*POCOR-6286 ends*/
+                else{
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
                 }
                 //POCOR-6202 end
@@ -1631,7 +1638,7 @@ class NavigationComponent extends Component
         }
 
         /*POCOR-6286 - added profiles moduls under Directory > Student module*/
-        if ($this->AccessControl->check(['Institutions', 'StudentProfiles'])) {
+        if ($this->AccessControl->check(['Profiles', 'StudentProfiles'])) {
             $newNav = [
                 'Directories.StudentProfiles' => [
                     'title' => 'Profiles',

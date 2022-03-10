@@ -60,7 +60,7 @@ class POCOR6286 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],[
                 'name' => 'Generate Satff Profile',
-                'controller' => 'Institutions',
+                'controller' => 'Profiles',
                 'module' => 'Institutions',
                 'category' => 'Profiles',
                 'parent_id' => $parentId,
@@ -76,7 +76,7 @@ class POCOR6286 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ], [
                 'name' => 'Download Satff Profile',
-                'controller' => 'Institutions',
+                'controller' => 'Profiles',
                 'module' => 'Institutions',
                 'category' => 'Profiles',
                 'parent_id' => $parentId,
@@ -92,7 +92,7 @@ class POCOR6286 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],[
                 'name' => 'Generate Students Profile',
-                'controller' => 'Institutions',
+                'controller' => 'Profiles',
                 'module' => 'Institutions',
                 'category' => 'Profiles',
                 'parent_id' => $parentId,
@@ -108,7 +108,7 @@ class POCOR6286 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],[
                 'name' => 'Download Students Profile',
-                'controller' => 'Institutions',
+                'controller' => 'Profiles',
                 'module' => 'Institutions',
                 'category' => 'Profiles',
                 'parent_id' => $parentId,
