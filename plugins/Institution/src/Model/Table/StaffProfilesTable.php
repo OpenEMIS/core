@@ -215,7 +215,7 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        //echo "<pre>";print_r();die();
+        //echo "<pre>";print_r($this->request->params['plugin']);die();
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
@@ -227,7 +227,7 @@ class StaffProfilesTable extends ControllerActionTable
 		//End 
 
         // Report Cards filter
-        if ($this->request->params['plugin'] != 'Profile') {
+        if ($this->request->params['plugin'] != 'Profile' && $this->request->params['plugin'] != 'Directory') {
             $reportCardOptions = [];
             $reportCardOptions = $this->StaffTemplates->find('list')
                 ->where([
@@ -241,10 +241,10 @@ class StaffProfilesTable extends ControllerActionTable
             $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
         }
         //End	
-        if ($this->request->params['plugin'] != 'Profile') {  
+        if ($this->request->params['plugin'] != 'Profile' && $this->request->params['plugin'] != 'Directory') {  
 		    $where[$this->aliasField('institution_id')] = $institutionId;
         }
-        if ($this->request->params['plugin'] != 'Profile') {
+        if ($this->request->params['plugin'] != 'Profile' && $this->request->params['plugin'] != 'Directory') {
             $query
             ->select([
                 'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
