@@ -4295,6 +4295,7 @@ class InstitutionsController extends AppController
             'Institution.StudentSpecialNeeds'  => __('Student Special Needs'),
             'Institution.StudentHealths'  => __('Student Health'),
             'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
+            'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
         ];
         return $options;
     }
