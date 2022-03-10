@@ -39,6 +39,7 @@ class PerformanceTable extends AppTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Providers', ['className' => 'Institution.Providers', 'foreignKey' => 'institution_provider_id']);
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
+        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects', 'foreignKey' => 'subject_id']);
 
         //Behaviors
         $this->addBehavior('Excel', [
@@ -309,22 +310,6 @@ class PerformanceTable extends AppTable
         }
 
          $query
-            ->join([
-                'AssessmentItems' => [
-                    'type' => 'left',
-                    'table' => 'assessment_items', 
-                    'conditions' => [
-                        'AssessmentItems.assessment_id = '.$this->aliasField('assessment_id')
-                    ],
-                ],
-                'EducationSubjects' => [
-                    'type' => 'left',
-                    'table' => 'education_subjects',
-                    'conditions' => [
-                        'EducationSubjects.id = AssessmentItems.education_subject_id'
-                    ]
-                ]
-            ])
             ->select([
                 'academic_period_name' => $this->aliasField('academic_period_name'),
                 'institution_code' => $this->aliasField('institution_code'),
@@ -334,7 +319,7 @@ class PerformanceTable extends AppTable
                 'academic_term' => 'AssessmentPeriods.academic_term',
                 'assessment_name' => $this->aliasField('assessment_name'),
                 'assessment_period_name' => $this->aliasField('assessment_period_name'),
-                'subject_name' => 'EducationSubjects.name',
+                'subject_name' => $this->aliasField('subject_name'),
                 'total_students' =>  $this->aliasField('count_students'),
                 'marks_entered' => $this->aliasField('count_marked_students')
             ])
