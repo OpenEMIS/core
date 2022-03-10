@@ -531,18 +531,22 @@ class InstitutionShiftsTable extends ControllerActionTable
     {
         //POCOR-6618 starts 
         if(!empty($entity->id) && $entity->location){ //this will work when edit any shift 
-                $institutionShifts = TableRegistry::get('institution_shifts')
-                                        ->find()
-                                        ->where(['id'=>$entity->id])->first();
-                //location_institution_id belongs to `occupier` and  institution_id belongs to `owner`
-                if($entity->location == 'OTHER' && ($institutionShifts->location_institution_id == $this->request->data['InstitutionShifts']['location_institution_id'])){ 
-                    $entity->institution_id = $entity->location_institution_id;
-                    $entity->location_institution_id = $institutionShifts->institution_id;
-                }else if($entity->location == 'OTHER' && ($institutionShifts->location_institution_id != $this->request->data['InstitutionShifts']['location_institution_id'])){
-                    $entity->institution_id = $entity->institution_id;
-                    $entity->location_institution_id = $this->request->data['InstitutionShifts']['location_institution_id'];
-                }
-            }//POCOR-6618 ends
+            $institutionShifts = TableRegistry::get('institution_shifts')
+                                    ->find()
+                                    ->where(['id'=>$entity->id])->first();
+            //location_institution_id belongs to `occupier` and  institution_id belongs to `owner`
+            if($entity->location == 'OTHER' && ($institutionShifts->location_institution_id == $this->request->data['InstitutionShifts']['location_institution_id'])){ 
+                $entity->institution_id = $entity->location_institution_id;
+                $entity->location_institution_id = $institutionShifts->institution_id;
+            }else if($entity->location == 'OTHER' && ($institutionShifts->location_institution_id != $this->request->data['InstitutionShifts']['location_institution_id'])){
+                $entity->institution_id = $entity->institution_id;
+                $entity->location_institution_id = $this->request->data['InstitutionShifts']['location_institution_id'];
+            }
+            //when the occupier and the owner are same 
+            if($entity->location == 'CURRENT' && ($this->request->data['InstitutionShifts']['institution_id'] == $institutionShifts->institution_id) && ($institutionShifts->institution_id == $institutionShifts->location_institution_id)){
+                $entity->location_institution_id = $this->request->data['InstitutionShifts']['institution_id'];
+            }
+        }//POCOR-6618 ends
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
