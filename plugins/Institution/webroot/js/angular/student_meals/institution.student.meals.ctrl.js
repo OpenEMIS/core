@@ -138,7 +138,9 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 console.log('mealBenefitTypeOptions',mealBenefitTypeOptions);
                 vm.mealBenefitTypeOptions = mealBenefitTypeOptions;
                 vm.gridOptions.context.mealBenefitTypeOptions = vm.mealBenefitTypeOptions;
-                return InstitutionStudentMealsSvc.mealProgrameOptions(vm.institutionId);
+                console.log('vmData');
+                console.log(vm);
+                return InstitutionStudentMealsSvc.mealProgrameOptions(vm.getClassStudentParams());
             }, vm.error)
             .then(function(mealPrograme) {
                 vm.gridOptions.context.mealPrograme = mealPrograme[0].id
@@ -578,6 +580,11 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 //return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
                 return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
+        .then(function(mealBenefitTypeOptions) {
+            vm.updateIsMarked(mealBenefitTypeOptions);
+            //return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+            return InstitutionStudentMealsSvc.mealProgrameOptions(vm.getClassStudentParams());
+        }, vm.error)
         /*.then(function(isMarked) {
             vm.updateIsMarked(isMarked);
             return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());

@@ -292,8 +292,11 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             .ajax({success: success, defer: true});
     }
 
-    function mealProgrameOptions(institutionId) {
+    function mealProgrameOptions(params) {
         var success = function(response, deferred) {
+            console.log('responseData');
+            console.log(params.academic_period_id);
+            // console.log(institutionId);
             var mealProgrammes = response.data.data;
             if (angular.isObject(mealProgrammes) && mealProgrammes.length > 0) {
                 deferred.resolve(mealProgrammes);
@@ -304,7 +307,8 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         
         return MealInstitutionProgrammes
             .find('mealInstitutionProgrammes', {
-                institution_id: institutionId,
+                institution_id: params.institution_id,
+                academic_period_id: params.academic_period_id
             })
              .ajax({success: success, defer: true});
             return [];
