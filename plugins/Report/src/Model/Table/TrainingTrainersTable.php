@@ -48,8 +48,6 @@ class TrainingTrainersTable extends AppTable
                 'session_start_date' => 'Sessions.start_date',
                 'session_end_date' => 'Sessions.end_date',
                 'openemis_no' => 'Trainers.openemis_no',
-                // 'identity_type_name' => 'Identityvalue.name',
-                // 'identity_number' => 'IdentityTypes.number',
             ])
             ->matching('Sessions.Courses')
             ->join([
@@ -60,27 +58,6 @@ class TrainingTrainersTable extends AppTable
                         'Trainers.id = ' . $this->aliasField('trainer_id')
                     ]
                 ],
-                // 'IdentityTypes' => [
-                //     'type' => 'LEFT',
-                //     'table' => 'user_identities',
-                //     'conditions' => [
-                //         'IdentityTypes.security_user_id = ' . $this->aliasField('trainer_id')
-                //     ]
-                // ],
-                // 'Identityvalue' => [
-                //     'type' => 'LEFT',
-                //     'table' => 'identity_types',
-                //     'conditions' => [
-                //         'Identityvalue.id = ' . $Identityvalue->aliasField('identity_type_id')
-                //     ]
-                // ],
-                // 'IdentityTypes' => [
-                //     'type' => 'LEFT',
-                //     'table' => 'identity_types',
-                //     'conditions' => [
-                //         'IdentityTypes.id = ' . $this->Trainers->aliasField('identity_type_id')
-                //     ]
-                // ],
             ])
             ->where(['Courses.id' => $trainingCourseId])
             ->order([$this->aliasField('name')]);
@@ -176,7 +153,8 @@ class TrainingTrainersTable extends AppTable
             return ' ';
         }
     }
-
+   
+    // start POCOR-6595
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
         $userIdentities = TableRegistry::get('user_identities');
@@ -218,50 +196,33 @@ class TrainingTrainersTable extends AppTable
     public function onExcelGetAreaName(Event $event, Entity $entity)
     {
         if (!empty($entity->trainer_id)) {
-            $AreaTable = TableRegistry::get('Area.Areas');
             $InstitutionStaff = TableRegistry::get('Institution.Staff');
             $Institution = TableRegistry::get('Institution.Institutions');
+            $AreaTable = TableRegistry::get('Area.Areas');
 
-            $data = $AreaTable->find('all')->first();
-        echo "<pre>"; print_r($data); die();
+            $data = $InstitutionStaff->find()
+                    ->select([
+                        'area_name' => $AreaTable->aliasField('name')
+                    ])
+                    ->leftjoin(
+                        [$Institution->alias() => $Institution->table()],
+                        [$Institution->aliasField('id = ').$InstitutionStaff->aliasField('institution_id')]
+                    )
+                    ->leftjoin(
+                        [$AreaTable->alias() => $AreaTable->table()],
+                        [$AreaTable->aliasField('id = ').$Institution->aliasField('area_id')]
+                    )
+                    ->where([
+                        $InstitutionStaff->aliasField('staff_id') => $entity->trainer_id,
+                        $InstitutionStaff->aliasField('staff_status_id') => 1
+                    ])->first();
 
-
-
-
-
-
-
-
-
-            // $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-            // $statuses = $StaffStatuses->findCodeList();
-            // $data = $InstitutionStaff->find()
-            //         ->select([
-            //             'id' => $Institution->aliasField('id')
-            //         ])
-            //         ->leftjoin(
-            //             [$Institution->alias() => $Institution->table()],
-            //             [$Institution->aliasField('id = ').$InstitutionStaff->aliasField('institutions_id')]
-            //         )
-
-            // ->contain(['Institutions' => function ($q){
-            //             return $q->where([
-            //                 'Institutions.id =' => 6,                  
-            //             ]);                
-            //         }])
-                    // ->where([
-                    //     $InstitutionStaff->aliasField('staff_id') => 14352,
-                    //     $InstitutionStaff->aliasField('staff_status_id') => 1
-                    // ])->first();
-            if (!empty($query)) {
-                $AreaTable = TableRegistry::get('Area.Areas');
-                $value = $AreaTable->find()->where([$AreaTable->aliasField('id') => $query->institution->area_id])->first();
-                if (empty($value)) {
-                    return ' - ';
+                if (!empty($data)) {
+                    return $data->area_name;                    
                 } else {
-                    return $value->name;
-                }
-            }
+                    return ' - ';
+                }            
         }
     }
+    // END POCOR-6595
 }
