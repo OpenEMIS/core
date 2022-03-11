@@ -137,6 +137,15 @@ class InstitutionShiftsTable extends ControllerActionTable
         }
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // if($entity->location){
+        //     $entity->institution_id = $entity->institution_id;
+        //     $entity->location_institution_id = $entity->location_institution_id;
+        //     echo "<pre>";print_r($entity);die;
+        // }
+    }
+
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $currentInstitutionId = $this->Session->read('Institution.Institutions.id');
@@ -406,7 +415,12 @@ class InstitutionShiftsTable extends ControllerActionTable
                 $attr['value'] = 'CURRENT';
             }
         } elseif ($action == 'edit') {
-            if (!Configure::read('schoolMode')) {
+            if($attr['entity']->institution_id != $attr['entity']->location_institution_id){
+                $attr['onChangeReload'] = 'changeLocation';
+                $attr['default'] = 'OTHER'; //set the default selected location as Current Institution
+                $attr['select'] = false;
+            }
+            else if (!Configure::read('schoolMode')) {
                 $attr['onChangeReload'] = 'changeLocation';
                 $attr['default'] = 'CURRENT'; //set the default selected location as Current Institution
                 $attr['select'] = false;
@@ -421,7 +435,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onUpdateFieldLocationInstitutionId(Event $event, array $attr, $action, $request)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+       $institutionId = $this->Session->read('Institution.Institutions.id');
         if ($action == 'add') {
             if ($request->data) {
                 $data = $request->data[$this->alias()];
@@ -445,22 +459,28 @@ class InstitutionShiftsTable extends ControllerActionTable
                 }
             }
         } elseif ($action == 'edit') {
-            $attr['onChangeReload'] = 'changeLocation';
-            // $attr['type'] = 'readonly';
-            // $Institutions = TableRegistry::get('Institution.Institutions');
-            // $occupier = $Institutions->findById($attr['entity']->location_institution_id)->first();
-            // $attr['attr']['value'] = $occupier->name;
+            // $attr['onChangeReload'] = 'changeLocation';
+            if($event->data[0]['entity']->institution_id != $event->data[0]['entity']->location_institution_id){
+            $attr['type'] = 'autocomplete';
+            $attr['target'] = ['key' => 'location_institution_id', 'name' => $this->aliasField('location_institution_id')];
+            }
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $occupier = $Institutions->findById($attr['entity']->location_institution_id)->first();
+            $attr['attr']['value'] = $occupier->name;
             $data = $request->data[$this->alias()];
-            if ($data['location'] == 'OTHER') {
+            
+            if ($event->data[0]['entity']->institution_id != $event->data[0]['entity']->location_institution_id && $event->data[0]['entity']->location != 'CURRENT') {
+            //POCOR-6587 added one more condition to get data
                 $attr['type'] = 'autocomplete';
                 $attr['target'] = ['key' => 'location_institution_id', 'name' => $this->aliasField('location_institution_id')];
                 $attr['noResults'] = __('No Institutions found');
                 $attr['attr'] = ['placeholder' => __('Institution Code or Name')];
-                if (isset($data['location_institution_id']) && !empty($data['location_institution_id'])) { //this is to regain institution name after validation / reload
-                    if ($data['location_institution_id'] == $institutionId) {
+                if (isset($event->data[0]['entity']->location_institution_id) && !empty($event->data[0]['entity']->location_institution_id)) { //this is to regain institution name after validation / reload
+                    if ($event->data[0]['entity']->institution_id == $institutionId) {
                         $attr['attr']['value'] = '';
                     } else {
-                        $institutionDetails = $this->Institutions->findById($data['location_institution_id'])->first();
+                        $entity->location_institution_id = $event->data[0]['entity']->location_institution_id;
+                        $institutionDetails = $this->Institutions->findById($event->data[0]['entity']->institution_id)->first();
                         $attr['attr']['value'] = $institutionDetails['code'] . " - " . $institutionDetails['name'];
                     }
                 }
@@ -477,7 +497,7 @@ class InstitutionShiftsTable extends ControllerActionTable
             //         $attr['attr']['value'] = $institutionDetails['code'] . " - " . $institutionDetails['name'];
             //     }
             // }
-            $attr['url'] = ['academicperiod' => $this->getSelectedAcademicPeriod($this->request), 'controller' => 'Institutions', 'action' => 'Shifts', 'ajaxInstitutionsAutocomplete'];
+            // $attr['url'] = ['academicperiod' => $this->getSelectedAcademicPeriod($this->request), 'controller' => 'Institutions', 'action' => 'Shifts', 'ajaxInstitutionsAutocomplete'];
         }
         // pr($attr['value']);
         return $attr;

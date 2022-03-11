@@ -22,7 +22,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 
         $this->addBehavior('Excel',[
-            'excludes' => ['institution_id'],
+           // 'excludes' => ['institution_id'],
             'pages' => ['index'],
         ]);
     }
@@ -42,7 +42,6 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-
         if ($field == 'academic_period_id') {
             return __('Academic Period');
         }
@@ -56,10 +55,18 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+        //print_r($field); exit;
+
+    }
+    public function viewBeforeAction(Event $event)
+    {
+
+        $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'comment','institutions.name']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
-        $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'comment']);
+        $this->field('Institution');
+        $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'comment','Institution']);
     }
 
     public function onGetStaffId(Event $event, Entity $entity)
@@ -83,7 +90,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
 
         $this->setFieldOrder([
             'academic_period_id', 'staff_duties_id',
-            'staff_id','comment'
+            'staff_id','comment','institution_id'
         ]);
     }
 
@@ -163,8 +170,27 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
             'type'  => 'string',
             'label' => __('Comment')
         ];
+         $extraField[] = [
+            'key' => 'Institutions.name',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution')
+        ];
 
         $fields->exchangeArray($extraField);
+    }
+
+    public function onExcelGetInstitutionName(Event $event, Entity $entity)
+    {
+        $Institutions = TableRegistry::get('institutions');
+        $InstitutionName=$Institutions->find()->select('name')->where(['id' => $entity->institution_id])->first();
+        return $InstitutionName['name'];
+    }
+    public function onGetInstitution(Event $event, Entity $entity)
+    {
+        $Institutions = TableRegistry::get('institutions');
+        $InstitutionName=$Institutions->find()->select('name')->where(['id' => $entity->institution_id])->first();
+        return $InstitutionName['name'];
     }
 
     public function onExcelGetStaffId(Event $event, Entity $entity)

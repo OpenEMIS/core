@@ -15,6 +15,7 @@ use ArrayObject;
 
 class InstitutionSubjectStaffTable extends AppTable
 {
+    private $isSubjectExistData;
     use OptionsTrait;
     public function initialize(array $config)
     {
@@ -79,8 +80,22 @@ class InstitutionSubjectStaffTable extends AppTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew()) {
+        if ($this->isSubjectExistData) {
+            $entity->start_date = $this->isSubjectExistData->start_date;
+        } else {
             $entity->start_date = Time::now();
+        }
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $existingRecords = $this->find()->where([
+            $this->aliasField('staff_id') => $data['staff_id'],
+            $this->aliasField('institution_id') => $data['institution_id'],
+            $this->aliasField('institution_subject_id') => $data['institution_subject_id']
+        ])->first();
+        if ($existingRecords) {
+            $this->isSubjectExistData = $existingRecords;
         }
     }
 
