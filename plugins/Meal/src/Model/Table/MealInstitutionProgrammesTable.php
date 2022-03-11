@@ -51,6 +51,10 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
     public function findMealInstitutionProgrammes(Query $query, array $options){
         
         $institutionId = $options['institution_id'];
+        $academic_period_id = $options['academic_period_id'];
+        if($options['academic_period_id'] == ''){
+            $options['academic_period_id'] = 31;
+        }
 
         $MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
         $query
@@ -65,7 +69,10 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
             ]
         )
         ->where([
-        $this->aliasField('institution_id') => $institutionId]);
+        $this->aliasField('institution_id') => $institutionId]
+        
+        );
+        echo "<pre>";print_r($query->Sql());die;
         // $row = $query->toArray();
         
         // $results = $MealProgrammes
