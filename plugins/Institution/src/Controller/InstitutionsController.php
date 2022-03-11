@@ -286,6 +286,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBudgets']);
     }
+    // POCOR-6160 start
+    public function BankAccounts()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBankAccounts']);
+    }
+    // POCOR-6160 ends
     public function Income()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionIncomes']);
@@ -388,6 +394,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffBehaviours']);
     }
+    // POCOR-6154
+    public function StudentBehaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentBehaviours']);
+    }
+    // POCOR-6154
     public function Textbooks()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']);
@@ -4283,6 +4295,7 @@ class InstitutionsController extends AppController
             'Institution.StudentSpecialNeeds'  => __('Student Special Needs'),
             'Institution.StudentHealths'  => __('Student Health'),
             'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
+            'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
             'Institution.InstitutionStaffPositionProfile'  => __('Staff Positions for all staff'),
         ];
         return $options;

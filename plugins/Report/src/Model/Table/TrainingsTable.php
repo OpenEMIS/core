@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\ORM\TableRegistry;
 
 use App\Model\Traits\OptionsTrait;
 
@@ -65,6 +66,8 @@ class TrainingsTable extends AppTable
         $this->ControllerAction->field('training_need_type', ['type' => 'hidden']);
         $this->ControllerAction->field('status');
         $this->ControllerAction->field('format');
+        $this->ControllerAction->field('institution_status');
+        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
@@ -151,7 +154,7 @@ class TrainingsTable extends AppTable
 
     public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
     {
-        $excludedFeature = ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers'];
+        $excludedFeature = ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers', 'Report.ReportTrainingNeedStatistics'];
 
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
@@ -188,6 +191,50 @@ class TrainingsTable extends AppTable
                 }
                 // End POCOR-4072
 
+                return $attr;
+            }
+        }
+    }
+
+    public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, Request $request)
+    {
+        $includedFeature     = ['Report.ReportTrainingNeedStatistics'];
+        $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
+        $statuses            = $InstitutionStatuses->findIdList();
+
+        if ($action == 'add') {
+            if (isset($this->request->data[$this->alias()]['feature'])) {
+                $feature = $this->request->data[$this->alias()]['feature'];
+                if (in_array($feature, $includedFeature)) {
+                    $institution_statuses = ['-1' => __('All Statuses')];
+                    $attr['type'] = 'select';
+                    $attr['select'] = false;
+                    $attr['options'] = $institution_statuses + $statuses;
+                } else {
+                    $attr['visible'] = false;
+                }
+                return $attr;
+            }
+        }
+    }
+
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        $includedFeature     = ['Report.ReportTrainingNeedStatistics'];
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+
+            if (in_array($feature, $includedFeature)) {
+                $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $academicPeriodOptions = $AcademicPeriodTable->getYearList();
+                $currentPeriod = $AcademicPeriodTable->getCurrent();
+                $attr['options'] = $academicPeriodOptions;
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['onChangeReload'] = true;
+                if (empty($request->data[$this->alias()]['academic_period_id'])) {
+                    $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
+                }
                 return $attr;
             }
         }
