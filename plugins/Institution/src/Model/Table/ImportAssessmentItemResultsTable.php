@@ -478,7 +478,16 @@ class ImportAssessmentItemResultsTable extends AppTable {
                                 ])
 		->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId])
 		->first();
-		
+        //START: POCOR-6602
+		$today_date = date('Y-m-d');
+        if (!empty($assessment)) {
+            if(strtotime($today_date) > strtotime($assessment->date_disabled)){
+                $rowInvalidCodeCols['marks'] = __('Date of assement period is expired.');
+                $tempRow['marks'] = false;
+                return false;
+            }
+        }
+        //END: POCOR-6602
 		$maxval = $maxvalue->maximumvalue;
 		$value = preg_replace('~\.0+$~','',$maxval);
 		/*POCOR-6528 ends*/
