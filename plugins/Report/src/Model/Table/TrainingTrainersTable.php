@@ -48,8 +48,8 @@ class TrainingTrainersTable extends AppTable
                 'session_start_date' => 'Sessions.start_date',
                 'session_end_date' => 'Sessions.end_date',
                 'openemis_no' => 'Trainers.openemis_no',
-                'identity_type_name' => 'IdentityTypes.name',
-                'identity_number' => 'Trainers.identity_number'
+                // 'identity_type_name' => 'Identityvalue.name',
+                // 'identity_number' => 'IdentityTypes.number',
             ])
             ->matching('Sessions.Courses')
             ->join([
@@ -60,13 +60,27 @@ class TrainingTrainersTable extends AppTable
                         'Trainers.id = ' . $this->aliasField('trainer_id')
                     ]
                 ],
-                'IdentityTypes' => [
-                    'type' => 'LEFT',
-                    'table' => 'identity_types',
-                    'conditions' => [
-                        'IdentityTypes.id = ' . $this->Trainers->aliasField('identity_type_id')
-                    ]
-                ],
+                // 'IdentityTypes' => [
+                //     'type' => 'LEFT',
+                //     'table' => 'user_identities',
+                //     'conditions' => [
+                //         'IdentityTypes.security_user_id = ' . $this->aliasField('trainer_id')
+                //     ]
+                // ],
+                // 'Identityvalue' => [
+                //     'type' => 'LEFT',
+                //     'table' => 'identity_types',
+                //     'conditions' => [
+                //         'Identityvalue.id = ' . $Identityvalue->aliasField('identity_type_id')
+                //     ]
+                // ],
+                // 'IdentityTypes' => [
+                //     'type' => 'LEFT',
+                //     'table' => 'identity_types',
+                //     'conditions' => [
+                //         'IdentityTypes.id = ' . $this->Trainers->aliasField('identity_type_id')
+                //     ]
+                // ],
             ])
             ->where(['Courses.id' => $trainingCourseId])
             ->order([$this->aliasField('name')]);
@@ -116,17 +130,23 @@ class TrainingTrainersTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'IdentityTypes.name',
-            'field' => 'identity_type_name',
+            'key' => 'identity_type',
+            'field' => 'identity_type',
             'type' => 'string',
-            'label' => __('Identity Type'),
+            'label' => __('Identity Type')
         ];
 
         $newFields[] = [
-            'key' => 'Trainess.identity_number',
+            'key' => 'identity_number',
             'field' => 'identity_number',
-            'type' => 'integer',
-            'label' => '',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+        $newFields[] = [
+            'key' => 'other_identity',
+            'field' => 'other_identity',
+            'type' => 'string',
+            'label' => __('Other Identites')
         ];
 
         $newFields[] = [
@@ -134,6 +154,13 @@ class TrainingTrainersTable extends AppTable
             'field' => 'name',
             'type' => 'name',
             'label' => __('Name'),
+        ];
+
+        $newFields[] = [
+            'key' => 'area_name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => 'Area'
         ];
 
         $fields->exchangeArray($newFields);
@@ -147,6 +174,94 @@ class TrainingTrainersTable extends AppTable
             return $this->Trainers->get($trainerId)->name;
         } else {
             return ' ';
+        }
+    }
+
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentitiesResult = $userIdentities->find()
+                ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
+                ->select([
+                    'identity_number' => $userIdentities->aliasField('number'),
+                    'identity_type_name' => 'IdentityTypes.name',
+                ])
+                ->where([$userIdentities->aliasField('security_user_id') => $entity->trainer_id])
+                ->order([$userIdentities->aliasField('id DESC')])
+                ->hydrate(false)->toArray();
+                $entity->custom_identity_number = '';
+                $other_identity_array = [];
+                if (!empty($userIdentitiesResult)) {
+                    foreach ( $userIdentitiesResult as $index => $user_identities_data ) {
+                        if ($index == 0) {
+                            $entity->custom_identity_number = $user_identities_data['identity_number'];
+                            $entity->custom_identity_name   = $user_identities_data['identity_type_name'];
+                        } else {
+                            $other_identity_array[] = '(['.$user_identities_data['identity_type_name'].'] - '.$user_identities_data['identity_number'].')';
+                        }
+                    }
+                }
+        $entity->custom_identity_other_data = implode(',', $other_identity_array);
+        return $entity->custom_identity_name;
+    }
+
+    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    {
+        return $entity->custom_identity_number;
+    }
+
+    public function onExcelGetOtherIdentity(Event $event, Entity $entity)
+    {
+        return $entity->custom_identity_other_data;
+    }
+
+    public function onExcelGetAreaName(Event $event, Entity $entity)
+    {
+        if (!empty($entity->trainer_id)) {
+            $AreaTable = TableRegistry::get('Area.Areas');
+            $InstitutionStaff = TableRegistry::get('Institution.Staff');
+            $Institution = TableRegistry::get('Institution.Institutions');
+
+            $data = $AreaTable->find('all')->first();
+        echo "<pre>"; print_r($data); die();
+
+
+
+
+
+
+
+
+
+            // $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+            // $statuses = $StaffStatuses->findCodeList();
+            // $data = $InstitutionStaff->find()
+            //         ->select([
+            //             'id' => $Institution->aliasField('id')
+            //         ])
+            //         ->leftjoin(
+            //             [$Institution->alias() => $Institution->table()],
+            //             [$Institution->aliasField('id = ').$InstitutionStaff->aliasField('institutions_id')]
+            //         )
+
+            // ->contain(['Institutions' => function ($q){
+            //             return $q->where([
+            //                 'Institutions.id =' => 6,                  
+            //             ]);                
+            //         }])
+                    // ->where([
+                    //     $InstitutionStaff->aliasField('staff_id') => 14352,
+                    //     $InstitutionStaff->aliasField('staff_status_id') => 1
+                    // ])->first();
+            if (!empty($query)) {
+                $AreaTable = TableRegistry::get('Area.Areas');
+                $value = $AreaTable->find()->where([$AreaTable->aliasField('id') => $query->institution->area_id])->first();
+                if (empty($value)) {
+                    return ' - ';
+                } else {
+                    return $value->name;
+                }
+            }
         }
     }
 }
