@@ -68,6 +68,10 @@ class TrainingsTable extends AppTable
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('institution_status');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('start_date', ['type' => 'hidden']);  // POCOR-6569
+        $this->ControllerAction->field('end_date', ['type' => 'hidden']);  // POCOR-6569
+        $this->ControllerAction->field('session_name', ['type' => 'hidden']); // POCOR-6596
+        $this->ControllerAction->field('area_id', ['type' => 'hidden']); // POCOR-6596
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
@@ -106,7 +110,7 @@ class TrainingsTable extends AppTable
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
-                if (in_array($feature, ['Report.TrainingResults', 'Report.TrainingSessionParticipants', 'Report.TrainingTrainers'])) {
+                if (in_array($feature, ['Report.TrainingResults', 'Report.TrainingSessionParticipants', 'Report.TrainingTrainers', 'Report.TrainersSessions'])) { // POCOR-6569
                     $options = $this->Training->getCourseList();
 					$options = ['-1' => __('All Training Courses')] + $options;
 
@@ -235,6 +239,87 @@ class TrainingsTable extends AppTable
                 if (empty($request->data[$this->alias()]['academic_period_id'])) {
                     $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
                 }
+                return $attr;
+            }
+        }
+    }
+
+    /**
+     * Add Start Date selection date picker
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6596
+     * @check: Contact to Anubhav for removation process of this function (Added in POCOR-6569)
+     */
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
+    {
+        $feature = $this->request->data[$this->alias()]['feature'];
+        $includedFeature = ['Report.TrainersSessions', 'Report.TrainingResults'];
+        if (in_array($feature, $includedFeature)) {
+            $entity = $attr['entity'];
+            $attr['type'] = 'date';
+            // $attr['onChangeReload'] = true;
+            return $attr;
+        }
+    }
+
+    /**
+     * Add End Date selection date picker
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6596
+     * @check: Contact to Anubhav for removation process of this function (Added in POCOR-6569)
+     */
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request)
+    {
+        $feature = $this->request->data[$this->alias()]['feature'];
+        $includedFeature = ['Report.TrainersSessions', 'Report.TrainingResults'];
+        if (in_array($feature, $includedFeature)) {
+            $entity = $attr['entity'];
+            $attr['type'] = 'date';
+            return $attr;
+        }
+    }
+
+    /**
+     * Add Trainer selection drop-down
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6596
+     */
+    public function onUpdateFieldSessionName(Event $event, array $attr, $action, Request $request)
+    {
+        $includedFeature = ['Report.TrainingResults'];
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, $includedFeature)) {
+                $courseId = $this->request->data[$this->alias()]['training_course_id'];
+                $training_session_object = TableRegistry::get('Training.TrainingSessions');
+                $session = $training_session_object->getCourses($courseId);
+                $session_options = ['-1' => __('All Session')] + $session;
+                $attr['options'] = $session_options;
+                $attr['type']    = 'select';
+                $attr['select']  = false;
+                $attr['onChangeReload'] = true;
+                return $attr;
+            }
+        }
+    }
+
+    /**
+     * Add Area selection drop-down with multiple select feature
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6596
+     */
+    public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
+    {
+        $includedFeature = ['Report.TrainingResults'];
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, $includedFeature)) {
+                $Areas = TableRegistry::get('Area.Areas');
+                $area_options = $Areas->getAreas();
+                $attr['type'] = 'chosenSelect';
+                $attr['attr']['multiple'] = true;
+                $attr['select'] = true;
+                $attr['options'] = ['-1' => __('All Areas')] + $area_options;
                 return $attr;
             }
         }
