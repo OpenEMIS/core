@@ -30,6 +30,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     private $canUpdateDetails = true;
     private $currentAcademicPeriod = null;
+    private $_dynamicFieldName = 'custom_field_data';
 
     public function initialize(array $config)
     {
@@ -46,19 +47,19 @@ class InstitutionLandsTable extends ControllerActionTable
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
-//         $this->addBehavior('CustomField.Record', [
-//             'fieldKey' => 'infrastructure_custom_field_id',
-//             'tableColumnKey' => null,
-//             'tableRowKey' => null,
-//             'fieldClass' => ['className' => 'Infrastructure.LandCustomFields'],
-//             'formKey' => 'infrastructure_custom_form_id',
-//             'filterKey' => 'infrastructure_custom_filter_id',
-//             'formFieldClass' => ['className' => 'Infrastructure.LandCustomFormsFields'],
-//             'formFilterClass' => ['className' => 'Infrastructure.LandCustomFormsFilters'],
-//             'recordKey' => 'institution_land_id',
-//             'fieldValueClass' => ['className' => 'Infrastructure.LandCustomFieldValues', 'foreignKey' => 'institution_land_id', 'dependent' => true],
-//             'tableCellClass' => null
-//         ]);
+        $this->addBehavior('CustomField.Record', [
+            'fieldKey' => 'infrastructure_custom_field_id',
+            'tableColumnKey' => null,
+            'tableRowKey' => null,
+            'fieldClass' => ['className' => 'Infrastructure.LandCustomFields'],
+            'formKey' => 'infrastructure_custom_form_id',
+            'filterKey' => 'infrastructure_custom_filter_id',
+            'formFieldClass' => ['className' => 'Infrastructure.LandCustomFormsFields'],
+            'formFilterClass' => ['className' => 'Infrastructure.LandCustomFormsFilters'],
+            'recordKey' => 'institution_land_id',
+            'fieldValueClass' => ['className' => 'Infrastructure.LandCustomFieldValues', 'foreignKey' => 'institution_land_id', 'dependent' => true],
+            'tableCellClass' => null
+        ]);
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
@@ -257,7 +258,20 @@ class InstitutionLandsTable extends ControllerActionTable
 
         $extra['elements']['toolbarElements'] = $this->addBreadcrumbElement();
         $extra['elements']['control'] = $this->addControlFilterElement();
-
+        /*POCOR-6264 starts*/
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        if ($this->AccessControl->check(['Institutions', 'Lands', 'excel'])) {
+            $button = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Lands', 'excel',
+                'institutionId' => $institutionId
+            ];
+            $extra['toolbarButtons']['export']['url'] = $button;
+        }
+       
+        /*POCOR-6264 ends*/
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -1332,6 +1346,25 @@ class InstitutionLandsTable extends ControllerActionTable
                 'type' => 'string',
                 'label' => __('Room Type')
             ];
+            $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+            $customFieldData = $InfrastructureCustomFields->find()->select([
+                'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+                'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+            ])->innerJoin(['CustomFieldValues' => 'room_custom_field_values' ], [
+                'CustomFieldValues.infrastructure_custom_field_id = ' . $InfrastructureCustomFields->aliasField('id'),
+            ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
+            if(!empty($customFieldData)) {
+                foreach($customFieldData as $data) {
+                    $custom_field_id = $data->custom_field_id;
+                    $custom_field = $data->custom_field;
+                    $newFields[] = [
+                        'key' => '',
+                        'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
+                        'type' => 'string',
+                        'label' => __($custom_field)
+                    ];
+                }
+            }
         }//POCOR-6263 ends
         $fields->exchangeArray($newFields);
     }
@@ -1431,7 +1464,10 @@ class InstitutionLandsTable extends ControllerActionTable
             //POCOR-6263 start
             if($landType->name == 'Room') { 
             $query
-                ->select(['room_type'=> $roomTypes->aliasField('name')]);
+                ->select([
+                    'room_type'=> $roomTypes->aliasField('name'),
+                    'institutions_room_id' => 'Institution'.$level.'.'.'id'
+                ]);
             }//POCOR-6263 ends
 
             $query
@@ -1493,8 +1529,8 @@ class InstitutionLandsTable extends ControllerActionTable
             $query->where($conditions);
         }
 
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($landType) {
+            return $results->map(function ($row) use ($landType) {
 
                 $areas1 = TableRegistry::get('areas');
                 $areasData = $areas1
@@ -1536,6 +1572,61 @@ class InstitutionLandsTable extends ControllerActionTable
                     }
                 }
 
+                if($landType->name == 'Room') {
+                    $Guardians = TableRegistry::get('Infrastructure.RoomCustomFieldValues');
+                    $guardianData = $Guardians->find()
+                        ->select([
+                            'id'                             => $Guardians->aliasField('id'),
+                            'institution_room_id'            => $Guardians->aliasField('institution_room_id'),
+                            'infrastructure_custom_field_id' => $Guardians->aliasField('infrastructure_custom_field_id'),
+                            'number_value'                   => $Guardians->aliasField('number_value'),
+                            'decimal_value'                  => $Guardians->aliasField('decimal_value'),
+                            'textarea_value'                 => $Guardians->aliasField('textarea_value'),
+                            'date_value'                     => $Guardians->aliasField('date_value'),
+                            'time_value'                     => $Guardians->aliasField('time_value'),
+                            'text_value'                     => $Guardians->aliasField('text_value'),
+                            'checkbox_value_text'            => 'RoomCustomFieldOptions.name',
+                            'question_name'                  => 'RoomCustomFields.name',
+                            'field_type'                     => 'RoomCustomFields.field_type',
+                            'field_description'              => 'RoomCustomFields.description',
+                            'question_field_type'            => 'RoomCustomFields.field_type',
+                        ])->leftJoin(
+                            ['RoomCustomFields' => 'infrastructure_custom_fields'],
+                            ['RoomCustomFields.id = '. $Guardians->aliasField('infrastructure_custom_field_id')]
+                        )->leftJoin(
+                            ['RoomCustomFieldOptions' => 'infrastructure_custom_field_options'],
+                            ['RoomCustomFieldOptions.id = '. $Guardians->aliasField('number_value')]
+                        )
+                        ->where([
+                            $Guardians->aliasField('institution_room_id') => $row['institutions_room_id'],
+                        ])->toArray();
+                        $existingCheckboxValue = '';
+                        foreach ($guardianData as $guadionRow) {
+                            $fieldType = $guadionRow->field_type;
+                            if ($fieldType == 'TEXT') {
+                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->text_value;
+                            } else if ($fieldType == 'CHECKBOX') {
+                                $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
+                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = trim($existingCheckboxValue, ',');
+                            } else if ($fieldType == 'NUMBER') {
+                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->number_value;
+                            } else if ($fieldType == 'DECIMAL') {
+                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->decimal_value;
+                            } else if ($fieldType == 'TEXTAREA') {
+                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->textarea_value;
+                            } else if ($fieldType == 'DROPDOWN') {
+                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->checkbox_value_text;
+                            } else if ($fieldType == 'DATE') {
+                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
+                            } else if ($fieldType == 'TIME') {
+                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
+                            } else if ($fieldType == 'COORDINATES') {
+                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->text_value;
+                            } else if ($fieldType == 'NOTE') {
+                                $row[$this->_dynamicFieldName.'_'.$guadionRow->infrastructure_custom_field_id] = $guadionRow->field_description;
+                            }
+                        }
+                }
                 return $row;
             });
         });

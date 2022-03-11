@@ -95,9 +95,9 @@ class UserInsurancesTable extends ControllerActionTable
     {
         switch ($field) {
             case 'start_date':
-                return __('Start date');
+                return __('Start Date');
             case 'end_date':
-                return __('End date');
+                return __('End Date');
             case 'insurance_provider_id':
                 return __('Provider');
                 case 'insurance_type_id':
