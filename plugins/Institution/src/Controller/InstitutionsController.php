@@ -4296,7 +4296,7 @@ class InstitutionsController extends AppController
             'Institution.StudentHealths'  => __('Student Health'),
             'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
             'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
-            'Institution.InstitutionStaffPositionProfile'  => __('Staff Positions for all staff'),
+            'Institution.InstitutionStaffPositionProfile'  => __('Staff Positions for all staff'),//POCOR-6581
         ];
         return $options;
     }
