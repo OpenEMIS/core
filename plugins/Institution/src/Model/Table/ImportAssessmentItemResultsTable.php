@@ -451,7 +451,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         $educationGradeId = $educationData->education_grade_id;
         $tempRow['education_grade_id'] = $educationGradeId;
         $assessment = $this->AssessmentPeriods->find()
-                        ->select([$this->AssessmentPeriods->aliasField('assessment_id')])
+                        ->select([$this->AssessmentPeriods->aliasField('assessment_id'), $this->AssessmentPeriods->aliasField('date_disabled')])
                         ->where([$this->AssessmentPeriods->aliasField('id') => $tempRow['assessment_period_id']])
                         ->first();
         $tempRow['assessment_id'] = $assessment->assessment_id;
@@ -479,6 +479,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
 		->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId])
 		->first();
         //START: POCOR-6602
+        
 		$today_date = date('Y-m-d');
         if (!empty($assessment)) {
             if(strtotime($today_date) > strtotime($assessment->date_disabled)){
