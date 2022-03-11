@@ -307,6 +307,15 @@ class SecurityGroupUsersTable extends AppTable {
 
                 if ($isSchoolBased) {
                     if (is_null($institutionId)) {
+                        $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                        $assigneeQuery = $SecurityGroupUsers
+                        ->find('userList', ['where' => $where])
+                        ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+
+                        Log::write('debug', 'Non-School based assignee query:');
+                        Log::write('debug', $assigneeQuery->sql());
+
+                        $assigneeOptions = $assigneeQuery->toArray();
                         Log::write('debug', 'Institution Id not found.');
                     } else {
                         $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
