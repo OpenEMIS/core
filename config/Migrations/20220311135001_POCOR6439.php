@@ -13,8 +13,8 @@ class POCOR6439 extends AbstractMigration
     public function up()
     {
         /*Backup report_queries table*/
-        $this->execute('CREATE TABLE `z_report_queries` LIKE `report_queries`');
-        $this->execute('INSERT INTO `z_report_queries` SELECT * FROM `report_queries`');
+        $this->execute('CREATE TABLE `z_6439_report_queries` LIKE `report_queries`');
+        $this->execute('INSERT INTO `z_6439_report_queries` SELECT * FROM `report_queries`');
 
         /*Delete OpenEMIS Core report_student_attendance_summary row in report_queries table */
         $this->execute('DELETE FROM report_queries WHERE report_queries.name = "report_student_attendance_summary_truncate"'); 
@@ -32,6 +32,6 @@ class POCOR6439 extends AbstractMigration
     public function down()
     {
         $this->execute('DROP TABLE IF EXISTS `report_queries`');
-        $this->execute('RENAME TABLE `z_report_queries` TO `report_queries`');
+        $this->execute('RENAME TABLE `z_6439_report_queries` TO `report_queries`');
     }
 }
