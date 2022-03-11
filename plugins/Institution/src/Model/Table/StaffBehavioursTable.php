@@ -44,6 +44,8 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->addBehavior('Institution.StaffProfile');
 
         $this->setDeleteStrategy('restrict');
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+       
     }
 
     public function implementedEvents()
@@ -411,6 +413,76 @@ class StaffBehavioursTable extends ControllerActionTable
             ]
         ];
         return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+     
+        $extraField[] = [
+            'key' => 'Students.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+
+        $extraField[] = [
+            'key' => 'Students.student_name',
+            'field' => 'student_name',
+            'type' => 'string',
+            'label' => __('Student')
+        ];
+
+        $extraField[] = [
+            'key' => 'StudentBehaviour.date_of_behaviour',
+            'field' => 'date_of_behaviour',
+            'type' => 'date',
+            'label' => __('Date Of Behaviour')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffBehaviourCategories.name',
+            'field' => 'category',
+            'type' => 'string',
+            'label' => __('Category')
+        ];
+
+        $extraField[] = [
+            'key' => 'BehaviourClassifications.name',
+            'field' => 'behaviour_classification',
+            'type' => 'string',
+            'label' => __('Behaviour Classification')
+        ];
+
+       
+        $fields->exchangeArray($extraField);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $User = TableRegistry::get('security_users');
+            $query
+            ->select(['date' => 'StaffBehaviours.date_of_behaviour','category' => 'StaffBehaviourCategories.name','behaviour_classification' => 'BehaviourClassifications.name', 'openemis_no' => 'Staff.openemis_no', 'student_name' => $User->find()->func()->concat([
+                'first_name' => 'literal',
+                " ",
+                'last_name' => 'literal'
+            ])])
+         
+            ->LeftJoin([$this->Staff->alias() => $this->Staff->table()],[
+                $this->Staff->aliasField('id').' = ' . 'StaffBehaviours.staff_id'
+            ])
+           
+            ->LeftJoin([$this->StaffBehaviourCategories->alias() => $this->StaffBehaviourCategories->table()],[
+                $this->StaffBehaviourCategories->aliasField('id').' = ' . 'StaffBehaviours.staff_behaviour_category_id'
+            ])
+
+            ->LeftJoin([$this->BehaviourClassifications->alias() => $this->BehaviourClassifications->table()],[
+                $this->BehaviourClassifications->aliasField('id').' = ' . 'StaffBehaviours.behaviour_classification_id'
+            ])
+            ->where(['StaffBehaviours.institution_id' =>  $institutionId]);
+        
+           
     }
 
     /*POCOR-5177 starts*/

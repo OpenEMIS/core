@@ -32,12 +32,12 @@ class InstitutionAssetsTable extends ControllerActionTable
         $this->belongsTo('AssetTypes', ['className' => 'Institution.AssetTypes']);
         $this->belongsTo('AssetConditions', ['className' => 'Institution.AssetConditions']);
 
-        // POCOR-6152 export button
+        // POCOR-6152 export button <vikas.rathore@mail.valuecoders.com>
         $this->addBehavior('Excel',[
             'excludes' => ['academic_period_id', 'id'],
             'pages' => ['index'],
         ]);
-        // POCOR-6152 export button
+        // POCOR-6152 export button <vikas.rathore@mail.valuecoders.com>
     }
 
     public function validationDefault(Validator $validator)
@@ -51,24 +51,24 @@ class InstitutionAssetsTable extends ControllerActionTable
             ]);
     }
 
-    // POCOR06152 set breadcrumb header
+    // POCOR-6152 set breadcrumb header <vikas.rathore@mail.valuecoders.com>
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $modelAlias = 'InstitutionAssets';
         $userType = '';
         $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
     }
-    // POCOR06152 set breadcrumb header
+    // POCOR-6152 set breadcrumb header <vikas.rathore@mail.valuecoders.com>
 
     // setting up  fields and filter POCOR-6152
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        // POCOR-6152 set academic period filter
+        // POCOR-6152 set academic period filter <vikas.rathore@mail.valuecoders.com>
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
-        // set academic period filter
+        // set academic period filter <vikas.rathore@mail.valuecoders.com>
 
-        // set asset types filter
+        // set asset types filter POCOR-6152
         $assetTypes = $this->AssetTypes
             ->find('optionList', ['defaultOption' => false])
             ->find('visible')
@@ -77,14 +77,14 @@ class InstitutionAssetsTable extends ControllerActionTable
             
         $assetTypeOptions = ['' => __('All Types')] + $assetTypes;
         $extra['selectedAssetType'] = $this->request->query('asset_type_id'); 
-        // set asset types filter
+        // set asset types filter POCOR-6152
         
-        // set Accessibilities filter
+        // set Accessibilities filter POCOR-6152
         $this->accessibilityOptions = $this->getSelectOptions($this->aliasField('accessibility'));
         
         $accessibilityOptions = ['' => __('All Accessibilities')] + $this->accessibilityOptions;
         $extra['selectedAccessibility'] = $this->request->query('accessibility'); 
-        // set Accessibilities filter
+        // set Accessibilities filter POCOR-6152
 
         $extra['elements']['control'] = [
             'name' => 'Institution.Assets/controls',
@@ -118,7 +118,7 @@ class InstitutionAssetsTable extends ControllerActionTable
     }
     // setting up  fields and filter POCOR-6152
 
-    // get selected academic period 
+    // get selected academic period  POCOR-6152
     private function getSelectedAcademicPeriod($request)
     {
         $selectedAcademicPeriod = '';
@@ -135,9 +135,9 @@ class InstitutionAssetsTable extends ControllerActionTable
 
         return $selectedAcademicPeriod;
     } 
-    // get selected academic period 
+    // get selected academic period POCOR-6152
 
-    // setting up query for index 
+    // setting up query for index POCOR-6152 start
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
@@ -206,9 +206,9 @@ class InstitutionAssetsTable extends ControllerActionTable
             });
         });
     }
-    // setting up query for index 
+    // setting up query for index POCOR-6152 ends
 
-    // POCOR-6152 Export Functionality
+    // POCOR-6152 Export Functionality 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->session();
@@ -340,56 +340,56 @@ class InstitutionAssetsTable extends ControllerActionTable
     }
     // POCOR-6152 Export Functionality
 
-    // set up fields in add page
+    // set up fields in add page POCOR-6152
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        // academic period field 
+        // academic period field POCOR-6152
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $this->fields['academic_period_id']['type'] = 'select';
         $this->fields['academic_period_id']['default'] = $this->AcademicPeriods->getCurrent();
         $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
         $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
-        // academic period field 
+        // academic period field POCOR-6152
 
-        // purpose fields
+        // purpose fields POCOR-6152
         $this->purposeOptions = $this->getSelectOptions($this->aliasField('purpose'));
         $this->fields['purpose']['type'] = 'select';
         $this->fields['purpose']['options'] = $this->purposeOptions;
         $this->field('purpose', ['after' => 'name','attr' => ['label' => __('Purpose')]]);
-        // purpose fields
+        // purpose fields POCOR-6152
 
-        // asset type field
+        // asset type field POCOR-6152
         $this->fields['asset_type_id']['type'] = 'select';
         $this->field('asset_type_id', ['after' => 'purpose','attr' => ['label' => __('Type')]]);
-        // asset type field
+        // asset type field POCOR-6152
 
-        // condition Field
+        // condition Field POCOR-6152
         $this->fields['asset_condition_id']['type'] = 'select';
         $this->field('asset_condition_id', ['after' => 'asset_type_id','attr' => ['label' => __('Condition')]]);
-        // condition Field
+        // condition Field POCOR-6152
 
-        // Accessibility field
+        // Accessibility field POCOR-6152
         $this->accessibilityOptions = $this->getSelectOptions($this->aliasField('accessibility'));
         $this->fields['accessibility']['type'] = 'select';
         $this->fields['accessibility']['options'] = $this->accessibilityOptions;
         $this->field('accessibility', ['after' => 'asset_condition_id','attr' => ['label' => __('Accessibility')]]);
-        // Accessibility field
+        // Accessibility field POCOR-6152
 
-        // status field
+        // status field POCOR-6152
         $this->fields['asset_status_id']['type'] = 'select';
         $this->field('asset_status_id', ['after' => 'accessibility','attr' => ['label' => __('Status')]]);
-        // status field
+        // status field POCOR-6152
     }
-    // set up fields in add page
+    // set up fields in add page POCOR-6152
 
-    // view page
+    // view page POCOR-6152
     public function viewAfterAction(Event $event,Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity, $extra);
     }
-    // view page
+    // view page POCOR-6152
 
-    // setup fields for view and edit
+    // setup fields for view and edit POCOR-6152
     public function setupFields(Entity $entity, ArrayObject $extra)
     { 
         // academic field view
@@ -418,5 +418,5 @@ class InstitutionAssetsTable extends ControllerActionTable
         // status field view
         $this->field('asset_status_id',['after' => 'accessibility','attr' => ['label' => __('Status')],'visible' => ['view' => true]]);
     }
-    // setup fields for view and edit
+    // setup fields for view and edit POCOR-6152
 }

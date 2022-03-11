@@ -353,19 +353,17 @@ class StaffUserTable extends ControllerActionTable
             ->requirePresence('position_type', 'create')
             ->requirePresence('institution_position_id', 'create')
             ->requirePresence('staff_type_id', 'create')
-            ->add('start_date', 'ruleInAcademicPeriod', [
+            ->notEmpty('start_date', null, 'create')
+            ->requirePresence('start_date', 'create')
+            ->notEmpty('staff_shifts_id', null, 'create')
+            ->requirePresence('staff_shifts_id', 'create')
+           /* ->add('start_date', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                 'on' => function ($context) {
                     // check for staff add wizard on create operations - where academic_period_id exist in the context data - POCOR-4576
                     return ($context['newRecord'] && array_key_exists('academic_period_id', $context['data']));
                 }
-            ])
-            //POCOR-5924 starts
-            ->allowEmpty('identity_number')
-            ->add('identity_number', 'ruleCheckUniqueIdentityNumber', [
-                'rule' => ['checkUniqueIdentityNumber'],
-                'on' => 'create'
-            ])//POCOR-5924 ends
+            ])*/
             ;
         return $validator;
     }
@@ -493,9 +491,6 @@ class StaffUserTable extends ControllerActionTable
 
         $this->fields['identity_type_id']['type'] = 'readonly';
         $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
-        /*POCOR-6265 starts - make email editable*/
-        $this->fields['email']['type'] = 'string';
-        /*POCOR-6265 ends*/
     }
 
     public function editAfterSave(Event $event, Entity $entity)
@@ -539,7 +534,7 @@ class StaffUserTable extends ControllerActionTable
                     $postalCode = $value->user->postal_code;
                     $addressArea = $value->user->address_area->name;
                     $birthplaceArea = $value->user->birthplace_area->name;
-
+                    $role = $value->user->is_staff;
                     $contactValue = [];
                     $contactType = [];
                     if(!empty($value->user['contacts'])) {
@@ -579,14 +574,30 @@ class StaffUserTable extends ControllerActionTable
 
                 }
             }
-            $shift =  TableRegistry::get('Institution.InstitutionShifts');
-            $shiftData = $shift->find('all',
-                                [ 'contain' => [
-                                    'ShiftOptions'
-                                ],
-                    ])->where([
-                        $shift->aliasField('id') => $entity->id
-                    ]);
+       $institutionShifts = TableRegistry::get('institution_shifts');
+       $shiftOptions = TableRegistry::get('shift_options'); 
+       $institutionStaffShifts = TableRegistry::get('institution_staff_shifts');
+       $res=$institutionShifts->find()->select(['name'=> 'shift_options.name' ])
+                                ->leftJoin(
+                                        [$shiftOptions->alias() => $shiftOptions->table()],
+                                        [
+                                            $shiftOptions->aliasField('id = ') . $institutionShifts->aliasField('shift_option_id')
+                                        ]
+                                    )
+                                    ->leftJoin(
+                                        [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
+                                        [
+                                            $institutionStaffShifts->aliasField('shift_id = ') . $institutionShifts->aliasField('id')
+                                        ]
+                                    )
+                              
+                               
+                                ->where([$institutionStaffShifts->aliasField('staff_id')=> $entity->id])->order($institutionShifts->aliasField('id'))->group('shift_options.name')->order('shift_options.name')->toArray();
+                                $shift='';
+                                foreach ($res as $key => $value) {
+                                    $shift.=$value['name'].','; 
+                                }
+                               $shiftName=rtrim($shift,',');    
             if (!empty($shiftData)) {
                 foreach ($shiftData as $k => $val) {
                     $shiftName =  $val->shift_option->name;
@@ -617,14 +628,15 @@ class StaffUserTable extends ControllerActionTable
                 'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
                 'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
                 'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-                'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
+                //'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
                 'institution_staff_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
                 'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
                 'institution_positions_position_no'=>!empty($position_no) ? $position_no : NULL,
                 'staff_position_titles_type'=>!empty($class) ? $class : NULL,
                 'staff_position_titles_name'=>!empty($staff_position_titles_name) ? $staff_position_titles_name : NULL,
                 'staff_types_name'=>!empty($staff_types_name) ? $staff_types_name : NULL,
-                'shift_options_name' => !empty($shiftName) ? $shiftName : NULL
+                'shift_options_name' => !empty($shiftName) ? $shiftName : NULL,
+                'role_name' => ($role == 1) ? 'staff' : NULL
             ];
               $Webhooks = TableRegistry::get('Webhook.Webhooks');
               $Webhooks->triggerShell('staff_update', ['username' => ''], $body);
@@ -659,188 +671,258 @@ class StaffUserTable extends ControllerActionTable
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
-        /* foreach ($fields as $key => $field) {
-            //get the value from the table, but change the label to become default identity type.
-            if ($field['field'] == 'identity_number') {
-                $fields[$key] = [
-                    'key' => 'StudentUser.identity_number',
-                    'field' => 'identity_number',
-                    'type' => 'string',
-                    'label' => __($identity->name)
-                ];
-                break;
-            }
-        } */
+        $extraField[] = [
+            "key" => "StaffUser.username",
+            "field" => "username",
+            "type" => "string",
+            "label" => "Username"
+        ];
 
-        $cloneFields = $fields->getArrayCopy();
-        $newFields = [];
-        foreach ($cloneFields as $key => $value) {
-            $newFields[] = $value;
-            if ($value['field'] == 'identity_number') {
-                $newFields[] = [
-                    'key' => 'StudentUser.identity_number',
-                    'field' => 'identity_number',
-                    'type' => 'string',
-                    'label' => __($identity->name)
-                ];
+        $extraField[] = [
+            "key" => "StaffUser.openemis_no",
+            "field" => "openemis_no",
+            "type" => "string",
+            "label" => "OpenEMIS ID"
+        ];
 
-                /* $newFields[] = [
-                    'key' => 'IdentityTypes.name',
-                    'field' => 'identity_type',
-                    'type' => 'string',
-                    'label' => 'Identity Type'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.first_name',
+            'field' => 'first_name',
+            'type' => 'string',
+            'label' => 'First Name'
+        ];
 
-                $newFields[] = [
-                    'key' => 'Nationalities.name',
-                    'field' => 'nationality',
-                    'type' => 'string',
-                    'label' => 'Nationality'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.middle_name',
+            'field' => 'middle_name',
+            'type' => 'string',
+            'label' => 'Middle Name'
+        ];
 
-                $newFields[] = [
-                    'key' => 'userIdentities.number',
-                    'field' => 'number',
-                    'type' => 'string',
-                    'label' => 'Number'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.third_name',
+            'field' => 'third_name',
+            'type' => 'string',
+            'label' => 'Third Name'
+        ];
 
-                $newFields[] = [
-                    'key' => 'userIdentities.issue_date',
-                    'field' => 'issue_date',
-                    'type' => 'string',
-                    'label' => 'Issue Date'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.last_name',
+            'field' => 'last_name',
+            'type' => 'string',
+            'label' => 'Last Name'
+        ];
 
-                $newFields[] = [
-                    'key' => 'userIdentities.expiry_date',
-                    'field' => 'expiry_date',
-                    'type' => 'string',
-                    'label' => 'Expiry Date'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.preferred_name',
+            'field' => 'preferred_name',
+            'type' => 'string',
+            'label' => __('Preferred Name')
+        ];
 
-                $newFields[] = [
-                    'key' => 'userIdentities.issue_location',
-                    'field' => 'issuer',
-                    'type' => 'string',
-                    'label' => 'Issuer'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.email',
+            'field' => 'email',
+            'type' => 'string',
+            'label' => __('Email')
+        ];
 
-                $newFields[] = [
-                    'key' => 'userContacts.value',
-                    'field' => 'value',
-                    'type' => 'string',
-                    'label' => 'Value'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.address',
+            'field' => 'address',
+            'type' => 'string',
+            'label' => __('Address')
+        ];
 
-                $newFields[] = [
-                    'key' => '',
-                    'field' => 'description',
-                    'type' => 'string',
-                    'label' => 'Description'
-                ]; */
+        $extraField[] = [
+            'key' => 'StaffUser.postal_code',
+            'field' => 'postal_code',
+            'type' => 'string',
+            'label' => __('Postal Code')
+        ];
 
-                /* $newFields[] = [
-                    'key' => 'InstitutionClasses.name',
-                    'field' => 'class_name',
-                    'type' => 'string',
-                    'label' => 'Classs Name'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.address_area_id',
+            'field' => 'address_area_id',
+            'type' => 'string',
+            'label' => __('Address Area')
+        ];
 
-                $newFields[] = [
-                    'key' => 'InstitutionSubjects.name',
-                    'field' => 'subject_name',
-                    'type' => 'string',
-                    'label' => 'Subject Name'
-                ];
+        $extraField[] = [
+            'key' => 'StaffUser.birthplace_area_id',
+            'field' => 'birthplace_area_id',
+            'type' => 'string',
+            'label' => __('Birthplace Area')
+        ];
 
-                $newFields[] = [
-                    'key' => '',
-                    'field' => 'total_absence',
-                    'type' => 'string',
-                    'label' => 'Total Absence'
-                ]; */
-            }
-        }
-        $fields->exchangeArray($newFields);
+        $extraField[] = [
+            'key' => 'StaffUser.gender_id',
+            'field' => 'gender_id',
+            'type' => 'integer',
+            'label' => 'Gender'
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.date_of_birth',
+            'field' => 'date_of_birth',
+            'type' => 'date',
+            'label' => 'Date Of Birth'
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.nationality_id',
+            'field' => 'nationality_id',
+            'type' => 'integer',
+            'label' => __('Nationality')
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'number',
+            'type' => 'string',
+            'label' => __($identity->name)
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'contact_number',
+            'type' => 'string',
+            'label' => __('Contact Number')
+        ];
+
+        /* $extraField[] = [
+            'key' => 'StaffUser.external_reference',
+            'field' => 'external_reference',
+            'type' => 'string',
+            'label' => __('External Reference')
+        ]; */
+        $extraField[] = [
+            'key' => 'StaffUser.status',
+            'field' => 'status',
+            'type' => 'integer',
+            'label' => __('Status')
+        ];
+
+        $extraField[] = [
+            'key' => 'StaffUser.last_login',
+            'field' => 'last_login',
+            'type' => 'datetime',
+            'label' => __('Last Login')
+        ];
+        $extraField[] = [
+            'key' => 'StaffUser.preferred_language',
+            'field' => 'preferred_language',
+            'type' => 'string',
+            'label' => __('Preferred Language')
+        ];
+
+        $fields->exchangeArray($extraField);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        if(!isset($staffUserId)){
-            $session = $this->request->session();
-            $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-            $userIdentities = TableRegistry::get('StaffUser.userIdentities');
-            $identityType = TableRegistry::get('StaffUser.IdentityTypes');
-            $userNationalities = TableRegistry::get('StaffUser.userNationalities');
-            $nationalities = TableRegistry::get('StaffUser.Nationalities');
-            $userContacts = TableRegistry::get('StaffUser.userContacts');
-            $contactTypes = TableRegistry::get('StaffUser.ContactTypes');
-            $contactOptions = TableRegistry::get('StaffUser.contactOptions');
-            $classes = TableRegistry::get('StaffUser.InstitutionClasses');
-            $institutionSubjects = TableRegistry::get('StaffUser.InstitutionSubjects');
-            $staffSubjects = TableRegistry::get('StaffUser.InstitutionSubjectStaff');
-            $staffAbsence = TableRegistry::get('StaffUser.InstitutionStaffAttendances');
+        $userNationalities = TableRegistry::get('StaffUser.userNationalities');
+        $userContacts = TableRegistry::get('StaffUser.userContacts');
+        $contactTypes = TableRegistry::get('StaffUser.ContactTypes  ');
+        $contactOptions = TableRegistry::get('StaffUser.contactOptions  ');
+        $institutionStaff = TableRegistry::get('StaffUser.InstitutionStaff');
 
-            $query
-            ->select([
-                'identity_type' => 'IdentityTypes.name',
-                'nationality' => 'Nationalities.name',
-                'number' => 'userIdentities.number',
-                'issue_date' => 'userIdentities.issue_date',
-                'expiry_date' => 'userIdentities.expiry_date',
-                'issuer' => 'userIdentities.issue_location',
-                'value' => 'userContacts.value',
-                'description' => $this->find()->func()->concat([
-                    'ContactTypes.name' => 'literal',
-                    " - ",
-                    'contactOptions.name' => 'literal'
-                ]),
-                // 'class_name' => 'InstitutionClasses.name',
-                // 'subject_name' => 'InstitutionSubjects.name',
-                // 'total_absence' =>  "(SELECT COUNT(id) FROM ".$staffAbsence->table()." WHERE time_in IS NULL AND time_out IS NULL AND staff_id =".$staffUserId.")",
-            ])
-            ->leftjoin(
-                [$userIdentities->alias() => $userIdentities->table()],
-                [$userIdentities->aliasField('security_user_id=').$this->aliasField('id')]
-            )
-            ->leftjoin(
-                [$identityType->alias() => $identityType->table()],
-                [$identityType->aliasField('id=').$userIdentities->aliasField('identity_type_id')]
-            )
-            ->leftjoin(
-                [$nationalities->alias() => $nationalities->table()],
-                [$userIdentities->aliasField('nationality_id=').$nationalities->aliasField('id')]
-            )
-            ->leftjoin(
-                [$userContacts->alias() => $userContacts->table()],
-                [$userContacts->aliasField('security_user_id=').$this->aliasField('id')]
-            )
-            ->leftjoin(
-                [$contactTypes->alias() => $contactTypes->table()],
-                [$contactTypes->aliasField('id = ').$userContacts->aliasField('contact_type_id')]
-            )
-            ->leftjoin(
-                [$contactOptions->alias() => $contactOptions->table()],
-                [$contactOptions->aliasField('id = ').$contactTypes->aliasField('contact_option_id')]
-            )
-            ->leftjoin(
-                [$classes->alias() => $classes->table()],
-                [$classes->aliasField('staff_id = ').$this->aliasField('id')]
-            )
-            ->leftjoin(
-                [$staffSubjects->alias() => $staffSubjects->table()],
-                [$staffSubjects->aliasField('staff_id = ').$this->aliasField('id')]
-            )
-            ->leftjoin(
-                [$institutionSubjects->alias() => $institutionSubjects->table()],
-                [$institutionSubjects->aliasField('id = ').$staffSubjects->aliasField('institution_subject_id')]
-            )
-            ->where([
-                $this->aliasField('id = ').$staffUserId,
-            ]);
-        }
+
+        $query
+        ->select([
+            'staff_id' => $this->aliasField('id'),
+        ])
+        ->leftjoin(
+            [$institutionStaff->alias() => $institutionStaff->table()],
+            [$institutionStaff->aliasField('staff_id = ').$this->aliasField('id')]
+        )
+        ->where([
+            $this->aliasField('id = ').$staffUserId
+        ]);
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $userContacts = TableRegistry::get('StaffUser.userContacts');
+                $contactTypes = TableRegistry::get('StaffUser.ContactTypes ');
+                $contactOptions = TableRegistry::get('StaffUser.contactOptions');
+
+                $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+
+                $userContactsData = $userContacts
+                ->find()
+                ->select([
+                    'contact_number' => 'userContacts.value','userContacts.preferred','userContacts.contact_type_id',
+                ])
+                ->leftjoin(
+                    [$contactTypes->alias() => $contactTypes->table()],
+                    [$contactTypes->aliasField('id=').$userContacts->aliasField('contact_type_id')]
+                )
+                ->leftjoin(
+                    [$contactOptions->alias() => $contactOptions->table()],
+                    [$contactOptions->aliasField('id=').$contactTypes->aliasField('contact_option_id')]
+                )
+                ->where([
+                    $userContacts->aliasField('security_user_id') => $row->staff_id,'userContacts.preferred' => 1
+                ]);
+
+                $arr = $userContactsData->toArray();
+
+                $contacct = array_filter($arr, function ($var){
+                    return ($var['preferred'] == 1);
+                });
+
+                $row['contact_number'] = '';
+                if($contacct){
+                    $d = implode(', ',array_column($contacct, 'contact_number'));
+                    
+                    $row['contact_number'] = $d;
+                }
+
+                $userIdentities = TableRegistry::get('StaffUser.userIdentities');
+                $identityType = TableRegistry::get('StaffUser.IdentityTypes  ');
+                $nationalities = TableRegistry::get('StaffUser.Nationalities');
+
+                $userIdentitiesData = $userIdentities
+                ->find()
+                ->select([
+                    'identity_type' => 'IdentityTypes.name',
+                    'nationality' => 'Nationalities.name',
+                    'number' => 'userIdentities.number',
+                    'issue_date' => 'userIdentities.issue_date',
+                    'expiry_date' => 'userIdentities.expiry_date',
+                    'issuer' => 'userIdentities.issue_location',
+                ])
+                ->leftjoin(
+                    [$identityType->alias() => $identityType->table()],
+                    [$identityType->aliasField('id = ').$userIdentities->aliasField('identity_type_id')]
+                )
+                ->leftjoin(
+                    [$nationalities->alias() => $nationalities->table()],
+                    [$userIdentities->aliasField('nationality_id = ').$nationalities->aliasField('id')]
+                )
+                ->where([
+                    $userIdentities->aliasField('security_user_id') => $row->staff_id,
+                ]);
+
+                $arr1 = $userIdentitiesData->toArray();
+
+                $identy_num = array_filter($arr1, function ($var){
+                    return ($var['identity_type'] == 'Birth Certificate');
+                });
+
+                $row['number'] = '';
+                if($identy_num){
+                    $d = array_shift(array_values($identy_num));
+                    
+                    $row['number'] = $d->number;
+                }else{
+                    $row['number'] = $arr1[0]->number;
+                }
+                return $row;
+            });
+        });
+
     }
 
     public function findStaff(Query $query, array $options = [])

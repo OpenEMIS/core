@@ -66,7 +66,7 @@ class CsvBehavior extends Behavior
         $this->createSqlFile($_settings);
         $this->exportToCsv($_settings);
         $this->deleteSqlFile($_settings);
-
+    
         $model->dispatchEvent('ExcelTemplates.Model.onCsvGenerateComplete', [$_settings], $this);
     }
 
@@ -75,7 +75,7 @@ class CsvBehavior extends Behavior
         $process = $settings['process'];
         $query = $settings['query'];
         $sql = array_key_exists('sql', $settings) ? $settings['sql'] : $query->sql();
-
+        
         $ReportProgress = TableRegistry::get('Report.ReportProgress');
         $ReportProgress->updateAll(
             ['sql' => $sql],
@@ -120,7 +120,8 @@ class CsvBehavior extends Behavior
         if (!is_null($host) && strtolower($host) != 'localhost') {
             $exportCmd .= ' --host=' . $host;
         }
-        if (!is_null($port)) {
+        /*POCOR-6403 - added is_numeric condition check port*/
+        if (!is_null($port) && is_numeric($port)) {
             $exportCmd .= ' --port=' . $port;
         }
         $exportCmd .= ' --quick';

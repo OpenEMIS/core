@@ -368,15 +368,16 @@ class RegisteredStudentsBehavior extends Behavior {
                 $institutionId = $entity->institution->id;
             }
 
+            // POCOR-6159 education grade is coming inside entity->examination not directly
             $educationGrade = '';
-            if ($entity->education_grade) {
-                $educationGrade = $entity->education_grade->id;
+            if ($entity->examination->education_grade_id) {
+                $educationGrade = $entity->examination->education_grade_id;
             }
+            // POCOR-6159
         }
 
         $repeatStudent = '';
         if ($studentId && $educationGrade && $repeatedStatus) {
-
             //check whether there is any repeat status on student history for the same grade.
             $repeatStudent = $InstitutionStudents
                             ->find()
@@ -385,7 +386,7 @@ class RegisteredStudentsBehavior extends Behavior {
                                 $InstitutionStudents->aliasField('education_grade_id') => $educationGrade,
                                 $InstitutionStudents->aliasField('student_status_id') => $repeatedStatus //repeated
                             ])
-                            ->count();
+                            ->first();//change count to first POCOR-6159
         }
 
         if ($repeatStudent) {

@@ -222,6 +222,134 @@ class EducationGradesTable extends ControllerActionTable
             return [];
         }
     }
+    //POCOR-6362 starts
+    public function getNextAvailableEducationGradesForTransfer($gradeId, $academicPeriodId, $getNextProgrammeGrades = true, $firstGradeOnly = false) {
+        $getNextProgrammeGrades = true;
+        $gradeObj = $this->get($gradeId);
+        $programmeId = $gradeObj->education_programme_id;
+        if (!empty($gradeId)) {
+            $i = 0;
+            $gradeOptionsData = $this
+                ->find()
+                ->select([
+                    'id' => 'ToGrades.id',
+                    'grade_name' => 'ToGrades.name',
+                    'programme' => 'ToProgrammes.name',
+                    'is_visible' => 'ToGrades.visible'
+                ])
+                ->innerJoin(
+                    ['EducationProgrammes' => 'education_programmes'],
+                    [
+                        'EducationProgrammes.id = ' . $this->aliasField('education_programme_id'),
+                        'EducationProgrammes.visible = ' . 1
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationCycles' => 'education_cycles'],
+                    [
+                        'EducationCycles.id = EducationProgrammes.education_cycle_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationLevels' => 'education_levels'],
+                    [
+                        'EducationLevels.id = EducationCycles.education_level_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationSystems' => 'education_systems'],
+                    [
+                        'EducationSystems.id = EducationLevels.education_system_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = EducationSystems.academic_period_id',
+                    ]
+                )
+                ->leftJoin(
+                    ['NextGrades' => 'education_grades'],
+                    [
+                        'NextGrades.order = ' . $this->aliasField('order+1'),
+                        'NextGrades.education_programme_id = ' . $this->aliasField('education_programme_id'),
+                    ]
+                )
+                ->innerJoin(
+                    ['ToGrades' => 'education_grades'],
+                    [
+                        'ToGrades.code = NextGrades.code',
+                    ]
+                )
+                ->innerJoin(
+                    ['ToProgrammes' => 'education_programmes'],
+                    [
+                        'ToProgrammes.id = ToGrades.education_programme_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['ToCycles' => 'education_cycles'],
+                    [
+                        'ToCycles.id = ToProgrammes.education_cycle_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['ToLevels' => 'education_levels'],
+                    [
+                        'ToLevels.id = ToCycles.education_level_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['ToSystems' => 'education_systems'],
+                    [
+                        'ToSystems.id = ToLevels.education_system_id',
+                    ]
+                )
+                ->leftJoin(
+                    ['ToAcademicPeriods' => 'academic_periods'],
+                    [
+                        'ToAcademicPeriods.id = ToSystems.academic_period_id',
+                        'ToAcademicPeriods.order = AcademicPeriods.order-1',
+                    ]
+                )
+                ->where([
+                    //$this->aliasField('id') => $gradeId,
+                    'NextGrades.visible' => 1,
+                    'ToGrades.visible' => 1,//POCOR-6498
+                    'ToAcademicPeriods.id' => $academicPeriodId
+                ])
+                ->order([$this->aliasField('id')])
+                ->toArray();
+            
+            $gradeOptions = [];
+            foreach($gradeOptionsData as $key => $data) {
+                $gradeOptions[$data->id] = $data->programme . ' - ' .$data->grade_name;
+            }   
+                
+            // Default is to get the list of grades with the next programme grades
+            if ($getNextProgrammeGrades) {
+
+                if ($firstGradeOnly) {
+                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
+                } else {
+                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+                }
+                $results = $gradeOptions + $nextProgrammesGradesOptions;
+            } else {
+                $results = $gradeOptions;
+            }
+            $$i=0;
+            foreach ($results as $key => $value) {
+                if($i==0){
+                 $result[$key]=$value;
+                }
+            $i++;}
+            //print_r($result); exit;
+            return $result;
+        } else {
+            return [];
+        }
+    }//POCOR-6362 ends
 	
 	public function getNextAvailableEducationGradesForPromoted($gradeId, $academicPeriodId, $getNextProgrammeGrades = true, $firstGradeOnly = false) {
         
@@ -851,4 +979,90 @@ class EducationGradesTable extends ControllerActionTable
         return $gradeOptions;
     }
     /*POCOR-6257 ends*/
+
+    /*POCOR-6498 starts*/
+    public function getNextEducationGrades($gradeId, $periodId, $getNextProgrammeGrades = false, $firstGradeOnly = false) {
+        if (!empty($gradeId)) {
+            $gradeObj = $this->get($gradeId);
+            $programmeId = $gradeObj->education_programme_id;
+            $programmeObj = $this->EducationProgrammes->get($programmeId);
+            $programmeCode = $programmeObj->code;
+            $programmeName = $programmeObj->name;
+            $nextProgrammeId = $this->EducationProgrammes->find()
+                                ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                                ->where([
+                                    'EducationSystems.academic_period_id' => $periodId,
+                                    $this->EducationProgrammes->aliasField('code') => $programmeCode,
+                                    'OR' => [
+                                        $this->EducationProgrammes->aliasField('name') => $programmeName
+                                    ]
+                                ])
+                                ->first()->id;
+            $order = $gradeObj->order;
+            $gradeOptions = $this->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'programme_grade_name'
+                ])
+                ->find('visible')
+                ->find('order')
+                ->where([
+                    $this->aliasField('education_programme_id') => $programmeId,
+                    $this->aliasField('order').' > ' => $order
+                ])
+                ->order([$this->aliasField('order')])
+                ->toArray();
+            
+            // Default is to get the list of grades with the next programme grades
+            if ($getNextProgrammeGrades) {
+                if ($firstGradeOnly) {
+                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeGradeList($nextProgrammeId, $periodId);
+                } else {
+                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+                }
+                $results = $gradeOptions + $nextProgrammesGradesOptions;
+            } else {
+                $results = $gradeOptions;
+            }
+            return $results;
+        } else {
+            return [];
+        }
+    }
+    /*POCOR-6498 ends*/
+
+    /*POCOR-6498 Starts*/
+    public function getNextEducationGradesForTransfer($gradeId, $academicPeriodId, $getNextProgrammeGrades = true, $firstGradeOnly = false) {
+        $gradeObj = $this->get($gradeId);
+        $programmeId = $gradeObj->education_programme_id;
+        $programmeObj = $this->EducationProgrammes->get($programmeId);
+        $programmeCode = $programmeObj->code;
+        $programmeName = $programmeObj->name;
+        $nextProgrammeId = $this->EducationProgrammes->find()
+                                ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                                ->where([
+                                    'EducationSystems.academic_period_id' => $academicPeriodId,
+                                    $this->EducationProgrammes->aliasField('code') => $programmeCode,
+                                    'OR' => [
+                                        $this->EducationProgrammes->aliasField('name') => $programmeName
+                                    ]
+                                ])
+                                ->first()->id;
+        $order = $gradeObj->order;
+        $gradeOptions = $this->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'programme_grade_name'
+                ])
+                ->find('visible')
+                ->find('order')
+                ->where([
+                    $this->aliasField('education_programme_id') => $nextProgrammeId,
+                    $this->aliasField('order').' > ' => $order
+                ])
+                ->order([$this->aliasField('order')])
+                ->limit(1)
+                ->toArray();
+
+        return $gradeOptions;
+    }
+    /*POCOR-6498 ends*/
 }
