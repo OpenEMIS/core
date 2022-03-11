@@ -22,11 +22,9 @@ class TrainingEmployeeQualificationTable extends AppTable
 
     public function initialize(array $config)
     {
-        $this->table('training_session_trainee_results');
+        $this->table('institution_staff');
         parent::initialize($config);
-        $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
-        $this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
-        $this->belongsTo('TrainingResultTypes', ['className' => 'Training.TrainingResultTypes']);
+        $this->belongsTo('Institutions', ['className' => 'Institutions.Institutions', 'foreignKey' => 'institution_id']);
 
         $this->addBehavior('Excel');
         $this->addBehavior('Report.ReportList');
@@ -244,48 +242,64 @@ class TrainingEmployeeQualificationTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelRenderInstitutionCode(Event $event, Entity $entity, array $attr)
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
-        if ($entity->has('trainee_id')) {
-            $traineeId = $entity->trainee_id;
-            $this->institutionDetails = $this->getInstitutionDetailByTraineeId($traineeId);
+        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentitiesResult = $userIdentities->find()
+                ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
+                ->select([
+                    'identity_number' => $userIdentities->aliasField('number'),
+                    'identity_type_name' => 'IdentityTypes.name',
+                ])
+                ->where([$userIdentities->aliasField('security_user_id') => $entity->user_id_id]) // POCOR-6597
+                ->order([$userIdentities->aliasField('id DESC')])
+                ->hydrate(false)->toArray();
+                $entity->custom_identity_number = '';
+                $other_identity_array = [];
+                if (!empty($userIdentitiesResult)) {
+                    foreach ( $userIdentitiesResult as $index => $user_identities_data ) {
+                        if ($index == 0) {
+                            $entity->custom_identity_number = $user_identities_data['identity_number'];
+                            $entity->custom_identity_name   = $user_identities_data['identity_type_name'];
+                        } else {
+                            $other_identity_array[] = '(['.$user_identities_data['identity_type_name'].'] - '.$user_identities_data['identity_number'].')';
+                        }
+                    }
+                }
+        $entity->custom_identity_other_data = implode(',', $other_identity_array);
+        return $entity->custom_identity_name;
+    }
 
-            if (isset($this->institutionDetails->institution->code) && !empty($this->institutionDetails->institution->code)) {
-                return $this->institutionDetails->institution->code;
-            } else {
-                return ' ';
+    public function onExcelGetAreaName(Event $event, Entity $entity)
+    {
+        // if ($entity->has('staff') && !empty($entity->staff)) { // POCOR-6597
+            $InstitutionStaff = TableRegistry::get('Institution.Staff');
+            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+            $statuses = $StaffStatuses->findCodeList();
+            $query = $InstitutionStaff->find('all')
+                    ->contain(['Institutions'])
+                    ->where([
+                        $InstitutionStaff->aliasField('staff_id') => $entity->user_id_id, // POCOR-6597
+                        $InstitutionStaff->aliasField('staff_status_id') => $statuses['ASSIGNED']
+                    ])
+                    ->order([
+                        $InstitutionStaff->aliasField('start_date DESC'),
+                        $InstitutionStaff->aliasField('created DESC')
+                    ])
+                    ->first();
+            if (!empty($query)) {
+                $AreaTable = TableRegistry::get('Area.Areas');
+                $value = $AreaTable->find()->where([$AreaTable->aliasField('id') => $query->institution->area_id])->first();
+                if (empty($value)) {
+                    return ' - ';
+                } else {
+                    return $value->name;
+                }
             }
-        } else {
-            return ' ';
-        }
+        // } // POCOR-6597
     }
 
-    public function onExcelRenderInstitutionName(Event $event, Entity $entity)
-    {
-        if (isset($this->institutionDetails->institution->name) && !empty($this->institutionDetails->institution->name)) {
-            return $this->institutionDetails->institution->name;
-        } else {
-            return ' ';
-        }
-    }
+    
 
-    public function getInstitutionDetailByTraineeId($traineeId)
-    {
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
-
-        $institutionDetails = [];
-        $institutionDetails = $InstitutionStaff->find()
-            ->contain('Institutions')
-            ->where([
-                $InstitutionStaff->aliasField('staff_id') => $traineeId,
-                $InstitutionStaff->aliasField('staff_status_id') => self::ACTIVE_STATUS
-            ])
-            ->order([
-                $InstitutionStaff->aliasField('start_date') => 'DESC',
-            ])
-            ->first()
-        ;
-		
-        return $institutionDetails;
-    }
+    
 }
