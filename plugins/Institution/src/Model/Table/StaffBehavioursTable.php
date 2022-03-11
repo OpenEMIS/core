@@ -57,9 +57,9 @@ class StaffBehavioursTable extends ControllerActionTable
                     'SecurityRoleFunctions._execute' => 1
                 ])
                 ->toArray();
-        if(!empty($QueryResult)){
+        // if(!empty($QueryResult)){ //commented in POCOR-6155 
             $this->addBehavior('Excel', ['pages' => ['index']]);
-        }
+        // }
     }
 
     public function implementedEvents()
