@@ -1851,6 +1851,16 @@ class StaffTable extends ControllerActionTable
         }
         
         $institutionStaff = TableRegistry::get('institution_staff');
+    /**
+
+     * Changes On staff dashboard 
+
+     * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
+
+     * @ticket POCOR-6553
+
+     */
+        // Starts POCOR-6553
         /* POCOR-6553 starts */
       $date = "'".date('Y-m-d')."'";
         $staffAttendances = $institutionStaff->find('all')
@@ -1898,30 +1908,19 @@ class StaffTable extends ControllerActionTable
           ;
      
         $attendanceData = [];
-        
+
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
         $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
         $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
         
         $total_present = $total_absent = $total_late = 0;
-       
+        
         foreach ($staffAttendances as $key => $attendance) {
-           
-             if ( $attendance->time_in) {
-                        $total_present = $total_present + 1;
-             }
-             if ($attendance->absence_type_id == 3) {
-                        $total_late = $total_late + 1;
-                       
-             } 
-             if ($attendance->absent.length > 0) {
-                        $total_absent = $total_absent + 1;
-             }     
-           // $total_present = $attendance->present + $total_present;
-           // $total_absent = $attendance->absent + $total_absent;
-            //$total_late = $attendance->late + $total_late;
+        
+            $total_present = $attendance->present + $total_present;
+            $total_absent = $attendance->absent + $total_absent;
+            $total_late = $attendance->late + $total_late;
         }
-        /* POCOR-6553 ends */
         if(!empty($currentYear)) {
             $attendanceData[$currentYear] = $currentYear;
             $dataSet['Present']['data'][$currentYear] = $total_present;
@@ -1931,9 +1930,10 @@ class StaffTable extends ControllerActionTable
         
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => __('For Today'));
-        $params['options']['xxis']['categories'] = array_values($attendanceData);
+        $params['options']['xAxis']['categories'] = array_values($attendanceData);
         $params['dataSet'] = $dataSet;
         return $params;
+            /* POCOR-6553 ends */
     }
 
     // Functions that are migrated over
