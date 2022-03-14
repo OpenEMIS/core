@@ -2,29 +2,27 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Network\Session;
+
 use App\Model\Table\AppTable;
-/**
- * Get details of all Employee Qualification 
- * POCOR-6598
- * @author divyaa
-*/
+use App\Model\Traits\OptionsTrait;
+use Cake\Datasource\ConnectionManager;
+
 class TrainingEmployeeQualificationTable extends AppTable
 {
-    private $trainingSessionResults = [];
-    private $institutionDetails = [];
-
-    CONST ACTIVE_STATUS = 1;
 
     public function initialize(array $config)
     {
         $this->table('institution_staff');
         parent::initialize($config);
-       $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
+
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
@@ -33,8 +31,13 @@ class TrainingEmployeeQualificationTable extends AppTable
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->addBehavior('Excel');
         $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Excel', [
+            'excludes' => ['start_year', 'end_year', 'security_group_user_id'],
+            'pages' => false,
+            'autoFields' => false
+        ]);
+        
     }
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
@@ -50,14 +53,18 @@ class TrainingEmployeeQualificationTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-
+        $qualification = TableRegistry::get('staff_qualifications');
+        print_r($qualification);die;
         $query
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('start_date'),
                 $this->aliasField('staff_id'),  // this field is required to build value for Education Grades
+                $this->aliasField('staff_type_id'),
                 $this->aliasField('staff_status_id'),
-                $this->aliasField('institution_id')
+                $this->aliasField('institution_id'),
+                //'qualification_name' => 'StaffQualifications.name',
+                //'document_no' => 'StaffQualifications.document_no',
             ])
             ->contain([
                 'Institutions' => [
@@ -87,7 +94,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                         'area_name' => 'Areas.name'
                     ]
                 ],
-                
+                //POCOR-5388 ends
                 'Users' => [
                     'fields' => [
                         'Users.id', // this field is required for Identities and IdentityTypes to appear
@@ -96,29 +103,19 @@ class TrainingEmployeeQualificationTable extends AppTable
                         'middle_name' => 'Users.middle_name',
                         'third_name' => 'Users.third_name',
                         'last_name' => 'Users.last_name',
-                        'preferred_name' => 'Users.preferred_name',
-                        'number' => 'Users.identity_number',
-                        'dob' => 'Users.date_of_birth', // for Date Of Birth field
-                        'Users.date_of_birth',  // for Age field
-                        'username' => 'Users.username'
                     ]
                 ],
-                /*'Users.Identities.IdentityTypes' => [
-                    'fields' => [
-                        'Identities.number',
-                        'Identities.issue_date',
-                        'Identities.expiry_date',
-                        'Identities.issue_location',
-                        'IdentityTypes.name',
-                        'IdentityTypes.default'
-                    ]
-                ],*/
                 'Users.Genders' => [
                     'fields' => [
                         'gender' => 'Genders.name'
                     ]
                 ],
                 
+                'StaffTypes' => [
+                    'fields' => [
+                        'StaffTypes.name'
+                    ]
+                ],
                 'StaffStatuses' => [
                     'fields' => [
                         'StaffStatuses.name'
@@ -135,39 +132,27 @@ class TrainingEmployeeQualificationTable extends AppTable
                         'position_title_teaching' => 'StaffPositionTitles.type'
                     ]
                 ],
-                'Positions.StaffPositionGrades' => [
-                    'fields' => [
-                        'position_grade' => 'StaffPositionGrades.name',
-                        
-                    ]
-                ],
-                'Positions.StaffPositionGrades' => [
-                    'fields' => [
-                        'position_grade' => 'StaffPositionGrades.name',
-                        
-                    ]
-                ],
                 'Positions.WorkflowSteps' => [
                     'fields' => [
-                        'hiring_status' => 'WorkflowSteps.name',
+                        'workflow_step' => 'WorkflowSteps.name',
                         
                     ]
                 ]
             ])
-			
-            ->group([
-                $this->aliasField('staff_id')
-            ]);
-        print_r($query->Sql());die('pk');
-        
+            ->leftJoin(
+                [$qualification->alias() => $qualification->table()],
+                [$qualification->aliasField('staff_id = ') . $this->aliasfield('staff_id')]
+            )
+            
+        print_r($query->Sql());die;
+    
     }
 
+    
+
+    
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
     {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-        $identity = $IdentityType->getDefaultEntity();
-
-        $settings['identity'] = $identity;
 
         $newFields[] = [
             'key' => 'Institutions.code',
@@ -203,14 +188,7 @@ class TrainingEmployeeQualificationTable extends AppTable
             'type' => 'integer',
             'label' => '',
         ];
-        //POCOR-5388 starts
-        $newFields[] = [
-            'key' => 'Institutions.locality_name',
-            'field' => 'locality_name',
-            'type' => 'string',
-            'label' => __('Locality')
-        ];
-        //POCOR-5388 ends
+    
         $newFields[] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
@@ -246,12 +224,6 @@ class TrainingEmployeeQualificationTable extends AppTable
             'label' => ''
         ];
 
-        $newFields[] = [
-            'key' => 'IdentityType',
-            'field' => 'IdentityType',
-            'type' => 'string',
-            'label' => ''
-        ];
         $newFields[] = [
             'key' => 'Users.identity_number',
             'field' => 'user_identities_default',
@@ -302,29 +274,8 @@ class TrainingEmployeeQualificationTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'Users.date_of_birth',
-            'field' => 'dob',
-            'type' => 'date',
-            'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => 'Age',
-            'field' => 'Age',
-            'type' => 'Age',
-            'label' => __('Age'),
-        ];
-
-        $newFields[] = [
             'key' => 'InstitutionStaff.start_date',
             'field' => 'start_date',
-            'type' => 'date',
-            'label' => ''
-        ];
-
-         $newFields[] = [
-            'key' => 'InstitutionStaff.end_date',
-            'field' => 'end_date',
             'type' => 'date',
             'label' => ''
         ];
@@ -371,74 +322,7 @@ class TrainingEmployeeQualificationTable extends AppTable
             'label' => __('Teaching')
         ];
 
-        $newFields[] = [
-            'key' => 'Users.username',
-            'field' => 'username',
-            'type' => 'string',
-            'label' => __('Username')
-        ];
 
         $fields->exchangeArray($newFields);
     }
-
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
-    {
-        $userIdentities = TableRegistry::get('user_identities');
-        $userIdentitiesResult = $userIdentities->find()
-                ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
-                ->select([
-                    'identity_number' => $userIdentities->aliasField('number'),
-                    'identity_type_name' => 'IdentityTypes.name',
-                ])
-                ->where([$userIdentities->aliasField('security_user_id') => $entity->user_id_id]) // POCOR-6597
-                ->order([$userIdentities->aliasField('id DESC')])
-                ->hydrate(false)->toArray();
-                $entity->custom_identity_number = '';
-                $other_identity_array = [];
-                if (!empty($userIdentitiesResult)) {
-                    foreach ( $userIdentitiesResult as $index => $user_identities_data ) {
-                        if ($index == 0) {
-                            $entity->custom_identity_number = $user_identities_data['identity_number'];
-                            $entity->custom_identity_name   = $user_identities_data['identity_type_name'];
-                        } else {
-                            $other_identity_array[] = '(['.$user_identities_data['identity_type_name'].'] - '.$user_identities_data['identity_number'].')';
-                        }
-                    }
-                }
-        $entity->custom_identity_other_data = implode(',', $other_identity_array);
-        return $entity->custom_identity_name;
-    }
-
-    public function onExcelGetAreaName(Event $event, Entity $entity)
-    {
-        // if ($entity->has('staff') && !empty($entity->staff)) { // POCOR-6597
-            $InstitutionStaff = TableRegistry::get('Institution.Staff');
-            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-            $statuses = $StaffStatuses->findCodeList();
-            $query = $InstitutionStaff->find('all')
-                    ->contain(['Institutions'])
-                    ->where([
-                        $InstitutionStaff->aliasField('staff_id') => $entity->user_id_id, // POCOR-6597
-                        $InstitutionStaff->aliasField('staff_status_id') => $statuses['ASSIGNED']
-                    ])
-                    ->order([
-                        $InstitutionStaff->aliasField('start_date DESC'),
-                        $InstitutionStaff->aliasField('created DESC')
-                    ])
-                    ->first();
-            if (!empty($query)) {
-                $AreaTable = TableRegistry::get('Area.Areas');
-                $value = $AreaTable->find()->where([$AreaTable->aliasField('id') => $query->institution->area_id])->first();
-                if (empty($value)) {
-                    return ' - ';
-                } else {
-                    return $value->name;
-                }
-            }
-        // } // POCOR-6597
-    }
-
-    
-
-    
 }
