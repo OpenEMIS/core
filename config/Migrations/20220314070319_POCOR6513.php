@@ -63,7 +63,38 @@ class POCOR6513 extends AbstractMigration
                     'en' => 'Performance',
                     'created_user_id' => 1,
                     'created' => date('Y-m-d H:i:s')
+                ],
+                [
+                    'en' => 'Academic Period Name',
+                    'created_user_id' => 1,
+                    'created' => date('Y-m-d H:i:s')
+                ],
+                [
+                    'en' => 'Area Name',
+                    'created_user_id' => 1,
+                    'created' => date('Y-m-d H:i:s')
+                ],
+                [
+                    'en' => 'Education Grade Name',
+                    'created_user_id' => 1,
+                    'created' => date('Y-m-d H:i:s')
+                ],
+                [
+                    'en' => 'Assessment Name',
+                    'created_user_id' => 1,
+                    'created' => date('Y-m-d H:i:s')
+                ],
+                [
+                    'en' => 'Assessment Period Name',
+                    'created_user_id' => 1,
+                    'created' => date('Y-m-d H:i:s')
+                ],
+                [
+                    'en' => 'Marks Entered',
+                    'created_user_id' => 1,
+                    'created' => date('Y-m-d H:i:s')
                 ]
+
             ];
             $this->insert('locale_contents', $localeContent);
 
