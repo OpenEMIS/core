@@ -274,6 +274,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionFloors']);
     }
+    // POCOR-6152 starts
+    public function InstitutionAssets()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssets']);
+    }
+    // POCOR-6152 ends
     public function InstitutionRooms()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionRooms']);
@@ -748,6 +754,12 @@ class InstitutionsController extends AppController
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
                 $this->Navigation->addCrumb(__('Hygiene'));
                 $this->set('contentHeader', $header);
+
+            }else if($this->request->param('action') == 'InstitutionAssets'){ //POCOR-6152 Header breadcrumbs
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Assets');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Assets'));
             } else if($this->request->param('action') == 'InfrastructureWashSewages'){
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Sewage');
@@ -4295,6 +4307,7 @@ class InstitutionsController extends AppController
             'Institution.StudentSpecialNeeds'  => __('Student Special Needs'),
             'Institution.StudentHealths'  => __('Student Health'),
             'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
+            'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
         ];
         return $options;
     }
