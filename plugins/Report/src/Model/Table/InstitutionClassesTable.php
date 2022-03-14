@@ -11,8 +11,10 @@ use Cake\ORM\TableRegistry;
 
 class InstitutionClassesTable extends AppTable
 {
-    public const CLASS_TEACHER = 'Home Room Teacher';
-    public const ASSISTANT_TEACHER = 'Secondary Teacher';
+    // POCOR-6606 starts <vikas.rathore@mail.valuecoders.com>
+    const CLASS_TEACHER = 'Home Room Teacher';
+    const ASSISTANT_TEACHER = 'Secondary Teacher';
+    // POCOR-6606 ends <vikas.rathore@mail.valuecoders.com>
 
     public function initialize(array $config)
     {
