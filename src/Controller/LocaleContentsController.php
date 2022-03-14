@@ -17,7 +17,24 @@ class LocaleContentsController extends PageController
     {
         parent::initialize();
 
-        $this->Page->disable(['add', 'delete']);
+       // $this->Page->disable(['add', 'delete']);
+	   
+	  
+		/**
+
+			 * Add Translations
+
+			 * @author Neeraj Rai <neeraj.rai@mail.valuecoders.com>
+
+			 * @ticket POCOR-6626
+
+			 */
+		// Starts POCOR-6626
+	   
+	   
+	    $this->Page->disable(['delete']);
+		
+		// End POCOR-6626
         $this->Page->setHeader('Translations');
 
         $this->loadModel('Locales');
