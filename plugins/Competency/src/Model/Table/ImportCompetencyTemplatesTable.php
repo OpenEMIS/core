@@ -76,8 +76,10 @@ class ImportCompetencyTemplatesTable extends AppTable {
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
-                    $row->code,
-                    $row->name
+                    //POCOR-6616 Start
+                    $row->name,
+                    $row->code
+                    //POCOR-6616 End
                 ];
             }
         }        
