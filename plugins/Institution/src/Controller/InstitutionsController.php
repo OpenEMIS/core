@@ -3578,7 +3578,7 @@ class InstitutionsController extends AppController
      */
      public function getInstituteProfileCompletnessData ($institutionId) {
         $data = array();
-        $data['percentage'] = 0;
+        //$data['percentage'] = 0; //POCOR-6627 - commented line;it was adding extra data in totalProfileComplete
         $profileComplete = 0;
         //Overview
         $institutions = TableRegistry::get('institutions');
