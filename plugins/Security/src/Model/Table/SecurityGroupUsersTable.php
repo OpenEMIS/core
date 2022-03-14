@@ -307,6 +307,7 @@ class SecurityGroupUsersTable extends AppTable {
 
                 if ($isSchoolBased) {
                     if (is_null($institutionId)) {
+                        //start POCOR-6619
                         $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                         $assigneeQuery = $SecurityGroupUsers
                         ->find('userList', ['where' => $where])
@@ -316,6 +317,7 @@ class SecurityGroupUsersTable extends AppTable {
                         Log::write('debug', $assigneeQuery->sql());
 
                         $assigneeOptions = $assigneeQuery->toArray();
+                        //End POCOR-6619
                         Log::write('debug', 'Institution Id not found.');
                     } else {
                         $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
