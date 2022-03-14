@@ -83,6 +83,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.createCustomFieldsArray = createCustomFieldsArray;
     StudentController.filterBySection = filterBySection;
     StudentController.mapBySection = mapBySection;
+    StudentController.changeOption = changeOption;
+    StudentController.changed = changed;
     
 
     angular.element(document).ready(function () {
@@ -345,6 +347,34 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             let filteredArray = selectedCustomField.filter((item) => StudentController.filterBySection(item, section));
             StudentController.customFieldsArray.push({sectionName: section , data: filteredArray});
         });
+        StudentController.customFieldsArray.forEach((customField) => {
+            customField.data.forEach((fieldData) => {
+                if(fieldData.field_type === 'DROPDOWN') {
+                    fieldData.selectedOptionId = '';
+                }
+                if(fieldData.field_type === 'DATE') {
+                    fieldData.isDatepickerOpen = false;
+                    fieldData.datePickerOptions = {
+                        minDate: new Date(fieldData.params.start_date),
+                        showWeeks: false
+                    };
+                }
+                if(fieldData.field_type === 'TIME') {
+                    fieldData.hourStep = 1;
+                    fieldData.minuteStep = 5;
+                    fieldData.isMeridian = true;
+                    let startTimeArray = fieldData.params.start_time.split(" ");
+                    let endTimeArray = fieldData.params.end_time.split(" ");
+                    let startTimes = startTimeArray[0].split(":");
+                    let endTimes = endTimeArray[0].split(":");
+                    let startTimeHour = startTimeArray[1] === 'AM' ? Number(startTimes[0]) : Number(startTimes[0]) + 12;
+                    let endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
+                    fieldData.answer = new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1]));
+                    fieldData.min = new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1]));
+                    fieldData.max = new Date(new Date(new Date().setHours(endTimeHour)).setMinutes(endTimes[1]));
+                }
+            });
+        });
     }
 
     function mapBySection(item) {
@@ -353,6 +383,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function filterBySection(item, section) {
         return section === item.section;
+    }
+
+    function changeOption(field, optionId){
+        field.option.forEach((option) => {
+            if(option.option_id === optionId){
+                field.selectedOption = option.option_name;
+            }
+        })
+    }
+
+    function changed(answer){
+        console.log(answer);
     }
 
     function setStudentName() {
