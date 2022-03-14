@@ -456,6 +456,7 @@ class StudentAttendancesTable extends ControllerActionTable
                         $StudentAbsencesPeriodDetails->aliasField('education_grade_id = ') => $educationGradeId,
                         $StudentAbsencesPeriodDetails->aliasField('student_id IN ') => $studentList,
                         $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
+                        $StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId,
                         'AND' => [
                             $StudentAbsencesPeriodDetails->aliasField('date >= ') => $weekStartDay,
                             $StudentAbsencesPeriodDetails->aliasField('date <= ') => $weekEndDay,
@@ -475,6 +476,7 @@ class StudentAttendancesTable extends ControllerActionTable
                         $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
                         $StudentAttendanceMarkedRecords->aliasField('education_grade_id = ') => $educationGradeId,
                         $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
+                        $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId,
                         $StudentAttendanceMarkedRecords->aliasField('date >= ') => $weekStartDay,
                         $StudentAttendanceMarkedRecords->aliasField('date <= ') => $weekEndDay
                     ])

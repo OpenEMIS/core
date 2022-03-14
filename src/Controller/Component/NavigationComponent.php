@@ -317,6 +317,11 @@ class NavigationComponent extends Component
                 //POCOR-6202 start
                 if($action == 'GuardianStudents'){
                     $userInfo = TableRegistry::get('student_guardians')->get($securityUserId);
+                }else if($action == 'StudentGuardians'){
+                    $securityUserId = $this->controller->paramsDecode($this->request->params['pass'][1]);
+                    $userInfo = TableRegistry::get('Student.StudentGuardians')->get($securityUserId);//POCOR-6453 ends
+                    $securityUserId = $userInfo->guardian_id;
+                    $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
                 }else if($action == 'Identities'){//POCOR-6453 starts
                     $securityUserId = $this->controller->paramsDecode($this->request->query['queryString']);
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
@@ -359,7 +364,6 @@ class NavigationComponent extends Component
             $isStudent = $session->read('Directory.Directories.is_student');
             $isStaff = $session->read('Directory.Directories.is_staff');
             $isGuardian = $session->read('Directory.Directories.is_guardian');
-
 
             // POCOR-6372 (start) initially here userType was checking but it did not work for directory navigation so changed with roles
             if ($isStaff) {
@@ -839,14 +843,14 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
-
+            //POCOR-6160 start 
             'Institutions.BankAccounts' => [
                 'title' => 'Bank Accounts',
                 'parent' => 'Institution.Finance',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Institutions.BankAccounts'],
             ],
-
+            //POCOR-6160 end
             'Institutions.Budget' => [
                 'title' => 'Budget',
                 'parent' => 'Institution.Finance',
