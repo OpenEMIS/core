@@ -43,7 +43,7 @@ class POCOR6513 extends AbstractMigration
       $this->execute("ALTER TABLE `report_assessment_missing_mark_entry` ADD KEY `academic_period_id` (`academic_period_id`),ADD KEY `assessment_id` (`assessment_id`),ADD KEY `assessment_period_id` (`assessment_period_id`),ADD KEY `education_grade_id` (`education_grade_id`),ADD KEY `institution_id` (`institution_id`),ADD KEY `institution_provider_id` (`institution_provider_id`),ADD KEY `area_id` (`area_id`)");
 
       $this->execute('INSERT INTO report_queries (`name`, `query_sql`, `frequency`, `status`, `created_user_id`, `created`) 
-      VALUES ("report_assessment_missing_mark_entry_truncate","TRUNCATE report_student_attendance_summary;","month", 1, 1, NOW())');
+      VALUES ("report_assessment_missing_mark_entry_truncate","TRUNCATE report_assessment_missing_mark_entry;","month", 1, 1, NOW())');
 
 
       $this->execute('INSERT INTO report_queries (`name`, `query_sql`, `frequency`, `status`, `created_user_id`, `created`) 
