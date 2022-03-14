@@ -590,12 +590,12 @@ class AssessmentResultsTable extends AppTable
                         }
                         //$withoutTerm[$key]['marks'] = $assessmentItemResultsData->marks;
                         //$withoutTerm[$key]['academic_term_total_weighted_marks'] += $assessmentItemResultsArr->marks*$value['assessment_period']['weight'];
+                        $withoutTerm[$key]['marks'] = array_sum($withoutTerm_sum_marks); 
+                        $withoutTerm[$key]['academic_term_total_weighted_marks'] = array_sum($withoutTerm_sum_assesment_weight);
                     } 
-                    $withoutTerm[$key]['marks'] = array_sum($withoutTerm_sum_marks); 
-                    $withoutTerm[$key]['academic_term_total_weighted_marks'] = array_sum($withoutTerm_sum_assesment_weight);
                     //POCOR-6586 ends
                 }
-              
+            
             $withTerm = $AssessmentItemResults->find()
                 ->select([
                     $AssessmentItemResults->aliasField('institution_id'),
@@ -720,9 +720,9 @@ class AssessmentResultsTable extends AppTable
                         }
                         //$withTerm[$key]['marks'] = $assessmentItemResultsData->marks;
                         //$withTerm[$key]['academic_term_total_weighted_marks'] = $assessmentItemResultsData->marks*$value['assessment_period']['weight'];
+                        $withTerm[$key]['marks'] = array_sum($withTerm_sum_marks); 
+                        $withTerm[$key]['academic_term_total_weighted_marks'] = array_sum($withTerm_sum_assesment_weight);
                     } 
-                    $withTerm[$key]['marks'] = array_sum($withTerm_sum_marks); 
-                    $withTerm[$key]['academic_term_total_weighted_marks'] = array_sum($withTerm_sum_assesment_weight);
                     //POCOR-6586 ends
                 }
             if (!empty($withTerm)) { // If academic_term is setup, to use the academic_term to calculate the average
@@ -799,6 +799,7 @@ class AssessmentResultsTable extends AppTable
                     ];
                 }
             }
+            
             // $studentSubjectResults = array_merge($withoutTerm->toArray(), $withTerm->toArray(), $averageRecords);
             $studentSubjectResults = array_merge($withoutTerm, $withTerm, $averageRecords);
             return $studentSubjectResults;
