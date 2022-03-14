@@ -54,35 +54,40 @@ class TrainingEmployeeQualificationTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $qualification = TableRegistry::get('staff_qualifications');
-        print_r($qualification);die;
+        $qualificationtitle = TableRegistry::get('FieldOption.QualificationTitles');
+        $qualificationlevel = TableRegistry::get('FieldOption.QualificationLevels');
+        $qualificationCountry = TableRegistry::get('FieldOption.Countries');
+        $educationFieldOfStudy = TableRegistry::get('Education.EducationFieldOfStudies');
+        //print_r($qualification);die;
         $query
             ->select([
                 $this->aliasField('id'),
-                $this->aliasField('start_date'),
+               'date_of_hiring' => $this->aliasField('start_date'),
                 $this->aliasField('staff_id'),  // this field is required to build value for Education Grades
                 $this->aliasField('staff_type_id'),
                 $this->aliasField('staff_status_id'),
                 $this->aliasField('institution_id'),
-                //'qualification_name' => 'StaffQualifications.name',
-                //'document_no' => 'StaffQualifications.document_no',
+                'document_no' => 'staff_qualifications.document_no',
+                'graduate_year' => 'staff_qualifications.graduate_year',
+                'qualification_institution' => 'staff_qualifications.qualification_institution',
+                'avg' => 'staff_qualifications.gpa',
+                'EducationFieldOfStudies' => 'EducationFieldOfStudies.name',
+                'Qualification_title' => 'QualificationTitles.name',
+                'country' => 'Countries.name',
+                'level' => 'QualificationLevels.name',
             ])
             ->contain([
                 'Institutions' => [
                     'fields' => [
                         'code' => 'Institutions.code',
-                        'Institutions.name'
+                        'name'=>'Institutions.name'
                     ]
                 ],
-                'Institutions.Types' => [
-                    'fields' => [
-                        'institution_type' => 'Types.name'
-                    ]
-                ],
-                'Institutions.Sectors' => [
+                /*'Institutions.Sectors' => [
                     'fields' => [
                         'institution_sector' => 'Sectors.name',
                     ]
-                ],
+                ],*/
                 'Institutions.Providers' => [
                     'fields' => [
                         'institution_provider' => 'Providers.name',
@@ -90,11 +95,10 @@ class TrainingEmployeeQualificationTable extends AppTable
                 ],
                 'Institutions.Areas' => [
                     'fields' => [
-                        'area_code' => 'Areas.code',
                         'area_name' => 'Areas.name'
                     ]
                 ],
-                //POCOR-5388 ends
+                
                 'Users' => [
                     'fields' => [
                         'Users.id', // this field is required for Identities and IdentityTypes to appear
@@ -103,6 +107,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                         'middle_name' => 'Users.middle_name',
                         'third_name' => 'Users.third_name',
                         'last_name' => 'Users.last_name',
+                        'address' => 'Users.address',
                     ]
                 ],
                 'Users.Genders' => [
@@ -118,7 +123,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                 ],
                 'StaffStatuses' => [
                     'fields' => [
-                        'StaffStatuses.name'
+                        'employment_status'=>'StaffStatuses.name'
                     ]
                 ],
                 'Positions' => [
@@ -129,22 +134,39 @@ class TrainingEmployeeQualificationTable extends AppTable
                 'Positions.StaffPositionTitles' => [
                     'fields' => [
                         'position_title' => 'StaffPositionTitles.name',
-                        'position_title_teaching' => 'StaffPositionTitles.type'
                     ]
                 ],
-                'Positions.WorkflowSteps' => [
+                'Positions.StaffPositionGrades' => [
                     'fields' => [
-                        'workflow_step' => 'WorkflowSteps.name',
+                        'functional_class' => 'StaffPositionGrades.name',
                         
                     ]
-                ]
+                ],
+                /*'Positions.WorkflowSteps' => [
+                    'fields' => [
+                        'status_hiring' => 'WorkflowSteps.name',
+                        
+                    ]
+                ]*/
             ])
             ->leftJoin(
                 [$qualification->alias() => $qualification->table()],
                 [$qualification->aliasField('staff_id = ') . $this->aliasfield('staff_id')]
-            )
+            )->leftJoin(
+                [$qualificationtitle->alias() => $qualificationtitle->table()],
+                [$qualificationtitle->aliasField('id = ') . $qualification->aliasField('qualification_title_id')]
+            )->leftJoin(
+                [$qualificationCountry->alias() => $qualificationCountry->table()],
+                [$qualificationCountry->aliasField('id = ') . $qualification->aliasField('qualification_country_id')]
+            )->leftJoin(
+                [$educationFieldOfStudy->alias() => $educationFieldOfStudy->table()],
+                [$educationFieldOfStudy->aliasField('id = ') . $qualification->aliasField('education_field_of_study_id')]
+            )->leftJoin(
+                [$qualificationlevel->alias() => $qualificationlevel->table()],
+                [$qualificationlevel->aliasField('id = ') . $qualificationtitle->aliasField('qualification_level_id')]
+            );
             
-        print_r($query->Sql());die;
+       // print_r($query->Sql());die;
     
     }
 
@@ -155,153 +177,170 @@ class TrainingEmployeeQualificationTable extends AppTable
     {
 
         $newFields[] = [
+            'key' => 'institution_provider',
+            'field' => 'institution_provider',
+            'type' => 'string',
+            'label' => __('Institution Provider')
+        ];
+        $newFields[] = [
+            'key' => 'area_name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __('Area Education')
+        ];
+        $newFields[] = [
             'key' => 'Institutions.code',
             'field' => 'code',
             'type' => 'string',
-            'label' => '',
+            'label' => __('Institution Code')
+        ];
+        $newFields[] = [
+            'key' => 'Institutions.name',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => __('Institution Name')
         ];
 
-        $newFields[] = [
-            'key' => 'InstitutionStaff.institution_id',
-            'field' => 'institution_id',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'Institutions.institution_type_id',
-            'field' => 'institution_type',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'Institutions.institution_sector_id',
-            'field' => 'institution_sector',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'Institutions.institution_provider_id',
-            'field' => 'institution_provider',
-            'type' => 'integer',
-            'label' => '',
-        ];
     
         $newFields[] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => ''
+            'label' => __('OpenEMIS ID')
+        ];
+        $newFields[] = [
+            'key' => 'identity_type',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];
+        $newFields[] = [
+            'key' => 'identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+        $newFields[] = [
+            'key' => 'other_identity',
+            'field' => 'other_identity',
+            'type' => 'string',
+            'label' => __('Other Identities')
         ];
 
         $newFields[] = [
             'key' => 'Users.first_name',
             'field' => 'first_name',
             'type' => 'string',
-            'label' => ''
+            'label' => __('First Name')
         ];
 
         $newFields[] = [
             'key' => 'Users.middle_name',
             'field' => 'middle_name',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Second Name')
+        ];
+        $newFields[] = [
+            'key' => 'Users.third_name',
+            'field' => 'third_name',
+            'type' => 'string',
+            'label' => __('Third Name')
         ];
 
         $newFields[] = [
             'key' => 'Users.last_name',
             'field' => 'last_name',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Last Name')
+        ];
+        $newFields[] = [
+            'key' => 'Users.address',
+            'field' => 'address',
+            'type' => 'string',
+            'label' => __('Address')
         ];
 
         $newFields[] = [
             'key' => 'Users.gender_id',
             'field' => 'gender',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Gender')
         ];
 
         $newFields[] = [
-            'key' => 'Users.identity_number',
-            'field' => 'user_identities_default',
+            'key' => 'functional_class',
+            'field' => 'functional_class',
             'type' => 'string',
-            'label' => __($identity->name)
+            'label' => __('Functional class')
         ];
 
-        $newFields[] = [
-            'key' => 'Users.identities',
-            'field' => 'user_identities',
-            'type' => 'string',
-            'label' => __('Other Identities')
-        ];
-
-        $newFields[] = [
-            'key' => 'Institutions.area_code',
-            'field' => 'area_code',
-            'type' => 'string',
-            'label' => __('Area Education Code')
-        ];
-
-        $newFields[] = [
+        /*$newFields[] = [
             'key' => 'Institutions.area',
             'field' => 'area_name',
             'type' => 'string',
             'label' => __('Area Education')
-        ];
+        ];*/
 
         $newFields[] = [
-            'key' => 'Institutions.area_administrative_code',
-            'field' => 'area_administrative_code',
+            'key' => 'employment_status',
+            'field' => 'employment_status',
             'type' => 'string',
-            'label' => __('Area Administrative Code')
+            'label' => __('Employment Status')
         ];
 
-        $newFields[] = [
-            'key' => 'Institutions.area_administrative_name',
-            'field' => 'area_administrative_name',
-            'type' => 'string',
-            'label' => __('Area Administrative')
-        ];
-
-        $newFields[] = [
-            'key' => 'InstitutionStaff.FTE',
-            'field' => 'FTE',
-            'type' => 'integer',
-            'label' => 'FTE (%)',
-        ];
+        /*$newFields[] = [
+            'key' => 'status_of_hiring',
+            'field' => 'status_of_hiring',
+            'type' => 'date',
+            'label' => __('Date Of Hiring')
+        ];*/ 
 
         $newFields[] = [
             'key' => 'InstitutionStaff.start_date',
             'field' => 'start_date',
             'type' => 'date',
-            'label' => ''
+            'label' => __('Date Of Hiring')
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionStaff.staff_type_id',
-            'field' => 'staff_type_id',
-            'type' => 'integer',
-            'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => 'Education.education_grades',
-            'field' => 'education_grades',
+            'key' => 'level',
+            'field' => 'level',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Level')
+        ];
+        $newFields[] = [
+            'key' => 'country',
+            'field' => 'country',
+            'type' => 'string',
+            'label' => __('Country')
+        ];
+        $newFields[] = [
+            'key' => 'qualification_institution',
+            'field' => 'qualification_institution',
+            'type' => 'string',
+            'label' => __('Qualification Institution')
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionStaff.staff_status_id',
-            'field' => 'staff_status_id',
+            'key' => 'document_no',
+            'field' => 'document_no',
             'type' => 'integer',
-            'label' => ''
+            'label' => __('Document Number')
+        ];
+        $newFields[] = [
+            'key' => 'graduate_year',
+            'field' => 'graduate_year',
+            'type' => 'integer',
+            'label' => __('Graduate Year')
+        ];
+        $newFields[] = [
+            'key' => 'avg',
+            'field' => 'avg',
+            'type' => 'integer',
+            'label' => __('The Avg')
         ];
 
-        $newFields[] = [
+        /*$newFields[] = [
             'key' => 'Positions.position_no',
             'field' => 'position_no',
             'type' => 'string',
@@ -313,16 +352,43 @@ class TrainingEmployeeQualificationTable extends AppTable
             'field' => 'position_title',
             'type' => 'string',
             'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => 'Positions.position_title_teaching',
-            'field' => 'position_title_teaching',
-            'type' => 'string',
-            'label' => __('Teaching')
-        ];
-
+        ];*/
 
         $fields->exchangeArray($newFields);
+    }
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentitiesResult = $userIdentities->find()
+            ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
+            ->select([
+                'identity_number' => $userIdentities->aliasField('number'),
+                'identity_type_name' => 'IdentityTypes.name',
+            ])
+            ->where([$userIdentities->aliasField('security_user_id') => $entity->trainee_id])
+            ->order([$userIdentities->aliasField('id DESC')])
+            ->hydrate(false)->toArray();
+            $entity->custom_identity_number = '';
+            $other_identity_array = [];
+            if (!empty($userIdentitiesResult)) {
+                foreach ( $userIdentitiesResult as $index => $user_identities_data ) {
+                    if ($index == 0) {
+                        $entity->custom_identity_number = $user_identities_data['identity_number'];
+                        $entity->custom_identity_name   = $user_identities_data['identity_type_name'];
+                    } else {
+                        $other_identity_array[] = '(['.$user_identities_data['identity_type_name'].'] - '.$user_identities_data['identity_number'].')';
+                    }
+                }
+            }
+        $entity->custom_identity_other_data = implode(',', $other_identity_array);
+        return $entity->custom_identity_name;
+    }
+    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    {
+        return $entity->custom_identity_number;
+    }
+    public function onExcelGetOtherIdentity(Event $event, Entity $entity)
+    {
+        return $entity->custom_identity_other_data;
     }
 }
