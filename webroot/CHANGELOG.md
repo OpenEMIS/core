@@ -1,3 +1,25 @@
+### [3.74.2] - 2022-03-07
+- Implemented: Add Export button function - Institutions > Behaviour > Students
+- Implemented: Add Export button function - Institutions > Finances > Bank Accounts
+- Implemented: Develop an SQL migration file to automatically create / update data dictionary CSV file
+- Implemented: Improvement of the student record export function in school
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 2
+- Bug Fixed: API /restful/v2/Assessment-AssessmentItems.json is not working
+- Bug Fixed: Institutions>Attendance>Students-Inconsistencies between the attendance marked per day and the attendance selected for All Days
+- Bug Fixed: Create migration script for report_student_assessment_summary
+- Bug Fixed: Administrations > System Setup > System Configuration > Webhooks: Webhook get method is working however Webhook post method is not working.
+- Bug Fixed: Institutions>Infrastructure>Overview: Custom fields are inaccurate
+- Bug Fixed: Reports> Survey : Some surveys are not showing up in report
+- Bug Fixed: Institution>Staff: 404 error when trying to Edit the Staff profile
+- Bug Fixed: Report>Institution: Student Attendance Report is stuck in progress
+
+### [3.74.1] - 2022-02-25
+- Implemented: Develop an API for Security Group Users
+- Bug Fixed: Administration > Meals : Change fields to multi select
+- Bug Fixed: Report>Survey: Open surveys are not included
+- Bug Fixed: Directory > Guardian: 404 error in BS environments when trying to access the guardians' page from Directory
+- Bug Fixed: Institutions>Performance>Assessments>Report: Ungrouped subjects has wrong total marks
+
 ### [3.74.0] - 2022-02-23
 - Implemented: Reports > Institutions > Positions : To add Staff Name, OpenEMIS ID, Default Identity Type, Identity Number
 - Implemented: Reports > Institutions > Classes : To add an Education Grade Filter
