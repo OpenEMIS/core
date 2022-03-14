@@ -1,3 +1,14 @@
+### [3.74.3] - 2022-03-14
+- Implemented: Add Export button function - Institutions > Infrastructures > Assets
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 1
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 5
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 8
+- Bug Fixed: Institutions>Statistics>Standard: Develop Staff Special needs data for all staff.
+- Bug Fixed: Institutions>Performance>Assessments: User should not be able to import if the assessment period is over
+- Bug Fixed: Jordan UAT: Reports > Institution > Classes
+- Bug Fixed: Institutions>Performance>Assessments: Enrolled students should show only in Reference Tab
+- Bug Fixed: Report>Institution: Changes to the report
+
 ### [3.74.2] - 2022-03-07
 - Implemented: Add Export button function - Institutions > Behaviour > Students
 - Implemented: Add Export button function - Institutions > Finances > Bank Accounts
