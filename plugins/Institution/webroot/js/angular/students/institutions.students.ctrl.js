@@ -41,6 +41,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.selectedSection = '';
 
     StudentController.datepickerOptions = {
+        minDate: new Date(),
+        maxDate: new Date('01/01/2100'),
+        showWeeks: false
+    };
+    StudentController.dobDatepickerOptions = {
+        minDate: new Date('01/01/1900'),
         maxDate: new Date(),
         showWeeks: false
     };
@@ -85,6 +91,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.mapBySection = mapBySection;
     StudentController.changeOption = changeOption;
     StudentController.changed = changed;
+    StudentController.selectOption = selectOption;
     
 
     angular.element(document).ready(function () {
@@ -354,8 +361,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 }
                 if(fieldData.field_type === 'DATE') {
                     fieldData.isDatepickerOpen = false;
+                    let params = JSON.parse(fieldData.params);
                     fieldData.datePickerOptions = {
-                        minDate: new Date(fieldData.params.start_date),
+                        minDate: params && params.start_date ? new Date(params.start_date): new Date(),
+                        maxDate: new Date('01/01/2100'),
                         showWeeks: false
                     };
                 }
@@ -363,15 +372,35 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     fieldData.hourStep = 1;
                     fieldData.minuteStep = 5;
                     fieldData.isMeridian = true;
-                    let startTimeArray = fieldData.params.start_time.split(" ");
-                    let endTimeArray = fieldData.params.end_time.split(" ");
-                    let startTimes = startTimeArray[0].split(":");
-                    let endTimes = endTimeArray[0].split(":");
-                    let startTimeHour = startTimeArray[1] === 'AM' ? Number(startTimes[0]) : Number(startTimes[0]) + 12;
-                    let endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
-                    fieldData.answer = new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1]));
-                    fieldData.min = new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1]));
-                    fieldData.max = new Date(new Date(new Date().setHours(endTimeHour)).setMinutes(endTimes[1]));
+                    let params = JSON.parse(fieldData.params);
+                    if(params && params.start_time) {
+                        var startTimeArray = params.start_time.split(" ");
+                        var startTimes = startTimeArray[0].split(":");
+                        if(startTimes[0] === 12) {
+                            var startTimeHour = startTimeArray[1] === 'PM' ? Number(startTimes[0]) : Number(startTimes[0]) - 12;
+                        } else {
+                            var startTimeHour = startTimeArray[1] === 'AM' ? Number(startTimes[0]) : Number(startTimes[0]) + 12;
+                        } 
+                    }
+                    if(params && params.end_time) {
+                        var endTimeArray = params.end_time.split(" ");
+                        var endTimes = endTimeArray[0].split(":");
+                        if(startTimes[0] === 12) {
+                            var endTimeHour = endTimeArray[1] === 'PM' ? Number(endTimes[0]) : Number(endTimes[0]) - 12;
+                        } else {
+                            var endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
+                        }
+                    }
+                    fieldData.answer = params && params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
+                    fieldData.min = params && params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
+                    fieldData.max = params && params.end_time ? new Date(new Date(new Date().setHours(endTimeHour)).setMinutes(endTimes[1])): new Date();
+                }
+
+                if(fieldData.field_type === 'CHECKBOX') {
+                    fieldData.answer = [];
+                    fieldData.option.forEach((option) => {
+                        option.selected = false;
+                    })
                 }
             });
         });
@@ -395,6 +424,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function changed(answer){
         console.log(answer);
+    }
+
+    function selectOption (field) {
+        field.answer = [];
+        field.option.forEach((option) => {
+            if(option.selected) {
+                field.answer.push(option.option_id);
+            }
+        })
     }
 
     function setStudentName() {
