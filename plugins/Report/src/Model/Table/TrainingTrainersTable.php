@@ -225,4 +225,17 @@ class TrainingTrainersTable extends AppTable
         }
     }
     // END POCOR-6595
+
+
+    /**
+     * Get all trainer ids as key and name as value
+     * @usage  It is used as drop-down options
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6569
+     */
+    public function getTrainers()
+    {
+        return $this->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();
+    }
+
 }
