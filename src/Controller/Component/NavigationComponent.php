@@ -1600,7 +1600,7 @@ class NavigationComponent extends Component
         $session = $this->request->session();
         $id = $session->read('Guardian.Guardians.id');
 
-        $nav = [
+        $navigation = [
             'Directories.Student' => [
                 'title' => 'Student',
                 'parent' => 'Directories.Directories.index',
@@ -1625,18 +1625,18 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Directory', 'type' => 'student'],
                 'selected' => ['Directories.StudentBankAccounts', 'Directories.StudentFees']
             ],
-            // 'Directories.StudentProfiles' => [
-            //     'title' => 'Profiles',
-            //     'parent' => 'Directories.Student',
-            //     'params' => ['plugin' => 'Directory'],
-            //     'selected' => ['Directories.StudentProfiles']
-            // ]
+            'Directories.StudentProfiles' => [
+                'title' => 'Profiles',
+                'parent' => 'Directories.Student',
+                'params' => ['plugin' => 'Directory'],
+                'selected' => ['Directories.StudentProfile']
+            ]
         ];
 
         $session = $this->request->session();
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
         if (!empty($studentToGuardian)) {
-            $nv['Directories.StudentGuardians']['selected'] = ['Directories.StudentGuardians', 'Directories.StudentGuardianUser', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments', 'Directories.Contacts', 'Directories.Demographic'];
+            $navigation['Directories.StudentGuardians']['selected'] = ['Directories.StudentGuardians', 'Directories.StudentGuardianUser', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments', 'Directories.Contacts', 'Directories.Demographic'];
         }
 
         return $navigation;
