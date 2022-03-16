@@ -99,11 +99,11 @@ class CompetencyTemplatesTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('academic_period_id', [
+        /*$this->field('academic_period_id', [
             'type' => 'select',
             'select' => false,
             'entity' => $entity
-        ]);
+        ]);*/
         $this->field('education_programme_id', [
             'type' => 'select',
             'entity' => $entity
@@ -114,7 +114,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         ]);
 
         $this->setFieldOrder([
-            'code', 'name', 'description', 'academic_period_id', 'education_programme_id', 'education_grade_id'//, 'assessment_items'
+            'code', 'name', 'description', /*'academic_period_id'*/ 'education_programme_id', 'education_grade_id'//, 'assessment_items'
         ]);
     }
 
