@@ -119,7 +119,7 @@ class StudentProfilesTable extends ControllerActionTable
             ];
 			
             // Download button, status must be generated or published
-			if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+			if ($this->AccessControl->check(['Profiles', 'StudentProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 // $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
                 // $buttons['download'] = [
                 //     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
@@ -135,7 +135,7 @@ class StudentProfilesTable extends ControllerActionTable
             }
 
             // Generate button, all statuses
-            if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'generate'])) {
+            if ($this->AccessControl->check(['Profiles', 'StudentProfiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->StudentTemplates
@@ -583,7 +583,9 @@ class StudentProfilesTable extends ControllerActionTable
     {
 		$model = $this->InstitutionStudentsProfileTemplates;
         $ids = $this->getQueryString();
-		
+		$session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $ids['institution_id'] = $institutionId;
         if ($model->exists($ids)) {
             $data = $model->find()->where($ids)->first();
             $fileName = $data->file_name;
@@ -613,7 +615,9 @@ class StudentProfilesTable extends ControllerActionTable
     {
 		$model = $this->InstitutionStudentsProfileTemplates;
         $ids = $this->getQueryString();
-		
+		$session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $ids['institution_id'] = $institutionId;
         if ($model->exists($ids)) {
             $data = $model->find()->where($ids)->first();
             $fileName = $data->file_name;
@@ -645,10 +649,11 @@ class StudentProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->StudentTemplates->checkIfHasTemplate($params['student_profile_template_id']);
-        
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
         if ($hasTemplate) {
-            $this->addReportCardsToProcesses($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
-            $this->GenerateAllStudentReportCards($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
+            $this->addReportCardsToProcesses($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
+            $this->GenerateAllStudentReportCards($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
             $this->Alert->warning('StudentProfiles.generate');
         } else {
             $url = $this->url('index');
@@ -663,7 +668,8 @@ class StudentProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->StudentTemplates->checkIfHasTemplate($params['student_profile_template_id']);
-        
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
         if ($hasTemplate) {
             $StudentReportCardProcesses = TableRegistry::get('ReportCard.StudentReportCardProcesses');
             $inProgress = $StudentReportCardProcesses->find()
@@ -671,7 +677,7 @@ class StudentProfilesTable extends ControllerActionTable
                     $StudentReportCardProcesses->aliasField('student_profile_template_id') => $params['student_profile_template_id'],
                     $StudentReportCardProcesses->aliasField('student_id') => $params['student_id'],
                     $StudentReportCardProcesses->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $StudentReportCardProcesses->aliasField('institution_id') => $params['institution_id'],
+                    $StudentReportCardProcesses->aliasField('institution_id') => $institutionId,
                 ])
                 ->count();      
                         
@@ -694,14 +700,15 @@ class StudentProfilesTable extends ControllerActionTable
 	public function downloadAllPdf(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
         $files = $this->InstitutionStudentsProfileTemplates->find()
             ->contain(['StudentTemplates'])
             ->where([
-                $this->InstitutionStudentsProfileTemplates->aliasField('institution_id') => $params['institution_id'],
+                $this->InstitutionStudentsProfileTemplates->aliasField('institution_id') => $institutionId,
                 $this->InstitutionStudentsProfileTemplates->aliasField('academic_period_id') => $params['academic_period_id'],
                 $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id') => $params['student_profile_template_id'],
                 $this->InstitutionStudentsProfileTemplates->aliasField('status IN ') => $statusArray,
@@ -749,14 +756,15 @@ class StudentProfilesTable extends ControllerActionTable
     public function downloadAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
         $files = $this->InstitutionStudentsProfileTemplates->find()
             ->contain(['StudentTemplates'])
             ->where([
-                $this->InstitutionStudentsProfileTemplates->aliasField('institution_id') => $params['institution_id'],
+                $this->InstitutionStudentsProfileTemplates->aliasField('institution_id') => $institutionId,
                 $this->InstitutionStudentsProfileTemplates->aliasField('academic_period_id') => $params['academic_period_id'],
                 $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id') => $params['student_profile_template_id'],
                 $this->InstitutionStudentsProfileTemplates->aliasField('status IN ') => $statusArray,
@@ -855,8 +863,10 @@ class StudentProfilesTable extends ControllerActionTable
     public function email(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $this->addReportCardsToEmailProcesses($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
-        $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $this->addReportCardsToEmailProcesses($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
+        $this->triggerEmailAllReportCardsShell($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
         $this->Alert->warning('StudentProfiles.email');
 
         $event->stopPropagation();
@@ -866,11 +876,12 @@ class StudentProfilesTable extends ControllerActionTable
     public function emailAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
         $inProgress = $this->StudentReportCardEmailProcesses->find()
             ->where([
                 $this->StudentReportCardEmailProcesses->aliasField('student_profile_template_id') => $params['student_profile_template_id'],
-                $this->StudentReportCardEmailProcesses->aliasField('institution_id') => $params['institution_id'],
+                $this->StudentReportCardEmailProcesses->aliasField('institution_id') => $institutionId,
                 $this->StudentReportCardEmailProcesses->aliasField('education_grade_id') => $params['education_grade_id'],
                 $this->StudentReportCardEmailProcesses->aliasField('academic_period_id') => $params['academic_period_id'],
                 $this->StudentReportCardEmailProcesses->aliasField('status') => $this->StudentReportCardEmailProcesses::SENDING
@@ -878,8 +889,8 @@ class StudentProfilesTable extends ControllerActionTable
             ->count();
 
         if (!$inProgress) {
-            $this->addReportCardsToEmailProcesses($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id']);
-            $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id']);
+            $this->addReportCardsToEmailProcesses($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id']);
+            $this->triggerEmailAllReportCardsShell($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id']);
 
             $this->Alert->warning('StudentProfiles.emailAll');
         } else {

@@ -921,7 +921,9 @@ class ProfilesController extends AppController
         $this->set('ngController', 'StudentTimetableCtrl as $ctrl');
     }
 
-    public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffProfiles']); }
+    /*POCOR-6286 starts - registering function*/
+    public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.StaffProfiles']); }
 
-    public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentProfiles']); }
+    public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.StudentProfiles']); }
+    /*POCOR-6286 ends*/
 }
