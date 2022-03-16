@@ -445,35 +445,35 @@ class StudentProfilesTable extends ControllerActionTable
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $params = $this->request->query;
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+    { return $query;
+        // $params = $this->request->query;
+        // $session = $this->request->session();
+        // $institutionId = $session->read('Institution.Institutions.id');
 
-        $query
-            ->select([
-                'student_profile_template_id' => $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id'),
-                'report_card_status' => $this->InstitutionStudentsProfileTemplates->aliasField('status'),
-                'report_card_started_on' => $this->InstitutionStudentsProfileTemplates->aliasField('started_on'),
-                'report_card_completed_on' => $this->InstitutionStudentsProfileTemplates->aliasField('completed_on'),
-                'email_status_id' => $this->StudentReportCardEmailProcesses->aliasField('status'),
-                'email_error_message' => $this->StudentReportCardEmailProcesses->aliasField('error_message')
-            ])
-            ->leftJoin([$this->InstitutionStudentsProfileTemplates->alias() => $this->InstitutionStudentsProfileTemplates->table()],
-                [
-                    $this->InstitutionStudentsProfileTemplates->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    //$this->InstitutionStudentsProfileTemplates->aliasField('institution_id = ') . $this->aliasField('institution_id')
-                ]
-            )
-            ->leftJoin([$this->StudentReportCardEmailProcesses->alias() => $this->StudentReportCardEmailProcesses->table()],
-                [
-                    $this->StudentReportCardEmailProcesses->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    //$this->StudentReportCardEmailProcesses->aliasField('institution_id = ') . $this->InstitutionStudentsProfileTemplates->aliasField('institution_id'),
-                    $this->StudentReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->InstitutionStudentsProfileTemplates->aliasField('academic_period_id'),
-                    $this->StudentReportCardEmailProcesses->aliasField('student_profile_template_id = ') . $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id')
-                ]
-            );
-            //->autoFields(true);
+        // $query
+        //     ->select([
+        //         'student_profile_template_id' => $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id'),
+        //         'report_card_status' => $this->InstitutionStudentsProfileTemplates->aliasField('status'),
+        //         'report_card_started_on' => $this->InstitutionStudentsProfileTemplates->aliasField('started_on'),
+        //         'report_card_completed_on' => $this->InstitutionStudentsProfileTemplates->aliasField('completed_on'),
+        //         'email_status_id' => $this->StudentReportCardEmailProcesses->aliasField('status'),
+        //         'email_error_message' => $this->StudentReportCardEmailProcesses->aliasField('error_message')
+        //     ])
+        //     ->leftJoin([$this->InstitutionStudentsProfileTemplates->alias() => $this->InstitutionStudentsProfileTemplates->table()],
+        //         [
+        //             $this->InstitutionStudentsProfileTemplates->aliasField('student_id = ') . $this->aliasField('student_id'),
+        //             //$this->InstitutionStudentsProfileTemplates->aliasField('institution_id = ') . $this->aliasField('institution_id')
+        //         ]
+        //     )
+        //     ->leftJoin([$this->StudentReportCardEmailProcesses->alias() => $this->StudentReportCardEmailProcesses->table()],
+        //         [
+        //             $this->StudentReportCardEmailProcesses->aliasField('student_id = ') . $this->aliasField('student_id'),
+        //             //$this->StudentReportCardEmailProcesses->aliasField('institution_id = ') . $this->InstitutionStudentsProfileTemplates->aliasField('institution_id'),
+        //             $this->StudentReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->InstitutionStudentsProfileTemplates->aliasField('academic_period_id'),
+        //             $this->StudentReportCardEmailProcesses->aliasField('student_profile_template_id = ') . $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id')
+        //         ]
+        //     );
+        //     //->autoFields(true);
     }
 
     public function onGetStatus(Event $event, Entity $entity)
