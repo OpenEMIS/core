@@ -18,7 +18,7 @@ use App\Model\Table\ControllerActionTable;
  * 
  * This class is used to generate the Staff profile
  * Ticket - POCOR6286
- * @author Poonam Kharka <poonam.malvi@mail.valuecoders.com>
+ * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
  * 
  */
 class StaffProfilesTable extends ControllerActionTable
