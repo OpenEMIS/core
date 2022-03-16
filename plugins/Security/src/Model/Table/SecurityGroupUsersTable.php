@@ -288,7 +288,7 @@ class SecurityGroupUsersTable extends AppTable {
     public function getAssigneeList($params = []) { 
         $isSchoolBased = array_key_exists('is_school_based', $params) ? $params['is_school_based'] : null;
         $stepId = array_key_exists('workflow_step_id', $params) ? $params['workflow_step_id'] : null;
-        $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : null;
+        $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : $params['url_institution_id']; //POCOR-6619
 
         Log::write('debug', 'Is School Based: ' . $isSchoolBased);
         Log::write('debug', 'Workflow Step Id: ' . $stepId);
@@ -306,18 +306,7 @@ class SecurityGroupUsersTable extends AppTable {
                 $Institutions = TableRegistry::get('Institution.Institutions');
 
                 if ($isSchoolBased) {
-                    if (is_null($institutionId)) {
-                        //start POCOR-6619
-                        $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
-                        $assigneeQuery = $SecurityGroupUsers
-                        ->find('userList', ['where' => $where])
-                        ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
-
-                        Log::write('debug', 'Non-School based assignee query:');
-                        Log::write('debug', $assigneeQuery->sql());
-
-                        $assigneeOptions = $assigneeQuery->toArray();
-                        //End POCOR-6619
+                    if (is_null($institutionId)) {                        
                         Log::write('debug', 'Institution Id not found.');
                     } else {
                         $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
