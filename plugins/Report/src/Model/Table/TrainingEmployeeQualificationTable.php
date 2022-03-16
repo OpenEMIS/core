@@ -14,6 +14,10 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Datasource\ConnectionManager;
 
+/**
+ * POCOR-6598
+ * Generate Employee Qualification Report
+ */ 
 class TrainingEmployeeQualificationTable extends AppTable
 {
 
@@ -165,8 +169,6 @@ class TrainingEmployeeQualificationTable extends AppTable
                 [$qualificationlevel->alias() => $qualificationlevel->table()],
                 [$qualificationlevel->aliasField('id = ') . $qualificationtitle->aliasField('qualification_level_id')]
             );
-            
-        //print_r($query->Sql());die;
     
     }
 
@@ -423,6 +425,41 @@ class TrainingEmployeeQualificationTable extends AppTable
                     $entity->main_major = $val['name'];
                 }
                  return $entity->main_major;
+            }
+            return '';
+    }
+    /**
+    * Get staff other qualification 
+    */
+    public function onExcelGetSubMajor(Event $event, Entity $entity)
+    {
+        $qualification = TableRegistry::get('Staff.Qualifications');
+        $qualificationtitlespecial = TableRegistry::get('FieldOption.QualificationSpecialisations');
+        $qualificationspecial = TableRegistry::get('staff_qualifications_specialisations');
+        $submajor = $qualificationspecial->find()
+            ->innerJoin(
+                [$qualification->alias() => $qualification->table()],
+                [$qualification->aliasField('id = ') . $qualificationspecial->aliasField('staff_qualification_id')]
+            )
+            ->innerJoin(
+                [$qualificationtitlespecial->alias() => $qualificationtitlespecial->table()],
+                [$qualificationtitlespecial->aliasField('id = ') .$qualificationspecial->aliasField('qualification_specialisation_id')]
+            )
+            ->select([
+                'id' => $qualificationtitlespecial->aliasField('id'),
+                'name' => $qualificationtitlespecial->aliasField('name'),
+            ])
+            ->where([$qualification->aliasField('staff_id') => $entity->staff_id]);
+            $specialisationss = [];
+            if($submajor!=null){
+                $data = $submajor->toArray();
+                $entity->sub_major = '';
+                foreach ($data as $key => $val) {
+                    $specialisationss[$val['id']] = $val['name'];
+                
+                }
+            $entity->sub_major =  implode(', ', array_values($specialisationss));
+            return $entity->sub_major;
             }
             return '';
     }
