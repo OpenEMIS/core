@@ -1,5 +1,5 @@
 <?php
-namespace Institution\Model\Table;
+namespace Directory\Model\Table;
 
 use ArrayObject;
 use ZipArchive;
@@ -14,13 +14,6 @@ use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
-/**
- * 
- * This class is used to generate the Staff profile
- * Ticket - POCOR6286
- * @author Poonam Kharka <poonam.malvi@mail.valuecoders.com>
- * 
- */
 class StaffProfilesTable extends ControllerActionTable
 {
     private $statusOptions = [];
@@ -33,8 +26,8 @@ class StaffProfilesTable extends ControllerActionTable
     CONST PUBLISHED = 4;
 
     CONST MAX_PROCESSES = 2;
-    
-    public $fileTypes = [
+	
+	public $fileTypes = [
         'jpeg'  => 'image/jpeg',
         'jpg'   => 'image/jpeg',
         'gif'   => 'image/gif',
@@ -65,8 +58,8 @@ class StaffProfilesTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
-        
-        $this->StaffTemplates = TableRegistry::get('ProfileTemplate.StaffTemplates');
+		
+		$this->StaffTemplates = TableRegistry::get('ProfileTemplate.StaffTemplates');
         $this->StaffReportCards = TableRegistry::get('Institution.StaffReportCards');
         $this->StaffReportCardProcesses = TableRegistry::get('ReportCard.StaffReportCardProcesses');
         $this->StaffReportCardEmailProcesses = TableRegistry::get('ReportCard.StaffReportCardEmailProcesses');
@@ -85,8 +78,8 @@ class StaffProfilesTable extends ControllerActionTable
         $events['ControllerAction.Model.generate'] = 'generate';
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
-        $events['ControllerAction.Model.downloadAllPdf'] = 'downloadAllPdf';
-        $events['ControllerAction.Model.downloadExcel'] = 'downloadExcel';
+		$events['ControllerAction.Model.downloadAllPdf'] = 'downloadAllPdf';
+		$events['ControllerAction.Model.downloadExcel'] = 'downloadExcel';
         $events['ControllerAction.Model.downloadPDF'] = 'downloadPDF';
         $events['ControllerAction.Model.publish'] = 'publish';
         $events['ControllerAction.Model.publishAll'] = 'publishAll';
@@ -107,7 +100,7 @@ class StaffProfilesTable extends ControllerActionTable
         $institutionId = $this->request->query('institution_id');
         $academicPeriodId = $this->request->query('academic_period_id');
         
-        if (!is_null($reportCardId) && $this->StaffTemplates->exists([$this->StaffTemplates->primaryKey() => $reportCardId])) {
+		if (!is_null($reportCardId) && $this->StaffTemplates->exists([$this->StaffTemplates->primaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
@@ -116,16 +109,16 @@ class StaffProfilesTable extends ControllerActionTable
                 'institution_id' => $institutionId,
                 'academic_period_id' => $academicPeriodId,
             ];
-            
+			
             // Download button, status must be generated or published
-            if ($this->AccessControl->check(['Profiles', 'StaffProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+			if ($this->AccessControl->check(['ProfileTemplates', 'StaffProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
                 $buttons['download'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
                     'attr' => $indexAttr,
                     'url' => $downloadUrl
                 ];
-                $downloadPdfUrl = $this->setQueryString($this->url('downloadPDF'), $params);
+				$downloadPdfUrl = $this->setQueryString($this->url('downloadPDF'), $params);
                 $buttons['downloadPdf'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
                     'attr' => $indexAttr,
@@ -134,7 +127,7 @@ class StaffProfilesTable extends ControllerActionTable
             }
 
             // Generate button, all statuses
-            if ($this->AccessControl->check(['Profiles', 'StaffProfiles', 'generate'])) {
+            if ($this->AccessControl->check(['ProfileTemplates', 'StaffProfiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->StaffTemplates
@@ -170,7 +163,7 @@ class StaffProfilesTable extends ControllerActionTable
             }
 
             // Publish button, status must be generated
-            if ($this->AccessControl->check(['Profiles', 'StaffProfiles', 'publish']) && $entity->has('report_card_status') 
+            if ($this->AccessControl->check(['ProfileTemplates', 'StaffProfiles', 'publish']) && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::GENERATED 
                          || $entity->report_card_status == '12' 
                        )
@@ -184,7 +177,7 @@ class StaffProfilesTable extends ControllerActionTable
             }
 
             // Unpublish button, status must be published
-            if ($this->AccessControl->check(['Profiles', 'StaffProfiles', 'unpublish']) 
+            if ($this->AccessControl->check(['ProfileTemplates', 'StaffProfiles', 'unpublish']) 
                     && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::PUBLISHED 
                           || $entity->report_card_status == '16'
@@ -199,7 +192,7 @@ class StaffProfilesTable extends ControllerActionTable
             }
 
             // Single email button, status must be published
-            if ($this->AccessControl->check(['Profiles', 'StaffProfiles', 'email']) 
+            if ($this->AccessControl->check(['ProfileTemplates', 'StaffProfiles', 'email']) 
                     && $entity->has('report_card_status')
                     && ( $entity->report_card_status == self::PUBLISHED 
                             || $entity->report_card_status == '16' 
@@ -229,12 +222,12 @@ class StaffProfilesTable extends ControllerActionTable
         $this->field('completed_on');
         $this->field('email_status');
     }
-
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+	
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('report_queue');
         $this->setFieldOrder(['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
-        $this->setFieldVisible(['index'], ['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+		$this->setFieldVisible(['index'], ['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->StaffReportCardProcesses
@@ -253,35 +246,61 @@ class StaffProfilesTable extends ControllerActionTable
                 $this->StaffReportCardProcesses->aliasField('staff_id')
             ])
             ->hydrate(false)
-            ->toArray();
+            ->toArray();	
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+      
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$AcademicPeriod->aliasField('id')] = $selectedAcademicPeriod;        
-        //End 
+		//End 
 
         // Report Cards filter
         $reportCardOptions = [];
-        $reportCardOptions = $this->StaffTemplates->find('list')
-            ->where([
-                $this->StaffTemplates->aliasField('academic_period_id') => $selectedAcademicPeriod
-            ])
-            ->toArray();
+		$reportCardOptions = $this->StaffTemplates->find('list')
+			->where([
+				$this->StaffTemplates->aliasField('academic_period_id') => $selectedAcademicPeriod
+			])
+			->toArray();
        
 
         $reportCardOptions = ['-1' => '-- '.__('Select Staff Template').' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->query('staff_profile_template_id')) ? $this->request->query('staff_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
-        //End   
-        
+		//End	
+		
+  //       // Area filter
+		// $Areas = TableRegistry::get('Area.Areas');
+
+		// $areaOptions = [];
+		// $areaOptions = $Areas->find('list')->toArray();
+       
+  //       $areaOptions = ['-1' => '-- '.__('Select Area').' --'] + $areaOptions;
+  //       $selectedArea = !is_null($this->request->query('area_id')) ? $this->request->query('area_id') : -1;
+  //       $this->controller->set(compact('areaOptions', 'selectedArea'));
+  //       //End
+
+  //       // Institution filter
+		// $Institutions = TableRegistry::get('Institutions');
+
+		// $institutionOptions = [];
+		// $institutionOptions = $Institutions->find('list')
+		// 					->where([
+		// 						$Institutions->aliasField('area_id') => $selectedArea
+		// 					])
+		// 					->toArray();
+       
+  //       $institutionOptions = ['-1' => '-- '.__('Select Institution').' --'] + $institutionOptions;
+  //       $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
+  //       $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
+		// $where[$this->aliasField('institution_id')] = $selectedInstitution;
+  //       //End
+		
         $query
             ->select([
                 'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
@@ -291,51 +310,50 @@ class StaffProfilesTable extends ControllerActionTable
                 'email_status_id' => $this->StaffReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->StaffReportCardEmailProcesses->aliasField('error_message')
             ])
-            ->innerJoin([$AcademicPeriod->alias() => $AcademicPeriod->table()],
+			->innerJoin([$AcademicPeriod->alias() => $AcademicPeriod->table()],
                 [
-                    'OR' => [[
-                    array(
-                        $this->aliasField('end_date').' IS NOT NULL',
-                        $this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('start_date'),
-                        $this->aliasField('end_date >= ') . $AcademicPeriod->aliasField('start_date'),
-                    ),
-                    array(
-                        $this->aliasField('end_date').' IS NOT NULL',
-                        $this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('end_date'),
-                        $this->aliasField('end_date >= ') . $AcademicPeriod->aliasField('end_date'),
-                    ),
-                    array(
-                        $this->aliasField('end_date').' IS NOT NULL',
-                        $this->aliasField('start_date >= ') . $AcademicPeriod->aliasField('start_date'),
-                        $this->aliasField('end_date <= ') . $AcademicPeriod->aliasField('end_date'),
-                    )],
-                    array(
-                        $this->aliasField('end_date').' IS NULL',
-                        $this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('end_date'),
-                    )
-                    ]
+					'OR' => [[
+					array(
+						$this->aliasField('end_date').' IS NOT NULL',
+						$this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('start_date'),
+						$this->aliasField('end_date >= ') . $AcademicPeriod->aliasField('start_date'),
+					),
+					array(
+						$this->aliasField('end_date').' IS NOT NULL',
+						$this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('end_date'),
+						$this->aliasField('end_date >= ') . $AcademicPeriod->aliasField('end_date'),
+					),
+					array(
+						$this->aliasField('end_date').' IS NOT NULL',
+						$this->aliasField('start_date >= ') . $AcademicPeriod->aliasField('start_date'),
+						$this->aliasField('end_date <= ') . $AcademicPeriod->aliasField('end_date'),
+					)],
+					array(
+						$this->aliasField('end_date').' IS NULL',
+						$this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('end_date'),
+					)
+					]
                 ]
             )
             ->leftJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
                 [
                     $this->StaffReportCards->aliasField('staff_id = ') . $this->aliasField('staff_id'),
-                    $this->StaffReportCards->aliasField('institution_id = ') . $institutionId,
+                    //$this->StaffReportCards->aliasField('institution_id = ') . $selectedInstitution,
                     $this->StaffReportCards->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
-                    $this->StaffReportCards->aliasField('staff_profile_template_id = ') . $selectedReportCard
+                    //$this->StaffReportCards->aliasField('staff_profile_template_id = ') . $selectedReportCard
                 ]
             )
             ->leftJoin([$this->StaffReportCardEmailProcesses->alias() => $this->StaffReportCardEmailProcesses->table()],
                 [
                     $this->StaffReportCardEmailProcesses->aliasField('staff_id = ') . $this->aliasField('staff_id'),
-                    $this->StaffReportCardEmailProcesses->aliasField('institution_id = ') . $institutionId,
+                    //$this->StaffReportCardEmailProcesses->aliasField('institution_id = ') . $selectedInstitution,
                     $this->StaffReportCardEmailProcesses->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
-                    $this->StaffReportCardEmailProcesses->aliasField('staff_profile_template_id = ') . $selectedReportCard
+                    //$this->StaffReportCardEmailProcesses->aliasField('staff_profile_template_id = ') . $selectedReportCard
                 ]
             )
             ->autoFields(true)
             ->where($where)
             ->all();
-
         if (is_null($this->request->query('sort'))) {
             $query
                 ->contain('Users')
@@ -396,8 +414,8 @@ class StaffProfilesTable extends ControllerActionTable
                     'academic_period_id' => $academicPeriodId,
                     'staff_profile_template_id' => $reportCardId
                 ];
-                
-                if ($generatedCount > 0 || $publishedCount > 0) {
+				
+				if ($generatedCount > 0 || $publishedCount > 0) {
                     $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
                     $downloadButtonPdf['type'] = 'button';
                     $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
@@ -492,44 +510,15 @@ class StaffProfilesTable extends ControllerActionTable
         $searchableFields[] = 'openemis_no';
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+	public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
-        $this->setFieldVisible(['view'], ['academic_period_id', 'openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+		$this->setFieldVisible(['view'], ['academic_period_id', 'openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // $params = $this->request->query;
-        // $session = $this->request->session();
-        // $institutionId = $session->read('Institution.Institutions.id');
-        // $query
-        //     ->select([
-        //         'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
-        //         'report_card_status' => $this->StaffReportCards->aliasField('status'),
-        //         'report_card_started_on' => $this->StaffReportCards->aliasField('started_on'),
-        //         'report_card_completed_on' => $this->StaffReportCards->aliasField('completed_on'),
-        //         'email_status_id' => $this->StaffReportCardEmailProcesses->aliasField('status'),
-        //         'email_error_message' => $this->StaffReportCardEmailProcesses->aliasField('error_message')
-        //     ])
-        //     ->leftJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
-        //         [
-        //             $this->StaffReportCards->aliasField('staff_id = ') . $this->aliasField('staff_id'),
-        //             $this->StaffReportCards->aliasField('institution_id = ') . $institutionId,
-        //             $this->StaffReportCards->aliasField('academic_period_id = ') . $params['academic_period_id'],
-        //         ]
-        //     )
-        //     ->leftJoin([$this->StaffReportCardEmailProcesses->alias() => $this->StaffReportCardEmailProcesses->table()],
-        //         [
-        //             $this->StaffReportCardEmailProcesses->aliasField('staff_id = ') . $this->aliasField('staff_id'),
-        //             $this->StaffReportCardEmailProcesses->aliasField('institution_id = ') . $institutionId,
-        //             $this->StaffReportCardEmailProcesses->aliasField('academic_period_id = ') . $params['academic_period_id'],
-        //             //$this->StaffReportCardEmailProcesses->aliasField('staff_profile_template_id = ') . $params['staff_profile_template_id']
-        //         ]
-        //     )
-        //     ->autoFields(true);
-        $query;
-            //echo "<pre>";print_r($query);die();
+        return $query;
     }
 
     public function onGetStatus(Event $event, Entity $entity)
@@ -573,7 +562,7 @@ class StaffProfilesTable extends ControllerActionTable
         } else if (!is_null($this->request->query('staff_profile_template_id'))) {
             $reportCardId = $this->request->query('staff_profile_template_id');
         }
-        $academicPeriodId = $this->request->query('academic_period_id');
+		$academicPeriodId = $this->request->query('academic_period_id');
 
         $search = [
             'staff_profile_template_id' => $reportCardId,
@@ -634,15 +623,12 @@ class StaffProfilesTable extends ControllerActionTable
 
         return $value;
     }
-    
-    public function downloadExcel(Event $event, ArrayObject $extra)
+	
+	public function downloadExcel(Event $event, ArrayObject $extra)
     {
-        $model = $this->StaffReportCards;
+		$model = $this->StaffReportCards;
         $ids = $this->getQueryString();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-        $ids['institution_id'] = $institutionId;
-        
+		
         if ($model->exists($ids)) {
             $data = $model->find()->where($ids)->first();
             $fileName = $data->file_name;
@@ -667,20 +653,18 @@ class StaffProfilesTable extends ControllerActionTable
         }
         exit();
     }
-    
-    public function downloadPDF(Event $event, ArrayObject $extra)
+	
+	public function downloadPDF(Event $event, ArrayObject $extra)
     {
-        $model = $this->StaffReportCards;
+		$model = $this->StaffReportCards;
         $ids = $this->getQueryString();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-        $ids['institution_id'] = $institutionId;
+		
         if ($model->exists($ids)) {
             $data = $model->find()->where($ids)->first();
             $fileName = $data->file_name;
             $fileNameData = explode(".",$fileName);
-            $fileName = $fileNameData[0].'.pdf';
-            $pathInfo['extension'] = 'pdf';
+			$fileName = $fileNameData[0].'.pdf';
+			$pathInfo['extension'] = 'pdf';
             $file = $this->getFile($data->file_content_pdf);
             $fileType = 'image/jpg';
             if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
@@ -705,13 +689,11 @@ class StaffProfilesTable extends ControllerActionTable
     public function generate(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-
         $hasTemplate = $this->StaffTemplates->checkIfHasTemplate($params['staff_profile_template_id']);
+        
         if ($hasTemplate) {
-            $this->addReportCardsToProcesses($institutionId, $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
-            $this->triggerGenerateAllReportCardsShell($institutionId, $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
+            $this->addReportCardsToProcesses($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
+            $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
             $this->Alert->warning('StaffProfiles.generate');
         } else {
             $url = $this->url('index');
@@ -726,9 +708,7 @@ class StaffProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->StaffTemplates->checkIfHasTemplate($params['staff_profile_template_id']);
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-
+        
         if ($hasTemplate) {
             $StaffReportCardProcesses = TableRegistry::get('ReportCard.StaffReportCardProcesses');
             $inProgress = $StaffReportCardProcesses->find()
@@ -736,15 +716,15 @@ class StaffProfilesTable extends ControllerActionTable
                     $StaffReportCardProcesses->aliasField('staff_profile_template_id') => $params['staff_profile_template_id'],
                     $StaffReportCardProcesses->aliasField('staff_id') => $params['staff_id'],
                     $StaffReportCardProcesses->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $StaffReportCardProcesses->aliasField('institution_id') => $institutionId,
+                    $StaffReportCardProcesses->aliasField('institution_id') => $params['institution_id'],
                 ])
                 ->count();      
                         
 
             if (!$inProgress) {                   
-                $this->addReportCardsToProcesses($institutionId, $params['academic_period_id'], $params['staff_profile_template_id']);
-                $this->triggerGenerateAllReportCardsShell($institutionId, $params['academic_period_id'], $params['staff_profile_template_id']);
-                $this->Alert->warning('StaffProfiles.generateAll');
+                $this->addReportCardsToProcesses($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id']);
+				$this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id']);
+				$this->Alert->warning('StaffProfiles.generateAll');
             } else {
                 $this->Alert->warning('StaffProfiles.inProgress');
             }
@@ -755,19 +735,18 @@ class StaffProfilesTable extends ControllerActionTable
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
-    
-    public function downloadAllPdf(Event $event, ArrayObject $extra)
+	
+	public function downloadAllPdf(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
         $files = $this->StaffReportCards->find()
             ->contain(['StaffTemplates'])
             ->where([
-                $this->StaffReportCards->aliasField('institution_id') => $institutionId,
+                $this->StaffReportCards->aliasField('institution_id') => $params['institution_id'],
                 $this->StaffReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
                 $this->StaffReportCards->aliasField('staff_profile_template_id') => $params['staff_profile_template_id'],
                 $this->StaffReportCards->aliasField('status IN ') => $statusArray,
@@ -785,11 +764,11 @@ class StaffProfilesTable extends ControllerActionTable
             $zip->open($filepath, ZipArchive::CREATE);
             
             foreach ($files as $file) {
-                $fileName = $file->file_name;
-                $fileNameData = explode(".",$fileName);
-                $fileName = $fileNameData[0].'.pdf';
+				$fileName = $file->file_name;
+				$fileNameData = explode(".",$fileName);
+				$fileName = $fileNameData[0].'.pdf';
                 
-                $zip->addFromString($fileName,  $this->getFile($file->file_content_pdf));
+				$zip->addFromString($fileName,  $this->getFile($file->file_content_pdf));
              
             }
             $zip->close();
@@ -811,19 +790,18 @@ class StaffProfilesTable extends ControllerActionTable
             return $this->controller->redirect($this->url('index'));
         }
     }
-    
+	
     public function downloadAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
         $files = $this->StaffReportCards->find()
             ->contain(['StaffTemplates'])
             ->where([
-                $this->StaffReportCards->aliasField('institution_id') => $institutionId,
+                $this->StaffReportCards->aliasField('institution_id') => $params['institution_id'],
                 $this->StaffReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
                 $this->StaffReportCards->aliasField('staff_profile_template_id') => $params['staff_profile_template_id'],
                 $this->StaffReportCards->aliasField('status IN ') => $statusArray,
@@ -922,10 +900,8 @@ class StaffProfilesTable extends ControllerActionTable
     public function email(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-        $this->addReportCardsToEmailProcesses($institutionId, $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
-        $this->triggerEmailAllReportCardsShell($institutionId, $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
+        $this->addReportCardsToEmailProcesses($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
+        $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
         $this->Alert->warning('StaffProfiles.email');
 
         $event->stopPropagation();
@@ -935,20 +911,19 @@ class StaffProfilesTable extends ControllerActionTable
     public function emailAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+
         $inProgress = $this->StaffReportCardEmailProcesses->find()
             ->where([
                 $this->StaffReportCardEmailProcesses->aliasField('staff_profile_template_id') => $params['staff_profile_template_id'],
-                $this->StaffReportCardEmailProcesses->aliasField('institution_id') => $institutionId,
+                $this->StaffReportCardEmailProcesses->aliasField('institution_id') => $params['institution_id'],
                 $this->StaffReportCardEmailProcesses->aliasField('academic_period_id') => $params['academic_period_id'],
                 $this->StaffReportCardEmailProcesses->aliasField('status') => $this->StaffReportCardEmailProcesses::SENDING
             ])
             ->count();
 
         if (!$inProgress) {
-            $this->addReportCardsToEmailProcesses($institutionId, $params['academic_period_id'], $params['staff_profile_template_id']);
-            $this->triggerEmailAllReportCardsShell($institutionId, $params['academic_period_id'], $params['staff_profile_template_id']);
+            $this->addReportCardsToEmailProcesses($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id']);
+            $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id']);
 
             $this->Alert->warning('StaffProfiles.emailAll');
         } else {
@@ -1026,7 +1001,7 @@ class StaffProfilesTable extends ControllerActionTable
                     'file_content' => NULL,
                     'staff_id' => $staff->staff_id
                 ];
-                
+				
                 $newEntity = $this->StaffReportCards->patchEntity($staffsReportCardEntity, $newData);
 
                 if (!$this->StaffReportCards->save($newEntity)) {
@@ -1088,8 +1063,8 @@ class StaffProfilesTable extends ControllerActionTable
     private function addReportCardsToEmailProcesses($institutionId, $academicPeriodId, $reportCardId, $staffId = null)
     {
         Log::write('debug', 'Initialize Add All Staff Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.Time::now().')');
-        
-        $staffTable = TableRegistry::get('institution_staff');
+		
+		$staffTable = TableRegistry::get('institution_staff');
         $where = [];
         $where[$staffTable->aliasField('institution_id')] = $institutionId;
         if (!is_null($staffId)) {
@@ -1100,7 +1075,7 @@ class StaffProfilesTable extends ControllerActionTable
                 $staffTable->aliasField('staff_id'),
                 $staffTable->aliasField('institution_id'),
             ])
-            ->innerJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
+			->innerJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
                 [
                     $this->StaffReportCards->aliasField('staff_id = ') . $staffTable->aliasField('staff_id'),
                     $this->StaffReportCards->aliasField('institution_id = ') . $staffTable->aliasField('institution_id'),

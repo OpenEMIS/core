@@ -1,5 +1,5 @@
 <?php
-namespace Institution\Model\Table;
+namespace Profile\Model\Table;
 
 use ArrayObject;
 use ZipArchive;
@@ -241,8 +241,8 @@ class StaffProfilesTable extends ControllerActionTable
             ->find()
             ->select([
                 $this->StaffReportCardProcesses->aliasField('staff_profile_template_id'),
-                $this->StaffReportCardProcesses->aliasField('staff_id'),
-                $this->StaffReportCardProcesses->aliasField('institution_id'),
+                //$this->StaffReportCardProcesses->aliasField('staff_id'),
+                //$this->StaffReportCardProcesses->aliasField('institution_id'),
                 $this->StaffReportCardProcesses->aliasField('academic_period_id')
             ])
             ->where([
@@ -259,6 +259,19 @@ class StaffProfilesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $loggedIn = $this->Auth->user()['id'];
+        $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+        $getInfo = $SecurityGroupUsersTable->find()
+                    ->select([$SecurityGroupUsersTable->aliasField('security_group_id')])
+                    ->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $loggedIn])
+                    ->toArray();
+        $institutionIds = [];
+        if (!empty($getInfo)) {
+            foreach ($getInfo as $value) {
+                $institutionIds[] = $value->security_group_id;
+            }
+        }
+        
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
         // Academic Periods filter
@@ -281,7 +294,7 @@ class StaffProfilesTable extends ControllerActionTable
         $selectedReportCard = !is_null($this->request->query('staff_profile_template_id')) ? $this->request->query('staff_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
         //End   
-        
+        echo "<pre>";print_r($query);die();
         $query
             ->select([
                 'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
@@ -318,24 +331,24 @@ class StaffProfilesTable extends ControllerActionTable
             )
             ->leftJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
                 [
-                    $this->StaffReportCards->aliasField('staff_id = ') . $this->aliasField('staff_id'),
-                    $this->StaffReportCards->aliasField('institution_id = ') . $institutionId,
+                    //$this->StaffReportCards->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+                    $this->StaffReportCards->aliasField('institution_id IN ') . $institutionIds,
                     $this->StaffReportCards->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
                     $this->StaffReportCards->aliasField('staff_profile_template_id = ') . $selectedReportCard
                 ]
             )
             ->leftJoin([$this->StaffReportCardEmailProcesses->alias() => $this->StaffReportCardEmailProcesses->table()],
                 [
-                    $this->StaffReportCardEmailProcesses->aliasField('staff_id = ') . $this->aliasField('staff_id'),
-                    $this->StaffReportCardEmailProcesses->aliasField('institution_id = ') . $institutionId,
+                    //$this->StaffReportCardEmailProcesses->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+                    $this->StaffReportCardEmailProcesses->aliasField('institution_id IN ') . $institutionIds,
                     $this->StaffReportCardEmailProcesses->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
-                    $this->StaffReportCardEmailProcesses->aliasField('staff_profile_template_id = ') . $selectedReportCard
+                    //$this->StaffReportCardEmailProcesses->aliasField('staff_profile_template_id = ') . $selectedReportCard
                 ]
             )
             ->autoFields(true)
             ->where($where)
             ->all();
-
+            echo "<pre>";print_r($query);die();
         if (is_null($this->request->query('sort'))) {
             $query
                 ->contain('Users')
