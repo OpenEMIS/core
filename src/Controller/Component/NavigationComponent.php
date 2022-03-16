@@ -1017,12 +1017,14 @@ class NavigationComponent extends Component
                 'selected' => ['InfrastructureUtilityTelephones.view', 'InfrastructureUtilityTelephones.add', 'InfrastructureUtilityTelephones.edit', 'InfrastructureUtilityTelephones.delete']
             ],
 
-            'InstitutionAssets.index' => [
+            // POCOR-6152
+            'Institutions.InstitutionAssets' => [
                 'title' => 'Assets',
                 'parent' => 'Infrastructures',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionAssets.view', 'InstitutionAssets.add', 'InstitutionAssets.edit', 'InstitutionAssets.delete'],
+                'selected' => ['Institutions.InstitutionAssets','Institutions.InstitutionAssets.view', 'Institutions.InstitutionAssets.add', 'Institutions.InstitutionAssets.edit', 'Institutions.InstitutionAssets.delete'],
             ],
+            // POCOR-6152
 
             'Meals' => [
                 'title' => 'Meals',
