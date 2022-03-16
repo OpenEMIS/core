@@ -105,17 +105,21 @@ class ImportCompetencyTemplatesTable extends AppTable {
 
     public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         $request = $this->request;
-        $selectedProgramme = $request->query['programme'];//POCOR-6616
+        $selectedperiod = $request->query('period'); //POCOR-6616
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 3;
         $data[$columnOrder]['data'][] = [$programmeHeader, $translatedReadableCol, $translatedCol];
-        if($selectedProgramme!=null){
+        if($selectedperiod!=null){
             $modelData = $lookedUpTable->find('visible')
-                                ->contain(['EducationProgrammes'])
+                                //->contain(['EducationProgrammes'])
                                 ->select(['code', 'name', 'EducationProgrammes.name'])
-                                ->where(['education_programme_id'=>$selectedProgramme])//POCOR-6616
+                                //POCOR-6616
+                                ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])//
+                                ->where(['EducationSystems.academic_period_id' => $selectedperiod])
+                                ->group([$lookupModel.'.name'])
+                                //POCOR-6616
                                 ->order([
                                     'EducationProgrammes.order',
                                     $lookupModel.'.order'
@@ -188,7 +192,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
             'entity' => $entity,
             'before' => 'select_file'
         ]);
-        $this->ControllerAction->field('education_programme_id', [
+        /*$this->ControllerAction->field('education_programme_id', [
             'type' => 'select',
             'entity' => $entity,
             'before' => 'select_file',
@@ -197,7 +201,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
             'type' => 'select',
             'entity' => $entity,
             'before' => 'select_file'
-        ]);
+        ]);*/
     }
 
     /**
