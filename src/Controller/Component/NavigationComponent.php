@@ -595,13 +595,6 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution']
             ],
             /*POCOR-6286 starts*/
-			// 'Institutions.Profiles.index' => [
-			// 	'title' => 'Profiles',
-			// 	'parent' => 'Institution.General',
-			// 	'selected' => ['Institutions.Profiles'],
-			// 	'params' => ['plugin' => 'Institution']
-			// ],
-
             'Profile' => [
                 'title' => 'Profiles',
                 'parent' => 'Institution.General',
@@ -1468,7 +1461,7 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Staff',
                 'selected' => ['Profiles.ScheduleTimetable'],
                 'params' => ['plugin' => 'Profile']
-            ],
+            ],/*POCOR-6286 - added profiles menu*/
             'Profiles.StaffProfiles' => [
                 'title' => 'Profiles',
                 'parent' => 'Profiles.Staff',
@@ -1511,7 +1504,7 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Student',
                 'params' => ['plugin' => 'Profile', 'type' => 'student'],
                 'selected' => ['Profiles.StudentBankAccounts', 'Profiles.StudentFees']
-            ],
+            ],/*POCOR-6286 - added profiles menu*/
             'Profiles.StudentProfiles' => [
                 'title' => 'Profiles',
                 'parent' => 'Profiles.Student',
@@ -1583,7 +1576,7 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Staff',
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.TrainingNeeds', 'Directories.TrainingResults', 'Directories.Courses']
-            ],
+            ],/*POCOR-6286 - added profiles menu*/
             'Directories.StaffProfiles' => [
                     'title' => 'Profiles',
                     'parent' => 'Directories.Staff',
@@ -1624,7 +1617,7 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Student',
                 'params' => ['plugin' => 'Directory', 'type' => 'student'],
                 'selected' => ['Directories.StudentBankAccounts', 'Directories.StudentFees']
-            ],
+            ],/*POCOR-6286 - added profiles menu*/
             'Directories.StudentProfiles' => [
                 'title' => 'Profiles',
                 'parent' => 'Directories.Student',
