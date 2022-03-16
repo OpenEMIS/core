@@ -72,7 +72,8 @@ class NavigationComponent extends Component
             $this->checkPermissions($navigations);
             $controller->set('_navigations', $navigations);
         } catch (SecurityException $ex) {
-            return;
+            echo "<pre>";print_r($ex);die();
+            return $ex;
         }
     }
 
@@ -1557,7 +1558,7 @@ class NavigationComponent extends Component
         $session = $this->request->session();
         $id = $session->read('Guardian.Guardians.id');
 
-        $nav = [
+        $navigation = [
             'Directories.Staff' => [
                 'title' => 'Staff',
                 'parent' => 'Directories.Directories.index',
@@ -1581,21 +1582,14 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.TrainingNeeds', 'Directories.TrainingResults', 'Directories.Courses']
             ],
-        ];
-        /*POCOR-6286 - added profiles moduls under Directory > Staff module*/
-        if ($this->AccessControl->check(['Institutions', 'StaffProfiles'])) {
-            $newNav = [
-                'Directories.StaffProfiles' => [
+            'Directories.StaffProfiles' => [
                     'title' => 'Profiles',
                     'parent' => 'Directories.Staff',
-                    'params' => ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'StaffProfiles'],
-                    'selected' => ['Directories.StaffProfiles.index', 'Directories.StaffProfiles.view']
-                ]
-            ];
-        }
-        $navigation = array_merge($nav, $newNav);
-        /*POCOR-6286 ends*/
-        
+                    'params' => ['plugin' => 'Directory'],
+                    'selected' => ['Directories.StaffProfiles']
+            ]
+        ];
+
         return $navigation;
     }
 
@@ -1629,6 +1623,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Directory', 'type' => 'student'],
                 'selected' => ['Directories.StudentBankAccounts', 'Directories.StudentFees']
             ],
+            // 'Directories.StudentProfiles' => [
+            //     'title' => 'Profiles',
+            //     'parent' => 'Directories.Student',
+            //     'params' => ['plugin' => 'Directory'],
+            //     'selected' => ['Directories.StudentProfiles']
+            // ]
         ];
 
         $session = $this->request->session();
@@ -1637,19 +1637,6 @@ class NavigationComponent extends Component
             $nv['Directories.StudentGuardians']['selected'] = ['Directories.StudentGuardians', 'Directories.StudentGuardianUser', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments', 'Directories.Contacts', 'Directories.Demographic'];
         }
 
-        /*POCOR-6286 - added profiles moduls under Directory > Student module*/
-        if ($this->AccessControl->check(['Profiles', 'StudentProfiles'])) {
-            $newNav = [
-                'Directories.StudentProfiles' => [
-                    'title' => 'Profiles',
-                    'parent' => 'Directories.Student',
-                    'params' => ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'StudentProfiles'],
-                    'selected' => ['Directories.StudentProfiles.index', 'Directories.StudentProfiles.view']
-                ]
-            ];
-        }
-        $navigation = array_merge($nav, $newNav);
-        /*POCOR-6286 ends*/
         return $navigation;
     }
 

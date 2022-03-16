@@ -119,7 +119,7 @@ class StudentProfilesTable extends ControllerActionTable
             ];
 			
             // Download button, status must be generated or published
-			if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+			if ($this->AccessControl->check(['Directory', 'StudentProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 // $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
                 // $buttons['download'] = [
                 //     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
@@ -135,7 +135,7 @@ class StudentProfilesTable extends ControllerActionTable
             }
 
             // Generate button, all statuses
-            if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'generate'])) {
+            if ($this->AccessControl->check(['Directory', 'StudentProfiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->StudentTemplates
@@ -236,13 +236,11 @@ class StudentProfilesTable extends ControllerActionTable
 				$this->StudentTemplates->aliasField('academic_period_id') => $selectedAcademicPeriod
 			])
 			->toArray();
-       
-
         $reportCardOptions = ['-1' => '-- '.__('Select Student Template').' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->query('student_profile_template_id')) ? $this->request->query('student_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
-		//End
-        //$where[$this->aliasField('institution_id')] = $institutionId;	
+        //End
+        	
         $query
             ->select([
                 'student_profile_template_id' => $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id'),
