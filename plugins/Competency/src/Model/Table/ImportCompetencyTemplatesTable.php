@@ -36,7 +36,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $newEvent = [
-            'Model.import.onImportPopulateAcademicPeriodsData' => 'onImportPopulateAcademicPeriodsData',
+            /*'Model.import.onImportPopulateAcademicPeriodsData' => 'onImportPopulateAcademicPeriodsData',*/
             'Model.import.onImportPopulateEducationProgrammesData' => 'onImportPopulateEducationProgrammesData',
             'Model.import.onImportPopulateEducationGradesData' => 'onImportPopulateEducationGradesData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation'
@@ -45,7 +45,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
         return $events;
     }
 
-    public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    /*public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->getAvailableAcademicPeriods(false);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -67,13 +67,13 @@ class ImportCompetencyTemplatesTable extends AppTable {
             }
         }
     }
-
+*/
     public function onImportPopulateEducationProgrammesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         $request = $this->request;
         $selectedperiod = $request->query('period'); //POCOR-6616
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['lookupColumn'] = 2; //POCOR-6616
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
         if($selectedperiod!=null){
             $modelData = $lookedUpTable->find('visible')
@@ -109,7 +109,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 3;
+        $data[$columnOrder]['lookupColumn'] = 3;//POCOR-6616
         $data[$columnOrder]['data'][] = [$programmeHeader, $translatedReadableCol, $translatedCol];
         if($selectedperiod!=null){
             $modelData = $lookedUpTable->find('visible')
@@ -149,14 +149,16 @@ class ImportCompetencyTemplatesTable extends AppTable {
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
+        //POCOR-6616 start
 
-        $CompetencyTemplates = $CompetencyTemplates->find()
+        /*$CompetencyTemplates = $CompetencyTemplates->find()
             ->where([
                 'code' => $tempRow['code'],
                 'academic_period_id' => $tempRow['academic_period_id']
             ])
-            ->count();
+            ->count();*/
 
+             //POCOR-6616 start
         if ($CompetencyTemplates > 0) {
             $rowInvalidCodeCols['code'] = __('This code already exists');
             return false;
@@ -166,12 +168,12 @@ class ImportCompetencyTemplatesTable extends AppTable {
             $rowInvalidCodeCols['name'] = __('Name should not be empty');
             return false;
         }
-
-        if (empty($tempRow['academic_period_id'])) {
+         //POCOR-6616 start
+        /*if (empty($tempRow['academic_period_id'])) {
             $rowInvalidCodeCols['academic_period_id'] = __('Academic Period should not be empty');
             return false;
-        }
-
+        }*/
+         //POCOR-6616 start
         if (empty($tempRow['education_grade_id'])) {
             $rowInvalidCodeCols['education_grade_id'] = __('Education Grade should not be empty');
             return false;
@@ -369,7 +371,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
             $competencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
             $latest = $competencyTemplates->find()->where([
                 'code' => $criteriaData['competency_template_code'],
-                'academic_period_id' => $criteriaData['academic_period_id']
+                //'academic_period_id' => $criteriaData['academic_period_id']
             ])->order($competencyTemplates->aliasField('id') . ' DESC')->first();
 
             if ($latest) {
@@ -378,7 +380,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
                 $data = [
                     'code' => $criteriaData['criteria_code'],
                     'name' => $criteriaData['criteria_name'],
-                    'academic_period_id' => $criteriaData['academic_period_id'],
+                   // 'academic_period_id' => $criteriaData['academic_period_id'],
                     'outcome_template_id' => $competencyTemplateInsertedId,
                     'education_grade_id' =>$criteriaData['education_grade_id'],
                     'education_subject_id' => $criteriaData['education_subject_code'],
