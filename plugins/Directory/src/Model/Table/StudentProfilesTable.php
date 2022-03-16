@@ -14,6 +14,13 @@ use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
+/**
+ * 
+ * This class is used to generate the Student profile
+ * Ticket - POCOR6286
+ * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+ * 
+ */
 class StudentProfilesTable extends ControllerActionTable
 {
     private $statusOptions = [];
