@@ -114,7 +114,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         ]);
 
         $this->setFieldOrder([
-            'code', 'name', 'description', /*'academic_period_id'*/ 'education_programme_id', 'education_grade_id'//, 'assessment_items'
+            'code', 'name', 'description', 'academic_period_id', 'education_programme_id', 'education_grade_id'//, 'assessment_items'
         ]);
     }
 
