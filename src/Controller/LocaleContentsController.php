@@ -17,7 +17,8 @@ class LocaleContentsController extends PageController
     {
         parent::initialize();
 
-       // $this->Page->disable(['add', 'delete']);
+      
+	  // $this->Page->disable(['add', 'delete']);
 	   
 	  
 		/**
