@@ -152,7 +152,9 @@ class ReportsController extends AppController
                 'Report.TrainingResults' => __('Results'),
                 'Report.StaffTrainingApplications' => __('Applications'),
                 'Report.TrainingTrainers' => __('Trainers'),
-                'Report.TrainingSessionParticipants' => __('Session Participants')
+                'Report.TrainingSessionParticipants' => __('Session Participants'),
+                'Report.ReportTrainingNeedStatistics' => __('Training Needs Statistics'),
+                'Report.TrainersSessions' => __('Trainers Sessions'), // POCOR-6569
             ];
         } elseif ($module == 'Scholarships') {
             $options = [
