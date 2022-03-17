@@ -150,15 +150,16 @@ class ImportCompetencyTemplatesTable extends AppTable {
     {
         $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
         //POCOR-6616 start
-
-        /*$CompetencyTemplates = $CompetencyTemplates->find()
+        $request = $this->request;
+        $tempRow['academic_period_id'] = $request->query('period');
+        //POCOR-6616 end
+        $CompetencyTemplates = $CompetencyTemplates->find()
             ->where([
                 'code' => $tempRow['code'],
                 'academic_period_id' => $tempRow['academic_period_id']
             ])
-            ->count();*/
+            ->count();
 
-             //POCOR-6616 start
         if ($CompetencyTemplates > 0) {
             $rowInvalidCodeCols['code'] = __('This code already exists');
             return false;
@@ -168,12 +169,11 @@ class ImportCompetencyTemplatesTable extends AppTable {
             $rowInvalidCodeCols['name'] = __('Name should not be empty');
             return false;
         }
-         //POCOR-6616 start
-        /*if (empty($tempRow['academic_period_id'])) {
-            $rowInvalidCodeCols['academic_period_id'] = __('Academic Period should not be empty');
+        if (empty($tempRow['academic_period_id'])) {
+            $rowInvalidCodeCols['academic_period_id'] = __('Please select academic period'); //POCOR-6616 start
             return false;
-        }*/
-         //POCOR-6616 start
+        }
+        
         if (empty($tempRow['education_grade_id'])) {
             $rowInvalidCodeCols['education_grade_id'] = __('Education Grade should not be empty');
             return false;
@@ -360,36 +360,6 @@ class ImportCompetencyTemplatesTable extends AppTable {
         } else {
             return $selectedGrade;
         }
-    }
-
-    /**
-    * POCOR-6616 
-    */
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
-    {
-        foreach ($this->_currentData AS $criteriaData) {
-            $competencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
-            $latest = $competencyTemplates->find()->where([
-                'code' => $criteriaData['competency_template_code'],
-                //'academic_period_id' => $criteriaData['academic_period_id']
-            ])->order($competencyTemplates->aliasField('id') . ' DESC')->first();
-
-            if ($latest) {
-                $competencyTemplateInsertedId = $latest->id;
-                $ContactTable = TableRegistry::get('Competency.CompetencyCriterias');
-                $data = [
-                    'code' => $criteriaData['criteria_code'],
-                    'name' => $criteriaData['criteria_name'],
-                   // 'academic_period_id' => $criteriaData['academic_period_id'],
-                    'outcome_template_id' => $competencyTemplateInsertedId,
-                    'education_grade_id' =>$criteriaData['education_grade_id'],
-                    'education_subject_id' => $criteriaData['education_subject_code'],
-                    'outcome_grading_type_id' => $criteriaData['outcome_grading_type'],
-                ];
-                $contactEntity = $ContactTable->newEntity($data);
-                $ContactTable->save($contactEntity);
-            }
-        }  
     }
 
 
