@@ -1853,7 +1853,7 @@ class StaffTable extends ControllerActionTable
         $institutionStaff = TableRegistry::get('institution_staff');
     /**
 
-     * Changes On staff dashboard 
+     * Present, absent and late count issue on staff dashboard 
 
      * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
 
@@ -1871,8 +1871,8 @@ class StaffTable extends ControllerActionTable
                 'institution_staff.end_date',
                 'institutionStaffAttendances.absence_type_id',
                 'institutionStaffAttendances.time_in',
-                'present' => '(IF((institutionStaffAttendances.time_in <= start_time) OR (institutionStaffAttendances.time_in > start_time),1,0))',
-                'absent' => '(IF(institutionStaffAttendances.time_in IS NULL,1,0))',
+                'present' => '(IF(institutionStaffAttendances.time_in <= start_time, 1,0))',
+                'absent' => '(IF((institutionStaffAttendances.time_in IS NULL) OR (institutionStaffAttendances.time_in > start_time),1,0))',
                 'late' => '(IF(institutionStaffAttendances.time_in > start_time, 1,0))',
             ])
            ->leftJoin(
