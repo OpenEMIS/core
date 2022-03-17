@@ -19,6 +19,13 @@ class POCOR6616 extends AbstractMigration
 
         //deleting academic period in import compatancy section
         $this->execute('DELETE FROM `import_mapping` WHERE `model` = "Competency.CompetencyTemplates" And `column_name` = "academic_period_id"');
+        // update order in import compatancy section
+        $this->execute('UPDATE `import_mapping` SET `order` = "4" 
+                        WHERE `model` = "Competency.CompetencyTemplates" And `column_name` = "education_programme_id"'
+                    ); 
+        $this->execute('UPDATE `import_mapping` SET `order` = "5" 
+                        WHERE `model` = "Competency.CompetencyTemplates" And `column_name` = "education_grade_id"'
+                    ); 
     }
 
     // Rollback
