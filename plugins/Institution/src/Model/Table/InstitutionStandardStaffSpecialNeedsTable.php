@@ -41,7 +41,7 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
         $controllerName = $this->controller->name;
         $institutions_crumb = __('Institutions');
         $parent_crumb       = __('Statistics');
-		$reportName         = __('Standard');
+        $reportName         = __('Standard');
         
         //# START: Crumb
         $this->Navigation->removeCrumb($this->getHeader($this->alias));
@@ -127,7 +127,6 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
 
         // START: JOINs
         $join = [
-
             'InstitutionStaff' =>  [
                 'type' => 'inner',
                 'table' => 'institution_staff',
@@ -139,7 +138,7 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
                 'type' => 'inner',
                 'table' => 'institutions',
                 'conditions' => [
-                'Institution.id = InstitutionStaff.institution_id'
+                    'Institution.id = InstitutionStaff.institution_id'
                 ]
             ],
             'AcademicPeriod' => [
@@ -159,19 +158,12 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
             $selectable['referrer_last_name'] = 'ReferralsSecurityUsers.last_name';
             $selectable['referrer_special_needs_referrer_types_name'] = 'SpecialNeedsReferrerTypes.name';
             $selectable['referrer_reason_type'] = 'SpecialNeedsTypes.name';
-<<<<<<< HEAD
-=======
             $group_by[] = 'SpecialNeedsReferrals.id';
->>>>>>> 3.74.3_6581
             $join['SpecialNeedsReferrals'] = [
                 'type' => 'inner',
                 'table' => 'user_special_needs_referrals',
                 'conditions' => [
-<<<<<<< HEAD
-                    'SpecialNeedsReferrals.security_user_id = ' . $this->aliasField('id'),
-=======
                     'SpecialNeedsReferrals.security_user_id = InstitutionStaff.staff_id',
->>>>>>> 3.74.3_6581
                     'SpecialNeedsReferrals.academic_period_id = AcademicPeriod.id',
                 ],
             ];
@@ -204,16 +196,6 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
             $selectable['special_needs_assessments_special_need_type_name'] = 'SpecialNeedsTypesAssessment.name';
             $selectable['special_needs_assessments_special_difficulty_name'] = 'SpecialNeedsDifficulties.name';
             $group_by[] = 'SpecialNeedsAssessments.id';
-<<<<<<< HEAD
-            $join['InstitutionStaff'] = [
-                'type' => 'inner',
-                'table' => 'institution_staff',
-                'conditions' => [
-                    'InstitutionStaff.staff_id = ' . $this->aliasField('id')
-                ],
-            ];
-=======
->>>>>>> 3.74.3_6581
             $join['SpecialNeedsAssessments'] = [
                 'type' => 'inner',
                 'table' => 'user_special_needs_assessments',
@@ -243,20 +225,13 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
             $selectable['service_comment'] = 'SpecialNeedsServices.comment';
             $selectable['service_file_name'] = 'SpecialNeedsServices.file_name';
             $selectable['service_type_name'] = 'SpecialNeedsServiceTypes.name';
-<<<<<<< HEAD
-=======
             $group_by[] = 'SpecialNeedsServices.id';
->>>>>>> 3.74.3_6581
             $join['SpecialNeedsServices'] = [
                 'type' => 'inner',
                 'table' => 'user_special_needs_services',
                 'conditions' => [
-<<<<<<< HEAD
-                    'SpecialNeedsServices.security_user_id = ' . $this->aliasField('id')
-=======
                     'SpecialNeedsServices.security_user_id = InstitutionStaff.staff_id'
                     // 'SpecialNeedsServices.security_user_id = ' . $this->aliasField('id')
->>>>>>> 3.74.3_6581
                 ],
             ];
             $join['SpecialNeedsServiceTypes'] = [
@@ -270,20 +245,13 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
         } else if ( $sheet_tab_name == 'SpecialNeedsDevices' ) {
             $selectable['devices_comment'] = 'SpecialNeedsDevices.comment';
             $selectable['devices_type_name'] = 'SpecialNeedsDeviceTypes.name';
-<<<<<<< HEAD
-=======
             $group_by[] = 'SpecialNeedsDevices.id';
->>>>>>> 3.74.3_6581
             $join['SpecialNeedsDevices'] = [
                 'type' => 'inner',
                 'table' => 'user_special_needs_devices',
                 'conditions' => [
-<<<<<<< HEAD
-                    'SpecialNeedsDevices.security_user_id = ' . $this->aliasField('id')
-=======
                     'SpecialNeedsDevices.security_user_id = InstitutionStaff.staff_id',
                     //'SpecialNeedsDevices.security_user_id = ' . $this->aliasField('id')
->>>>>>> 3.74.3_6581
                 ],
             ];
             $join['SpecialNeedsDeviceTypes'] = [
@@ -298,19 +266,12 @@ class InstitutionStandardStaffSpecialNeedsTable extends AppTable
             $selectable['plans_name'] = 'SpecialNeedsPlans.plan_name';
             $selectable['plans_comment'] = 'SpecialNeedsPlans.comment';
             $selectable['plans_file_name'] = 'SpecialNeedsPlans.file_name';
-<<<<<<< HEAD
-=======
             $group_by[] = 'SpecialNeedsPlans.id';
->>>>>>> 3.74.3_6581
             $join['SpecialNeedsPlans'] = [
                 'type' => 'inner',
                 'table' => 'user_special_needs_plans',
                 'conditions' => [
-<<<<<<< HEAD
-                    'SpecialNeedsPlans.security_user_id = ' . $this->aliasField('id')
-=======
                     'SpecialNeedsPlans.security_user_id = InstitutionStaff.staff_id'
->>>>>>> 3.74.3_6581
                 ],
             ];
         }
