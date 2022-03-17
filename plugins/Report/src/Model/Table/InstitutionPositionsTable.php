@@ -18,6 +18,11 @@ class InstitutionPositionsTable extends AppTable
     // position filter
     const ALL_POSITION = 0;
     const POSITION_WITH_STAFF = 1;
+    
+    //POCOR-6614 start
+    const TEACHING = 1;
+    const NON_TEACHING = 0;
+    //POCOR-6614 end
 
     public function initialize(array $config)
     {
@@ -42,16 +47,22 @@ class InstitutionPositionsTable extends AppTable
     { 
 	    /*POCOR-6534 starts*/
 		$IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
 		$UserIdentitiesTable   = TableRegistry::get('User.Identities');
+        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
 		$birth_certificate_code_id = $IdentityTypesTable->getIdByName('Birth Certificate');
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
+        $teachingFilter = $requestData->teaching_filter;
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
         $where = [];
         if ($institution_id != 0) {
             $where[$this->aliasField('institution_id')] = $institution_id;
         }
+        
+            $where[$StaffPositionTitles->aliasField('type')] = $teachingFilter;
+        
         if ($areaId != -1) {
             $where['Institutions.area_id'] = $areaId;
         }
