@@ -145,7 +145,7 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
         $qualificationTitles   = TableRegistry::get('QualificationTitles');
         $qualificationLevel    = TableRegistry::get('QualificationLevels');
         $institutionStaff      = TableRegistry::get('institution_staff');
-        $institutions          = TableRegistry::get('institutions');
+        $Institutions          = TableRegistry::get('Institution.Institutions');
         $fieldOfStudy          = TableRegistry::get('education_field_of_studies');
         $Users                 = TableRegistry::get('security_users');
         $selectable            = [];
@@ -179,8 +179,8 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
         if ( $sheet_tab_name == 'Qualifications' ) {
             $query
             ->select([
-                'institution_code'          => $institutions->aliasField('code'),
-                'institution_name'          => $institutions->aliasField('name'),
+                'institution_code'          => $Institutions->aliasField('code'),
+                'institution_name'          => $Institutions->aliasField('name'),
                 'openemis_no'               => $Users->aliasField('openemis_no'),
                 'name'                      => $Users->find()->func()->concat(['security_users.first_name' => 'literal',"  ",'security_users.last_name' => 'literal']),
                 'graduate_year'             => $this->aliasField('graduate_year'),
@@ -246,13 +246,13 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
 
         if ( $sheet_tab_name == 'Qualifications' ) {
             $extraField[] = [
-                'key'   => 'institutions.code',
+                'key'   => '',
                 'field' => 'institution_code',
                 'type'  => 'string',
                 'label' => __('Institution Code'),
             ];
             $extraField[] = [
-                'key'   => 'institutions.name',
+                'key'   => '',
                 'field' => 'institution_name',
                 'type'  => 'string',
                 'label' => __('Institution Name'),
