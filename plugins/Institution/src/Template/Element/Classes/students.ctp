@@ -204,13 +204,18 @@
 							<?= $this->html->link($obj->student_openemis_no, $newUrl) ?>
 						</td>
 						<td><?php 
-							if (!empty($obj->user->identity_number)) {
+							//START: POCOR-6623
+							// if (!empty($obj->user->identity_number)) {
+							if (!empty($obj->user->identities[0]->number)) {
 								if ($configureStudentName) {
-									echo $obj->user->identity_number.' - '.$obj->user->name;
+									// echo $obj->user->identity_number.' - '.$obj->user->name;
+									echo $obj->user->identities[0]->number.' - '.$obj->user->name;
 								} else {
-									echo $obj->user->identity_number.' - '.$obj->user->first_name.' '.$obj->user->last_name;
+									// echo $obj->user->identity_number.' - '.$obj->user->first_name.' '.$obj->user->last_name;
+									echo $obj->user->identities[0]->number.' - '.$obj->user->first_name.' '.$obj->user->last_name;
 									}
 							}
+							//END: POCOR-6623
 							else {
 							echo $obj->user->name;
 							}
