@@ -16,7 +16,7 @@ class POCOR6608 extends AbstractMigration
         $this->execute('CREATE TABLE `z_6608_meal_institution_programmes` LIKE `meal_institution_programmes`');
         $this->execute('INSERT INTO `z_6608_meal_institution_programmes` SELECT * FROM `meal_institution_programmes`');
 
-        $this->execute('ALTER TABLE `meal_institution_programmes` ADD COLUMN `area_id` int(11) AFTER `institution_id`');
+        $this->execute("ALTER TABLE `meal_institution_programmes` ADD COLUMN `area_id` int(11) AFTER `institution_id` COMMENT = 'links to areas.id' ");
     }
 
     // rollback
