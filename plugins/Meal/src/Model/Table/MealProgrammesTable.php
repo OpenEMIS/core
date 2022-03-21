@@ -97,10 +97,12 @@ class MealProgrammesTable extends ControllerActionTable
         // $institutionId = $entity->institution_id;
         // $entity->institution_id = $institutionId;
         $InstitutionTable = TableRegistry::get('institutions');
+        $Areas = TableRegistry::get('Area.Areas');
         $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
         $result=$this->find('all',['fields'=>'id'])->last();
 
         //START : POCOR-6608
+        $areaIdsData = $entity['area_id']['_ids'];
         $record_id=$result->id;
         $institutionIds = $entity->institution_id;
         $institutionIdsData = $institutionIds['_ids'];
@@ -141,6 +143,27 @@ class MealProgrammesTable extends ControllerActionTable
                 catch (PDOException $e) {
                     echo "<pre>";print_r($e);die;
                 }
+            }
+        }
+
+        if($areaIdsData[0] == -1){
+            $MealInstitutionProgrammes->updateAll(
+                ['area_id' => $areaIdsData[0]],    
+                ['meal_programme_id' => $record_id]
+            );
+        }else{
+            foreach($institutionIdsData AS $key => $value){
+                $where[$InstitutionTable->aliasField('id')] = $value;
+                $institutionData = $InstitutionTable->find()
+                ->select([
+                    $InstitutionTable->aliasField('area_id'),
+                ])
+                ->where($where)
+                ->first();
+                $MealInstitutionProgrammes->updateAll(
+                    ['area_id' => $institutionData->area_id],    
+                    ['meal_programme_id' => $record_id, 'institution_id'=> $value]
+                );
             }
         }
         //END : POCOR-6608
@@ -291,7 +314,46 @@ class MealProgrammesTable extends ControllerActionTable
                             ->contain(['Institutions'])
                             ->where([$MealInstitutionProgrammes->alias('meal_programme_id')=>$row->id])
                             ->all();
-                $row['institution_id'] = $MealInstitutionProgrammesData;
+
+                $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+                foreach($MealInstitutionProgrammesData AS $institutionData){
+                    $institutionArr[] = $institutionData->institution_id;
+                }
+                $Institutions = TableRegistry::get('Institution.Institutions');
+                $InstitutionsResult = $Institutions
+                    ->find()
+                    ->where(['id IN' => $institutionArr])
+                    ->all();
+                foreach($InstitutionsResult AS $InstitutionsResultData){
+                    $InstitutionsData[] =  $InstitutionsResultData;
+                }
+                $row['institution_id'] = $InstitutionsResult;
+
+                $AreaResult = $MealInstitutionProgrammes
+                    ->find()
+                    ->select([$MealInstitutionProgrammes->aliasField('area_id')])
+                    ->where(['meal_programme_id' => $row->id])
+                    ->all();
+                if(!empty($AreaResult)){
+                    foreach($AreaResult AS $AreaData){
+                        $areaArr[] = $AreaData->area_id;
+                    }
+                    $Areas = TableRegistry::get('Area.Areas');
+                    if($areaArr[0] == -1){
+                        $AreasResult = $Areas
+                        ->find()
+                        ->all();
+                    }else{
+                        $AreasResult = $Areas
+                        ->find()
+                        ->where(['id IN' => $areaArr])
+                        ->all();
+                    }
+                    foreach($AreasResult AS $AreaResultData){
+                        $AreaDataVal[] =  $AreaResultData;
+                    }
+                    $row['area_id'] = $AreaDataVal;
+                }
 
                 return $row;
             });
@@ -334,6 +396,12 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('start_date');
         $this->field('end_date');
         $this->field('amount');
+        $this->field('area_administrative_id', [	
+            'attr' => [	
+                'label' => __('Area Education')	
+            ],	
+            'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]	
+        ]);
         $this->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
         $this->field('institution_id', [
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
@@ -463,6 +531,36 @@ class MealProgrammesTable extends ControllerActionTable
         return $areaName;
         // return $entity->area_id;;
     } 
+
+    /* 
+    *Get the list of area field to show in view and edit page
+    * @auther Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return array
+    * ticket POCOR-6608
+    */
+
+    public function onGetAreaAdministrativeId(Event $event, Entity $entity)
+    {
+        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+        $result = $MealInstitutionProgrammes
+            ->find()
+            ->select([$MealInstitutionProgrammes->aliasField('area_id')])
+            ->where(['meal_programme_id' => $entity->id])
+            ->all();
+        
+        foreach($result AS $AreaData){
+            $areaArr[] = $AreaData->area_id;
+        }
+        $Areas = TableRegistry::get('Area.Areas');
+        $AreasResult = $Areas
+            ->find('list')
+            ->where(['id IN' => $areaArr])
+            ->toArray();
+        foreach($AreasResult AS $AreaResultData){
+            $AreaDataVal[] =  $AreaResultData;
+        }
+        return (!empty($AreaDataVal))? implode(', ', $AreaDataVal): 'All area';
+    }
 
     public function onGetInstitutionId(Event $event, Entity $entity)
     {
