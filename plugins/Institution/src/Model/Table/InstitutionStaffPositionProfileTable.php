@@ -136,6 +136,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 $this->aliasField('id'),
                 'positionsNumber' => 'InstitutionPositions.position_no',
                 'title' => 'StaffPositionTitles.name',
+                'positionsType' => 'StaffPositionTitles.type',
                 'grade' => 'StaffPositionGrades.name',
                 'institution'=> 'Institutions.name',
                 'is_home' => $positions->aliasField('is_homeroom'),
@@ -221,13 +222,20 @@ class InstitutionStaffPositionProfileTable extends AppTable
         {
             return $results->map(function ($row)
             {
-                    $row['referrer_full_name'] = $row['fname_Staff'] . ' ' .  $row['mname_Staff'] .' '. $row['tname_Staff'] .' '. $row['lname_Staff'];
+                    $row['referrer_full_name'] = $row['fname_Staff'] .' '. $row['lname_Staff'];
                     if($row['is_home']==1){
                         $row['referrer_is_home'] = 'Yes';
                     }else{
                         $row['referrer_is_home'] = 'No';
                     }
-                    $row['assignee_user_full_name'] = $row['assigneefName'] . ' ' .  $row['assigneemName'] .' '. $row['assigneetName'] .' '. $row['assigneelName'];
+                    if($row['positionsType']==1){
+                        $row['referrer_is_type'] = 'Teaching';
+                    }else{
+                        $row['referrer_is_type'] = 'Non-Teaching';
+                    }
+                    $row['referrer_position_type'] = $row['title'] .'-'. $row['referrer_is_type'];
+
+                    $row['assignee_user_full_name'] = $row['assigneefName'] .' '. $row['assigneelName'];
                 return $row;
             });
         });
@@ -245,10 +253,10 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'label' => __('Number'),
         ];
         $newFields[] = [
-            'key'   => 'title',
-            'field' => 'title',
+            'key'   => 'referrer_position_type',
+            'field' => 'referrer_position_type',
             'type'  => 'string',
-            'label' => __('Title'),
+            'label' => __('Positions'),
         ];
         $newFields[] = [
             'key'   => 'grade',
@@ -272,7 +280,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'key'   => 'referrer_is_home',
             'field' => 'referrer_is_home',
             'type'  => 'string',
-            'label' => __('HomeroomTeacher'),
+            'label' => __('Home Room Teacher'),
         ];
         $newFields[] = [
             'key'   => 'openemis_no',
@@ -290,7 +298,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'key'   => 'fte',
             'field' => 'fte',
             'type'  => 'integer',
-            'label' => __('Fte'),
+            'label' => __('FTE'),
         ];
         $newFields[] = [
             'key'   => 'staffStatus',
