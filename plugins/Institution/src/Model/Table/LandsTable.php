@@ -1577,11 +1577,11 @@ class LandsTable extends ControllerActionTable
                         'Institution'.$level.'.'.$type.'_type_id = ' . $roomTypes->aliasField('id')
                     ]);
                 } //POCOR-6263 end 
-                /*POCOR-6584 starts - adding condition to get on In Use room status id records*/
+                /*POCOR-6628 starts - adding condition to get on In Use room status id records*/
                 if($landType->name == 'Room') {
                     $query->where(['Institution'.$level.'.'.$type.'_status_id' => 1]);
                 }
-                /*POCOR-6584 ends*/   
+                /*POCOR-6628 ends*/   
             $query->where($conditions);
         }
 
