@@ -1500,7 +1500,13 @@ class LandsTable extends ControllerActionTable
                 ->LeftJoin([$infrastructureOwnerships->alias() => $infrastructureOwnerships->table()], [
                     $this->aliasField('land_status_id').'  = ' . $infrastructureOwnerships->aliasField('id'),
                 ])
-                ->where($conditions);
+                ->where($conditions)
+                /*POCOR-6628 starts - filter result on the bases institution's shift*/
+                ->group([
+                    $this->aliasField('institution_id'),
+                    $this->aliasField('id')
+                ]);
+                /*POCOR-ends*/
         } else {
             if($landType->name == 'Building') { $level = "Buildings"; $type ='building';}
             if($landType->name == 'Floor') { $level = "Floors"; $type ='floor';}
@@ -1583,6 +1589,12 @@ class LandsTable extends ControllerActionTable
                 }
                 /*POCOR-6628 ends*/   
             $query->where($conditions);
+            /*POCOR-6628 starts - filter result on the bases institution's shift*/
+            $query->group([
+                'Institution'.$level.'.'.'institution_id',
+                'Institution'.$level.'.'.'id'
+            ]);
+            /*POCOR-6628 ends*/
         }
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($landType) {
