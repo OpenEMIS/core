@@ -92,7 +92,9 @@ class InstitutionReportCardsTable extends AppTable
                 'InstitutionRoomTypesCount',
                 //POCOR-6426 ends
                 'InstitutionAreaName',//POCOR-6481
-                'NonTeachingStaffCount'//POCOR-6481
+                'NonTeachingStaffCount',//POCOR-6481
+                'InstitutionCustomFields',//POCOR-6519
+                'InstitutionCustomFieldValues'//POCOR-6519
             ]
         ]);
     }
@@ -167,6 +169,8 @@ class InstitutionReportCardsTable extends AppTable
         //POCOR-6426 ends
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionAreaName'] = 'onExcelTemplateInitialiseInstitutionAreaName';//POCOR-6481
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseNonTeachingStaffCount'] = 'onExcelTemplateInitialiseNonTeachingStaffCount';//POCOR-6481
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionCustomFields'] = 'onExcelTemplateInitialiseInstitutionCustomFields';//POCOR-6519
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionCustomFieldValues'] = 'onExcelTemplateInitialiseInstitutionCustomFieldValues';//POCOR-6519
         return $events;
     }
 
@@ -3774,4 +3778,148 @@ class InstitutionReportCardsTable extends AppTable
         return count($NonTeachingStaffData);
     }
     //POCOR-6481 ends  
+    //POCOR-6519 starts 
+    public function onExcelTemplateInitialiseInstitutionCustomFields(Event $event, array $params, ArrayObject $extra){
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionCustomFieldValues = TableRegistry::get('institution_custom_field_values');
+            $InstitutionCustomFields = TableRegistry::get('institution_custom_fields');
+            $entity = $InstitutionCustomFieldValues
+                        ->find()
+                        ->select([
+                                'id' => $InstitutionCustomFields->aliasField('id'),
+                                'name' => $InstitutionCustomFields->aliasField('name')
+                            ])
+                        ->leftJoin(
+                            [$InstitutionCustomFields->alias() => $InstitutionCustomFields->table()],
+                            [
+                                $InstitutionCustomFields->aliasField('id ='). $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
+                            ]
+                        )
+                        ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $params['institution_id']])
+                        ->group([$InstitutionCustomFields->aliasField('id')])
+                        ->hydrate(false)
+                        ->toArray();
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseInstitutionCustomFieldValues(Event $event, array $params, ArrayObject $extra){
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionCustomFieldValues = TableRegistry::get('institution_custom_field_values');
+            $InstitutionCustomFields = TableRegistry::get('institution_custom_fields');
+            $institutionCustomFieldOptions = TableRegistry::get('institution_custom_field_options');
+            $InstitutionCustomFieldResult = $InstitutionCustomFieldValues
+                        ->find()
+                        ->select([
+                                'id' => $InstitutionCustomFields->aliasField('id'),
+                                'name' => $InstitutionCustomFields->aliasField('name')
+                            ])
+                        ->leftJoin(
+                            [$InstitutionCustomFields->alias() => $InstitutionCustomFields->table()],
+                            [
+                                $InstitutionCustomFields->aliasField('id ='). $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
+                            ]
+                        )
+                        ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $params['institution_id']])
+                        ->group([$InstitutionCustomFields->aliasField('id')])
+                        ->hydrate(false)
+                        ->toArray();
+            
+            $field_arr = [];
+            foreach ($InstitutionCustomFieldResult as $key => $value) {
+                $field_arr[] = $this->getInstitutionCustomFieldValues($params['institution_id'], $value['id']);    
+            }
+
+            $result = [];
+            if(!empty($field_arr)){
+                foreach ($field_arr as $field_key => $field_val) {
+                    $result[$field_key]['id'] = $field_val[0]['id'];
+                    if($field_val[0]['name'] == 'test_input_checkbox'){
+                        $check_num = [];
+                        foreach ($field_val as $f_k => $f_v) {
+                            $check_data = $institutionCustomFieldOptions
+                                        ->find()
+                                        ->select([
+                                                'name' => $institutionCustomFieldOptions->aliasField('name')
+                                            ])
+                                        ->where([$institutionCustomFieldOptions->aliasField('id IN') => $f_v['number_value']])
+                                        ->hydrate(false)
+                                        ->toArray();
+                            $check_num[] = $check_data[0]['name'];
+                        }
+                        $checkbox = implode(',', $check_num);                    
+                        $result[$field_key]['name'] = !empty($checkbox) ? $checkbox : '';
+                    }else if($field_val[0]['name'] == 'test_input_text'){
+                        $result[$field_key]['name'] = !empty($field_val[0]['text_value']) ? $field_val[0]['text_value'] : ' ';
+                    }else if($field_val[0]['name'] == 'test_input_number'){
+                        $result[$field_key]['name'] = !empty($field_val[0]['number_value']) ? $field_val[0]['number_value'].' ' : '0 ';
+                    }else if($field_val[0]['name'] == 'test_input_decimal'){
+                        $result[$field_key]['name'] = !empty($field_val[0]['decimal_value']) ? $field_val[0]['decimal_value'].' ' : '0.00 ';
+                    }else if($field_val[0]['name'] == 'test_input_textarea'){
+                        $result[$field_key]['name'] = !empty($field_val[0]['textarea_value']) ? $field_val[0]['textarea_value'] : '';
+                    }else if($field_val[0]['name'] == 'test_input_dropdown'){
+                        $check_data = $institutionCustomFieldOptions
+                                        ->find()
+                                        ->select([
+                                                'name' => $institutionCustomFieldOptions->aliasField('name')
+                                            ])
+                                        ->where([$institutionCustomFieldOptions->aliasField('id IN') => $field_val[0]['number_value']])
+                                        ->hydrate(false)
+                                        ->toArray();
+                        $result[$field_key]['name'] = !empty($check_data[0]['name']) ? $check_data[0]['name'] : '';
+                    }else if($field_val[0]['name'] == 'test_input_date'){
+                        $result[$field_key]['name'] = !empty($field_val[0]['date_value']) ? date("Y-m-d", strtotime($field_val[0]['date_value'])) : '';
+                    }else if($field_val[0]['name'] == 'test_input_time'){
+                        $result[$field_key]['name'] = !empty($field_val[0]['time_value']) ? date("H: i: s", strtotime($field_val[0]['time_value'])) : '';
+                    }else if($field_val[0]['name'] == 'test_input_cordinates'){
+                        if(!empty($field_val[0]['text_value'])){
+                            $cordinate = json_decode($field_val[0]['text_value'], true);
+                            $result[$field_key]['name'] = 'latitude: '.$cordinate['latitude'] .', longitude: '.$cordinate['longitude'] ;
+                        }else{
+                            $result[$field_key]['name'] = '';
+                        }
+                    } 
+                }
+            }
+            
+            $entity = [];
+            foreach ($result as $e_key => $e_val) {
+                $entity[] = [
+                    'id' => $e_val['id'],
+                    'data' => $e_val['name']
+                ];
+            }
+            return $entity;
+        }
+    } 
+
+    public function getInstitutionCustomFieldValues($institution_id, $institution_custom_field_id){
+        $InstitutionCustomFieldValues = TableRegistry::get('institution_custom_field_values');
+        $InstitutionCustomFields = TableRegistry::get('institution_custom_fields');
+        $institutionCustomFieldOptions = TableRegistry::get('institution_custom_field_options');
+        $InstitutionCustomFieldValues = $InstitutionCustomFieldValues
+                        ->find()
+                        ->select([
+                                'text_value' => $InstitutionCustomFieldValues->aliasField('text_value'),
+                                'number_value' => $InstitutionCustomFieldValues->aliasField('number_value'),
+                                'decimal_value' => $InstitutionCustomFieldValues->aliasField('decimal_value'),
+                                'textarea_value' => $InstitutionCustomFieldValues->aliasField('textarea_value'),
+                                'date_value' => $InstitutionCustomFieldValues->aliasField('date_value'),
+                                'time_value' => $InstitutionCustomFieldValues->aliasField('time_value'),
+                                'id' => $InstitutionCustomFields->aliasField('id'),
+                                'name' => $InstitutionCustomFields->aliasField('name')
+                            ])
+                        ->leftJoin(
+                            [$InstitutionCustomFields->alias() => $InstitutionCustomFields->table()],
+                            [
+                                $InstitutionCustomFields->aliasField('id ='). $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
+                            ]
+                        )
+                        ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $institution_id])
+                        ->where([$InstitutionCustomFieldValues->aliasField('institution_custom_field_id') => $institution_custom_field_id])
+                        ->hydrate(false)
+                        ->toArray();
+        return $InstitutionCustomFieldValues;
+    }
+    //POCOR-6519 ends
 }
