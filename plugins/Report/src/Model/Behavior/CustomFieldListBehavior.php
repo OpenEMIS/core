@@ -306,16 +306,15 @@ class CustomFieldListBehavior extends Behavior {
 		if (!(is_null($filterKey))) {
 			$query->where([$this->_table->aliasField($filterKey) => $key]);
 		}
-
+		
 		// If there is any specified query condition
 		$condition = $this->_condition;
 		$query->where($condition);
-
 		// If it is a survey
 		if (is_null($this->config('moduleKey'))) {
 			$query->where([$this->_table->aliasField($this->config('formKey')) => $key]);
 		}
-
+		
 		// Getting the list of available custom field options
 		$optionsValues = $this->CustomFieldValues->CustomFields->CustomFieldOptions->find('list')->toArray();
 

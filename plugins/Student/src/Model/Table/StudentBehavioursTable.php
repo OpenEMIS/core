@@ -28,10 +28,22 @@ class StudentBehavioursTable extends AppTable {
         
 	public function beforeFind( Event $event, Query $query )
 	{   
+		$userData = $this->Session->read();
 		if (isset($this->controller->name) && $this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
 			if ($this->Session->read('Auth.User.is_guardian') == 1) {
 				$sId = $this->Session->read('Student.ExaminationResults.student_id'); 
+				/**
+                 * Need to add current login id as param when no data found in existing variable
+                 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+				 * @ticket POCOR-6548
+                 */
+                //# START: [POCOR-6548] Check if user data not found then add current login user data
+                if ($sId == null || empty($sId) || $sId == '') {
+                    $studentId = $userData['Student']['ExaminationResults']['student_id'];
+                } else {
 				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+                }
+                //# END: [POCOR-6548] Check if user data not found then add current login user data
 			} else {
 				$studentId = $this->Session->read('Auth.User.id');
 			}

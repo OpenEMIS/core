@@ -296,7 +296,8 @@ class DirectoriesTable extends ControllerActionTable
                     $query
                         ->select([
                             'identity_type' => $IdentityTypes->aliasField('name'),
-                            $typesIdentity->identity_type => $UserIdentities->aliasField('number')
+                            // for POCOR-6561 changed $typesIdentity->identity_type to $typesIdentity->id below
+                            $typesIdentity->id => $UserIdentities->aliasField('number')
                         ])
                         ->leftJoin(
                                     [$UserIdentities->alias() => $UserIdentities->table()],
@@ -1187,6 +1188,7 @@ class DirectoriesTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        //POCOR-6332 commented due to this function some error was occuring
         $isSet = $this->setSessionAfterAction($event, $entity);
         if ($isSet) {
             $reload = $this->Session->read('Directory.Directories.reload');
