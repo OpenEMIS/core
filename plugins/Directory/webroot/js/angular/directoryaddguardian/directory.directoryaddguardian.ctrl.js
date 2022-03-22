@@ -332,7 +332,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
                 columnDefs: [
                     {headerName: scope.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -384,7 +384,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
                 columnDefs: [
                     {headerName: scope.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -439,7 +439,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
             scope.externalGridOptions = {
                 columnDefs: [
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -489,7 +489,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
             scope.externalGridOptions = {
                 columnDefs: [
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -592,7 +592,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
                 columnDefs: [
                     {headerName: scope.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -640,7 +640,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
             scope.externalGridOptions = {
                 columnDefs: [
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -688,7 +688,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
                 columnDefs: [
                     {headerName: scope.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -734,7 +734,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
             scope.externalGridOptions = {
                 columnDefs: [
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},

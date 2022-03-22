@@ -148,7 +148,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     function getExternalSearchData(param) {
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Directories/directoryExternalSearch';
-        $http.get(url, {params: param})
+        $http.post(url, {params: param})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
@@ -757,7 +757,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     function getEducationGrades(param) {
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/getEducationGrade';
-        $http.get(url, {params: param})
+        $http.post(url, {params: param})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
@@ -768,8 +768,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getClasses(params) {
         var deferred = $q.defer();
-        let url = angular.baseUrl + '/Institutions/getEducationGrade';
-        $http.get(url, {params: params})
+        let url = angular.baseUrl + '/Institutions/getClassOptions';
+        $http.post(url, {params: params})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
