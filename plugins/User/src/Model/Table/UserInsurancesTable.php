@@ -4,7 +4,8 @@ namespace User\Model\Table;
 use ArrayObject;
 
 use Cake\Validation\Validator;
-use Cake\Event\Event;//POCOR-6255 
+
+use Cake\Event\Event;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -20,15 +21,18 @@ class UserInsurancesTable extends ControllerActionTable
         $this->belongsTo('InsuranceTypes', ['className' => 'Health.InsuranceTypes', 'foreignKey' => 'insurance_type_id']);
 
         $this->addBehavior('Health.Health');
+
+        $this->toggle('search', false);
+
         $this->addBehavior('Excel',[
             'excludes' => ['comment, security_user_id'],
             'pages' => ['index'],
         ]);
         //POCOR-6255 start
-        $this->addBehavior('Page.FileUpload', [
+        /* $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['file_name' => 'file_content'],
             'size' => '2MB'
-        ]);//POCOR-6255 end
+        ]); *///POCOR-6255 end
     }
     //POCOR-6255 start
     public function implementedEvents()
@@ -63,7 +67,7 @@ class UserInsurancesTable extends ControllerActionTable
         //echo $this->alias(); exit;
         $modelAlias = 'UserInsurances';
         $userType = '';
-        $this->controller->changeHealthHeader($this, $modelAlias, $userType);
+        $this->controller->changeStudentHealthHeader($this, $modelAlias, $userType);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -79,13 +83,21 @@ class UserInsurancesTable extends ControllerActionTable
         /*POCOR-6307 Ends*/
     }
 
+    /* POCOR-6131 */
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    }
+    /* POCOR-6131 */
+
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'start_date':
-                return __('Start date');
+                return __('Start Date');
             case 'end_date':
-                return __('End date');
+                return __('End Date');
             case 'insurance_provider_id':
                 return __('Provider');
                 case 'insurance_type_id':
@@ -97,7 +109,11 @@ class UserInsurancesTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query){
         $session = $this->request->session();
-        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        if($this->request->param('action') == 'StudentInsurances'){
+            $staffUserId = $session->read('Institution.StudentUser.primaryKey.id');
+        } else if($this->request->param('action') == 'StaffInsurances'){
+            $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        }
         $query->where([$this->aliasField('security_user_id') => $staffUserId])
         ->orderDesc($this->aliasField('created'));
     }
@@ -145,5 +161,8 @@ class UserInsurancesTable extends ControllerActionTable
 
         $this->fields['insurance_type_id']['type'] = 'select';
         $this->field('insurance_type_id', ['attr' => ['label' => __('Type')]]);
+        // POCOR-6131
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 }

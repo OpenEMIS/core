@@ -48,11 +48,11 @@ class ProfilesController extends AppController
 
         $this->ControllerAction->models = [
             // Users
-            'Accounts'              => ['className' => 'Profile.Accounts', 'actions' => $accountPermissions],
+            'Accounts'              => ['className' => 'Profile.Accounts', 'actions' => ['view', 'edit']],
             'History'               => ['className' => 'User.UserActivities', 'actions' => ['index']],
 
             // Student
-            'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
+            // 'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
             'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
 
@@ -80,6 +80,8 @@ class ProfilesController extends AppController
     // public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
 
     // CAv4
+    public function StudentAbsences()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']); }
+    public function Absences()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']); }
     public function StudentFees()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']); }
     public function StaffEmployments() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']); }
     public function StaffQualifications()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']); }
@@ -288,7 +290,14 @@ class ProfilesController extends AppController
             
             if (!empty($studentId)) {
                 $sId = $this->ControllerAction->paramsDecode($studentId);
-                $student_id = $sId['id'];
+                // $student_id = $sId['id'];
+
+
+                if(isset($sId['id']) && !empty($sId['id'])){
+                    $student_id = $sId['id'];
+                }else{
+                    $student_id = $sId['security_user_id'];
+                }
                 
                 if ($action == 'StudentReportCards') {
                     //$student_id = $sId['student_id']; //POCOR-5979
@@ -332,7 +341,7 @@ class ProfilesController extends AppController
 
             if (!in_array($alias, $excludedModel)) {
                 ## Enabled in POCOR-6314
-                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications'];
+                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications', 'EmploymentStatuses', 'Leave'];
                 if (in_array($alias, $enabledCrudOperation)) {
                     $model->toggle('add', true);
                     $model->toggle('edit', true);
@@ -341,6 +350,11 @@ class ProfilesController extends AppController
                     $model->toggle('add', false);
                     $model->toggle('edit', false);
                     $model->toggle('remove', false);
+                    $enabledEditOperation = ['Profiles', 'Demographic', 'Identities', 'UserNationalities', 'UserLanguages', 'Attachments'];
+                    if (in_array($alias, $enabledEditOperation)) {
+                        $model->toggle('edit', true);
+                        $model->toggle('add', true);
+                    }
                 }
 
                 // redirected view feature is to cater for the link that redirected to institution
@@ -350,7 +364,7 @@ class ProfilesController extends AppController
             }
         } else if ($model instanceof \App\Model\Table\AppTable) { // CAv3
             $alias = $model->alias();
-            $excludedModel = ['Accounts', 'Extracurriculars'];
+            $excludedModel = ['Accounts', 'Extracurriculars', 'UserActivities'];
 
             if (!in_array($alias, $excludedModel)) {
                 $model->addBehavior('ControllerAction.HideButton');
@@ -504,7 +518,20 @@ class ProfilesController extends AppController
         if ($model->hasField('security_user_id')) {
             $studentId = $session->read('Student.Students.id'); 
             if (!empty($studentId)) {
+                /**
+                 * Need to add current login id as param when no data found in existing variable
+                 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+                 * @ticket POCOR-6548
+                 */
+                //# START: [POCOR-6548] Check if user data not found then add current login user data
+                if (is_int($studentId)) {
+                    $sId = $studentId;
+                } else if ($studentId == null || empty($studentId) || $studentId == '') {
+                    $sId = $loginUserId;
+                } else {
                 $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
+                }
+                //# END: [POCOR-6548] Check if user data not found then add current login user data
                 $query->where([$model->aliasField('security_user_id') => $sId]);
             } else {
                 $query->where([$model->aliasField('security_user_id') => $loginUserId]);

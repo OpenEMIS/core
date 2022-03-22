@@ -68,4 +68,25 @@ class ShiftOptionsTable extends ControllerActionTable
         }
         return $query;
     }
+
+    public function findAvailableShiftsOccupier(Query $query, array $options)
+    {
+        if (array_key_exists('institution_id', $options) && array_key_exists('academic_period_id', $options)) {
+            $conditions = [
+                $this->Shifts->aliasField('shift_option_id = ') . $this->aliasField('id'),
+                $this->Shifts->aliasField('location_institution_id') => $options['institution_id'],
+                $this->Shifts->aliasField('academic_period_id') => $options['academic_period_id']
+            ];
+            $query->leftJoin(
+                [$this->Shifts->alias() => $this->Shifts->table()],
+                $conditions
+            )
+            ->where(
+                [$this->Shifts->aliasField('id IS NULL')]
+            );
+        } else {
+            pr('fields not exists');die;
+        }
+        return $query;
+    }
 }

@@ -46,11 +46,12 @@ class BulkStudentTransferOutTable extends ControllerActionTable
             ->toArray();
         //remove open status because we are not getting start_date, end_date, institution class 
         $option = array();
+        //POCOR-6362 starts
         foreach ($steplists as $klist => $vlist) {
-            if($vlist == 'Pending Student Transfer'){
+            if($vlist == 'Pending Student Transfer' || $vlist == 'Open' || $vlist == 'Pending Approval' || $vlist == 'Transferred' || $vlist == 'Rejected' || $vlist == 'Cancelled'){
                 $option[$klist] = $vlist;
             }
-        } 
+        } //POCOR-6362 ends
         $this->_stepsOptions = $option;
     }
 

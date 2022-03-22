@@ -6,6 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
 use Cake\Datasource\ResultSetInterface;
+use Cake\Event\Event;
 
 use App\Model\Table\AppTable;
 
@@ -39,8 +40,24 @@ class AssessmentItemsTable extends AppTable
             'cascadeCallbacks' => true
         ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Results' => ['index']
+            'Results' => ['index', 'view']
         ]);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
+        return $events;
+    }
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'index' || $action == 'view') {
+            // check for the user permission to view here
+            $event->stopPropagation();
+            return true;
+        }
     }
 
     public function validationDefault(Validator $validator)
@@ -128,7 +145,7 @@ class AssessmentItemsTable extends AppTable
             $classId = $options['class_id'];
             $staffId = $options['staff_id'];
             $query
-                    ->contain('EducationSubjects.InstitutionSubjects')
+                    //->contain('EducationSubjects.InstitutionSubjects')
                     ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
                         $ClassSubjects->aliasField('institution_class_id') => $classId
                     ])
