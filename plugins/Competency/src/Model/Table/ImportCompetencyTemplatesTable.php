@@ -69,8 +69,15 @@ class ImportCompetencyTemplatesTable extends AppTable {
     }
 */
     public function onImportPopulateEducationProgrammesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+        //POCOR-6616 Start
         $request = $this->request;
-        $selectedperiod = $request->query('period'); //POCOR-6616
+        $selectedperiodyear = $request->query('period'); 
+        if(!empty($selectedperiodyear)){
+             $selectedperiod = $selectedperiodyear ;
+        }else{
+            $selectedperiod = $this->AcademicPeriods->getCurrent();
+        }
+        //POCOR-6616 End
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 2; //POCOR-6616
@@ -104,8 +111,15 @@ class ImportCompetencyTemplatesTable extends AppTable {
     }
 
     public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+        //POCOR-6616 start
         $request = $this->request;
-        $selectedperiod = $request->query('period'); //POCOR-6616
+        $selectedperiodyear = $request->query('period'); 
+        if(!empty($selectedperiodyear)){
+             $selectedperiod = $selectedperiodyear ;
+        }else{
+            $selectedperiod = $this->AcademicPeriods->getCurrent();
+        }
+        //POCOR-6616 End
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
