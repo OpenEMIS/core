@@ -144,6 +144,9 @@ class TrainingsTable extends AppTable
                     if (!empty($this->request->data[$this->alias()]['training_course_id'])) {
                         $courseId = $this->request->data[$this->alias()]['training_course_id'];
                         $options = $this->Training->getSessionList(['training_course_id' => $courseId]);
+                        if ($courseId == -1 ) {
+                            $options = ['-1' => _('All training sessions.')] + $options; //POCOR-6595
+                        }
                     } else {
                         $options = [];
                     }
