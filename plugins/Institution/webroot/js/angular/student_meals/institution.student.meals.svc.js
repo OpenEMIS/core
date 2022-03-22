@@ -295,10 +295,10 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
     function mealProgrameOptions(params) {
         var success = function(response, deferred) {
             console.log('responseData');
-            console.log(params.academic_period_id);
+            console.log(response);
             // console.log(institutionId);
             var mealProgrammes = response.data.data;
-            if (angular.isObject(mealProgrammes) && mealProgrammes.length > 0) {
+            if (mealProgrammes) {
                 deferred.resolve(mealProgrammes);
             } else {
                 deferred.reject('There was an error when retrieving the student absence reasons');
@@ -317,6 +317,8 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 
     function mealReceviedOptionsOptions() {
         var success = function(response, deferred) {
+            console.log('mealReceviedOptionsOptions');
+            console.log(response);
             var mealRecevied = response.data.data;
             if (angular.isObject(mealRecevied) && mealRecevied.length > 0) {
                 deferred.resolve(mealRecevied);

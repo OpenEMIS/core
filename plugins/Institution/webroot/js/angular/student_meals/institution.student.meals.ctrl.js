@@ -580,11 +580,6 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 //return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
                 return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
-        .then(function(mealBenefitTypeOptions) {
-            vm.updateIsMarked(mealBenefitTypeOptions);
-            //return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
-            return InstitutionStudentMealsSvc.mealProgrameOptions(vm.getClassStudentParams());
-        }, vm.error)
         /*.then(function(isMarked) {
             vm.updateIsMarked(isMarked);
             return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());
@@ -592,6 +587,16 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
         }, vm.error)
+        //START: POCOR-6609
+        .then(function(mealBenefitTypeOptions) {
+            vm.updateIsMarked(mealBenefitTypeOptions);
+            //return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+            return InstitutionStudentMealsSvc.mealProgrameOptions(vm.getClassStudentParams());
+        }, vm.error)
+        .then(function(mealPrograme) {
+            vm.updateMealPrograme(mealPrograme);
+        }, vm.error)
+        //END: POCOR-6609
         .finally(function() {
             vm.setGridData();
             vm.setColumnDef();
