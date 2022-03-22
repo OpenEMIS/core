@@ -166,6 +166,11 @@ class ImportCompetencyTemplatesTable extends AppTable {
         //POCOR-6616 start
         $request = $this->request;
         $tempRow['academic_period_id'] = $request->query('period');
+        if($tempRow['academic_period_id']==null){
+            $tempRow['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        }else{
+            $tempRow['academic_period_id'] = $request->query('period');
+        }
         //POCOR-6616 end
         $CompetencyTemplates = $CompetencyTemplates->find()
             ->where([
