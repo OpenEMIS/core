@@ -1076,11 +1076,25 @@ class DirectoriesController extends AppController
         echo json_encode($result_array);die;
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        //for api purpose POCOR-5672 starts
+        if($this->request->params['action'] == 'directoryInternalSearch'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'directoryInternalSearch';
+        }
+        if($this->request->params['action'] == 'directoryExternalSearch'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'directoryExternalSearch';
+        }//for api purpose POCOR-5672 ends
+        return $events;
+    }
+
     public function directoryInternalSearch()
     { 
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
-        //$requestData = json_decode($this->request->data(), true);
+        $requestData = $requestData['params'];
         $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
         $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
         $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
@@ -1380,6 +1394,7 @@ class DirectoriesController extends AppController
         
         //$requestData = json_decode($this->request->data(), true);
         $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
         $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
         $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
         $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
