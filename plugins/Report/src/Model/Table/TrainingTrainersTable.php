@@ -59,12 +59,16 @@ class TrainingTrainersTable extends AppTable
                     ]
                 ],
             ])
-            ->where(['Courses.id' => $trainingCourseId])
+            //->where(['Courses.id' => $trainingCourseId])
             ->order([$this->aliasField('name')]);
+        if (!empty($trainingCourseId) && $trainingCourseId != -1) { //POCOR-6595 one condition add
+            $query->where(['Courses.id' => $trainingCourseId]);
+        }
 
-        if (!empty($trainingSessionId)) {
+        if (!empty($trainingSessionId) && $trainingSessionId != -1) { //POCOR-6595 one condition add
             $query->where([$this->aliasField('training_session_id') => $trainingSessionId]);
         }
+
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
