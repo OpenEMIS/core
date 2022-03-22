@@ -4284,10 +4284,12 @@ class InstitutionsController extends AppController
                             ])
                             ->group([$studentCustomFormsFields->aliasField('section')])
                             ->toArray();
-        $SectionArr = [];
-        $remove_field_type = ['FILE','COORDINATES','TABLE'];                    
+
+        $remove_field_type = ['FILE','COORDINATES','TABLE'];  
+        $i= 0;    
+        $fieldsArr = [];              
         foreach ($SectionData as $skey => $sval) {
-            $SectionArr[$skey][$sval->section] = $sval->section;
+            //$SectionArr[$skey][$sval->section] = $sval->section;
             $CustomFieldsData = $studentCustomFormsFields->find()
                             ->select([
                                 'student_custom_form_id'=>$studentCustomFormsFields->aliasField('student_custom_form_id'),
@@ -4308,18 +4310,18 @@ class InstitutionsController extends AppController
                                 $studentCustomFormsFields->aliasField('section') => $sval->section,
                                 $studentCustomFields->aliasField('field_type NOT IN') => $remove_field_type
                             ])->toArray();
-            $fieldsArr = [];
+            
             foreach ($CustomFieldsData as $ckey => $cval) {
-                $fieldsArr[$ckey]['student_custom_form_id'] = $cval->student_custom_form_id;
-                $fieldsArr[$ckey]['student_custom_field_id'] = $cval->student_custom_field_id;
-                $fieldsArr[$ckey]['section'] = $cval->section;
-                $fieldsArr[$ckey]['name'] = $cval->name;
-                $fieldsArr[$ckey]['order'] = $cval->order;
-                $fieldsArr[$ckey]['description'] = $cval->description;
-                $fieldsArr[$ckey]['field_type'] = $cval->field_type;
-                $fieldsArr[$ckey]['is_mandatory'] = $cval->is_mandatory;
-                $fieldsArr[$ckey]['is_unique'] = $cval->is_unique;
-                $fieldsArr[$ckey]['params'] = $cval->params;
+                $fieldsArr[$i]['student_custom_form_id'] = $cval->student_custom_form_id;
+                $fieldsArr[$i]['student_custom_field_id'] = $cval->student_custom_field_id;
+                $fieldsArr[$i]['section'] = $cval->section;
+                $fieldsArr[$i]['name'] = $cval->name;
+                $fieldsArr[$i]['order'] = $cval->order;
+                $fieldsArr[$i]['description'] = $cval->description;
+                $fieldsArr[$i]['field_type'] = $cval->field_type;
+                $fieldsArr[$i]['is_mandatory'] = $cval->is_mandatory;
+                $fieldsArr[$i]['is_unique'] = $cval->is_unique;
+                $fieldsArr[$i]['params'] = $cval->params;
 
                 if($cval->field_type == 'DROPDOWN' || $cval->field_type == 'CHECKBOX'){
                     $OptionData = $studentCustomFieldOptions->find()
@@ -4341,11 +4343,12 @@ class InstitutionsController extends AppController
                         $OptionDataArr[$opkey]['visible'] = $opval->visible;
                         $OptionDataArr[$opkey]['option_order'] = $opval->option_order;
                     }
-                    $fieldsArr[$ckey]['option'] = $OptionDataArr;
+                    $fieldsArr[$i]['option'] = $OptionDataArr;
                 }
+                $i++;
             }
             //$SectionArr[$skey][$sval->section] = $fieldsArr;
-            $SectionArr[$skey] = $fieldsArr;
+            $SectionArr = $fieldsArr;
         }
         echo json_encode($SectionArr);die;
     }
