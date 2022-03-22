@@ -7,7 +7,9 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
-
+// Starts POCOR-6593
+use Cake\ORM\TableRegistry;
+// Ends POCOR-6593
 class TrainingSessionsTable extends AppTable  {
     public function initialize(array $config)
     {
