@@ -1079,7 +1079,8 @@ class DirectoriesController extends AppController
     public function directoryInternalSearch()
     { 
         $this->autoRender = false;
-        $requestData = json_decode($this->request->data(), true);
+        $requestData = $this->request->input('json_decode', true);
+        //$requestData = json_decode($this->request->data(), true);
         $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
         $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
         $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
@@ -1377,7 +1378,8 @@ class DirectoriesController extends AppController
             'assertion' => $token
         ];
         
-        $requestData = json_decode($this->request->data(), true);
+        //$requestData = json_decode($this->request->data(), true);
+        $requestData = $this->request->input('json_decode', true);
         $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
         $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
         $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
