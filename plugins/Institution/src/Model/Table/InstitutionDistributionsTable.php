@@ -39,6 +39,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
     //    $validator = parent::validationDefault($validator);
 
     // }
+    
 
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -55,10 +56,12 @@ class InstitutionDistributionsTable extends ControllerActionTable
         $institutionId = $session->read('Institution.Institutions.id');
         $options['academid_period_id'] = $selectedPeriod;
         $options['institution_id'] = $institutionId;
-
         // meal programmes filter
-        $levelOptions = $this->MealProgrammes->getMealProgrammesOptions($options);
-        // $levelOptions = $this->MealProgrammes->getMealInstitutionProgrammes($institutionId);
+        //START: POCOR-6609
+        // $levelOptions = $this->MealProgrammes->getMealProgrammesOptions();
+        $levelOptions = $this->MealProgrammes->getMealInstitutionProgrammes($options);
+        //END: POCOR-6609
+    
         if (!empty($levelOptions)) {
             $levelOptions = array(-1 => __('-- Select Programmes Meal --')) + $levelOptions;
         }else{
@@ -222,24 +225,23 @@ class InstitutionDistributionsTable extends ControllerActionTable
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
         //POCOR-6434[START]
-        $institutionId = $request->data['InstitutionDistributions'];
+        // $institutionId = $request->data['InstitutionDistributions'];
+        //POCOR-6434[END]
         if(!empty($institutionId)){
             $options['period'] = $request->data['InstitutionDistributions']['academic_period_id'];
             $options['level'] = $request->query['level'];
-            $options['institution_id'] = $request->data['InstitutionDistributions']['institution_id'];
+            $options['institution_id'] = $institutionId;
         }else{
-        //POCOR-6434[END]
-        $options['period'] = $request->query['period'];
-        $options['level'] = $request->query['level'];
-        $options['institution_id'] = $institutionId;
+            $options['period'] = $request->query['period'];
+            $options['level'] = $request->query['level'];
+            $options['institution_id'] = $institutionId;
         }
-        // echo "<pre>";print_r($options);die;
+        // list($levelOptions, $selectedLevel) = array_values($this->getNameOptions($institutionId));
         list($levelOptions, $selectedLevel) = array_values($this->getNameOptions($options));
         $attr['options'] = $levelOptions;
         if ($action == 'add') {
             $attr['default'] = $selectedLevel;
         }
-
         return $attr;
     }
 
@@ -259,7 +261,15 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     public function getNameOptions($options)
     {
+        
         $institutionId = $options['institution_id'];
+        //START: POCOR-6609
+        if(!isset($options['period'])){
+            $academic_period_id = $this->AcademicPeriods->getCurrent();
+        }else{
+            $academic_period_id = $options['period'];
+        }
+        //END: POCOR-6609
 
         $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
 
@@ -269,11 +279,13 @@ class InstitutionDistributionsTable extends ControllerActionTable
         ->innerJoin(
             [$MealInstitutionProgrammes->alias() => $MealInstitutionProgrammes->table()], [
                 $MealProgramme->aliasField('id = ') . $MealInstitutionProgrammes->aliasField('meal_programme_id'),
-                $MealProgramme->aliasField('academic_period_id = ') . $options['period']
+                $MealProgramme->aliasField('academic_period_id = ') . $academic_period_id
             ]
         )
         ->where([
-            $MealInstitutionProgrammes->aliasField('institution_id') => $options['institution_id']])            
+            $MealInstitutionProgrammes->aliasField('institution_id') => $institutionId])            
+        ->orWhere([ 
+            $MealInstitutionProgrammes->aliasField('institution_id') => $options['institution_id'] ])
         // ->orWhere([ 
         //     $MealInstitutionProgrammes->aliasField('institution_id') => 0 ])
         ->toArray();
