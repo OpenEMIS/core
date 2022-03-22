@@ -161,6 +161,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
 
     //POCOR-5863 starts
     private function getData($settings) {
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $areaEducationId = $requestData->area_education_id;
@@ -220,6 +221,8 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ->where($conditions)
                                 ->toArray();
         $result = [];
+        $check_data_consitency  = [];
+        $prepare_logical_result = [];
         if(!empty($institutionsList)){
             $i = 0;
             foreach ($institutionsList as $ins_key => $ins_value) {
@@ -232,7 +235,13 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                     'academic_period_name' => 'AcademicPeriods.name',
                                     'gender_name' =>'Genders.name',
                                     'education_grade_name' => 'EducationGrades.name',
-                                    'count'=> $StudentsEnrollmentSummary->find()->func()->count('DISTINCT '.$StudentsEnrollmentSummary->aliasField('student_id'))
+                                    'status_name' => 'StudentStatuses.name',
+                                    'first_name' => 'Users.first_name',
+                                    'last_name' => 'Users.last_name',
+                                    'email' => 'Users.email',
+                                    'openemis_no' => 'Users.openemis_no',
+                                    'end_date' => $StudentsEnrollmentSummary->aliasField('end_date')
+                                    // 'count'=> $StudentsEnrollmentSummary->find()->func()->count('DISTINCT '.$StudentsEnrollmentSummary->aliasField('student_id'))
                                     
                                  ])
                                 ->leftJoin(['Users' => 'security_users'], [
@@ -250,39 +259,103 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                                                 $StudentsEnrollmentSummary->aliasfield('academic_period_id').' = ' . 'AcademicPeriods.id'
                                             ])
-                                ->where(['Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId, $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id])
-                                ->group(['EducationGrades.id', 'Genders.id'])->toArray();
+                                ->leftJoin(['StudentStatuses' => 'student_statuses'], [
+                                    $StudentsEnrollmentSummary->aliasfield('student_status_id').' = ' . 'StudentStatuses.id'
+                                ])
+                                ->where([
+                                    'Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId,
+                                    $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id
+                                ]);
+                                // if ($institutionId > 0) {
+                                //     $instStudData->where([$StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus]);
+                                // }
+                                $instStudData
+                                //->group(['EducationGrades.id', 'Genders.id', 'StudentStatuses.id'])
+                                ->hydrate(false)
+                                ->toArray();
                 
                 if(!empty($instStudData)){
-                    foreach ($instStudData as $key => $value) {
-                        $result[$i][] = !empty($value->institution_name) ? $value->institution_name : ' 0';
-                        $result[$i][] = !empty($value->institution_code) ? $value->institution_code : ' 0';
-                        $result[$i][] = !empty($value->academic_period_name) ? $value->academic_period_name : ' 0';
-                        $result[$i][] = !empty($value->education_grade_name) ? $value->education_grade_name : ' 0';
-                        $result[$i][] = !empty($value->gender_name) ? $value->gender_name : ' 0';
-                        $result[$i][] = !empty($value->count) ? $value->count : ' 0';
+                    foreach ($instStudData as $key => $value) {                        
+                        if ( isset($check_data_consitency[$value['academic_period_name']][$value['institution_name']][$value['openemis_no']]) ) {
+                            $end_date_check = $check_data_consitency[$value['academic_period_name']][$value['institution_name']][$value['openemis_no']];
+                            if ($end_date_check < $value['end_date']->format('Y-m-d')) {
+                                $prepare_logical_result[$value['institution_name']][$value['openemis_no']] = [
+                                    !empty($value['institution_name'])     ? $value['institution_name']     : ' 0',
+                                    !empty($value['institution_code'])     ? $value['institution_code']     : ' 0',
+                                    !empty($value['academic_period_name']) ? $value['academic_period_name'] : ' 0',
+                                    !empty($value['education_grade_name']) ? $value['education_grade_name'] : ' 0',
+                                    !empty($value['gender_name'])          ? $value['gender_name']          : ' 0',
+                                ];
+                                $check_data_consitency[$value['academic_period_name']][$value['institution_name']][$value['openemis_no']] = $value['end_date']->format('Y-m-d');
+                            }
+                        } else {
+                            $check_data_consitency[$value['academic_period_name']][$value['institution_name']][$value['openemis_no']] = $value['end_date']->format('Y-m-d');
+                            $prepare_logical_result[$value['institution_name']][$value['openemis_no']] = [
+                                !empty($value['institution_name'])     ? $value['institution_name']     : ' 0',
+                                !empty($value['institution_code'])     ? $value['institution_code']     : ' 0',
+                                !empty($value['academic_period_name']) ? $value['academic_period_name'] : ' 0',
+                                !empty($value['education_grade_name']) ? $value['education_grade_name'] : ' 0',
+                                !empty($value['gender_name'])          ? $value['gender_name']          : ' 0',
+
+                            ];
+                        }
                         $i++;
                     }
-                }else{
-                    $AcademicPeriodData = $AcademicPeriods
-                                        ->find()
-                                        ->select([
-                                                $AcademicPeriods->aliasField('name'),
-                                            ])
-                                        ->where([$AcademicPeriods->aliasField('id')=>$academicPeriodId])
-                                        ->first();
-                    $result[$i][] = $ins_value->name;
-                    $result[$i][] = $ins_value->code;
-                    $result[$i][] = $AcademicPeriodData->name;
-                    $result[$i][] = '';
-                    $result[$i][] = '';
-                    $result[$i][] = ' 0';
-                    $i++;
                 }                
             }
         }
-
-        return $result;
+        $prepare_result_array = [];
+        foreach ( $prepare_logical_result as $users ) {
+            foreach ( $users as $user ) {
+                $prepare_result_array[$user[1]][$user[3]][$user[4]] = [
+                    'count' => $prepare_result_array[$user[1]][$user[3]][$user[4]]['count'] + 1,
+                    'institution_name' => $user[0],
+                    'year' => $user[2]
+                ];
+            }
+        }
+        $final_result = [];
+        foreach ( $prepare_result_array as $institution_code => $institution_code_data) {
+            foreach ( $institution_code_data as $grade => $grade_data ) {
+                foreach ( $grade_data as $gender => $user_data ) {
+                    $final_result[] = [
+                        $user_data['institution_name'],
+                        $institution_code,
+                        $user_data['year'],
+                        $grade,
+                        $gender,
+                        $user_data['count'],
+                    ];
+                }
+            }
+        }
+        return $final_result;
+        /* START : POCOR-6469
+        if ($institutionId == '' || $institutionId == null || $institutionId < 1) {
+        * END : POCOR-6469 */
+            /*
+            $updated_result = [];
+            foreach ($result AS $grade_data) {
+                $check_key = $grade_data[0].$grade_data[1].$grade_data[2].$grade_data[3].$grade_data[4];
+                if ($grade_data[5] != 0) {
+                    $updated_result[$check_key] = $grade_data;
+                }
+            }
+            return $updated_result;
+        */
+        /* START : POCOR-6469
+        } else {
+            $check_grade_exist = [];
+            $updated_result= [];
+            foreach ($result AS $grade_data) {
+                if (!in_array($grade_data[4].$grade_data[3], $check_grade_exist)) {
+                    $updated_result[] = $grade_data;
+                }
+                $check_grade_exist[] = $grade_data[4].$grade_data[3];
+            }
+            return $updated_result;
+        }
+        * END : POCOR-6469 */
     }
     //POCOR-5863 ends
     private function getFields($table, $settings, $label)

@@ -198,19 +198,50 @@ class InstitutionInfrastructuresTable extends AppTable
             'label' => __('Accessibility')
         ];
 		
+		/*POCOR-6264 starts*/
 		$InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
-                    
-        $customFieldData = $InfrastructureCustomFields->find()
+		$customModules = TableRegistry::get('custom_modules');
+		$infrastructureCustomForms = TableRegistry::get('infrastructure_custom_forms');
+		$infrastructureCustomFormsFields = TableRegistry::get('infrastructure_custom_forms_fields');
+		$customModuleId = $customModules->find()
+						->where([
+						    $customModules->aliasField('name') => 'Institution >'. ' ' . ucwords($type)
+						])->first()->id;
+		$getRecords = $infrastructureCustomForms->find()
+						->where([
+										$infrastructureCustomForms->aliasField('custom_module_id') => $customModuleId
+									])->toArray();
+					$redcordIds = [];
+					if (!empty($getRecords)) {
+						foreach ($getRecords as $record) {
+							$redcordIds[] = $record->id;
+						}
+					}
+					if (!empty($redcordIds)) {
+						$customdata = $infrastructureCustomFormsFields->find()
+									->where([
+										$infrastructureCustomFormsFields->aliasfield('infrastructure_custom_form_id IN') => $redcordIds
+									])->toArray();
+						$ids = [];
+						if (!empty($customdata)) {
+							foreach ($customdata as $val) {
+								$ids[] = $val->infrastructure_custom_field_id;
+							}
+						}
+				}
+		$customFieldData = $InfrastructureCustomFields->find()
             ->select([
                 'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
                 'custom_field' => $InfrastructureCustomFields->aliasfield('name')
             ])
-			->innerJoin(['CustomFieldValues' => lcfirst($type).'_custom_field_values' ], [
+			->leftJoin(['CustomFieldValues' => lcfirst($type).'_custom_field_values' ], [
 				'CustomFieldValues.infrastructure_custom_field_id = ' . $InfrastructureCustomFields->aliasField('id'),
 			])
+			->where([$InfrastructureCustomFields->aliasfield('id IN') => $ids])
 			->group($InfrastructureCustomFields->aliasfield('id'))
             ->toArray();
-       
+
+        /*POCOR-6264 ends*/
 		if(!empty($customFieldData)) {
 			foreach($customFieldData as $data) {
 				$custom_field_id = $data->custom_field_id;
@@ -279,7 +310,12 @@ class InstitutionInfrastructuresTable extends AppTable
              $conditions['Institution'.$level.'.'.'institution_id IN'] = $institutionIds;
          
         }
-       
+		/*POCOR-6335 starts - applying academic period condition*/
+		if (!empty($academicPeriodId)) {
+             $conditions['Institution'.$level.'.'.'academic_period_id'] = $academicPeriodId;
+         
+        }
+		/*POCOR-633 ends*/	       
 		if ($infrastructureLevel == 1 || $infrastructureLevel == 2) {
 			$query
 					->select(['land_infrastructure_code'=>'Institution'.$level.'.'.'code',
@@ -496,6 +532,7 @@ class InstitutionInfrastructuresTable extends AppTable
 						->select([
 							'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
 							'custom_field' => $InfrastructureCustomFields->aliasfield('name'),
+							'field_type' => $InfrastructureCustomFields->aliasfield('field_type'),
 							'text_value' => 'CustomFieldValues.text_value',
 							'number_value' => 'CustomFieldValues.number_value',
 							'decimal_value' => 'CustomFieldValues.decimal_value',
@@ -509,14 +546,52 @@ class InstitutionInfrastructuresTable extends AppTable
 						])
 						->toArray();
 				}
+				$optVal = [];
 				if(!empty($customFieldData)) {
 					foreach($customFieldData as $data) {
 						if(!empty($data->text_value)) {
 							$row[$data->custom_field_id] = $data->text_value;
 						} 
-						if(!empty($data->number_value)) {
-							$row[$data->custom_field_id] = $data->number_value;
+						if(!empty($data->number_value) && $data->field_type == 'CHECKBOX') {
+							/*POCOR-6376 starts*/
+							$infrastructureCustomFieldOptions = TableRegistry::get('infrastructure_custom_field_options');
+							$infrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+							$fieldValue = $infrastructureCustomFieldOptions->find()
+											->select([$infrastructureCustomFieldOptions->aliasField('name')])
+											->innerJoin([$infrastructureCustomFields->alias() => $infrastructureCustomFields->table()],[
+									            $infrastructureCustomFields->aliasField('id').' = ' . $infrastructureCustomFieldOptions->aliasField('infrastructure_custom_field_id')
+									        ])
+									        ->innerJoin(['CustomFieldValues' => lcfirst($type).'_custom_field_values' ], [
+												'CustomFieldValues.infrastructure_custom_field_id = ' . $infrastructureCustomFieldOptions->aliasField('infrastructure_custom_field_id'),
+												'CustomFieldValues.institution_'.lcfirst($type).'_id  = ' . $row['level_id'],
+												'CustomFieldValues.number_value  = ' . $infrastructureCustomFieldOptions->aliasField('id')
+											])
+											->where([
+												$infrastructureCustomFields->alias('field_type') => 'CHECKBOX',
+												'CustomFieldValues.institution_'.lcfirst($type).'_id  = ' . $row['level_id']])
+											->group([$infrastructureCustomFieldOptions->aliasField('name')])
+											->toArray();
+							
+							if (!empty($fieldValue)) {
+								foreach ($fieldValue as $numValue) {
+									$optVal[] = $numValue->name;
+								}
+							}
+							$str = implode(',', $optVal);
+							$row[$data->custom_field_id] = $str;
+							unset($optVal);
+						} 
+						if (!empty($data->number_value) && $data->field_type != 'CHECKBOX') {
+							$optvalue = TableRegistry::get('infrastructure_custom_field_options');
+							$fieldVal = $optvalue->get($data->number_value);
+							if (!empty($fieldVal)) {
+								$opt = $fieldVal->name;
+							} else {
+								$opt = '';
+							}
+							$row[$data->custom_field_id] = $opt;
 						}
+						/*POCOR-6376 ends*/
 						if(!empty($data->decimal_value)) {
 							$row[$data->custom_field_id] = $data->decimal_value;
 						}

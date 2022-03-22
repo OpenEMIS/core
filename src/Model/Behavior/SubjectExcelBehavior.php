@@ -237,7 +237,8 @@ class SubjectExcelBehavior extends Behavior
 						'SubjectRooms.name' => 'literal'
 					]),
 					'gender' => 'Genders.name',
-					'student_status' => 'StudentStatuses.name',
+                    'institution_id' => 'Institutions.id',
+                    'student_status' => 'StudentStatuses.name',//POCOR-6338 
                 ])
 				->contain([
 					'AcademicPeriods' => [
@@ -267,13 +268,13 @@ class SubjectExcelBehavior extends Behavior
 				[
 					'InstitutionSubjectStudents.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
 				]
-				) 
+				) // POCOR-6338 starts
 				->leftJoin(
 				['StudentStatuses' => 'student_statuses'],
 				[
 					'StudentStatuses.id = InstitutionSubjectStudents.student_status_id'
 				]
-				)
+				)//POCOR-6338 ends
 				->leftJoin(
 				['SubjectStudents' => 'security_users'],
 				[
@@ -301,14 +302,18 @@ class SubjectExcelBehavior extends Behavior
                 //POCOR-5852 starts
                 ->where($conditions)
                 //POCOR-5852 ends
-				->group([
-					'SubjectStudents.id'
-				])
+				
 				->order([
 					'AcademicPeriods.order',
 					'Institutions.code',
 					'InstitutionSubjects.id'
 				]);
+                if($table->alias!='Subjects'){
+                    $query->group([
+                    'SubjectStudents.id'
+                 ]);
+                }
+          
                 $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
 					return $results->map(function ($row) {
 						$teachers = explode(',',$row['teachers']);

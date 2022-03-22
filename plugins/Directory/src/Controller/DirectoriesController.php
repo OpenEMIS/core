@@ -21,8 +21,8 @@ class DirectoriesController extends AppController
             'Accounts'              => ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 
             // Student
-            'StudentAbsences'       => ['className' => 'Directory.Absences', 'actions' => ['index', 'view']],
-            // 'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
+            //'StudentAbsences'       => ['className' => 'Directory.Absences', 'actions' => ['index', 'view']],
+            //'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
             'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
 
@@ -965,4 +965,11 @@ class DirectoriesController extends AppController
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
+
+    public function StudentAbsences()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
+    }
+
+    public function Absences()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']); }
 }

@@ -74,7 +74,7 @@ class InstitutionClassSubjectsTable extends AppTable
                                     ])
                                     ->toArray();
                                    
-        if (count($scheduleTimetablesData) > 0) {
+       /* if (count($scheduleTimetablesData) > 0) {
                     $query
                     ->select([
                         'id' => $InstitutionSubjects->aliasField('id'),
@@ -116,7 +116,7 @@ class InstitutionClassSubjectsTable extends AppTable
                     ->group([
                         $InstitutionSubjects->aliasField('id')
                     ]);
-                } else {
+                } else {*/
                     $query
                         ->select([
                              'id'=>$InstitutionSubjects->aliasField('id'),
@@ -136,7 +136,7 @@ class InstitutionClassSubjectsTable extends AppTable
                         ->order([
                             $InstitutionSubjects->aliasField('name')=>'DESC'
                         ]);
-                    }
+                   // }
 
 
                     $staffId = $options['user']['id'];

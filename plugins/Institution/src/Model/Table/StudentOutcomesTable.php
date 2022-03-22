@@ -815,6 +815,7 @@ class StudentOutcomesTable extends ControllerActionTable
             $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $Users = $ClassStudents->Users;
             $StudentStatuses = $ClassStudents->StudentStatuses;
+            $statuses = $StudentStatuses->findCodeList();
 
             $results = $ClassStudents->find()
                 ->select([
@@ -831,7 +832,8 @@ class StudentOutcomesTable extends ControllerActionTable
                 ->matching('StudentStatuses')
                 ->where([
                     $ClassStudents->aliasField('institution_class_id') => $this->classId,
-                    $ClassStudents->aliasField('education_grade_id') => $gradeId
+                    $ClassStudents->aliasField('education_grade_id') => $gradeId,
+                    $ClassStudents->aliasField('student_status_id NOT IN') => $statuses['TRANSFERRED']
                 ])
                 ->order([$Users->aliasField('first_name'), $Users->aliasField('last_name')])
                 ->toArray();

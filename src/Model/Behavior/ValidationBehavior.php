@@ -754,7 +754,12 @@ class ValidationBehavior extends Behavior
         $Students = TableRegistry::get('Institution.Students');
         $educationGradeField = isset($options['educationGradeField']) ? $options['educationGradeField'] : 'education_grade_id';
         $studentIdField = isset($options['studentIdField']) ? $options['studentIdField'] : 'student_id';
-        return !$Students->completedGrade($globalData['data'][$educationGradeField], $globalData['data'][$studentIdField]);
+        $academic_period_id = $globalData['data']['academic_period_id'];
+        $education_grade_code = $globalData['data']['education_grade_code'];
+        // return !$Students->completedGrade($globalData['data'][$educationGradeField], $globalData['data'][$studentIdField], $academic_period_id);
+        //POCOR-6539[START]
+        return !$Students->completedGradeNew($globalData['data'][$educationGradeField], $globalData['data'][$studentIdField], $academic_period_id, $education_grade_code);
+        //POCOR-6539[END]
     }
 
     public static function compareStudentGenderWithInstitution($field, array $globalData)
@@ -2119,10 +2124,13 @@ class ValidationBehavior extends Behavior
                 $InstitutionStaffAttendances->aliasField('staff_id') => $staffId,
                 $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
                 $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
-                $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'"
+                $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
+                $InstitutionStaffAttendances->aliasField("time_in")   . ' IS NOT NULL', //POCOR-6559
+                $InstitutionStaffAttendances->aliasField("time_out")  . ' IS NOT NULL' //POCOR-6559
             ])
             ->first();
-        // Check if staff aattendance exists
+        
+        // Check if staff attendance exists
         if ($staffAttendances) {
             return false;
         }
@@ -3296,4 +3304,56 @@ class ValidationBehavior extends Behavior
         }
     }
     //POCOR-5975 ends
+    //POCOR-5924 starts
+    public static function checkUniqueIdentityNumber($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $data = $globalData['data'];
+        $userIdentities = TableRegistry::get('user_identities');
+        $IdentitiesEntity = $userIdentities->find()
+            ->where([
+                $userIdentities->aliasField('number') => $data['identity_number'],
+                $userIdentities->aliasField('identity_type_id') => $data['identity_type_id']
+            ])
+            ->count()
+            ;
+        if($IdentitiesEntity > 0){
+            $validationErrorMsg = $model->getMessage('Institution.Students.identity_number.ruleCheckUniqueIdentityNumber');
+            return $validationErrorMsg;
+        }
+
+        return true;
+    }//POCOR-5924 ends
+
+    /*POCOR-6348 starts*/
+    public static function noStaffLeaveOverlapping($field, array $globalData)
+    {
+        $data = $globalData['data'];
+        
+        $InstitutionStaffLeave = TableRegistry::get('Institution.StaffLeave');
+        $staffId = $data['staff_id'];
+        $institutionId = $data['institution_id'];
+        $academicPeriodId = $data['academic_period_id'];
+
+        $weekStartDate = $data['date'];
+        $weekEndDate = $data['date'];
+
+        $staffLeaveExist = $InstitutionStaffLeave
+            ->find()
+            ->where([
+                $InstitutionStaffLeave->aliasField('institution_id') => $institutionId,
+                $InstitutionStaffLeave->aliasField('staff_id') => $staffId,
+                $InstitutionStaffLeave->aliasField('academic_period_id') => $academicPeriodId,
+                $InstitutionStaffLeave->aliasField("date_from <= '") . $weekStartDate . "'",
+                $InstitutionStaffLeave->aliasField("date_to >= '") . $weekEndDate . "'"
+            ])
+            ->first();
+
+        // Check if staff aattendance exists
+        if ($staffLeaveExist) {
+            return false;
+        }
+        return true;
+    }
+    /*POCOR-6348 ends*/
 }

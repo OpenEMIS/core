@@ -21,34 +21,38 @@ if(!$isAdmin): ?>
     text-align: center;
 }
 </style>
-<h3><?= __('Profile Completeness'); ?></h3>
-<div class="overview-box alert attendance-dashboard ng-scope" ng-class="disableElement">
-	<a data-dismiss="alert" href="#" aria-hidden="true" class="close" style="position: absolute;right: 20px;">×</a>
-	<div class="data-section section_custom_1 single-day">
-		<i class="kd-staff icon"></i>
-		<div class="data-field">
-			<h4>Percent Complete:</h4>
-			<h1 class="data-header ng-binding"><?= $profileCompletness['percentage'];?>%</h1>
+<!-- POCOR-6395 starts -->
+<?php if (!$isAdmin && $hasPermission): ?>
+	<h3><?= __('Profile Completeness'); ?></h3>
+	<div class="overview-box alert attendance-dashboard ng-scope" ng-class="disableElement">
+		<a data-dismiss="alert" href="#" aria-hidden="true" class="close" style="position: absolute;right: 20px;">×</a>
+		<div class="data-section section_custom_1 single-day">
+			<i class="kd-staff icon"></i>
+			<div class="data-field">
+				<h4><?= __('Percent Complete'); ?>:</h4>
+				<h1 class="data-header ng-binding"><?= $profileCompletness['percentage'];?>%</h1>
+			</div>
 		</div>
-	</div>
-	<!-- <div class="data-section">
-		<div class="data-field">
-			
+		<!-- <div class="data-section">
+			<div class="data-field">
+				
+			</div>
+		</div> -->
+		<div class="data-section section_custom_2">		
+			<div class="progress" style= "border-radius: 25px;height: 22px;">
+				<div class="progress-bar" role="progressbar"  style="background-color: #6699CC; width:<?= $profileCompletness['percentage'];?>%">
+				<?= $profileCompletness['percentage'];?>%
+				</div>
+			</div>
 		</div>
-	</div> -->
-	<div class="data-section section_custom_2">		
-		<div class="progress" style= "border-radius: 25px;height: 22px;">
-			<div class="progress-bar" role="progressbar"  style="background-color: #6699CC; width:<?= $profileCompletness['percentage'];?>%">
-			<?= $profileCompletness['percentage'];?>%
+		<div class="data-section section_custom_3">
+			<div class="data-field">
+				<button id="profile_detail" class="btn btn-default btn-save">Details</button>
 			</div>
 		</div>
 	</div>
-	<div class="data-section section_custom_3">
-		<div class="data-field">
-			<button id="profile_detail" class="btn btn-default btn-save">Details</button>
-		</div>
-	</div>
-</div>
+<?php endif ?>
+<!-- POCOR-6395 ends -->
 <?php endif ?>
 <table class="table" id="profile_data_div" style="display:none">
 	<thead>

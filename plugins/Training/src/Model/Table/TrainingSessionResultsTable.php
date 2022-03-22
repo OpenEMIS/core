@@ -88,6 +88,9 @@ class TrainingSessionResultsTable extends ControllerActionTable
                         'certificate_number' => $trainee['certificate_number'],//5695
                         'practical' => $trainee['practical'],//5695
 						//'training_result_type_id' => $resultTypeId, //5695
+						// POCOR 6585 starts (i have reopen pocor 5695 comment code because it was giving error so i have set default value 0 in training_result_type_id when $resultTypeId variable empty)
+						'training_result_type_id' => isset($resultTypeId) ? $resultTypeId : 0,
+						// POCOR 6585 ends
 						'trainee_id' => $trainee['trainee_id'],
 						'training_session_id' => $sessionId,
 						'counterNo' => $key

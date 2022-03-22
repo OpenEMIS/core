@@ -184,7 +184,10 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             )
             ->group([
                 $ClassGrades->aliasField('institution_class_id'),
+                /** Ticket : POCOR-6480
+                 * Added because showing same records multiple time
                 $Assessments->aliasField('id')
+                **/
             ])
             ->autoFields(true)
             ;
@@ -404,7 +407,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                     $InstitutionClassStudentsTable->aliasField('education_grade_id') => $grade,
                     $InstitutionClassStudentsTable->aliasField('academic_period_id') => $period,
                     $InstitutionClassStudentsTable->aliasField('institution_id') => $institutionId,
-                    $Genders->aliasField('code') => 'M'
+                    $Genders->aliasField('code') => 'M',
+                    $InstitutionClassStudentsTable->aliasField('student_status_id') => 1 //POCOR-6566
                 ])->count();
         
         return $count;
@@ -435,7 +439,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                     $InstitutionClassStudentsTable->aliasField('education_grade_id') => $grade,
                     $InstitutionClassStudentsTable->aliasField('academic_period_id') => $period,
                     $InstitutionClassStudentsTable->aliasField('institution_id') => $institutionId,
-                    $Genders->aliasField('code') => 'F'
+                    $Genders->aliasField('code') => 'F',
+                    $InstitutionClassStudentsTable->aliasField('student_status_id') => 1 //POCOR-6566
                 ])->count();
         
         return $count;
