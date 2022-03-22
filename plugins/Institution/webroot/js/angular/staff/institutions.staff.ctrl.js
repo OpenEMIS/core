@@ -513,7 +513,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 columnDefs: [
                     {headerName: StaffController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -554,7 +554,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -595,7 +595,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 columnDefs: [
                     {headerName: StaffController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -634,7 +634,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
