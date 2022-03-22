@@ -4063,6 +4063,7 @@ class InstitutionsController extends AppController
     public function getEducationGrade()
     {
         $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
        /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
         echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
         $institution_name = $this->request->session()->read('Institution.Institutions.name');
@@ -4150,6 +4151,7 @@ class InstitutionsController extends AppController
     public function getClassOptions()
     {
         $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
         $academic_period = $requestData['academic_periods'];
         $grade_id = $requestData['grade_id'];
         $institution_id = $this->request->session()->read('Institution.Institutions.id');
