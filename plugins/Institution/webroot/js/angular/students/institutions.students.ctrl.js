@@ -92,6 +92,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.changeOption = changeOption;
     StudentController.changed = changed;
     StudentController.selectOption = selectOption;
+    StudentController.onDecimalNumberChange = onDecimalNumberChange;
     
 
     angular.element(document).ready(function () {
@@ -177,6 +178,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 InstitutionsStudentsSvc.getInternalSearchData(param)
                 .then(function(response) {
                     var gridData = response.data.data;
+                    if(!gridData)
+                        gridData=[];
                     var totalRowCount = response.data.total;
                     return StudentController.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
@@ -327,7 +330,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         };
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getClasses(params).then(function(resp){
-            StudentController.classOptions = resp.data;
+            if(!resp.data)
+                StudentController.classOptions = resp.data;
+            else
+                StudentController.classOptions = [];
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
@@ -348,22 +354,25 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function createCustomFieldsArray() {
-        var selectedCustomField = StudentController.customFields[0];
-        var filteredSections = Array.from(new Set(StudentController.customFields[0].map((item)=> mapBySection(item))));
+        var selectedCustomField = StudentController.customFields;
+        var filteredSections = Array.from(new Set(StudentController.customFields.map((item)=> mapBySection(item))));
         filteredSections.forEach((section)=>{
             let filteredArray = selectedCustomField.filter((item) => StudentController.filterBySection(item, section));
             StudentController.customFieldsArray.push({sectionName: section , data: filteredArray});
         });
         StudentController.customFieldsArray.forEach((customField) => {
             customField.data.forEach((fieldData) => {
+                fieldData.answer = '';
+                fieldData.errorMessage = '';
                 if(fieldData.field_type === 'DROPDOWN') {
                     fieldData.selectedOptionId = '';
                 }
                 if(fieldData.field_type === 'DATE') {
                     fieldData.isDatepickerOpen = false;
                     let params = JSON.parse(fieldData.params);
+                    fieldData.params = params;
                     fieldData.datePickerOptions = {
-                        minDate: params && params.start_date ? new Date(params.start_date): new Date(),
+                        minDate: fieldData.params && fieldData.params.start_date ? new Date(fieldData.params.start_date): new Date(),
                         maxDate: new Date('01/01/2100'),
                         showWeeks: false
                     };
@@ -373,8 +382,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     fieldData.minuteStep = 5;
                     fieldData.isMeridian = true;
                     let params = JSON.parse(fieldData.params);
-                    if(params && params.start_time) {
-                        var startTimeArray = params.start_time.split(" ");
+                    fieldData.params = params;
+                    if(fieldData.params && fieldData.params.start_time) {
+                        var startTimeArray = fieldData.params.start_time.split(" ");
                         var startTimes = startTimeArray[0].split(":");
                         if(startTimes[0] === 12) {
                             var startTimeHour = startTimeArray[1] === 'PM' ? Number(startTimes[0]) : Number(startTimes[0]) - 12;
@@ -382,8 +392,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                             var startTimeHour = startTimeArray[1] === 'AM' ? Number(startTimes[0]) : Number(startTimes[0]) + 12;
                         } 
                     }
-                    if(params && params.end_time) {
-                        var endTimeArray = params.end_time.split(" ");
+                    if(fieldData.params && fieldData.params.end_time) {
+                        var endTimeArray = fieldData.params.end_time.split(" ");
                         var endTimes = endTimeArray[0].split(":");
                         if(startTimes[0] === 12) {
                             var endTimeHour = endTimeArray[1] === 'PM' ? Number(endTimes[0]) : Number(endTimes[0]) - 12;
@@ -391,16 +401,19 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                             var endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
                         }
                     }
-                    fieldData.answer = params && params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
+                    fieldData.answer = fieldData.params && fieldData.params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
                     fieldData.min = params && params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
-                    fieldData.max = params && params.end_time ? new Date(new Date(new Date().setHours(endTimeHour)).setMinutes(endTimes[1])): new Date();
+                    fieldData.max = fieldData.params && fieldData.params.end_time ? new Date(new Date(new Date().setHours(endTimeHour)).setMinutes(endTimes[1])): new Date();
                 }
-
                 if(fieldData.field_type === 'CHECKBOX') {
                     fieldData.answer = [];
                     fieldData.option.forEach((option) => {
                         option.selected = false;
                     })
+                }
+                if(fieldData.field_type === 'DECIMAL') {
+                    let params = JSON.parse(fieldData.params);
+                    fieldData.params = params;
                 }
             });
         });
@@ -433,6 +446,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 field.answer.push(option.option_id);
             }
         })
+    }
+
+    function onDecimalNumberChange(field) {
+        let timer;
+        if(timer) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(()=>{
+            field.answer = parseFloat(field.answer.toFixed(field.params.precision));
+        }, 3000);
     }
 
     function setStudentName() {
@@ -551,7 +574,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 columnDefs: [
                     {headerName: StudentController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -596,7 +619,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 columnDefs: [
                     {headerName: StudentController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -646,7 +669,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -689,7 +712,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -848,6 +871,21 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(!StudentController.selectedStudentData.username || !StudentController.selectedStudentData.password || !StudentController.selectedStudentData.academic_period_id || !StudentController.selectedStudentData.startDate){
             return;
         }
+        StudentController.customFieldsArray.forEach((customField) => {
+            customField.data.forEach((field) => {
+                if(field.is_mandatory === 1) {
+                    if(field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'DROPDOWN' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL' || field.field_type === 'DATE' || field.field_type === 'TIME') {
+                        if(!field.answer) {
+                            field.errorMessage = 'This field is required.';
+                        }
+                    } else if(field.field_type === 'CHECKBOX') {
+                        if(field.ansewer.length === 0) {
+                            field.errorMessage = 'This field is required.';
+                        }
+                    }
+                }
+            })
+        })
         StudentController.saveStudentDetails();
     }
 
@@ -950,7 +988,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 columnDefs: [
                     {headerName: StudentController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -991,7 +1029,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -1032,7 +1070,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 columnDefs: [
                     {headerName: StudentController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
@@ -1071,7 +1109,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
