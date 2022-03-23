@@ -62,9 +62,9 @@ class TrainingSessionsTable extends AppTable  {
                 $TrainingCourses->aliasField('id = ') . 'TrainingSessions.training_course_id'
             ])
             ->select(['course_code' => 'training_courses.code','number' => 'number'])
-            ->where(['start_date >' => $startDate ])
-            ->where(['end_date <' => $endDate ])
-            ->order([$this->Courses->aliasField('code'), $this->aliasField('code')]);
+            ->where(['start_date >=' => $startDate ])
+            ->where(['end_date <=' => $endDate ])
+            ->order(['course_code', $this->aliasField('code')]);
         if ($selectedStatus != '-1') {
             $query->matching('WorkflowSteps.WorkflowStatuses', function ($q) use ($selectedStatus) {
                 return $q->where(['WorkflowStatuses.id' => $selectedStatus]);
