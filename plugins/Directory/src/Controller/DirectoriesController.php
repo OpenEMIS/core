@@ -54,6 +54,10 @@ class DirectoriesController extends AppController
         $this->loadModel('Directory.AreaAdministratives');
         $this->attachAngularModules();
         $this->attachAngularModulesForDirectory();
+        //POCOR-5672 it is used for removing csrf token mismatch condition in directory external search 
+        if ($this->request->action == 'directoryExternalSearch') {
+            $this->eventManager()->off($this->Csrf);
+        }//POCOR-5672 ends
 
         $this->set('contentHeader', 'Directories');
     }
@@ -1186,7 +1190,6 @@ class DirectoriesController extends AppController
             ->toArray();
 
             $totalCount = $this->getCountInernalSearch($conditions, $identityNumber);
-
         }else{
             $security_users_result = $security_users
             ->find()
@@ -1230,7 +1233,6 @@ class DirectoriesController extends AppController
             ->InnerJoin(['Identities' => 'user_identities'],[
                 'Identities.security_user_id'=> $security_users->aliasField('id'),
                 'Identities.number LIKE'=> $identityNumber. '%',
-
             ])
             ->LeftJoin([$genders->alias() => $genders->table()], [
                 $genders->aliasField('id =') . $security_users->aliasField('gender_id')
@@ -1249,7 +1251,7 @@ class DirectoriesController extends AppController
 
             $totalCount = $this->getCountInernalSearch($conditions, $identityNumber);
         }
-        
+        $result_array = [];
         foreach($security_users_result AS $result){
             $MainNationalities_id = !empty($result['MainNationalities_id']) ? $result['MainNationalities_id'] : '';
             $MainNationalities_name = !empty($result['MainNationalities_name']) ? $result['MainNationalities_name'] : '';
@@ -1392,7 +1394,6 @@ class DirectoriesController extends AppController
             'assertion' => $token
         ];
         
-        //$requestData = json_decode($this->request->data(), true);
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
         $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
@@ -1412,6 +1413,7 @@ class DirectoriesController extends AppController
             '{date_of_birth}' => $dateOfBirth,
             '{identity_number}' => $identityNumber
         ];
+        
         $http = new Client();
         $response = $http->post($attributes['token_uri'], $data);
         $noData = json_encode(['data' => [], 'total' => 0], JSON_PRETTY_PRINT);
