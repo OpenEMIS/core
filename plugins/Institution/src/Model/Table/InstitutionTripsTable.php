@@ -13,9 +13,12 @@ use Cake\Log\Log;
 use Cake\Network\Request;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait; // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
 class InstitutionTripsTable extends ControllerActionTable
 {
+    use OptionsTrait;// POCOR-6169 <vikas.rathore@mail.valuecoders.com>
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -440,17 +443,19 @@ class InstitutionTripsTable extends ControllerActionTable
         $this->fields['trip_type_id']['type'] = 'select';
         $this->field('trip_type_id', ['attr' => ['label' => __('Trip Type')]]);
 
+        $providerOptions = $this->getProviderOptions(); // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
         $this->fields['institution_transport_provider_id']['type'] = 'select';
-        $this->field('institution_transport_provider_id', ['attr' => ['label' => __('Provider')]]);
+        $this->fields['institution_transport_provider_id']['options'] = $providerOptions;
+        $this->field('institution_transport_provider_id', ['attr' => ['label' => __('Provider')] , 'onChangeReload' => true]); // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
-        $InstitutionBuses = $this->InstitutionBuses
-        ->find('optionList')
-        ->where([
-            $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $extra->institution_transport_provider_id
-        ])
-        ->toArray();
-        $this->fields['institution_bus_id']['type'] = 'select';
-        $this->fields['institution_bus_id']['options'] = $InstitutionBuses;
+        // $InstitutionBuses = $this->InstitutionBuses
+        // ->find('optionList')
+        // ->where([
+        //     $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $extra->institution_transport_provider_id
+        // ])
+        // ->toArray();
+        // $this->fields['institution_bus_id']['type'] = 'select';
+        // $this->fields['institution_bus_id']['options'] = $InstitutionBuses;
         $this->field('institution_bus_id', ['attr' => ['label' => __('Bus')]]);
         
         $repeatOptions = [
@@ -464,11 +469,48 @@ class InstitutionTripsTable extends ControllerActionTable
         $this->field('repeat', ['attr' => ['label' => __('Repeat')]]);
 
         $dayOptions = $this->getDays();
-        $this->fields['days']['type'] = 'select';
+        $this->fields['days']['type'] = 'chosenSelect';// POCOR-6169 <vikas.rathore@mail.valuecoders.com>
         $this->fields['days']['options'] = $dayOptions;
-        $this->field('days', ['attr' => ['label' => __('Days')]]);
+        $this->field('days', ['attr' => ['label' => __('Days'), 'multiple' => true]]);// POCOR-6169 <vikas.rathore@mail.valuecoders.com>
     }
     // POCOR-6169 end
+
+    // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
+    private function getProviderOptions()
+	{
+        $session = $this->request->session();
+        $institutionId  = $session->read('Institution.Institutions.id');
+
+		return $this->InstitutionTransportProviders
+        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+        ->where([
+            $this->InstitutionTransportProviders->aliasField('institution_id') => $institutionId
+        ])
+        ->toArray();
+	}
+    // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
+
+    // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
+    public function onUpdateFieldInstitutionBusId(Event $event, array $attr, $action, $request) {
+
+        $parentId = $this->request->data['InstitutionTrips']['institution_transport_provider_id'];
+
+        $InstitutionBuses = $this->InstitutionBuses
+        ->find('optionList')
+        ->where([
+            $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $parentId
+        ])
+        ->toArray();
+        
+		$attr['options'] = $InstitutionBuses;
+        unset($attr['options'][0]);
+
+		if (empty($InstitutionBuses)) {
+			$attr['empty'] = 'Select';
+		}
+		return $attr;
+	}
+    // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
