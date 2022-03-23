@@ -106,6 +106,8 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+		//print_r($this->ReportProgress); die;
+		//print_r($this->_table->alias());die;
 		$query = $settings['query'];
 		$settings['pagination'] = false;
 		$fields = $this->_table->ControllerAction->getFields($this->ReportProgress);
@@ -135,14 +137,34 @@ class ReportListBehavior extends Behavior {
 			$userId = $this->_table->Auth->user('id');
 			$conditions[$this->ReportProgress->aliasField('created_user_id')] = $userId;
 		}
-
-		$query = $this->ReportProgress->find()
+		//POCOR-6621 fetch report listing based on module and current institute
+		$session = new Session();
+	    $institutionId  = $session->read('Institution.Institutions.id'); 
+		if($this->_table->alias() == 'InstitutionStandards'){ // Inside the institution module report listing
+			$query = $this->ReportProgress->find('all')
+			->where(['JSON_VALUE(params, "$.current_institution_id")=' . $institutionId,'module'=>'InstitutionStandards'])
+			->order([
+				$this->ReportProgress->aliasField('created') => 'DESC',
+				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
+			]);				
+		}elseif($this->_table->alias() == 'InstitutionStatistics'){ // Inside the institution module report listing
+			$query = $this->ReportProgress->find('all')
+			->where(['JSON_VALUE(params, "$.institution_id")=' . $institutionId,'module'=>'InstitutionStatistics'])
+			->order([
+				$this->ReportProgress->aliasField('created') => 'DESC',
+				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
+			]);	
+		}else{
+			// This is for report module listing
+			$query = $this->ReportProgress->find()
 			->contain('CreatedUser') //association declared on AppTable
 			->where($conditions)
 			->order([
 				$this->ReportProgress->aliasField('created') => 'DESC',
 				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
 			]);
+		}
+		//POCOR-6621 End
 
 		return $query;
 	}
