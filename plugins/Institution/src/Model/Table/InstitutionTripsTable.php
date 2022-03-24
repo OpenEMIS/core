@@ -430,6 +430,32 @@ class InstitutionTripsTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
+        
+
+		if (($entity->toArray())) {
+			if ($entity->has('institution_transport_provider_id')) {
+				$this->fields['institution_transport_provider_id']['default'] = $entity->institution_transport_provider_id;
+			} 
+		}else {
+			// 1st instance of add
+			$entity->institution_transport_provider_id = '';
+		} 
+
+        $InstitutionBuses = $this->InstitutionBuses
+            ->find('optionList')
+            ->where([
+                $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $entity->institution_transport_provider_id
+            ])
+            ->toArray();
+
+        unset($InstitutionBuses[0]);
+        
+        $this->fields['institution_bus_id']['type'] = 'select';
+        $this->fields['institution_bus_id']['options'] = $InstitutionBuses;
+	}
+
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -447,15 +473,7 @@ class InstitutionTripsTable extends ControllerActionTable
         $this->fields['institution_transport_provider_id']['type'] = 'select';
         $this->fields['institution_transport_provider_id']['options'] = $providerOptions;
         $this->field('institution_transport_provider_id', ['attr' => ['label' => __('Provider')] , 'onChangeReload' => true]); // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
-
-        // $InstitutionBuses = $this->InstitutionBuses
-        // ->find('optionList')
-        // ->where([
-        //     $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $extra->institution_transport_provider_id
-        // ])
-        // ->toArray();
-        // $this->fields['institution_bus_id']['type'] = 'select';
-        // $this->fields['institution_bus_id']['options'] = $InstitutionBuses;
+        
         $this->field('institution_bus_id', ['attr' => ['label' => __('Bus')]]);
         
         $repeatOptions = [
@@ -469,11 +487,65 @@ class InstitutionTripsTable extends ControllerActionTable
         $this->field('repeat', ['attr' => ['label' => __('Repeat')]]);
 
         $dayOptions = $this->getDays();
-        $this->fields['days']['type'] = 'chosenSelect';// POCOR-6169 <vikas.rathore@mail.valuecoders.com>
+        
+        // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
         $this->fields['days']['options'] = $dayOptions;
-        $this->field('days', ['attr' => ['label' => __('Days'), 'multiple' => true]]);// POCOR-6169 <vikas.rathore@mail.valuecoders.com>
+        $this->field('days', [
+            'type' => 'chosenSelect',
+            'attr' => ['label' => __('Days')],
+            'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true]
+        ]);
+        // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
+    
+        // dump($this->fields);die;
     }
     // POCOR-6169 end
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['InstitutionTripDays', 'InstitutionTripPassengers']);
+
+        return $query;
+    }
+
+    // view page POCOR-6169
+    public function viewAfterAction(Event $event,Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity, $extra);
+    }
+    // view page POCOR-6169
+
+    // setup fields for view and edit POCOR-6152
+    public function setupFields(Entity $entity, ArrayObject $extra)
+    { 
+        // academic field view
+        if($entity->academic_period_id){
+            $entity['academic_period_id'] = $entity->academic_period->name;
+        }
+        $this->field('academic_period_id',['before' => 'name','attr' => ['label' => __('Academic Period')],'visible' => ['view' => true]]);
+        
+        $this->field('trip_type_id',['after' => 'name','visible' => ['view' => true]]);//trip type field
+
+        $this->field('institution_transport_provider_id',['after' => 'trip_type_id','visible' => ['view' => true]]); //provider field
+
+        //set bus field
+        if($entity->institution_bus){
+            $entity['institution_buss'] = $entity->institution_bus->plate_number;
+        }
+        $this->field('institution_buss',['after' => 'institution_transport_provider_id','attr' => ['label' => __('Bus')],'visible' => ['view' => true]]);
+        
+        // repeat field view
+        if($entity->repeat == 1){
+            $entity['repeat'] = 'Yes';
+        }else{
+            $entity['repeat'] = 'No';
+        }
+        $this->field('repeat',['after' => 'institution_buss','visible' => ['view' => true]]);
+
+        $this->field('institution_bus_id',['visible' => ['view' => false]]);
+
+    }
+    // setup fields for view and edit POCOR-6152
 
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
     private function getProviderOptions()
