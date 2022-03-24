@@ -554,7 +554,7 @@ class InstitutionTripsTable extends ControllerActionTable
         $institutionId  = $session->read('Institution.Institutions.id');
 
 		return $this->InstitutionTransportProviders
-        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+        ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
         ->where([
             $this->InstitutionTransportProviders->aliasField('institution_id') => $institutionId
         ])
