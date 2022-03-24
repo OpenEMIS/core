@@ -694,7 +694,12 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                         if (mode == 'view') {
                             if(studentMealTypeId == 3 || studentMealTypeId == 2 || studentMealTypeId == null) {
                                 return '<i style="color: #999999;" class="fa fa-minus"></i>';
-                            } else if(studentMealTypeId == 1) {
+                            //START: POCOR-6609(To avoid database value update for existing data)
+                            } else if( (studentMealTypeId == 1 && params.data.institution_student_meal.meal_benefit == null) ) {
+                                var html = '100%';
+                            }
+                            //END: POCOR-6609
+                            else{
                                 var html = '';
                                 html += getViewMealReasonElement(data, mealBenefitTypeOptions);
                                 html += getViewCommentsElement(data);
