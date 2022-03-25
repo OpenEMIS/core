@@ -99,7 +99,38 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $gradeId = $requestData->education_grade_id;
         $classId = $requestData->institution_class_id;
         $month = $requestData->month;
-        
+        $absentDays = TableRegistry::get('Institution. InstitutionStudentAbsenceDays');
+        $query
+            ->select([
+                'openemis_no' => 'Users.openemis_no',
+                'first_name' => 'Users.first_name',
+                'middle_name' => 'Users.middle_name',
+                'third_name' => 'Users.third_name',
+                'last_name' => 'Users.last_name',
+                'identity_number' => 'Users.identity_number',
+                ])
+            ->contain([
+                'Users' => [
+                   'fields' => [
+                      'openemis_no' => 'Users.openemis_no',
+                        'first_name' => 'Users.first_name',
+                        'middle_name' => 'Users.middle_name',
+                        'third_name' => 'Users.third_name',
+                        'last_name' => 'Users.last_name',
+                        'identity_number' => 'Users.identity_number',
+                   ]
+             ],
+            ])
+            ->leftJoin([$absentDays->alias() => $absentDays->table()],
+                [$absentDays->aliasField('id = ') . $this->aliasField('institution_student_absence_day_id')]
+            )
+            ->where([$this->aliasField('academic_period_id') => $academicPeriodId,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('institution_class_id') => $classId,
+                    $this->aliasField('education_grade_id') => $gradeId,
+                    $this->aliasField('date') => $month,
+                ])
+            return $query;
         
     }
 
