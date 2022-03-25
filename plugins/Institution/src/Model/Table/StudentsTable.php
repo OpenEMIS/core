@@ -1837,13 +1837,37 @@ class StudentsTable extends ControllerActionTable
             unset($buttons['edit']);
         }
 
-        // if student is not currently enrolled in this institution, remove the delete button
-        $studentStatuses = $this->StudentStatuses->findCodeList();
-        if ($entity->student_status_id != $studentStatuses['CURRENT']) {
-            if (isset($buttons['remove'])) {
-                unset($buttons['remove']);
-            }
+        /*POCOR-6634 starts - added remove button functionality*/
+        if (isset($buttons['remove'])) {
+            $institutionId = $entity->institution->id;
+            $studentId = $entity->_matchingData['Users']['id'];
+            $periodId = $entity->academic_period->id;
+            $gradeId = $entity->education_grade->id;
+            $toBeDeleteId = $this->find()
+                            ->where([
+                                $this->aliasField('institution_id') => $institutionId,
+                                $this->aliasField('academic_period_id') => $periodId,
+                                $this->aliasField('education_grade_id') => $gradeId,
+                                $this->aliasField('student_id') => $studentId
+                            ])
+                            ->first()->id;
+            $encodedId = $this->paramsEncode([
+                            'id' => $toBeDeleteId
+                        ]);
+            $attr = [
+                'role' => 'menuitem',
+                'tabindex' => -1,
+                'escape' => false,
+                'data-toggle' => 'modal',
+                'data-target' => '#delete-modal',
+                'field-target' => '#recordId',
+                'field-value' => $encodedId,
+                'onclick' => 'ControllerAction.fieldMapping(this)'
+            ];
+            
+            $buttons['remove']['attr'] = $attr;
         }
+        /*POCOR-6634 ends*/
         return $buttons;
     }
     // End PHPOE-1897
