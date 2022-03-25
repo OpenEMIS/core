@@ -111,7 +111,9 @@ class TrainingsTable extends AppTable
                 $feature = $this->request->data[$this->alias()]['feature'];
                 if (in_array($feature, ['Report.TrainingResults', 'Report.TrainingSessionParticipants', 'Report.TrainingTrainers', 'Report.TrainersSessions'])) { // POCOR-6569
                     $options = $this->Training->getCourseList();
-					$options = ['-1' => __('All Training Courses')] + $options;
+                    $options = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Training Courses')] + $options; //POCOR-6595
+
+					// $options = ['-1' => __('All Training Courses')] + $options;
 
                     $attr['type'] = 'select';
                     $attr['select'] = false;
@@ -142,6 +144,9 @@ class TrainingsTable extends AppTable
                     if (!empty($this->request->data[$this->alias()]['training_course_id'])) {
                         $courseId = $this->request->data[$this->alias()]['training_course_id'];
                         $options = $this->Training->getSessionList(['training_course_id' => $courseId]);
+                        if ($courseId == -1 ) {
+                            $options = ['-1' => _('All training sessions.')] + $options; //POCOR-6595
+                        }
                     } else {
                         $options = [];
                     }
