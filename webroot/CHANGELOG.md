@@ -1,3 +1,8 @@
+### [3.74.4] - 2022-03-16
+- Implemented: Add Export button function - Institutions > Behaviour > Staff
+- Bug Fixed: Institutions>General>Shift: Edit Institution 404 Forbidden: Page Not Found
+- Bug Fixed: Institution>Dashboard: Institution completeness is not showing correctly
+
 ### [3.74.3] - 2022-03-14
 - Implemented: Add Export button function - Institutions > Infrastructures > Assets
 - Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 1
