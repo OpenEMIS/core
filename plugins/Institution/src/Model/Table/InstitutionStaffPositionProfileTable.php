@@ -212,7 +212,8 @@ class InstitutionStaffPositionProfileTable extends AppTable
             ->leftJoin(
                 [$SecurityUser->alias() => $SecurityUser->table()],
                 [$SecurityUser->aliasField('id = ') . 'InstitutionPositions.assignee_id']
-            )->group(['InstitutionStaff.staff_id'])
+            )
+            //->group(['InstitutionStaff.staff_id'])
         ->where([
             'InstitutionClasses.academic_period_id' => $academicPeriodId,
             'InstitutionStaff.institution_id' => $institutionId,
@@ -256,7 +257,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'key'   => 'referrer_position_type',
             'field' => 'referrer_position_type',
             'type'  => 'string',
-            'label' => __('Positions'),
+            'label' => __('Title'),
         ];
         $newFields[] = [
             'key'   => 'grade',
@@ -280,7 +281,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'key'   => 'referrer_is_home',
             'field' => 'referrer_is_home',
             'type'  => 'string',
-            'label' => __('Home Room Teacher'),
+            'label' => __('Homeroom Teacher'),
         ];
         $newFields[] = [
             'key'   => 'openemis_no',
@@ -330,19 +331,19 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'key'   => 'class_name',
             'field' => 'class_name',
             'type'  => 'string',
-            'label' => __('Classes'),
+            'label' => __('Classes (homeroom teacher)'),
         ];
         $newFields[] = [
             'key'   => 'subject_name',
             'field' => 'subject_name',
             'type'  => 'string',
-            'label' => __('Subject'),
+            'label' => __('Subject (if he is a teacher)'),
         ];
         $newFields[] = [
             'key'   => 'staff_absence_day',
             'field' => 'staff_absence_day',
             'type'  => 'integer',
-            'label' => __('Absences'),
+            'label' => __('Number of absence Day'),
         ];
 
         $fields->exchangeArray($newFields);
@@ -362,7 +363,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 'days' => "SUM(".$staffleave->aliasField('number_of_days').")"
 
             ])
-            ->group(['InstitutionStaffLeave.staff_id'])
+           // ->group(['InstitutionStaffLeave.staff_id'])
             ->where([$staffleave->aliasField('staff_id') => $userid]);
             if($absenceDay!=null){
                 $data = $absenceDay->toArray();
