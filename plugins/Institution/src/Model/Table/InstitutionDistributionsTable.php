@@ -32,6 +32,15 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
         $this->MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
         
+            // POCOR-6153 start
+            $this->addBehavior('Excel', [
+            'excludes' => ['academic_period_id', 'institution_id', 'comment'],
+            'pages' => ['index'],
+            'autoFields' => false
+            ]);
+        // POCOR-6153 end
+        
+        
     }
 
     // public function validationDefault(Validator $validator)
