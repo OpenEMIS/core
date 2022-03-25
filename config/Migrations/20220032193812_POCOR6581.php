@@ -20,6 +20,21 @@ class POCOR6581 extends AbstractMigration
         $current_time  = date('Y-m-d H:i:s');
         $localeContent = [
             [
+                'en'              => 'Classes (homeroom teacher)',
+                'created_user_id' => 1,
+                'created'         => $current_time
+            ],
+            [
+                'en'              => 'Subject (if he is a teacher)',
+                'created_user_id' => 1,
+                'created'         => $current_time
+            ],
+            [
+                'en'              => 'Number of absence Day',
+                'created_user_id' => 1,
+                'created'         => $current_time
+            ],
+            [
                 'en'              => 'FTE',
                 'created_user_id' => 1,
                 'created'         => $current_time
