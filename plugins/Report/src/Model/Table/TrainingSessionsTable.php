@@ -42,11 +42,20 @@ class TrainingSessionsTable extends AppTable  {
     {  
          // Starts POCOR-6593
         $requestData = json_decode($settings['process']['params']);
+        //print_r($requestData);die;
         $selectedStatus = $requestData->status;
         $areas = TableRegistry::get('areas');
         $TrainingCourses = TableRegistry::get('training_courses');
          $area_education_id=$requestData->area_education_id->_ids;
-
+          //print_r($area_education_id);die;
+         if($area_education_id[0] == -1){
+          
+           $where = [];
+         } else {
+            
+            $where = ['area_id IN' => $area_education_id];
+           
+         }
         
         $startDate=date("Y-m-d", strtotime($requestData->session_start_date));
         $endDate=date("Y-m-d", strtotime($requestData->session_end_date));
@@ -65,7 +74,7 @@ class TrainingSessionsTable extends AppTable  {
                 $TrainingCourses->aliasField('id = ') . 'TrainingSessions.training_course_id'
             ])
             ->select(['course_code' => 'training_courses.code','number' => 'number'])
-            ->where(['area_id IN' => $area_education_id ])
+            ->where($where)
             ->where(['start_date >=' => $startDate ])
             ->where(['end_date <=' => $endDate ])
             ->order(['course_code', $this->aliasField('code')]);
