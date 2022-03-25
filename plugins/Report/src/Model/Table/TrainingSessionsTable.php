@@ -39,12 +39,15 @@ class TrainingSessionsTable extends AppTable  {
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    {
+    {  
          // Starts POCOR-6593
         $requestData = json_decode($settings['process']['params']);
         $selectedStatus = $requestData->status;
         $areas = TableRegistry::get('areas');
         $TrainingCourses = TableRegistry::get('training_courses');
+         $area_education_id=$requestData->area_education_id->_ids;
+
+        
         $startDate=date("Y-m-d", strtotime($requestData->session_start_date));
         $endDate=date("Y-m-d", strtotime($requestData->session_end_date));
         $join=[];
@@ -62,6 +65,7 @@ class TrainingSessionsTable extends AppTable  {
                 $TrainingCourses->aliasField('id = ') . 'TrainingSessions.training_course_id'
             ])
             ->select(['course_code' => 'training_courses.code','number' => 'number'])
+            ->where(['area_id IN' => $area_education_id ])
             ->where(['start_date >=' => $startDate ])
             ->where(['end_date <=' => $endDate ])
             ->order(['course_code', $this->aliasField('code')]);
@@ -70,6 +74,7 @@ class TrainingSessionsTable extends AppTable  {
                 return $q->where(['WorkflowStatuses.id' => $selectedStatus]);
             });
         }
+        //print_r($res->sql()); die;
          // Ends POCOR-6593
     }
 
