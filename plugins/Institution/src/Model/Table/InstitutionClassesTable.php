@@ -916,6 +916,9 @@ class InstitutionClassesTable extends ControllerActionTable
                 'ClassesSecondaryStaff.SecondaryStaff',
                 'ClassStudents' => [
                     'Users.Genders',
+                    //START: POCOR-6623
+                    'Users.Identities',
+                    //END: POCOR-6623
                     'Users.SpecialNeeds',
                     'EducationGrades',
                     'StudentStatuses',
@@ -931,6 +934,9 @@ class InstitutionClassesTable extends ControllerActionTable
                 'ClassesSecondaryStaff.SecondaryStaff',
                 'ClassStudents' => [
                     'Users.Genders',
+                    //START: POCOR-6623
+                    'Users.Identities',
+                    //END: POCOR-6623
                     'Users.SpecialNeeds',
                      /*POCOR-6566 starts*/
                     'EducationGrades'=> function ($q) use ($grades) {
