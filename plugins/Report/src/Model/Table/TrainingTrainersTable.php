@@ -48,8 +48,6 @@ class TrainingTrainersTable extends AppTable
                 'session_start_date' => 'Sessions.start_date',
                 'session_end_date' => 'Sessions.end_date',
                 'openemis_no' => 'Trainers.openemis_no',
-                'identity_type_name' => 'IdentityTypes.name',
-                'identity_number' => 'Trainers.identity_number'
             ])
             ->matching('Sessions.Courses')
             ->join([
@@ -60,20 +58,17 @@ class TrainingTrainersTable extends AppTable
                         'Trainers.id = ' . $this->aliasField('trainer_id')
                     ]
                 ],
-                'IdentityTypes' => [
-                    'type' => 'LEFT',
-                    'table' => 'identity_types',
-                    'conditions' => [
-                        'IdentityTypes.id = ' . $this->Trainers->aliasField('identity_type_id')
-                    ]
-                ],
             ])
-            ->where(['Courses.id' => $trainingCourseId])
+            //->where(['Courses.id' => $trainingCourseId])
             ->order([$this->aliasField('name')]);
+        if (!empty($trainingCourseId) && $trainingCourseId != -1) { //POCOR-6595 one condition add
+            $query->where(['Courses.id' => $trainingCourseId]);
+        }
 
-        if (!empty($trainingSessionId)) {
+        if (!empty($trainingSessionId) && $trainingSessionId != -1) { //POCOR-6595 one condition add
             $query->where([$this->aliasField('training_session_id') => $trainingSessionId]);
         }
+
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -116,17 +111,23 @@ class TrainingTrainersTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'IdentityTypes.name',
-            'field' => 'identity_type_name',
+            'key' => 'identity_type',
+            'field' => 'identity_type',
             'type' => 'string',
-            'label' => __('Identity Type'),
+            'label' => __('Identity Type')
         ];
 
         $newFields[] = [
-            'key' => 'Trainess.identity_number',
+            'key' => 'identity_number',
             'field' => 'identity_number',
-            'type' => 'integer',
-            'label' => '',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+        $newFields[] = [
+            'key' => 'other_identity',
+            'field' => 'other_identity',
+            'type' => 'string',
+            'label' => __('Other Identites')
         ];
 
         $newFields[] = [
@@ -134,6 +135,13 @@ class TrainingTrainersTable extends AppTable
             'field' => 'name',
             'type' => 'name',
             'label' => __('Name'),
+        ];
+
+        $newFields[] = [
+            'key' => 'area_name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => 'Area'
         ];
 
         $fields->exchangeArray($newFields);
@@ -149,6 +157,79 @@ class TrainingTrainersTable extends AppTable
             return ' ';
         }
     }
+   
+    // start POCOR-6595
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentitiesResult = $userIdentities->find()
+                ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
+                ->select([
+                    'identity_number' => $userIdentities->aliasField('number'),
+                    'identity_type_name' => 'IdentityTypes.name',
+                ])
+                ->where([$userIdentities->aliasField('security_user_id') => $entity->trainer_id])
+                ->order([$userIdentities->aliasField('id DESC')])
+                ->hydrate(false)->toArray();
+                $entity->custom_identity_number = '';
+                $other_identity_array = [];
+                if (!empty($userIdentitiesResult)) {
+                    foreach ( $userIdentitiesResult as $index => $user_identities_data ) {
+                        if ($index == 0) {
+                            $entity->custom_identity_number = $user_identities_data['identity_number'];
+                            $entity->custom_identity_name   = $user_identities_data['identity_type_name'];
+                        } else {
+                            $other_identity_array[] = '(['.$user_identities_data['identity_type_name'].'] - '.$user_identities_data['identity_number'].')';
+                        }
+                    }
+                }
+        $entity->custom_identity_other_data = implode(',', $other_identity_array);
+        return $entity->custom_identity_name;
+    }
+
+    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    {
+        return $entity->custom_identity_number;
+    }
+
+    public function onExcelGetOtherIdentity(Event $event, Entity $entity)
+    {
+        return $entity->custom_identity_other_data;
+    }
+
+    public function onExcelGetAreaName(Event $event, Entity $entity)
+    {
+        if (!empty($entity->trainer_id)) {
+            $InstitutionStaff = TableRegistry::get('Institution.Staff');
+            $Institution = TableRegistry::get('Institution.Institutions');
+            $AreaTable = TableRegistry::get('Area.Areas');
+
+            $data = $InstitutionStaff->find()
+                    ->select([
+                        'area_name' => $AreaTable->aliasField('name')
+                    ])
+                    ->leftjoin(
+                        [$Institution->alias() => $Institution->table()],
+                        [$Institution->aliasField('id = ').$InstitutionStaff->aliasField('institution_id')]
+                    )
+                    ->leftjoin(
+                        [$AreaTable->alias() => $AreaTable->table()],
+                        [$AreaTable->aliasField('id = ').$Institution->aliasField('area_id')]
+                    )
+                    ->where([
+                        $InstitutionStaff->aliasField('staff_id') => $entity->trainer_id,
+                        $InstitutionStaff->aliasField('staff_status_id') => 1
+                    ])->first();
+
+                if (!empty($data)) {
+                    return $data->area_name;                    
+                } else {
+                    return ' - ';
+                }            
+        }
+    }
+    // END POCOR-6595
+
 
     /**
      * Get all trainer ids as key and name as value
@@ -160,4 +241,5 @@ class TrainingTrainersTable extends AppTable
     {
         return $this->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();
     }
+
 }
