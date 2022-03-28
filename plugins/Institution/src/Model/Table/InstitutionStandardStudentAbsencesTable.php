@@ -144,43 +144,31 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             'key'   => 'positionsNumber',
             'field' => 'positionsNumber',
             'type'  => 'string',
-            'label' => __('Number'),
+            'label' => __('OpenEMIS ID'),
         ];
         $newFields[] = [
             'key'   => 'referrer_is_home',
             'field' => 'referrer_is_home',
             'type'  => 'string',
-            'label' => __('HomeroomTeacher'),
+            'label' => __('Student full name'),
         ];
         $newFields[] = [
             'key'   => 'openemis_no',
             'field' => 'openemis_no',
             'type'  => 'integer',
-            'label' => __('openemis_no'),
+            'label' => __('identity number'),
         ];
         $newFields[] = [
             'key'   => 'referrer_full_name',
             'field' => 'referrer_full_name',
             'type'  => 'string',
-            'label' => __('staff'),
+            'label' => __('Day'),
         ];
         $newFields[] = [
             'key'   => 'fte',
             'field' => 'fte',
             'type'  => 'integer',
-            'label' => __('fte'),
-        ];
-        $newFields[] = [
-            'key'   => 'staffStatus',
-            'field' => 'staffStatus',
-            'type'  => 'string',
-            'label' => __('staffStatus'),
-        ];
-        $newFields[] = [
-            'key'   => 'identityType',
-            'field' => 'identityType',
-            'type'  => 'string',
-            'label' => __('identityType'),
+            'label' => __('Total absence'),
         ];
 
         $fields->exchangeArray($extraField);
