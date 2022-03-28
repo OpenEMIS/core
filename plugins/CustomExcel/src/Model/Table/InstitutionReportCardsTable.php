@@ -94,7 +94,8 @@ class InstitutionReportCardsTable extends AppTable
                 'InstitutionAreaName',//POCOR-6481
                 'NonTeachingStaffCount',//POCOR-6481
                 'InstitutionCustomFields',//POCOR-6519
-                'InstitutionCustomFieldValues'//POCOR-6519
+                'InstitutionCustomFieldValues',//POCOR-6519
+                'ReportStudentAssessmentSummary'//POCOR-6519
             ]
         ]);
     }
@@ -171,6 +172,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseNonTeachingStaffCount'] = 'onExcelTemplateInitialiseNonTeachingStaffCount';//POCOR-6481
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionCustomFields'] = 'onExcelTemplateInitialiseInstitutionCustomFields';//POCOR-6519
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionCustomFieldValues'] = 'onExcelTemplateInitialiseInstitutionCustomFieldValues';//POCOR-6519
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseReportStudentAssessmentSummary'] = 'onExcelTemplateInitialiseReportStudentAssessmentSummary';//POCOR-6519
         return $events;
     }
 
@@ -290,11 +292,14 @@ class InstitutionReportCardsTable extends AppTable
 							3=>'Multiple Shift Owner',
 							4=>'Multiple Shift Occupier'
 							];
-			if($shift_types[$entity->shift_type]) {
-				$entity->shift_type_name = $shift_types[$entity->shift_type];
-			}
-
-            $entity->date_opened = $entity->date_opened->format('Y-m-d');//POCOR-6328 
+            //POCOR-6519 starts
+            $entity->shift_type_name = '';
+            if($entity->shift_type != 0){
+                if($shift_types[$entity->shift_type]) {
+                    $entity->shift_type_name = $shift_types[$entity->shift_type];
+                }
+            }//POCOR-6519 ends
+			$entity->date_opened = $entity->date_opened->format('Y-m-d');//POCOR-6328 
             return $entity;
 		}
     }
@@ -3920,6 +3925,67 @@ class InstitutionReportCardsTable extends AppTable
                         ->hydrate(false)
                         ->toArray();
         return $InstitutionCustomFieldValues;
+    }
+
+    public function onExcelTemplateInitialiseReportStudentAssessmentSummary(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $ReportStudentAssessmentSummary = TableRegistry::get('report_student_assessment_summary');
+            $AssessmentSummaryData = $ReportStudentAssessmentSummary->find()
+                ->select([
+                'id' => $ReportStudentAssessmentSummary->aliasField('id'),
+                'academic_period_code' => $ReportStudentAssessmentSummary->aliasField('academic_period_code'),
+                'academic_period_name' => $ReportStudentAssessmentSummary->aliasField('academic_period_name'),
+                'area_code' => $ReportStudentAssessmentSummary->aliasField('area_code'),
+                'area_name' => $ReportStudentAssessmentSummary->aliasField('area_name'),
+                'institution_code' => $ReportStudentAssessmentSummary->aliasField('institution_code'),
+                'institution_name' => $ReportStudentAssessmentSummary->aliasField('institution_name'),
+                'grade_code' => $ReportStudentAssessmentSummary->aliasField('grade_code'),
+                'grade_name' => $ReportStudentAssessmentSummary->aliasField('grade_name'),
+                'subject_code' => $ReportStudentAssessmentSummary->aliasField('subject_code'),
+                'subject_name' => $ReportStudentAssessmentSummary->aliasField('subject_name'),
+                'subject_weight' => $ReportStudentAssessmentSummary->aliasField('subject_weight'),
+                'assessment_code' => $ReportStudentAssessmentSummary->aliasField('assessment_code'),
+                'assessment_name' => $ReportStudentAssessmentSummary->aliasField('assessment_name'),
+                'period_code' => $ReportStudentAssessmentSummary->aliasField('period_code'),
+                'period_name' => $ReportStudentAssessmentSummary->aliasField('period_name'),
+                'period_weight' => $ReportStudentAssessmentSummary->aliasField('period_weight'),
+                'average_marks' => $ReportStudentAssessmentSummary->aliasField('average_marks')
+                ])
+                ->where([$ReportStudentAssessmentSummary->aliasField('institution_id') => $params['institution_id']])    
+                ->where([$ReportStudentAssessmentSummary->aliasField('academic_period_id') => $params['academic_period_id']])    
+                ->hydrate(false)
+                ->toArray(); 
+            if(empty($AssessmentSummaryData)){
+                $entity = [];
+                return $entity;
+            }
+
+            $entity = [];
+            foreach ($AssessmentSummaryData as $e_key => $e_val) {
+                $entity[] = [
+                    'id' => $e_val['id'],
+                    'academic_period_code' => (!empty($e_val['academic_period_code']) ? $e_val['academic_period_code'] : ''),
+                    'academic_period_name' => (!empty($e_val['academic_period_name']) ? $e_val['academic_period_name'] : ''),
+                    'area_code' => (!empty($e_val['area_code']) ? $e_val['area_code'] : ''),
+                    'area_name' => (!empty($e_val['area_name']) ? $e_val['area_name'] : ''),
+                    'institution_code' => (!empty($e_val['institution_code']) ? $e_val['institution_code'] : ''),
+                    'institution_name' => (!empty($e_val['institution_name']) ? $e_val['institution_name'] : ''),
+                    'grade_code' => (!empty($e_val['grade_code']) ? $e_val['grade_code'] : ''),
+                    'grade_name' => (!empty($e_val['grade_name']) ? $e_val['grade_name'] : ''),
+                    'subject_code' => (!empty($e_val['subject_code']) ? $e_val['subject_code'] : ''),
+                    'subject_name' => (!empty($e_val['subject_name']) ? $e_val['subject_name'] : ''),
+                    'subject_weight' => (!empty($e_val['subject_weight']) ? $e_val['subject_weight'] : ''),
+                    'assessment_code' => (!empty($e_val['assessment_code']) ? $e_val['assessment_code'] : ''),
+                    'assessment_name' => (!empty($e_val['assessment_name']) ? $e_val['assessment_name'] : ''),
+                    'period_code' => (!empty($e_val['period_code']) ? $e_val['period_code'] : ''),
+                    'period_name' => (!empty($e_val['period_name']) ? $e_val['period_name'] : ''),
+                    'period_weight' => (!empty($e_val['period_weight']) ? $e_val['period_weight'] : ''),
+                    'average_marks' => (!empty($e_val['average_marks']) ? $e_val['average_marks'] : '')
+                ];
+            }
+            return $entity;
+        }
     }
     //POCOR-6519 ends
 }
