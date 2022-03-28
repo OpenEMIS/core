@@ -335,8 +335,8 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'label' => 'FTE',
         ];
         $newFields[] = [
-            'key'   => 'staffStatus',
-            'field' => 'staffStatus',
+            'key'   => 'StaffStatuses',
+            'field' => 'employment_status',
             'type'  => 'string',
             'label' => __('Status'),
         ];
