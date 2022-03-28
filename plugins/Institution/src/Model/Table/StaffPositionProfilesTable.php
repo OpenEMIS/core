@@ -16,8 +16,6 @@ use Cake\I18n\Date;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 
-
-
 class StaffPositionProfilesTable extends ControllerActionTable
 {
     use OptionsTrait;
