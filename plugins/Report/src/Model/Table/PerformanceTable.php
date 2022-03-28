@@ -225,8 +225,11 @@ class PerformanceTable extends AppTable
                 $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
             }
             
-            $attr['options'] = $institutionOptions;
+            $attr['type'] = 'chosenSelect';
             $attr['onChangeReload'] = true;
+            $attr['attr']['multiple'] = false;
+            $attr['options'] = $institutionOptions;
+            $attr['attr']['required'] = true;
         }
 
         return $attr;
@@ -327,12 +330,15 @@ class PerformanceTable extends AppTable
     public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $areaId = $requestData->area_id;
+        $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $gradeId = $requestData->education_grade_id;
         $assessmentPeriodId = $requestData->assessment_period_id;
         $assessmentPeriodId = $requestData->assessment_period_id;
         $academicPeriodId = $requestData->academic_period_id;
+        $superAdmin = $requestData->super_admin;
+        $userId = $requestData->user_id;
+        $institutionIds = [];
         $conditions = [];
         if ($areaId > 0) {
             $conditions[$this->aliasField('area_id')] = $areaId;
@@ -342,7 +348,18 @@ class PerformanceTable extends AppTable
         }
         if ($institutionId > 0) {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
+        } else {//Added condition to get only user's accessiable institution data
+            if (!$superAdmin) {
+                $institutionObj = $this->Institutions->find('byAccess', ['userId' => $userId])->toArray();
+                if (!empty($institutionObj)) {
+                    foreach ($institutionObj as $value) {
+                        $institutionIds[] = $value->id;
+                    }
+                }
+            }
+            $conditions[$this->aliasField('institution_id IN')] = $institutionIds;
         }
+        
         if ($assessmentPeriodId > 0) {
             $conditions[$this->aliasField('assessment_period_id')] = $assessmentPeriodId;
         }
