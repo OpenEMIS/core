@@ -331,19 +331,19 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'key'   => 'class_name',
             'field' => 'class_name',
             'type'  => 'string',
-            'label' => __('Classes (homeroom teacher)'),
+            'label' => __('Classes'),
         ];
         $newFields[] = [
             'key'   => 'subject_name',
             'field' => 'subject_name',
             'type'  => 'string',
-            'label' => __('Subject (if he is a teacher)'),
+            'label' => __('Subject'),
         ];
         $newFields[] = [
             'key'   => 'staff_absence_day',
             'field' => 'staff_absence_day',
             'type'  => 'integer',
-            'label' => __('Number of absence Day'),
+            'label' => __('Absences'),
         ];
 
         $fields->exchangeArray($newFields);
