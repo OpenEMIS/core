@@ -207,7 +207,6 @@ class ClassExcelBehavior extends Behavior
 
             $footer = $this->getFooter();
             $Query = $sheet['query'];
-			//print_r($table->alias); exit;
 			$EducationGrades = TableRegistry::get('Education.EducationGrades');
 			$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 			$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
@@ -215,130 +214,196 @@ class ClassExcelBehavior extends Behavior
 			$InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
 			$InstitutionStudents = TableRegistry::get('Institution.InstitutionClassesStudents');
 			$InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+            /**
+            * added condition to make query on the bases on selected class and exporting student's list
+            * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+            * @ticket POCOR-6635 starts
+            */
+            $encodedClassId = $this->_table->request->params['pass'][1];
+            if (!empty($encodedClassId)) {
+                $decodedClassId = $this->_table->paramsDecode($encodedClassId);
+                $classId = $decodedClassId['id'];
+                $where[$InstitutionClasses->aliasField('InstitutionClasses.id')] = $classId;
+                $query = $Query
+                        ->contain([
+                                'AcademicPeriods' => [
+                                    'fields' => [
+                                        'AcademicPeriods.name'
+                                    ]
+                                ],
+                                'Institutions.Types',
+                                'InstitutionShifts.ShiftOptions',
+                                'Staff' => [
+                                    'fields' => [
+                                        'Staff.openemis_no',
+                                        'Staff.first_name',
+                                        'Staff.middle_name',
+                                        'Staff.third_name',
+                                        'Staff.last_name'
+                                    ]
+                                ]
+                        ])
+                        ->select([
+                            'academic_period_id' => 'InstitutionClasses.academic_period_id',
+                            'education_grade' => 'EducationGrades.name',
+                            'institution_code' => 'Institutions.code',
+                            'institution_name' => 'Institutions.name',
+                            'shift' => 'ShiftOptions.name',
+                            'class_name' => 'InstitutionClasses.name',
+                            'homeroom_teacher' => $Query->func()->concat([
+                                'Staff.openemis_no' => 'literal',
+                                " - ",
+                                'Staff.first_name' => 'literal',
+                                " ",
+                                'Staff.last_name' => 'literal'
+                            ]),
+                            'secondary_teacher' => $Query->func()->group_concat([
+                                'DISTINCT(SecurityUsers.openemis_no)' => 'literal',
+                                " - ",
+                                'SecurityUsers.first_name' => 'literal',
+                                " ",
+                                'SecurityUsers.last_name' => 'literal'
+                            ]),
+                            'openEMIS_ID' => 'ClassesStudents.openemis_no',
+                            'student_name' => $Query->func()->concat([
+                                'ClassesStudents.first_name' => 'literal',
+                                " ",
+                                'ClassesStudents.last_name' => 'literal'
+                            ]),
+                            'gender' => 'Genders.name',
+                            'student_status' => 'StudentStatuses.name',
+                            'special_need' => '(CASE
+                                                    WHEN SpecailNeed.id IS NULL THEN "No"
+                                                    ELSE "Yes"
+                                                END)'
+                            ])
+                        ->leftJoin(['InstitutionClassGrades' => 'institution_class_grades'], [
+                            'InstitutionClassGrades.institution_class_id = '. $InstitutionClasses->aliasField('id')
+                        ])
+                        ->leftJoin(['EducationGrades' => 'education_grades'], [
+                            'InstitutionClassGrades.education_grade_id = '. $EducationGrades->aliasField('id')
+                        ]) 
+                        ->leftJoin(['InstitutionClassesStudents' => 'institution_class_students'], [
+                            'InstitutionClassesStudents.institution_class_id = '. $InstitutionClasses->aliasField('id'),
+                            'InstitutionClassesStudents.student_status_id = '. 1
+                        ])
+                        ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                            'InstitutionClassesSecondaryStaff.institution_class_id = '. $InstitutionClasses->aliasField('id')
+                        ]) 
+                        ->leftJoin(['SecurityUsers' => 'security_users'], [
+                            'SecurityUsers.id = InstitutionClassesSecondaryStaff.secondary_staff_id'
+                        ])
+                        ->leftJoin(['StudentStatuses' => 'student_statuses'], [
+                            'StudentStatuses.id = InstitutionClassesStudents.student_status_id'
+                        ])
+                        ->leftJoin(['ClassesStudents' => 'security_users'], [
+                            'ClassesStudents.id = '. $InstitutionStudents->aliasField('student_id')
+                        ])
+                        ->leftJoin(['SpecailNeed' => 'user_special_needs_assessments'], [
+                            'SpecailNeed.security_user_id = '. $InstitutionStudents->aliasField('student_id')
+                        ])
+                        ->leftJoin(['Genders' => 'genders'], [
+                            'ClassesStudents.gender_id = Genders.id'
+                        ])
+                        ->where([$conditions, $where])
+                        ->group(['InstitutionClassesStudents.student_id']); 
+            } else {
+                $query = $Query
+                        ->select([
+                            'academic_period_id' => 'InstitutionClasses.academic_period_id',
+                            'education_grade' => 'EducationGrades.name',
+                            'institution_code' => 'Institutions.code',
+                            'institution_name' => 'Institutions.name',
+                            'shift' => 'ShiftOptions.name',
+                            'class_name' => 'InstitutionClasses.name',
+                            'homeroom_teacher' => $Query->func()->concat([
+                                'Staff.openemis_no' => 'literal',
+                                " - ",
+                                'Staff.first_name' => 'literal',
+                                " ",
+                                'Staff.last_name' => 'literal'
+                            ]),
+                            'secondary_teacher' => $Query->func()->group_concat([
+                                'DISTINCT(SecurityUsers.openemis_no)' => 'literal',
+                                " - ",
+                                'SecurityUsers.first_name' => 'literal',
+                                " ",
+                                'SecurityUsers.last_name' => 'literal'
+                            ]),
+                            'openEMIS_ID' => 'ClassesStudents.openemis_no',
+                            'student_name' => $Query->func()->concat([
+                                'ClassesStudents.first_name' => 'literal',
+                                " ",
+                                'ClassesStudents.last_name' => 'literal'
+                            ]),
+                            'gender' => 'Genders.name',
+                            'student_status' => 'StudentStatuses.name',
+                            'special_need' => '(CASE
+                                                    WHEN SpecailNeed.id IS NULL THEN "No"
+                                                    ELSE "Yes"
+                                                END)'
+                            ])
+                            ->contain([
+                                'AcademicPeriods' => [
+                                    'fields' => [
+                                        'AcademicPeriods.name'
+                                    ]
+                                ],
+                                'Institutions.Types',
+                                'InstitutionShifts.ShiftOptions',
+                                'Staff' => [
+                                    'fields' => [
+                                        'Staff.openemis_no',
+                                        'Staff.first_name',
+                                        'Staff.middle_name',
+                                        'Staff.third_name',
+                                        'Staff.last_name'
+                                    ]
+                                ]
+                            ])
+                            ->leftJoin(['InstitutionClassGrades' => 'institution_class_grades'], [
+                                'InstitutionClassGrades.institution_class_id = '. $InstitutionClasses->aliasField('id')
+                            ])
+                            ->leftJoin(['EducationGrades' => 'education_grades'], [
+                                'InstitutionClassGrades.education_grade_id = '. $EducationGrades->aliasField('id')
+                            ]) 
+                            ->leftJoin(['InstitutionClassesStudents' => 'institution_class_students'], [
+                                'InstitutionClassesStudents.institution_class_id = '. $InstitutionClasses->aliasField('id')
+                            ]) 
+                            ->leftJoin(['StudentStatuses' => 'student_statuses'], [
+                                'StudentStatuses.id = InstitutionClassesStudents.student_status_id'
+                            ])
+                            ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                                'InstitutionClassesSecondaryStaff.institution_class_id = '. $InstitutionClasses->aliasField('id')
+                            ])
+                            ->leftJoin(['SecurityUsers' => 'security_users'], [
+                                'SecurityUsers.id = '. $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
+                            ])
+                            ->leftJoin(['ClassesStudents' => 'security_users'], [
+                                'ClassesStudents.id = '. $InstitutionStudents->aliasField('student_id')
+                            ])
+                            ->leftJoin(['SpecailNeed' => 'user_special_needs_assessments'], [
+                                'SpecailNeed.security_user_id = '. $InstitutionStudents->aliasField('student_id')
+                            ])
+                            ->leftJoin(['Genders' => 'genders'], [
+                                'ClassesStudents.gender_id = Genders.id'
+                            ])
+                            ->where($conditions)//POCOR-5852
+                            ->order([
+                                'AcademicPeriods.order',
+                                'Institutions.code',
+                                'InstitutionClasses.id'
+                            ]);
+                        if($table->alias!='Classes'){
+                              $query->group([
+                                'ClassesStudents.id'
+                               ]);  
+                            }    
+            }
+            /*POCOR--6635 ends*/
 
-			$query = $Query
-				->select([
-					'academic_period_id' => 'InstitutionClasses.academic_period_id',
-					'education_grade' => 'EducationGrades.name',
-					'institution_code' => 'Institutions.code',
-					'institution_name' => 'Institutions.name',
-					'shift' => 'ShiftOptions.name',
-					'class_name' => 'InstitutionClasses.name',
-					'homeroom_teacher' => $Query->func()->concat([
-						'Staff.openemis_no' => 'literal',
-						" - ",
-						'Staff.first_name' => 'literal',
-						" ",
-						'Staff.last_name' => 'literal'
-					]),
-					'secondary_teacher' => $Query->func()->group_concat([
-						'DISTINCT(SecurityUsers.openemis_no)' => 'literal',
-						" - ",
-						'SecurityUsers.first_name' => 'literal',
-						" ",
-						'SecurityUsers.last_name' => 'literal'
-					]),
-					'openEMIS_ID' => 'ClassesStudents.openemis_no',
-					'student_name' => $Query->func()->concat([
-						'ClassesStudents.first_name' => 'literal',
-						" ",
-						'ClassesStudents.last_name' => 'literal'
-					]),
-					'gender' => 'Genders.name',
-					'student_status' => 'StudentStatuses.name',
-					'special_need' => '(CASE
-											WHEN SpecailNeed.id IS NULL THEN "No"
-											ELSE "Yes"
-										END)'
-				])
-				->contain([
-					'AcademicPeriods' => [
-						'fields' => [
-							'AcademicPeriods.name'
-						]
-					],
-					'Institutions.Types',
-					'InstitutionShifts.ShiftOptions',
-					'Staff' => [
-						'fields' => [
-							'Staff.openemis_no',
-							'Staff.first_name',
-							'Staff.middle_name',
-							'Staff.third_name',
-							'Staff.last_name'
-						]
-					]
-				])
-				->leftJoin(
-				['InstitutionClassGrades' => 'institution_class_grades'],
-				[
-					'InstitutionClassGrades.institution_class_id = '. $InstitutionClasses->aliasField('id')
-				]
-				)
-				->leftJoin(
-				['EducationGrades' => 'education_grades'],
-				[
-					'InstitutionClassGrades.education_grade_id = '. $EducationGrades->aliasField('id')
-				]
-				) 
-				->leftJoin(
-				['InstitutionClassesStudents' => 'institution_class_students'],
-				[
-					'InstitutionClassesStudents.institution_class_id = '. $InstitutionClasses->aliasField('id')
-				]
-				) 
-				->leftJoin(
-				['StudentStatuses' => 'student_statuses'],
-				[
-					'StudentStatuses.id = InstitutionClassesStudents.student_status_id'
-				]
-				)
-				->leftJoin(
-				['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'],
-				[
-					'InstitutionClassesSecondaryStaff.institution_class_id = '. $InstitutionClasses->aliasField('id')
-				]
-				)
-				->leftJoin(
-				['SecurityUsers' => 'security_users'],
-				[
-					'SecurityUsers.id = '. $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
-				]
-				)
-				->leftJoin(
-				['ClassesStudents' => 'security_users'],
-				[
-					'ClassesStudents.id = '. $InstitutionStudents->aliasField('student_id')
-				]
-				)
-				->leftJoin(
-				['SpecailNeed' => 'user_special_needs_assessments'],
-				[
-					'SpecailNeed.security_user_id = '. $InstitutionStudents->aliasField('student_id')
-				]
-				)
-				->leftJoin(
-				['Genders' => 'genders'],
-				[
-					'ClassesStudents.gender_id = Genders.id'
-				]
-				)
-                //POCOR-5852 starts
-                ->where($conditions)
-                //POCOR-5852 ends
-				
-				->order([
-					'AcademicPeriods.order',
-					'Institutions.code',
-					'InstitutionClasses.id'
-				]);
-                if($table->alias!='Classes'){
-                  $query->group([
-                    'ClassesStudents.id'
-                   ]);  
-                }
-                //POCOR-5852 starts
-                $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            //POCOR-5852 starts
+            $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                     return $results->map(function ($row) {
                         $Users = TableRegistry::get('security_users');
                         $user_data= $Users
@@ -622,8 +687,17 @@ class ClassExcelBehavior extends Behavior
         $module = $table->alias();
         $language = I18n::locale();
         $excludedTypes = ['binary'];
-        $columns = array_diff($columns, $excludes);
-
+        /*POCOR-6635 starts - added condition to export individual class with student's list*/
+        $encodedClassId = $this->_table->request->params['pass'][1];
+        if (!empty($encodedClassId)) {
+            $columns = ['institution_code','institution_name','academic_period_id',
+                    'class_name','shift','education_grade','homeroom_teacher','secondary_teacher',
+                    'openEMIS_ID','student_name','gender','student_status',
+                    'special_need'];
+        } else {
+            $columns = array_diff($columns, $excludes);
+        }
+        /*POCOR-6635 ends */
         foreach ($columns as $col) {
             $field = $schema->column($col);
             if (!in_array($field['type'], $excludedTypes)) {
