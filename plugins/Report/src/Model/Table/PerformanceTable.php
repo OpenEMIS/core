@@ -246,8 +246,21 @@ class PerformanceTable extends AppTable
         $institutionId = $request->data[$this->alias()]['institution_id'];
         $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
         $gradeTable = $this->Institutions->InstitutionGrades;
+        $institutionIds = [];
         if ($institutionId > 0) {
             $condition[$gradeTable->aliasField('institution_id')] = $institutionId;
+        } else {
+            $superAdmin = $this->Auth->user('super_admin');
+            $userId = $this->Auth->user('id');
+            if (!$superAdmin) {
+                $institutionObj = $this->Institutions->find('byAccess', ['userId' => $userId])->toArray();
+                if (!empty($institutionObj)) {
+                    foreach ($institutionObj as $value) {
+                        $institutionIds[] = $value->id;
+                    }
+                }
+                $conditions[$gradeTable->aliasField('institution_id IN')] = $institutionIds;
+            }
         }
         $gradeOptions = $this->EducationGrades
                         ->find('list', [
@@ -356,8 +369,8 @@ class PerformanceTable extends AppTable
                         $institutionIds[] = $value->id;
                     }
                 }
+                $conditions[$this->aliasField('institution_id IN')] = $institutionIds;
             }
-            $conditions[$this->aliasField('institution_id IN')] = $institutionIds;
         }
         
         if ($assessmentPeriodId > 0) {
