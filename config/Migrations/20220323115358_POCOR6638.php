@@ -14,20 +14,21 @@ class POCOR6638 extends AbstractMigration
     {
 		
 		//backup
-        $this->execute('CREATE TABLE `z_6638_institution_report_cards` LIKE `institution_report_cards`');
-        $this->execute('INSERT INTO `z_6638_institution_report_cards` SELECT * FROM `institution_report_cards`');
+        $this->execute('DROP TABLE IF EXISTS `zz_6638_institution_report_cards`');
+        $this->execute('CREATE TABLE `zz_6638_institution_report_cards` LIKE `institution_report_cards`');
+        $this->execute('INSERT INTO `zz_6638_institution_report_cards` SELECT * FROM `institution_report_cards`');
 		
 		$this->execute("ALTER TABLE `institution_report_cards` CHANGE `report_card_id` `report_card_id` INT(11) NOT NULL COMMENT 'links to report_cards.id'");
 		$this->execute("ALTER TABLE `institution_report_cards` CHANGE `institution_id` `institution_id` INT(11) NOT NULL COMMENT 'links to institutions.id'");
      }
 	 
 	 
-	 // rollback
+	 
     public function down()
     {
-       // meal_programmes
+       // rollback
        $this->execute('DROP TABLE IF EXISTS `institution_report_cards`');
-       $this->execute('RENAME TABLE `z_6638_institution_report_cards` TO `institution_report_cards`');
+       $this->execute('RENAME TABLE `zz_6638_institution_report_cards` TO `institution_report_cards`');
     }
 	 
 	 
