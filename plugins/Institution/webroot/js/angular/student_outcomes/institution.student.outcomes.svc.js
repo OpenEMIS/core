@@ -70,7 +70,8 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         return InstitutionClassStudents
             .select()
             .contain(['Users','StudentStatuses'])
-            .where({institution_class_id: classId})
+            .where({institution_class_id: classId ,
+                student_status_id : 1})
             .order(['Users.first_name', 'Users.last_name'])
             .ajax({success: success, defer:true});
     }

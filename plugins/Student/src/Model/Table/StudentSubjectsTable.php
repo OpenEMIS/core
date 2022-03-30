@@ -211,7 +211,6 @@ class StudentSubjectsTable extends ControllerActionTable
                 [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()],
                 [
                     $InstitutionClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $InstitutionClassStudents->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
                     $InstitutionClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $InstitutionClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $InstitutionClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
