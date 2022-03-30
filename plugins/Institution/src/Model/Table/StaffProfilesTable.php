@@ -118,7 +118,7 @@ class StaffProfilesTable extends ControllerActionTable
             ];
             
             // Download button, status must be generated or published
-            if ($this->AccessControl->check(['Profiles', 'StaffProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+            if ($this->AccessControl->check(['Institutions', 'StaffProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
                 $buttons['download'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
@@ -134,7 +134,7 @@ class StaffProfilesTable extends ControllerActionTable
             }
 
             // Generate button, all statuses
-            if ($this->AccessControl->check(['Profiles', 'StaffProfiles', 'generate'])) {
+            if ($this->AccessControl->check(['Institutions', 'StaffProfiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->StaffTemplates
@@ -170,7 +170,7 @@ class StaffProfilesTable extends ControllerActionTable
             }
 
             // Publish button, status must be generated
-            if ($this->AccessControl->check(['Profiles', 'StaffProfiles', 'publish']) && $entity->has('report_card_status') 
+            if ($this->AccessControl->check(['Institutions', 'StaffProfiles', 'publish']) && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::GENERATED 
                          || $entity->report_card_status == '12' 
                        )
@@ -184,7 +184,7 @@ class StaffProfilesTable extends ControllerActionTable
             }
 
             // Unpublish button, status must be published
-            if ($this->AccessControl->check(['Profiles', 'StaffProfiles', 'unpublish']) 
+            if ($this->AccessControl->check(['Institutions', 'StaffProfiles', 'unpublish']) 
                     && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::PUBLISHED 
                           || $entity->report_card_status == '16'
@@ -199,7 +199,7 @@ class StaffProfilesTable extends ControllerActionTable
             }
 
             // Single email button, status must be published
-            if ($this->AccessControl->check(['Profiles', 'StaffProfiles', 'email']) 
+            if ($this->AccessControl->check(['Institutions', 'StaffProfiles', 'email']) 
                     && $entity->has('report_card_status')
                     && ( $entity->report_card_status == self::PUBLISHED 
                             || $entity->report_card_status == '16' 
