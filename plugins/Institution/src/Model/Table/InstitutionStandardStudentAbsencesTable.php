@@ -242,7 +242,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             { 
                 $newFields[]=[
                 'key'   => 'Day'.$i,
-                'field' => 'Day'.$i,
+                'field' => 'absent_date',
                 'type'  => 'int',
                 'label' => __('Day'.$i),
                 ];
@@ -308,9 +308,9 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                 $data = $absenceDays->toArray();
                 $entity->absence_date = '';
                 foreach($data as $key=>$val){
-                    $entity->absence_date = $val['absent_date'];
+                    $entity->absence_date = '2018-05-05';
                 }
-                 return $entity->absence_date;
+                 $days['absent_date'] =  $entity->absence_date;
             }
     }
     
