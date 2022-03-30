@@ -284,8 +284,7 @@ class ClassExcelBehavior extends Behavior
                             'InstitutionClassGrades.education_grade_id = '. $EducationGrades->aliasField('id')
                         ]) 
                         ->leftJoin(['InstitutionClassesStudents' => 'institution_class_students'], [
-                            'InstitutionClassesStudents.institution_class_id = '. $InstitutionClasses->aliasField('id'),
-                            'InstitutionClassesStudents.student_status_id = '. 1
+                            'InstitutionClassesStudents.institution_class_id = '. $InstitutionClasses->aliasField('id')
                         ])
                         ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
                             'InstitutionClassesSecondaryStaff.institution_class_id = '. $InstitutionClasses->aliasField('id')
