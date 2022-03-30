@@ -32,6 +32,15 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
         $this->MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
         
+            // POCOR-6153 start
+            $this->addBehavior('Excel', [
+            'excludes' => ['academic_period_id', 'institution_id', 'comment'],
+            'pages' => ['index'],
+            'autoFields' => false
+            ]);
+        // POCOR-6153 end
+        
+        
     }
 
     // public function validationDefault(Validator $validator)
@@ -214,9 +223,11 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     public function onUpdateFieldMealProgrammesId(Event $event, array $attr, $action, $request)
     {
-        // echo "<pre>"; print_r($request); die();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        // $session = $this->request->session();
+        // $institutionId = $session->read('Institution.Institutions.id');
+        //POCOR-6434[START]
+        $institutionId = $request->data['InstitutionDistributions'];
+        //POCOR-6434[END]
 
         list($levelOptions, $selectedLevel) = array_values($this->getNameOptions($institutionId));
         $attr['options'] = $levelOptions;
@@ -241,15 +252,24 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     }
 
-    public function getNameOptions($institutionId)
+    public function getNameOptions($options)
     {
+        $institutionId = $options['institution_id'];
+
+        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+
         $MealProgramme = TableRegistry::get('Meal.MealProgrammes');
         $levelOptions = $MealProgramme
         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+        ->innerJoin(
+            [$MealInstitutionProgrammes->alias() => $MealInstitutionProgrammes->table()], [
+                $MealProgramme->aliasField('id = ') . $MealInstitutionProgrammes->aliasField('meal_programme_id')
+            ]
+        )
         ->where([
-            $MealProgramme->aliasField('institution_id') => $institutionId])            
+            $MealInstitutionProgrammes->aliasField('institution_id') => $institutionId])            
         ->orWhere([ 
-            $MealProgramme->aliasField('institution_id') => 0 ])
+            $MealInstitutionProgrammes->aliasField('institution_id') => 0 ])
         ->toArray();
 
         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);

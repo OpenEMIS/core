@@ -99,11 +99,11 @@ class CompetencyTemplatesTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('academic_period_id', [
+        /*$this->field('academic_period_id', [
             'type' => 'select',
             'select' => false,
             'entity' => $entity
-        ]);
+        ]);*/
         $this->field('education_programme_id', [
             'type' => 'select',
             'entity' => $entity

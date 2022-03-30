@@ -85,4 +85,40 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 
 		return $results;
 	}
+
+	/*POCOR-6498 starts*/
+	public function getNextProgrammeGradeList($id, $periodId) {
+		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+
+		$nextProgrammeList = $this->getNextProgrammeList($id);
+
+		if (!empty($nextProgrammeList)) {
+			$results = [];
+			$ids = [];
+			foreach ($nextProgrammeList as $key => $nextProgrammeId) {
+               $nextProgrammeGradeResults = $EducationGrades
+					->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
+					->find('visible')
+					->find('order')
+					->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+					->where([
+						$EducationGrades->aliasField('education_programme_id') => $nextProgrammeId,
+						'EducationSystems.academic_period_id' => $periodId,
+						'EducationProgrammes.visible' => 1
+					])
+					->order([$EducationGrades->aliasField('order')])
+					->toArray();
+					
+				if (!is_null(key($nextProgrammeGradeResults))) {
+					$results = $results + [key($nextProgrammeGradeResults) => current($nextProgrammeGradeResults)];
+				}
+				
+			}
+		} else {
+			$results = [];
+		}
+		
+		return $results;
+	}
+	/*POCOR-6498 ends*/
 }

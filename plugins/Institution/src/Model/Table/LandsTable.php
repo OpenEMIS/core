@@ -1500,7 +1500,13 @@ class LandsTable extends ControllerActionTable
                 ->LeftJoin([$infrastructureOwnerships->alias() => $infrastructureOwnerships->table()], [
                     $this->aliasField('land_status_id').'  = ' . $infrastructureOwnerships->aliasField('id'),
                 ])
-                ->where($conditions);
+                ->where($conditions)
+                /*POCOR-6628 starts - filter result on the bases institution's shift*/
+                ->group([
+                    $this->aliasField('institution_id'),
+                    $this->aliasField('id')
+                ]);
+                /*POCOR-ends*/
         } else {
             if($landType->name == 'Building') { $level = "Buildings"; $type ='building';}
             if($landType->name == 'Floor') { $level = "Floors"; $type ='floor';}
@@ -1508,7 +1514,9 @@ class LandsTable extends ControllerActionTable
             if (!empty($institutionId)) {
                 $conditions['Institution'.$level.'.'.'institution_id'] = $institutionId;
                 $conditions['Institution'.$level.'.'.'academic_period_id'] = $academicPeriodId;
+                $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
             }
+
             //POCOR-6263 start
             if($landType->name == 'Room') { 
             $query
@@ -1574,8 +1582,19 @@ class LandsTable extends ControllerActionTable
                     $query->LeftJoin([$roomTypes->alias() => $roomTypes->table()], [
                         'Institution'.$level.'.'.$type.'_type_id = ' . $roomTypes->aliasField('id')
                     ]);
-                } //POCOR-6263 end   
+                } //POCOR-6263 end 
+                /*POCOR-6628 starts - adding condition to get on In Use room status id records*/
+                if($landType->name == 'Room') {
+                    $query->where(['Institution'.$level.'.'.$type.'_status_id' => 1]);
+                }
+                /*POCOR-6628 ends*/   
             $query->where($conditions);
+            /*POCOR-6628 starts - filter result on the bases institution's shift*/
+            $query->group([
+                'Institution'.$level.'.'.'institution_id',
+                'Institution'.$level.'.'.'id'
+            ]);
+            /*POCOR-6628 ends*/
         }
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($landType) {
@@ -1662,6 +1681,8 @@ class LandsTable extends ControllerActionTable
                                             ])
                                             ->where([
                                                 $infrastructureCustomFields->alias('field_type') => 'CHECKBOX',
+                                                // $infrastructureCustomFieldOptions->aliasField('id') => $data->number_value,
+                                                'CustomFieldValues.infrastructure_custom_field_id = ' . $data->custom_field_id,
                                                 'CustomFieldValues.institution_'.lcfirst($landType->name).'_id  = ' . $row['level_id']])
                                             ->group([$infrastructureCustomFieldOptions->aliasField('name')])
                                             ->toArray();
@@ -1685,6 +1706,10 @@ class LandsTable extends ControllerActionTable
                                 }
                                 $row[$data->custom_field_id] = $opt;
                             }
+                        }
+                        
+                        if(!empty($data->number_value) && $data->field_type == 'NUMBER') {
+                            $row[$data->custom_field_id] = $data->number_value;
                         }
                         /*POCOR-6376 ends*/
                         if(!empty($data->decimal_value)) {
