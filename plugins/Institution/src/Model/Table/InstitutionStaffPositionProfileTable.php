@@ -155,10 +155,10 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 $this->aliasField('staff_type_id'),
                 $this->aliasField('staff_status_id'),
                 $this->aliasField('institution_id'),
-                $this->aliasField('institution_position_id'),
-                'class_name' => 'InstitutionClasses.name',
+                'position_id'=> $this->aliasField('institution_position_id'),
                 'subject_name' => 'InstitutionSubjects.name',
                 'academic_period' => 'AcademicPeriods.name',
+                'academic_id' => 'AcademicPeriods.id',
                // 'absences_day' => $this->find()->func()->sum('InstitutionStaffLeave.number_of_days'),
             ])
             ->contain([
@@ -175,16 +175,10 @@ class InstitutionStaffPositionProfileTable extends AppTable
                         'middle_name' => 'Users.middle_name',
                         'third_name' => 'Users.third_name',
                         'last_name' => 'Users.last_name',
-                        'identity_number' => 'Users.identity_number',
                         'Identities_number' => 'Users.username',
-                        'identity_type_id' => 'Users.identity_type_id'
                     ]
                 ],
-                'Users.IdentityTypes' => [
-                    'fields' => [
-                         'identity_type_name' =>'IdentityTypes.name'
-                    ]
-                ],
+                
                 'StaffTypes' => [
                     'fields' => [
                         'StaffTypes.name'
@@ -232,9 +226,6 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 [$academic_period->alias() => $academic_period->table()],
                 [$academic_period->aliasField('id = ') . $academicPeriodId]
             )
-            ->leftJoin(['InstitutionClasses' => 'institution_classes'], [
-                            $this->aliasfield('staff_id') . ' = '.'InstitutionClasses.staff_id',
-                        ])
             ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
                             $this->aliasfield('staff_id') . ' = '.'InstitutionSubjectStaff.staff_id',
                         ])
@@ -341,14 +332,14 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'label' => __('Status'),
         ];
         $newFields[] = [
-            'key'   => 'Users.IdentityTypes',
-            'field' => 'identity_type_name',
+            'key'   => 'identity_type',
+            'field' => 'identity_type',
             'type'  => 'string',
             'label' => __('Identity Type'),
         ];
         
         $newFields[] = [
-            'key' => 'Users.identity_number',
+            'key' => 'identity_number',
             'field' => 'identity_number',
             'type' => 'string',
             'label' => __('Identity Number')
@@ -361,8 +352,8 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'label' => __('Academic Period'),
         ];
         $newFields[] = [
-            'key'   => 'class_name',
-            'field' => 'class_name',
+            'key'   => 'institution_classes',
+            'field' => 'institution_classes',
             'type'  => 'string',
             'label' => __('Classes'),
         ];
@@ -409,5 +400,81 @@ class InstitutionStaffPositionProfileTable extends AppTable
             return '';
     }
 
-    
+    public function onExcelGetInstitutionClasses(Event $event, Entity $entity)
+    {
+        $classname = [];
+        $staff = TableRegistry::get('Institution.InstitutionStaff');
+        $positions = TableRegistry::get('Institution.InstitutionPositions');
+        $homeRoomteacher = $staff->find()
+                            ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
+                            $this->aliasfield('institution_position_id') . ' = '.'InstitutionPositions.id',
+                        ])
+                        ->where(['InstitutionPositions.is_homeroom'=>1,
+                            'institution_id'=>$entity->institution_id
+                    ]);
+        if(!empty($homeRoomteacher)){                
+            if ($entity->staff_id) 
+            {
+                $class = TableRegistry::get('Institution.InstitutionClasses');
+                $getclass = $class->find()
+                            ->select(['name'])
+                            ->where(['staff_id'=>$entity->staff_id,
+                                'academic_period_id'=>$entity->academic_id
+                        ]);
+                    if($getclass!=null){
+                        $instituteclass = $getclass->toArray();
+                        foreach ($instituteclass as $key => $value) {
+                            $classname[] = $value->name;
+                        }
+                }
+
+                return implode(', ', $classname);
+            }
+        }
+    }
+
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentitiesResult = $userIdentities->find()
+            ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
+            ->select([
+                'identity_number' => $userIdentities->aliasField('number'),
+                'identity_type_name' => 'IdentityTypes.name',
+                'default_name' => 'IdentityTypes.default',
+            ])
+            ->where([$userIdentities->aliasField('security_user_id') => $entity->staff_id])
+            ->order([$userIdentities->aliasField('id DESC')])
+            ->hydrate(false)->toArray();
+            $userIdentitiesdata = $userIdentities->find()
+            ->where([$userIdentities->aliasField('security_user_id') => $entity->staff_id])
+            ->order([$userIdentities->aliasField('id DESC')])
+            ->hydrate(false)->toArray();
+            
+            $entity->custom_identity_number = '';
+            $other_identity_array = [];
+            if (!empty($userIdentitiesResult)) {
+                foreach ($userIdentitiesResult as $user_identities_data ) {
+                    if ($user_identities_data['default_name']==1 && count($userIdentitiesdata)>1) {
+                        $entity->custom_identity_number = $user_identities_data['identity_number'];
+                        $entity->custom_identity_name   = $user_identities_data['identity_type_name'];
+                    }elseif($user_identities_data['default_name']!=1 && count($userIdentitiesdata)>1){
+                        $entity->custom_identity_name = '';
+                        $entity->custom_identity_number='';
+                    }elseif($user_identities_data['identity_type_name']=='Passport') {
+                        $entity->custom_identity_name = '';
+                        $entity->custom_identity_number='';
+                    }elseif($user_identities_data['identity_type_name']=='Birth Certificate') {
+                        $entity->custom_identity_number = $user_identities_data['identity_number'];
+                        $entity->custom_identity_name   = $user_identities_data['identity_type_name'];
+                    }
+            }
+        $entity->custom_identity_other_data = implode(',', $other_identity_array);
+        return $entity->custom_identity_name;
+    }
+}
+    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    {
+        return $entity->custom_identity_number;
+    }
 }
