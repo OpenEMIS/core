@@ -249,7 +249,16 @@ class StudentProfilesTable extends ControllerActionTable
         $selectedReportCard = !is_null($this->request->query('student_profile_template_id')) ? $this->request->query('student_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//End
-        $where[$this->aliasField('institution_id')] = $institutionId;	
+        $userObj = $this->Auth->user();
+        $userId = $userObj['id'];
+        $isStudent = $userObj['is_student'];
+        $isStaff = $userObj['is_staff'];
+        $isGuardian = $userObj['is_guardian'];
+        //if logged In user is just a student
+        if ($isStudent && !$isStaff && !$isGuardian) {
+            $where[$this->aliasField('student_id')] = $userId;
+        }
+        	
         $query
             ->select([
                 'student_profile_template_id' => $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id'),
@@ -284,6 +293,7 @@ class StudentProfilesTable extends ControllerActionTable
             ->where($where)
             // ->where([$this->aliasField('student_status_id') => 1])
             ->all();
+            //echo "<pre>";print_r($query);die();
             Log::write('debug',$query);
         if (is_null($this->request->query('sort'))) {
             $query
