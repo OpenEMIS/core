@@ -280,8 +280,19 @@ class AbsencesTable extends ControllerActionTable
                     ])->toArray(); 
             } elseif ($this->controller->name == 'Profiles') {
                 $userData = $this->Session->read();
+                /**
+                 * Need to add current login id as param when no data found in existing variable
+                 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+                 * @ticket POCOR-6548
+                 */
+                //# START: [POCOR-6548] Check if user data not found then add current login user data
                 $userId =  $userData['Student']['ExaminationResults']['student_id'];
+                if ($userId == null || empty($userId) || $userId == '') {
+                    $studentId['id'] = $userData['Student']['ExaminationResults']['student_id'];
+                } else {
                 $studentId = $this->ControllerAction->paramsDecode($userId);
+                }
+                //# END: [POCOR-6548] Check if user data not found then add current login user data
                 
                 $query
                     ->find('all')

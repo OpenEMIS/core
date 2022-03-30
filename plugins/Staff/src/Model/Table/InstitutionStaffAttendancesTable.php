@@ -9,6 +9,7 @@ use Cake\I18n\Time;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\TableRegistry;
 
 class InstitutionStaffAttendancesTable extends ControllerActionTable {
 
@@ -30,6 +31,11 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
 
         return $validator
+                        // commented this for ticket POCOR-6570 time_in validation was not required
+                        // ->add('time_in', 'leavePeriodOverlap', [
+                        //     'rule' => ['noStaffLeaveOverlapping'],
+                        //     'message' => __('Attendance applied overlaps existing records.')
+                        // ])
                         ->allowEmpty('time_out')
                         ->add('time_out', 'timeInShouldNotEmpty', [
                             'rule' => function($value, $context) {
@@ -61,7 +67,7 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
     
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        
+
         $this->startUpdateStaffLateAttendance($entity->staff_id, $entity->date->format('Y-m-d'));
         
     }

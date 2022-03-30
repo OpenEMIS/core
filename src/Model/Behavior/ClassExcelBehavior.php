@@ -207,7 +207,7 @@ class ClassExcelBehavior extends Behavior
 
             $footer = $this->getFooter();
             $Query = $sheet['query'];
-			
+			//print_r($table->alias); exit;
 			$EducationGrades = TableRegistry::get('Education.EducationGrades');
 			$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 			$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
@@ -232,7 +232,7 @@ class ClassExcelBehavior extends Behavior
 						'Staff.last_name' => 'literal'
 					]),
 					'secondary_teacher' => $Query->func()->group_concat([
-						'SecurityUsers.openemis_no' => 'literal',
+						'DISTINCT(SecurityUsers.openemis_no)' => 'literal',
 						" - ",
 						'SecurityUsers.first_name' => 'literal',
 						" ",
@@ -326,14 +326,17 @@ class ClassExcelBehavior extends Behavior
                 //POCOR-5852 starts
                 ->where($conditions)
                 //POCOR-5852 ends
-				->group([
-					'ClassesStudents.id'
-				])
+				
 				->order([
 					'AcademicPeriods.order',
 					'Institutions.code',
 					'InstitutionClasses.id'
 				]);
+                if($table->alias!='Classes'){
+                  $query->group([
+                    'ClassesStudents.id'
+                   ]);  
+                }
                 //POCOR-5852 starts
                 $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                     return $results->map(function ($row) {

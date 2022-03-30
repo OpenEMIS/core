@@ -456,6 +456,7 @@ class StudentAttendancesTable extends ControllerActionTable
                         $StudentAbsencesPeriodDetails->aliasField('education_grade_id = ') => $educationGradeId,
                         $StudentAbsencesPeriodDetails->aliasField('student_id IN ') => $studentList,
                         $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
+                        $StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId,
                         'AND' => [
                             $StudentAbsencesPeriodDetails->aliasField('date >= ') => $weekStartDay,
                             $StudentAbsencesPeriodDetails->aliasField('date <= ') => $weekEndDay,
@@ -475,6 +476,7 @@ class StudentAttendancesTable extends ControllerActionTable
                         $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
                         $StudentAttendanceMarkedRecords->aliasField('education_grade_id = ') => $educationGradeId,
                         $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
+                        $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId,
                         $StudentAttendanceMarkedRecords->aliasField('date >= ') => $weekStartDay,
                         $StudentAttendanceMarkedRecords->aliasField('date <= ') => $weekEndDay
                     ])
@@ -565,36 +567,65 @@ class StudentAttendancesTable extends ControllerActionTable
                     });
             }
         }
-        $studentId = [];
-        $studentWithdraw = TableRegistry::get('institution_student_withdraw');
-		$studentWithdrawData = $studentWithdraw->find()
-            ->select([
-					'student_id' => 'institution_student_withdraw.student_id',
-				])
-                /*POCOR-6062 starts*/
-                ->leftJoin([$InstitutionStudents->alias() => $InstitutionStudents->table()], [
-                    $InstitutionStudents->aliasField('student_id = ') . $studentWithdraw->aliasField('student_id'),
-                    $InstitutionStudents->aliasField('education_grade_id = ') . $studentWithdraw->aliasField('education_grade_id'),
-                    $InstitutionStudents->aliasField('academic_period_id = ') . $studentWithdraw->aliasField('academic_period_id'),
-                    $InstitutionStudents->aliasField('institution_id = ') . $studentWithdraw->aliasField('institution_id')
-                ])/*POCOR-6062 ends*/
-				->where([
-                    $studentWithdraw->aliasField('institution_id') => $institutionId,
-                    $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
-                    $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
+        //POCOR-6547[START]
+        if ($day != -1) {
+            $studentId = [];
+            $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+            $studentWithdrawData = $studentWithdraw->find()
+                ->select([
+                        'student_id' => 'institution_student_withdraw.student_id',
+                    ])
+                    /*POCOR-6062 starts*/
+                    ->leftJoin([$InstitutionStudents->alias() => $InstitutionStudents->table()], [
+                        $InstitutionStudents->aliasField('student_id = ') . $studentWithdraw->aliasField('student_id'),
+                        $InstitutionStudents->aliasField('education_grade_id = ') . $studentWithdraw->aliasField('education_grade_id'),
+                        $InstitutionStudents->aliasField('academic_period_id = ') . $studentWithdraw->aliasField('academic_period_id'),
+                        $InstitutionStudents->aliasField('institution_id = ') . $studentWithdraw->aliasField('institution_id')
+                    ])/*POCOR-6062 ends*/
+                    ->where([
+                        $studentWithdraw->aliasField('institution_id') => $institutionId,
+                        $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
+                        $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
 
-                   // $studentWithdraw->aliasField('effective_date >= ') => $day,
-                    $studentWithdraw->aliasField('effective_date <= ') => $findDay,
-                    $InstitutionStudents->aliasField('student_status_id !=') => 1 //POCOR-6062
-                ])
-                ->toArray();
-               
-          if ($studentWithdrawData) {
-              foreach($studentWithdrawData as $studenetVal){
-                   $studentId[] = $studenetVal['student_id'];
-              }  
-                $query->where([$this->aliasField('student_id NOT IN') => $studentId]);             
-          }
+                    // $studentWithdraw->aliasField('effective_date >= ') => $day,
+                        $studentWithdraw->aliasField('effective_date >= ') => $findDay[0],
+                        $studentWithdraw->aliasField('effective_date <= ') => $findDay[1],
+                        $InstitutionStudents->aliasField('student_status_id !=') => 1 //POCOR-6062
+                    ])
+                    ->toArray();
+        }
+        else{
+            $studentId = [];
+            $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+            $studentWithdrawData = $studentWithdraw->find()
+                ->select([
+                        'student_id' => 'institution_student_withdraw.student_id',
+                    ])
+                    /*POCOR-6062 starts*/
+                    ->leftJoin([$InstitutionStudents->alias() => $InstitutionStudents->table()], [
+                        $InstitutionStudents->aliasField('student_id = ') . $studentWithdraw->aliasField('student_id'),
+                        $InstitutionStudents->aliasField('education_grade_id = ') . $studentWithdraw->aliasField('education_grade_id'),
+                        $InstitutionStudents->aliasField('academic_period_id = ') . $studentWithdraw->aliasField('academic_period_id'),
+                        $InstitutionStudents->aliasField('institution_id = ') . $studentWithdraw->aliasField('institution_id')
+                    ])/*POCOR-6062 ends*/
+                    ->where([
+                        $studentWithdraw->aliasField('institution_id') => $institutionId,
+                        $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
+                        $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
+
+                    // $studentWithdraw->aliasField('effective_date >= ') => $day,
+                        $studentWithdraw->aliasField('effective_date <= ') => $findDay,
+                        $InstitutionStudents->aliasField('student_status_id !=') => 1 //POCOR-6062
+                    ])
+                    ->toArray(); 
+        }
+        //POCOR-6547[END]       
+        if ($studentWithdrawData) {
+            foreach($studentWithdrawData as $studenetVal){
+                $studentId[] = $studenetVal['student_id'];
+            }  
+            $query->where([$this->aliasField('student_id NOT IN') => $studentId]);             
+        }
         return $query;
     }
 

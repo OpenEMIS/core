@@ -299,7 +299,14 @@ class ProfilesController extends AppController
             
             if (!empty($studentId)) {
                 $sId = $this->ControllerAction->paramsDecode($studentId);
-                $student_id = $sId['id'];
+                // $student_id = $sId['id'];
+
+
+                if(isset($sId['id']) && !empty($sId['id'])){
+                    $student_id = $sId['id'];
+                }else{
+                    $student_id = $sId['security_user_id'];
+                }
                 
                 if ($action == 'StudentReportCards') {
                     //$student_id = $sId['student_id']; //POCOR-5979
@@ -365,7 +372,9 @@ class ProfilesController extends AppController
 
             if (!in_array($alias, $excludedModel)) {
                 ## Enabled in POCOR-6314
-                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications', 'StaffTrainingApplications', 'StaffTrainings'];
+
+                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications', 'StaffTrainingApplications', 'StaffTrainings','EmploymentStatuses', 'Leave'];
+
                 if (in_array($alias, $enabledCrudOperation)) {
                     $model->toggle('add', true);
                     $model->toggle('edit', true);
@@ -541,7 +550,20 @@ class ProfilesController extends AppController
         if ($model->hasField('security_user_id')) {
             $studentId = $session->read('Student.Students.id'); 
             if (!empty($studentId)) {
+                /**
+                 * Need to add current login id as param when no data found in existing variable
+                 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+                 * @ticket POCOR-6548
+                 */
+                //# START: [POCOR-6548] Check if user data not found then add current login user data
+                if (is_int($studentId)) {
+                    $sId = $studentId;
+                } else if ($studentId == null || empty($studentId) || $studentId == '') {
+                    $sId = $loginUserId;
+                } else {
                 $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
+                }
+                //# END: [POCOR-6548] Check if user data not found then add current login user data
                 $query->where([$model->aliasField('security_user_id') => $sId]);
             } else {
                 $query->where([$model->aliasField('security_user_id') => $loginUserId]);
