@@ -126,7 +126,7 @@ class StudentProfilesTable extends ControllerActionTable
             ];
 			
             // Download button, status must be generated or published
-			if ($this->AccessControl->check(['Profiles', 'StudentProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+			if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 // $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
                 // $buttons['download'] = [
                 //     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
@@ -142,7 +142,7 @@ class StudentProfilesTable extends ControllerActionTable
             }
 
             // Generate button, all statuses
-            if ($this->AccessControl->check(['Profiles', 'StudentProfiles', 'generate'])) {
+            if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->StudentTemplates
