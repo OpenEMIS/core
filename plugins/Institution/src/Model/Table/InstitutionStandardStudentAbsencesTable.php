@@ -24,7 +24,9 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' =>'institution_class_id']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades', 'foreignKey' =>'education_grade_id']);
         $this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
         $this->belongsTo('InstitutionStudentAbsenceDays', ['className' => 'Institution.InstitutionStudentAbsenceDays', 'foreignKey' =>'institution_student_absence_day_id']);
 
         // Behaviours
@@ -109,19 +111,21 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $classId = $requestData->institution_class_id;
         $month = $requestData->month;
         $absentDays = TableRegistry::get('Institution. InstitutionStudentAbsenceDays');
+        $where = [];
         if ($gradeId != -1) {
-            $query->where([
-                $this->aliasField('education_grade_id') => $gradeId
-            ]);
+               $where[$this->aliasField('education_grade_id')] = $gradeId;
         }
+        $where[$this->aliasField('academic_period_id')] = $academicPeriodId;
+        $where[$this->aliasField('institution_id')] = $institutionId;
+        $where[$this->aliasField('institution_class_id')] = $classId;
         $date =  '"'.$year.'-'.$month.'%"';
         $query
             ->select([
                 $this->aliasField('student_id'),
                 $this->aliasField('institution_id'),
-                $this->aliasField('education_grade_id'),
-                $this->aliasField('institution_class_id'),
-                $this->aliasField('date'),
+                'education_grades'=>$this->aliasField('education_grade_id'),
+                'institution_class'=>$this->aliasField('institution_class_id'),
+                'date'=> $this->aliasField('date'),
                 'openemis_no' => 'Users.openemis_no',
                 'first_name' => 'Users.first_name',
                 'middle_name' => 'Users.middle_name',
@@ -137,30 +141,45 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                         'middle_name' => 'Users.middle_name',
                         'third_name' => 'Users.third_name',
                         'last_name' => 'Users.last_name',
-                        'identity_number' => 'Users.identity_number',
                    ]
              ],
+             'AcademicPeriods' => [
+                    'fields' => [
+                        'academic_period_id'=>'AcademicPeriods.id',
+                        'academic_period'=>'AcademicPeriods.name'
+                    ]
+                ],
+                'Institutions' => [
+                    'fields' => [
+                       'institution_name'=> 'Institutions.name',
+                        'institution_code'=>'Institutions.code'
+                    ]
+                ],
+                'InstitutionClasses' => [
+                    'fields' => [
+                       'institution_Class_name'=> 'InstitutionClasses.name'
+                    ]
+                ],
+                'EducationGrades' => [
+                    'fields' => [
+                       'education_grade_name'=> 'EducationGrades.name',
+                    ]
+                ],
             ])
             ->leftJoin([$absentDays->alias() => $absentDays->table()],
                 [$absentDays->aliasField('id = ') . $this->aliasField('institution_student_absence_day_id')]
             )
-            
-            //->andWhere([$this->aliasField('date LIKE ".$date."')]);
-           ->where([$this->aliasField('date') . ' LIKE ' =>  ".$date."])
-           ->andWhere([$this->aliasField('academic_period_id') => $academicPeriodId,
-                    $this->aliasField('institution_id') => $institutionId,
-                    $this->aliasField('institution_class_id') => $classId,
-                    $this->aliasField('education_grade_id') => $gradeId,
-                ]);
-            //print_r($query->Sql());die;
+            ->Where($where)
+            ->andWhere([$this->aliasField('date LIKE '.$date)])
+            ->group([$this->aliasField('student_id')]);
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
             {
-            return $results->map(function ($row)
-            {
+                return $results->map(function ($row)
+                {
                     $row['referrer_full_name'] = $row['first_name'] .' '. $row['last_name'];
                     return $row;
+                });
             });
-        });
 
     }
 
@@ -170,6 +189,37 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
+        $i_max = 31;
+        $newFields[] = [
+            'key'   => 'academic_period',
+            'field' => 'academic_period',
+            'type'  => 'integer',
+            'label' => __('Academic Period'),
+        ];
+        $newFields[] = [
+            'key'   => 'institution_code',
+            'field' => 'institution_code',
+            'type'  => 'string',
+            'label' => __('School Code'),
+        ];
+        $newFields[] = [
+            'key'   => 'institution_name',
+            'field' => 'institution_name',
+            'type'  => 'string',
+            'label' => __('School Name'),
+        ];
+        $newFields[] = [
+            'key'   => 'education_grade_name',
+            'field' => 'education_grade_name',
+            'type'  => 'string',
+            'label' => __('Grade'),
+        ];
+        $newFields[] = [
+            'key'   => 'institution_Class_name',
+            'field' => 'institution_Class_name',
+            'type'  => 'string',
+            'label' => __('Class'),
+        ];
         $newFields[] = [
             'key'   => 'openemis_no',
             'field' => 'openemis_no',
@@ -180,20 +230,23 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             'key'   => 'referrer_full_name',
             'field' => 'referrer_full_name',
             'type'  => 'string',
-            'label' => __('Student full name'),
+            'label' => __('Student Full Name'),
         ];
         $newFields[] = [
-            'key'   => 'identity_number',
-            'field' => 'identity_number',
+            'key'   => 'identity_type',
+            'field' => 'identity_type',
             'type'  => 'string',
-            'label' => __('identity number'),
+            'label' => __('Identity Type'),
         ];
-        /*$newFields[] = [
-            'key'   => 'referrer_full_name',
-            'field' => 'referrer_full_name',
-            'type'  => 'string',
-            'label' => __('Day'),
-        ];*/
+            for( $i=1; $i<=$i_max; $i++ )
+            { 
+                $newFields[]=[
+                'key'   => 'Day'.$i,
+                'field' => 'Day'.$i,
+                'type'  => 'int',
+                'label' => __('Day'.$i),
+                ];
+            }
         $newFields[] = [
             'key'   => 'total_absence_day',
             'field' => 'total_absence_day',
@@ -219,7 +272,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                 'days' => "SUM(".$studentleave->aliasField('absent_days').")"
 
             ])
-           // ->group(['InstitutionStaffLeave.staff_id'])
+            ->group(['InstitutionStudentAbsenceDays.student_id'])
             ->where([$studentleave->aliasField('student_id') => $userid,
                     $studentleave->aliasField('institution_id') => $institutionId
                 ]);
@@ -240,46 +293,45 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
     {
         $userid =  $entity->student_id;
         $Institutionstudent = TableRegistry::get('Institution.InstitutionStudentAbsences');
-        $studentleave = TableRegistry::get('Institution.InstitutionStudentAbsenceDays');
         $absenceDays = $Institutionstudent->find()
-            ->leftJoin(['InstitutionStudentAbsenceDays' => 'institution_student_absence_days'], ['InstitutionStudentAbsences.student_id = '. $studentleave->aliasField('student_id')])
             ->select([
-                'days' => "SUM(".$studentleave->aliasField('absent_days').")"
+                'absent_date' => $Institutionstudent->aliasField('date')
 
             ])
-           // ->group(['InstitutionStaffLeave.staff_id'])
-            ->where([$studentleave->aliasField('student_id') => $userid,
-                    $studentleave->aliasField('institution_id') => $institutionId
+            ->where([$Institutionstudent->aliasField('student_id') => $userid,
+                    $Institutionstudent->aliasField('institution_id') => $institutionId,
+                    $Institutionstudent->aliasField('institution_classes') => $institution_class,
+                    $Institutionstudent->aliasField('education_grade_id') => $education_grades,
+                    $Institutionstudent->aliasField('academic_period_id') => $academic_period_id
                 ]);
             if($absenceDays!=null){
                 $data = $absenceDays->toArray();
-                $entity->total_absence_days = '';
+                $entity->absence_date = '';
                 foreach($data as $key=>$val){
-                    $entity->total_absence_days = $val['days'];
+                    $entity->absence_date = $val['absent_date'];
                 }
-                 return $entity->total_absence_days;
+                 return $entity->absence_date;
             }
-            return '';
     }
-    public function onExcelGetInstitutionName(Event $event, Entity $entity)
+    
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
+        $return = [];
+        if ($entity->has('user')) {
+            if ($entity->user->has('identities')) {
+                if (!empty($entity->user->identities)) {
+                    $identities = $entity->user->identities;
+                    foreach ($identities as $key => $value) {
+                        if ($value->identity_type->default == 1) {                            
+                            $return[] = $value->identity_type->name;
+                        }
+                    }
+                }
+            }
+        }
 
-        return $entity->institution_id;
+        return implode(', ', array_values($return));
     }
-    public function onExcelGetInstitutionCode(Event $event, Entity $entity)
-    {
 
-        return $entity->institution_id;
-    }
-    public function onExcelGetEducationGrade(Event $event, Entity $entity)
-    {
-
-        return $entity->education_grade_id;
-    }
-    public function onExcelGetInstitutionClass(Event $event, Entity $entity)
-    {
-
-        return $entity->institution_class_id;
-    }
    
 }
