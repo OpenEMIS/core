@@ -440,29 +440,56 @@ class InstitutionReportCardsTable extends AppTable
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionGrades = TableRegistry::get('institution_grades');
             $EducationProgrammes = TableRegistry::get('education_programmes');
-
+            //POCOR-6520 Starts change in query
             $entity = $InstitutionGrades->find()
                 ->select([
                     'id' => 'EducationGrades.id',
-                    'name' => 'EducationProgrammes.name',
+                    'name' => 'EducationProgrammes.name'
                 ])
                 ->innerJoin(
-                ['EducationGrades' => 'education_grades'],
-                [
-                    'EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')
-                ]
+                    ['EducationGrades' => 'education_grades'],
+                    [
+                        'EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')
+                    ]
                 )
                 ->innerJoin(
-                ['EducationProgrammes' => 'education_programmes'],
-                [
-                    'EducationProgrammes.id = '. 'EducationGrades.education_programme_id'
-                ]
+                    ['EducationProgrammes' => 'education_programmes'],
+                    [
+                        'EducationProgrammes.id = '. 'EducationGrades.education_programme_id',
+                    ]
                 )
+                ->innerJoin(
+                    ['EducationCycles' => 'education_cycles'],
+                    [
+                        'EducationCycles.id = EducationProgrammes.education_cycle_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationLevels' => 'education_levels'],
+                    [
+                        'EducationLevels.id = EducationCycles.education_level_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationSystems' => 'education_systems'],
+                    [
+                        'EducationSystems.id = EducationLevels.education_system_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = EducationSystems.academic_period_id',
+                    ]
+                )
+                ->where([
+                    'EducationSystems.academic_period_id' => $params['academic_period_id']
+                ])
                 ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])    
                 ->hydrate(false)
                 ->toArray()
             ;
-            
+            //POCOR-6520 Ends
             $totalArray = [];
             $totalArray = [
                 'id' => count($entity) + 1,
@@ -816,6 +843,7 @@ class InstitutionReportCardsTable extends AppTable
 				->find()
 				->contain('Users')
 				->where([$InstitutionStaffs->aliasField('institution_id') => $params['institution_id']])
+                ->where([$InstitutionStaffs->aliasField('staff_status_id') => 1])//POCOR-6520
 				->group($InstitutionStaffs->aliasField('staff_id'))//POCOR-6520
                 ->count()
 			;
@@ -837,6 +865,7 @@ class InstitutionReportCardsTable extends AppTable
 				->find()
 				->contain('Users')
 				->where([$InstitutionStaffs->aliasField('institution_id') => $params['institution_id']])
+                ->where([$InstitutionStaffs->aliasField('staff_status_id') => 1])//POCOR-6520
 				->group($InstitutionStaffs->aliasField('staff_id'))
 				->count()
 			;
@@ -1092,22 +1121,55 @@ class InstitutionReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionGrades = TableRegistry::get('institution_grades');
-
+            //POCOR-6520 Starts change in query
             $entity = $InstitutionGrades->find()
-				->select([
-					'id' => 'EducationGrades.id',
-					'name' => 'EducationGrades.name',
-				])
-				->innerJoin(
-				['EducationGrades' => 'education_grades'],
-				[
-					'EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')
-				]
-				)
-				->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])	
-				->hydrate(false)
-				->toArray()
-			;
+                ->select([
+                    'id' => 'EducationGrades.id',
+                    'name' => 'EducationGrades.name'
+                ])
+                ->innerJoin(
+                    ['EducationGrades' => 'education_grades'],
+                    [
+                        'EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationProgrammes' => 'education_programmes'],
+                    [
+                        'EducationProgrammes.id = '. 'EducationGrades.education_programme_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationCycles' => 'education_cycles'],
+                    [
+                        'EducationCycles.id = EducationProgrammes.education_cycle_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationLevels' => 'education_levels'],
+                    [
+                        'EducationLevels.id = EducationCycles.education_level_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationSystems' => 'education_systems'],
+                    [
+                        'EducationSystems.id = EducationLevels.education_system_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = EducationSystems.academic_period_id',
+                    ]
+                )
+                ->where([
+                    'EducationSystems.academic_period_id' => $params['academic_period_id']
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])    
+                ->hydrate(false)
+                ->toArray()
+            ;//POCOR-6520 Ends
 			
 			$totalArray = [];
 			$totalArray = [
@@ -1124,21 +1186,54 @@ class InstitutionReportCardsTable extends AppTable
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionStudents = TableRegistry::get('institution_students');
             $InstitutionGrades = TableRegistry::get('institution_grades');
-
+            //POCOR-6520 Starts change in query
             $EducationGradesData = $InstitutionGrades->find()
-				->select([
-					'id' => 'EducationGrades.id'
-				])
-				->innerJoin(
-				['EducationGrades' => 'education_grades'],
-				[
-					'EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')
-				]
-				)
-				->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])	
-				->hydrate(false)
-				->toArray()
-			;
+                ->select([
+                    'id' => 'EducationGrades.id'
+                ])
+                ->innerJoin(
+                    ['EducationGrades' => 'education_grades'],
+                    [
+                        'EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationProgrammes' => 'education_programmes'],
+                    [
+                        'EducationProgrammes.id = '. 'EducationGrades.education_programme_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationCycles' => 'education_cycles'],
+                    [
+                        'EducationCycles.id = EducationProgrammes.education_cycle_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationLevels' => 'education_levels'],
+                    [
+                        'EducationLevels.id = EducationCycles.education_level_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationSystems' => 'education_systems'],
+                    [
+                        'EducationSystems.id = EducationLevels.education_system_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = EducationSystems.academic_period_id',
+                    ]
+                )
+                ->where([
+                    'EducationSystems.academic_period_id' => $params['academic_period_id']
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])    
+                ->hydrate(false)
+                ->toArray()
+            ;//POCOR-6520 Ends
 			$total_count = 0;
 			foreach ($EducationGradesData as $value) {
 				$InstitutionStudentsData = $InstitutionStudents->find()
@@ -1180,21 +1275,54 @@ class InstitutionReportCardsTable extends AppTable
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionClasses = TableRegistry::get('institution_classes');
             $InstitutionGrades = TableRegistry::get('institution_grades');
-
+            //POCOR-6520 Starts change in query
             $EducationGradesData = $InstitutionGrades->find()
-				->select([
-					'id' => 'EducationGrades.id'
-				])
-				->innerJoin(
-				['EducationGrades' => 'education_grades'],
-				[
-					'EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')
-				]
-				)
-				->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])	
-				->hydrate(false)
-				->toArray()
-			;
+                ->select([
+                    'id' => 'EducationGrades.id'
+                ])
+                ->innerJoin(
+                    ['EducationGrades' => 'education_grades'],
+                    [
+                        'EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationProgrammes' => 'education_programmes'],
+                    [
+                        'EducationProgrammes.id = '. 'EducationGrades.education_programme_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationCycles' => 'education_cycles'],
+                    [
+                        'EducationCycles.id = EducationProgrammes.education_cycle_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationLevels' => 'education_levels'],
+                    [
+                        'EducationLevels.id = EducationCycles.education_level_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['EducationSystems' => 'education_systems'],
+                    [
+                        'EducationSystems.id = EducationLevels.education_system_id',
+                    ]
+                )
+                ->innerJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = EducationSystems.academic_period_id',
+                    ]
+                )
+                ->where([
+                    'EducationSystems.academic_period_id' => $params['academic_period_id']
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])    
+                ->hydrate(false)
+                ->toArray()
+            ;//POCOR-6520 Ends
 			$total_count = 0;
 			foreach ($EducationGradesData as $value) {
 				$InstitutionClassesData = $InstitutionClasses->find()
@@ -1904,6 +2032,8 @@ class InstitutionReportCardsTable extends AppTable
 				->contain('Positions.StaffPositionTitles')
 				->where([$InstitutionStaff->aliasField('institution_id') => $params['institution_id']])
 				->where('StaffPositionTitles.type = 1')
+                ->where([$InstitutionStaff->aliasField('staff_status_id !=') => 2])//POCOR-6520
+                ->group($InstitutionStaff->aliasField('staff_id'))//POCOR-6520
 				->count()
 			;
 			
@@ -1911,7 +2041,7 @@ class InstitutionReportCardsTable extends AppTable
 				->find()
 				->contain('Users')
 				->where([$InstitutionStaff->aliasField('institution_id') => $params['institution_id']])
-				->group($InstitutionStaff->aliasField('staff_id'))//POCOR-6520
+                ->group($InstitutionStaff->aliasField('staff_id'))//POCOR-6520
                 ->count()
 			;
 			
