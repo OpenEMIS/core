@@ -132,13 +132,29 @@ class MealProgrammesTable extends ControllerActionTable
             foreach($institutionIdsData AS $key => $value)
             {
                 try{
-                    $data = $MealInstitutionProgrammes->newEntity([
-                        'meal_programme_id' => $record_id,
-                        'institution_id' => $value,
-                        'created_user_id' => 2
-                    ]);
-        
-                    $saveData = $MealInstitutionProgrammes->save($data);
+                    $MealInstitutionProgrammesData = $MealInstitutionProgrammes->find()
+                    ->select([
+                        $MealInstitutionProgrammes->aliasField('area_id'),
+                    ])
+                    ->where([
+                        $MealInstitutionProgrammes->aliasField('meal_programme_id') => $record_id,
+                        $MealInstitutionProgrammes->aliasField('institution_id') => $value,
+                    ])
+                    ->first();
+                    if(!empty($MealInstitutionProgrammesData)){
+                        // $MealInstitutionProgrammes->updateAll(
+                        //     ['area_id' => $institutionData->area_id],    
+                        //     ['meal_programme_id' => $record_id, 'institution_id'=> $value]
+                        // );
+                    }else{
+                        $data = $MealInstitutionProgrammes->newEntity([
+                            'meal_programme_id' => $record_id,
+                            'institution_id' => $value,
+                            'created_user_id' => 2
+                        ]);
+            
+                        $saveData = $MealInstitutionProgrammes->save($data);
+                    }
                 }
                 catch (PDOException $e) {
                     echo "<pre>";print_r($e);die;
@@ -367,7 +383,7 @@ class MealProgrammesTable extends ControllerActionTable
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {     
+    {   $this->fields['id']['type'] = 'hidden';  
         $this->setupFields($entity);
     }
 
@@ -639,7 +655,27 @@ class MealProgrammesTable extends ControllerActionTable
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
-            $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id']['_ids'] : 0;
+            if($action == 'edit'){
+                $MealsProgrammeId = $this->paramsDecode($request->params['pass']['1']);
+
+                $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+                $result = $MealInstitutionProgrammes
+                    ->find()
+                    ->select([$MealInstitutionProgrammes->aliasField('area_id')])
+                    ->where(['meal_programme_id' => $MealsProgrammeId['id']])
+                    ->all();
+                
+                foreach($result AS $AreaData){
+                    $AreaDataArr[] = $AreaData->area_id;
+                }
+                if(!empty($request->data)){
+                    $areaId = array_unique($request->data['MealProgrammes']['area_id']['_ids']);
+                }else{
+                    $areaId = array_unique($AreaDataArr);
+                }
+            }else{
+                $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id']['_ids'] : 0;
+            }
             //START: POCOR-6608
             $InstitutionsId = isset($request->data) ? $request->data['MealProgrammes']['institution_id']['_ids'] : 0;
             $institutionList = [];
