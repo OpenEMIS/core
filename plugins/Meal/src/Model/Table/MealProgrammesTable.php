@@ -147,13 +147,22 @@ class MealProgrammesTable extends ControllerActionTable
                         //     ['meal_programme_id' => $record_id, 'institution_id'=> $value]
                         // );
                     }else{
-                        $data = $MealInstitutionProgrammes->newEntity([
-                            'meal_programme_id' => $record_id,
-                            'institution_id' => $value,
-                            'created_user_id' => 2
-                        ]);
-            
-                        $saveData = $MealInstitutionProgrammes->save($data);
+
+                            $date = date('Y-m-d H:i:s');
+                            $mealDataOnEdit = [
+                                'meal_programme_id' =>  $record_id,
+                                'institution_id' => $value,
+                                'area_id' => null,
+                                'created_user_id' => 2,
+                                'created' => $date
+
+                            ];
+
+                            $MealInstitutionProgrammes
+                            ->query()
+                            ->insert(['meal_programme_id', 'institution_id','area_id','created_user_id','created'])
+                            ->values($mealDataOnEdit)
+                            ->execute();
                     }
                 }
                 catch (PDOException $e) {
@@ -655,6 +664,7 @@ class MealProgrammesTable extends ControllerActionTable
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
+            //START: POCOR-6608
             if($action == 'edit'){
                 $MealsProgrammeId = $this->paramsDecode($request->params['pass']['1']);
 
@@ -676,7 +686,6 @@ class MealProgrammesTable extends ControllerActionTable
             }else{
                 $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id']['_ids'] : 0;
             }
-            //START: POCOR-6608
             $InstitutionsId = isset($request->data) ? $request->data['MealProgrammes']['institution_id']['_ids'] : 0;
             $institutionList = [];
             $InstitutionsTable = TableRegistry::get('Institution.Institutions');
