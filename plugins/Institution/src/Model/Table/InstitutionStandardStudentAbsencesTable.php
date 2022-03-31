@@ -175,8 +175,18 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
             {
                 return $results->map(function ($row)
-                {
+                { 
                     $row['referrer_full_name'] = $row['first_name'] .' '. $row['last_name'];
+                    $i_max=31;
+                    for( $i=1; $i<=$i_max; $i++ )
+                        { 
+                            
+
+                            $row['Day'.'10'] = '2022-10-10';
+
+                            
+                        }
+                            
                     return $row;
                 });
             });
@@ -238,15 +248,15 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             'type'  => 'string',
             'label' => __('Identity Type'),
         ];
-            for( $i=1; $i<=$i_max; $i++ )
-            { 
-                $newFields[]=[
-                'key'   => 'Day'.$i,
-                'field' => 'absent_date',
-                'type'  => 'int',
-                'label' => __('Day'.$i),
-                ];
-            }
+        for( $i=1; $i<=$i_max; $i++ )
+        { 
+            $newFields[]=[
+            'key'   => 'Day'.$i,
+            'field' => 'absent_date',
+            'type'  => 'int',
+            'label' => __('Day'.$i),
+            ];
+        }
         $newFields[] = [
             'key'   => 'total_absence_day',
             'field' => 'total_absence_day',
@@ -308,7 +318,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                 $data = $absenceDays->toArray();
                 $entity->absence_date = '';
                 foreach($data as $key=>$val){
-                    $entity->absence_date = '2018-05-05';
+                    $entity->absence_date = '2018-05-10';
                 }
                  $days['absent_date'] =  $entity->absence_date;
             }
