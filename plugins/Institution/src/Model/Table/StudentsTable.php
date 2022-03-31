@@ -1298,7 +1298,7 @@ class StudentsTable extends ControllerActionTable
                     );
                      // Ends POCOR-6532
             }
-        }else{
+        } else {
             $query->select([
                 $this->aliasField('id'),
                 'Users.id',
@@ -1309,7 +1309,15 @@ class StudentsTable extends ControllerActionTable
                 'Users.last_name',
                 'Users.preferred_name',
                 'student_status_id'
+            ])
+            //POCOR-6645 starts - applied join to get result when not $ConfigItem
+            ->leftJoin([$UserIdentities->alias() => $UserIdentities->table()], [
+                $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('student_id')
+            ])
+            ->leftJoin([$IdentityTypes->alias() => $IdentityTypes->table()], [
+                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
             ]);
+            //POCOR-6645 ends
         }//POCOR-6248 ends
   
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
