@@ -597,9 +597,19 @@ class StudentProfilesTable extends ControllerActionTable
 	public function downloadExcel(Event $event, ArrayObject $extra)
     {
 		$model = $this->InstitutionStudentsProfileTemplates;
-        $ids = $this->getQueryString();
-		$session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $userObj = $this->Auth->user();
+        $studentId = $userObj['id'];
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $userData = $InstitutionStudents->find()
+                    ->matching('StudentStatuses', 
+                        function ($q) {
+                            return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                    })
+                    ->where([$InstitutionStudents->aliasField('student_id') => $studentId])
+                    ->first();
+        if (!empty($userData)) {
+            $institutionId = $userData->institution_id;
+        }
         $ids['institution_id'] = $institutionId;
         if ($model->exists($ids)) {
             $data = $model->find()->where($ids)->first();
@@ -629,9 +639,19 @@ class StudentProfilesTable extends ControllerActionTable
 	public function downloadPDF(Event $event, ArrayObject $extra)
     {
 		$model = $this->InstitutionStudentsProfileTemplates;
-        $ids = $this->getQueryString();
-		$session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $userObj = $this->Auth->user();
+        $studentId = $userObj['id'];
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $userData = $InstitutionStudents->find()
+                    ->matching('StudentStatuses', 
+                        function ($q) {
+                            return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                    })
+                    ->where([$InstitutionStudents->aliasField('student_id') => $studentId])
+                    ->first();
+        if (!empty($userData)) {
+            $institutionId = $userData->institution_id;
+        }
         $ids['institution_id'] = $institutionId;
         if ($model->exists($ids)) {
             $data = $model->find()->where($ids)->first();
@@ -663,9 +683,20 @@ class StudentProfilesTable extends ControllerActionTable
     public function generate(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
+        $userObj = $this->Auth->user();
+        $studentId = $userObj['id'];
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $userData = $InstitutionStudents->find()
+                    ->matching('StudentStatuses', 
+                        function ($q) {
+                            return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                    })
+                    ->where([$InstitutionStudents->aliasField('student_id') => $studentId])
+                    ->first();
+        if (!empty($userData)) {
+            $institutionId = $userData->institution_id;
+        }
         $hasTemplate = $this->StudentTemplates->checkIfHasTemplate($params['student_profile_template_id']);
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
         if ($hasTemplate) {
             $this->addReportCardsToProcesses($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
             $this->GenerateAllStudentReportCards($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
@@ -683,8 +714,19 @@ class StudentProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->StudentTemplates->checkIfHasTemplate($params['student_profile_template_id']);
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $userObj = $this->Auth->user();
+        $studentId = $userObj['id'];
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $userData = $InstitutionStudents->find()
+                    ->matching('StudentStatuses', 
+                        function ($q) {
+                            return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                    })
+                    ->where([$InstitutionStudents->aliasField('student_id') => $studentId])
+                    ->first();
+        if (!empty($userData)) {
+            $institutionId = $userData->institution_id;
+        }
         if ($hasTemplate) {
             $StudentReportCardProcesses = TableRegistry::get('ReportCard.StudentReportCardProcesses');
             $inProgress = $StudentReportCardProcesses->find()
@@ -715,8 +757,19 @@ class StudentProfilesTable extends ControllerActionTable
 	public function downloadAllPdf(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $userObj = $this->Auth->user();
+        $studentId = $userObj['id'];
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $userData = $InstitutionStudents->find()
+                    ->matching('StudentStatuses', 
+                        function ($q) {
+                            return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                    })
+                    ->where([$InstitutionStudents->aliasField('student_id') => $studentId])
+                    ->first();
+        if (!empty($userData)) {
+            $institutionId = $userData->institution_id;
+        }
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
@@ -771,8 +824,19 @@ class StudentProfilesTable extends ControllerActionTable
     public function downloadAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $userObj = $this->Auth->user();
+        $studentId = $userObj['id'];
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $userData = $InstitutionStudents->find()
+                    ->matching('StudentStatuses', 
+                        function ($q) {
+                            return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                    })
+                    ->where([$InstitutionStudents->aliasField('student_id') => $studentId])
+                    ->first();
+        if (!empty($userData)) {
+            $institutionId = $userData->institution_id;
+        }
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
@@ -878,8 +942,19 @@ class StudentProfilesTable extends ControllerActionTable
     public function email(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $userObj = $this->Auth->user();
+        $studentId = $userObj['id'];
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $userData = $InstitutionStudents->find()
+                    ->matching('StudentStatuses', 
+                        function ($q) {
+                            return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                    })
+                    ->where([$InstitutionStudents->aliasField('student_id') => $studentId])
+                    ->first();
+        if (!empty($userData)) {
+            $institutionId = $userData->institution_id;
+        }
         $this->addReportCardsToEmailProcesses($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
         $this->triggerEmailAllReportCardsShell($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
         $this->Alert->warning('StudentProfiles.email');
@@ -891,8 +966,19 @@ class StudentProfilesTable extends ControllerActionTable
     public function emailAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $userObj = $this->Auth->user();
+        $studentId = $userObj['id'];
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $userData = $InstitutionStudents->find()
+                    ->matching('StudentStatuses', 
+                        function ($q) {
+                            return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                    })
+                    ->where([$InstitutionStudents->aliasField('student_id') => $studentId])
+                    ->first();
+        if (!empty($userData)) {
+            $institutionId = $userData->institution_id;
+        }
         $inProgress = $this->StudentReportCardEmailProcesses->find()
             ->where([
                 $this->StudentReportCardEmailProcesses->aliasField('student_profile_template_id') => $params['student_profile_template_id'],
