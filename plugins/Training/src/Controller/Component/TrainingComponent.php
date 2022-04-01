@@ -65,7 +65,7 @@ class TrainingComponent extends Component
             // End
         }
 
-        if ($courseId) {
+        if ($courseId && $courseId != -1) { //POCOR-6595 one condition add
             $query->where([
                 $Sessions->aliasField('training_course_id') => $courseId
             ]);
