@@ -454,6 +454,9 @@ class InstitutionTripsTable extends ControllerActionTable
         
         $this->fields['institution_bus_id']['type'] = 'select';
         $this->fields['institution_bus_id']['options'] = $InstitutionBuses;
+
+        // $this->fields['days']['multiple'] = true;
+        // $this->fields['days']['options'] = $InstitutionBuses;
 	}
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
@@ -490,6 +493,7 @@ class InstitutionTripsTable extends ControllerActionTable
         
         // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
         $this->fields['days']['options'] = $dayOptions;
+        
         $this->field('days', [
             'type' => 'chosenSelect',
             'attr' => ['label' => __('Days')],
@@ -504,8 +508,20 @@ class InstitutionTripsTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['InstitutionTripDays', 'InstitutionTripPassengers']);
+        //START:POCOR-6169
+        //return $query
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $arr =[];
+                foreach($row->institution_trip_days as $key=> $dayss){
+                    $arr[$key] = ['id'=>$dayss['day']];
+                }
+                $row['days'] = $arr;
+                return $row;
+            });
+        });
+        //END:POCOR-6169
 
-        return $query;
     }
 
     // view page POCOR-6169
