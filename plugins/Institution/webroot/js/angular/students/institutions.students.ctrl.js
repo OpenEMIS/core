@@ -758,6 +758,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(!StudentController.isGuardianAdding){
             switch(StudentController.step){
                 case 'internal_search': 
+                    StudentController.selectedStudentData.date_of_birth = new Date(StudentController.selectedStudentData.date_of_birth);
                     StudentController.step = 'user_details';
                     break;
                 case 'external_search': 
@@ -809,7 +810,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     break;
                 case 'confirmation': 
                     StudentController.step = 'add_student';
-                    StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
+                    StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
                     StudentController.generatePassword();
                     break;
             }
@@ -841,8 +842,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(!StudentController.selectedStudentData.gender_id){
             StudentController.error.gender_id = 'This field cannot be left empty';
         }
-        if(!StudentController.selectedStudentData.date_of_birth){
+        if(!StudentController.selectedStudentData.date_of_birth) {
             StudentController.error.date_of_birth = 'This field cannot be left empty';
+        } else {
+            let dob = StudentController.selectedStudentData.date_of_birth.toLocaleDateString();
+            let dobArray = dob.split('/');
+            StudentController.selectedStudentData.date_of_birth = `${dobArray[2]}-${dobArray[1]}-${dobArray[0]}`;
         }
 
         if(!StudentController.selectedStudentData.first_name || !StudentController.selectedStudentData.last_name || !StudentController.selectedStudentData.gender_id || !StudentController.selectedStudentData.date_of_birth){
@@ -862,9 +867,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(!StudentController.selectedStudentData.academic_period_id){
             StudentController.error.academic_period_id = 'This field cannot be left empty';
         }
-        // if(!StudentController.selectedStudentData.education_grade_id){
-        //     StudentController.error.education_grade_id = 'This field cannot be left empty';
-        // }
+        if(!StudentController.selectedStudentData.education_grade_id){
+            StudentController.error.education_grade_id = 'This field cannot be left empty';
+        }
         if(!StudentController.selectedStudentData.startDate){
             StudentController.error.startDate = 'This field cannot be left empty';
         }
@@ -879,7 +884,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                             field.errorMessage = 'This field is required.';
                         }
                     } else if(field.field_type === 'CHECKBOX') {
-                        if(field.ansewer.length === 0) {
+                        if(field.answer.length === 0) {
                             field.errorMessage = 'This field is required.';
                         }
                     }
@@ -890,6 +895,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function saveStudentDetails() {
+        let startDate = StudentController.selectedStudentData.startDate.toLocaleDateString();
+        let startDateArray = startDate.split('/');
         var params = {
             openemis_no: StudentController.selectedStudentData.openemis_no,
             first_name: StudentController.selectedStudentData.first_name,
@@ -910,11 +917,70 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             identity_type_id: StudentController.selectedStudentData.identity_type_id,
             education_grade_id: 59,
             academic_period_id: StudentController.selectedStudentData.academic_period_id,
-            start_date: StudentController.selectedStudentData.startDate,
+            start_date: `${startDateArray[2]}-${startDateArray[1]}-${startDateArray[0]}`,
             end_date: StudentController.selectedStudentData.endDate,
             institution_class_id: 524,
             student_status_id: 1,
+            custom: [],
         };
+
+        StudentController.customFieldsArray.forEach((customField)=> {
+            customField.data.forEach((field)=> {
+                if(field.field_type !== 'CHECKBOX') {
+                    let fieldData = {
+                        student_custom_field_id: field.student_custom_field_id,
+                        text_value:"",
+                        number_value:null,
+                        decimal_value:"",
+                        textarea_value:"",
+                        time_value:"",
+                        date_value:"",
+                        file:"",
+                        created_user_id: 1,
+                        created: new Date().toLocaleString(),
+                    };
+                    if(field.field_type === 'TEXT' || field.field_type === 'NOTE' || field.field_type === 'TEXTAREA') {
+                        fieldData.text_value = field.answer;
+                    }
+                    if(field.field_type === 'NUMBER') {
+                        fieldData.number_value = field.answer;
+                    }
+                    if(field.field_type === 'DECIMAL') {
+                        fieldData.decimal_value = String(field.answer);
+                    }
+                    if(field.field_type === 'DROPDOWN') {
+                        fieldData.number_value = Number(field.answer);
+                    }
+                    if(field.field_type === 'TIME') {
+                        let time = field.answer.toLocaleTimeString();
+                        let timeArray = time.split(':');
+                        fieldData.time_value = `${timeArray[0]}:${timeArray[1]}`;
+                    }
+                    if(field.field_type === 'DATE') {
+                        let date = field.answer.toLocaleDateString();
+                        let dateArray = date.split('/');
+                        fieldData.date_value = `${dateArray[2]}-${dateArray[1]}-${dateArray[0]}`;
+                    }
+                    params.custom.push(fieldData);
+                } else {
+                    field.answer.forEach((id )=> {
+                        let fieldData = {
+                            student_custom_field_id: field.student_custom_field_id,
+                            text_value:"",
+                            number_value: Number(id),
+                            decimal_value:"",
+                            textarea_value:"",
+                            time_value:"",
+                            date_value:"",
+                            file:"",
+                            created_user_id: 1,
+                            created: new Date().toLocaleString(),
+                        };
+                        params.custom.push(fieldData);
+                    });
+                }
+            })
+        })
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.saveStudentDetails(params).then(function(resp){
             StudentController.message = (StudentController.selectedStudentData && StudentController.selectedStudentData.userType ? StudentController.selectedStudentData.userType.name : 'Student') + ' successfully added.';
