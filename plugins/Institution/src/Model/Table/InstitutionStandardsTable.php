@@ -66,6 +66,8 @@ class InstitutionStandardsTable extends AppTable
     public function addBeforeAction(Event $event)
     {
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('assessment_id', ['type' => 'hidden']);//POCOR-6630
+        $this->ControllerAction->field('assessment_period_id', ['type' => 'hidden']);//POCOR-6630
         $session = $this->request->session();
         $institution_id = $session->read('Institution.Institutions.id');
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institution_id]);
@@ -122,6 +124,64 @@ class InstitutionStandardsTable extends AppTable
             return $attr;
         }
     }
+
+    /**
+    * POCOR-6630
+    * get Assessment name list
+    */
+    public function onUpdateFieldAssessmentId(Event $event, array $attr, $action, Request $request)
+    {
+        $report = ($request->data[$this->alias()]['feature']);
+        if ($report=='Institution.InstitutionStandardMarksEntered') {
+            $feature                = $this->request->data[$this->alias()]['feature'];
+            $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+            $AssesmentTable    = TableRegistry::get('Assessment.Assessments');
+            $assessmentList = $AssesmentTable->find('list', [
+                                'keyField' => 'id',
+                                'valueField' => 'name'
+                             ])
+                            ->select(['id','name'])
+                            ->where([$AssesmentTable->aliasField('academic_period_id') => $academicPeriodId])
+                            ->order($AssesmentTable->aliasField('name'))
+                            ->toArray();
+            $attr['options'] = ['0' => __('All Assessment')] + $assessmentList;
+            $attr['type']           = 'select';
+            $attr['select']         = false;
+            $attr['onChangeReload'] = true;
+            return $attr;
+        }
+    }
+    /**
+    * POCOR-6630
+    * get Assessment period list
+    */
+    public function onUpdateFieldAssessmentPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        $report = ($request->data[$this->alias()]['feature']);
+        if ($report=='Institution.InstitutionStandardMarksEntered') { 
+            $feature                = $this->request->data[$this->alias()]['feature'];
+            $assessmentId = $request->data[$this->alias()]['assessment_id'];
+            $AssesmentPeriodTable    = TableRegistry::get('Assessment.AssessmentPeriods');
+            $where = [];
+            if($assessmentId != 0) {
+               $where[$AssesmentPeriodTable->aliasField('assessment_id')] = $assessmentId;
+            }
+            $assessmentPeriodList = $AssesmentPeriodTable->find('list', [
+                                'keyField' => 'id',
+                                'valueField' => 'name'
+                             ])
+                            ->select(['id','name'])
+                            ->where($where)
+                            ->order($AssesmentPeriodTable->aliasField('name'))
+                            ->toArray();
+            $attr['options']        = $assessmentPeriodList;
+            $attr['type']           = 'select';
+            $attr['select']         = false;
+            $attr['onChangeReload'] = true;
+            return $attr;
+        }
+    }
+
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
