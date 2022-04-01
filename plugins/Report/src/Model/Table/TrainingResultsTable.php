@@ -58,15 +58,23 @@ class TrainingResultsTable extends AppTable
         }
         // START: POCOR-6596
         if (isset($requestData->area_id->_ids) && !empty($requestData->area_id->_ids)) {
-            $conditions['trainee_info.area_id IN '] = $requestData->area_id->_ids;
+            // START: POCOR-6596
+            if($requestData->area_id->_ids[0]== -1){
+            $requestData->area_id->_ids[0] = 1;
+            }
+            // END: POCOR-6596
+          $conditions['Sessions.area_id IN '] = $requestData->area_id->_ids;
         }
         if ($session_name > 0) {
             $conditions['Sessions.id'] = $session_name;
         }
         if (!empty($start_date)) {
+
+           
             $conditions['Sessions.start_date >= '] = date('Y-m-d', strtotime($start_date));
         }
         if (!empty($end_date)) {
+            
             $conditions['Sessions.end_date <= '] = date('Y-m-d', strtotime($end_date));
         }
         // END: POCOR-6596
