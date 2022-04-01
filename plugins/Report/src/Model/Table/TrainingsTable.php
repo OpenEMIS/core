@@ -65,11 +65,11 @@ class TrainingsTable extends AppTable
         $this->ControllerAction->field('training_session_id', ['type' => 'hidden']);
         $this->ControllerAction->field('training_need_type', ['type' => 'hidden']);
         $this->ControllerAction->field('status');
-        $this->ControllerAction->field('institution_status');
-        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('session_name', ['type' => 'hidden']); // POCOR-6596
         $this->ControllerAction->field('start_date', ['type' => 'hidden']);  // POCOR-6569
         $this->ControllerAction->field('end_date', ['type' => 'hidden']);  // POCOR-6569
-        $this->ControllerAction->field('session_name', ['type' => 'hidden']); // POCOR-6596
+        $this->ControllerAction->field('institution_status');
+        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_id', ['type' => 'hidden']); // POCOR-6596
 		// Start POCOR-6596 Changed position of format field 
 		$this->ControllerAction->field('format');
