@@ -1,3 +1,18 @@
+### [3.74.5] - 2022-03-25
+- Implemented: Add Export button function - Institutions > Meals > Distributions
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 6
+- Bug Fixed: Institution>Students: User is unable to search students through identity number
+- Bug Fixed: Reports -> Institutions -> Students: the student totals are different from the student total in Institutions -> Students for all institutions when a specific programme is selected
+- Bug Fixed: Jordan UAT: Reports > Institution > Positions
+- Bug Fixed: Administration>Performance>Competencies: Unable to import
+- Bug Fixed: Personal > Staff > Careers : Assignee field is not populated though Institution>Staff>Career is populating
+- Bug Fixed: Report>Students>Student Enrolment summary: Enrolment summary report is showing the wrong number
+- Bug Fixed: Institution > Academic > Classes: Students' names do not have the ID number included
+- Bug Fixed: Institutions>Add: Coordinates fields should be available and mandatory when creating an Institution
+- Bug Fixed: Administration>Localisation>Translation: Some words are missing Arabic translations
+- Bug Fixed: Institutions>Infrastructure>Overview: Duplicated entries in Rooms and custom fields should show correctly
+- Bug Fixed: Institution>Students: User is unable to delete students
+
 ### [3.74.4] - 2022-03-16
 - Implemented: Add Export button function - Institutions > Behaviour > Staff
 - Bug Fixed: Institutions>General>Shift: Edit Institution 404 Forbidden: Page Not Found
