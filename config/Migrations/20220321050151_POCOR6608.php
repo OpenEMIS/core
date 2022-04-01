@@ -17,9 +17,19 @@ class POCOR6608 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_6608_meal_institution_programmes` LIKE `meal_institution_programmes`');
         $this->execute('INSERT INTO `zz_6608_meal_institution_programmes` SELECT * FROM `meal_institution_programmes`');
 
-        $this->execute('ALTER TABLE `meal_institution_programmes` ADD COLUMN `area_id` int(11) AFTER `institution_id`');
-
-        $this->execute("ALTER TABLE `meal_institution_programmes` CHANGE `area_id` `area_id` INT(11) NULL DEFAULT NULL COMMENT 'Links to areas.id' ");
+        // $this->execute('ALTER TABLE `meal_institution_programmes` ADD COLUMN `area_id` int(11) AFTER `institution_id`');
+        $CheckAreaIDExist = "SELECT COUNT(*)
+         FROM information_schema.columns 
+         WHERE table_name   = 'meal_institution_programmes'
+         AND column_name  = 'area_id'";
+         $tableData = $this->fetchAll($CheckAreaIDExist);
+         if($tableData[0][0] == 1){
+            $this->execute('ALTER TABLE `meal_institution_programmes` ADD COLUMN `area_id` int(11) AFTER `institution_id` ');
+            $this->execute("ALTER TABLE `meal_institution_programmes` CHANGE `area_id` `area_id` INT(11) NULL DEFAULT NULL COMMENT 'Links to areas.id' ");
+         }
+        // sleep(30);
+        // $this->execute("ALTER TABLE `meal_institution_programmes` CHANGE `area_id` `area_id` INT(11) NULL DEFAULT NULL COMMENT 'Links to areas.id' ");
+        // $this->execute("CREATE PROCEDURE ADD_Comment() BEGIN DECLARE _count INT; SET _count = (  SELECT COUNT(*)  FROM INFORMATION_SCHEMA.COLUMNS WHERE   TABLE_NAME = 'meal_institution_programmes' AND COLUMN_NAME = 'area_id'); IF _count = 1 THEN ALTER TABLE `meal_institution_programmes` CHANGE `area_id` `area_id` INT(11) NULL DEFAULT NULL COMMENT 'Links to areas.id' ; END IF; END ; ");
     }
 
     // rollback
