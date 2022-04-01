@@ -345,11 +345,10 @@ class InstitutionStandardMarksEnteredTable extends AppTable
             foreach($totalMarks as $value){
                 $marks = $value['marks'];
                 $student = $value['total_students'];
-                $entity->marks_entered_per = ($marks/$student) * 100;
+                return $entity->marks_entered_per = ($marks/$student) * 100;
                 
             }
         }
-        return $entity->marks_entered_per ;
         
     }
 
