@@ -196,7 +196,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     function saveStudentDetails(param) {
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/postSaveStudentsData';
-        $http.get(url, {params: param})
+        $http.post(url, param)
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
