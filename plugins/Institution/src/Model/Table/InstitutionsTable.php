@@ -227,7 +227,7 @@ class InstitutionsTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        // $validator = $this->LatLongValidation();
+        $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
 
         $validator
         ->add('date_opened', [
@@ -271,6 +271,22 @@ class InstitutionsTable extends ControllerActionTable
             'provider' => 'table',
             'last' => true
         ])
+
+        // POCOR-6625 <vikas.rathore@mail.valocoders.com>
+        ->add('latitude', [
+            'ruleForLatitudeLength' => [
+                'rule' => ['forLatitudeLength'],
+                'message' => __('Latitude length is incomplete')
+            ]
+        ])
+
+        ->add('longitude', [
+            'ruleForLongitudeLength' => [
+                'rule' => ['forLongitudeLength'],
+                'message' => __('Longitude length is incomplete')
+            ]
+        ])
+        // POCOR-6625 <vikas.rathore@mail.valocoders.com>        
 
         ->add('code', 'ruleUnique', [
             'rule' => 'validateUnique',
@@ -911,9 +927,15 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('contact_section', ['type' => 'section', 'title' => __('Contact'), 'after' => $field]);
         $this->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => 'website', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
         //pocor-5669
-        $this->field('longitude', ['visible' => ['view' => false]]);
-        $this->field('latitude', ['visible' => ['view' => false]]);
+        // $this->field('longitude', ['visible' => ['view' => false]]);
+        // $this->field('latitude', ['visible' => ['view' => false]]);
         //pocor-5669
+
+        // POCOR-6625 starts <vikas.rathore@mail.valocoders.com>
+        $this->field('longitude', ['visible' => true]);
+        $this->field('latitude', ['visible' => true]);
+        // POCOR-6625 starts <vikas.rathore@mail.valocoders.com>
+
         if (strtolower($this->action) != 'index') {
             $this->Navigation->addCrumb($this->getHeader($this->action));
         }
@@ -1697,10 +1719,11 @@ class InstitutionsTable extends ControllerActionTable
     public function getCustomFilter(Event $event)
     {
         $filters = [
-            'shift_type' => [
+            //POCOR-6618 Starts hide shift type filter from advance search
+            /*'shift_type' => [
                 'label' => __('Shift Type'),
                 'options' => $this->shiftTypes
-            ],
+            ],//POCOR-6618 Ends*/
             'classification' => [
                 'label' => __('Classification'),
                 'options' => $this->classificationOptions
