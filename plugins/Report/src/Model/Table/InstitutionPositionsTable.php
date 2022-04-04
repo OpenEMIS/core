@@ -50,7 +50,10 @@ class InstitutionPositionsTable extends AppTable
         $IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
 		$UserIdentitiesTable   = TableRegistry::get('User.Identities');
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
-		$birth_certificate_code_id = $IdentityTypesTable->getIdByName('Birth Certificate');
+        //Start POCOR-6605  JO UAT environment is not working blank birthCertificateId
+		$birthCertificateId = $IdentityTypesTable->getIdByName('Birth Certificate');
+        $birth_certificate_code_id = !empty($birthCertificateId) ? $birthCertificateId : 0;
+        //End POCOR-6605
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
         $teachingFilter = $requestData->teaching_filter;

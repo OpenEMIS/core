@@ -1215,7 +1215,21 @@ class StudentsTable extends ControllerActionTable
 
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
-            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+             /**
+
+             * pass table alias name for identity number in search function
+
+             * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
+
+             * @ticket POCOR-6532
+
+             */
+            // Starts POCOR-6532
+           $UserIdentitiesnumber = TableRegistry::get('User.Identities');
+           $useridentites = $UserIdentitiesnumber->aliasField('number');
+            
+            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'aliasidentity' => 'Identities', 'searchTerm' => $search]);
+            // Ends POCOR-6532
             $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
         } else {
             //POCOR-5690 remove check isAdvancedSearchEnabled for search data from list
@@ -1258,20 +1272,31 @@ class StudentsTable extends ControllerActionTable
                         'identity_type' => $IdentityTypes->aliasField('name'),
                         "'". $typesIdentity->identity_type . "'" => $UserIdentities->aliasField('number') //POCRO-6583 added single quote as identity_type was not working for some clients
                     ])
+                    /**
+
+                     * Add identity number like in the query and hide default identity id
+
+                     * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
+
+                     * @ticket POCOR-6532
+
+                     */
+                    // Starts POCOR-6532
                     ->leftJoin(
                                 [$UserIdentities->alias() => $UserIdentities->table()],
                                 [
                                     $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('student_id'),
-                                    $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
+                                    //$UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
                                 ]
                             )
                     ->leftJoin(
                         [$IdentityTypes->alias() => $IdentityTypes->table()],
                         [
                             $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
-                            $IdentityTypes->aliasField('id = ') . $typesIdentity->id
+                           // $IdentityTypes->aliasField('id = ') . $typesIdentity->id
                         ]
                     );
+                     // Ends POCOR-6532
             }
         }else{
             $query->select([
@@ -1289,7 +1314,7 @@ class StudentsTable extends ControllerActionTable
   
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
         $query->group([$this->aliasField('student_id'), $this->aliasField('academic_period_id'), $this->aliasField('institution_id'), $this->aliasField('education_grade_id'), $this->aliasField('student_status_id')]);
-
+          
         // POCOR-2547 sort list of staff and student by name
         if (!isset($request->query['sort'])) {
             $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
@@ -1812,13 +1837,37 @@ class StudentsTable extends ControllerActionTable
             unset($buttons['edit']);
         }
 
-        // if student is not currently enrolled in this institution, remove the delete button
-        $studentStatuses = $this->StudentStatuses->findCodeList();
-        if ($entity->student_status_id != $studentStatuses['CURRENT']) {
-            if (isset($buttons['remove'])) {
-                unset($buttons['remove']);
-            }
+        /*POCOR-6634 starts - added remove button functionality*/
+        if (isset($buttons['remove'])) {
+            $institutionId = $entity->institution->id;
+            $studentId = $entity->_matchingData['Users']['id'];
+            $periodId = $entity->academic_period->id;
+            $gradeId = $entity->education_grade->id;
+            $toBeDeleteId = $this->find()
+                            ->where([
+                                $this->aliasField('institution_id') => $institutionId,
+                                $this->aliasField('academic_period_id') => $periodId,
+                                $this->aliasField('education_grade_id') => $gradeId,
+                                $this->aliasField('student_id') => $studentId
+                            ])
+                            ->first()->id;
+            $encodedId = $this->paramsEncode([
+                            'id' => $toBeDeleteId
+                        ]);
+            $attr = [
+                'role' => 'menuitem',
+                'tabindex' => -1,
+                'escape' => false,
+                'data-toggle' => 'modal',
+                'data-target' => '#delete-modal',
+                'field-target' => '#recordId',
+                'field-value' => $encodedId,
+                'onclick' => 'ControllerAction.fieldMapping(this)'
+            ];
+            
+            $buttons['remove']['attr'] = $attr;
         }
+        /*POCOR-6634 ends*/
         return $buttons;
     }
     // End PHPOE-1897
