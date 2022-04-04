@@ -29,6 +29,11 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     scope.rowsThisPage = [];
     scope.selectedUser;
 
+    $window.savePhoto = function(event) {
+        let photo = event.files[0];
+        scope.selectedUserData.photo = photo;
+    }
+
     scope.datepickerOptions = {
         maxDate: new Date(),
         showWeeks: false

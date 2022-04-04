@@ -341,6 +341,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         });
     }
 
+    $window.savePhoto = function(event) {
+        let photo = event.files[0];
+        StudentController.selectedStudentData.photo = photo;
+    }
+
     function getStudentCustomFields() {
         InstitutionsStudentsSvc.getStudentCustomFields().then(function(resp){
             StudentController.customFields = resp.data;
