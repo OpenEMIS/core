@@ -51,6 +51,11 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
         scope.getRelationType();
     });
 
+    $window.savePhoto = function(event) {
+        let photo = event.files[0];
+        scope.selectedGuardianData.photo = photo;
+    }
+
     scope.getUniqueOpenEmisId = function() {
         if(scope.selectedGuardianData.openemis_no){
             setTimeout(function(){
