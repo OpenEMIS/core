@@ -101,7 +101,7 @@ class StaffProfilesTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
+        unset($buttons['view']);
         // check if report card request is valid
         $reportCardId = $this->request->query('staff_profile_template_id');
         $institutionId = $this->request->query('institution_id');
