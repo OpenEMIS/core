@@ -1090,6 +1090,15 @@ class DirectoriesController extends AppController
         }
         if($this->request->params['action'] == 'directoryExternalSearch'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'directoryExternalSearch';
+        }
+        if($this->request->params['action'] == 'getContactType'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getContactType';
+        }
+        if($this->request->params['action'] == 'getRedirectToGuardian'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getRedirectToGuardian';
+        }
+        if($this->request->params['action'] == 'getRelationshipType'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getRelationshipType';
         }//for api purpose POCOR-5672 ends
         return $events;
     }
