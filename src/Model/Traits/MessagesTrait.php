@@ -77,6 +77,7 @@ trait MessagesTrait
             'delete' => [
                 'restrictDelete' => 'The record cannot be deleted.',
                 'restrictDeleteBecauseAssociation' => 'Delete operation is not allowed as there are other information linked to this record.',
+                'NationalitiesRecordNoRemain' => 'There must be at least one Preferred Nationality',
                 'cascadeDelete' => 'All associated information related to this record will also be removed.',
                 'success' => 'The record has been deleted successfully.',
                 'failed' => 'The record is not deleted due to errors encountered.',
@@ -1121,7 +1122,10 @@ trait MessagesTrait
                     'ageRangeHint' => 'The student should be between %s to %s years old',
                     'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.',
                     'studentNotExists' => 'This student does not exist in the system.'
-                ],
+                ],//POCOR-5924 starts
+                'identity_number' => [
+                    'ruleCheckUniqueIdentityNumber' => 'This identity has already existed in the system.'
+                ],//POCOR-5924 ends
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
@@ -2501,10 +2505,17 @@ trait MessagesTrait
             'transferConnectionFail' => 'Please configure connection to Archive Database.',
             'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.'
         ],
+        'CopyData' => [
+            'genralerror' => 'To and from academic period can not be same.',
+            'alreadyexist' => 'There are existing data in the selected To Academic Period.',
+            'nodataexist' => 'Data does not exist for seleceted from academic period.',
+            'nodataexisteducationsystem' => 'Data does not exist in education system for seleceted to academic period.'
+        ],
         'UserNationalities' => [
             'ValidateNumberSuccess' => 'Identity number validate successfully.',
             'ValidateNumberFail' => 'Please enter correct identity number.',
             'IdentityNumberNotExist' => 'Identity number should not be blank.',
+            'NationalitiesRecordNoRemain' => 'There must be at least one Preferred Nationality.',
         ],
         'StudentMarkTypeStatuses' => [
             'statusAlreadyAdded' => 'Attendance for the selected Education Grade already added.',

@@ -74,6 +74,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.processExternalGridUserRecord = processExternalGridUserRecord;
     StaffController.saveStaffDetails = saveStaffDetails;
 
+    $window.savePhoto = function(event) {
+        let photo = event.files[0];
+        StaffController.selectedStaffData.photo = photo;
+    }
+
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
         StaffController.initGrid();

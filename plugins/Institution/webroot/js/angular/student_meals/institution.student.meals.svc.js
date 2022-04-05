@@ -94,6 +94,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         StudentAttendanceMarkedRecords: 'Meal.StudentAttendanceMarkedRecords',
         MealBenefit: 'Meal.MealBenefit',
         MealProgrammes: 'Meal.MealProgrammes',
+        MealInstitutionProgrammes: 'Meal.MealInstitutionProgrammes',
         StudentMealMarkedRecords: 'Meal.StudentMealMarkedRecords',
         MealReceived: 'Meal.MealReceived',
     };
@@ -291,7 +292,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             .ajax({success: success, defer: true});
     }
 
-    function mealProgrameOptions() {
+    function mealProgrameOptions(institutionId) {
         var success = function(response, deferred) {
             var mealProgrammes = response.data.data;
             if (angular.isObject(mealProgrammes) && mealProgrammes.length > 0) {
@@ -300,10 +301,14 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                 deferred.reject('There was an error when retrieving the student absence reasons');
             }
         };
+        
+        return MealInstitutionProgrammes
+            .find('mealInstitutionProgrammes', {
+                institution_id: institutionId,
+            })
+             .ajax({success: success, defer: true});
+            return [];
 
-        return MealProgrammes
-            .select(['id', 'name'])
-            .ajax({success: success, defer: true});
     }
 
     function mealReceviedOptionsOptions() {
@@ -735,7 +740,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         eCell.setAttribute("id", dataKey);
         console.log('onedit', data.institution_student_meal[dataKey]);
         if (data.institution_student_meal[dataKey] == null) {
-            data.institution_student_meal[dataKey] = 1;
+            data.institution_student_meal[dataKey] = 2;
         }
 
         var eSelect = document.createElement("select");

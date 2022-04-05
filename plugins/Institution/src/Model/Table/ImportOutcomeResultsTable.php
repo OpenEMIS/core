@@ -176,7 +176,7 @@ class ImportOutcomeResultsTable extends AppTable
     public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $academicPeriodId = !is_null($request->data('ImportOutcomeResults')['academic_period']) ? $request->data('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
             $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
 
             $userId = $this->Auth->user('id');
@@ -193,7 +193,10 @@ class ImportOutcomeResultsTable extends AppTable
                         $query->where(['1 = 0'], [], true);
                     } else {
                         $query->innerJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                            'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
+                            'OR' => [
+                                'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id',
+                                'ClassesSecondaryStaff.secondary_staff_id = InstitutionClasses.staff_id',
+                            ]
                         ]);
                         // If only class permission is available but no subject permission available
                         if ($classPermission && !$subjectPermission) {
@@ -252,7 +255,7 @@ class ImportOutcomeResultsTable extends AppTable
     public function onUpdateFieldOutcomeTemplate(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $academicPeriodId = !is_null($request->data('ImportOutcomeResults')['academic_period']) ? $request->data('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
             $classId = $request->query('class');
             $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
             // if class id is not null, then filter Outcome Template by class_grades of the class else by institution_grades of the school
@@ -293,7 +296,7 @@ class ImportOutcomeResultsTable extends AppTable
     {
 
         if ($action == 'add') {
-            $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $academicPeriodId = !is_null($request->data('ImportOutcomeResults')['academic_period']) ? $request->data('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
 
             $outcomePeriodOptions = [];
             if (!is_null($request->query('outcome_template'))) {

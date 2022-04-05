@@ -14,7 +14,7 @@ use Cake\Network\Request;
 use DateTime;
 use PHPExcel_Worksheet;
 use Cake\Utility\Inflector;
-
+use Cake\Log\Log;
 class ImportAssessmentItemResultsTable extends AppTable {
     private $institutionId = false;
 
@@ -331,9 +331,19 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportGetAssessmentPeriodsId(Event $event, $cellValue)
     {
-        
-        $dataRecord = $this->AssessmentPeriods->find()->select([$this->AssessmentPeriods->aliasField('id')])->where([$this->AssessmentPeriods->aliasField('code') => $cellValue])->first();
-        
+        /*POCOR-6377 starts*/
+        $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $dataRecord = $this->AssessmentPeriods->find()
+                    ->select([$this->AssessmentPeriods->aliasField('id')])
+                    ->leftJoin([$Assessments->alias() => $Assessments->table()], [
+                        $this->AssessmentPeriods->aliasField('assessment_id = ') . $Assessments->aliasField('id')
+                    ])
+                    ->where([
+                        $Assessments->aliasField('academic_period_id') => $academicPeriodId,
+                        $this->AssessmentPeriods->aliasField('code') => $cellValue
+                    ])->first();
+        /*POCOR-6377 ends*/
         $assessmentPeriodsId = $dataRecord->id;
         
         return $assessmentPeriodsId;
@@ -370,6 +380,8 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {
+        //POCOR-6613 starts
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;// for enrolled status //POCOR-6613 ends
         $classId = $this->request->query['class_name'];
         $academicPeriodId = !is_null($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
         $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
@@ -377,38 +389,39 @@ class ImportAssessmentItemResultsTable extends AppTable {
         $studentData = $InstitutionClassStudents->find()
                         ->where([
                             $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
-                            $InstitutionClassStudents->aliasField('academic_period_id') => $academicPeriodId
+                            $InstitutionClassStudents->aliasField('academic_period_id') => $academicPeriodId,
+                            $InstitutionClassStudents->aliasField('student_status_id') => $enrolledStatus //POCOR-6613 
                         ])->toArray();
         $studentIds = [];
         if (!empty($studentData)) {
             foreach ($studentData as $value) {
-               $studentIds[] = $value->student_id;
-        }
+                $studentIds[] = $value->student_id;
+            }
 
-        $UsersData = $Users->find()
-                        ->select([
-                            $Users->aliasField('id'),
-                            $Users->aliasField('first_name'),
-                            $Users->aliasField('middle_name'),
-                            $Users->aliasField('third_name'),
-                            $Users->aliasField('last_name'),
-                            $Users->aliasField('openemis_no')
-                        ])
-                        ->where([$Users->aliasField('id IN') => $studentIds]);
+            $UsersData = $Users->find()
+                            ->select([
+                                $Users->aliasField('id'),
+                                $Users->aliasField('first_name'),
+                                $Users->aliasField('middle_name'),
+                                $Users->aliasField('third_name'),
+                                $Users->aliasField('last_name'),
+                                $Users->aliasField('openemis_no')
+                            ])
+                            ->where([$Users->aliasField('id IN') => $studentIds]);
 
-        $translatedReadableCol = $this->getExcelLabel($UsersData, 'Name');
+            $translatedReadableCol = $this->getExcelLabel($UsersData, 'Name');
 
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = ['Name', $translatedCol];
-        
-        $modelData = $UsersData->find('all')
-        ->select([ 
-            'first_name', 
-            'middle_name', 
-            'third_name', 
-            'last_name',
-            'openemis_no'
-        ]);
+            $data[$columnOrder]['lookupColumn'] = 2;
+            $data[$columnOrder]['data'][] = ['Name', $translatedCol];
+            
+            $modelData = $UsersData->find('all')
+            ->select([ 
+                'first_name', 
+                'middle_name', 
+                'third_name', 
+                'last_name',
+                'openemis_no'
+            ]);
 
             if (!empty($modelData)) {
                 foreach($modelData->toArray() as $row) {
@@ -428,6 +441,10 @@ class ImportAssessmentItemResultsTable extends AppTable {
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
         $tempRow['institution_id'] = $institutionId;
+		/*POCOR-6528 starts*/
+		$this->AssessmentItemsGradingTypes = TableRegistry::get('Institution.AssessmentItemsGradingTypes');
+		$this->AssessmentGradingTypes = TableRegistry::get('Institution.AssessmentGradingTypes');
+		/*POCOR-6528 ends*/
         $tempRow['academic_period_id'] = $academicPeriodId;
         $classId = $this->request->query['class_name'];
         $educationData = $this->InstitutionClassGrades->find()
@@ -437,12 +454,62 @@ class ImportAssessmentItemResultsTable extends AppTable {
         $educationGradeId = $educationData->education_grade_id;
         $tempRow['education_grade_id'] = $educationGradeId;
         $assessment = $this->AssessmentPeriods->find()
-                        ->select([$this->AssessmentPeriods->aliasField('assessment_id')])
+                        ->select([$this->AssessmentPeriods->aliasField('assessment_id'), $this->AssessmentPeriods->aliasField('date_disabled')])
                         ->where([$this->AssessmentPeriods->aliasField('id') => $tempRow['assessment_period_id']])
                         ->first();
         $tempRow['assessment_id'] = $assessment->assessment_id;
         $tempRow['institution_classes_id'] = $tempRow['class_id'];
+		/*POCOR-6528 starts*/
+		$maxvalue = $this->Assessments->find()
+		->select(['maximumvalue'=>$this->AssessmentGradingTypes->aliasField('max')])
+		 ->InnerJoin([$this->AssessmentItems->alias() => $this->AssessmentItems->table()],[
+                                    $this->AssessmentItems->aliasField('assessment_id = ') . $this->Assessments->aliasField('id')
+                                ])
+		->InnerJoin([$this->AssessmentItemsGradingTypes->alias() => $this->AssessmentItemsGradingTypes->table()],[
+                                    $this->AssessmentItemsGradingTypes->aliasField('assessment_id = ') . $this->AssessmentItems->aliasField('assessment_id'),
+									
+                                    $this->AssessmentItemsGradingTypes->aliasField('education_subject_id = ') . $this->AssessmentItems->aliasField('education_subject_id')
+                                ])
+		->InnerJoin([$this->AssessmentGradingTypes->alias() => $this->AssessmentGradingTypes->table()],[
+                                    $this->AssessmentGradingTypes->aliasField('id =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
+                                ])
+		->InnerJoin([$this->AssessmentPeriods->alias() => $this->AssessmentPeriods->table()],[
+                                    $this->AssessmentPeriods->aliasField('assessment_id =') . $this->Assessments->aliasField('id')	
+                                ])									
+		->InnerJoin([$this->InstitutionClassGrades->alias() => $this->InstitutionClassGrades->table()],[
+                                    $this->InstitutionClassGrades->aliasField('education_grade_id =') . $this->Assessments->aliasField('education_grade_id')
+                                ])
+		->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId])
+		->first();
+        //START: POCOR-6602
         
+		$today_date = date('Y-m-d');
+        if (!empty($assessment)) {
+            if(strtotime($today_date) > strtotime($assessment->date_disabled)){
+                $rowInvalidCodeCols['marks'] = __('Date of assement period is expired.');
+                $tempRow['marks'] = false;
+                return false;
+            }
+        }
+        //END: POCOR-6602
+		$maxval = $maxvalue->maximumvalue;
+		$value = preg_replace('~\.0+$~','',$maxval);
+		/*POCOR-6528 ends*/
+        /*POCOR-6486 starts*/
+        $enteredMarks = $tempRow['marks'];
+        if (!empty($enteredMarks) && $enteredMarks > 100) {
+            $rowInvalidCodeCols['marks'] = __('Marks Should be between 0 to 100');
+            $tempRow['marks'] = false;
+            return false;
+        
+		/*POCOR-6528 starts*/
+        }elseif (!empty($enteredMarks) && $enteredMarks > $maxval) {
+            $rowInvalidCodeCols['marks'] = __('Marks Should be less then to max Marks');
+            $tempRow['marks'] = false;
+            return false;
+        }
+		/*POCOR-6528 ends*/
+        /*POCOR-6486 ends*/
         return true;
     }
 }
