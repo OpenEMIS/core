@@ -888,7 +888,27 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         return deferred.promise;
     }
 
+    //POCOR-6460[START]
+    function getIdentityTypesExternalSave(identityTypesName) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data[0]['id']);
+        }
+        return IdentityTypes
+            .select(['id'])
+            .where({name: identityTypesName})
+            .ajax({success: success, defer: true});
+    };
 
+    function getNationalitiesExternalSave(nationalityTypesName) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data[0]['id']);
+        }
+        return Nationalities
+            .select(['id'])
+            .where({name: nationalityTypesName})
+            .ajax({success: success, defer: true});
+    };
+    //POCOR-6460[END]
 
     function getAddNewStudentConfig() {
         return ConfigItems
