@@ -18,8 +18,8 @@ class POCOR6169 extends AbstractMigration
         
         //Update security functions for Absence delete permission
         $this->execute(
-                        'UPDATE `security_functions` SET `_view` = "InstitutionTrips.index|InstitutionTrips.view", `_edit` = "InstitutionTrips.edit", `_add` ="InstitutionTrips.add", `_delete`="InstitutionTrips.delete", `_execute`="InstitutionTrips.excel" 
-                        WHERE `name` = "Trips" AND `controller` = "Institutions"
+                        'UPDATE `security_functions` SET `controller` = "Institutions", `_view` = "InstitutionTrips.index|InstitutionTrips.view", `_edit` = "InstitutionTrips.edit", `_add` ="InstitutionTrips.add", `_delete`="InstitutionTrips.delete", `_execute`="InstitutionTrips.excel" 
+                        WHERE `name` = "Trips" AND `controller` = "InstitutionTrips"
                         AND `module` = "Institutions"
                         AND `category` = "Transport"'
                     );      
