@@ -18,8 +18,7 @@ use Cake\Core\Configure;
 use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
-use Cake\Utility\Security;
-use Cake\Utility\Text;
+use PHPExcel_IOFactory;
 
 class InstitutionsController extends AppController
 {
@@ -138,6 +137,7 @@ class InstitutionsController extends AppController
 
         //assessment
         'ImportAssessmentItemResults',
+        'ReportCardGenerate',
 
         // misc
         // 'IndividualPromotion',
@@ -156,6 +156,10 @@ class InstitutionsController extends AppController
         // End
 
         parent::initialize();
+
+       $data =  $this->loadModel('Calendars');
+
+
         // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
@@ -194,7 +198,10 @@ class InstitutionsController extends AppController
             'ImportStudentExtracurriculars'   => ['className' => 'Institution.ImportStudentExtracurriculars', 'actions' => ['add']],
             'StudentArchive'  => ['className' => 'Institution.StudentArchive', 'actions' => ['add']],
             'AssessmentsArchive'  => ['className' => 'Institution.AssessmentsArchive', 'actions' => ['index']],
-            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']]
+            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
+            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
+            'InstitutionStatistics'              => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
+            'InstitutionStandards'              => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -252,6 +259,13 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionLands']);
     }
+    // POCOR-6150 start
+    public function InfrastructureNeeds()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureNeeds']);
+    }
+    // POCOR-6150 end
+
     public function InstitutionBuildings()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBuildings']);
@@ -260,6 +274,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionFloors']);
     }
+    // POCOR-6152 starts
+    public function InstitutionAssets()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssets']);
+    }
+    // POCOR-6152 ends
     public function InstitutionRooms()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionRooms']);
@@ -272,6 +292,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBudgets']);
     }
+    // POCOR-6160 start
+    public function BankAccounts()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBankAccounts']);
+    }
+    // POCOR-6160 ends
     public function Income()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionIncomes']);
@@ -374,6 +400,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffBehaviours']);
     }
+    // POCOR-6154
+    public function StudentBehaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentBehaviours']);
+    }
+    // POCOR-6154
     public function Textbooks()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']);
@@ -416,6 +448,11 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
     }
 
+    public function InstitutionTransportProviders()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTransportProviders']);
+    }
+
     // public function AssessmentsArchive()
     // {
     //     if (!empty($this->request->param('institutionId'))) {
@@ -441,7 +478,7 @@ class InstitutionsController extends AppController
     //     $this->set('ngController', 'InstitutionAssessmentsArchiveCtrl as $ctrl');
     // }
 
-    public function Distributions()
+    public function Distribution()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDistributions']);
     }
@@ -603,6 +640,13 @@ class InstitutionsController extends AppController
     }
     //POCOR-5669 added InstitutionMaps
 
+    //POCOR-6122 add export button in calendar
+    public function InstitutionCalendars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Calendars']);
+    }
+    //POCOR-6122 add export button in calendar
+
     //POCOR-5683 added InstitutionStatusUpdate
     public function InstitutionStatus()
     {
@@ -626,10 +670,21 @@ class InstitutionsController extends AppController
     }
     //POCOR-5182 added StaffSalaries
 
+
     //POCOR-6145 added Export button in Infratucture > Wash > Waters
     public function InfrastructureWashWaters()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashWaters']);
+    }
+    //POCOR-6148 add Export button on Institutions > Infrastructures > WASH > Waste
+    public function InfrastructureWashWastes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashWastes']);
+    }
+    //POCOR-6146 added Export button in Infratucture > Wash > Sanitation
+    public function InfrastructureWashSanitations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashSanitations']);
     }
     //PCOOR-6146 add export button in Institutions > Infrastructures > WASH > Hygiene
     public function InfrastructureWashHygienes(){
@@ -649,6 +704,12 @@ class InstitutionsController extends AppController
     }
     //POCOR-6143 added Export button in Infratucture > Utilitie > Electricity
 
+    //POCOR-6149 Add expor button on Add Export button function - Institutions > Infrastructures > WASH > Sewage
+    public function InfrastructureWashSewages()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashSewages']);
+    }
+
     public function changeUtilitiesHeader($model, $modelAlias, $userType)
     {
         $session = $this->request->session();
@@ -663,7 +724,12 @@ class InstitutionsController extends AppController
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
                 $this->Navigation->addCrumb(__('Electricity'));
                 $this->set('contentHeader', $header);
-
+            } else if($this->request->param('action') == 'InfrastructureWashWastes'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Waste');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Waste'));
+                $this->set('contentHeader', $header);
             } else if($this->request->param('action') == 'InfrastructureUtilityInternets'){
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Internet');
@@ -688,7 +754,26 @@ class InstitutionsController extends AppController
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
                 $this->Navigation->addCrumb(__('Hygiene'));
                 $this->set('contentHeader', $header);
+
+            }else if($this->request->param('action') == 'InstitutionAssets'){ //POCOR-6152 Header breadcrumbs
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Assets');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Assets'));
+            } else if($this->request->param('action') == 'InfrastructureWashSewages'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Sewage');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Sewage'));
+            // POCOR-6150 start
+            }else if($this->request->param('action') == 'InfrastructureNeeds'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Needs');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Needs'));
+                $this->set('contentHeader', $header);
             }
+            // POCOR-6150 end
         }
 
     }
@@ -764,6 +849,14 @@ class InstitutionsController extends AppController
         $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
 
         $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+        $TransferLogs = TableRegistry::get('TransferLogs');
+        $TransferLogsData = $TransferLogs
+        ->find()
+        ->select([
+            'TransferLogs.academic_period_id'
+        ])
+        ->first();
+
         $securityRoleFunctionsData = $securityRoleFunctions
         ->find()
         ->select([
@@ -779,6 +872,11 @@ class InstitutionsController extends AppController
             $is_button_accesible = 1;
         }
         if($this->Auth->user('super_admin') == 1){
+            $is_button_accesible = 1;
+        }
+        if(empty($TransferLogsData)){
+            $is_button_accesible = 0;
+        }else{
             $is_button_accesible = 1;
         }
 
@@ -946,15 +1044,18 @@ class InstitutionsController extends AppController
 
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
-
         if ($hasTemplate) {
-            $customUrl = $this->ControllerAction->url('index');
-            $customUrl['plugin'] = 'CustomExcel';
-            $customUrl['controller'] = 'CustomExcels';
-            $customUrl['action'] = 'export';
-            $customUrl[0] = 'AssessmentResults';
-            $this->set('customExcel', Router::url($customUrl));
+            $queryString = $this->request->query('queryString');
+            $customUrl = Router::url([
+                            'plugin' => 'Institution',
+                            'controller' => 'Institutions',
+                            'action' => 'reportCardGenerate',
+                            'add',
+                            'queryString' => $queryString
+                        ]);
 
+            $this->set('reportCardGenerate',$customUrl);
+           
             $exportPDF_Url = $this->ControllerAction->url('index');
             $exportPDF_Url['plugin'] = 'CustomExcel';
             $exportPDF_Url['controller'] = 'CustomExcels';
@@ -965,6 +1066,10 @@ class InstitutionsController extends AppController
 
         $this->set('excelUrl', Router::url($url));
         $this->set('ngController', 'InstitutionsResultsCtrl');
+    }
+
+    public function ReportCardGenerate(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardGenerate']);
     }
 
     public function Comments()
@@ -1448,6 +1553,14 @@ class InstitutionsController extends AppController
                 $institutionId = $session->read('Institution.Institutions.id');
             }
 
+            $TransferLogs = TableRegistry::get('TransferLogs');
+            $TransferLogsData = $TransferLogs
+            ->find()
+            ->select([
+                'TransferLogs.academic_period_id'
+            ])
+            ->first();
+
             $securityFunctions = TableRegistry::get('SecurityFunctions');
             $securityFunctionsData = $securityFunctions
             ->find()
@@ -1476,6 +1589,11 @@ class InstitutionsController extends AppController
                 $is_button_accesible = 1;
             }
             if($this->Auth->user('super_admin') == 1){
+                $is_button_accesible = 1;
+            }
+            if(empty($TransferLogsData)){
+                $is_button_accesible = 0;
+            }else{
                 $is_button_accesible = 1;
             }
 
@@ -1981,8 +2099,11 @@ class InstitutionsController extends AppController
            // echo '<pre>'; print_r($model->alias());die;
             if (isset($params['pass'][1])) {
                 if ($model->table() == 'security_users' && !$isDownload) {
+                    if (count(explode('.', $params['pass'][1])) != 2) {
+                    } else {
                     $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
+                    }
                 }
             } elseif (isset($requestQuery['user_id'])) {
                 // POCOR-4577 - to check if Users association existed in model - for staff leave import
@@ -1993,7 +2114,7 @@ class InstitutionsController extends AppController
                     $persona = $Users->get($requestQuery['user_id']);
                 }
             }
-
+           
             if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
                 $header = $persona->name . ' - ' . $model->getHeader($alias);
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
@@ -2009,8 +2130,10 @@ class InstitutionsController extends AppController
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
             }elseif ($model->alias() == 'InstitutionAssociationStudent') {
                 $header .= ' - '. __('Associations');
+            } elseif($model->alias() == 'InstitutionStatistics'){
+                $header .= ' - '. __('Statistics');
             } else {
-                 $header .= ' - ' . $model->getHeader($alias);
+                $header .= ' - ' . $model->getHeader($alias);
             }
            
             $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
@@ -3204,10 +3327,13 @@ class InstitutionsController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate)
+    public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate, $staffUserPriId = '')
     {
         if ($endDate == 'null') {
             $endDate = null;
+        }
+        if ($startDate == 'null') {
+            $startDate = null;
         }
 
         $this->autoRender= false;
@@ -3261,9 +3387,35 @@ class InstitutionsController extends AppController
         $activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
         $positionConditions = [];
         $positionConditions[$StaffTable->Positions->aliasField('institution_id')] = $institutionId;
+        /* START : POCOR-6450
         if (!empty($activeStatusId)) {
             $positionConditions[$StaffTable->Positions->aliasField('status_id').' IN '] = $activeStatusId;
         }
+        END : POCOR-6450 */
+
+        // START : POCOR-6450
+        $expectedStaffStatuses = $this->getSpecificInstitutionStaff($institutionId, $staffUserPriId);
+        if ( !empty($expectedStaffStatuses) ) {
+            $positionConditions[$StaffTable->Positions->aliasField('staff_position_title_id').' NOT IN '] = $expectedStaffStatuses;
+        }
+        // END : POCOR-6450
+        /**
+         * @ticket POCOR-6522
+         * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+         */
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $staff_min_role = $SecurityGroupUsers->find()
+                            ->contain('SecurityRoles')
+                            ->order(['SecurityRoles.order'])
+                            ->where([$SecurityGroupUsers->aliasField('security_user_id') => $this->Auth->user()['id']])
+                            ->first();
+        if ( $this->Auth->user()['super_admin'] != 1 && isset($staff_min_role->security_role->order) && $staff_min_role->security_role->order > 0) {
+            $positionConditions['SecurityRoles.order >= '] = $staff_min_role->security_role->order;
+        }
+        /**
+         * END
+         * @ticket POCOR-6522
+         */
 
         if ($selectedFTE > 0) {
             $staffPositionsOptions = $StaffTable->Positions
@@ -3328,6 +3480,35 @@ class InstitutionsController extends AppController
         $this->response->type('json');
 
         return $this->response;
+    }
+
+    /**
+     * Get staff details of specific institution
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6522
+     */
+    private function getSpecificInstitutionStaff($institution_id, $staff_id)
+    {
+        $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
+        $institutionPositionsTable = TableRegistry::get('Institution.InstitutionPositions');
+        $StaffTable = TableRegistry::get('Institution.Staff');
+        $alreadyAssignedStaffs = $StaffTable->find()->select([
+            'institution_position_id' => $StaffTable->aliasField('institution_position_id'),
+            'status_id' => $institutionPositionsTable->aliasField('status_id'),
+            'staff_position_title_id' => $institutionPositionsTable->aliasField('staff_position_title_id')
+        ])->innerJoin([$institutionPositionsTable->alias() => $institutionPositionsTable->table()], [
+            $institutionPositionsTable->aliasField('id = ') . $StaffTable->aliasField('institution_position_id'),
+        ])->where([
+            $StaffTable->aliasField('institution_id') => $institution_id,
+            $StaffTable->aliasField('staff_id') => $staff_id,
+            $StaffTable->aliasField('staff_status_id') => $StaffStatusesTable->getIdByCode('ASSIGNED'),
+        ])
+        ->hydrate(false)->toArray();
+        $expectedStaffStatuses = [];
+        foreach ($alreadyAssignedStaffs AS $staff) {
+            $expectedStaffStatuses[$staff['staff_position_title_id']] = $staff['staff_position_title_id'];
+        }
+        return $expectedStaffStatuses;
     }
 
     public function getStatusPermission($model)
@@ -3443,7 +3624,7 @@ class InstitutionsController extends AppController
      */
      public function getInstituteProfileCompletnessData ($institutionId) {
         $data = array();
-        $data['percentage'] = 0;
+        //$data['percentage'] = 0; //POCOR-6627 - commented line;it was adding extra data in totalProfileComplete
         $profileComplete = 0;
         //Overview
         $institutions = TableRegistry::get('institutions');
@@ -5029,5 +5210,125 @@ class InstitutionsController extends AppController
                 unset($studentCustomFieldsResult);
             }
         }
+    }
+
+    /*POCOR-6264 starts*/
+    public function Lands()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Lands']);
+    }
+    /*POCOR-6264 ends*/
+
+    //  POCOR-6130 export
+    public function StudentUserExport()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUserExport']);
+    }
+
+    public function InstitutionBuses(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBuses']);
+    }
+
+    public function Distributions(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDistributions']);
+    }
+
+    public function ViewReport()
+    {
+        ini_set('memory_limit', '-1');
+        $data = $_GET;
+        $explode_data = explode("/", $data['file_path']);
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $this->Navigation->addCrumb($data['module']);
+        $header = __('Reports') . ' - ' .$data['module'];
+
+        $inputFileName = WWW_ROOT. 'export/'.end($explode_data);
+
+        $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
+        $objReader = PHPExcel_IOFactory::createReader($inputFileType);
+        $objPHPExcel = $objReader->load($inputFileName);
+
+        $sheet = $objPHPExcel->getSheet(0);
+        $highestRow = $sheet->getHighestRow();
+        if ($data['module'] == 'InstitutionStatistics' ) {
+             $highestRow = $sheet->getHighestRow() + 1;
+        }
+        $highestColumn = $sheet->getHighestColumn();
+
+        for ($row = 1; $row <= 1; $row++){
+            $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
+                NULL,
+                TRUE,
+                FALSE);
+        }
+
+        $rowHeaderNew = $this->array_flatten($rowHeader);
+        for ($row = 2; $row <= $highestRow -1; $row++){
+            //  Read a row of data into an array
+            $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
+                NULL,
+                TRUE,
+                FALSE);
+            if($this->isEmptyRow(reset($rowData))) { continue; }
+            //  Insert row data array into your database of choice here
+        }
+        foreach($rowData as $newKey => $newDataVal){
+            foreach($newDataVal as $kay2 => $new_data_arr){
+                if(isset($new_data_arr)){
+                    $newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
+                }
+            }
+        }
+        $this->set('rowHeader', $rowHeader);
+        $this->set('newArr2', $newArr2);
+
+        $this->set('contentHeader', $header);
+    }
+
+    function array_flatten($array) {
+        if (!is_array($array)) {
+            return false;
+        }
+        $result = array();
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $result = array_merge($result, $this->array_flatten($value));
+            } else {
+                $result = array_merge($result, array($key => $value));
+            }
+        }
+        return $result;
+    }
+
+    function isEmptyRow($row) {
+        foreach($row as $cell){
+            if (null !== $cell) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Get the Feature options of the Institutions Standard Report
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @return array
+     * @ticket POCOR-6493
+     */
+    public function getInstitutionStatisticStandardReportFeature() : array
+    {
+        $options = [
+            'Institution.InstitutionStandards' => __('Students') . ' ' . __('Overview'),
+            'Institution.StudentSpecialNeeds'  => __('Student Special Needs'),
+            'Institution.StudentHealths'  => __('Student Health'),
+            'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
+            'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
+        ];
+        return $options;
     }
 }

@@ -112,6 +112,8 @@ class WorkflowsTable extends AppTable
             'select' => false,
             'type' => 'select'
         ]);
+        $this->ControllerAction->field('report_start_date',['type'=>'hidden']);
+        $this->ControllerAction->field('report_end_date',['type'=>'hidden']);
             $this->ControllerAction->field('academic_period_id', ['select' => false]);
 
             $this->ControllerAction->field('area', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
@@ -151,7 +153,12 @@ class WorkflowsTable extends AppTable
         $validator = parent::validationDefault($validator);
         $validator
             ->notEmpty('institution_id');
-
+        if($this->request['data']['Workflows']['institution_id'] ==0){
+            $validator
+            ->notEmpty('report_start_date');
+            $validator
+            ->notEmpty('report_end_date');
+        }
         return $validator;
     }
 
@@ -319,6 +326,8 @@ class WorkflowsTable extends AppTable
                     $fieldsOrder[] = 'area_level_id';
                     $fieldsOrder[] = 'area';
                     $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
                     $fieldsOrder[] = 'category';
                     $fieldsOrder[] = 'format';
                     break;
@@ -348,6 +357,27 @@ class WorkflowsTable extends AppTable
                     $requestData[$this->alias()]['feature'] => __('Workflow Records')
                 ];
             }
+        }
+    }
+
+     public function onUpdateFieldReportStartDate(Event $event, array $attr, $action, Request $request)
+    {
+        if ($request['data']['Workflows']['institution_id'] == 0) {
+            $attr['type'] = 'date';
+            $attr['null'] = false;
+            $attr['label'] = __('test');
+            return $attr;
+        }
+        
+    }
+
+
+    public function onUpdateFieldReportEndDate(Event $event, array $attr, $action, Request $request)
+    {
+       if ($request['data']['Workflows']['institution_id'] == 0) {
+            $attr['type'] = 'date';
+            $attr['null'] = false;
+            return $attr;
         }
     }
 }
