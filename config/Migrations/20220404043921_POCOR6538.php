@@ -24,7 +24,7 @@ class POCOR6538 extends AbstractMigration
         $this->execute('INSERT INTO `zz_6538_config_item_options` SELECT * FROM `config_item_options`');
         $this->execute('INSERT INTO `config_items` 
             (`id`, `name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`) VALUES 
-            (6, "Time Zone", "time_zone", "System", "Time Zone", "(GMT+08:00) Kuala Lumpur, Singapore", "(GMT+08:00) Kuala Lumpur, Singapore", 1, 1, "Dropdown", "time_zone", 1, CURRENT_DATE())');
+            (6, "Time Zone", "time_zone", "System", "Time Zone", "", "(GMT 00:00)", 1, 1, "Dropdown", "time_zone", 1, CURRENT_DATE())');
 	    
          // insert data to config_items table
         $configitemoptions = [
