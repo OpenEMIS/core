@@ -73,6 +73,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.processInternalGridUserRecord = processInternalGridUserRecord;
     StaffController.processExternalGridUserRecord = processExternalGridUserRecord;
     StaffController.saveStaffDetails = saveStaffDetails;
+    StaffController.validateDetails = validateDetails;
+    StaffController.goToInternalSearch = goToInternalSearch;
+    StaffController.goToExternalSearch = goToExternalSearch;
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -150,16 +153,35 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function getInternalSearchData() {
+        var first_name = '';
+        var last_name = '';
+        var openemis_no = '';
+        var date_of_birth = '';
+        var identity_number = '';
         first_name = StaffController.selectedStaffData.first_name;
         last_name = StaffController.selectedStaffData.last_name;
+        date_of_birth = StaffController.selectedStaffData.date_of_birth;
+        openemis_no = StaffController.selectedStaffData.openemis_no;
+        identity_number = StaffController.selectedStaffData.identity_number;
         var dataSource = {
             pageSize: StaffController.pageSize,
             getRows: function (params) {
                 UtilsSvc.isAppendLoader(true);
-                InstitutionsStaffSvc.getInternalSearchData(first_name, last_name)
+                var param = {
+                    page: params.endRow / (params.endRow - params.startRow),
+                    limit: params.endRow - params.startRow,
+                    first_name: first_name,
+                    last_name: last_name,
+                    openemis_no: openemis_no,
+                    date_of_birth: date_of_birth,
+                    identity_number: identity_number,
+                }
+                InstitutionsStaffSvc.getInternalSearchData(param)
                 .then(function(response) {
-                    var gridData = response.data;
-                    var totalRowCount = gridData.length;
+                    var gridData = response.data.data;
+                    if(!gridData)
+                        gridData=[];
+                    var totalRowCount = response.data.total;
                     return StaffController.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
@@ -178,22 +200,29 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.rowsThisPage = userRecords;
 
         params.successCallback(StaffController.rowsThisPage, lastRow);
-        // scope.externalDataLoaded = true;
         UtilsSvc.isAppendLoader(false);
         return userRecords;
     }
 
     function getExternalSearchData() {
-        first_name = StaffController.selectedStaffData.first_name;
-        last_name = StaffController.selectedStaffData.last_name;
+        var param = {
+            first_name: StaffController.selectedStaffData.first_name,
+            last_name: StaffController.selectedStaffData.last_name,
+            date_of_birth: StaffController.selectedStaffData.date_of_birth,
+            identity_number: StaffController.selectedStaffData.identity_number,
+        };
         var dataSource = {
             pageSize: StaffController.pageSize,
             getRows: function (params) {
                 UtilsSvc.isAppendLoader(true);
-                InstitutionsStaffSvc.getExternalSearchData(first_name, last_name)
+                param.limit = params.endRow - params.startRow;
+                param.page = params.endRow / (params.endRow - params.startRow);
+                InstitutionsStaffSvc.getExternalSearchData(param)
                 .then(function(response) {
-                    var gridData = response.data;
-                    var totalRowCount = gridData.length;
+                    var gridData = response.data.data;
+                    if(!gridData)
+                        gridData = [];
+                    var totalRowCount = response.data.total;
                     return StaffController.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
@@ -212,7 +241,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.rowsThisPage = userRecords;
 
         params.successCallback(StaffController.rowsThisPage, lastRow);
-        // scope.externalDataLoaded = true;
         UtilsSvc.isAppendLoader(false);
         return userRecords;
     }
@@ -441,17 +469,210 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
         StaffController.getPositions();
     }
+
+    function goToInternalSearch(){
+        UtilsSvc.isAppendLoader(true);
+        AggridLocaleSvc.getTranslatedGridLocale()
+        .then(function(localeText){
+            StaffController.internalGridOptions = {
+                columnDefs: [
+                    {headerName: StaffController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
+                ],
+                localeText: localeText,
+                enableColResize: true,
+                enableFilter: false,
+                enableServerSideFilter: true,
+                enableServerSideSorting: true,
+                enableSorting: false,
+                headerHeight: 38,
+                rowData: [],
+                rowHeight: 38,
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStudent(_e.node.data.id);
+                    $scope.$apply();
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
+            };
+            setTimeout(function(){
+                StaffController.getInternalSearchData();
+            }, 1500);
+        }, function(error){
+            StaffController.internalGridOptions = {
+                columnDefs: [
+                    {headerName: StaffController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
+                ],
+                localeText: localeText,
+                enableColResize: true,
+                enableFilter: false,
+                enableServerSideFilter: true,
+                enableServerSideSorting: true,
+                enableSorting: false,
+                headerHeight: 38,
+                rowData: [],
+                rowHeight: 38,
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id);
+                    $scope.$apply();
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
+            };
+            setTimeout(function(){
+                StaffController.getInternalSearchData();
+            }, 1500);
+        });
+    }
+
+    function goToExternalSearch(){
+        UtilsSvc.isAppendLoader(true);
+        AggridLocaleSvc.getTranslatedGridLocale()
+        .then(function(localeText){
+            StaffController.externalGridOptions = {
+                columnDefs: [
+                    {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                ],
+                localeText: localeText,
+                enableColResize: false,
+                enableFilter: false,
+                enableServerSideFilter: true,
+                enableServerSideSorting: true,
+                enableSorting: false,
+                headerHeight: 38,
+                rowData: [],
+                rowHeight: 38,
+                 rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id);
+                    $scope.$apply();
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
+            };
+            setTimeout(function(){
+                StaffController.getExternalSearchData();
+            }, 1500);
+        }, function(error){
+            StaffController.externalGridOptions = {
+                columnDefs: [
+                    {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                ],
+                localeText: localeText,
+                enableColResize: false,
+                enableFilter: false,
+                enableServerSideFilter: true,
+                enableServerSideSorting: true,
+                enableSorting: false,
+                headerHeight: 38,
+                rowData: [],
+                rowHeight: 38,
+                 rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.c(_e.node.data.id);
+                    $scope.$apply();
+                },
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
+            };
+            setTimeout(function(){
+                StaffController.getExternalSearchData();
+            }, 1500);
+        });
+    }
     
     function goToPrevStep(){
         switch(StaffController.step){
             case 'internal_search': 
+                StaffController.selectedStaffData.date_of_birth = new Date(StaffController.selectedStaffData.date_of_birth);
                 StaffController.step = 'user_details';
                 break;
             case 'external_search': 
                 StaffController.step = 'internal_search';
+                StaffController.internalGridOptions = null;
+                StaffController.goToInternalSearch();
                 break;
             case 'confirmation': 
                 StaffController.step = 'external_search';
+                StaffController.externalGridOptions = null;
+                StaffController.goToExternalSearch();
                 break;
             case 'add_staff': 
                 StaffController.step = 'confirmation';
@@ -459,18 +680,41 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
     }
 
+    function validateDetails() {
+        if(!StaffController.selectedStaffData.first_name){
+            StaffController.error.first_name = 'This field cannot be left empty';
+        }
+        if(!StaffController.selectedStaffData.last_name){
+            StaffController.error.last_name = 'This field cannot be left empty';
+        }
+        if(!StaffController.selectedStaffData.gender_id){
+            StaffController.error.gender_id = 'This field cannot be left empty';
+        }
+        if(!StaffController.selectedStaffData.date_of_birth) {
+            StaffController.error.date_of_birth = 'This field cannot be left empty';
+        } else {
+            let dob = StaffController.selectedStaffData.date_of_birth.toLocaleDateString();
+            let dobArray = dob.split('/');
+            StaffController.selectedStaffData.date_of_birth = `${dobArray[2]}-${dobArray[1]}-${dobArray[0]}`;
+        }
+
+        if(!StaffController.selectedStaffData.first_name || !StaffController.selectedStaffData.last_name || !StaffController.selectedStaffData.gender_id || !StaffController.selectedStaffData.date_of_birth){
+            return;
+        }
+        StaffController.step = 'internal_search';
+        StaffController.getUniqueOpenEmisId();
+    }
+
     function goToNextStep() {
         switch(StaffController.step){
             case 'user_details': 
                 StaffController.step = 'internal_search';
-                StaffController.getUniqueOpenEmisId();
+                StaffController.validateDetails();
                 break;
             case 'internal_search': 
                 StaffController.step = 'external_search';
-                UtilsSvc.isAppendLoader(false);
-                setTimeout(function(){
-                    StaffController.getExternalSearchData();
-                }, 1500);
+                StaffController.externalGridOptions = null;
+                StaffController.goToExternalSearch();
                 break;
             case 'external_search': 
                 StaffController.step = 'confirmation';
