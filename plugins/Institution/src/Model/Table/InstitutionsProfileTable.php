@@ -95,7 +95,7 @@ class InstitutionsProfileTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     { 
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
+        unset($buttons['view']);
         // check if report card request is valid
         $reportCardId = $this->request->query('report_card_id');
         $academicPeriodId = $this->request->query('academic_period_id');
@@ -346,45 +346,6 @@ class InstitutionsProfileTable extends ControllerActionTable
     {
         $searchableFields[] = 'institution_name';
         $searchableFields[] = 'institution_code';
-    }
-
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->setFieldOrder(['institution_name', 'institution_code', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue']);
-		$this->setFieldVisible(['view'], ['institution_name', 'institution_code', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue']);
-    }
-
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $params = $this->request->query;
-		
-		if(!empty($params['report_card_id'])) {
-
-			$query
-				->select([
-					'institution_name' => $this->aliasField('name'),
-					'institution_code' => $this->aliasField('code'),
-					'report_card_id' => $this->InstitutionReportCards->aliasField('report_card_id'),
-					'report_card_status' => $this->InstitutionReportCards->aliasField('status'),
-					'report_card_started_on' => $this->InstitutionReportCards->aliasField('started_on'),
-					'report_card_completed_on' => $this->InstitutionReportCards->aliasField('completed_on'),
-				])
-				->leftJoin([$this->InstitutionReportCards->alias() => $this->InstitutionReportCards->table()],
-					[
-						$this->InstitutionReportCards->aliasField('institution_id = ') . $this->aliasField('id'),
-						$this->InstitutionReportCards->aliasField('academic_period_id = ') . $params['academic_period_id'],
-						$this->InstitutionReportCards->aliasField('report_card_id = ') . $params['report_card_id']
-					]
-				)
-				->autoFields(true);
-		} else {
-			$query
-				->select([
-					'institution_name' => $this->aliasField('name'),
-					'institution_code' => $this->aliasField('code'),
-				])
-				->autoFields(true);
-		}
     }
 
     public function onGetStatus(Event $event, Entity $entity)
