@@ -19,6 +19,8 @@ use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
 use PHPExcel_IOFactory;
+use Cake\Utility\Security; //POCOR-5672
+use Cake\Utility\Text;//POCOR-5672
 
 class InstitutionsController extends AppController
 {
@@ -209,6 +211,10 @@ class InstitutionsController extends AppController
         $this->loadComponent('Institution.CreateUsers');
         $this->attachAngularModules();
         $this->loadModel('Institution.StaffBodyMasses');
+        //POCOR-5672 it is used for removing csrf token mismatch condition in save student Api 
+        if ($this->request->action == 'saveStudentData') {
+            $this->eventManager()->off($this->Csrf);
+        }//POCOR-5672 ends
     }
 
     // CAv4
@@ -4570,7 +4576,7 @@ class InstitutionsController extends AppController
             //$institutionId = $this->request->session()->read('Institution.Institutions.id');
             $institutionId = (array_key_exists('institution_id', $requestData))? $requestData['institution_id'] : null;
             $studentStatusId = (array_key_exists('student_status_id', $requestData))? $requestData['student_status_id'] : null;
-            $userId = (array_key_exists('login_user_id', $requestData))? $requestData['login_user_id'] : 1;
+            $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
             $custom = (array_key_exists('custom', $requestData))? $requestData['custom'] : "";
             
             //get academic period data
@@ -4618,7 +4624,7 @@ class InstitutionsController extends AppController
                 'postal_code' => $postalCode,
                 'is_student' => 1,
                 'created_user_id' => $userId,
-                'created' => date('y-m-d H:i:s'),
+                'created' => date('Y-m-d H:i:s')
             ];
             //save in security_users table
             $entity = $SecurityUsers->newEntity($entityData);
@@ -4644,7 +4650,7 @@ class InstitutionsController extends AppController
                         'nationality_id' => $nationalityId,
                         'security_user_id' => $user_record_id,
                         'created_user_id' => $userId,
-                        'created' => date('y-m-d H:i:s')
+                        'created' => date('Y-m-d H:i:s')
                     ];
                     //save in user_nationalities table
                     $entityNationalData = $UserNationalities->newEntity($entityNationalData);
@@ -4659,7 +4665,7 @@ class InstitutionsController extends AppController
                         'nationality_id' => $nationalityId,
                         'security_user_id' => $user_record_id,
                         'created_user_id' => $userId,
-                        'created' => date('y-m-d H:i:s')
+                        'created' => date('Y-m-d H:i:s')
                     ];
                     //save in user_identities table
                     $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
@@ -4680,7 +4686,7 @@ class InstitutionsController extends AppController
                         'end_year' => $endYear,
                         'institution_id' => $institutionId,
                         'created_user_id' => $userId,
-                        'created' => date('y-m-d H:i:s')
+                        'created' => date('Y-m-d H:i:s')
                     ];
                     //save in institution_students table
                     $entityStudentsData = $InstitutionStudents->newEntity($entityStudentsData);
@@ -4713,7 +4719,7 @@ class InstitutionsController extends AppController
                         'education_grade_id' => $educationGradeId,
                         'institution_class_id' => $institutionClassId,
                         'created_user_id' => $userId,
-                        'created' => date('y-m-d H:i:s')
+                        'created' => date('Y-m-d H:i:s')
                     ];
                     //save in institution_student_admission table
                     $entityAdmissionData = $institutionStudentAdmission->newEntity($entityAdmissionData);
@@ -4731,7 +4737,7 @@ class InstitutionsController extends AppController
                         'institution_id' => $institutionId,
                         'student_status_id' => $statuses['CURRENT'], 
                         'created_user_id' => $userId,
-                        'created' => date('y-m-d H:i:s')
+                        'created' => date('Y-m-d H:i:s')
                     ];
                     //save in institution_class_students table
                     $entityClassData = $institutionClassStudents->newEntity($entityAdmissionData);
@@ -4797,7 +4803,7 @@ class InstitutionsController extends AppController
                                 'education_grade_id' => $educationGradeId,
                                 'student_status_id' => $statuses['CURRENT'],
                                 'created_user_id' => $userId,
-                                'created' => date('y-m-d H:i:s')
+                                'created' => date('Y-m-d H:i:s')
                             ];
                             //save in institution_subject_students table
                             $entitySubjectsData = $institutionSubjectStudents->newEntity($entitySubjectsData);
@@ -4814,21 +4820,22 @@ class InstitutionsController extends AppController
                     foreach ($custom as $skey => $sval) {
                         $entityCustomData = [
                             'id' => Text::uuid(),
-                            'text_value' => $sval->text_value,
-                            'number_value' => $sval->number_value,
-                            'decimal_value' => $sval->decimal_value,
-                            'textarea_value' => $sval->textarea_value,
-                            'time_value' => $sval->time_value,
-                            'file' => $sval->file,
-                            'student_custom_field_id' => $sval->student_custom_field_id,
+                            'text_value' => $sval['text_value'],
+                            'number_value' => $sval['number_value'],
+                            'decimal_value' => $sval['decimal_value'],
+                            'textarea_value' => $sval['textarea_value'],
+                            'time_value' => $sval['time_value'],
+                            'file' => $sval['file'],
+                            'student_custom_field_id' => $sval['student_custom_field_id'],
                             'student_id' => $user_record_id,
                             'created_user_id' => $userId,
-                            'created' => date('y-m-d H:i:s')
+                            'created' => date('Y-m-d H:i:s')
                         ];
                         //save in student_custom_field_values table
                         $entityCustomData = $studentCustomFieldValues->newEntity($entitySubjectsData);
                         $studentCustomFieldsResult = $studentCustomFieldValues->save($entityCustomData);
                         unset($studentCustomFieldsResult);
+                        unset($entityCustomData);
                     }
                 }
             }else{
