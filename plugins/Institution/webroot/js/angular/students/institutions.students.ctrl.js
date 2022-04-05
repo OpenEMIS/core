@@ -114,30 +114,19 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     });
 
     function getUniqueOpenEmisId() {
-        if(!StudentController.isGuardianAdding && StudentController.selectedStudentData.openemis_no){
-            StudentController.internalGridOptions = null;
-            StudentController.goToInternalSearch();
-            return;
-        }
-        if(StudentController.isGuardianAdding && StudentController.selectedGuardianData.openemis_no){
+        if(StudentController.selectedStudentData.openemis_no){
             StudentController.internalGridOptions = null;
             StudentController.goToInternalSearch();
             return;
         }
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getUniqueOpenEmisId()
-            .then(function(response) {
-                if(!StudentController.isGuardianAdding){
-                    StudentController.selectedStudentData.openemis_no = response;
-                    StudentController.selectedStudentData.username = response;
-                    StudentController.getInternalSearchData();
-                } else {
-                    StudentController.selectedGuardianData.openemis_no = response;
-                    StudentController.selectedGuardianData.username = response;
-                    StudentController.goToInternalSearch();
-                }
-                
-    }, function(error) {
+        .then(function(response) {
+            StudentController.selectedStudentData.openemis_no = response;
+            StudentController.selectedStudentData.username = response;
+            StudentController.getInternalSearchData();
+            
+        }, function(error) {
             console.log(error);
             StudentController.getInternalSearchData();
         });
@@ -149,19 +138,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var openemis_no = '';
         var date_of_birth = '';
         var identity_number = '';
-        if(!StudentController.isGuardianAdding) {
-            first_name = StudentController.selectedStudentData.first_name;
-            last_name = StudentController.selectedStudentData.last_name;
-            date_of_birth = StudentController.selectedStudentData.date_of_birth;
-            openemis_no = StudentController.selectedStudentData.openemis_no;
-            identity_number = StudentController.selectedStudentData.identity_number;
-        } else{
-            first_name = StudentController.selectedGuardianData.first_name;
-            last_name = StudentController.selectedGuardianData.last_name;
-            date_of_birth = StudentController.selectedGuardianData.date_of_birth;
-            openemis_no = StudentController.selectedGuardianData.openemis_no;
-            identity_number = StudentController.selectedGuardianData.identity_number;
-        }
+        first_name = StudentController.selectedStudentData.first_name;
+        last_name = StudentController.selectedStudentData.last_name;
+        date_of_birth = StudentController.selectedStudentData.date_of_birth;
+        openemis_no = StudentController.selectedStudentData.openemis_no;
+        identity_number = StudentController.selectedStudentData.identity_number;
         var dataSource = {
             pageSize: StudentController.pageSize,
             getRows: function (params) {
@@ -204,22 +185,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function getExternalSearchData() {
-        var param = {};
-        if(!StudentController.isGuardianAdding) {
-            param = {
-                first_name: StudentController.selectedStudentData.first_name,
-                last_name: StudentController.selectedStudentData.last_name,
-                date_of_birth: StudentController.selectedStudentData.date_of_birth,
-                identity_number: StudentController.selectedStudentData.identity_number,
-            }
-        } else{
-            param = {
-                first_name: StudentController.selectedGuardianData.first_name,
-                last_name: StudentController.selectedGuardianData.last_name,
-                date_of_birth: StudentController.selectedGuardianData.date_of_birth,
-                identity_number: StudentController.selectedGuardianData.identity_number,
-            }
-        }
+        var param = {
+            first_name: StudentController.selectedStudentData.first_name,
+            last_name: StudentController.selectedStudentData.last_name,
+            date_of_birth: StudentController.selectedStudentData.date_of_birth,
+            identity_number: StudentController.selectedStudentData.identity_number,
+        };
         var dataSource = {
             pageSize: StudentController.pageSize,
             getRows: function (params) {
@@ -228,12 +199,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 param.page = params.endRow / (params.endRow - params.startRow);
                 InstitutionsStudentsSvc.getExternalSearchData(param)
                 .then(function(response) {
-                    if(response.data.data){
-                        var gridData = response.data.data;
-                        var totalRowCount = response.data.total;
-                        return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
-                    }
-                    UtilsSvc.isAppendLoader(false);
+                    var gridData = response.data.data;
+                    if(!gridData)
+                        gridData = [];
+                    var totalRowCount = response.data.total;
+                    return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
             }, function(error) {
                     console.log(error);
                     UtilsSvc.isAppendLoader(false);
@@ -703,7 +673,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StudentController.c(_e.node.data.id);
+                    StudentController.selectStudent(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -850,9 +820,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(!StudentController.selectedStudentData.date_of_birth) {
             StudentController.error.date_of_birth = 'This field cannot be left empty';
         } else {
-            let dob = StudentController.selectedStudentData.date_of_birth.toLocaleDateString();
-            let dobArray = dob.split('/');
-            StudentController.selectedStudentData.date_of_birth = `${dobArray[2]}-${dobArray[1]}-${dobArray[0]}`;
+            // let dob = StudentController.selectedStudentData.date_of_birth.toLocaleDateString();
+            // let dobArray = dob.split('/');
+            StudentController.selectedStudentData.date_of_birth = $filter('date')(StudentController.selectedStudentData.date_of_birth, 'yyyy-MM-dd');
         }
 
         if(!StudentController.selectedStudentData.first_name || !StudentController.selectedStudentData.last_name || !StudentController.selectedStudentData.gender_id || !StudentController.selectedStudentData.date_of_birth){
@@ -900,8 +870,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function saveStudentDetails() {
-        let startDate = StudentController.selectedStudentData.startDate.toLocaleDateString();
-        let startDateArray = startDate.split('/');
+        let startDate = $filter('date')(StudentController.selectedStudentData.startDate, 'yyyy-MM-dd');
         var params = {
             openemis_no: StudentController.selectedStudentData.openemis_no,
             first_name: StudentController.selectedStudentData.first_name,
@@ -922,12 +891,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             identity_type_id: StudentController.selectedStudentData.identity_type_id,
             education_grade_id: 59,
             academic_period_id: StudentController.selectedStudentData.academic_period_id,
-            start_date: `${startDateArray[2]}-${startDateArray[1]}-${startDateArray[0]}`,
+            start_date: startDate,
             end_date: StudentController.selectedStudentData.endDate,
             institution_class_id: 524,
             student_status_id: 1,
             custom: [],
         };
+
+        var formData = new FormData();
+        formData.append("data", JSON.stringify(param));
+        formData.append("photo", JSON.stringify(StudentController.selectedStudentData.photo));
 
         StudentController.customFieldsArray.forEach((customField)=> {
             customField.data.forEach((field)=> {
@@ -962,6 +935,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         fieldData.time_value = `${timeArray[0]}:${timeArray[1]}`;
                     }
                     if(field.field_type === 'DATE') {
+                        fieldData.date_value = $filter('date')(field.anser, 'yyyy-MM-dd');
                         let date = field.answer.toLocaleDateString();
                         let dateArray = date.split('/');
                         fieldData.date_value = `${dateArray[2]}-${dateArray[1]}-${dateArray[0]}`;
@@ -1040,6 +1014,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     StudentController.selectStudent = function(id) {
+        StaffController.selectedStudent = id;
         StudentController.getStudentData();
     }
 
