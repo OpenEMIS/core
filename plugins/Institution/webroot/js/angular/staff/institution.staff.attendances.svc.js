@@ -123,6 +123,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                 academic_period_id: academicPeriodId,
                 week_id: weekId,
                 institution_id: institutionId,
+                school_closed_required: true
             })
             .ajax({success: success, defer: true});
     }
@@ -447,7 +448,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         eTextarea.addEventListener('blur', function () {
             var oldValue = params.value;
             var newValue = eTextarea.value;
-            if (newValue && oldValue != newValue) {
+            if (oldValue != newValue) {
                 UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
                 if (params.data.attendance[date].comment == null) {
                     params.data.attendance[date].isNew = true;

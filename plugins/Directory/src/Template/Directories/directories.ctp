@@ -214,11 +214,7 @@
                             <p class="font-italic">* Format Supported: .jpg, .jpeg, .png, .gif</p>
                             <div class="d-flex">
                                 <div class="position-relative">
-                                    <button class="btn btn-xs btn-default fontSize-16">
-                                        <i class="fa fa-folder"></i>
-                                        <span>Select File</span>
-                                    </button>
-                                    <input type="file" class="input-hidden">
+                                    <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >
                                 </div>
                             </div>
                         </div>
