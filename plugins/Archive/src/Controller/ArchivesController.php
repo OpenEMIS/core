@@ -52,6 +52,9 @@ class ArchivesController extends AppController
         }elseif($this->request->action == 'Connection'){
             $header = __('Archive') . ' - ' . __('Connection');
             $this->Navigation->addCrumb('Connection');
+        }elseif($this->request->action == 'CopyData'){
+            $header = __('Data Management') . ' - ' . __('Copy');
+            $this->Navigation->addCrumb('Copy');
         }
         $this->set('contentHeader', $header); 
 
@@ -73,6 +76,12 @@ class ArchivesController extends AppController
         readfile($fileLink);
         exit();
     }
+
+    //POCOR-6281[START]
+    public function CopyData(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.DataManagementCopy']);
+    }
+    //POCOR-6281[END]
 
     //Archive backup module log page
     public function BackupLog(){

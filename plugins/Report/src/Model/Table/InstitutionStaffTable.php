@@ -8,9 +8,11 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Network\Session;
 
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Datasource\ConnectionManager;
 
 class InstitutionStaffTable extends AppTable
 {
@@ -57,6 +59,8 @@ class InstitutionStaffTable extends AppTable
         $typeId = $requestData->type;
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $academicPeriodId = $requestData->academic_period_id;
+
         if ($statusId != 0) {
             $query->where([
                 $this->aliasField('staff_status_id') => $statusId
@@ -148,7 +152,8 @@ class InstitutionStaffTable extends AppTable
                         'Identities.issue_date',
                         'Identities.expiry_date',
                         'Identities.issue_location',
-                        'IdentityTypes.name'
+                        'IdentityTypes.name',
+                        'IdentityTypes.default'
                     ]
                 ],
                 'Users.Genders' => [
@@ -190,6 +195,31 @@ class InstitutionStaffTable extends AppTable
                     ]
                 ]
             ]);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($academicPeriodId) {
+            return $results->map(function ($row) use ($academicPeriodId){
+                $row['academic_period_id'] = $academicPeriodId;
+
+                return $row;
+            });
+        });
+    }
+
+    public function onExcelGetUserIdentitiesDefault(Event $event, Entity $entity)
+    {
+        $return = [];
+        if ($entity->has('user')) {
+            if ($entity->user->has('identities')) {
+                if (!empty($entity->user->identities)) {
+                    $identities = $entity->user->identities;
+                    foreach ($identities as $key => $value) {
+                        if ($value->identity_type->default == 1) {
+                            $return[] = $value->number;
+                        }
+                    }
+                }
+            }
+        }
+        return implode(', ', array_values($return));
     }
 
     public function onExcelGetUserIdentities(Event $event, Entity $entity)
@@ -200,7 +230,9 @@ class InstitutionStaffTable extends AppTable
                 if (!empty($entity->user->identities)) {
                     $identities = $entity->user->identities;
                     foreach ($identities as $key => $value) {
-                        $return[] = '([' . $value->identity_type->name . ']' . ' - ' . $value->number . ')';
+                        if ($value->identity_type->default == 0) {                            
+                            $return[] = '([' . $value->identity_type->name . ']' . ' - ' . $value->number . ')';
+                        }
                     }
                 }
             }
@@ -228,48 +260,71 @@ class InstitutionStaffTable extends AppTable
         }
         return $age;
     }
+    
 
     public function onExcelGetEducationGrades(Event $event, Entity $entity)
     {
         $grades = [];
 
         if ($entity->has('staff_id')) {
+
+            // echo "<pre>"; print_r($entity); die();
             $staffId = $entity->staff_id;
+            $academicPeriodId = $entity->academic_period_id;
             $ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
             $ClassesSecondaryStaffTable = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
 
-            $query = $ClassesTable
-                ->find()
-                ->select([
-                    $ClassesTable->aliasField('id'),
-                    $ClassesTable->aliasField('staff_id'),
-                    $ClassesSecondaryStaffTable->aliasField('secondary_staff_id')
-                ])
-                ->innerJoin([$ClassesSecondaryStaffTable->alias() => $ClassesSecondaryStaffTable->table()], [
-                    $ClassesSecondaryStaffTable->aliasField('institution_class_id = ') . $ClassesTable->aliasField('id')
-                ])
-                ->contain([
-                    'EducationGrades' => [
-                        'fields' => [
-                            'InstitutionClassGrades.institution_class_id',
-                            'EducationGrades.id',
-                            'EducationGrades.code',
-                            'EducationGrades.name'
-                        ]
-                    ]
-                ])
-                ->hydrate(false)
-                ->where([
-                    'OR' => [
-                        [$ClassesTable->aliasField('staff_id') => $staffId],
-                        [$ClassesSecondaryStaffTable->aliasField('secondary_staff_id') => $staffId]
-                    ]
-                ]);
+            $connection = ConnectionManager::get('default');
+            $institutionClassesData = $connection->execute("SELECT academic_period_id,homeroom_or_secondary.institution_class_id,homeroom_or_secondary.staff_id,education_grade_id FROM
+                institution_classes 
+                INNER JOIN
+                (SELECT id institution_class_id,staff_id FROM institution_classes
 
-            $classes = $query->toArray();
-            foreach ($classes as $class) {
-                foreach ($class['education_grades'] as $grade) {
-                    $grades[$grade['id']] = $grade['name'];
+                UNION
+                SELECT institution_class_id,secondary_staff_id staff_id FROM institution_classes_secondary_staff) homeroom_or_secondary
+                ON institution_classes.id = homeroom_or_secondary.institution_class_id
+                INNER JOIN institution_class_grades ON institution_class_grades.institution_class_id = institution_classes.id
+                WHERE homeroom_or_secondary.staff_id = '".$staffId."' AND institution_classes.academic_period_id = '".$academicPeriodId."'")->fetchAll(\PDO::FETCH_ASSOC);
+             $query = [];
+            foreach ($institutionClassesData as $key => $value) {
+                $query [$key] = $EducationGrades
+                ->find('all')
+                ->where([$EducationGrades->aliasField('id') => $value['education_grade_id']])->toArray();
+            }
+
+
+            // $query = $ClassesTable
+            //     ->find()
+            //     ->select([
+            //         $ClassesTable->aliasField('id'),
+            //         $ClassesTable->aliasField('staff_id'),
+            //         $ClassesSecondaryStaffTable->aliasField('secondary_staff_id')
+            //     ])
+            //     ->innerJoin([$ClassesSecondaryStaffTable->alias() => $ClassesSecondaryStaffTable->table()], [
+            //         $ClassesSecondaryStaffTable->aliasField('institution_class_id = ') . $ClassesTable->aliasField('id')
+            //     ])
+            //     ->contain([
+            //         'EducationGrades' => [
+            //             'fields' => [
+            //                 'InstitutionClassGrades.institution_class_id',
+            //                 'EducationGrades.id',
+            //                 'EducationGrades.code',
+            //                 'EducationGrades.name'
+            //             ]
+            //         ]
+            //     ])
+            //     ->hydrate(false)
+            //     ->where([
+            //         'OR' => [
+            //             [$ClassesTable->aliasField('staff_id') => $staffId],
+            //             [$ClassesSecondaryStaffTable->aliasField('secondary_staff_id') => $staffId]
+            //         ]
+            //     ]);
+
+            foreach ($query as $grade) {
+                foreach ($grade as $key => $gradeName) {
+                    $grades[$gradeName['id']] = $gradeName['name'];
                 }
             }
         }
@@ -392,12 +447,18 @@ class InstitutionStaffTable extends AppTable
             'type' => 'string',
             'label' => ''
         ];
+        $newFields[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'user_identities_default',
+            'type' => 'string',
+            'label' => __($identity->name)
+        ];
 
         $newFields[] = [
             'key' => 'Users.identities',
             'field' => 'user_identities',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Other Identities')
         ];
 
         $newFields[] = [
@@ -471,10 +532,10 @@ class InstitutionStaffTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'Education.education_grades',
+            'key' => 'Education.name', //POCOR-6614
             'field' => 'education_grades',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Education grades')
         ];
 
         $newFields[] = [

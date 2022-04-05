@@ -998,6 +998,23 @@ class ReportCardStatusesTable extends ControllerActionTable
                     Log::write('debug', 'Error Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
                     Log::write('debug', $newEntity->errors());
                 }
+            }else{
+                //POCOR-6431[START]
+                $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+                if (!$StudentsReportCards->exists($recordIdKeys)) {
+                    // insert student report card record if it does not exist
+                    $recordIdKeys['status'] = $StudentsReportCards::IN_PROGRESS;
+                    $recordIdKeys['started_on'] = date('Y-m-d H:i:s');
+                    $newEntity = $StudentsReportCards->newEntity($recordIdKeys);
+                    $StudentsReportCards->save($newEntity);
+                } else {
+                    // update status to in progress if record exists
+                    $StudentsReportCards->updateAll([
+                        'status' => $StudentsReportCards::IN_PROGRESS,
+                        'started_on' => date('Y-m-d H:i:s')
+                    ], $recordIdKeys);
+                }
+                //POCOR-6431[END]
             }
             // end
         }
