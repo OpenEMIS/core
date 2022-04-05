@@ -108,18 +108,7 @@ class StudentProfilesTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (array_key_exists('view', $buttons)) {
-            //unset($buttons['view']);
-            $url = [
-                'plugin' => 'Directory',
-                'controller' => 'Directories',
-                'action' => 'StudentProfiles',
-                'view'
-            ];
-            
-            $buttons['view']['url'] = $url;
-        }
-        //echo "<pre>";print_r($buttons);die();
+        unset($buttons['view']);
         // check if report card request is valid
         $reportCardId = $this->request->query('student_profile_template_id');
         $institutionId = $this->request->query('institution_id');
