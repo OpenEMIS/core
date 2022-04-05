@@ -825,4 +825,12 @@
     .uib-datepicker-popup {
         padding: 5px 10px;
     }
+    
+    .file-input {
+        width: 200%;
+        border: 0px;
+        font-size: 14px;
+        height: 40px;
+        paddi`ng-left: 0px;
+    }
 </style>
