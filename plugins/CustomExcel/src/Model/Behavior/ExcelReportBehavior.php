@@ -109,8 +109,6 @@ class ExcelReportBehavior extends Behavior
         }
 
         $extra['params'] = $params;
-        $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this);
-
         $extra['vars'] = $this->getVars($params, $extra);
 
 
