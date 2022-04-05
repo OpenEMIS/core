@@ -284,7 +284,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             institution_id: StudentController.institutionId
         };
         InstitutionsStudentsSvc.getEducationGrades(param).then(function(resp){
-            StudentController.educationGradeOptions = resp.data;
+            if(resp.data)
+                StudentController.educationGradeOptions = resp.data;
+            else 
+                StudentController.educationGradeOptions = [];
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
@@ -300,7 +303,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         };
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getClasses(params).then(function(resp){
-            if(!resp.data)
+            if(resp.data)
                 StudentController.classOptions = resp.data;
             else
                 StudentController.classOptions = [];
@@ -914,8 +917,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         time_value:"",
                         date_value:"",
                         file:"",
-                        created_user_id: 1,
-                        created: new Date().toLocaleString(),
+                        institution_id: StudentController.institutionId,
                     };
                     if(field.field_type === 'TEXT' || field.field_type === 'NOTE' || field.field_type === 'TEXTAREA') {
                         fieldData.text_value = field.answer;
@@ -936,9 +938,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     }
                     if(field.field_type === 'DATE') {
                         fieldData.date_value = $filter('date')(field.anser, 'yyyy-MM-dd');
-                        let date = field.answer.toLocaleDateString();
-                        let dateArray = date.split('/');
-                        fieldData.date_value = `${dateArray[2]}-${dateArray[1]}-${dateArray[0]}`;
                     }
                     params.custom.push(fieldData);
                 } else {
@@ -952,8 +951,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                             time_value:"",
                             date_value:"",
                             file:"",
-                            created_user_id: 1,
-                            created: new Date().toLocaleString(),
+                            institution_id: StudentController.institutionId,
                         };
                         params.custom.push(fieldData);
                     });
@@ -962,10 +960,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         })
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.saveStudentDetails(params).then(function(resp){
-            StudentController.message = (StudentController.selectedStudentData && StudentController.selectedStudentData.userType ? StudentController.selectedStudentData.userType.name : 'Student') + ' successfully added.';
-            StudentController.messageClass = 'alert-success';
-            StudentController.step = "summary";
-            StudentController.getRedirectToGuardian();
+            if(resp) {
+                StudentController.message = (StudentController.selectedStudentData && StudentController.selectedStudentData.userType ? StudentController.selectedStudentData.userType.name : 'Student') + ' successfully added.';
+                StudentController.messageClass = 'alert-success';
+                StudentController.step = "summary";
+                StudentController.getRedirectToGuardian();
+            }
         }, function(error){
             console.log(error);
             UtilsSvc.isAppendLoader(false);
