@@ -292,13 +292,21 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             .ajax({success: success, defer: true});
     }
 
-    function mealProgrameOptions(params) {
+    //START:POCOR-6609 get_academic_period_id added 
+    function mealProgrameOptions(institution_id, academic_period_id) {
+        academic_period_id = localStorage.getItem('academic_period_id');
+        console.log('academic_period_idrrr');
+        console.log(academic_period_id);
+        if(!academic_period_id){
+            console.log('GHREEREE');
+            academic_period_id = '';
+        }else{
+            academic_period_id = localStorage.getItem('academic_period_id');
+        }
         var success = function(response, deferred) {
-            console.log('responseData');
-            console.log(response);
-            // console.log(institutionId);
             var mealProgrammes = response.data.data;
             if (mealProgrammes) {
+                // localStorage.removeItem('academic_period_id');
                 deferred.resolve(mealProgrammes);
             } else {
                 deferred.reject('There was an error when retrieving the student absence reasons');
@@ -307,8 +315,8 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         
         return MealInstitutionProgrammes
             .find('mealInstitutionProgrammes', {
-                institution_id: params.institution_id,
-                academic_period_id: params.academic_period_id
+                institution_id: institution_id,
+                academic_period_id: academic_period_id
             })
              .ajax({success: success, defer: true});
             return [];
