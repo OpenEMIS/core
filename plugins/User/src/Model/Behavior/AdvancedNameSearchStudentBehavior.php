@@ -4,7 +4,14 @@ namespace User\Model\Behavior;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 
-class AdvancedNameSearchBehavior extends Behavior
+/**
+ * Created identical Behavior of AdvancedNameSearchBehavior for filtering student list on the bases of identity number
+ * can't make changes on AdvancedNameSearchBehavior as it is master behavior and also throws 404 where join is missing
+ * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+ * @ticket POCOR-6647
+ */
+
+class AdvancedNameSearchStudentBehavior extends Behavior
 {
     // findByNames
     // advancedNameSearch Behavior
@@ -37,20 +44,16 @@ class AdvancedNameSearchBehavior extends Behavior
         }
         $alias = '`'.$alias.'`';
         /**
-
-         * Add identity number like in the query
-
-         * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
-
-         * @ticket POCOR-6532
-
-         */
+        * Add identity number like in the query
+        * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
+        * @ticket POCOR-6532
+        */
         // Starts POCOR-6532
         if (array_key_exists('aliasidentity', $options)) {
             $aliasidentity = $options['aliasidentity'];
         }
         $aliasidentity = '`'.$aliasidentity.'`';
-        // Starts POCOR-6532
+        //ends POCOR-6532
         $searchParams = explode(' ', trim($search));
         foreach ($searchParams as $key => $value) {
             if (empty($searchParams[$key])) {
@@ -75,7 +78,7 @@ class AdvancedNameSearchBehavior extends Behavior
                         $alias . '.last_name LIKE' => $searchString,
                         $alias . '.identity_number LIKE' => $searchString, // Adding the search by identity.
                         // Starts POCOR-6532
-                        //$aliasidentity . '.number LIKE' => $searchString //POCOR-6647 : commented code because it was throwing 404 while searching for student/Staff 
+                        $aliasidentity . '.number LIKE' => $searchString 
                         // Ends POCOR-6532
                         // Adding the search by user identity table number column 
                     ]

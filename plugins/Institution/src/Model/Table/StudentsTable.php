@@ -50,7 +50,7 @@ class StudentsTable extends ControllerActionTable
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('User.User');
-        $this->addBehavior('User.AdvancedNameSearch');
+        $this->addBehavior('User.AdvancedNameSearchStudent');//POCOR-6647 using copy behavior of AdvancedNameSearchBehavior
         $this->addBehavior('Institution.StudentCascadeDelete'); // for cascade delete on student related tables from an institution
         $this->addBehavior('AcademicPeriod.AcademicPeriod'); // to make sure it is compatible with v4
         $this->addBehavior('User.MoodleCreateUser');
