@@ -64,6 +64,14 @@ class TrainingsTable extends AppTable
         $this->ControllerAction->field('training_course_id', ['type' => 'hidden']);
         $this->ControllerAction->field('training_session_id', ['type' => 'hidden']);
         $this->ControllerAction->field('training_need_type', ['type' => 'hidden']);
+        // Starts POCOR-6593
+        $feature = $this->request->data[$this->alias()]['feature'];
+        if ($feature == 'Report.TrainingSessions') {
+        $this->ControllerAction->field('session_start_date',['type' => 'date']);
+        $this->ControllerAction->field('session_end_date',['type' => 'date']);
+        $this->ControllerAction->field('area_education_id');
+        }
+        // Ends POCOR-6593
         $this->ControllerAction->field('status');
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('institution_status');
@@ -247,7 +255,7 @@ class TrainingsTable extends AppTable
             }
         }
     }
-
+    
     /**
      * Add Trainer selection drop-down
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
@@ -315,4 +323,80 @@ class TrainingsTable extends AppTable
     {
         return $this->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();
     }
+
+     /**
+
+     * Add Start Date, End Date, area Education Fields Added   
+
+     * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
+
+     * @ticket POCOR-6593
+
+     */
+        // Starts POCOR-6593
+     public function onUpdateFieldSessionStartDate(Event $event, array $attr, $action, Request $request)
+    {
+       
+        $feature = $this->request->data[$this->alias()]['feature'];
+
+        if ($feature!='Report.TrainingSessions') {
+
+                    $attr['visible'] = false;
+            }
+                                
+        return $attr;
+    }
+
+    public function onUpdateFieldSessionEndDate(Event $event, array $attr, $action, Request $request)
+    {
+       
+        $feature = $this->request->data[$this->alias()]['feature'];
+
+        if ($feature!='Report.TrainingSessions') {
+
+                    $attr['visible'] = false;
+            }
+                                
+        return $attr;
+    }
+
+    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, Request $request)
+    { 
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+           // $areaLevelId = $this->request->data[$this->alias()]['area_level_id'];//POCOR-6333
+            if ($feature=='Report.TrainingSessions')  {
+                
+                $Areas = TableRegistry::get('areas');
+                $entity = $attr['entity'];
+
+                if ($action == 'add') {
+
+                    $where = [];
+                        
+                        $areas = $Areas
+                            ->find('list')
+                           // ->where([$where])
+                            ->order([$Areas->aliasField('order')]);
+                        $areaOptions = $areas->toArray();
+                        $attr['type'] = 'chosenSelect';
+                        $attr['attr']['multiple'] = true;
+                        //$attr['select'] = true;
+                        /*POCOR-6333 starts*/
+                        if (count($areaOptions) > 1) {
+                            $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions;
+                        } else {
+                            $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions;
+                        }
+                        /*POCOR-6333 ends*/
+                        $attr['onChangeReload'] = true;
+                } else {
+                    $attr['type'] = 'hidden';
+                }
+            }
+        }
+        return $attr;
+    }
+
+    // Ends POCOR-6593
 }
