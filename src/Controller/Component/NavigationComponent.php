@@ -1057,12 +1057,14 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.InstitutionBuses','Institutions.InstitutionBuses.add', 'Institutions.InstitutionBuses.edit', 'Institutions.InstitutionBuses.view', 'Institutions.InstitutionBuses.delete']
             ],
 
-            'InstitutionTrips.index' => [
+            // POCOR-6169
+            'Institutions.InstitutionTrips.index' => [
                 'title' => 'Trips',
                 'parent' => 'Institutions.Transport',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionTrips.add', 'InstitutionTrips.edit', 'InstitutionTrips.view', 'InstitutionTrips.delete']
+                'selected' => ['Institutions.InstitutionTrips','Institutions.InstitutionTrips.add', 'Institutions.InstitutionTrips.edit', 'Institutions.InstitutionTrips.view', 'Institutions.InstitutionTrips.delete']
             ],
+            // POCOR-6169
 
             'Institutions.Cases' => [
                 'title' => 'Cases',
