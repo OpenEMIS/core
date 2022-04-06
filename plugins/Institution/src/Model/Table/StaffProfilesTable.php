@@ -281,7 +281,7 @@ class StaffProfilesTable extends ControllerActionTable
         $selectedReportCard = !is_null($this->request->query('staff_profile_template_id')) ? $this->request->query('staff_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
         //End   
-        
+        $where[$this->StaffReportCards->aliasField('staff_profile_template_id = ')] = $selectedReportCard;
         $query
             ->select([
                 'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
@@ -713,9 +713,6 @@ class StaffProfilesTable extends ControllerActionTable
             $this->addReportCardsToProcesses($institutionId, $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
             $this->triggerGenerateAllReportCardsShell($institutionId, $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
             $this->Alert->warning('StaffProfiles.generate');
-        } else {
-            $url = $this->url('index');
-            $this->Alert->warning('StaffProfiles.noTemplate');
         }
 
         $event->stopPropagation();

@@ -677,9 +677,6 @@ class StaffProfilesTable extends ControllerActionTable
             $this->addReportCardsToProcesses($this->getInstitutionId($params['staff_id']), $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
             $this->triggerGenerateAllReportCardsShell($this->getInstitutionId($params['staff_id']), $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
             $this->Alert->warning('StaffProfiles.generate');
-        } else {
-            $url = $this->url('index');
-            $this->Alert->warning('StaffProfiles.noTemplate');
         }
 
         $event->stopPropagation();

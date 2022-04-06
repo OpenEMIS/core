@@ -249,7 +249,8 @@ class StudentProfilesTable extends ControllerActionTable
         $selectedReportCard = !is_null($this->request->query('student_profile_template_id')) ? $this->request->query('student_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//End
-        $where[$this->aliasField('institution_id')] = $institutionId;	
+        $where[$this->aliasField('institution_id')] = $institutionId;
+        $where[$this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id = ')] = $selectedReportCard;
         $query
             ->select([
                 'student_profile_template_id' => $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id'),
@@ -662,9 +663,6 @@ class StudentProfilesTable extends ControllerActionTable
             $this->addReportCardsToProcesses($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
             $this->GenerateAllStudentReportCards($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
             $this->Alert->warning('StudentProfiles.generate');
-        } else {
-            $url = $this->url('index');
-            $this->Alert->warning('StudentProfiles.noTemplate');
         }
 
         $event->stopPropagation();
