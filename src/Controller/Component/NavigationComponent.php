@@ -936,12 +936,14 @@ class NavigationComponent extends Component
             ],
             // POCOR-6150 end
 
-            'InfrastructureProjects.index' => [
+            // POCOR-6151
+            'Institutions.InfrastructureProjects' => [
                 'title' => 'Projects',
                 'parent' => 'Infrastructures',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InfrastructureProjects.view', 'InfrastructureProjects.add', 'InfrastructureProjects.edit', 'InfrastructureProjects.delete']
+                'selected' => ['InfrastructureProjects'.'Institutions.InfrastructureProjects.view', 'Institutions.InfrastructureProjects.add', 'Institutions.InfrastructureProjects.edit', 'Institutions.InfrastructureProjects.delete']
             ],
+            // POCOR-6151
 
             'Wash' => [
                 'title' => 'WASH',
