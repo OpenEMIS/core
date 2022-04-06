@@ -45,7 +45,6 @@ class InstitutionDistributionsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {            
         $request = $this->request;
-
         //academic period filter
         list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
@@ -176,8 +175,10 @@ class InstitutionDistributionsTable extends ControllerActionTable
     {
         if ($action == 'add') {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-
             $attr['options'] = $periodOptions;
+            //START:POCOR:6609
+            $attr['default'] = $selectedPeriod;
+            //END:POCOR:6609
 
             $attr['onChangeReload'] = $selectedPeriod;
         } else if ($action == 'edit') {

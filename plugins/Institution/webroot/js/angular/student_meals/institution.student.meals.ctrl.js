@@ -125,6 +125,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         InstitutionStudentMealsSvc.init(angular.baseUrl, $scope);
         vm.action = 'view';
         vm.gridOptions.context.mode = vm.action;
+        localStorage.setItem('academic_period_id', vm.selectedAcademicPeriod);
        
         UtilsSvc.isAppendLoader(true);
         if (vm.institutionId != null) {
@@ -138,14 +139,39 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 console.log('mealBenefitTypeOptions',mealBenefitTypeOptions);
                 vm.mealBenefitTypeOptions = mealBenefitTypeOptions;
                 vm.gridOptions.context.mealBenefitTypeOptions = vm.mealBenefitTypeOptions;
-                console.log('vmData');
-                console.log(vm);
-                return InstitutionStudentMealsSvc.mealProgrameOptions(vm.getClassStudentParams());
+                console.log('Vmdata')
+                setTimeout(()=>{
+                    console.log('SELETED ')
+                    console.log(vm.selectedAcademicPeriod);
+                var get_academic_period_id = vm.selectedAcademicPeriod
+                // localStorage.removeItem('academic_period_id');
+                localStorage.setItem('academic_period_id', vm.selectedAcademicPeriod);
+                },1000)
+                //START:POCOR:6609
+                setTimeout(()=>{
+                var get_academic_period_id = localStorage.getItem('academic_period_id');
+                console.log('get_academic_period_id1111');
+                console.log(get_academic_period_id)
+            },1000)
+            var get_academic_period_id = localStorage.getItem('academic_period_id');
+
+            console.log('get_academic_period_id1112');
+                console.log(get_academic_period_id)
+                return InstitutionStudentMealsSvc.mealProgrameOptions(vm.institutionId, get_academic_period_id);
+                //END:POCOR:6609
             }, vm.error)
             .then(function(mealPrograme) {
-                vm.gridOptions.context.mealPrograme = mealPrograme[0].id
-                vm.updateMealPrograme(mealPrograme)
-                return InstitutionStudentMealsSvc.mealReceviedOptionsOptions();
+                //START:POCOR:6609
+                if (mealPrograme.length !== 0) {
+                    vm.gridOptions.context.mealPrograme = mealPrograme[0].id
+                    vm.updateMealPrograme(mealPrograme)
+                    return InstitutionStudentMealsSvc.mealReceviedOptionsOptions();
+                }else{
+                    vm.gridOptions.context.mealPrograme = mealPrograme
+                    vm.updateMealPrograme(mealPrograme)
+                    return InstitutionStudentMealsSvc.mealReceviedOptionsOptions();
+                }
+                //END:POCOR:6609
             }, vm.error)
             .then(function(mealReceviedOptions) {
                 vm.gridOptions.context.mealTypes = mealReceviedOptions;
@@ -258,7 +284,16 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 if (angular.isDefined(dayListOptions[i]['selected']) && dayListOptions[i]['selected']) {
                     hasSelected = true;
                     vm.selectedDay = dayListOptions[i].date;
+                    //START:POCOR:6609
+                    setTimeout(()=>{
+                    // localStorage.removeItem('academic_period_id');
+                    // localStorage.removeItem('dataSource');
+                    // localStorage.setItem('academic_period_id', vm.selectedAcademicPeriod);
+                    // localStorage.removeItem('academic_period_id');
+                    localStorage.setItem('academic_period_id', vm.selectedAcademicPeriod);
                     console.log(vm.selectedDay);
+                    },1000)
+                    //END:POCOR:6609
                    
                     vm.schoolClosed = (angular.isDefined(dayListOptions[i]['closed']) && dayListOptions[i]['closed']) ? true : false;
                     vm.gridOptions.context.date = vm.selectedDay;
@@ -289,8 +324,15 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     }
 
     vm.updateMealPrograme = function(mealPrograme) {
-        vm.mealProgrameOptions = mealPrograme;
-        vm.selectedmealPrograme = vm.mealProgrameOptions[0].id
+        //START:POCOR:6609
+        if (mealPrograme.length !== 0) {
+            vm.mealProgrameOptions = mealPrograme;
+            vm.selectedmealPrograme = vm.mealProgrameOptions[0].id
+        }else{
+            vm.mealProgrameOptions = mealPrograme;
+            vm.selectedmealPrograme = vm.mealProgrameOptions
+        }
+        //END:POCOR:6609
     }
     
     vm.updateEducationGradeList = function(educationGradeListOptions) {
@@ -559,6 +601,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
 
     // changes
     vm.changeAcademicPeriod = function() {
+        // localStorage.removeItem('academic_period_id');
+        localStorage.setItem('academic_period_id', vm.selectedAcademicPeriod);
         //debugger;
         //"var test = "/search?fname="+fname"+"&lname="+lname"
         UtilsSvc.isAppendLoader(true);
@@ -591,7 +635,11 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         .then(function(mealBenefitTypeOptions) {
             vm.updateIsMarked(mealBenefitTypeOptions);
             //return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
-            return InstitutionStudentMealsSvc.mealProgrameOptions(vm.getClassStudentParams());
+            //START: POCOR-6609
+            // localStorage.removeItem('dataSource');
+            var get_academic_period_id = localStorage.getItem('academic_period_id')
+            return InstitutionStudentMealsSvc.mealProgrameOptions(vm.institutionId, get_academic_period_id);
+            //END: POCOR-6609
         }, vm.error)
         .then(function(mealPrograme) {
             vm.updateMealPrograme(mealPrograme);
