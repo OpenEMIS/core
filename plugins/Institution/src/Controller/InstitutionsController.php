@@ -443,6 +443,30 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
     }
 
+    public function InstitutionTrips()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTrips']);
+    }
+
+    public function changePageHeaderTrips($model, $modelAlias, $userType)
+    {
+        $session = $this->request->session();
+        $institutionId = 0;
+        if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        if (!empty($institutionId)) {
+            if($this->request->param('action') == 'InstitutionTrips') {
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Trips');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Trips'));
+                $this->set('contentHeader', $header);
+
+            } 
+        }
+    }
+
     public function AssessmentItemResultsArchived()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
