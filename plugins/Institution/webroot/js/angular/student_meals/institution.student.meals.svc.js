@@ -108,6 +108,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 
         getTranslatedText: getTranslatedText,
         getAcademicPeriodOptions: getAcademicPeriodOptions,
+        getCurrentAcademicPeriod: getCurrentAcademicPeriod,
         getWeekListOptions: getWeekListOptions,
         getDayListOptions: getDayListOptions,
         getClassOptions: getClassOptions,
@@ -207,6 +208,23 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             .ajax({success: success, defer: true});
     }
 
+    function getCurrentAcademicPeriod(institutionId) {
+        var success = function(response, deferred) {
+            var periods = response.data.data;
+            if (angular.isObject(periods) && periods.length > 0) {
+                deferred.resolve(periods);
+            } else {
+                deferred.reject('There was an error when retrieving the academic periods');
+            }
+        };
+
+        return AcademicPeriods
+            .find('periodHasCurrentClass', {
+                institution_id: institutionId
+            })
+            .ajax({success: success, defer: true});
+    }
+
     function getWeekListOptions(academicPeriodId) {
         var success = function(response, deferred) {
             var academicPeriodObj = response.data.data;
@@ -298,7 +316,21 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         console.log('academic_period_idrrr');
         console.log(academic_period_id);
         if(!academic_period_id){
-            console.log('GHREEREE');
+            // var functionvalue = getAcademicPeriodOptions(institution_id)
+            // console.log('Here');
+            // console.log( functionvalue.$$state);
+            // var url = angular.baseUrl + '/Translations/translate';
+            // $http.post(url, {text: message})
+            // .then(function(response, message){
+            //     var message = response.data.translated_text;
+            //     for (var i=0; i < args.length; i++ ) {
+            //         message = message.replace( /%s/, args[i] );
+            //     }
+            //     scope.message = message;
+            // }, function(error) {
+            //     scope.message = message;
+            // });
+
             academic_period_id = '';
         }else{
             academic_period_id = localStorage.getItem('academic_period_id');
