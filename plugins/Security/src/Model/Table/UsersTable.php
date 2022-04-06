@@ -71,10 +71,15 @@ class UsersTable extends AppTable
             $schema = $this->schema();
             $fields = $schema->columns();
             foreach ($fields as $key => $field) {
+                //POCOR-6380 - added OR condition to unset pre-defined fields only for Administration >> Security> Users listing
+                //echo "<pre>";print_r($this->action);die();
                 if ($schema->column($field)['type'] == 'binary') {
-                    unset($fields[$key]);
+                    if ($this->table() == 'security_users' || $this->action == 'index') {
+                        unset($fields[$key]);
+                    }
                 }
             }
+            
             return $query->select($fields);
         }
     }
@@ -173,12 +178,25 @@ class UsersTable extends AppTable
         if (!isset($this->request->query['sort'])) {
             $query->find('notSuperAdmin')->order([$this->aliasField('first_name'), $this->aliasField('last_name')]);
         }
-
+       
         $search = $this->ControllerAction->getSearchKey();
 
         if (!empty($search)) {
             $query = $this->addSearchConditions($query, ['searchTerm' => $search, 'searchByUserName' => true]);
         }
+        /*POCOR-6380 starts - select seletced fields only to reduce execution time*/
+        $query->select([
+            $this->aliasField('id'),
+            $this->aliasField('openemis_no'),
+            $this->aliasField('username'),
+            $this->aliasField('first_name'),
+            $this->aliasField('middle_name'),
+            $this->aliasField('third_name'),
+            $this->aliasField('last_name'),
+            $this->aliasField('status'),
+            $this->aliasField('email')
+        ]);
+        /*POCOR-6380 ends*/
     }
 
     public function findNotSuperAdmin(Query $query, array $options)
@@ -379,4 +397,17 @@ class UsersTable extends AppTable
 
         return $tooltipMessage;
     }
+
+    /*POCOR-6380 starts : overwrite view button as it was taking null id after selecting specific columns in indexing*/
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+       
+        if (array_key_exists('view', $buttons)) {
+            $buttons['view']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
+        }
+
+        return $buttons;
+    }
+    /*POCOR-6380 ends*/
 }
