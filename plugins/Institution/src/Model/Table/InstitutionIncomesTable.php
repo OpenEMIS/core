@@ -131,13 +131,7 @@ class InstitutionIncomesTable extends ControllerActionTable
 
 		->LeftJoin([$this->IncomeSources->alias() => $this->IncomeSources->table()],[
 			$this->IncomeSources->aliasField('id').' = ' . 'InstitutionIncomes.income_source_id'
-        ])
-
-        ->where([
-            $this->aliasField('academic_period_id = ') . $academyPeriodId,
-            $this->aliasField('institution_id = ') . $institutionId,
         ]);
-
     }
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
