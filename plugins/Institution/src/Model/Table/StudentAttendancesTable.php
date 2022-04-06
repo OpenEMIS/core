@@ -15,6 +15,7 @@ use Cake\Validation\Validator;
 use Cake\Chronos\Date;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Core\Configure;
+use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -852,6 +853,4 @@ class StudentAttendancesTable extends ControllerActionTable
     {
         echo "<pre>";print_r($data);die;
     }
-
-    
 }
