@@ -657,9 +657,6 @@ class StudentProfilesTable extends ControllerActionTable
             $this->addReportCardsToProcesses($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
             $this->GenerateAllStudentReportCards($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
             $this->Alert->warning('StudentProfiles.generate');
-        } else {
-            $url = $this->url('index');
-            $this->Alert->warning('StudentProfiles.noTemplate');
         }
 
         $event->stopPropagation();

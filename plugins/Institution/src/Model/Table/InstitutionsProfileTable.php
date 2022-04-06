@@ -498,9 +498,6 @@ class InstitutionsProfileTable extends ControllerActionTable
             $this->addReportCardsToProcesses($params['academic_period_id'], $params['report_card_id'], $params['institution_id']);
             $this->triggerGenerateAllReportCardsShell($params['academic_period_id'], $params['report_card_id'], $params['institution_id']);
             $this->Alert->warning('ReportCardStatuses.generate');
-        } else {
-            $url = $this->url('index');
-            $this->Alert->warning('ReportCardStatuses.noTemplate');
         }
 
         $event->stopPropagation();
