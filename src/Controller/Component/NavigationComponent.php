@@ -1635,6 +1635,13 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+            /*POCOR-6513 starts - Added new report module*/
+            'Reports.Performance' => [
+                'title' => 'Performance',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
+            /*POCOR-6513 ends*/
             'Reports.Examinations' => [
                 'title' => 'Examinations',
                 'parent' => 'Reports',
@@ -1684,7 +1691,7 @@ class NavigationComponent extends Component
                 'title' => 'Custom',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ],
+            ]
         ];
         return $navigation;
     }
