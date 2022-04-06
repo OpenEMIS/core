@@ -953,4 +953,10 @@ class ProfilesController extends AppController
         $this->set('institutionDefaultId', $institutionId);
         $this->set('ngController', 'StudentTimetableCtrl as $ctrl');
     }
+
+    /*POCOR-6286 starts - registering function*/
+    public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.StaffProfiles']); }
+
+    public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.StudentProfiles']); }
+    /*POCOR-6286 ends*/
 }
