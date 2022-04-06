@@ -325,14 +325,13 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                 if (!empty($entity->user->identities)) {
                     $identities = $entity->user->identities;
                     foreach ($identities as $key => $value) {
-                        if ($value->identity_type->default == 1) {                            
-                            $return[] = $value->identity_type->name;
+                        if ($value->identity_type->default == 1) {
+                            $return[] = $value->number;
                         }
                     }
                 }
             }
         }
-
         return implode(', ', array_values($return));
     }
 
