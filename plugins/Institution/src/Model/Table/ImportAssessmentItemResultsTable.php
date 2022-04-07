@@ -470,9 +470,13 @@ class ImportAssessmentItemResultsTable extends AppTable {
 									
                                     $this->AssessmentItemsGradingTypes->aliasField('education_subject_id = ') . $this->AssessmentItems->aliasField('education_subject_id')
                                 ])
-		->InnerJoin([$this->AssessmentGradingTypes->alias() => $this->AssessmentGradingTypes->table()],[
-                                    $this->AssessmentGradingTypes->aliasField('id =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
+        //START:POCOR-6640
+		// ->InnerJoin([$this->AssessmentGradingTypes->alias() => $this->AssessmentGradingTypes->table()],[
+        //                             $this->AssessmentGradingTypes->aliasField('id =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
+        ->InnerJoin([$this->AssessmentGradingTypes->alias() => $this->AssessmentGradingTypes->table()],[
+                                   $this->AssessmentGradingTypes->aliasField('code =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
                                 ])
+        //END:POCOR-6640
 		->InnerJoin([$this->AssessmentPeriods->alias() => $this->AssessmentPeriods->table()],[
                                     $this->AssessmentPeriods->aliasField('assessment_id =') . $this->Assessments->aliasField('id')	
                                 ])									
