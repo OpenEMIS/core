@@ -608,10 +608,21 @@ class MealProgrammesTable extends ControllerActionTable
         return $selectedAcademicPeriod;
     } 
 
-    public function getMealProgrammesOptions()
+    public function getMealProgrammesOptions($options)
     {
-        $list = $this
+        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+        $MealProgramme = TableRegistry::get('Meal.MealProgrammes');
+        $list = $MealProgramme
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+            ->innerJoin(
+                [$MealInstitutionProgrammes->alias() => $MealInstitutionProgrammes->table()], [
+                    $MealProgramme->aliasField('id = ') . $MealInstitutionProgrammes->aliasField('meal_programme_id')
+                ]
+            )
+            ->where([
+                $MealProgramme->aliasField('academic_period_id') => $options['academid_period_id'],
+                $MealInstitutionProgrammes->aliasField('institution_id') => $options['institution_id']
+            ])
             ->toArray();
         return $list;
     } 
@@ -874,5 +885,31 @@ class MealProgrammesTable extends ControllerActionTable
         
         return $attr;
     }
+
+    /* 
+    * Get the list Meals Programmes
+    * @auther Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return array
+    * ticket POCOR-6609
+    */
+
+    public function getMealInstitutionProgrammes($options)
+     {
+        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+        $MealProgramme = TableRegistry::get('Meal.MealProgrammes');
+        $list = $MealProgramme
+             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+            ->innerJoin(
+                [$MealInstitutionProgrammes->alias() => $MealInstitutionProgrammes->table()], [
+                    $MealProgramme->aliasField('id = ') . $MealInstitutionProgrammes->aliasField('meal_programme_id')
+                ]
+            )
+            ->where([
+                $MealProgramme->aliasField('academic_period_id') => $options['academid_period_id'],
+                $MealInstitutionProgrammes->aliasField('institution_id') => $options['institution_id']
+            ])
+             ->toArray();
+         return $list;
+     } 
     
 }
