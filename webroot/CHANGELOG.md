@@ -1,3 +1,24 @@
+### [3.75.0] - 2022-04-07
+- Implemented: Add Export button function - Institutions > Infrastructures > Projects
+- Implemented: Add Export button function - Institutions > Transport > Trips
+- Implemented: Add the Profiles feature to Institutions module
+- Implemented: Develop a new report: Reports > Performance > Assessment Missing Mark Entry
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 4
+- Bug Fixed: Personal > Staff > Training > Achievements : Add Achievements page in Personal module
+- Bug Fixed: Administration> Security >Users: Unable to load users
+- Bug Fixed: Report>Institution: Student Attendance Report is stuck in progress
+- Bug Fixed: Administrations > Profiles > Institutions : Rows are duplicated
+- Bug Fixed: Institutions>Statistics>Standard: Develop Staff Positions for all staff
+- Bug Fixed: Administrations > Meals : Issues in Add/View/Edit pages
+- Bug Fixed: Institutions > Meals : Issues in Meal pages
+- Bug Fixed: Institution>Statistics>Standard: Report that is run in Avory Primary School should not be seen in Khundo or other institutions
+- Bug Fixed: Institution>Overview: System will set the students' statuses to withdraw, not only in the current academic period but in all academic periods
+- Bug Fixed: Institutions>Academic>Classes/Subjects: Add export to include student list
+- Bug Fixed: Institution>Staffs: Issue of not being able to take certain dates when doing the End of Assignment of staff
+- Bug Fixed: Institutions>Performance>Assessments: Unable to import assessment mark even when it is within limit
+- Bug Fixed: Institution>Students/Staff: 404 error when searching students and clicking on institution get 404 error
+- Bug Fixed: Administration>Security>Users: 404 error when accessing
+
 ### [3.74.5] - 2022-03-25
 - Implemented: Add Export button function - Institutions > Meals > Distributions
 - Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 6
