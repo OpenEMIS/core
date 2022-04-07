@@ -75,7 +75,7 @@ class AdvancedNameSearchBehavior extends Behavior
                         $alias . '.last_name LIKE' => $searchString,
                         $alias . '.identity_number LIKE' => $searchString, // Adding the search by identity.
                         // Starts POCOR-6532
-                        $aliasidentity . '.number LIKE' => $searchString 
+                        //$aliasidentity . '.number LIKE' => $searchString //POCOR-6647 : commented code because it was throwing 404 while searching for student/Staff 
                         // Ends POCOR-6532
                         // Adding the search by user identity table number column 
                     ]

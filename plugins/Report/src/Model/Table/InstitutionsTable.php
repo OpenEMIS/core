@@ -1043,6 +1043,10 @@ class InstitutionsTable extends AppTable
                 ) {
 
                 $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+                $conditions = [];
+                if ($institutionId != 0) {
+                    $conditions[$InstitutionGrades->aliasField('institution_id')] = $institutionId;
+                }
                 $gradeOptions = $InstitutionGrades
                     ->find('list', [
                         'keyField' => 'id',
@@ -1056,7 +1060,7 @@ class InstitutionsTable extends AppTable
                     //->contain(['EducationProgrammes'])
                     ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
                     ->where([
-                        $InstitutionGrades->aliasField('institution_id') => $institutionId,
+                        $conditions,
                         'EducationSystems.academic_period_id' => $academicPeriodId,
                     ])
                     ->order([
