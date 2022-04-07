@@ -50,7 +50,7 @@ class StudentsTable extends ControllerActionTable
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('User.User');
-        $this->addBehavior('User.AdvancedNameSearch');
+        $this->addBehavior('User.AdvancedNameSearchStudent');//POCOR-6647 using copy behavior of AdvancedNameSearchBehavior
         $this->addBehavior('Institution.StudentCascadeDelete'); // for cascade delete on student related tables from an institution
         $this->addBehavior('AcademicPeriod.AcademicPeriod'); // to make sure it is compatible with v4
         $this->addBehavior('User.MoodleCreateUser');
@@ -1298,7 +1298,7 @@ class StudentsTable extends ControllerActionTable
                     );
                      // Ends POCOR-6532
             }
-        }else{
+        } else {
             $query->select([
                 $this->aliasField('id'),
                 'Users.id',
@@ -1309,7 +1309,15 @@ class StudentsTable extends ControllerActionTable
                 'Users.last_name',
                 'Users.preferred_name',
                 'student_status_id'
+            ])
+            //POCOR-6645 starts - applied join to get result when not $ConfigItem
+            ->leftJoin([$UserIdentities->alias() => $UserIdentities->table()], [
+                $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('student_id')
+            ])
+            ->leftJoin([$IdentityTypes->alias() => $IdentityTypes->table()], [
+                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
             ]);
+            //POCOR-6645 ends
         }//POCOR-6248 ends
   
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437

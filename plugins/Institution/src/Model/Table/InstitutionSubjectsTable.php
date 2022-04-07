@@ -2051,13 +2051,24 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'total_male_students' => 'InstitutionSubjects.total_male_students',
             'total_female_students' => 'InstitutionSubjects.total_female_students',
             'institution_subject_id' => 'InstitutionSubjects.id'
-        ])
-        ->group('InstitutionSubjects.id')    
+        ])   
         ->where([
             $this->aliasField('academic_period_id = ').$selectedAcademicPeriodId,
             $this->aliasField('institution_id = ').$institutionId,
         ]);
 
+        /**
+        * added condition to make query on the bases on selected subject and exporting student's list
+        * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+        * @ticket POCOR-6635 starts
+        */
+        $encodedSubjectId = $this->request->params['pass'][1];
+        if (!empty($encodedSubjectId)) {
+            $query;
+        } else {
+            $query->group('InstitutionSubjects.id'); 
+        }
+        //POCOR-6635 ends
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 // GETTING ROOMS FOR EACH SUBJECT

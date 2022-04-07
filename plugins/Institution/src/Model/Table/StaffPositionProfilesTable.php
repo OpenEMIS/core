@@ -912,7 +912,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
                     if (!empty($latestSubjectStartDate)) {
                         // restrict earliest end of assignment date to the day after latest subject start date
-                        $earliestEndDate = $latestSubjectStartDate->start_date->modify('+1 day');
+                        // $earliestEndDate = $latestSubjectStartDate->start_date->modify('+1 day');
+                        $earliestEndDate = $entity->start_date->modify('+1 day'); //POCOR-6636 There should be a validation where the end date cannot be earlier than start date
                     } else {
                         $earliestEndDate = $entity->start_date;
                     }

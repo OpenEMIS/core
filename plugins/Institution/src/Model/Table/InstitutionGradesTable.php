@@ -1129,11 +1129,15 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
 
     private function _gradeOptions(Query $query, $academicPeriodId = NULL, $institutionsId, $listOnly)
     {
-        $query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
-        ->where([
-            'EducationSystems.academic_period_id' => $academicPeriodId,
-            $this->aliasField('institution_id') => $institutionsId
-        ])
+        $conditions = [];
+        if ($institutionsId != 0) {
+            $conditions[$this->aliasField('institution_id')] = $institutionsId;
+        }
+		$query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+		->where([
+			'EducationSystems.academic_period_id' => $academicPeriodId,
+			$conditions
+		])
         ->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
         $data = $query->toArray();
 

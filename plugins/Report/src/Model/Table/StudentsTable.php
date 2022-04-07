@@ -550,7 +550,6 @@ class StudentsTable extends AppTable
                 return $row;
             });
         });
-//print_r($query->toArray()); exit;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
