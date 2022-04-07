@@ -1270,7 +1270,7 @@ class StudentsTable extends ControllerActionTable
                         'Users.preferred_name',
                         'student_status_id',
                         'identity_type' => $IdentityTypes->aliasField('name'),
-                        "'". $typesIdentity->identity_type . "'" => $UserIdentities->aliasField('number') //POCRO-6583 added single quote as identity_type was not working for some clients
+                        "`". $typesIdentity->identity_type . "`" => $UserIdentities->aliasField('number') //POCRO-6611 remove single quote from identity number (single quote getting error on student home dashboard)
                     ])
                     /**
 
