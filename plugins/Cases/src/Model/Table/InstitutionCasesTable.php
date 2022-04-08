@@ -192,7 +192,7 @@ class InstitutionCasesTable extends ControllerActionTable
                 [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
                 [
                     [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                    [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                    // [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
                 ]
             )
             //->where([$this->aliasField('assignee_id') => $userId])
