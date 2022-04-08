@@ -865,6 +865,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $session = $controller->request->session();
     
         $userId = $session->read('Auth.User.id');
+        $institutionId  = $session->read('Institution.Institutions.id'); 
         $Statuses = $this->Statuses;
         $doneStatus = WorkflowSteps::DONE;
         $roles = TableRegistry::get('Security.SecurityGroupUsers');
@@ -873,7 +874,9 @@ class InstitutionSurveysTable extends ControllerActionTable
                     ->where([ $roles->aliasField('security_user_id')  => $userId ])->first();
         $roleId = $userRole['security_role_id'];
         $workflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-        $this->copyBuildSurveyRecords($controller);
+        if(empty($institutionId)){ // POCOR-6652
+            $this->copyBuildSurveyRecords($controller);
+        }
         $query
             ->select([
                 $this->aliasField('id'),
