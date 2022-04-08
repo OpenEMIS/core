@@ -43,8 +43,11 @@ class StaffSubjectsTable extends ControllerActionTable {
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		$this->field('academic_period', []);
-		$this->field('institution_class', []);
-		$this->field('education_subject', []);
+		//start:POCOR-5274
+        $this->field('institution_class',['sort'  => true]);        
+		$this->field('institution_subject_id', [ 'sort' => ['field' => 'InstitutionSubjects.name']]);
+        //end:POCOR-5274
+        $this->field('education_subject', []);
 		$this->field('male_students', []);
 		$this->field('female_students', []);
 
@@ -64,18 +67,32 @@ class StaffSubjectsTable extends ControllerActionTable {
                 $query->contain([
 			'InstitutionSubjects'
 		]);
-                
+        //start:POCOR-5274
+        $sortList = ['InstitutionSubjects.name','start_date','end_date'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        //end:POCOR-5274
+        $extra['options']['sortWhitelist'] = $sortList;
                 // Academic Periods
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodId = $AcademicPeriods->getCurrent();
+                //start:POCOR-5274
+                $academicPeriodId = 0;
+        
                 $academicPeriodOptions = $AcademicPeriods->getYearList();
-                
+                $academicPeriodOptions += ['0'=>'All Acedemic Period'];
+                //end:POCOR-5274
                 if(!empty($this->request->query('academic_period_id'))){
                     $academicPeriodId = $this->request->query('academic_period_id');                     
                 }    
-                
-                $query->where(['InstitutionSubjects.academic_period_id' => $academicPeriodId]);
-                
+                //start:POCOR-5274
+                if($academicPeriodId == 0){
+                    $query->toArray();
+                }else{
+                    $query->where(['InstitutionSubjects.academic_period_id' => $academicPeriodId]);
+                }
+                //end:POCOR-5274
                 $this->controller->set(compact('academicPeriodOptions','academicPeriodId'));
                
                 
