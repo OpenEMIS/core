@@ -1431,6 +1431,10 @@ class InstitutionsTable extends ControllerActionTable
             'area_administrative_section',
             'area_administrative_id',
         ]);
+        //Start:POCOR-6660
+        $this->field('latitude', ['type' => 'readOnly','visible'=>false]);	
+        $this->field('longitude', ['type' => 'readOnly', 'visible' =>false]);
+        //End:POCOR-6660
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
