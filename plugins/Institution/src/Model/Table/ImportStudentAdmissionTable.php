@@ -370,7 +370,7 @@ class ImportStudentAdmissionTable extends AppTable {
         }
         $educationGradeId = $this->getCustomEducationGradeIdByEducationGrade($tempRow['academic_period_id'], $originalEducationGradeCode, $tempRow['education_grade_id']);
         $tempRow['education_grade_id'] = $educationGradeId;
-
+        $tempRow['education_grade_code'] = $originalEducationGradeCode;
         if (empty($tempRow['student_id'])) {
             return false;
         }

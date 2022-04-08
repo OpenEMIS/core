@@ -129,6 +129,15 @@ class WorkflowsController extends AppController
     public function ajaxGetAssignees()
     {
         $this->viewBuilder()->layout('ajax');
+        /*
+         - missing institution_id is profile->staff->carrer    
+         -Start POCOR-6619
+        */
+        $url = $_SERVER['HTTP_REFERER'];
+        $queryString = parse_url($url);
+        $urlInstitutionId = $queryString['query'];
+        $getInstitutionId = explode("=",$urlInstitutionId);
+        //End POCOR-6619
 
         $isSchoolBased = $this->request->query('is_school_based');
         $nextStepId = $this->request->query('next_step_id');
@@ -138,7 +147,8 @@ class WorkflowsController extends AppController
             $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
             $params = [
                 'is_school_based' => $isSchoolBased,
-                'workflow_step_id' => $nextStepId
+                'workflow_step_id' => $nextStepId,
+                'url_institution_id' => $getInstitutionId[1]  //POCOR-6619
             ];
             if ($isSchoolBased) {
                 $session = $this->request->session();

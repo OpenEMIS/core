@@ -36,7 +36,21 @@ class AdvancedNameSearchBehavior extends Behavior
             $alias = $options['alias'];
         }
         $alias = '`'.$alias.'`';
+        /**
 
+         * Add identity number like in the query
+
+         * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
+
+         * @ticket POCOR-6532
+
+         */
+        // Starts POCOR-6532
+        if (array_key_exists('aliasidentity', $options)) {
+            $aliasidentity = $options['aliasidentity'];
+        }
+        $aliasidentity = '`'.$aliasidentity.'`';
+        // Starts POCOR-6532
         $searchParams = explode(' ', trim($search));
         foreach ($searchParams as $key => $value) {
             if (empty($searchParams[$key])) {
@@ -59,7 +73,11 @@ class AdvancedNameSearchBehavior extends Behavior
                         $alias . '.middle_name LIKE' => $searchString,
                         $alias . '.third_name LIKE' => $searchString,
                         $alias . '.last_name LIKE' => $searchString,
-                        $alias . '.identity_number LIKE' => $searchString // Adding the search by identity.
+                        $alias . '.identity_number LIKE' => $searchString, // Adding the search by identity.
+                        // Starts POCOR-6532
+                        //$aliasidentity . '.number LIKE' => $searchString //POCOR-6647 : commented code because it was throwing 404 while searching for student/Staff 
+                        // Ends POCOR-6532
+                        // Adding the search by user identity table number column 
                     ]
                 ];
                 if ($searchByUserName) {

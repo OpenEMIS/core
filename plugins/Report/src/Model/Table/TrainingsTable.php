@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\ORM\TableRegistry;
 
 use App\Model\Traits\OptionsTrait;
 
@@ -63,8 +64,21 @@ class TrainingsTable extends AppTable
         $this->ControllerAction->field('training_course_id', ['type' => 'hidden']);
         $this->ControllerAction->field('training_session_id', ['type' => 'hidden']);
         $this->ControllerAction->field('training_need_type', ['type' => 'hidden']);
+        // Starts POCOR-6593
+        $feature = $this->request->data[$this->alias()]['feature'];
+        if ($feature == 'Report.TrainingSessions') {
+        $this->ControllerAction->field('session_start_date',['type' => 'date']);
+        $this->ControllerAction->field('session_end_date',['type' => 'date']);
+        $this->ControllerAction->field('area_education_id');
+        }
+        // Ends POCOR-6593
         $this->ControllerAction->field('status');
         $this->ControllerAction->field('format');
+        $this->ControllerAction->field('institution_status');
+        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('trainer_name', ['type' => 'hidden']);  // POCOR-6569
+        $this->ControllerAction->field('start_date', ['type' => 'hidden']);  // POCOR-6569
+        $this->ControllerAction->field('end_date', ['type' => 'hidden']);  // POCOR-6569
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
@@ -103,9 +117,11 @@ class TrainingsTable extends AppTable
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
-                if (in_array($feature, ['Report.TrainingResults', 'Report.TrainingSessionParticipants', 'Report.TrainingTrainers'])) {
+                if (in_array($feature, ['Report.TrainingResults', 'Report.TrainingSessionParticipants', 'Report.TrainingTrainers', 'Report.TrainersSessions'])) { // POCOR-6569
                     $options = $this->Training->getCourseList();
-					$options = ['-1' => __('All Training Courses')] + $options;
+                    $options = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Training Courses')] + $options; //POCOR-6595
+
+					// $options = ['-1' => __('All Training Courses')] + $options;
 
                     $attr['type'] = 'select';
                     $attr['select'] = false;
@@ -136,6 +152,9 @@ class TrainingsTable extends AppTable
                     if (!empty($this->request->data[$this->alias()]['training_course_id'])) {
                         $courseId = $this->request->data[$this->alias()]['training_course_id'];
                         $options = $this->Training->getSessionList(['training_course_id' => $courseId]);
+                        if ($courseId == -1 ) {
+                            $options = ['-1' => _('All training sessions.')] + $options; //POCOR-6595
+                        }
                     } else {
                         $options = [];
                     }
@@ -151,7 +170,7 @@ class TrainingsTable extends AppTable
 
     public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
     {
-        $excludedFeature = ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers'];
+        $excludedFeature = ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers', 'Report.TrainersSessions', 'Report.ReportTrainingNeedStatistics']; // POCOR-6569
 
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
@@ -192,4 +211,192 @@ class TrainingsTable extends AppTable
             }
         }
     }
+
+    public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, Request $request)
+    {
+        $includedFeature     = ['Report.ReportTrainingNeedStatistics'];
+        $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
+        $statuses            = $InstitutionStatuses->findIdList();
+
+        if ($action == 'add') {
+            if (isset($this->request->data[$this->alias()]['feature'])) {
+                $feature = $this->request->data[$this->alias()]['feature'];
+                if (in_array($feature, $includedFeature)) {
+                    $institution_statuses = ['-1' => __('All Statuses')];
+                    $attr['type'] = 'select';
+                    $attr['select'] = false;
+                    $attr['options'] = $institution_statuses + $statuses;
+                } else {
+                    $attr['visible'] = false;
+                }
+                return $attr;
+            }
+        }
+    }
+
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        $includedFeature     = ['Report.ReportTrainingNeedStatistics'];
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+
+            if (in_array($feature, $includedFeature)) {
+                $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $academicPeriodOptions = $AcademicPeriodTable->getYearList();
+                $currentPeriod = $AcademicPeriodTable->getCurrent();
+                $attr['options'] = $academicPeriodOptions;
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['onChangeReload'] = true;
+                if (empty($request->data[$this->alias()]['academic_period_id'])) {
+                    $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
+                }
+                return $attr;
+            }
+        }
+    }
+    
+    /**
+     * Add Trainer selection drop-down
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6569
+     */
+    public function onUpdateFieldTrainerName(Event $event, array $attr, $action, Request $request)
+    {
+        $includedFeature = ['Report.TrainersSessions'];
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, $includedFeature)) {
+                $training_trainer_object = TableRegistry::get('Report.TrainingTrainers');
+                $trainers = $training_trainer_object->getTrainers();
+                $trainer_options = ['-1' => __('All Trainers')] + $trainers;
+                $attr['options'] = $trainer_options;
+                $attr['type']    = 'select';
+                $attr['select']  = false;
+                $attr['onChangeReload'] = true;
+                return $attr;
+            }
+        }
+    }
+
+    /**
+     * Add Start Date selection date picker
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6569
+     */
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
+    {
+        $feature = $this->request->data[$this->alias()]['feature'];
+        $includedFeature = ['Report.TrainersSessions'];
+        if (in_array($feature, $includedFeature)) {
+            $entity = $attr['entity'];
+            $attr['type'] = 'date';
+            // $attr['onChangeReload'] = true;
+            return $attr;
+        }
+    }
+
+    /**
+     * Add End Date selection date picker
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6569
+     */
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request)
+    {
+        $feature = $this->request->data[$this->alias()]['feature'];
+        $includedFeature = ['Report.TrainersSessions'];
+        if (in_array($feature, $includedFeature)) {
+            $entity = $attr['entity'];
+            $attr['type'] = 'date';
+            return $attr;
+        }
+    }
+
+    /**
+     * Get training courses for drop-down option selection
+     * Id   as key
+     * Name as value
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6569
+     */
+    public function getTrainingCourseList()
+    {
+        return $this->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();
+    }
+
+     /**
+
+     * Add Start Date, End Date, area Education Fields Added   
+
+     * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
+
+     * @ticket POCOR-6593
+
+     */
+        // Starts POCOR-6593
+     public function onUpdateFieldSessionStartDate(Event $event, array $attr, $action, Request $request)
+    {
+       
+        $feature = $this->request->data[$this->alias()]['feature'];
+
+        if ($feature!='Report.TrainingSessions') {
+
+                    $attr['visible'] = false;
+            }
+                                
+        return $attr;
+    }
+
+    public function onUpdateFieldSessionEndDate(Event $event, array $attr, $action, Request $request)
+    {
+       
+        $feature = $this->request->data[$this->alias()]['feature'];
+
+        if ($feature!='Report.TrainingSessions') {
+
+                    $attr['visible'] = false;
+            }
+                                
+        return $attr;
+    }
+
+    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, Request $request)
+    { 
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+           // $areaLevelId = $this->request->data[$this->alias()]['area_level_id'];//POCOR-6333
+            if ($feature=='Report.TrainingSessions')  {
+                
+                $Areas = TableRegistry::get('areas');
+                $entity = $attr['entity'];
+
+                if ($action == 'add') {
+
+                    $where = [];
+                        
+                        $areas = $Areas
+                            ->find('list')
+                           // ->where([$where])
+                            ->order([$Areas->aliasField('order')]);
+                        $areaOptions = $areas->toArray();
+                        $attr['type'] = 'chosenSelect';
+                        $attr['attr']['multiple'] = true;
+                        //$attr['select'] = true;
+                        /*POCOR-6333 starts*/
+                        if (count($areaOptions) > 1) {
+                            $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions;
+                        } else {
+                            $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions;
+                        }
+                        /*POCOR-6333 ends*/
+                        $attr['onChangeReload'] = true;
+                } else {
+                    $attr['type'] = 'hidden';
+                }
+            }
+        }
+        return $attr;
+    }
+
+    // Ends POCOR-6593
 }
