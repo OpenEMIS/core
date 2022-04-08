@@ -208,109 +208,157 @@ class SubjectExcelBehavior extends Behavior
 			$InstitutionStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 			$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
 			$InstitutionSubjectsRooms = TableRegistry::get('Institution.InstitutionSubjectsRooms');
-		
-			$query = $Query
-				->select([
-					'academic_period_id' => 'InstitutionSubjects.academic_period_id',
-					'education_grade' => 'EducationGrades.name',
-					'institution_code' => 'Institutions.code',
-					'institution_name' => 'Institutions.name',
-					'Class_Name' => $InstitutionClasses->alias().'.name',
-					'subject_name' => 'InstitutionSubjects.name',
-					'subject_code' => 'EducationSubjects.code',
-					'openEMIS_ID' => 'SubjectStudents.openemis_no',
-					'student_name' => $Query->func()->concat([
-						'SubjectStudents.first_name' => 'literal',
-						" ",
-						'SubjectStudents.last_name' => 'literal'
-					]),
-					'teachers' => $Query->func()->group_concat([
-						'SubjectTeachers.openemis_no' => 'literal',
-						" - ",
-						'SubjectTeachers.first_name' => 'literal',
-						" ",
-						'SubjectTeachers.last_name' => 'literal'
-					]),
-					'rooms' => $Query->func()->group_concat([
-						'SubjectRooms.code' => 'literal',
-						" - ",
-						'SubjectRooms.name' => 'literal'
-					]),
-					'gender' => 'Genders.name',
-                    'institution_id' => 'Institutions.id',
-                    'student_status' => 'StudentStatuses.name',//POCOR-6338 
-                ])
-				->contain([
-					'AcademicPeriods' => [
-						'fields' => [
-							'AcademicPeriods.name'
-						]
-					],
-					'Institutions.Types',
-				])
-				->leftJoin(['EducationSubjects' => 'education_subjects'], [
-					'EducationSubjects.id =' . $InstitutionSubjects->aliasField('education_subject_id')
-				])
-				->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
-					$InstitutionSubjects->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
-				])
-				->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
-					$InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
-				])
-				->leftJoin(
-				['EducationGrades' => 'education_grades'],
-				[
-					$InstitutionSubjects->aliasField('education_grade_id ='). $EducationGrades->aliasField('id')
-				]
-				) 
-				->leftJoin(
-				['InstitutionSubjectStudents' => 'institution_subject_students'],
-				[
-					'InstitutionSubjectStudents.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
-				]
-				) // POCOR-6338 starts
-				->leftJoin(
-				['StudentStatuses' => 'student_statuses'],
-				[
-					'StudentStatuses.id = InstitutionSubjectStudents.student_status_id'
-				]
-				)//POCOR-6338 ends
-				->leftJoin(
-				['SubjectStudents' => 'security_users'],
-				[
-					'SubjectStudents.id = '. $InstitutionStudents->aliasField('student_id')
-				]
-				)
-				->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()], [
-					$InstitutionSubjects->aliasField('id =') . $InstitutionSubjectStaff->aliasField('institution_subject_id')
-				])
-				->leftJoin(['SubjectTeachers' => 'security_users'], [
-					'SubjectTeachers.id = '. $InstitutionSubjectStaff->aliasField('staff_id')
-				])
-				->leftJoin([$InstitutionSubjectsRooms->alias() => $InstitutionSubjectsRooms->table()], [
-					$InstitutionSubjects->aliasField('id =') . $InstitutionSubjectsRooms->aliasField('institution_subject_id')
-				])
-				->leftJoin(['SubjectRooms' => 'institution_rooms'], [
-					'SubjectRooms.id = '. $InstitutionSubjectsRooms->aliasField('institution_room_id')
-				])
-				->leftJoin(
-				['Genders' => 'genders'],
-				[
-					'SubjectStudents.gender_id = Genders.id'
-				]
-				)
-                //POCOR-5852 starts
-                ->where($conditions)
-                //POCOR-5852 ends
-				->group([
-					'SubjectStudents.id'
-				])
-				->order([
-					'AcademicPeriods.order',
-					'Institutions.code',
-					'InstitutionSubjects.id'
-				]);
-          
+            /**
+            * added condition to make query on the bases on selected subject and exporting student's list
+            * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+            * @ticket POCOR-6635 starts
+            */
+		    $encodedSubjectId = $this->_table->request->params['pass'][1];
+            if (!empty($encodedSubjectId)) {
+                $decodedSubjectId = $this->_table->paramsDecode($encodedSubjectId);
+                $subjectId = $decodedSubjectId['id'];
+                $where[$InstitutionSubjects->aliasField('InstitutionSubjects.id')] = $subjectId;
+                $query = $Query
+                        ->select([
+                            'academic_period_id' => 'InstitutionSubjects.academic_period_id',
+                            'education_grade' => 'EducationGrades.name',
+                            'institution_code' => 'Institutions.code',
+                            'institution_name' => 'Institutions.name',
+                            'Class_Name' => $InstitutionClasses->alias().'.name',
+                            'subject_name' => 'InstitutionSubjects.name',
+                            'subject_code' => 'EducationSubjects.code',
+                            'openEMIS_ID' => 'SubjectStudents.openemis_no',
+                            'student_name' => $Query->func()->concat([
+                                'SubjectStudents.first_name' => 'literal',
+                                " ",
+                                'SubjectStudents.last_name' => 'literal'
+                            ]),
+                            'gender' => 'Genders.name',
+                            'institution_id' => 'Institutions.id',
+                            'student_status' => 'StudentStatuses.name',//POCOR-6338 
+                        ])
+                        ->contain([
+                            'AcademicPeriods' => [
+                                'fields' => [
+                                    'AcademicPeriods.name'
+                                ]
+                            ],
+                            'Institutions.Types',
+                        ])
+                        ->leftJoin(['EducationSubjects' => 'education_subjects'], [
+                            'EducationSubjects.id =' . $InstitutionSubjects->aliasField('education_subject_id')
+                        ])
+                        ->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+                            $InstitutionSubjects->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
+                        ])
+                        ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                            $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
+                        ])
+                        ->leftJoin(['EducationGrades' => 'education_grades'], [
+                            $InstitutionSubjects->aliasField('education_grade_id ='). $EducationGrades->aliasField('id')
+                        ]) 
+                        ->leftJoin(['InstitutionSubjectStudents' => 'institution_subject_students'], [
+                            'InstitutionSubjectStudents.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
+                        ])
+                        ->leftJoin(['StudentStatuses' => 'student_statuses'], [
+                            'StudentStatuses.id = InstitutionSubjectStudents.student_status_id'
+                        ])
+                        ->leftJoin(['SubjectStudents' => 'security_users'], [
+                            'SubjectStudents.id = '. $InstitutionStudents->aliasField('student_id')
+                        ])
+                        ->leftJoin(['Genders' => 'genders'], [
+                            'SubjectStudents.gender_id = Genders.id'
+                        ])
+                        ->where([$conditions, $where]);
+            } else {
+                $query = $Query
+                        ->select([
+                            'academic_period_id' => 'InstitutionSubjects.academic_period_id',
+                            'education_grade' => 'EducationGrades.name',
+                            'institution_code' => 'Institutions.code',
+                            'institution_name' => 'Institutions.name',
+                            'Class_Name' => $InstitutionClasses->alias().'.name',
+                            'subject_name' => 'InstitutionSubjects.name',
+                            'subject_code' => 'EducationSubjects.code',
+                            'openEMIS_ID' => 'SubjectStudents.openemis_no',
+                            'student_name' => $Query->func()->concat([
+                                'SubjectStudents.first_name' => 'literal',
+                                " ",
+                                'SubjectStudents.last_name' => 'literal'
+                            ]),
+                            'teachers' => $Query->func()->group_concat([
+                                'SubjectTeachers.openemis_no' => 'literal',
+                                " - ",
+                                'SubjectTeachers.first_name' => 'literal',
+                                " ",
+                                'SubjectTeachers.last_name' => 'literal'
+                            ]),
+                            'rooms' => $Query->func()->group_concat([
+                                'SubjectRooms.code' => 'literal',
+                                " - ",
+                                'SubjectRooms.name' => 'literal'
+                            ]),
+                            'gender' => 'Genders.name',
+                            'institution_id' => 'Institutions.id',
+                            'student_status' => 'StudentStatuses.name',//POCOR-6338 
+                        ])
+                        ->contain([
+                            'AcademicPeriods' => [
+                                'fields' => [
+                                    'AcademicPeriods.name'
+                                ]
+                            ],
+                            'Institutions.Types',
+                        ])
+                        ->leftJoin(['EducationSubjects' => 'education_subjects'], [
+                            'EducationSubjects.id =' . $InstitutionSubjects->aliasField('education_subject_id')
+                        ])
+                        ->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+                            $InstitutionSubjects->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
+                        ])
+                        ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                            $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
+                        ])
+                        ->leftJoin(['EducationGrades' => 'education_grades'], [
+                            $InstitutionSubjects->aliasField('education_grade_id ='). $EducationGrades->aliasField('id')
+                        ]) 
+                        ->leftJoin(['InstitutionSubjectStudents' => 'institution_subject_students'], [
+                            'InstitutionSubjectStudents.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
+                        ]) // POCOR-6338 starts
+                        ->leftJoin(['StudentStatuses' => 'student_statuses'], [
+                            'StudentStatuses.id = InstitutionSubjectStudents.student_status_id'
+                        ])//POCOR-6338 ends
+                        ->leftJoin(['SubjectStudents' => 'security_users'], [
+                            'SubjectStudents.id = '. $InstitutionStudents->aliasField('student_id')
+                        ])
+                        ->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()], [
+                            $InstitutionSubjects->aliasField('id =') . $InstitutionSubjectStaff->aliasField('institution_subject_id')
+                        ])
+                        ->leftJoin(['SubjectTeachers' => 'security_users'], [
+                            'SubjectTeachers.id = '. $InstitutionSubjectStaff->aliasField('staff_id')
+                        ])
+                        ->leftJoin([$InstitutionSubjectsRooms->alias() => $InstitutionSubjectsRooms->table()], [
+                            $InstitutionSubjects->aliasField('id =') . $InstitutionSubjectsRooms->aliasField('institution_subject_id')
+                        ])
+                        ->leftJoin(['SubjectRooms' => 'institution_rooms'], [
+                            'SubjectRooms.id = '. $InstitutionSubjectsRooms->aliasField('institution_room_id')
+                        ])
+                        ->leftJoin(['Genders' => 'genders'], [
+                            'SubjectStudents.gender_id = Genders.id'
+                        ])
+                        ->where($conditions)//POCOR-5852
+                        ->order([
+                            'AcademicPeriods.order',
+                            'Institutions.code',
+                            'InstitutionSubjects.id'
+                        ]);
+                    
+                    if($table->alias!='Subjects'){
+                        $query->group([
+                            'SubjectStudents.id'
+                    ]);
+                        }
+            }
                 $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
 					return $results->map(function ($row) {
 						$teachers = explode(',',$row['teachers']);
@@ -610,7 +658,14 @@ class SubjectExcelBehavior extends Behavior
         $module = $table->alias();
         $language = I18n::locale();
         $excludedTypes = ['binary'];
-        $columns = array_diff($columns, $excludes);
+        /*POCOR-6635 starts - added condition to export individual subject with student's list*/
+        $encodedSubjectId = $this->_table->request->params['pass'][1];
+        if (!empty($encodedSubjectId)) {
+            $columns = ['institution_code', 'institution_name', 'academic_period_id', 'Class_Name', 'education_grade', 'subject_name','subject_code', 'teachers', 'rooms', 'openEMIS_ID', 'student_name', 'gender', 'student_status'];
+        } else {
+            $columns = array_diff($columns, $excludes);
+        }
+        /*POCOR-6635 ends */
 
         foreach ($columns as $col) {
             $field = $schema->column($col);

@@ -296,7 +296,8 @@ class DirectoriesTable extends ControllerActionTable
                     $query
                         ->select([
                             'identity_type' => $IdentityTypes->aliasField('name'),
-                            $typesIdentity->identity_type => $UserIdentities->aliasField('number')
+                            // for POCOR-6561 changed $typesIdentity->identity_type to $typesIdentity->id below
+                            $typesIdentity->id => $UserIdentities->aliasField('number')
                         ])
                         ->leftJoin(
                                     [$UserIdentities->alias() => $UserIdentities->table()],

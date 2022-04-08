@@ -336,6 +336,7 @@ class StaffTable extends ControllerActionTable
                     $Guardians = TableRegistry::get('staff_custom_field_values');
                     $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
                     $staffCustomFields = TableRegistry::get('staff_custom_fields');
+                    $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
     
                     $guardianData = $Guardians->find()
                     ->select([
@@ -367,11 +368,13 @@ class StaffTable extends ControllerActionTable
                     ->where([
                         $Guardians->aliasField('staff_id') => $row->user['id'],
                     ])->toArray();   
-                      
+                      //print_r($guardianData); exit;
                     $existingCheckboxValue = '';
                     foreach ($guardianData as $guadionRow) {
                         $fieldType = $guadionRow->field_type;
+
                         if ($fieldType == 'TEXT') {
+                            //die($guadionRow->text_value);
                             $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->text_value;
                         } else if ($fieldType == 'CHECKBOX') {
                             $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
@@ -395,7 +398,6 @@ class StaffTable extends ControllerActionTable
                         }
                     }
                     // POCOR-6130 custome fields code
-    
                     return $row;
                 });
             });
@@ -509,12 +511,19 @@ class StaffTable extends ControllerActionTable
         ];
 
         $InfrastructureCustomFields = TableRegistry::get('staff_custom_fields');
+        $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
             $customFieldData = $InfrastructureCustomFields->find()->select([
                 'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
                 'custom_field' => $InfrastructureCustomFields->aliasfield('name')
-            ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
+            ])->innerJoin(
+                        ['staffCustomFormsFields' => 'staff_custom_forms_fields'],
+                        [
+                            'staffCustomFormsFields.staff_custom_field_id = '.$InfrastructureCustomFields->aliasField('id')
+                        ]
+                    )->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
 
             if(!empty($customFieldData)) {
+              // echo "<pre>"; print_r($customFieldData); exit;
                 foreach($customFieldData as $data) {
                     $custom_field_id = $data->custom_field_id;
                     $custom_field = $data->custom_field;
@@ -852,7 +861,7 @@ class StaffTable extends ControllerActionTable
                         'Users.last_name',
                         'Users.preferred_name',
                         'identity_type' => $IdentityTypes->aliasField('name'),
-                        $typesIdentity->identity_type => $UserIdentities->aliasField('number')
+                        "`". $typesIdentity->identity_type . "`" => $UserIdentities->aliasField('number') //POCRO-6583 added single quote as identity_type was not working for some clients
                     ])
                     ->leftJoin(
                                 [$UserIdentities->alias() => $UserIdentities->table()],
@@ -869,7 +878,48 @@ class StaffTable extends ControllerActionTable
                         ]
                     );
             }
-        }  //POCOR-6248 ends                  
+        }//POCOR-6248 ends
+        //POCOR-6645 starts - applied join to get result when not $ConfigItem otherwise it was throwing 404 error 
+        else {
+            $query->select([
+                        'Staff.id',
+                        'Staff.FTE',
+                        'Staff.start_year',
+                        'Staff.start_date',
+                        'Staff.end_year',
+                        'Staff.end_date',
+                        'Staff.staff_id',
+                        'Staff.staff_type_id',
+                        'Staff.staff_status_id',
+                        'Staff.institution_id',
+                        'Staff.institution_position_id',
+                        'Staff.security_group_user_id',
+                        'Positions.id',
+                        'Positions.status_id',
+                        'Positions.position_no',
+                        'Positions.staff_position_title_id',
+                        'Positions.staff_position_grade_id',
+                        'Positions.position_no',
+                        'Positions.institution_id',
+                        'Positions.assignee_id',
+                        'Positions.is_homeroom',
+                        'Users.id',
+                        'Users.username',
+                        'Users.openemis_no',
+                        'Users.first_name',
+                        'Users.middle_name',
+                        'Users.third_name',
+                        'Users.last_name',
+                        'Users.preferred_name',
+            ])
+            ->leftJoin([$UserIdentities->alias() => $UserIdentities->table()], [
+                $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('staff_id')
+            ])
+            ->leftJoin([$IdentityTypes->alias() => $IdentityTypes->table()], [
+                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
+            ]);
+        }
+        //POCOR-6645 ends                  
         $this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
     }
 
@@ -2214,7 +2264,7 @@ class StaffTable extends ControllerActionTable
                 $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
             ])
             ->where([
-                //$InstitutionClasses->aliasField('id') => $classId,
+                $InstitutionClasses->aliasField('id') => $classId,//POCOR-6508
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('staff_id') => $staffId
             ])

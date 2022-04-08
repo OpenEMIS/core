@@ -77,6 +77,7 @@ trait MessagesTrait
             'delete' => [
                 'restrictDelete' => 'The record cannot be deleted.',
                 'restrictDeleteBecauseAssociation' => 'Delete operation is not allowed as there are other information linked to this record.',
+                'NationalitiesRecordNoRemain' => 'There must be at least one Preferred Nationality',
                 'cascadeDelete' => 'All associated information related to this record will also be removed.',
                 'success' => 'The record has been deleted successfully.',
                 'failed' => 'The record is not deleted due to errors encountered.',
@@ -2514,6 +2515,7 @@ trait MessagesTrait
             'ValidateNumberSuccess' => 'Identity number validate successfully.',
             'ValidateNumberFail' => 'Please enter correct identity number.',
             'IdentityNumberNotExist' => 'Identity number should not be blank.',
+            'NationalitiesRecordNoRemain' => 'There must be at least one Preferred Nationality.',
         ],
         'StudentMarkTypeStatuses' => [
             'statusAlreadyAdded' => 'Attendance for the selected Education Grade already added.',

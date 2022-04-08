@@ -104,6 +104,15 @@ class ProfilesController extends AppController
     public function StudentAwards()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function StaffAwards()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function TrainingNeeds()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
+    // public function StaffTrainingApplications()
+    // {
+    //     $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingApplications']);
+    // }
+    public function StaffTrainingApplications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingApplications']); }
+    public function CourseCatalogue()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.CourseCatalogue']);
+    }
     public function StaffAppraisals()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']); }
     public function StaffDuties()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Duties']); }
     public function StaffAssociations()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.InstitutionAssociationStaff']);}
@@ -290,7 +299,14 @@ class ProfilesController extends AppController
             
             if (!empty($studentId)) {
                 $sId = $this->ControllerAction->paramsDecode($studentId);
-                $student_id = $sId['id'];
+                // $student_id = $sId['id'];
+
+
+                if(isset($sId['id']) && !empty($sId['id'])){
+                    $student_id = $sId['id'];
+                }else{
+                    $student_id = $sId['security_user_id'];
+                }
                 
                 if ($action == 'StudentReportCards') {
                     //$student_id = $sId['student_id']; //POCOR-5979
@@ -319,6 +335,28 @@ class ProfilesController extends AppController
         $this->set('contentHeader', $header);
     }
 
+    public function changeUserHeader($model, $modelAlias, $userType)
+    {
+        $session = $this->request->session();
+        // add the student name to the header
+        $id = 0;
+        if ($session->check('Staff.Staff.id')) {
+            $id = $session->read('Staff.Staff.id');
+        }
+        if (!empty($id)) {
+            $Users = TableRegistry::get('Security.Users');
+            $entity = $Users->get($id);
+            $name = $entity->name;
+            $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
+            $header = $name . ' - ' . __($crumb);
+            $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+            $this->Navigation->addCrumb('Staff', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']);
+            $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userType, 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
+            $this->Navigation->addCrumb($crumb);
+            $this->set('contentHeader', $header);
+        }
+    }
+
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $session = $this->request->session();
@@ -334,7 +372,9 @@ class ProfilesController extends AppController
 
             if (!in_array($alias, $excludedModel)) {
                 ## Enabled in POCOR-6314
-                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications'];
+
+                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications', 'StaffTrainingApplications', 'StaffTrainings','EmploymentStatuses', 'Leave'];
+
                 if (in_array($alias, $enabledCrudOperation)) {
                     $model->toggle('add', true);
                     $model->toggle('edit', true);
@@ -349,7 +389,6 @@ class ProfilesController extends AppController
                         $model->toggle('add', true);
                     }
                 }
-
                 // redirected view feature is to cater for the link that redirected to institution
                 if (in_array($alias, $this->redirectedViewFeature)) {
                     $model->toggle('view', false);
@@ -511,7 +550,20 @@ class ProfilesController extends AppController
         if ($model->hasField('security_user_id')) {
             $studentId = $session->read('Student.Students.id'); 
             if (!empty($studentId)) {
+                /**
+                 * Need to add current login id as param when no data found in existing variable
+                 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+                 * @ticket POCOR-6548
+                 */
+                //# START: [POCOR-6548] Check if user data not found then add current login user data
+                if (is_int($studentId)) {
+                    $sId = $studentId;
+                } else if ($studentId == null || empty($studentId) || $studentId == '') {
+                    $sId = $loginUserId;
+                } else {
                 $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
+                }
+                //# END: [POCOR-6548] Check if user data not found then add current login user data
                 $query->where([$model->aliasField('security_user_id') => $sId]);
             } else {
                 $query->where([$model->aliasField('security_user_id') => $loginUserId]);
@@ -763,6 +815,7 @@ class ProfilesController extends AppController
         $staffUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
         $studentTabElements = [
             'TrainingNeeds' => ['text' => __('Training Needs')],
+            'StaffTrainingApplications' => ['text' => __('Applications')],
             'TrainingResults' => ['text' => __('Training Results')],
             'Courses' => ['text' => __('Courses')],
         ];
@@ -900,4 +953,10 @@ class ProfilesController extends AppController
         $this->set('institutionDefaultId', $institutionId);
         $this->set('ngController', 'StudentTimetableCtrl as $ctrl');
     }
+
+    /*POCOR-6286 starts - registering function*/
+    public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.StaffProfiles']); }
+
+    public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.StudentProfiles']); }
+    /*POCOR-6286 ends*/
 }
