@@ -289,6 +289,19 @@ class InstitutionSubjectBehavior extends Behavior
                         LIMIT 1
                     )'
                 ];
+                /*POCOR-6508 starts - Staff should be able to assigned classes subjects*/
+                $orConditions[] = [
+                    'EXISTS (
+                        SELECT 1
+                        FROM institution_classes
+                        JOIN institution_class_subjects
+                        ON institution_classes.id = institution_class_subjects.institution_class_id
+                        WHERE institution_class_subjects.institution_subject_id = ' . $this->_table->aliasField('id') . '
+                        AND institution_classes.staff_id = ' . $userId . '
+                        LIMIT 1
+                    )'
+                ];
+                /*POCOR-6508 ends*/
             }
 
             if ($hasMyClassesPermission) {

@@ -23,8 +23,40 @@ class SecurityGroupUsersTable extends AppTable {
         $this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Results' => ['index']
+            'Results' => ['index', 'view']
         ]);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
+        return $events;
+    }
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'index' || $action == 'view') {
+            // check for the user permission to view here
+            $event->stopPropagation();
+            return true;
+        }
+    }
+
+    public function findAllSecurityGroupUsers(Query $query, array $options)
+    {
+        $SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        $security_user_id = $options['_controller']->request->query['security_user_id'];
+        $query
+        ->select([
+            'security_role_id',
+            'institution_id' => $SecurityInstitutions->aliasField('institution_id')
+        ])
+        ->leftJoin([$SecurityInstitutions->alias() => $SecurityInstitutions->table()], [
+            $SecurityInstitutions->aliasField('security_group_id = ') . $this->aliasField('security_group_id'),
+        ])
+        ->where(['security_user_id' => $security_user_id]);
+        return $query;
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -256,7 +288,7 @@ class SecurityGroupUsersTable extends AppTable {
     public function getAssigneeList($params = []) { 
         $isSchoolBased = array_key_exists('is_school_based', $params) ? $params['is_school_based'] : null;
         $stepId = array_key_exists('workflow_step_id', $params) ? $params['workflow_step_id'] : null;
-        $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : null;
+        $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : $params['url_institution_id']; //POCOR-6619
 
         Log::write('debug', 'Is School Based: ' . $isSchoolBased);
         Log::write('debug', 'Workflow Step Id: ' . $stepId);
@@ -274,7 +306,7 @@ class SecurityGroupUsersTable extends AppTable {
                 $Institutions = TableRegistry::get('Institution.Institutions');
 
                 if ($isSchoolBased) {
-                    if (is_null($institutionId)) {
+                    if (is_null($institutionId)) {                        
                         Log::write('debug', 'Institution Id not found.');
                     } else {
                         $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();

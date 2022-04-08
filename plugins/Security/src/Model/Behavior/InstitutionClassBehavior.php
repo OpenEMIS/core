@@ -139,6 +139,8 @@ class InstitutionClassBehavior extends Behavior
 
     public function findByAccess(Query $query, array $options)
     {
+        $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         if (array_key_exists('accessControl', $options)) {
             $AccessControl = $options['accessControl'];
             $userId = $options['userId'];
@@ -157,12 +159,22 @@ class InstitutionClassBehavior extends Behavior
                         ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
                             'InstitutionClasses.id = InstitutionClassesSecondaryStaff.institution_class_id'
                         ])
+                        ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+                            'InstitutionClasses.id = InstitutionClassSubjects.institution_class_id'
+                        ])
+                        // ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+                        //     'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
+                        // ])
                         ->where([
                         'OR' => [
                             [$this->_table->aliasField('staff_id') => $userId],
                             ['InstitutionClassesSecondaryStaff.secondary_staff_id' => $userId]
-                        ]
+                        ],
+                        // 'OR' =>[
+                        //     ['InstitutionSubjectStaff.staff_id' => $userId]
+                        // ]
                     ]);
+                        //echo "<pre>";print_r($query);die();
                 } else {
                     $query->where(['1 = 0']);
                 }

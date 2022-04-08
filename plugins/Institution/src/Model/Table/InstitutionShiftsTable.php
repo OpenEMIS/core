@@ -406,7 +406,12 @@ class InstitutionShiftsTable extends ControllerActionTable
                 $attr['value'] = 'CURRENT';
             }
         } elseif ($action == 'edit') {
-            if (!Configure::read('schoolMode')) {
+            if($attr['entity']->institution_id != $attr['entity']->location_institution_id){
+                $attr['onChangeReload'] = 'changeLocation';
+                $attr['default'] = 'OTHER'; //set the default selected location as Current Institution
+                $attr['select'] = false;
+            }
+            else if (!Configure::read('schoolMode')) {
                 $attr['onChangeReload'] = 'changeLocation';
                 $attr['default'] = 'CURRENT'; //set the default selected location as Current Institution
                 $attr['select'] = false;
@@ -421,7 +426,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onUpdateFieldLocationInstitutionId(Event $event, array $attr, $action, $request)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+       $institutionId = $this->Session->read('Institution.Institutions.id');
         if ($action == 'add') {
             if ($request->data) {
                 $data = $request->data[$this->alias()];
@@ -445,22 +450,28 @@ class InstitutionShiftsTable extends ControllerActionTable
                 }
             }
         } elseif ($action == 'edit') {
-            $attr['onChangeReload'] = 'changeLocation';
-            // $attr['type'] = 'readonly';
-            // $Institutions = TableRegistry::get('Institution.Institutions');
-            // $occupier = $Institutions->findById($attr['entity']->location_institution_id)->first();
-            // $attr['attr']['value'] = $occupier->name;
+            // $attr['onChangeReload'] = 'changeLocation';
+            if($event->data[0]['entity']->institution_id != $event->data[0]['entity']->location_institution_id){
+            $attr['type'] = 'autocomplete';
+            $attr['target'] = ['key' => 'location_institution_id', 'name' => $this->aliasField('location_institution_id')];
+            }
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $occupier = $Institutions->findById($attr['entity']->location_institution_id)->first();
+            $attr['attr']['value'] = $occupier->name;
             $data = $request->data[$this->alias()];
-            if ($data['location'] == 'OTHER') {
+            
+            if ($event->data[0]['entity']->institution_id != $event->data[0]['entity']->location_institution_id && $event->data[0]['entity']->location != 'CURRENT') {
+            //POCOR-6587 added one more condition to get data
                 $attr['type'] = 'autocomplete';
                 $attr['target'] = ['key' => 'location_institution_id', 'name' => $this->aliasField('location_institution_id')];
                 $attr['noResults'] = __('No Institutions found');
                 $attr['attr'] = ['placeholder' => __('Institution Code or Name')];
-                if (isset($data['location_institution_id']) && !empty($data['location_institution_id'])) { //this is to regain institution name after validation / reload
-                    if ($data['location_institution_id'] == $institutionId) {
+                if (isset($event->data[0]['entity']->location_institution_id) && !empty($event->data[0]['entity']->location_institution_id)) { //this is to regain institution name after validation / reload
+                    if ($event->data[0]['entity']->institution_id == $institutionId) {
                         $attr['attr']['value'] = '';
                     } else {
-                        $institutionDetails = $this->Institutions->findById($data['location_institution_id'])->first();
+                        $entity->location_institution_id = $event->data[0]['entity']->location_institution_id;
+                        $institutionDetails = $this->Institutions->findById($event->data[0]['entity']->institution_id)->first();
                         $attr['attr']['value'] = $institutionDetails['code'] . " - " . $institutionDetails['name'];
                     }
                 }
@@ -477,7 +488,7 @@ class InstitutionShiftsTable extends ControllerActionTable
             //         $attr['attr']['value'] = $institutionDetails['code'] . " - " . $institutionDetails['name'];
             //     }
             // }
-            $attr['url'] = ['academicperiod' => $this->getSelectedAcademicPeriod($this->request), 'controller' => 'Institutions', 'action' => 'Shifts', 'ajaxInstitutionsAutocomplete'];
+            // $attr['url'] = ['academicperiod' => $this->getSelectedAcademicPeriod($this->request), 'controller' => 'Institutions', 'action' => 'Shifts', 'ajaxInstitutionsAutocomplete'];
         }
         // pr($attr['value']);
         return $attr;
@@ -516,13 +527,33 @@ class InstitutionShiftsTable extends ControllerActionTable
         $data['InstitutionShifts']['location_institution_id'] = ''; //value has to be reset each time location being updated.
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        //POCOR-6618 starts 
+        if(!empty($entity->id) && $entity->location){ //this will work when edit any shift 
+            $institutionShifts = TableRegistry::get('institution_shifts')
+                                    ->find()
+                                    ->where(['id'=>$entity->id])->first();
+            //location_institution_id belongs to `occupier` and  institution_id belongs to `owner`
+            if($entity->location == 'OTHER' && ($institutionShifts->location_institution_id == $this->request->data['InstitutionShifts']['location_institution_id'])){ 
+                $entity->institution_id = $entity->location_institution_id;
+                $entity->location_institution_id = $institutionShifts->institution_id;
+            }else if($entity->location == 'OTHER' && ($institutionShifts->location_institution_id != $this->request->data['InstitutionShifts']['location_institution_id'])){
+                $entity->institution_id = $entity->institution_id;
+                $entity->location_institution_id = $this->request->data['InstitutionShifts']['location_institution_id'];
+            }
+            //when the occupier and the owner are same 
+            if($entity->location == 'CURRENT' && ($this->request->data['InstitutionShifts']['institution_id'] == $institutionShifts->institution_id) && ($institutionShifts->institution_id == $institutionShifts->location_institution_id)){
+                $entity->location_institution_id = $this->request->data['InstitutionShifts']['institution_id'];
+            }
+        }//POCOR-6618 ends
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($this->AcademicPeriods->getCurrent() == $entity->academic_period_id) { //if the one that being added / edited is the current academic period
-
             // $owner = $entity->institution_id;
             // $occupier = $entity->location_institution_id;
-
             $owner = $entity->location_institution_id;
             $occupier = $entity->institution_id;
 
