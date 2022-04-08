@@ -4628,7 +4628,12 @@ class InstitutionsController extends AppController
             ];
             //save in security_users table
             $entity = $SecurityUsers->newEntity($entityData);
-            $SecurityUserResult = $SecurityUsers->save($entity);
+            try{
+                $SecurityUserResult = $SecurityUsers->save($entity);
+                unset($entity);
+            }catch (Exception $e) {
+                return null;
+            }     
             if($SecurityUserResult){
                 $user_record_id=$SecurityUserResult->id;
                 if(!empty($nationalityId)){
@@ -4695,7 +4700,6 @@ class InstitutionsController extends AppController
 
                 $workflows = TableRegistry::get('workflows');
                 $workflowSteps = TableRegistry::get('workflow_steps');
-
                 $workflowResults = $workflows->find()
                             ->select(['workflowSteps_id'=>$workflowSteps->aliasField('id')])
                             ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
@@ -4832,7 +4836,7 @@ class InstitutionsController extends AppController
                             'created' => date('Y-m-d H:i:s')
                         ];
                         //save in student_custom_field_values table
-                        $entityCustomData = $studentCustomFieldValues->newEntity($entitySubjectsData);
+                        $entityCustomData = $studentCustomFieldValues->newEntity($entityCustomData);
                         $studentCustomFieldsResult = $studentCustomFieldValues->save($entityCustomData);
                         unset($studentCustomFieldsResult);
                         unset($entityCustomData);
