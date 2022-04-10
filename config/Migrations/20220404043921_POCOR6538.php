@@ -9,6 +9,9 @@ class POCOR6538 extends AbstractMigration
      * More information on this method is available here:
      * http://docs.phinx.org/en/latest/migrations.html#the-change-method
      * @return void
+	 * This class is used for adding time zone in database
+	 * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
+	 * @ticket POCOR-6538
      */
     public function up()
     {
