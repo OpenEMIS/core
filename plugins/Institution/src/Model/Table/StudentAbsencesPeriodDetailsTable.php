@@ -145,10 +145,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 ];
 
                 $absenceEntity = $InstitutionStudentAbsences->patchEntity($absenceEntity, $data);
-                $updateRecord = $InstitutionStudentAbsences->save($absenceEntity);
-                if ($updateRecord) {
-                    $this->triggerAlertAttendanceShell();
-                }
+                $InstitutionStudentAbsences->save($absenceEntity);
             }
         }
     }
@@ -188,15 +185,5 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                     ];
             $InstitutionStudentAbsences->deleteAll($data);
         }
-    }
-
-    private function triggerAlertAttendanceShell()
-    {
-        $cmd = ROOT . DS . 'bin' . DS . 'cake AlertAttendance';
-        $logs = ROOT . DS . 'logs' . DS . 'AlertAttendance.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
-        $pid = exec($shellCmd);
-        Log::write('debug', $shellCmd); 
-    
     }
 }
