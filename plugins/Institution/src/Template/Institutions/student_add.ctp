@@ -986,11 +986,11 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
     }
     
     .file-input {
-        width: 200%;
-        border: 0px;
-        font-size: 14px;
-        height: 40px;
-        paddi`ng-left: 0px;
+        width: 200% !important;
+        border: 0px !important;
+        font-size: 14px !important;
+        height: 40px !important;
+        padding-left: 0px !important;
     }
 
 </style>

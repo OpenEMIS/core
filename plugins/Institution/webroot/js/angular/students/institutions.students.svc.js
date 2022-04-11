@@ -1,10 +1,10 @@
 angular
-    .module('institutions.students.svc', ['kd.orm.svc'])
+    .module('institutions.students.svc', ['kd.orm.svc', 'kd.data.svc'])
     .service('InstitutionsStudentsSvc', InstitutionsStudentsSvc);
 
-InstitutionsStudentsSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc'];
+InstitutionsStudentsSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc', 'KdDataSvc'];
 
-function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
+function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdDataSvc) {
 
     var externalSource = null;
     var externalToken = null;
@@ -62,6 +62,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         getRelationType: getRelationType,
         saveStudentDetails: saveStudentDetails,
         getStudentCustomFields: getStudentCustomFields,
+        getAreas: getAreas,
     };
 
     var models = {
@@ -187,6 +188,18 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     function getStudentCustomFields(){
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/studentCustomFields';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
+    function getAreas(){
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/restful/v2/Area-Areas.json?_finder=areaList[userId:2;displayCountry:0;selected:11;recordOnly:true]&_limit=0';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response);
