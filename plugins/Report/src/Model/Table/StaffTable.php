@@ -160,17 +160,16 @@ class StaffTable extends AppTable  {
                 'Report.StaffQualifications','Report.StaffLicenses',
                 'Report.StaffEmploymentStatuses',
                 'Report.StaffTrainingReports','Report.StaffPositions','Report.PositionSummary',
-                'Report.StaffExtracurriculars'])) {
+                'Report.StaffExtracurriculars','Report.InstitutionStaffDetailed'])) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
-
+                $currentPeriod = $AcademicPeriodTable->getCurrent();//POCOR-6662
                 $attr['options'] = $academicPeriodOptions;
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-
+                 $attr['onChangeReload'] = true; //POCOR-6662
                 if (empty($request->data[$this->alias()]['academic_period_id'])) {
-                    reset($academicPeriodOptions);
-                    $request->data[$this->alias()]['academic_period_id'] = key($academicPeriodOptions);
+                    $request->data[$this->alias()]['academic_period_id'] = $currentPeriod; //POCOR-6662 
                 }
                 return $attr;
             }
@@ -188,7 +187,7 @@ class StaffTable extends AppTable  {
                 'Report.StaffLicenses','Report.StaffEmploymentStatuses',
                 'Report.StaffHealthReports','Report.StaffSalaries','Report.StaffTrainingReports',
                 'Report.StaffLeaveReport','Report.StaffPositions','Report.PositionSummary',
-                'Report.StaffDuties','Report.StaffExtracurriculars']))) {
+                'Report.StaffDuties','Report.StaffExtracurriculars','Report.InstitutionStaffDetailed']))) {
                 $Areas = TableRegistry::get('AreaLevel.AreaLevels');
                 $entity = $attr['entity'];
 
@@ -221,7 +220,7 @@ class StaffTable extends AppTable  {
                 'Report.StaffLicenses','Report.StaffEmploymentStatuses',
                 'Report.StaffHealthReports','Report.StaffSalaries','Report.StaffTrainingReports',
                 'Report.StaffLeaveReport','Report.StaffPositions','Report.PositionSummary',
-                'Report.StaffDuties','Report.StaffExtracurriculars'])) {
+                'Report.StaffDuties','Report.StaffExtracurriculars','Report.InstitutionStaffDetailed'])) {
                 $Areas = TableRegistry::get('Area.Areas');
                 $entity = $attr['entity'];
 
@@ -419,7 +418,7 @@ class StaffTable extends AppTable  {
                 'Report.StaffIdentities','Report.StaffContacts',
                 'Report.StaffQualifications','Report.StaffQualifications',
                 'Report.StaffLicenses','Report.StaffEmploymentStatuses','Report.StaffSalaries',
-                'Report.StaffTrainingReports','Report.StaffExtracurriculars'])) {
+                'Report.StaffTrainingReports','Report.StaffExtracurriculars','Report.InstitutionStaffDetailed'])) {
                 $areaId = $this->request->data[$this->alias()]['area_education_id'];
                 if(!empty($areaId) && $areaId != -1) {
                     $institutionQuery = $InstitutionsTable
@@ -482,7 +481,8 @@ class StaffTable extends AppTable  {
                         'Report.StaffHealthReports',
                         'Report.StaffSalaries',
                         'Report.StaffTrainingReports',
-                        'Report.StaffExtracurriculars'
+                        'Report.StaffExtracurriculars',
+                        'Report.InstitutionStaffDetailed'//POCOR-6662
                     ])) {
                         if (!empty($institutionList) && count($institutionList) > 1) {
                            $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
