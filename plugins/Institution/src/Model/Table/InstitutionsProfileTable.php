@@ -225,7 +225,7 @@ class InstitutionsProfileTable extends ControllerActionTable
 			->toArray();
        
 
-        $reportCardOptions = ['-1' => '-- '.__('Select Report Card').' --'] + $reportCardOptions;
+        $reportCardOptions = ['-1' => '-- '.__('Select Profile').' --'] + $reportCardOptions; //POCOR-6653 - updated filter name as per client's requirement
         $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
         //End
