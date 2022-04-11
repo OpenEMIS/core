@@ -600,27 +600,28 @@ class NavigationComponent extends Component
                 'parent' => 'Institution.General',
                 'link' => false
             ],
-
-            'Institutions.InstitutionProfiles.generate' => [
+            //POCOR-6653 starts - updated selected function to get correct page
+            'Institutions.InstitutionProfiles' => [
                 'title' => 'Institutions',
                 'parent' => 'Profile',
                 'selected' => ['Institutions.InstitutionProfiles'],
-                'params' => ['plugin' => 'Institution', 0 => $institutionId],
+                'params' => ['plugin' => 'Institution'],
             ],
 		    
-            'Institutions.StaffProfiles.generate' => [
+            'Institutions.StaffProfiles' => [
                 'title' => 'Staff',
                 'parent' => 'Profile',
                 'selected' => ['Institutions.StaffProfiles'],
-                'params' => ['plugin' => 'Institution', 0 => $institutionId],
+                'params' => ['plugin' => 'Institution'],
             ],
 
-            'Institutions.StudentProfiles.generate' => [
+            'Institutions.StudentProfiles' => [
                 'title' => 'Students',
                 'parent' => 'Profile',
                 'selected' => ['Institutions.StudentProfiles'],
-                'params' => ['plugin' => 'Institution', 0 => $institutionId],
+                'params' => ['plugin' => 'Institution'],
             ],
+            //POCOR-6653 ends
             /*POCOR-6286 ends*/
             'Institutions.Shifts' => [
                 'title' => 'Shifts',

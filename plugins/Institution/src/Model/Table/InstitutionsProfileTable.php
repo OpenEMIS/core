@@ -228,7 +228,6 @@ class InstitutionsProfileTable extends ControllerActionTable
         $reportCardOptions = ['-1' => '-- '.__('Select Report Card').' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
-		//$where[$this->InstitutionReportCards->aliasField('report_card_id')] = $selectedReportCard;
         //End
 	
         $query
