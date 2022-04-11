@@ -607,12 +607,12 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.InstitutionProfiles'],
                 'params' => ['plugin' => 'Institution', 0 => $institutionId],
             ],
-		    
-            'Institutions.StaffProfiles.generate' => [
+		    //POCOR-6654 modified staff menu
+            'Institutions.StaffProfiles' => [
                 'title' => 'Staff',
                 'parent' => 'Profile',
                 'selected' => ['Institutions.StaffProfiles'],
-                'params' => ['plugin' => 'Institution', 0 => $institutionId],
+                'params' => ['plugin' => 'Institution'],
             ],
 
             'Institutions.StudentProfiles.generate' => [
