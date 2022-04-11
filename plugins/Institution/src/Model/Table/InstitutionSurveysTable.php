@@ -750,7 +750,10 @@ class InstitutionSurveysTable extends ControllerActionTable
         $todayDate = date("Y-m-d");
         $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
         $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
-        $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
+        if(!empty($institutionId)){ // POCOR-6652
+            $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
+        }
+        
         $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
 
         foreach ($surveyForms as $surveyFormId => $surveyForm) {
@@ -863,7 +866,6 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         $controller = $options['_controller'];
         $session = $controller->request->session();
-    
         $userId = $session->read('Auth.User.id');
         $institutionId  = $session->read('Institution.Institutions.id'); 
         $Statuses = $this->Statuses;
@@ -874,9 +876,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     ->where([ $roles->aliasField('security_user_id')  => $userId ])->first();
         $roleId = $userRole['security_role_id'];
         $workflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-        if(empty($institutionId)){ // POCOR-6652
-            $this->copyBuildSurveyRecords($controller);
-        }
+        $this->copyBuildSurveyRecords($controller);
         $query
             ->select([
                 $this->aliasField('id'),
