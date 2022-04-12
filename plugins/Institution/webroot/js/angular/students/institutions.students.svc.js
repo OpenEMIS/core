@@ -2,9 +2,9 @@ angular
     .module('institutions.students.svc', ['kd.orm.svc', 'kd.data.svc'])
     .service('InstitutionsStudentsSvc', InstitutionsStudentsSvc);
 
-InstitutionsStudentsSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc', 'KdDataSvc'];
+InstitutionsStudentsSvc.$inject = ['$http', '$q', '$window', 'KdOrmSvc', 'KdDataSvc'];
 
-function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdDataSvc) {
+function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
     var externalSource = null;
     var externalToken = null;
@@ -66,13 +66,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdDataSvc) {
         getRelationType: getRelationType,
         saveStudentDetails: saveStudentDetails,
         getStudentCustomFields: getStudentCustomFields,
-        setAddressAreaId: setAddressAreaId,
         getAddressAreaId: getAddressAreaId,
-        setBirthplaceAreaId: setBirthplaceAreaId,
         getBirthplaceAreaId: getBirthplaceAreaId,
-        setAddressArea: setAddressArea,
         getAddressArea: getAddressArea,
-        setBirthplaceArea: setBirthplaceArea,
         getBirthplaceArea: getBirthplaceArea,
     };
 
@@ -209,35 +205,23 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdDataSvc) {
     }
 
     function getAddressAreaId () {
-        return selectedAddressAreaId;
-    }
-
-    function setAddressAreaId (data) {
-        selectedAddressAreaId = data;
+        selectedAddressAreaId = $window.localStorage.getItem('address_area_id');
+        return JSON.parse(selectedAddressAreaId);
     }
 
     function getAddressArea () {
-        return selectedAddressArea;
-    }
-
-    function setAddressArea (data) {
-        selectedAddressArea = data;
+        selectedAddressArea = $window.localStorage.getItem('address_area');
+        return JSON.parse(selectedAddressArea);
     }
 
     function getBirthplaceAreaId () {
-        return selectedBirthplcaeAreaId;
-    }
-
-    function setBirthplaceAreaId (data) {
-        selectedBirthplcaeAreaId = data;
+        selectedBirthplcaeAreaId = $window.localStorage.getItem('birthplace_area_id');
+        return JSON.parse(selectedBirthplcaeAreaId);
     }
 
     function getBirthplaceArea () {
-        return selectedBirthplcaeArea;
-    }
-
-    function setBirthplaceArea (data) {
-        selectedBirthplcaeArea = data;
+        selectedBirthplcaeArea = $window.localStorage.getItem('birthplace_area');
+        return JSON.parse(selectedBirthplcaeArea);
     }
 
     function saveStudentDetails(param) {

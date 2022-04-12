@@ -897,11 +897,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             photo_base_64: StudentController.selectedStudentData.photo_base_64,
             custom: [],
         };
-
-        // var formData = new FormData();
-        // formData.append("data", JSON.stringify(param));
-        // formData.append("photo", JSON.stringify(StudentController.selectedStudentData.photo));
-
         StudentController.customFieldsArray.forEach((customField)=> {
             customField.data.forEach((field)=> {
                 if(field.field_type !== 'CHECKBOX') {

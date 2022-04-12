@@ -1,9 +1,9 @@
-angular.module('sg.tree.ctrl', ['kd-angular-tree-dropdown', 'sg.tree.svc', 'institutions.students.svc'])
+angular.module('sg.tree.ctrl', ['kd-angular-tree-dropdown', 'sg.tree.svc'])
     .controller('SgTreeCtrl', SgTreeController);
 
-SgTreeController.$inject = ['$scope', '$window', 'SgTreeSvc', 'InstitutionsStudentsSvc'];
+SgTreeController.$inject = ['$scope', '$window', 'SgTreeSvc'];
 
-function SgTreeController($scope, $window, SgTreeSvc, InstitutionsStudentsSvc) {
+function SgTreeController($scope, $window, SgTreeSvc) {
 
     $scope.outputFlag = false;
     var Controller = this;
@@ -74,8 +74,14 @@ function SgTreeController($scope, $window, SgTreeSvc, InstitutionsStudentsSvc) {
     $scope.$watch('addressAreaOutputModelText', function (newValue, oldValue) {
         if (typeof newValue !== 'undefined' && newValue.length > 0) {
             Controller.outputValue = newValue[0].id;
-            InstitutionsStudentsSvc.setAddressAreaId(Controller.outputValue);
-            InstitutionsStudentsSvc.setAddressArea(newValue[0]);
+            if($window.localStorage.getItem('address_area_id')) {
+                $window.localStorage.removeItem('address_area_id')
+            }
+            if($window.localStorage.getItem('address_area')) {
+                $window.localStorage.removeItem('address_area')
+            }
+            $window.localStorage.setItem('address_area_id', Controller.outputValue);
+            $window.localStorage.setItem('address_area', JSON.stringify(newValue[0]));
             if (Controller.triggerOnChange) {
                 setTimeout(function() {
                     if (oldValue.length != 0 && Controller.outputValue != null && Controller.outputValue != oldValue[0].id) {
@@ -90,8 +96,14 @@ function SgTreeController($scope, $window, SgTreeSvc, InstitutionsStudentsSvc) {
     $scope.$watch('birthplaceAreaOutputModelText', function (newValue, oldValue) {
         if (typeof newValue !== 'undefined' && newValue.length > 0) {
             Controller.outputValue = newValue[0].id;
-            InstitutionsStudentsSvc.setBirthplaceAreaId(Controller.outputValue);
-            InstitutionsStudentsSvc.setBirthplaceArea(newValue[0]);
+            if($window.localStorage.getItem('birthplace_area_id')) {
+                $window.localStorage.removeItem('birthplace_area_id')
+            }
+            if($window.localStorage.getItem('birthplace_area')) {
+                $window.localStorage.removeItem('birthplace_area')
+            }
+            $window.localStorage.setItem('birthplace_area_id', Controller.outputValue);
+            $window.localStorage.setItem('birthplace_area', JSON.stringify(newValue[0]));
             if (Controller.triggerOnChange) {
                 setTimeout(function() {
                     if (oldValue.length != 0 && Controller.outputValue != null && Controller.outputValue != oldValue[0].id) {
