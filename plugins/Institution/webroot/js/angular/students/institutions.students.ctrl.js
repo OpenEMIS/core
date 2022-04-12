@@ -1,5 +1,5 @@
 angular
-    .module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.students.svc'])
+    .module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.students.svc', 'kd-angular-tree-dropdown'])
     .controller('InstitutionsStudentsCtrl', InstitutionStudentController);
 
 InstitutionStudentController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsStudentsSvc', '$rootScope'];
@@ -39,6 +39,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.customFields = [];
     StudentController.customFieldsArray = [];
     StudentController.selectedSection = '';
+    var todayDate = new Date();
+    StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
 
     StudentController.datepickerOptions = {
         minDate: new Date(),
@@ -93,7 +95,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.changed = changed;
     StudentController.selectOption = selectOption;
     StudentController.onDecimalNumberChange = onDecimalNumberChange;
-    StudentController.getAreas = getAreas;
     
 
     angular.element(document).ready(function () {
@@ -120,12 +121,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         .then(function(response) {
             StudentController.selectedStudentData.openemis_no = response;
             StudentController.selectedStudentData.username = response;
-            StudentController.getAreas();
+            UtilsSvc.isAppendLoader(false);
         }, function(error) {
+            UtilsSvc.isAppendLoader(false);
             console.log(error);
-            StudentController.getAreas();
-        });
-    }
+            });
+        }
 
     function getInternalSearchData() {
         var first_name = '';
@@ -281,7 +282,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             institution_id: StudentController.institutionId
         };
         InstitutionsStudentsSvc.getEducationGrades(param).then(function(resp){
-            if(!resp.data && resp.data !== 'null')
+            if(resp.data !== 'null')
                 StudentController.educationGradeOptions = resp.data;
             else 
                 StudentController.educationGradeOptions = [];
@@ -302,19 +303,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         };
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getClasses(params).then(function(resp){
-            if(!resp.data && resp.data !== 'null')
+            if(resp.data !== 'null')
                 StudentController.classOptions = resp.data;
             else
                 StudentController.classOptions = [];
-            UtilsSvc.isAppendLoader(false);
-        }, function(error){
-            console.log(error);
-            UtilsSvc.isAppendLoader(false);
-        });
-    }
-
-    function getAreas() {
-        InstitutionsStudentsSvc.getAreas().then(function(resp){
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
@@ -870,6 +862,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function saveStudentDetails() {
         let startDate = $filter('date')(StudentController.selectedStudentData.startDate, 'yyyy-MM-dd');
+        StudentController.selectedStudentData.addressArea = InstitutionsStudentsSvc.getAddressArea();
+        StudentController.selectedStudentData.birthplaceArea = InstitutionsStudentsSvc.getBirthplaceArea();
         var params = {
             openemis_no: StudentController.selectedStudentData.openemis_no,
             first_name: StudentController.selectedStudentData.first_name,
@@ -885,8 +879,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             password: StudentController.selectedStudentData.password,
             postal_code: StudentController.selectedStudentData.postalCode,
             address: StudentController.selectedStudentData.address,
-            birthplace_area_id: 2,
-            address_area_id: 2,
+            birthplace_area_id: InstitutionsStudentsSvc.getBirthplaceAreaId(),
+            address_area_id: InstitutionsStudentsSvc.getAddressAreaId(),
             identity_type_id: StudentController.selectedStudentData.identity_type_id,
             education_grade_id: 59,
             academic_period_id: StudentController.selectedStudentData.academic_period_id,

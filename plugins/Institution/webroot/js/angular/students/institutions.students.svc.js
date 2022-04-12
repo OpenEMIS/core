@@ -10,6 +10,10 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdDataSvc) {
     var externalToken = null;
     var institutionId = null;
     var externalDataSourceMapping = {};
+    var selectedAddressAreaId = null;
+    var selectedBirthplcaeAreaId = null;
+    var selectedAddressArea = [];
+    var selectedBirthplcaeArea = [];
 
     var service = {
         init: init,
@@ -62,7 +66,14 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdDataSvc) {
         getRelationType: getRelationType,
         saveStudentDetails: saveStudentDetails,
         getStudentCustomFields: getStudentCustomFields,
-        getAreas: getAreas,
+        setAddressAreaId: setAddressAreaId,
+        getAddressAreaId: getAddressAreaId,
+        setBirthplaceAreaId: setBirthplaceAreaId,
+        getBirthplaceAreaId: getBirthplaceAreaId,
+        setAddressArea: setAddressArea,
+        getAddressArea: getAddressArea,
+        setBirthplaceArea: setBirthplaceArea,
+        getBirthplaceArea: getBirthplaceArea,
     };
 
     var models = {
@@ -197,16 +208,36 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdDataSvc) {
         return deferred.promise;
     }
 
-    function getAreas(){
-        var deferred = $q.defer();
-        let url = angular.baseUrl + '/restful/v2/Area-Areas.json?_finder=areaList[userId:2;displayCountry:0;selected:11;recordOnly:true]&_limit=0';
-        $http.get(url)
-        .then(function(response){
-            deferred.resolve(response);
-        }, function(error) {
-            deferred.reject(error);
-        });
-        return deferred.promise;
+    function getAddressAreaId () {
+        return selectedAddressAreaId;
+    }
+
+    function setAddressAreaId (data) {
+        selectedAddressAreaId = data;
+    }
+
+    function getAddressArea () {
+        return selectedAddressArea;
+    }
+
+    function setAddressArea (data) {
+        selectedAddressArea = data;
+    }
+
+    function getBirthplaceAreaId () {
+        return selectedBirthplcaeAreaId;
+    }
+
+    function setBirthplaceAreaId (data) {
+        selectedBirthplcaeAreaId = data;
+    }
+
+    function getBirthplaceArea () {
+        return selectedBirthplcaeArea;
+    }
+
+    function setBirthplaceArea (data) {
+        selectedBirthplcaeArea = data;
     }
 
     function saveStudentDetails(param) {
