@@ -72,7 +72,8 @@ class NavigationComponent extends Component
             $this->checkPermissions($navigations);
             $controller->set('_navigations', $navigations);
         } catch (SecurityException $ex) {
-            return;
+            echo "<pre>";print_r($ex);die();
+            return $ex;
         }
     }
 
@@ -325,7 +326,14 @@ class NavigationComponent extends Component
                 }else if($action == 'Identities'){//POCOR-6453 starts
                     $securityUserId = $this->controller->paramsDecode($this->request->query['queryString']);
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
-                }else{
+                } 
+                /*POCOR-6286 : added condition to get selected student id */    
+                elseif ($action == 'StudentProfiles') {
+                    $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
+                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
+                } 
+                /*POCOR-6286 ends*/
+                else{
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
                 }
                 //POCOR-6202 end
@@ -586,27 +594,47 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Attachments'],
                 'params' => ['plugin' => 'Institution']
             ],
+            /*POCOR-6286 starts*/
+            'Profile' => [
+                'title' => 'Profiles',
+                'parent' => 'Institution.General',
+                'link' => false
+            ],
 
-			'Institutions.Profiles.index' => [
-				'title' => 'Profiles',
-				'parent' => 'Institution.General',
-				'selected' => ['Institutions.Profiles'],
-				'params' => ['plugin' => 'Institution']
-			],
+            'Institutions.InstitutionProfiles.generate' => [
+                'title' => 'Institutions',
+                'parent' => 'Profile',
+                'selected' => ['Institutions.InstitutionProfiles'],
+                'params' => ['plugin' => 'Institution', 0 => $institutionId],
+            ],
+		    
+            'Institutions.StaffProfiles.generate' => [
+                'title' => 'Staff',
+                'parent' => 'Profile',
+                'selected' => ['Institutions.StaffProfiles'],
+                'params' => ['plugin' => 'Institution', 0 => $institutionId],
+            ],
+
+            'Institutions.StudentProfiles.generate' => [
+                'title' => 'Students',
+                'parent' => 'Profile',
+                'selected' => ['Institutions.StudentProfiles'],
+                'params' => ['plugin' => 'Institution', 0 => $institutionId],
+            ],
+            /*POCOR-6286 ends*/
             'Institutions.Shifts' => [
                 'title' => 'Shifts',
                 'parent' => 'Institution.General',
                 'selected' => ['Institutions.Shifts'],
                 'params' => ['plugin' => 'Institution']
-            ],
 
+            ],
             'Institution.Academic' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
-
-
+            
             'Institutions.Programmes' => [
                 'title' => 'Programmes',
                 'parent' => 'Institution.Academic',
@@ -908,12 +936,14 @@ class NavigationComponent extends Component
             ],
             // POCOR-6150 end
 
-            'InfrastructureProjects.index' => [
+            // POCOR-6151
+            'Institutions.InfrastructureProjects' => [
                 'title' => 'Projects',
                 'parent' => 'Infrastructures',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InfrastructureProjects.view', 'InfrastructureProjects.add', 'InfrastructureProjects.edit', 'InfrastructureProjects.delete']
+                'selected' => ['InfrastructureProjects'.'Institutions.InfrastructureProjects.view', 'Institutions.InfrastructureProjects.add', 'Institutions.InfrastructureProjects.edit', 'Institutions.InfrastructureProjects.delete']
             ],
+            // POCOR-6151
 
             'Wash' => [
                 'title' => 'WASH',
@@ -982,12 +1012,14 @@ class NavigationComponent extends Component
                 'selected' => ['InfrastructureUtilityTelephones.view', 'InfrastructureUtilityTelephones.add', 'InfrastructureUtilityTelephones.edit', 'InfrastructureUtilityTelephones.delete']
             ],
 
-            'InstitutionAssets.index' => [
+            // POCOR-6152
+            'Institutions.InstitutionAssets' => [
                 'title' => 'Assets',
                 'parent' => 'Infrastructures',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionAssets.view', 'InstitutionAssets.add', 'InstitutionAssets.edit', 'InstitutionAssets.delete'],
+                'selected' => ['Institutions.InstitutionAssets','Institutions.InstitutionAssets.view', 'Institutions.InstitutionAssets.add', 'Institutions.InstitutionAssets.edit', 'Institutions.InstitutionAssets.delete'],
             ],
+            // POCOR-6152
 
             'Meals' => [
                 'title' => 'Meals',
@@ -1055,12 +1087,14 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.InstitutionBuses','Institutions.InstitutionBuses.add', 'Institutions.InstitutionBuses.edit', 'Institutions.InstitutionBuses.view', 'Institutions.InstitutionBuses.delete']
             ],
 
-            'InstitutionTrips.index' => [
+            // POCOR-6169
+            'Institutions.InstitutionTrips.index' => [
                 'title' => 'Trips',
                 'parent' => 'Institutions.Transport',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionTrips.add', 'InstitutionTrips.edit', 'InstitutionTrips.view', 'InstitutionTrips.delete']
+                'selected' => ['Institutions.InstitutionTrips','Institutions.InstitutionTrips.add', 'Institutions.InstitutionTrips.edit', 'Institutions.InstitutionTrips.view', 'Institutions.InstitutionTrips.delete']
             ],
+            // POCOR-6169
 
             'Institutions.Cases' => [
                 'title' => 'Cases',
@@ -1431,7 +1465,13 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Staff',
                 'selected' => ['Profiles.ScheduleTimetable'],
                 'params' => ['plugin' => 'Profile']
-            ],
+            ],/*POCOR-6286 - added profiles menu*/
+            'Profiles.StaffProfiles' => [
+                'title' => 'Profiles',
+                'parent' => 'Profiles.Staff',
+                'params' => ['plugin' => 'Profile',],
+                'selected' => ['Profiles.StaffProfiles']
+            ]
         ];
         return $navigation;
     }
@@ -1468,7 +1508,13 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Student',
                 'params' => ['plugin' => 'Profile', 'type' => 'student'],
                 'selected' => ['Profiles.StudentBankAccounts', 'Profiles.StudentFees']
-            ],
+            ],/*POCOR-6286 - added profiles menu*/
+            'Profiles.StudentProfiles' => [
+                'title' => 'Profiles',
+                'parent' => 'Profiles.Student',
+                'params' => ['plugin' => 'Profile', 'type' => 'student'],
+                'selected' => ['Profiles.StudentProfiles']
+            ]
         ];
         return $navigation;
     }
@@ -1534,8 +1580,15 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Staff',
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.TrainingNeeds', 'Directories.TrainingResults', 'Directories.Courses']
-            ],
+            ],/*POCOR-6286 - added profiles menu*/
+            'Directories.StaffProfiles' => [
+                    'title' => 'Profiles',
+                    'parent' => 'Directories.Staff',
+                    'params' => ['plugin' => 'Directory'],
+                    'selected' => ['Directories.StaffProfiles']
+            ]
         ];
+
         return $navigation;
     }
 
@@ -1568,7 +1621,13 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Student',
                 'params' => ['plugin' => 'Directory', 'type' => 'student'],
                 'selected' => ['Directories.StudentBankAccounts', 'Directories.StudentFees']
-            ],
+            ],/*POCOR-6286 - added profiles menu*/
+            'Directories.StudentProfiles' => [
+                'title' => 'Profiles',
+                'parent' => 'Directories.Student',
+                'params' => ['plugin' => 'Directory'],
+                'selected' => ['Directories.StudentProfile']
+            ]
         ];
 
         $session = $this->request->session();
@@ -1576,6 +1635,7 @@ class NavigationComponent extends Component
         if (!empty($studentToGuardian)) {
             $navigation['Directories.StudentGuardians']['selected'] = ['Directories.StudentGuardians', 'Directories.StudentGuardianUser', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments', 'Directories.Contacts', 'Directories.Demographic'];
         }
+
         return $navigation;
     }
 
@@ -1633,6 +1693,13 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+            /*POCOR-6513 starts - Added new report module*/
+            'Reports.Performance' => [
+                'title' => 'Performance',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
+            /*POCOR-6513 ends*/
             'Reports.Examinations' => [
                 'title' => 'Examinations',
                 'parent' => 'Reports',
@@ -1682,7 +1749,7 @@ class NavigationComponent extends Component
                 'title' => 'Custom',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ],
+            ]
         ];
         return $navigation;
     }

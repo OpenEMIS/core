@@ -14,6 +14,8 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 $(document).ready(function() {
+    localStorage.removeItem('academic_period_id');
+    localStorage.removeItem('academic_period_id_new');
     dashboards.init();
     showInstituteProfileCompleteData();
     showProfileCompleteData();

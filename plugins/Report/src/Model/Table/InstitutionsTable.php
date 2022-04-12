@@ -243,6 +243,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('position_filter', ['type' => 'hidden']);
+        $this->ControllerAction->field('teaching_filter', ['type' => 'hidden']);//POCOR-6614
         // $this->ControllerAction->field('license', ['type' => 'hidden']);
         $this->ControllerAction->field('type', ['type' => 'hidden']);
         $this->ControllerAction->field('status', ['type' => 'hidden']);
@@ -338,6 +339,7 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'area_level_id';
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'position_filter';
+                    $fieldsOrder[] = 'teaching_filter';//POCOR-6614
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'format';
                     break;
@@ -624,6 +626,29 @@ class InstitutionsTable extends AppTable
                 $options = [
                     InstitutionPositions::ALL_POSITION => __('All Positions'),
                     InstitutionPositions::POSITION_WITH_STAFF => __('Positions with Staff')
+                ];
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $options;
+            } else {
+                $attr['value'] = self::NO_FILTER;
+            }
+            return $attr;
+        }
+    }
+
+    /**
+    * @POCOR-6614
+    * Add teaching status filer
+    */
+    public function onUpdateFieldTeachingFilter(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.InstitutionPositions'])) {
+                $options = [
+                    InstitutionPositions::TEACHING => __('Teaching'),
+                    InstitutionPositions::NON_TEACHING => __('Non Teaching')
                 ];
                 $attr['type'] = 'select';
                 $attr['select'] = false;
@@ -1018,6 +1043,10 @@ class InstitutionsTable extends AppTable
                 ) {
 
                 $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+                $conditions = [];
+                if ($institutionId != 0) {
+                    $conditions[$InstitutionGrades->aliasField('institution_id')] = $institutionId;
+                }
                 $gradeOptions = $InstitutionGrades
                     ->find('list', [
                         'keyField' => 'id',
@@ -1031,7 +1060,7 @@ class InstitutionsTable extends AppTable
                     //->contain(['EducationProgrammes'])
                     ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
                     ->where([
-                        $InstitutionGrades->aliasField('institution_id') => $institutionId,
+                        $conditions,
                         'EducationSystems.academic_period_id' => $academicPeriodId,
                     ])
                     ->order([

@@ -106,6 +106,8 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+		//print_r($this->ReportProgress); die;
+		//print_r($this->_table->alias());die;
 		$query = $settings['query'];
 		$settings['pagination'] = false;
 		$fields = $this->_table->ControllerAction->getFields($this->ReportProgress);
@@ -135,14 +137,34 @@ class ReportListBehavior extends Behavior {
 			$userId = $this->_table->Auth->user('id');
 			$conditions[$this->ReportProgress->aliasField('created_user_id')] = $userId;
 		}
-
-		$query = $this->ReportProgress->find()
+		//POCOR-6621 fetch report listing based on module and current institute
+		$session = new Session();
+	    $institutionId  = $session->read('Institution.Institutions.id'); 
+		if($this->_table->alias() == 'InstitutionStandards'){ // Inside the institution module report listing
+			$query = $this->ReportProgress->find('all')
+			->where(['JSON_EXTRACT(params, "$.current_institution_id")=' . $institutionId,'module'=>'InstitutionStandards'])
+			->order([
+				$this->ReportProgress->aliasField('created') => 'DESC',
+				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
+			]);				
+		}elseif($this->_table->alias() == 'InstitutionStatistics'){ // Inside the institution module report listing
+			$query = $this->ReportProgress->find('all')
+			->where(['JSON_EXTRACT(params, "$.institution_id")=' . $institutionId,'module'=>'InstitutionStatistics'])
+			->order([
+				$this->ReportProgress->aliasField('created') => 'DESC',
+				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
+			]);	
+		}else{
+			// This is for report module listing
+			$query = $this->ReportProgress->find()
 			->contain('CreatedUser') //association declared on AppTable
 			->where($conditions)
 			->order([
 				$this->ReportProgress->aliasField('created') => 'DESC',
 				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
 			]);
+		}
+		//POCOR-6621 End
 
 		return $query;
 	}
@@ -320,12 +342,12 @@ class ReportListBehavior extends Behavior {
 
 		}
 		/*POCOR-6304 starts*/
+		$Institutions = TableRegistry::get('Institution.Institutions');
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$EducationGrades = TableRegistry::get('Education.EducationGrades');
 		if (array_key_exists('institution_id', $data['InstitutionStatistics'])) {
-			
 			$institutionId = $data['InstitutionStatistics']['institution_id'];
-	        $Institutions = TableRegistry::get('Institution.Institutions');
 	        $institutionData = $Institutions->get($institutionId);
-	        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStatistics']['academic_period_id']);
 	        if($feature == 'Report.InstitutionStudents'){
 	        	$name .= ' - '.$filterStr;
@@ -334,11 +356,8 @@ class ReportListBehavior extends Behavior {
 			}
 		}
 		if (array_key_exists('institution_id', $data['InstitutionStandards'])) {
-			
 			$institutionId = $data['InstitutionStandards']['institution_id'];
-	        $Institutions = TableRegistry::get('Institution.Institutions');
 	        $institutionData = $Institutions->get($institutionId);
-	        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStandards']['academic_period_id']);
 	        if($feature == 'Report.InstitutionStudents'){
 	        	$name .= ' - '.$filterStr;
@@ -346,7 +365,28 @@ class ReportListBehavior extends Behavior {
 				$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
 			}
 		}
-		/*POCOR-6304 ends*/		
+		/*POCOR-6304 ends*/
+		/*POCOR-6439 start : shorting report name as it is throwing error before save*/
+		if($feature == 'Report.StudentAttendanceSummary') {
+			$academicPeriodData = $AcademicPeriod->get($data['Institutions']['academic_period_id']);
+			if ($data['Institutions']['institution_id'] > 0) {
+				$institutionData = $Institutions->get($data['Institutions']['institution_id']);
+				$institutionCode = $institutionData->code;
+			} else {
+				$institutionCode = 'All Institutions';
+			}
+	        if ($data['Institutions']['education_grade_id'] > -1) {
+	        	$EducationGradesData = $EducationGrades->get($data['Institutions']['education_grade_id']);
+	        	$gradeName = $EducationGradesData->name;
+	        } else {
+	        	$gradeName = 'All Grades';
+	        }
+	        $reportStartDate = date("Ymd", strtotime($data[$alias]['report_start_date']));
+	        $reportEndDate = date("Ymd", strtotime($data[$alias]['report_end_date']));
+	        $reportName = $alias .':'. $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionCode .' - '. $gradeName.' - '. $reportStartDate .' - '.$reportEndDate;
+	        $name = $reportName;
+		}
+		/*POCOR-6439 ends*/		
 
 		$params = $data[$alias];
 		

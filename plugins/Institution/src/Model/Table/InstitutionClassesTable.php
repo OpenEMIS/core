@@ -846,6 +846,38 @@ class InstitutionClassesTable extends ControllerActionTable
             'academic_period_id', 'name', 'institution_shift_id', 'education_grades', 'capacity', 'total_male_students', 'total_female_students',
             'total_students', 'staff_id', 'classes_secondary_staff', 'multigrade', 'students'
         ]);
+
+        // overwrite back button
+        /*$btnAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        
+        $extraButtons = [
+            'export' => [
+                'Institution' => ['Institutions', 'IndividualClassExport', 'excel'],
+                'action' => 'IndividualClassExport', 'excel',
+                'icon' => '<i class="fa kd-export"></i>',
+                'title' => __('Export')
+            ]
+        ];
+        foreach ($extraButtons as $key => $attr) {
+            if ($this->AccessControl->check($attr['permission'])) {
+                $button = [
+                    'type' => 'button',
+                    'attr' => $btnAttr,
+                    'url' => [0 => 'index'] 
+                ];
+                $button['url']['action'] = $attr['action'];
+                $button['attr']['title'] = $attr['title'];
+                $button['label'] = $attr['icon'];
+
+                $extra['toolbarButtons'][$key] = $button;
+            }
+        }*/
+        // back button
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -916,6 +948,9 @@ class InstitutionClassesTable extends ControllerActionTable
                 'ClassesSecondaryStaff.SecondaryStaff',
                 'ClassStudents' => [
                     'Users.Genders',
+                    //START: POCOR-6623
+                    'Users.Identities',
+                    //END: POCOR-6623
                     'Users.SpecialNeeds',
                     'EducationGrades',
                     'StudentStatuses',
@@ -931,6 +966,9 @@ class InstitutionClassesTable extends ControllerActionTable
                 'ClassesSecondaryStaff.SecondaryStaff',
                 'ClassStudents' => [
                     'Users.Genders',
+                    //START: POCOR-6623
+                    'Users.Identities',
+                    //END: POCOR-6623
                     'Users.SpecialNeeds',
                      /*POCOR-6566 starts*/
                     'EducationGrades'=> function ($q) use ($grades) {
@@ -2084,16 +2122,24 @@ class InstitutionClassesTable extends ControllerActionTable
         $requestQuery = $this->request->query;
         $institutionID = $_SESSION['Institution']['Institutions']['id'];
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-        //$query->group($overwrite = false);
-        //print_r($query->sql()); exit;
-        //$query=str_replace('GROUP BY `ClassesStudents`.`id`', '', $query);
         $query
         ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'
             ])
         ->where([
             $this->aliasField('academic_period_id ='). $selectedAcademicPeriodId,
             $this->aliasField('Institutions.id ='). $institutionID,
-        ])
-        ->group(['InstitutionClasses.id']);
+        ]);
+        /**
+        * added condition to make query on the bases on selected class and exporting student's list
+        * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+        * @ticket POCOR-6635 starts
+        */
+        $encodedClassId = $this->request->params['pass'][1];
+        if (!empty($encodedClassId)) {
+            $query;
+        } else {
+            $query->group(['InstitutionClasses.id']);
+        }
+        //POCOR-6635 ends
     }
 }
