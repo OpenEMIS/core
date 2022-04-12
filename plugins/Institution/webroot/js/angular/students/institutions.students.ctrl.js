@@ -896,6 +896,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             institution_class_id: StudentController.selectedStudentData.class_id,
             student_status_id: 1,
             photo_base_64: StudentController.selectedStudentData.photo_base_64,
+            photo_name: StudentController.selectedStudentData.photo_name,
             custom: [],
         };
         StudentController.customFieldsArray.forEach((customField)=> {
