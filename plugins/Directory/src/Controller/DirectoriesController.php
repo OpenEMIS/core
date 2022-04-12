@@ -1129,9 +1129,9 @@ class DirectoriesController extends AppController
         if (!empty($lastName)) { 
             $conditions[$security_users->aliasField('last_name').' LIKE'] = $lastName . '%';
         }
-        if (!empty($openemisNo)) {
+        /*if (!empty($openemisNo)) {
             $conditions[$security_users->aliasField('openemis_no').' LIKE'] = $openemisNo . '%';
-        }
+        }*/
         if (!empty($dateOfBirth)) {
             $conditions[$security_users->aliasField('date_of_birth')] = date_create($dateOfBirth)->format('Y-m-d');
         }
