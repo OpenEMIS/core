@@ -1,9 +1,9 @@
-angular.module('sg.tree.ctrl', ['kd-angular-tree-dropdown', 'sg.tree.svc'])
+angular.module('sg.tree.ctrl', ['kd-angular-tree-dropdown', 'sg.tree.svc', 'institutions.students.svc'])
     .controller('SgTreeCtrl', SgTreeController);
 
-SgTreeController.$inject = ['$scope', '$window', 'SgTreeSvc'];
+SgTreeController.$inject = ['$scope', '$window', 'SgTreeSvc', 'InstitutionsStudentsSvc'];
 
-function SgTreeController($scope, $window, SgTreeSvc) {
+function SgTreeController($scope, $window, SgTreeSvc, InstitutionsStudentsSvc) {
 
     $scope.outputFlag = false;
     var Controller = this;
@@ -20,10 +20,10 @@ function SgTreeController($scope, $window, SgTreeSvc) {
 
     angular.element(document).ready(function () {
         SgTreeSvc.init(angular.baseUrl);
-        var userId = JSON.parse(Controller.userId);
+        var userId = JSON.parse(Controller.userId ? Controller.userId : 2);
         var authArea = [];
         var counter = 0;
-        SgTreeSvc.getRecords(Controller.model, userId, Controller.displayCountry, Controller.outputValue, true)
+        SgTreeSvc.getRecords(Controller.model ? Controller.model : 'Area.Areas', userId, Controller.displayCountry, Controller.outputValue, true)
             .then(function(response) {
                 if (angular.isDefined(response[1]) && angular.isDefined(response[1].name)) {
                     $scope.textConfig['noSelection'] = response[1].name;
@@ -60,6 +60,38 @@ function SgTreeController($scope, $window, SgTreeSvc) {
      $scope.$watch('outputModelText', function (newValue, oldValue) {
         if (typeof newValue !== 'undefined' && newValue.length > 0) {
             Controller.outputValue = newValue[0].id;
+            if (Controller.triggerOnChange) {
+                setTimeout(function() {
+                    if (oldValue.length != 0 && Controller.outputValue != null && Controller.outputValue != oldValue[0].id) {
+                        $('#reload').val('changeAreaEducation').click();
+                        return false;
+                    }
+                }, 1);
+            }
+        }
+    });
+
+    $scope.$watch('addressAreaOutputModelText', function (newValue, oldValue) {
+        if (typeof newValue !== 'undefined' && newValue.length > 0) {
+            Controller.outputValue = newValue[0].id;
+            InstitutionsStudentsSvc.setAddressAreaId(Controller.outputValue);
+            InstitutionsStudentsSvc.setAddressArea(newValue[0]);
+            if (Controller.triggerOnChange) {
+                setTimeout(function() {
+                    if (oldValue.length != 0 && Controller.outputValue != null && Controller.outputValue != oldValue[0].id) {
+                        $('#reload').val('changeAreaEducation').click();
+                        return false;
+                    }
+                }, 1);
+            }
+        }
+    });
+
+    $scope.$watch('birthplaceAreaOutputModelText', function (newValue, oldValue) {
+        if (typeof newValue !== 'undefined' && newValue.length > 0) {
+            Controller.outputValue = newValue[0].id;
+            InstitutionsStudentsSvc.setBirthplaceAreaId(Controller.outputValue);
+            InstitutionsStudentsSvc.setBirthplaceArea(newValue[0]);
             if (Controller.triggerOnChange) {
                 setTimeout(function() {
                     if (oldValue.length != 0 && Controller.outputValue != null && Controller.outputValue != oldValue[0].id) {
