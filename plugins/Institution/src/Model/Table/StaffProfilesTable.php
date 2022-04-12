@@ -361,7 +361,9 @@ class StaffProfilesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $reportCardId = $this->request->query('staff_profile_template_id');
-        $institutionId = $this->request->query('institution_id');
+        //POCOR-6654 - taking institution id from session as request query doesn't contain it
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
         $academicPeriodId = $this->request->query('academic_period_id');
 
         if (!is_null($reportCardId) && !is_null($institutionId)) {
@@ -499,36 +501,7 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // $params = $this->request->query;
-        // $session = $this->request->session();
-        // $institutionId = $session->read('Institution.Institutions.id');
-        // $query
-        //     ->select([
-        //         'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
-        //         'report_card_status' => $this->StaffReportCards->aliasField('status'),
-        //         'report_card_started_on' => $this->StaffReportCards->aliasField('started_on'),
-        //         'report_card_completed_on' => $this->StaffReportCards->aliasField('completed_on'),
-        //         'email_status_id' => $this->StaffReportCardEmailProcesses->aliasField('status'),
-        //         'email_error_message' => $this->StaffReportCardEmailProcesses->aliasField('error_message')
-        //     ])
-        //     ->leftJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
-        //         [
-        //             $this->StaffReportCards->aliasField('staff_id = ') . $this->aliasField('staff_id'),
-        //             $this->StaffReportCards->aliasField('institution_id = ') . $institutionId,
-        //             $this->StaffReportCards->aliasField('academic_period_id = ') . $params['academic_period_id'],
-        //         ]
-        //     )
-        //     ->leftJoin([$this->StaffReportCardEmailProcesses->alias() => $this->StaffReportCardEmailProcesses->table()],
-        //         [
-        //             $this->StaffReportCardEmailProcesses->aliasField('staff_id = ') . $this->aliasField('staff_id'),
-        //             $this->StaffReportCardEmailProcesses->aliasField('institution_id = ') . $institutionId,
-        //             $this->StaffReportCardEmailProcesses->aliasField('academic_period_id = ') . $params['academic_period_id'],
-        //             //$this->StaffReportCardEmailProcesses->aliasField('staff_profile_template_id = ') . $params['staff_profile_template_id']
-        //         ]
-        //     )
-        //     ->autoFields(true);
-        $query;
-            //echo "<pre>";print_r($query);die();
+        return $query;
     }
 
     public function onGetStatus(Event $event, Entity $entity)
