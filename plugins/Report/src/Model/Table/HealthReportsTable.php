@@ -117,6 +117,99 @@ class HealthReportsTable extends AppTable
         if ($areaId != -1) {
             $conditions['Institutions.area_id'] = $areaId;
         }
+        if ($healthReportType == 'Summary') {
+            $query
+                ->select([
+                    $this->aliasField('student_id'),
+                    $this->aliasField('education_grade_id'),
+                    $this->aliasField('institution_id'),
+                    $this->aliasField('academic_period_id'),
+                ])
+                ->contain([
+                    'Users' => [
+                        'fields' => [
+                            'openemis_no' => 'Users.openemis_no',
+                            'Users.first_name',
+                            'Users.middle_name',
+                            'Users.third_name',
+                            'Users.last_name',
+                            'date_of_birth' => 'Users.date_of_birth',
+                            'identity_number' => 'Users.identity_number',
+                            //'identity_type' => 'Users.identity_type_id'
+                        ]
+                    ],
+                    // 'EducationGrades' => [
+                    //     'fields' => [
+                    //         'name'
+                    //     ]
+                    // ],
+                    'Users.Genders' => [
+                        'fields' => [
+                            'name'
+                        ]
+                    ],
+                    'Institutions' => [
+                        'fields' => [
+                            'name',
+                            'code'
+                        ]
+                    ],
+                    'AcademicPeriods' => [
+                        'fields' => [
+                            'name',
+                            'start_year'
+                        ]
+                    ],
+                    'Institutions.Areas' => [
+                    'fields' => [
+                        'Areas.name',
+                        'Areas.code'
+                    ]
+                    ],
+                    'Users.BirthplaceAreas' => [
+                        'fields' => [
+                            'name'
+                        ]
+                    ],
+                ])
+                ->leftJoin(['EducationGrades' => 'education_grades'], [
+                    'EducationGrades.id = ' . $this->aliasField('education_grade_id')
+                ])
+                ->leftJoin(['InstitutionClassStudents' => 'institution_class_students'], [
+                    'InstitutionClassStudents.student_id = ' . $this->aliasField('id')  
+                ])
+                ->leftJoin(['InstitutionClasses' => 'institution_classes'], [
+                    'InstitutionClasses.id = ' . 'InstitutionClassStudents.institution_class_id'
+                ])
+                ->leftJoin(['InstitutionClassGrades'=>'institution_class_grades'], [
+                    'InstitutionClassGrades.institution_class_id = '.  'InstitutionClasses.id',
+                    'AND' => [
+                        'EducationGrades.id = '.  'InstitutionClassGrades.education_grade_id',
+                    ]
+                ])
+                ->leftJoin(['UserNationalities' => 'user_nationalities'], [
+                'UserNationalities.security_user_id = ' . $this->aliasfield('student_id'),
+                ])
+                ->leftJoin(['Nationalities' => 'nationalities'], [
+                   'Nationalities.id = UserNationalities.nationality_id',
+                ])
+                ->leftJoin(['UserIdentity' => 'user_identities'], [
+                    'UserIdentity.security_user_id = ' . $this->aliasfield('student_id'),
+                ])
+                ->leftJoin(['Nationalities' => 'nationalities'], [
+                   'Nationalities.id = UserNationalities.nationality_id',
+                   'AND' => [
+                        'Nationalities.default = 1',
+                    ]
+                ])
+                ->leftJoin(['IdentityTypes' => 'identity_types'], [
+                    'IdentityTypes.id = UserIdentity.identity_type_id',
+                    // 'AND' => [
+                    //     'IdentityTypes.id = UserIdentity.identity_type_id',
+                    // ]
+                ]); 
+            echo "<pre>"; print_r($query->sql()); die();
+        }
         if($healthReportType == 'Overview'){
             
 			$conditions[$this->aliasField('student_status_id')] = '1';
