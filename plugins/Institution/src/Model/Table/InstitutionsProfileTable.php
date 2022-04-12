@@ -170,13 +170,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
     }
-	
-	private function setupTabElements() {
-		$options['type'] = 'StaffTemplates';
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Profiles');
-	}
-
+    
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('report_queue');
@@ -198,8 +192,7 @@ class InstitutionsProfileTable extends ControllerActionTable
                 $this->InstitutionReportCardProcesses->aliasField('created'),
             ])
             ->hydrate(false)
-            ->toArray();
-		$this->setupTabElements();	
+            ->toArray();	
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -262,83 +255,6 @@ class InstitutionsProfileTable extends ControllerActionTable
         }
         $extra['options']['sortWhitelist'] = $sortList;
 
-    }
-
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
-    {
-        $reportCardId = $this->request->query('report_card_id');
-        $academicPeriodId = $this->request->query('academic_period_id');
-		
-        if (!is_null($reportCardId)) {
-            $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
-			
-            // only show toolbar buttons if request for report card and class is valid
-            if ($existingReportCard) {
-                $generatedCount = 0;
-                $publishedCount = 0;
-				
-                // count statuses to determine which buttons are shown
-                foreach($data as $student) {
-                    if ($student->has('report_card_status')) {
-                        if ($student->report_card_status == self::GENERATED) {
-                            $generatedCount += 1;
-                        } else if ($student->report_card_status == self::PUBLISHED) {
-                            $publishedCount += 1;
-                        }
-                    }
-                }
-
-                $toolbarAttr = [
-                    'class' => 'btn btn-xs btn-default',
-                    'data-toggle' => 'tooltip',
-                    'data-placement' => 'bottom',
-                    'escape' => false
-                ];
-
-                $params = [
-                    'academic_period_id' => $academicPeriodId,
-                    'report_card_id' => $reportCardId
-                ];
-
-                // Generate all button
-                $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
-                $generateButton['type'] = 'button';
-                $generateButton['label'] = '<i class="fa fa-refresh"></i>';
-                $generateButton['attr'] = $toolbarAttr;
-                $generateButton['attr']['title'] = __('Generate All');
-                //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
-                if (!is_null($this->request->query('report_card_id'))) {
-                    $reportCardId = $this->request->query('report_card_id');
-                }
-
-                $ReportCardsData = $this->ReportCards
-                                    ->find()
-                                    ->where([
-                                        $this->ReportCards->aliasField('id') => $reportCardId])
-                                    ->first();
-
-
-                if (!empty($ReportCardsData->generate_start_date)) {
-                $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
-                }
-
-                if (!empty($ReportCardsData->generate_end_date)) {
-                $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
-                }
-                $date = Time::now()->format('Y-m-d');
-
-                if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
-                    
-                    $extra['toolbarButtons']['generateAll'] = $generateButton;
-                    
-                } else { 
-                    $generateButton['attr']['data-html'] = true;
-                    $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('ReportCardStatuses.date_closed'));
-                    $generateButton['url'] = 'javascript:void(0)';
-                    $extra['toolbarButtons']['generateAll'] = $generateButton;
-                }
-            }
-        }
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
