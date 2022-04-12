@@ -9,7 +9,7 @@ use Cake\Log\Log;
 
 class AssessmentPeriod extends Entity
 {
-    protected $_virtual = ['editable'];
+    protected $_virtual = ['editable', 'code_name'];//POCOR-6513 added code_name virtual
 
     protected function _getEditable()
     {
@@ -21,5 +21,14 @@ class AssessmentPeriod extends Entity
             return $today->between($dateEnabled, $dateDisabled);
         }
         return false;
+    }
+
+    /**
+     * concatenate Assessment Period's code and name
+     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+     * Ticket No - POCOR-6513 
+     */
+    protected function _getCodeName() {
+        return $this->code . ' - ' . $this->name;
     }
 }

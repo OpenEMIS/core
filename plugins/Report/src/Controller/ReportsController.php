@@ -30,7 +30,8 @@ class ReportsController extends AppController
             'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
             'Audits' => ['className' => 'Report.Audits', 'actions' => ['index', 'add']],
             'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
-            'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']]
+            'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']],
+            'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']]
         ];
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
@@ -154,6 +155,7 @@ class ReportsController extends AppController
                 'Report.TrainingTrainers' => __('Trainers'),
                 'Report.TrainingSessionParticipants' => __('Session Participants'),
                 'Report.ReportTrainingNeedStatistics' => __('Training Needs Statistics'),
+                'Report.TrainersSessions' => __('Trainers Sessions'), // POCOR-6569
             ];
         } elseif ($module == 'Scholarships') {
             $options = [
@@ -196,7 +198,12 @@ class ReportsController extends AppController
             $options = [
                 'Report.WorkflowRecords' => __('Workflow Records')
             ];
-        }
+        } /*POCOR-6513 starts - added feature's option for Performance report*/
+        elseif ($module == 'Performance') {
+            $options = [
+                'Report.Performance' => __('Assessment Missing Mark Entry')
+            ];
+        }/*POCOR-6513 ends*/
         return $options;
     }
 
@@ -351,5 +358,4 @@ class ReportsController extends AppController
         }
         return true;
     }
-
 }

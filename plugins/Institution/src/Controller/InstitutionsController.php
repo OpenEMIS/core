@@ -270,10 +270,22 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBuildings']);
     }
+    // POCOR-6151 starts
+    public function InfrastructureProjects()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureProjects']);
+    }
+    // POCOR-6151 ends
     public function InstitutionFloors()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionFloors']);
     }
+    // POCOR-6152 starts
+    public function InstitutionAssets()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssets']);
+    }
+    // POCOR-6152 ends
     public function InstitutionRooms()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionRooms']);
@@ -435,6 +447,30 @@ class InstitutionsController extends AppController
     public function ReportCardComments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
+    }
+
+    public function InstitutionTrips()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTrips']);
+    }
+
+    public function changePageHeaderTrips($model, $modelAlias, $userType)
+    {
+        $session = $this->request->session();
+        $institutionId = 0;
+        if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        if (!empty($institutionId)) {
+            if($this->request->param('action') == 'InstitutionTrips') {
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Trips');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Trips'));
+                $this->set('contentHeader', $header);
+
+            } 
+        }
     }
 
     public function AssessmentItemResultsArchived()
@@ -748,6 +784,12 @@ class InstitutionsController extends AppController
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
                 $this->Navigation->addCrumb(__('Hygiene'));
                 $this->set('contentHeader', $header);
+
+            }else if($this->request->param('action') == 'InstitutionAssets'){ //POCOR-6152 Header breadcrumbs
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Assets');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Assets'));
             } else if($this->request->param('action') == 'InfrastructureWashSewages'){
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Sewage');
@@ -761,7 +803,18 @@ class InstitutionsController extends AppController
                 $this->Navigation->addCrumb(__('Needs'));
                 $this->set('contentHeader', $header);
             }
+
             // POCOR-6150 end
+
+            // POCOR-6151 start
+            else if($this->request->param('action') == 'InfrastructureProjects'){
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Projects');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Projects'));
+                $this->set('contentHeader', $header);
+            }// POCOR-6151 end
+
         }
 
     }
@@ -3578,7 +3631,7 @@ class InstitutionsController extends AppController
      */
      public function getInstituteProfileCompletnessData ($institutionId) {
         $data = array();
-        $data['percentage'] = 0;
+        //$data['percentage'] = 0; //POCOR-6627 - commented line;it was adding extra data in totalProfileComplete
         $profileComplete = 0;
         //Overview
         $institutions = TableRegistry::get('institutions');
@@ -4180,6 +4233,13 @@ class InstitutionsController extends AppController
         return $data;
      }
 
+    /*POCOR-6286 starts*/ 
+    public function InstitutionProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionsProfile']); }
+    public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffProfiles']); }
+    public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentProfiles']); }
+    /*POCOR-6286 ends*/
+
+
     /*POCOR-6264 starts*/
     public function Lands()
     {
@@ -4295,6 +4355,8 @@ class InstitutionsController extends AppController
             'Institution.StudentSpecialNeeds'  => __('Student Special Needs'),
             'Institution.StudentHealths'  => __('Student Health'),
             'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
+            'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
+            'Institution.InstitutionStaffPositionProfile'  => __('Staff Positions'),//POCOR-6581
         ];
         return $options;
     }
