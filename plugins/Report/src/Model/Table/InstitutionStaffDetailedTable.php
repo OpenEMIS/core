@@ -14,6 +14,10 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Datasource\ConnectionManager;
 
+/**
+ * POCOR-6662
+ * get staff detailed data
+*/
 class InstitutionStaffDetailedTable extends AppTable
 {
     use OptionsTrait;
@@ -55,30 +59,54 @@ class InstitutionStaffDetailedTable extends AppTable
     {
         // Setting request data and modifying fetch condition
         $requestData = json_decode($settings['process']['params']);
-        $statusId = $requestData->status;
-        $typeId = $requestData->type;
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
         $academicPeriodId = $requestData->academic_period_id;
-
-        if ($statusId != 0) {
-            $query->where([
-                $this->aliasField('staff_status_id') => $statusId
-            ]);
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStaffTable = TableRegistry::get('institution_staff');
+        $periodEntity = $AcademicPeriods->get($academicPeriodId);
+        $startDate = $periodEntity->start_date->format('Y-m-d');
+        $endDate = $periodEntity->end_date->format('Y-m-d');
+        $getyear = $AcademicPeriods->find('all')
+                   ->select(['name'=>$AcademicPeriods->aliasField('name')])
+                   ->where(['id'=>$academicPeriodId])
+                   ->limit(1);
+        foreach($getyear->toArray() as $val) {
+            $year  = $val['name'];
         }
-
-        if ($typeId != 0) {
-            $query->where([
-                $this->aliasField('staff_type_id') => $typeId
-            ]);
-        }
+        $custom_field = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
+        $StaffCustomFields = TableRegistry::get('staff_custom_fields');
+        $conditions = [];
         if ($institutionId != 0) {
-            $query->where([
-                $this->aliasField('institution_id') => $institutionId
-            ]);
+            $conditions[$this->aliasField('institution_id')]=$institutionId;
         }
         if ($areaId != -1) {
-            $query->where(['Institutions.area_id' => $areaId]);
+            $conditions[$this->aliasField('Institutions.area_id')]=$areaId;
+        }
+        if (!empty($academicPeriodId)) {
+                $conditions['OR'] = [
+                    'OR' => [
+                        [
+                            $this->aliasField('end_date') . ' IS NOT NULL',
+                            $this->aliasField('start_date') . ' <=' => $startDate,
+                            $this->aliasField('end_date') . ' >=' => $startDate
+                        ],
+                        [
+                            $this->aliasField('end_date') . ' IS NOT NULL',
+                            $this->aliasField('start_date') . ' <=' => $endDate,
+                            $this->aliasField('end_date') . ' >=' => $endDate
+                        ],
+                        [
+                            $this->aliasField('end_date') . ' IS NOT NULL',
+                            $this->aliasField('start_date') . ' >=' => $startDate,
+                            $this->aliasField('end_date') . ' <=' => $endDate
+                        ]
+                    ],
+                    [
+                        $this->aliasField('end_date') . ' IS NULL',
+                        $this->aliasField('start_date') . ' <=' => $endDate
+                    ]
+                ];
         }
 
         $query
@@ -87,28 +115,25 @@ class InstitutionStaffDetailedTable extends AppTable
                 $this->aliasField('FTE'),
                 $this->aliasField('start_date'),
                 $this->aliasField('end_date'),
-                $this->aliasField('staff_id'),  // this field is required to build value for Education Grades
-                $this->aliasField('staff_type_id'),
-                $this->aliasField('staff_status_id'),
-                $this->aliasField('institution_id')
+                $this->aliasField('staff_id'),
+                $this->aliasField('institution_id'), 
+                'number_value'=>$custom_field->aliasField('number_value'),
+                'text_value'=>$custom_field->aliasField('text_value'),
+                'decimal_value'=>$custom_field->aliasField('decimal_value'),
+                'textarea_value'=>$custom_field->aliasField('textarea_value'),
+                'date_value'=>$custom_field->aliasField('date_value'),
+                'staff_custom_name'=>$StaffCustomFields->aliasField('name'),
+                'staff_custom_description'=>$StaffCustomFields->aliasField('description'),
+                
             ])
             ->contain([
                 'Institutions' => [
                     'fields' => [
-                        'code' => 'Institutions.code',
-                        'Institutions.name'
+                        'institutions_code' => 'Institutions.code',
+                        'institutions_name'=>'Institutions.name'
                     ]
                 ],
-                'Institutions.Types' => [
-                    'fields' => [
-                        'institution_type' => 'Types.name'
-                    ]
-                ],
-                'Institutions.Sectors' => [
-                    'fields' => [
-                        'institution_sector' => 'Sectors.name',
-                    ]
-                ],
+                
                 'Institutions.Providers' => [
                     'fields' => [
                         'institution_provider' => 'Providers.name',
@@ -125,25 +150,16 @@ class InstitutionStaffDetailedTable extends AppTable
                         'area_administrative_code' => 'AreaAdministratives.code',
                         'area_administrative_name' => 'AreaAdministratives.name'
                     ]
-                ],//POCOR-5388 starts
-                'Institutions.Localities' => [
-                    'fields' => [
-                        'locality_name' => 'Localities.name'
-                    ]
-                ],//POCOR-5388 ends
+                ],
                 'Users' => [
                     'fields' => [
-                        'Users.id', // this field is required for Identities and IdentityTypes to appear
+                        'Users.id',
                         'openemis_no' => 'Users.openemis_no',
                         'first_name' => 'Users.first_name',
                         'middle_name' => 'Users.middle_name',
                         'third_name' => 'Users.third_name',
                         'last_name' => 'Users.last_name',
-                        'preferred_name' => 'Users.preferred_name',
                         'number' => 'Users.identity_number',
-                        'dob' => 'Users.date_of_birth', // for Date Of Birth field
-                        'Users.date_of_birth',  // for Age field
-                        'username' => 'Users.username'
                     ]
                 ],
                 'Users.Identities.IdentityTypes' => [
@@ -166,39 +182,21 @@ class InstitutionStaffDetailedTable extends AppTable
                         'nationality' => 'MainNationalities.name'
                     ]
                 ],
-                'Users.Contacts' => [
-                    'fields' => [
-                        'Contacts.value',
-                        'Contacts.contact_type_id',
-                        'Contacts.security_user_id'
-                    ]
-                ],
-                'StaffTypes' => [
-                    'fields' => [
-                        'StaffTypes.name'
-                    ]
-                ],
-                'StaffStatuses' => [
-                    'fields' => [
-                        'StaffStatuses.name'
-                    ]
-                ],
-                'Positions' => [
-                    'fields' => [
-                        'position_no' => 'Positions.position_no'
-                    ]
-                ],
+                
                 'Positions.StaffPositionTitles' => [
                     'fields' => [
                         'position_title' => 'StaffPositionTitles.name',
                         'position_title_teaching' => 'StaffPositionTitles.type'
                     ]
                 ]
-            ]);
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($academicPeriodId) {
-            return $results->map(function ($row) use ($academicPeriodId){
-                $row['academic_period_id'] = $academicPeriodId;
-
+            ])->leftJoin([$custom_field->alias() => $custom_field->table()],
+                        [$custom_field->aliasField('staff_id  = ') . $this->aliasField('staff_id')])
+            ->leftJoin([$StaffCustomFields->alias() => $StaffCustomFields->table()],
+                        [$StaffCustomFields->aliasField('id  = ') . $custom_field->aliasField('staff_custom_field_id')])
+            ->where($conditions);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($year) {
+            return $results->map(function ($row) use ($year){
+                $row['academic_period'] = $year;
                 return $row;
             });
         });
@@ -241,121 +239,7 @@ class InstitutionStaffDetailedTable extends AppTable
         return implode(', ', array_values($return));
     }
 
-    public function onExcelGetFTE(Event $event, Entity $entity)
-    {
-        return $entity->FTE*100;
-    }
-
-    public function onExcelRenderAge(Event $event, Entity $entity, $attr)
-    {
-        $age = '';
-        if ($entity->has('user')) {
-            if ($entity->user->has('date_of_birth')) {
-                if (!empty($entity->user->date_of_birth)) {
-                    $dateOfBirth = $entity->user->date_of_birth->format('Y-m-d');
-                    $today = date('Y-m-d');
-                    $age = date_diff(date_create($dateOfBirth), date_create($today))->y;
-                }
-            }
-        }
-        return $age;
-    }
     
-
-    public function onExcelGetEducationGrades(Event $event, Entity $entity)
-    {
-        $grades = [];
-
-        if ($entity->has('staff_id')) {
-
-            // echo "<pre>"; print_r($entity); die();
-            $staffId = $entity->staff_id;
-            $academicPeriodId = $entity->academic_period_id;
-            $ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
-            $ClassesSecondaryStaffTable = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
-
-            $connection = ConnectionManager::get('default');
-            $institutionClassesData = $connection->execute("SELECT academic_period_id,homeroom_or_secondary.institution_class_id,homeroom_or_secondary.staff_id,education_grade_id FROM
-                institution_classes 
-                INNER JOIN
-                (SELECT id institution_class_id,staff_id FROM institution_classes
-
-                UNION
-                SELECT institution_class_id,secondary_staff_id staff_id FROM institution_classes_secondary_staff) homeroom_or_secondary
-                ON institution_classes.id = homeroom_or_secondary.institution_class_id
-                INNER JOIN institution_class_grades ON institution_class_grades.institution_class_id = institution_classes.id
-                WHERE homeroom_or_secondary.staff_id = '".$staffId."' AND institution_classes.academic_period_id = '".$academicPeriodId."'")->fetchAll(\PDO::FETCH_ASSOC);
-             $query = [];
-            foreach ($institutionClassesData as $key => $value) {
-                $query [$key] = $EducationGrades
-                ->find('all')
-                ->where([$EducationGrades->aliasField('id') => $value['education_grade_id']])->toArray();
-            }
-
-
-            // $query = $ClassesTable
-            //     ->find()
-            //     ->select([
-            //         $ClassesTable->aliasField('id'),
-            //         $ClassesTable->aliasField('staff_id'),
-            //         $ClassesSecondaryStaffTable->aliasField('secondary_staff_id')
-            //     ])
-            //     ->innerJoin([$ClassesSecondaryStaffTable->alias() => $ClassesSecondaryStaffTable->table()], [
-            //         $ClassesSecondaryStaffTable->aliasField('institution_class_id = ') . $ClassesTable->aliasField('id')
-            //     ])
-            //     ->contain([
-            //         'EducationGrades' => [
-            //             'fields' => [
-            //                 'InstitutionClassGrades.institution_class_id',
-            //                 'EducationGrades.id',
-            //                 'EducationGrades.code',
-            //                 'EducationGrades.name'
-            //             ]
-            //         ]
-            //     ])
-            //     ->hydrate(false)
-            //     ->where([
-            //         'OR' => [
-            //             [$ClassesTable->aliasField('staff_id') => $staffId],
-            //             [$ClassesSecondaryStaffTable->aliasField('secondary_staff_id') => $staffId]
-            //         ]
-            //     ]);
-
-            foreach ($query as $grade) {
-                foreach ($grade as $key => $gradeName) {
-                    $grades[$gradeName['id']] = $gradeName['name'];
-                }
-            }
-        }
-
-        return implode(', ', array_values($grades));
-    }
-
-    public function onExcelGetPositionTitleTeaching(Event $event, Entity $entity)
-    {
-        $yesno = $this->getSelectOptions('general.yesno');
-        return (array_key_exists($entity->position_title_teaching, $yesno))? $yesno[$entity->position_title_teaching]: '';
-    }
-
-    public function onExcelRenderContactOption(Event $event, Entity $entity, array $attr)
-    {
-        $contactTypes = $attr['contactTypes'];
-
-        $result = [];
-        if ($entity->has('user')) {
-            if ($entity->user->has('contacts')) {
-                $userContacts = $entity->user->contacts;
-                foreach ($userContacts as $key => $obj) {
-                    if (in_array($obj->contact_type_id, $contactTypes)) {
-                        $result[] = $obj->value;
-                    }
-                }
-            }
-        }
-
-        return implode(', ', $result);
-    }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
     {
@@ -363,33 +247,11 @@ class InstitutionStaffDetailedTable extends AppTable
         $identity = $IdentityType->getDefaultEntity();
 
         $settings['identity'] = $identity;
-
         $newFields[] = [
-            'key' => 'Institutions.code',
-            'field' => 'code',
-            'type' => 'string',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'InstitutionStaff.institution_id',
-            'field' => 'institution_id',
+            'key' => 'academic_period',
+            'field' => 'academic_period',
             'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'Institutions.institution_type_id',
-            'field' => 'institution_type',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'Institutions.institution_sector_id',
-            'field' => 'institution_sector',
-            'type' => 'integer',
-            'label' => '',
+            'label' =>  __('Academic Period'),
         ];
 
         $newFields[] = [
@@ -398,14 +260,19 @@ class InstitutionStaffDetailedTable extends AppTable
             'type' => 'integer',
             'label' => '',
         ];
-        //POCOR-5388 starts
         $newFields[] = [
-            'key' => 'Institutions.locality_name',
-            'field' => 'locality_name',
+            'key' => 'institutions_code',
+            'field' => 'institutions_code',
             'type' => 'string',
-            'label' => __('Locality')
+            'label' => __('Institution Code'),
         ];
-        //POCOR-5388 ends
+        $newFields[] = [
+            'key' => 'institutions_name',
+            'field' => 'institutions_name',
+            'type' => 'string',
+            'label' => __('Institution Name'),
+        ];
+        
         $newFields[] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
@@ -423,6 +290,12 @@ class InstitutionStaffDetailedTable extends AppTable
         $newFields[] = [
             'key' => 'Users.middle_name',
             'field' => 'middle_name',
+            'type' => 'string',
+            'label' => ''
+        ];
+         $newFields[] = [
+            'key' => 'Users.third_name',
+            'field' => 'third_name',
             'type' => 'string',
             'label' => ''
         ];
@@ -462,52 +335,10 @@ class InstitutionStaffDetailedTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'Institutions.area_code',
-            'field' => 'area_code',
-            'type' => 'string',
-            'label' => __('Area Education Code')
-        ];
-
-        $newFields[] = [
-            'key' => 'Institutions.area',
-            'field' => 'area_name',
-            'type' => 'string',
-            'label' => __('Area Education')
-        ];
-
-        $newFields[] = [
-            'key' => 'Institutions.area_administrative_code',
-            'field' => 'area_administrative_code',
-            'type' => 'string',
-            'label' => __('Area Administrative Code')
-        ];
-
-        $newFields[] = [
             'key' => 'Institutions.area_administrative_name',
             'field' => 'area_administrative_name',
             'type' => 'string',
-            'label' => __('Area Administrative')
-        ];
-
-        $newFields[] = [
-            'key' => 'InstitutionStaff.FTE',
-            'field' => 'FTE',
-            'type' => 'integer',
-            'label' => 'FTE (%)',
-        ];
-
-        $newFields[] = [
-            'key' => 'Users.date_of_birth',
-            'field' => 'dob',
-            'type' => 'date',
-            'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => 'Age',
-            'field' => 'Age',
-            'type' => 'Age',
-            'label' => __('Age'),
+            'label' => __('Area Administrative Name')
         ];
 
         $newFields[] = [
@@ -516,86 +347,54 @@ class InstitutionStaffDetailedTable extends AppTable
             'type' => 'date',
             'label' => ''
         ];
-
-         $newFields[] = [
-            'key' => 'InstitutionStaff.end_date',
-            'field' => 'end_date',
-            'type' => 'date',
-            'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => 'InstitutionStaff.staff_type_id',
-            'field' => 'staff_type_id',
-            'type' => 'integer',
-            'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => 'Education.name', //POCOR-6614
-            'field' => 'education_grades',
-            'type' => 'string',
-            'label' => __('Education grades')
-        ];
-
-        $newFields[] = [
-            'key' => 'InstitutionStaff.staff_status_id',
-            'field' => 'staff_status_id',
-            'type' => 'integer',
-            'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => 'Positions.position_no',
-            'field' => 'position_no',
-            'type' => 'string',
-            'label' => __('Position Number')
-        ];
-
         $newFields[] = [
             'key' => 'Positions.position_title',
             'field' => 'position_title',
             'type' => 'string',
             'label' => ''
         ];
-
         $newFields[] = [
-            'key' => 'Positions.position_title_teaching',
-            'field' => 'position_title_teaching',
+            'key' => 'staff_custom_name',
+            'field' => 'staff_custom_name',
             'type' => 'string',
-            'label' => __('Teaching')
+            'label' => __('Custom Field Name')
         ];
-
         $newFields[] = [
-            'key' => 'Users.username',
-            'field' => 'username',
+            'key' => 'staff_custom_description',
+            'field' => 'staff_custom_description',
             'type' => 'string',
-            'label' => __('Username')
+            'label' => __('Custom Field Description')
         ];
-
-        $displayContactOptions = ['MOBILE', 'PHONE', 'EMAIL'];
-        $ContactOptionsTable = TableRegistry::get('User.ContactOptions');
-        $options = $ContactOptionsTable->find('list')
-            ->where([$ContactOptionsTable->aliasField('code IN') => $displayContactOptions])
-            ->order('order')
-            ->toArray();
-
-        $ContactTypesTable = TableRegistry::get('User.ContactTypes');
-        foreach ($options as $id => $name) {
-            $contactTypes = $ContactTypesTable->find()
-                ->where([$ContactTypesTable->aliasField('contact_option_id') => $id])
-                ->extract('id')
-                ->toArray();
-
-            $newFields[] = [
-                'key' => 'contact_option',
-                'field' => 'contact_option',
-                'type' => 'contact_option',
-                'label' => __($name),
-                'formatting' => 'string',
-                'contactTypes' => $contactTypes
-            ];
-        }
+        $newFields[] = [
+            'key' => 'number_value',
+            'field' => 'number_value',
+            'type' => 'string',
+            'label' => __('Number Value')
+        ];
+        $newFields[] = [
+            'key' => 'text_value',
+            'field' => 'text_value',
+            'type' => 'string',
+            'label' => __('Text Value')
+        ];
+        $newFields[] = [
+            'key' => 'decimal_value',
+            'field' => 'decimal_value',
+            'type' => 'string',
+            'label' => __('Decimal Value')
+        ];
+        $newFields[] = [
+            'key' => 'date_value',
+            'field' => 'date_value',
+            'type' => 'string',
+            'label' => __('Date Value')
+        ];
+        $newFields[] = [
+            'key' => 'textarea_value',
+            'field' => 'textarea_value',
+            'type' => 'string',
+            'label' => __('textarea Value')
+        ];
 
         $fields->exchangeArray($newFields);
     }
