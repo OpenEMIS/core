@@ -665,7 +665,13 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
         if ($options['InstitutionStatus']['current_status'] == 'Active') {
             if(!empty($options['InstitutionStatus']['withdraw_students']) && $options['InstitutionStatus']['withdraw_students'] == 1) {
                 $institutionStudents = TableRegistry::get('institution_students');
+                //Start POCOR-6624 For enrolled status, all the students should be withdrawn
+                $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+                $statuses = $StudentStatuses->findCodeList();
                 $query = $institutionStudents->query();
+                $query->where(['student_status_id NOT IN' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
+                    $statuses['PROMOTED'], $statuses['REPEATED'],$statuses['GRADUATED']]]);
+                //End POCOR-6624
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'student_status_id' => 4])
                 ->where(['institution_id' => $entity->id])

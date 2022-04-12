@@ -32,6 +32,15 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
         $this->MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
         
+            // POCOR-6153 start
+            $this->addBehavior('Excel', [
+            'excludes' => ['academic_period_id', 'institution_id', 'comment'],
+            'pages' => ['index'],
+            'autoFields' => false
+            ]);
+        // POCOR-6153 end
+        
+        
     }
 
     // public function validationDefault(Validator $validator)
@@ -39,25 +48,32 @@ class InstitutionDistributionsTable extends ControllerActionTable
     //    $validator = parent::validationDefault($validator);
 
     // }
+    
 
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {            
         $request = $this->request;
-
         //academic period filter
         list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
         $extra['selectedPeriod'] = $selectedPeriod;
         $data['periodOptions'] = $periodOptions;
         $data['selectedPeriod'] = $selectedPeriod;
-
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $options['academid_period_id'] = $selectedPeriod;
+        $options['institution_id'] = $institutionId;
         // meal programmes filter
-        $levelOptions = $this->MealProgrammes->getMealProgrammesOptions();
-        // $levelOptions = $this->MealProgrammes->getMealInstitutionProgrammes($institutionId);
+        //START: POCOR-6609
+        // $levelOptions = $this->MealProgrammes->getMealProgrammesOptions();
+        $levelOptions = $this->MealProgrammes->getMealInstitutionProgrammes($options);
+        //END: POCOR-6609
     
-        if ($levelOptions) {
+        if (!empty($levelOptions)) {
             $levelOptions = array(-1 => __('-- Select Programmes Meal --')) + $levelOptions;
+        }else{
+            $levelOptions = array(-1 => __('-- Select Programmes Meal --'));
         }
 
         if ($request->query('level')) {
@@ -168,8 +184,10 @@ class InstitutionDistributionsTable extends ControllerActionTable
     {
         if ($action == 'add') {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-
             $attr['options'] = $periodOptions;
+            //START:POCOR:6609
+            $attr['default'] = $selectedPeriod;
+            //END:POCOR:6609
 
             $attr['onChangeReload'] = $selectedPeriod;
         } else if ($action == 'edit') {
@@ -214,18 +232,26 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     public function onUpdateFieldMealProgrammesId(Event $event, array $attr, $action, $request)
     {
-        // $session = $this->request->session();
-        // $institutionId = $session->read('Institution.Institutions.id');
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
         //POCOR-6434[START]
-        $institutionId = $request->data['InstitutionDistributions'];
+        // $institutionId = $request->data['InstitutionDistributions'];
         //POCOR-6434[END]
-
-        list($levelOptions, $selectedLevel) = array_values($this->getNameOptions($institutionId));
+        if(!empty($institutionId)){
+            $options['period'] = $request->data['InstitutionDistributions']['academic_period_id'];
+            $options['level'] = $request->query['level'];
+            $options['institution_id'] = $institutionId;
+        }else{
+            $options['period'] = $request->query['period'];
+            $options['level'] = $request->query['level'];
+            $options['institution_id'] = $institutionId;
+        }
+        // list($levelOptions, $selectedLevel) = array_values($this->getNameOptions($institutionId));
+        list($levelOptions, $selectedLevel) = array_values($this->getNameOptions($options));
         $attr['options'] = $levelOptions;
         if ($action == 'add') {
             $attr['default'] = $selectedLevel;
         }
-
         return $attr;
     }
 
@@ -245,7 +271,15 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     public function getNameOptions($options)
     {
+        
         $institutionId = $options['institution_id'];
+        //START: POCOR-6609
+        if(!isset($options['period'])){
+            $academic_period_id = $this->AcademicPeriods->getCurrent();
+        }else{
+            $academic_period_id = $options['period'];
+        }
+        //END: POCOR-6609
 
         $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
 
@@ -254,13 +288,16 @@ class InstitutionDistributionsTable extends ControllerActionTable
         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
         ->innerJoin(
             [$MealInstitutionProgrammes->alias() => $MealInstitutionProgrammes->table()], [
-                $MealProgramme->aliasField('id = ') . $MealInstitutionProgrammes->aliasField('meal_programme_id')
+                $MealProgramme->aliasField('id = ') . $MealInstitutionProgrammes->aliasField('meal_programme_id'),
+                $MealProgramme->aliasField('academic_period_id = ') . $academic_period_id
             ]
         )
         ->where([
             $MealInstitutionProgrammes->aliasField('institution_id') => $institutionId])            
         ->orWhere([ 
-            $MealInstitutionProgrammes->aliasField('institution_id') => 0 ])
+            $MealInstitutionProgrammes->aliasField('institution_id') => $options['institution_id'] ])
+        // ->orWhere([ 
+        //     $MealInstitutionProgrammes->aliasField('institution_id') => 0 ])
         ->toArray();
 
         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);

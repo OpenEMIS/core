@@ -78,7 +78,7 @@ class InstitutionStudentsTable extends AppTable  {
         if ($institution_id != 0) {
             $query->where([$this->aliasField('institution_id') => $institution_id]);
         }
-        if ($areaId != -1) {
+        if ($areaId > 1) { //POCOR-6571
             $query->where(['Institutions.area_id' => $areaId]);
         }
 

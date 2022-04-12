@@ -1,3 +1,55 @@
+### [3.75.0] - 2022-04-07
+- Implemented: Add Export button function - Institutions > Infrastructures > Projects
+- Implemented: Add Export button function - Institutions > Transport > Trips
+- Implemented: Add the Profiles feature to Institutions module
+- Implemented: Develop a new report: Reports > Performance > Assessment Missing Mark Entry
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 4
+- Bug Fixed: Personal > Staff > Training > Achievements : Add Achievements page in Personal module
+- Bug Fixed: Administration> Security >Users: Unable to load users
+- Bug Fixed: Report>Institution: Student Attendance Report is stuck in progress
+- Bug Fixed: Administrations > Profiles > Institutions : Rows are duplicated
+- Bug Fixed: Institutions>Statistics>Standard: Develop Staff Positions for all staff
+- Bug Fixed: Administrations > Meals : Issues in Add/View/Edit pages
+- Bug Fixed: Institutions > Meals : Issues in Meal pages
+- Bug Fixed: Institution>Statistics>Standard: Report that is run in Avory Primary School should not be seen in Khundo or other institutions
+- Bug Fixed: Institution>Overview: System will set the students' statuses to withdraw, not only in the current academic period but in all academic periods
+- Bug Fixed: Institutions>Academic>Classes/Subjects: Add export to include student list
+- Bug Fixed: Institution>Staffs: Issue of not being able to take certain dates when doing the End of Assignment of staff
+- Bug Fixed: Institutions>Performance>Assessments: Unable to import assessment mark even when it is within limit
+- Bug Fixed: Institution>Students/Staff: 404 error when searching students and clicking on institution get 404 error
+- Bug Fixed: Administration>Security>Users: 404 error when accessing
+
+### [3.74.5] - 2022-03-25
+- Implemented: Add Export button function - Institutions > Meals > Distributions
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 6
+- Bug Fixed: Institution>Students: User is unable to search students through identity number
+- Bug Fixed: Reports -> Institutions -> Students: the student totals are different from the student total in Institutions -> Students for all institutions when a specific programme is selected
+- Bug Fixed: Jordan UAT: Reports > Institution > Positions
+- Bug Fixed: Administration>Performance>Competencies: Unable to import
+- Bug Fixed: Personal > Staff > Careers : Assignee field is not populated though Institution>Staff>Career is populating
+- Bug Fixed: Report>Students>Student Enrolment summary: Enrolment summary report is showing the wrong number
+- Bug Fixed: Institution > Academic > Classes: Students' names do not have the ID number included
+- Bug Fixed: Institutions>Add: Coordinates fields should be available and mandatory when creating an Institution
+- Bug Fixed: Administration>Localisation>Translation: Some words are missing Arabic translations
+- Bug Fixed: Institutions>Infrastructure>Overview: Duplicated entries in Rooms and custom fields should show correctly
+- Bug Fixed: Institution>Students: User is unable to delete students
+
+### [3.74.4] - 2022-03-16
+- Implemented: Add Export button function - Institutions > Behaviour > Staff
+- Bug Fixed: Institutions>General>Shift: Edit Institution 404 Forbidden: Page Not Found
+- Bug Fixed: Institution>Dashboard: Institution completeness is not showing correctly
+
+### [3.74.3] - 2022-03-14
+- Implemented: Add Export button function - Institutions > Infrastructures > Assets
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 1
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 5
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 8
+- Bug Fixed: Institutions>Statistics>Standard: Develop Staff Special needs data for all staff.
+- Bug Fixed: Institutions>Performance>Assessments: User should not be able to import if the assessment period is over
+- Bug Fixed: Jordan UAT: Reports > Institution > Classes
+- Bug Fixed: Institutions>Performance>Assessments: Enrolled students should show only in Reference Tab
+- Bug Fixed: Report>Institution: Changes to the report
+
 ### [3.74.2] - 2022-03-07
 - Implemented: Add Export button function - Institutions > Behaviour > Students
 - Implemented: Add Export button function - Institutions > Finances > Bank Accounts

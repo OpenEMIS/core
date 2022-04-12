@@ -264,7 +264,10 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ])
                                 ->where([
                                     'Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId,
-                                    $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id
+                                    $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id,
+                                    //POCOR-6620[START]
+                                    $StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus
+                                    //POCOR-6620[END]
                                 ]);
                                 // if ($institutionId > 0) {
                                 //     $instStudData->where([$StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus]);

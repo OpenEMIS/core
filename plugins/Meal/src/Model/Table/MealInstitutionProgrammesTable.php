@@ -49,9 +49,43 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
     }
 
     public function findMealInstitutionProgrammes(Query $query, array $options){
-        
         $institutionId = $options['institution_id'];
-
+        //SATRT: POCOR-6609
+        // $academic_year =  explode("-", $options['academic_period_id']);
+        // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        // $academicPeriodId = $AcademicPeriods
+        //             ->find()
+        //             ->where([
+        //                 $AcademicPeriods->aliasField('start_year') => $academic_year[0]
+        //             ])
+        //             ->extract('id')
+        //             ->first();
+        if(empty($options['academic_period_id']) )
+        {
+            // $academic_period_id = $this->AcademicPeriods->getCurrent();
+            $arrayStudent = $this->AcademicPeriods->find()
+                ->matching('InstitutionClasses')
+                ->where([
+                    'InstitutionClasses.institution_id' => $institutionId
+                ])
+                ->extract('id')
+                ->toArray();
+                $academic_period_id = end($arrayStudent);
+        }else{
+            $academic_period_id = $options['academic_period_id'];
+            // $academic_year =  explode("-", $options['academic_period_id']);
+            // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            // $academicPeriodId = $AcademicPeriods
+            //         ->find()
+            //         ->where([
+            //             $AcademicPeriods->aliasField('start_year') => $academic_year[0]
+            //         ])
+            //         ->extract('id')
+            //         ->first();
+            // // echo "<pre>";print_r($academicPeriodId);die;
+            // $academic_period_id = $academicPeriodId;
+        }
+        //END: POCOR-6609
         $MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
         $query
         ->select([
@@ -65,7 +99,10 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
             ]
         )
         ->where([
-        $this->aliasField('institution_id') => $institutionId]);
+        $this->aliasField('institution_id') => $institutionId,
+        $MealProgrammes->aliasField('academic_period_id') => $academic_period_id,
+        ]);
+        // echo "<pre>";print($query->toArray());die;
         // $row = $query->toArray();
         
         // $results = $MealProgrammes
