@@ -317,6 +317,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     $window.savePhoto = function(event) {
         let photo = event.files[0];
         StudentController.selectedStudentData.photo = photo;
+        let fileReader = new FileReader();
+        fileReader.readAsDataURL(photo);
+        fileReader.onload = () => {
+            console.log(fileReader.result);
+            StudentController.selectedStudentData.photoBase64 = fileReader.result;
+        }
     }
 
     function getStudentCustomFields() {
