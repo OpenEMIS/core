@@ -189,15 +189,8 @@ class StudentProfilesTable extends ControllerActionTable
         $this->field('started_on');
         $this->field('completed_on');
         $this->field('email_status');
-		$this->setupTabElements();
     }
 	
-	private function setupTabElements() {
-		$options['type'] = 'StaffTemplates';
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Profiles');
-	}
-
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('report_queue');
@@ -245,12 +238,11 @@ class StudentProfilesTable extends ControllerActionTable
 			->toArray();
        
 
-        $reportCardOptions = ['-1' => '-- '.__('Select Student Template').' --'] + $reportCardOptions;
+        $reportCardOptions = ['-1' => '-- '.__('Select Profile').' --'] + $reportCardOptions;//POCOR-6655 renamed filter name
         $selectedReportCard = !is_null($this->request->query('student_profile_template_id')) ? $this->request->query('student_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//End
         $where[$this->aliasField('institution_id')] = $institutionId;
-        $where[$this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id = ')] = $selectedReportCard;
         $query
             ->select([
                 'student_profile_template_id' => $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id'),
@@ -314,7 +306,8 @@ class StudentProfilesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $reportCardId = $this->request->query('student_profile_template_id');
-        $institutionId = $this->request->query('institution_id');
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
         $academicPeriodId = $this->request->query('academic_period_id');
         $educationGradeId = $this->request->query('education_grade_id');
 
