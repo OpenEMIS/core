@@ -321,7 +321,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         fileReader.readAsDataURL(photo);
         fileReader.onload = () => {
             console.log(fileReader.result);
-            StudentController.selectedStudentData.photoBase64 = fileReader.result;
+            StudentController.selectedStudentData.photo_base_64 = fileReader.result;
         }
     }
 
@@ -527,7 +527,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function changeClass() {
-        var className = StudentController.selectedStudentData.education_grade_id;
+        var className = StudentController.selectedStudentData.class_id;
         var classOptions = StudentController.classOptions;
         for (var i = 0; i < classOptions.length; i++) {
             if (classOptions[i].id == className) {
@@ -888,12 +888,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             birthplace_area_id: InstitutionsStudentsSvc.getBirthplaceAreaId(),
             address_area_id: InstitutionsStudentsSvc.getAddressAreaId(),
             identity_type_id: StudentController.selectedStudentData.identity_type_id,
-            education_grade_id: 59,
+            education_grade_id: StudentController.selectedStudentData.education_grade_id,
             academic_period_id: StudentController.selectedStudentData.academic_period_id,
             start_date: startDate,
             end_date: StudentController.selectedStudentData.endDate,
-            institution_class_id: 524,
+            institution_class_id: StudentController.selectedStudentData.class_id,
             student_status_id: 1,
+            photo_base_64: StudentController.selectedStudentData.photo_base_64,
             custom: [],
         };
 
