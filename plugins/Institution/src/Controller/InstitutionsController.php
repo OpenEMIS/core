@@ -4561,7 +4561,7 @@ class InstitutionsController extends AppController
             $nationalityId = (array_key_exists('nationality_id', $requestData))? $requestData['nationality_id']: null;
             $username = (array_key_exists('username', $requestData))? $requestData['username']: null;
             $password = (array_key_exists('password', $requestData))? password_hash($requestData['password'],  PASSWORD_DEFAULT) : null;
-            $address  = (array_key_exists('address', $requestData))? $requestData['address '] : null;
+            $address  = (array_key_exists('address', $requestData))? $requestData['address'] : null;
             $postalCode = (array_key_exists('postal_code', $requestData))? $requestData['postal_code'] : null;
             $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData))? $requestData['birthplace_area_id'] : null;
             $addressAreaId = (array_key_exists('address_area_id', $requestData))? $requestData['address_area_id'] : null;
@@ -4833,7 +4833,7 @@ class InstitutionsController extends AppController
                             'decimal_value' => $sval['decimal_value'],
                             'textarea_value' => $sval['textarea_value'],
                             'time_value' => $sval['time_value'],
-                            'file' => $sval['file'],
+                            'file' => file_get_contents($sval['file']),
                             'student_custom_field_id' => $sval['student_custom_field_id'],
                             'student_id' => $user_record_id,
                             'created_user_id' => $userId,
@@ -4858,7 +4858,6 @@ class InstitutionsController extends AppController
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
         /*$requestData = json_decode('{"login_user_id":"1","openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","academic_period_id":"30","start_date":"01-01-2021","end_date":"31-12-2021","staff_type_id":"1","institution_position_id":1,"fte":1,"custom":[{"staff_custom_field_id":17,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":27,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":29,"text_value":"test.jpg","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":28,"text_value":"","number_value":2,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":31,"text_value":"","number_value":3,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":26,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":31,"text_value":"","number_value":4,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":8,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":9,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":30,"text_value":"{\"latitude\":\"11.1\",\"longitude\":\"2.22\"}","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":18,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"}]}', true);*/
-        
         if(!empty($requestData)){
             $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
             $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
@@ -4872,7 +4871,7 @@ class InstitutionsController extends AppController
             $nationalityId = (array_key_exists('nationality_id', $requestData))? $requestData['nationality_id']: null;
             $username = (array_key_exists('username', $requestData))? $requestData['username']: null;
             $password = (array_key_exists('password', $requestData))? password_hash($requestData['password'],  PASSWORD_DEFAULT) : null;
-            $address  = (array_key_exists('address', $requestData))? $requestData['address '] : null;
+            $address  = (array_key_exists('address', $requestData))? $requestData['address'] : null;
             $postalCode = (array_key_exists('postal_code', $requestData))? $requestData['postal_code'] : null;
             $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData))? $requestData['birthplace_area_id'] : null;
             $addressAreaId = (array_key_exists('address_area_id', $requestData))? $requestData['address_area_id'] : null;
@@ -4884,11 +4883,13 @@ class InstitutionsController extends AppController
             $startDate = (array_key_exists('start_date', $requestData))? date('y-m-d', strtotime($requestData['start_date'])) : null;
             $endDate = (array_key_exists('end_date', $requestData))? date('y-m-d', strtotime($requestData['end_date'])) : null;
             
-            $institutionId = $this->request->session()->read('Institution.Institutions.id');
-            
+            //$institutionId = $this->request->session()->read('Institution.Institutions.id');
+            $institutionId = (array_key_exists('institution_id', $requestData))? $requestData['institution_id'] : null;
             $staffTypeId = (array_key_exists('staff_type_id', $requestData))? $requestData['staff_type_id'] : null;
-            $userId = (array_key_exists('login_user_id', $requestData))? $requestData['login_user_id'] : 1;
-            //$custom = (array_key_exists('custom', $requestData))? $requestData['custom'] : "";
+            $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
+            $photo_content = (array_key_exists('photo_base_64', $requestData))? $requestData['photo_base_64'] : null;
+            $photo_name = (array_key_exists('photo_name', $requestData))? $requestData['photo_name'] : null;
+            $custom = (array_key_exists('custom', $requestData))? $requestData['custom'] : "";
             
             //get academic period data
             $academicPeriods = TableRegistry::get('academic_periods');
@@ -4933,13 +4934,20 @@ class InstitutionsController extends AppController
                 'address_area_id' => $addressAreaId,
                 'birthplace_area_id' => $birthplaceAreaId,
                 'postal_code' => $postalCode,
+                'photo_name' => $photo_name,
+                'photo_content' => file_get_contents($photo_content),
                 'is_staff' => 1,
                 'created_user_id' => $userId,
                 'created' => date('y-m-d H:i:s'),
             ];
             //save in security_users table
             $entity = $SecurityUsers->newEntity($entityData);
-            $SecurityUserResult = $SecurityUsers->save($entity);
+            try{
+                $SecurityUserResult = $SecurityUsers->save($entity);
+                unset($entity);
+            }catch (Exception $e) {
+                return null;
+            }
             if($SecurityUserResult){
                 $user_record_id=$SecurityUserResult->id;
                 if(!empty($nationalityId)){
@@ -5023,16 +5031,17 @@ class InstitutionsController extends AppController
                             'decimal_value' => $sval->decimal_value,
                             'textarea_value' => $sval->textarea_value,
                             'time_value' => $sval->time_value,
-                            'file' => $sval->file,
+                            'file' => file_get_contents($sval->file),
                             'staff_custom_field_id' => $sval->staff_custom_field_id,
                             'student_id' => $user_record_id,
                             'created_user_id' => $userId,
                             'created' => date('y-m-d H:i:s')
                         ];
                         //save in staff_custom_field_values table
-                        $entityCustomData = $staffCustomFieldValues->newEntity($entitySubjectsData);
+                        $entityCustomData = $staffCustomFieldValues->newEntity($entityCustomData);
                         $staffCustomFieldsResult = $staffCustomFieldValues->save($entityCustomData);
                         unset($staffCustomFieldsResult);
+                        unset($entityCustomData);
                     }
                 }
             }else{
