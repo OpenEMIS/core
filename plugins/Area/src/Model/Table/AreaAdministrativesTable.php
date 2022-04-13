@@ -36,11 +36,28 @@ class AreaAdministrativesTable extends ControllerActionTable
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StaffRoom' => ['index'],
-            'SgTree' => ['index']
+            'SgTree' => ['index'],
+            'Results' => ['index', 'view'] //POCOR-5672
         ]);
 
         $this->setDeleteStrategy('restrict');
     }
+    //POCOR-5672 starts
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
+        return $events;
+    }
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'index' || $action == 'view') {
+            // check for the user permission to view here
+            $event->stopPropagation();
+            return true;
+        }
+    }//POCOR-5672 ends
 
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);

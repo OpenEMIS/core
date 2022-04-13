@@ -1103,6 +1103,14 @@ class DirectoriesController extends AppController
         return $events;
     }
 
+    public function isActionIgnored(Event $event, $action)
+    {
+        $pass = $this->request->pass;
+        if (isset($pass[0]) && $pass[0] == 'downloadFile') {
+            return true;
+        }
+    }
+
     public function directoryInternalSearch()
     { 
         $this->autoRender = false;
