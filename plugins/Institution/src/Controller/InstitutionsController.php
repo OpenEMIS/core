@@ -4578,7 +4578,9 @@ class InstitutionsController extends AppController
             $studentStatusId = (array_key_exists('student_status_id', $requestData))? $requestData['student_status_id'] : null;
             $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
             $custom = (array_key_exists('custom', $requestData))? $requestData['custom'] : "";
-            
+            $photo_content = (array_key_exists('photo_base_64', $requestData))? $requestData['photo_base_64'] : null;
+            $photo_name = (array_key_exists('photo_name', $requestData))? $requestData['photo_name'] : null;
+
             //get academic period data
             $academicPeriods = TableRegistry::get('academic_periods');
             $periods = $academicPeriods->find()
@@ -4622,6 +4624,8 @@ class InstitutionsController extends AppController
                 'address_area_id' => $addressAreaId,
                 'birthplace_area_id' => $birthplaceAreaId,
                 'postal_code' => $postalCode,
+                'photo_name' => $photo_name,
+                'photo_content' => file_get_contents($photo_content),
                 'is_student' => 1,
                 'created_user_id' => $userId,
                 'created' => date('Y-m-d H:i:s')
