@@ -243,84 +243,102 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
                                 ->leftJoin(['AbsenceTypes' => 'absence_types'], 
                                 ['AbsenceTypes.id = '. $absence->aliasField('absence_type_id')])
                                 ->select([
-                                    'excused_count' => "COUNT(".$absence->aliasField('absence_type_id').")"
+                                    'reason' => $absence->aliasField('student_absence_reason_id'),
+                                    'absence_type' => $absence->aliasField('absence_type_id')
                                 ])
-                                ->where([$absence->aliasField('student_absence_reason_id')=>1,
-                                    ['AbsenceTypes.code']=>'EXCUSED',
+                                ->where([['AbsenceTypes.code']=>'EXCUSED',
                                     $absence->aliasField('student_id')=>$entity->student_id,
                                     $absence->aliasField('academic_period_id')=>$entity->academic_period_id
                                 ]);
             $entity->reason_one = '';
+            $entity->reason_two='';
+            $entity->reason_three='';
+            $entity->reason_four='';
+            $entity->reason_five='';
+            $entity->reason_seven='';
+            $entity->eight='';
+            $entity->reason_nine='';
+            $entity->reason_ten='';
+            $one = [];
+            $two = [];
+            $three = [];
+            $four = [];
+            $five = [];
+            $seven = [];
+            $eight = [];
+            $nine = [];
+            $ten = [];
             if(!empty($findabsentreason)){
                 $get_absent_reason = $findabsentreason->toArray();
                 foreach($get_absent_reason as $val){
-                    $entity->reason_one = $val['excused_count'];
+                    if($val['reason']==1){
+                        $one[] = $val['absence_type'];
+                    }elseif($val['reason']==2){
+                        $two[] = $val['absence_type'];
+                    }elseif($val['reason']==3){
+                        $three[] = $val['absence_type'];
+                    }elseif($val['reason']==4){
+                        $four[] = $val['absence_type'];
+                    }elseif($val['reason']==5){
+                        $five[] = $val['absence_type'];
+                    }elseif($val['reason']==7){
+                        $seven[] = $val['absence_type'];
+                    }elseif($val['reason']==8){
+                        $eight[] = $val['absence_type'];
+                    }elseif($val['reason']==9){
+                        $none[] = $val['absence_type'];
+                    }elseif($val['reason']==10){
+                        $ten[] = $val['absence_type'];
+                    }
+                    
                 }
             }
+            $entity->reason_one = count($one);
+            $entity->reason_two = count($two);
+            $entity->reason_three = count($three);
+            $entity->reason_four = count($four);
+            $entity->reason_five = count($five);
+            $entity->reason_seven = count($seven);
+            $entity->reason_eight = count($eight);
+            $entity->reason_nine = count($nine);
+            $entity->reason_ten = count($ten);
             return $entity->reason_one;
         }
 
     }
     public function onExcelGetExcuseReasonTwo(Event $event, Entity $entity)
     {
-        if($entity->student_absence_reason_id!=null)
-        {
-            $studentAbsenceReason = TableRegistry::get('Institution.StudentAbsenceReasons');
-            $absencetype = TableRegistry::get('Institution.AbsenceTypes');
-            $absence = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
-            $findabsentreason = $absence->find('all')
-                                ->leftJoin([$studentAbsenceReason->alias() => $studentAbsenceReason->table()],
-                                [$studentAbsenceReason->aliasField('id = ') . $absence->aliasField('student_absence_reason_id')])
-                                ->leftJoin(['AbsenceTypes' => 'absence_types'], 
-                                ['AbsenceTypes.id = '. $absence->aliasField('absence_type_id')])
-                                ->select([
-                                    'excused_count' => "COUNT(".$absence->aliasField('absence_type_id').")"
-                                ])
-                                ->where([$absence->aliasField('student_absence_reason_id')=>2,
-                                    ['AbsenceTypes.code']=>'EXCUSED',
-                                    $absence->aliasField('student_id')=>$entity->student_id,
-                                    $absence->aliasField('academic_period_id')=>$entity->academic_period_id
-                                ]);
-            $entity->reason_two = '';
-            if(!empty($findabsentreason)){
-                $get_absent_reason = $findabsentreason->toArray();
-                foreach($get_absent_reason as $val){
-                    $entity->reason_two = $val['excused_count'];
-                }
-            }
-            return $entity->reason_two;
-        }
+        return $entity->reason_two;
     }
     public function onExcelGetExcuseReasonThree(Event $event, Entity $entity)
     {
-        if($entity->student_absence_reason_id!=null)
-        {
-            $studentAbsenceReason = TableRegistry::get('Institution.StudentAbsenceReasons');
-            $absencetype = TableRegistry::get('Institution.AbsenceTypes');
-            $absence = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
-            $findabsentreason = $absence->find('all')
-                                ->leftJoin([$studentAbsenceReason->alias() => $studentAbsenceReason->table()],
-                                [$studentAbsenceReason->aliasField('id = ') . $absence->aliasField('student_absence_reason_id')])
-                                ->leftJoin(['AbsenceTypes' => 'absence_types'], 
-                                ['AbsenceTypes.id = '. $absence->aliasField('absence_type_id')])
-                                ->select([
-                                    'excused_count' => "COUNT(".$absence->aliasField('absence_type_id').")"
-                                ])
-                                ->where([$absence->aliasField('student_absence_reason_id')=>3,
-                                    ['AbsenceTypes.code']=>'EXCUSED',
-                                    $absence->aliasField('student_id')=>$entity->student_id,
-                                    $absence->aliasField('academic_period_id')=>$entity->academic_period_id
-                                ]);
-            $entity->reason_three = '';
-            if(!empty($findabsentreason)){
-                $get_absent_reason = $findabsentreason->toArray();
-                foreach($get_absent_reason as $val){
-                    $entity->reason_three = $val['excused_count'];
-                }
-            }
-            return $entity->reason_three;
-        }
+        return $entity->reason_three;
     }
+    public function onExcelGetExcuseReasonFour(Event $event, Entity $entity)
+    {
+        return $entity->reason_four;
+    }
+    public function onExcelGetExcuseReasonFive(Event $event, Entity $entity)
+    {
+        return $entity->reason_five;
+    }
+    public function onExcelGetExcuseReasonSeven(Event $event, Entity $entity)
+    {
+        return $entity->reason_seven;
+    }
+    public function onExcelGetExcuseReasonEight(Event $event, Entity $entity)
+    {
+        return $entity->reason_eight;
+    }
+    public function onExcelGetExcuseReasonNine(Event $event, Entity $entity)
+    {
+        return $entity->reason_nine;
+    }
+    public function onExcelGetExcuseReasonTen(Event $event, Entity $entity)
+    {
+        return $entity->reason_ten;
+    }
+    
 
     public function onExcelGetUserIdentitiesDefault(Event $event, Entity $entity)
     {
@@ -424,6 +442,43 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
             'field' => 'excuse_reason_three',
             'type'  => 'string',
             'label' => __('Excused-Emergency'),
+        ];
+        $newFields[] = [
+            'key'   => 'excuse_reason_four',
+            'field' => 'excuse_reason_four',
+            'type'  => 'string',
+            'label' => __('Excused-Weather'),
+        ];
+        $newFields[] = [
+            'key'   => 'excuse_reason_five',
+            'field' => 'excuse_reason_five',
+            'type'  => 'string',
+            'label' => __('Excused-Family Matter'),
+        ];
+        $newFields[] = [
+            'key'   => 'excuse_reason_seven',
+            'field' => 'excuse_reason_seven',
+            'type'  => 'string',
+            'label' => __('Excused-Personal Reasons'),
+        ];
+        
+        $newFields[] = [
+            'key'   => 'excuse_reason_eight',
+            'field' => 'excuse_reason_eight',
+            'type'  => 'string',
+            'label' => __('Excused-Transportation'),
+        ];
+        $newFields[] = [
+            'key'   => 'excuse_reason_nine',
+            'field' => 'excuse_reason_nine',
+            'type'  => 'string',
+            'label' => __('Excused-Death'),
+        ];
+        $newFields[] = [
+            'key'   => 'excuse_reason_ten',
+            'field' => 'excuse_reason_ten',
+            'type'  => 'string',
+            'label' => __('Excused-Medical Appointment'),
         ];
 
         $fields->exchangeArray($newFields);
