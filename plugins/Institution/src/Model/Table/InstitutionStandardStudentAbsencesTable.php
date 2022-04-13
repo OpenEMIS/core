@@ -185,7 +185,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             {
                 return $results->map(function ($row)
                 { 
-                    $row['referrer_full_name'] = $row['first_name'] .' '. $row['last_name'];
+                    $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
                     $absent_date  = $row['absent_dates'];
                     $datearray = explode(',', $absent_date);
                     for( $i=1; $i<=$i_max; $i++ )
