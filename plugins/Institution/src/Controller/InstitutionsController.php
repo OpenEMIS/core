@@ -1685,14 +1685,14 @@ class InstitutionsController extends AppController
         }//for api purpose POCOR-5672 ends
         return $events;
     }
-
+    //POCOR-5672 starts
     public function isActionIgnored(Event $event, $action)
     {
         $pass = $this->request->pass;
         if (isset($pass[0]) && $pass[0] == 'downloadFile') {
             return true;
         }
-    }
+    }//POCOR-5672 ends
 
     public function changeUserHeader($model, $modelAlias, $userType)
     {
