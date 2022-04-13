@@ -353,7 +353,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
     }
 
     /**
-    *  total marks not entered
+    * total marks not entered
     */
     public function onExcelGetMarksNotEntered(Event $event, Entity $entity)
     {
