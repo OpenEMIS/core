@@ -92,7 +92,10 @@ class InstitutionReportCardsTable extends AppTable
                 'InstitutionRoomTypesCount',
                 //POCOR-6426 ends
                 'InstitutionAreaName',//POCOR-6481
-                'NonTeachingStaffCount'//POCOR-6481
+                'NonTeachingStaffCount',//POCOR-6481
+                /*POCOR-6646 starts*/
+                'EducationGrade'
+                /*POCOR-6646 ends*/
             ]
         ]);
     }
@@ -167,6 +170,9 @@ class InstitutionReportCardsTable extends AppTable
         //POCOR-6426 ends
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionAreaName'] = 'onExcelTemplateInitialiseInstitutionAreaName';//POCOR-6481
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseNonTeachingStaffCount'] = 'onExcelTemplateInitialiseNonTeachingStaffCount';//POCOR-6481
+        /*POCOR-6646 starts*/
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationGrade'] = 'onExcelTemplateInitialiseEducationGrade';
+        /*POCOR-6646 ends*/
         return $events;
     }
 
@@ -4150,5 +4156,44 @@ class InstitutionReportCardsTable extends AppTable
     
         return count($NonTeachingStaffData);
     }
-    //POCOR-6481 ends   
+    //POCOR-6481 ends
+    /*POCOR-6646 starts*/
+    public function onExcelTemplateInitialiseEducationGrade(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $gradeData = $InstitutionStudents->find('all')
+                    ->select([
+                        'id' => 'EducationGrades.id',
+                        'name' => 'EducationGrades.name'
+                    ])
+                    //->contain(['EducationGrades'])
+                    ->leftJoin(['EducationGrades' => 'education_grades'], [
+                        'EducationGrades.id = '. $InstitutionStudents->aliasField('education_grade_id')
+                    ])
+                    ->where([
+                        $InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id'],
+                        $InstitutionStudents->aliasField('institution_id') => $params['institution_id']
+                    ])  
+                    ->hydrate(false)
+                    ->toArray();
+            $result = [];
+            $total_students = 0;
+            foreach ($gradeData as $data) {
+                $result = [
+                    'id' => $data['id'],
+                    'name' => $data['name']
+                ];
+                $entity[] = $result;
+            }
+            $totalArray = [];
+            $totalArray = [
+                'id' => (!empty($data['id']) ? $data['id'] : 0)  + 1,
+                'name' => ''
+            ];
+            $entity[] = $totalArray;
+            return $entity;
+        }
+    }
+    /*POCOR-6646 ends*/   
 }
