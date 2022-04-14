@@ -5228,6 +5228,15 @@ class InstitutionsController extends AppController
                         $ConfigItems->aliasField('type') => 'System'
                     ])
                     ->first();
+            $StudVal = $StaffVal= $GaurdianVal = 0;        
+            if($userType == 1){ 
+                $StudVal = 1; 
+            }else if($userType == 2){ 
+                $StaffVal  = 1;
+            }else if($userType == 3){ 
+                $GaurdianVal = 1;
+            }      
+
 
             $SecurityUsers = TableRegistry::get('security_users');
             $entityData = [
@@ -5249,9 +5258,9 @@ class InstitutionsController extends AppController
                 'postal_code' => $postalCode,
                 'photo_name' => $photoName,
                 'photo_content' => file_get_contents($photoContent),
-                'is_student' => if($userType == 1)? 1 : 0,
-                'is_staff' => if($userType == 2)? 1 : 0,
-                'is_guardian' => if($userType == 3)? 1 : 0,
+                'is_student' => $StudVal,
+                'is_staff' => $StaffVal,
+                'is_guardian' => $GaurdianVal,
                 'created_user_id' => $userId,
                 'created' => date('Y-m-d H:i:s')
             ];
