@@ -140,6 +140,11 @@ class PageController extends AppController
                 try {
                     $queryOptions = $page->getQueryOptions();
                     $patchOption = $queryOptions['user'];
+                    // starts POCOR-6353 
+					if($this->request->params['controller'] == 'ProfileComments'){
+                        $request->data['security_user_id'] = $this->Auth->user('id');
+                    } 
+                    // Ends POCOR-6353
                     $entity = $table->newEntity($request->data, $patchOption);
                     $result = $table->save($entity, $patchOption);
 
