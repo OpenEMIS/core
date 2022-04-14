@@ -23,7 +23,7 @@ function SgTreeController($scope, $window, SgTreeSvc) {
         var userId = JSON.parse(Controller.userId ? Controller.userId : 2);
         var authArea = [];
         var counter = 0;
-        SgTreeSvc.getRecords(Controller.model ? Controller.model : 'Area.Areas', userId, Controller.displayCountry, Controller.outputValue, true)
+        SgTreeSvc.getRecords(Controller.model ? Controller.model : 'Area.AreaAdministratives', userId, Controller.displayCountry, Controller.outputValue, true)
             .then(function(response) {
                 if (angular.isDefined(response[1]) && angular.isDefined(response[1].name)) {
                     $scope.textConfig['noSelection'] = response[1].name;
