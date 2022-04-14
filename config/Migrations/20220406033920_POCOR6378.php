@@ -18,6 +18,8 @@ class POCOR6378 extends AbstractMigration
         $this->execute('INSERT INTO `zz_6378_institutions` SELECT * FROM `institutions`');
 
         $this->execute("UPDATE `institutions` SET `area_administrative_id` = (SELECT id FROM `area_administratives` WHERE `is_main_country` = 1) WHERE `institutions`.`area_administrative_id` = NULL");
+
+        $this->execute("UPDATE `institutions` SET `area_administrative_id` = '0' WHERE `area_administrative_id` IS NULL");
         
         $this->execute("ALTER TABLE `institutions` CHANGE `area_administrative_id` `area_administrative_id` INT(11) NOT NULL");
         /** END: institutions table changes */
