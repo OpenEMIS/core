@@ -253,6 +253,12 @@ class InstitutionStaffDetailedTable extends AppTable
             'type' => 'integer',
             'label' =>  __('Academic Period'),
         ];
+        $newFields[] = [
+            'key' => 'Institutions.area',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __('Area Education')
+        ];
 
         $newFields[] = [
             'key' => 'Institutions.institution_provider_id',
@@ -341,12 +347,12 @@ class InstitutionStaffDetailedTable extends AppTable
             'label' => __('Area Administrative Name')
         ];
 
-        $newFields[] = [
+        /*$newFields[] = [
             'key' => 'InstitutionStaff.start_date',
             'field' => 'start_date',
             'type' => 'date',
             'label' => ''
-        ];
+        ];*/
         $newFields[] = [
             'key' => 'Positions.position_title',
             'field' => 'position_title',
