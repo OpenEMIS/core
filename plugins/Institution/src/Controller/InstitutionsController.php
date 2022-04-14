@@ -1682,6 +1682,9 @@ class InstitutionsController extends AppController
         }
         if($this->request->params['action'] == 'saveGuardianData'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveGuardianData';
+        }
+        if($this->request->params['action'] == 'saveDirectoryData'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveDirectoryData';
         }//for api purpose POCOR-5672 ends
         return $events;
     }
