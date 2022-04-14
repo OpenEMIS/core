@@ -204,14 +204,21 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
             'type' => 'string',
             'label' => __('Preferred Name')
         ];
-
+        // START: POCOR-6511
         $extraField[] = [
             'key' => 'InstitutionStudentsOutOfSchool.email',
             'field' => 'email',
             'type' => 'string',
-            'label' => __('Email')
+            'label' => __('Student Email')
         ];
 
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.contact_id',
+            'field' => 'contact_id',
+            'type' => 'string',
+            'label' => __('Student Contact')
+        ];
+        // END: POCOR-6511
         $extraField[] = [
             'key' => 'InstitutionStudentsOutOfSchool.address',
             'field' => 'address',
@@ -260,7 +267,21 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
             'type' => 'string',
             'label' => __('Nationality')
         ];
+        // START: POCOR-6511
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.email',
+            'field' => 'email',
+            'type' => 'string',
+            'label' => __('Guardian Email')
+        ];
 
+        $extraField[] = [
+            'key' => 'InstitutionStudentsOutOfSchool.contact_id',
+            'field' => 'contact_id',
+            'type' => 'string',
+            'label' => __('Guardian Contact')
+        ];
+        // START: POCOR-6511
         $extraField[] = [
             'key' => 'InstitutionStudentsOutOfSchool.identity_type_id',
             'field' => 'identity_type_id',
@@ -282,12 +303,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
             'label' => __('External Reference')
         ];
 
-        $extraField[] = [
-            'key' => 'InstitutionStudentsOutOfSchool.contact_id',
-            'field' => 'contact_id',
-            'type' => 'string',
-            'label' => __('Contact')
-        ];
+        
 
         $extraField[] = [
             'key' => 'InstitutionStudentsOutOfSchool.reason_id',
