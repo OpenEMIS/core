@@ -1432,8 +1432,8 @@ class InstitutionsTable extends ControllerActionTable
             'area_administrative_id',
         ]);
         //Start:POCOR-6660
-        $this->field('latitude', ['type' => 'readOnly','visible'=>false]);	
-        $this->field('longitude', ['type' => 'readOnly', 'visible' =>false]);
+        $this->field('latitude', ['type' => 'hidden']);	
+        $this->field('longitude', ['type' => 'hidden']);
         //End:POCOR-6660
     }
 
