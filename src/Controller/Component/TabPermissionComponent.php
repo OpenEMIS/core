@@ -18,7 +18,7 @@ class TabPermissionComponent extends Component
     public function checkTabPermission(array $tabArray, array $roleId = [])
     {
         foreach ($tabArray as $key => $content) {
-            if (isset($content['url'])) {
+            if (isset($content['url'])) { //  POCOR-6353 remove profile comment controller condition
                 $check = $this->AccessControl->check($content['url'], $roleId);
                 if (!$check) {
                     unset($tabArray[$key]);
