@@ -181,13 +181,15 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             ->andWhere([$this->aliasField('date LIKE '.$date)])
             ->group([$this->aliasField('student_id')
             ]);
-            $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($date)
             {
-                return $results->map(function ($row)
+                return $results->map(function ($row) use($date)
                 { 
                     $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
+                    $row['Absent_Date'] = $date;
                     $absent_date  = $row['absent_dates'];
                     $datearray = explode(',', $absent_date);
+                    $i_max = 31;
                     for( $i=1; $i<=$i_max; $i++ )
                         { 
                             
@@ -296,14 +298,15 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
     {
         $userid =  $entity->student_id;
         $institutionId =  $entity->institution_id;
+        $Absent_Date =  $entity->Absent_Date;
         $Institutionstudent = TableRegistry::get('Institution.InstitutionStudentAbsences');
         $studentleave = TableRegistry::get('Institution.InstitutionStudentAbsenceDays');
         $absenceDays = $studentleave->find()
             ->select([
-                'days' => "SUM(".$studentleave->aliasField('absent_days').")"
+                'days' => "COUNT(".$studentleave->aliasField('absent_days').")"
             ])
-            ->where([$studentleave->aliasField('student_id') => $userid,
-                ]);
+            ->where([$studentleave->aliasField('student_id') => $userid])
+            ->andWhere([$studentleave->aliasField('start_date LIKE '.$Absent_Date)]);
             if($absenceDays!=null){
                 $data = $absenceDays->toArray();
                 $entity->total_absence_days = '';
