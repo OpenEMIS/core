@@ -4542,10 +4542,14 @@ class InstitutionsController extends AppController
         echo json_encode($SectionArr);die;
     }
 
-    public function saveStudentData()
+    public function saveStudentData($param = null)
     {
         $this->autoRender = false;
-        $requestData = $this->request->input('json_decode', true);
+        if($param != null){
+            $requestData = $param;
+        }else{
+            $requestData = $this->request->input('json_decode', true);
+        }
         /*$requestData = json_decode('{"institution_id":"6","login_user_id":"1","openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021","end_date":"31-12-2021","institution_class_id":"524","student_status_id":1,"custom":[{"student_custom_field_id":17,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":27,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":29,"text_value":"test.jpg","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":28,"text_value":"","number_value":2,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":3,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":26,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":4,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":8,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":9,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":30,"text_value":"{\"latitude\":\"11.1\",\"longitude\":\"2.22\"}","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":18,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"}]}', true);*/
         
         if(!empty($requestData)){
@@ -5012,7 +5016,7 @@ class InstitutionsController extends AppController
                         'staff_status_id' => $statuses['ASSIGNED'],
                         'institution_id' => $institutionId,
                         'institution_position_id' => $institutionPositionId,
-                        'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $requestData['login_user_id'] : 1,
+                        'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $userId : 1,
                         'created_user_id' => $userId,
                         'created' => date('y-m-d H:i:s')
                     ];
@@ -5079,7 +5083,7 @@ class InstitutionsController extends AppController
             $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData))? $requestData['guardian_relation_id'] : null;
             $studentId = (array_key_exists('student_id', $requestData))? $requestData['student_id'] : null;
             
-            $userId = (array_key_exists('login_user_id', $requestData))? $requestData['login_user_id'] : 1;
+            $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
             
             //get prefered language
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
@@ -5179,6 +5183,28 @@ class InstitutionsController extends AppController
             }
         }
         return true;
+    }
+
+    public function saveDirectoryData()
+    {
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        if(!empty($requestData)){
+            $userType = (array_key_exists('user_type', $requestData))? $requestData['user_type']: null;
+
+            if($userType == 1){//for save student details
+                $data = $this->saveStudentData($requestData);
+            }else if($userType == 2){//for save staff details
+                $data = $this->saveStaffData($requestData);
+            }else if($userType == 3){//for save guardian details
+                $data = $this->saveGuardianData($requestData);
+            }else{//for save others details
+                $data = $this->saveOthersData($requestData);
+            }
+
+            return $data;
+        }
+        
     }
 
     public function customFieldsUseJustForExample()
