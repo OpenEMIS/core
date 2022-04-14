@@ -2,24 +2,41 @@
 namespace User\Model\Table;
 
 use ArrayObject;
-
+use Cake\ORM\Entity; //POCOR-6353
+use Cake\Event\Event; //POCOR-6353
+use Cake\ORM\TableRegistry; //POCOR-6353
+use App\Model\Table\ControllerActionTable; //POCOR-6353
+use Cake\I18n\Time; //POCOR-6353
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
 use Cake\Network\Request;
 
 use App\Model\Table\AppTable;
-
-class CommentsTable extends AppTable
+/**
+     * This class is used for change url structure and permission for tab element
+     * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
+     * @ticket POCOR-6353
+*/
+class CommentsTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
         $this->table('user_comments');
         parent::initialize($config);
-
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('CommentTypes', ['className' => 'User.CommentTypes', 'foreignKey' => 'comment_type_id']);
+        $this->addBehavior('User.SetupTab'); //POCOR-6353
     }
+    
+    /**
+     * This function is used for add comment type select field
+     * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
+     * @ticket POCOR-6353
+    */ 
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('comment_type_id', ['type' => 'select']);
+    } 
 
     public function findIndex(Query $query, array $options)
     {
@@ -29,4 +46,5 @@ class CommentsTable extends AppTable
         }
         return $query;
     }
+
 }
