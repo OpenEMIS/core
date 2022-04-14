@@ -250,7 +250,6 @@ class StudentProfilesTable extends ControllerActionTable
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//End
         $where[$this->aliasField('institution_id')] = $institutionId;
-        $where[$this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id = ')] = $selectedReportCard;
         $query
             ->select([
                 'student_profile_template_id' => $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id'),
