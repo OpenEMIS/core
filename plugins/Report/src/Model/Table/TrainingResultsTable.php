@@ -45,7 +45,6 @@ class TrainingResultsTable extends AppTable
         $TrainingSessionResults = TableRegistry::get('Training.TrainingSessionResults');
         $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         $WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
-
         $requestData = json_decode($settings['process']['params']);
         $start_date   = $requestData->start_date; // POCOR-6596
         $session_name = $requestData->session_name; // POCOR-6596
