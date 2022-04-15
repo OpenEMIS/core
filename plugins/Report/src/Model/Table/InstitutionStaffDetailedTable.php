@@ -21,6 +21,7 @@ use Cake\Datasource\ConnectionManager;
 class InstitutionStaffDetailedTable extends AppTable
 {
     use OptionsTrait;
+    private $_dynamicFieldName = 'custom_field_data';
 
     public function initialize(array $config)
     {
@@ -112,19 +113,8 @@ class InstitutionStaffDetailedTable extends AppTable
         $query
             ->select([
                 $this->aliasField('id'),
-                $this->aliasField('FTE'),
-                $this->aliasField('start_date'),
-                $this->aliasField('end_date'),
                 $this->aliasField('staff_id'),
                 $this->aliasField('institution_id'), 
-                'number_value'=>$custom_field->aliasField('number_value'),
-                'text_value'=>$custom_field->aliasField('text_value'),
-                'decimal_value'=>$custom_field->aliasField('decimal_value'),
-                'textarea_value'=>$custom_field->aliasField('textarea_value'),
-                'date_value'=>$custom_field->aliasField('date_value'),
-                'staff_custom_name'=>$StaffCustomFields->aliasField('name'),
-                'staff_custom_description'=>$StaffCustomFields->aliasField('description'),
-                
             ])
             ->contain([
                 'Institutions' => [
@@ -197,6 +187,66 @@ class InstitutionStaffDetailedTable extends AppTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($year) {
             return $results->map(function ($row) use ($year){
                 $row['academic_period'] = $year;
+                $Guardians = TableRegistry::get('institution_custom_field_values');
+                    $institutionCustomFieldOptions = TableRegistry::get('institution_custom_field_options');
+                    $institutionCustomFields = TableRegistry::get('institution_custom_fields');
+                    $guardianData = $Guardians->find()
+                    ->select([
+                        'id'                             => $Guardians->aliasField('id'),
+                        'institution_id'                     => $Guardians->aliasField('institution_id'),
+                        'institution_custom_field_id'        => $Guardians->aliasField('institution_custom_field_id'),
+                        'text_value'                     => $Guardians->aliasField('text_value'),
+                        'number_value'                   => $Guardians->aliasField('number_value'),
+                        'decimal_value'                  => $Guardians->aliasField('decimal_value'),
+                        'textarea_value'                 => $Guardians->aliasField('textarea_value'),
+                        'date_value'                     => $Guardians->aliasField('date_value'),
+                        'time_value'                     => $Guardians->aliasField('time_value'),
+                        'checkbox_value_text'            => 'institutionCustomFieldOptions.name',
+                        'question_name'                  => 'institutionCustomField.name',
+                        'field_type'                     => 'institutionCustomField.field_type',
+                        'field_description'              => 'institutionCustomField.description',
+                        'question_field_type'            => 'institutionCustomField.field_type',
+                    ])->leftJoin(
+                        ['institutionCustomField' => 'institution_custom_fields'],
+                        [
+                            'institutionCustomField.id = '.$Guardians->aliasField('institution_custom_field_id')
+                        ]
+                    )->leftJoin(
+                        ['institutionCustomFieldOptions' => 'institution_custom_field_options'],
+                        [
+                            'institutionCustomFieldOptions.id = '.$Guardians->aliasField('number_value')
+                        ]
+                    )
+                    ->where([
+                        $Guardians->aliasField('institution_id') => $row['institution_id'],
+                    ])->toArray(); 
+
+                    $existingCheckboxValue = '';
+                    foreach ($guardianData as $guadionRow) {
+                        $fieldType = $guadionRow->field_type;
+                        if ($fieldType == 'TEXT') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->text_value;
+                        } else if ($fieldType == 'CHECKBOX') {
+                            $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = trim($existingCheckboxValue, ',');
+                        } else if ($fieldType == 'NUMBER') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->number_value;
+                        } else if ($fieldType == 'DECIMAL') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->decimal_value;
+                        } else if ($fieldType == 'TEXTAREA') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->textarea_value;
+                        } else if ($fieldType == 'DROPDOWN') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->checkbox_value_text;
+                        } else if ($fieldType == 'DATE') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
+                        } else if ($fieldType == 'TIME') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
+                        } else if ($fieldType == 'COORDINATES') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->text_value;
+                        } else if ($fieldType == 'NOTE') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->institution_custom_field_id] = $guadionRow->field_description;
+                        }
+                    }
                 return $row;
             });
         });
@@ -347,61 +397,31 @@ class InstitutionStaffDetailedTable extends AppTable
             'label' => __('Area Administrative Name')
         ];
 
-        /*$newFields[] = [
-            'key' => 'InstitutionStaff.start_date',
-            'field' => 'start_date',
-            'type' => 'date',
-            'label' => ''
-        ];*/
         $newFields[] = [
             'key' => 'Positions.position_title',
             'field' => 'position_title',
             'type' => 'string',
             'label' => ''
         ];
-        $newFields[] = [
-            'key' => 'staff_custom_name',
-            'field' => 'staff_custom_name',
-            'type' => 'string',
-            'label' => __('Custom Field Name')
-        ];
-        $newFields[] = [
-            'key' => 'staff_custom_description',
-            'field' => 'staff_custom_description',
-            'type' => 'string',
-            'label' => __('Custom Field Description')
-        ];
-        $newFields[] = [
-            'key' => 'number_value',
-            'field' => 'number_value',
-            'type' => 'string',
-            'label' => __('Number Value')
-        ];
-        $newFields[] = [
-            'key' => 'text_value',
-            'field' => 'text_value',
-            'type' => 'string',
-            'label' => __('Text Value')
-        ];
-        $newFields[] = [
-            'key' => 'decimal_value',
-            'field' => 'decimal_value',
-            'type' => 'string',
-            'label' => __('Decimal Value')
-        ];
-        $newFields[] = [
-            'key' => 'date_value',
-            'field' => 'date_value',
-            'type' => 'string',
-            'label' => __('Date Value')
-        ];
-        $newFields[] = [
-            'key' => 'textarea_value',
-            'field' => 'textarea_value',
-            'type' => 'string',
-            'label' => __('textarea Value')
-        ];
-
+        $InstituteCustomFields = TableRegistry::get('institution_custom_fields');
+        $customFieldData = $InstituteCustomFields->find()->select([
+            'custom_field_id' => $InstituteCustomFields->aliasfield('id'),
+            'custom_field' => $InstituteCustomFields->aliasfield('name')
+        ])->group($InstituteCustomFields->aliasfield('id'))->toArray();
+       
+        if(!empty($customFieldData)) {
+            foreach($customFieldData as $data) {
+                $custom_field_id = $data->custom_field_id;
+                $custom_field = $data->custom_field;
+                $newFields[] = [
+                    'key' => '',
+                    'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
+                    'type' => 'string',
+                    'label' => __($custom_field)
+                ];
+            }
+        }
+        
         $fields->exchangeArray($newFields);
     }
 }
