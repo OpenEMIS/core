@@ -1270,6 +1270,7 @@ class StudentsTable extends ControllerActionTable
                         'Users.preferred_name',
                         'student_status_id',
                         'identity_type' => $IdentityTypes->aliasField('name'),
+
                         //start:POCRO-6622 quates is removed with ` for loading issue in student on mv-moe server
                         "`". $typesIdentity->identity_type . "`" => $UserIdentities->aliasField('number') //POCRO-6583 added single quote as identity_type was not working for some clients
                         //end:POCRO-6622 
