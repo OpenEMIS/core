@@ -41,10 +41,14 @@ class StaffSubjectsTable extends ControllerActionTable {
         return $events;
     }
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {       
+        //echo "<pre>"; print_r($extra['query']->toArray());die;
 		$this->field('academic_period', []);
-		$this->field('institution_class', []);
-		$this->field('education_subject', []);
+		//start:POCOR-5274
+        $this->field('institution_class',['sort'  => ['field' =>'InstitutionClasses.name']]);        
+		$this->field('institution_subject_id', [ 'sort' => ['field' => 'InstitutionSubjects.name']]);
+        //end:POCOR-5274
+        $this->field('education_subject', []);
 		$this->field('male_students', []);
 		$this->field('female_students', []);
 
@@ -60,26 +64,69 @@ class StaffSubjectsTable extends ControllerActionTable {
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-                 
-                $query->contain([
+        //echo "<pre>"; print_r($query->toArray());die;
+        $query->contain([
 			'InstitutionSubjects'
 		]);
-                
+        //start:POCOR-5274
+        $query->find('withClass', ['institution_id' => 6, 'period_id' => 30]);
+        
+        $sortList = ['InstitutionSubjects.name','start_date','end_date','InstitutionClasses.name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        //end:POCOR-5274       
+
+        $extra['options']['sortWhitelist'] = $sortList;
                 // Academic Periods
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodId = $AcademicPeriods->getCurrent();
+                //start:POCOR-5274
+                $academicPeriodId = 0;
+        
                 $academicPeriodOptions = $AcademicPeriods->getYearList();
-                
+                $academicPeriodOptions += ['0'=>'All Acedemic Period'];
+                //end:POCOR-5274
                 if(!empty($this->request->query('academic_period_id'))){
                     $academicPeriodId = $this->request->query('academic_period_id');                     
                 }    
-                
-                $query->where(['InstitutionSubjects.academic_period_id' => $academicPeriodId]);
-                
+                //start:POCOR-5274
+                if($academicPeriodId == 0){
+                    $query->toArray();
+                }else{
+                    $query->where(['InstitutionSubjects.academic_period_id' => $academicPeriodId]);
+                }
+                //end:POCOR-5274
                 $this->controller->set(compact('academicPeriodOptions','academicPeriodId'));
                
                 
 	}
+//start:POCOR-5274
+    public function findWithClass(Query $query, array $options)
+    {
+        $queryData = $query->toArray();
+        $staff_id = $queryData[0]['staff_id']; 
+
+        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+
+        return $query
+            ->select([$Classes->aliasField('name')])
+            ->leftJoin(
+                [$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()],
+                [
+                    $InstitutionClassSubjects->aliasField('institution_subject_id = ') . $this->aliasField('institution_subject_id')
+                ]
+            )
+            ->leftJoin(
+                [$Classes->alias() => $Classes->table()],
+                [
+                    $Classes->aliasField('id = ') . $InstitutionClassSubjects->aliasField('institution_class_id')
+                ]
+            )
+            ->where([$this->aliasField('staff_id') => $staff_id]);
+    }
+//end:POCOR-5274    
         public function afterAction(Event $event, ArrayObject $extra)
         {
             
@@ -280,6 +327,19 @@ class StaffSubjectsTable extends ControllerActionTable {
         };
         return $process;
     }
+    //start:POCOR-5274
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'institution_class':
+                return __('Class');
+            case 'institution_subject_id':
+                return __('Name');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    //end:POCOR-5274
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
