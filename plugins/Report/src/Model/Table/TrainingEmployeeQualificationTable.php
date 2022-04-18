@@ -9,7 +9,6 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Network\Session;
-
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Datasource\ConnectionManager;
@@ -17,6 +16,7 @@ use Cake\Datasource\ConnectionManager;
 /**
  * POCOR-6598
  * Generate Employee Qualification Report
+ * get array data
  */ 
 class TrainingEmployeeQualificationTable extends AppTable
 {
@@ -62,9 +62,7 @@ class TrainingEmployeeQualificationTable extends AppTable
         $qualificationlevel = TableRegistry::get('FieldOption.QualificationLevels');
         $qualificationCountry = TableRegistry::get('FieldOption.Countries');
         $educationFieldOfStudy = TableRegistry::get('Education.EducationFieldOfStudies');
-        //$position = TableRegistry::get('Institution.InstitutionPositions');
-        //$workflows = TableRegistry::get('Workflow.WorkflowSteps');
-       // print_r($qualification);die;
+        /*$position = TableRegistry::get('Institution.InstitutionPositions');*/
         $query
             ->select([
                 $this->aliasField('id'),
@@ -73,15 +71,16 @@ class TrainingEmployeeQualificationTable extends AppTable
                 $this->aliasField('staff_type_id'),
                 $this->aliasField('staff_status_id'),
                 $this->aliasField('institution_id'),
-                'document_no' => 'Qualifications.document_no',
+                $this->aliasField('institution_position_id'),
+                /*'document_no' => 'Qualifications.document_no',
                 'graduate_year' => 'Qualifications.graduate_year',
                 'qualification_institution' => 'Qualifications.qualification_institution',
-                'avg' => 'Qualifications.gpa',
+                'avg' => 'Qualifications.gpa',*/
                 'EducationFieldOfStudies' => 'EducationFieldOfStudies.name',
-                'Qualification_title' => 'QualificationTitles.name',
                 'country' => 'Countries.name',
                 'level' => 'QualificationLevels.name',
-                'subject' => 'EducationFieldOfStudies.name',
+               // 'subject' => 'EducationFieldOfStudies.name',
+                'status_of_hiring' => 'Statuses.name',
               
             ])
             ->contain([
@@ -133,6 +132,11 @@ class TrainingEmployeeQualificationTable extends AppTable
                 'Positions' => [
                     'fields' => [
                         'position_no' => 'Positions.position_no'
+                    ]
+                ],
+                'Positions.Statuses' => [
+                    'fields' => [
+                        'status_of_hiring'=>'Statuses.name'
                     ]
                 ],
                 'Positions.StaffPositionTitles' => [
@@ -200,7 +204,7 @@ class TrainingEmployeeQualificationTable extends AppTable
             'key' => 'Institutions.name',
             'field' => 'name',
             'type' => 'string',
-            'label' => __('Institution Name')
+            'label' => __('Institution')
         ];
         $newFields[] = [
             'key' => 'Users.openemis_no',
@@ -254,25 +258,18 @@ class TrainingEmployeeQualificationTable extends AppTable
             'label' => __('Last Name')
         ];
         $newFields[] = [
-            'key' => 'Users.address',
-            'field' => 'address',
-            'type' => 'string',
-            'label' => __('Address')
-        ];
-
-        $newFields[] = [
             'key' => 'Users.gender_id',
             'field' => 'gender',
             'type' => 'string',
             'label' => __('Gender')
         ];
-
         $newFields[] = [
             'key' => 'functional_class',
             'field' => 'functional_class',
             'type' => 'string',
             'label' => __('Functional class')
         ];
+        
 
         $newFields[] = [
             'key' => 'employment_status',
@@ -281,31 +278,37 @@ class TrainingEmployeeQualificationTable extends AppTable
             'label' => __('Employment Status')
         ];
 
-        /*$newFields[] = [
+        $newFields[] = [
             'key' => 'status_of_hiring',
             'field' => 'status_of_hiring',
-            'type' => 'date',
-            'label' => __('Date Of Hiring')
-        ];*/ 
-
-        $newFields[] = [
-            'key' => 'InstitutionStaff.start_date',
-            'field' => 'start_date',
-            'type' => 'date',
-            'label' => __('Date Of Hiring')
+            'type' => 'string',
+            'label' => __('Status Of Hiring')
         ];
 
         $newFields[] = [
-            'key' => 'level',
-            'field' => 'level',
+            'key' => 'date_of_hiring',
+            'field' => 'date_of_hiring',
+            'type' => 'date',
+            'label' => __('Date Of Hiring')
+        ];
+        $newFields[] = [
+            'key' => 'staff_qualifications',
+            'field' => 'staff_qualifications',
+            'type' => 'string',
+            'label' => __('Staff Qualifications')
+        ];
+        $newFields[] = [
+            'key' => 'Users.address',
+            'field' => 'address',
+            'type' => 'string',
+            'label' => __('Address')
+        ];
+
+        $newFields[] = [
+            'key' => 'staff_level',
+            'field' => 'staff_level',
             'type' => 'string',
             'label' => __('Level')
-        ];
-        $newFields[] = [
-            'key' => 'main_major',
-            'field' => 'main_major',
-            'type' => 'string',
-            'label' => __('Main Major')
         ];
         $newFields[] = [
             'key' => 'sub_major',
@@ -314,8 +317,8 @@ class TrainingEmployeeQualificationTable extends AppTable
             'label' => __('Sub Major')
         ];
         $newFields[] = [
-            'key' => 'subject',
-            'field' => 'subject',
+            'key' => 'staff_subject',
+            'field' => 'staff_subject',
             'type' => 'string',
             'label' => __('Subject')
         ];
@@ -329,7 +332,7 @@ class TrainingEmployeeQualificationTable extends AppTable
             'key' => 'qualification_institution',
             'field' => 'qualification_institution',
             'type' => 'string',
-            'label' => __('Qualification Institution')
+            'label' => __('Institution')
         ];
 
         $newFields[] = [
@@ -345,25 +348,11 @@ class TrainingEmployeeQualificationTable extends AppTable
             'label' => __('Graduate Year')
         ];
         $newFields[] = [
-            'key' => 'avg',
-            'field' => 'avg',
+            'key' => 'gpa',
+            'field' => 'gpa',
             'type' => 'integer',
-            'label' => __('The Avg')
+            'label' => __('The Average')
         ];
-
-        /*$newFields[] = [
-            'key' => 'Positions.position_no',
-            'field' => 'position_no',
-            'type' => 'string',
-            'label' => __('Position Number')
-        ];
-
-        $newFields[] = [
-            'key' => 'Positions.position_title',
-            'field' => 'position_title',
-            'type' => 'string',
-            'label' => ''
-        ];*/
 
         $fields->exchangeArray($newFields);
     }
@@ -394,37 +383,272 @@ class TrainingEmployeeQualificationTable extends AppTable
         $entity->custom_identity_other_data = implode(',', $other_identity_array);
         return $entity->custom_identity_name;
     }
+
     public function onExcelGetIdentityNumber(Event $event, Entity $entity)
     {
         return $entity->custom_identity_number;
     }
+
     public function onExcelGetOtherIdentity(Event $event, Entity $entity)
     {
         return $entity->custom_identity_other_data;
     }
+
     /**
-     * Get staff highest qualification 
-     */
-    public function onExcelGetMainMajor(Event $event, Entity $entity)
+    * Get staff highest qualification 
+    */
+    public function onExcelGetStaffQualifications(Event $event, Entity $entity)
     {
         $userid =  $entity->staff_id;
         $qualification = TableRegistry::get('Staff.Qualifications');
         $qualificationtitle = TableRegistry::get('FieldOption.QualificationTitles');
-        $mainmajor = $qualification->find()
+        $qualificationLevel= TableRegistry::get('FieldOption.QualificationLevels');
+        $staffQualification = $qualification->find()
             ->leftJoin(['QualificationTitles' => 'qualification_titles'], ['QualificationTitles.id = '. $qualification->aliasField('qualification_title_id')])
+            ->leftJoin(['QualificationLevels' => 'qualification_levels'], ['QualificationLevels.id = '. $qualificationtitle->aliasField('qualification_level_id')])
             ->select([
-                'name' => $qualificationtitle->aliasField('name'),
-                'max' => "MAX(".$qualificationtitle->aliasField('order').")"
-
+                'order' => $qualificationLevel->aliasField('order'),
+                'id' => $qualificationtitle->aliasField('id'),
+                'level_id' => $qualificationtitle->aliasField('qualification_level_id'),
             ])
             ->where([$qualification->aliasField('staff_id') => $entity->staff_id]);
-            if($mainmajor!=null){
-                $data = $mainmajor->toArray();
-                $entity->main_major = '';
+            $level = [];
+            $titleid = [];
+            $level_id =[];
+            if(!empty($staffQualification)){
+                $data = $staffQualification->toArray();
+                $entity->staff_qualification = '';
+                $entity->document_no = '';
+                $entity->graduate_year = '';
+                $entity->qualification_institution = '';
+                $entity->gpa = '';
                 foreach($data as $key=>$val){
-                    $entity->main_major = $val['name'];
+                    $level[] = $val['order'];
+                    $titleid[] = $val['id'];
+                    $level_id[] = $val['level_id'];
                 }
-                 return $entity->main_major;
+                
+               // if(count(array_unique($level)) < count($level)){
+                if((count(array_unique($level)) === 1 && !empty($titleid))){
+                    $staffQualificationdata = $qualificationtitle->find('all')
+                    ->select([
+                            'id' => $qualificationtitle->aliasField('id'),
+                            'name' => $qualificationtitle->aliasField('name'),
+                        ])
+                    ->where([$qualificationtitle->aliasField('id IN ') => $titleid])
+                    ->order([$qualificationtitle->aliasField('id')=>'DESC'])
+                    ->limit(1);
+                    if($staffQualificationdata!=null){
+                        $staffdata = $staffQualificationdata->toArray();
+                        foreach($staffdata as $val){
+                            $entity->staff_qualification = $val['name'];
+                            $title_id = $val['id'];
+                             $entity->staff_qualification;
+                        }
+                        $staff_qualification_higher = $qualification->find('all')
+                                        ->where([$qualification->aliasField('staff_id') => $entity->staff_id,
+                                            $qualification->aliasField('qualification_title_id') => $title_id ])
+                                        ->limit(1);
+                        $get_qualification_data = $staff_qualification_higher->toArray();
+                        foreach($get_qualification_data as $value) {
+                            $entity->document_no = $value['document_no'];
+                            $entity->graduate_year = $value['graduate_year'];
+                            $entity->qualification_institution = $value['qualification_institution'];
+                            $entity->gpa = $value['gpa'];
+                        }
+                        
+                    }
+
+                }else{
+                    if(!empty($titleid)){
+                        if(array_unique(array_diff_assoc($level_id, array_unique($level_id)))){
+                       $staffQualificationdata1 = $qualificationtitle->find()
+                                    ->select([
+                                            'title_id' => "MAX(".$qualificationtitle->aliasField('id').")"
+                                        ])
+                                    ->where([$qualificationtitle->aliasField('qualification_level_id IN') => $level_id])
+                                    ->limit(1);
+                                    if(!empty($staffQualificationdata1))
+                            {
+                                $staffdata_s = $staffQualificationdata1->toArray();
+                                foreach($staffdata_s as $key=>$val)
+                                {
+                                    $tittle = $val['title_id'];
+                                }
+                                   $staffQualificationdata2 = $qualificationtitle->find()
+                                    ->select([
+                                            'title_name' => $qualificationtitle->aliasField('name'),
+                                            'title_id' => $qualificationtitle->aliasField('id')
+                                            
+                                        ])
+                                    ->where([$qualificationtitle->aliasField('id') => $tittle]);
+                                    
+                                $staffdata_ss = $staffQualificationdata2->toArray();
+                                foreach($staffdata_ss as $key=>$val)
+                                {
+                                    $entity->staff_qualification = $val['title_name'];
+                                    $title_id = $val['title_id'];
+                                     $entity->staff_qualification;
+                                }
+                                $staff_qualification_higher = $qualification->find('all')
+                                            ->where([$qualification->aliasField('staff_id') => $entity->staff_id,
+                                                $qualification->aliasField('qualification_title_id') => $title_id ])
+                                            ->limit(1);
+                                $get_qualification_data = $staff_qualification_higher->toArray();
+                                foreach($staff_qualification_higher as $value) {
+                                    $entity->document_no = $value['document_no'];
+                                    $entity->graduate_year = $value['graduate_year'];
+                                    $entity->qualification_institution = $value['qualification_institution'];
+                                    $entity->gpa = $value['gpa'];
+                                }
+                            }
+
+                        }else{
+                        
+                   $staffQualificationdata = $qualificationtitle->find()
+                    ->leftJoin(['QualificationLevels' => 'qualification_levels'], ['QualificationLevels.id = '. $qualificationtitle->aliasField('qualification_level_id')])
+                    ->select([
+                            'quali_id' => $qualificationtitle->aliasField('id'),
+                            'level_id' => $qualificationLevel->aliasField('id'),
+                           
+                        ])
+                    ->where([$qualificationLevel->aliasField('id IN') => $level_id])
+                    ->order([$qualificationLevel->aliasField('order')=>'ASC'])
+                    ->limit(1);
+                    if($staffQualificationdata!=null)
+                    {
+                        $staff_qualification_data = $staffQualificationdata->toArray();
+                        foreach($staff_qualification_data as $key=>$val)
+                        {
+                            $levelval = $val['level_id'];
+                            $quali_id = $val['quali_id'];
+                            $staffQualificationvals = $qualificationtitle->find()
+                            ->select([
+                                    'name' => $qualificationtitle->aliasField('name'),
+                                    'id' => $qualificationtitle->aliasField('id'),
+                                ])
+                            ->where([$qualificationtitle->aliasField('qualification_level_id') => $levelval,
+                                $qualificationtitle->aliasField('id') => $quali_id
+                        ]);
+                            if(!empty($staffQualificationvals))
+                            {
+                                $staffdata = $staffQualificationvals->toArray();
+                                foreach($staffdata as $key=>$val)
+                                {
+                                    $entity->staff_qualification = $val['name'];
+                                    $title_id = $val['id'];
+                                     $entity->staff_qualification;
+                                }
+                                $staff_qualification_higher = $qualification->find('all')
+                                            ->where([$qualification->aliasField('staff_id') => $entity->staff_id,
+                                                $qualification->aliasField('qualification_title_id') => $title_id ])
+                                            ->limit(1);
+                                $get_qualification_data = $staff_qualification_higher->toArray();
+                                foreach($staff_qualification_higher as $value) {
+                                    $entity->document_no = $value['document_no'];
+                                    $entity->graduate_year = $value['graduate_year'];
+                                    $entity->qualification_institution = $value['qualification_institution'];
+                                    $entity->gpa = $value['gpa'];
+                                }
+                            }   
+                         }
+
+                }  } }
+
+            }
+                
+        }
+            return $entity->staff_qualification;
+    }
+    public function onExcelGetDocumentNo(Event $event, Entity $entity)
+    {
+        return $entity->document_no;
+    }
+    public function onExcelGetGraduateYear(Event $event, Entity $entity)
+    {
+        return $entity->graduate_year;
+    }
+    public function onExcelGetQualificationInstitution(Event $event, Entity $entity)
+    {
+        return $entity->qualification_institution;
+    }
+    public function onExcelGetGpa(Event $event, Entity $entity)
+    {
+        return $entity->gpa;
+    }
+
+    /*
+    * Get staff highest level 
+    */
+    public function onExcelGetStaffLevel(Event $event, Entity $entity)
+    {
+        $userid =  $entity->staff_id;
+        $qualification = TableRegistry::get('Staff.Qualifications');
+        $qualificationtitle = TableRegistry::get('FieldOption.QualificationTitles');
+        $qualificationLevel= TableRegistry::get('FieldOption.QualificationLevels');
+        $staffQualification = $qualification->find()
+            ->leftJoin(['QualificationTitles' => 'qualification_titles'], ['QualificationTitles.id = '. $qualification->aliasField('qualification_title_id')])
+            ->leftJoin(['QualificationLevels' => 'qualification_levels'], ['QualificationLevels.id = '. $qualificationtitle->aliasField('qualification_level_id')])
+            ->select([
+                'order' => $qualificationLevel->aliasField('order'),
+                'id' => $qualificationtitle->aliasField('id'),
+                'level_id' => 'QualificationLevels.id',
+                //'max' => "MAX(".$qualificationtitle->aliasField('order').")"
+            ])
+            ->where([$qualification->aliasField('staff_id') => $entity->staff_id]);
+            $level = [];
+            $titleid = [];
+            $level_ids = [];
+            if(!empty($staffQualification)){
+                $data = $staffQualification->toArray();
+                $entity->staff_level = '';
+                foreach($data as $key=>$val){
+                    $level[] = $val['order'];
+                    $titleid[] = $val['id'];
+                    $level_ids[] = $val['level_id'];
+                }
+               // if(count(array_unique($level)) < count($level)){
+                if((count(array_unique($level)) === 1 && !empty($titleid))){
+                    $staffQualificationdata = $qualificationLevel->find('all')
+                    ->select([
+                            'id' => $qualificationLevel->aliasField('id'),
+                            'name' => $qualificationLevel->aliasField('name'),
+                        ])
+                    ->where([$qualificationLevel->aliasField('id IN ') => $level_ids])
+                    ->order([$qualificationLevel->aliasField('order')=>'ASC'])
+                    ->limit(1);
+                    if($staffQualificationdata!=null){
+                        $staffdata = $staffQualificationdata->toArray();
+                        foreach($staffdata as $val){
+                            $entity->staff_level = $val['name'];
+                            return $entity->staff_level;
+                        }
+                    }
+                }else{
+                    if(!empty($titleid)){
+                    $staffQualificationdata = $qualificationtitle->find()
+                    ->leftJoin(['QualificationLevels' => 'qualification_levels'], ['QualificationLevels.id = '. $qualificationtitle->aliasField('qualification_level_id')])
+                    ->select([
+                            'level' => $qualificationtitle->aliasField('qualification_level_id'),
+                            'id' => $qualificationLevel->aliasField('id'),
+                            'level_name' => $qualificationLevel->aliasField('name'),
+                        ])
+                    ->where([$qualificationtitle->aliasField('id IN') => $titleid])
+                    ->order([$qualificationLevel->aliasField('id')=>'ASC'])
+                    ->limit(1);
+                    if($staffQualificationdata!=null)
+                    {
+                        $staff_qualification_data = $staffQualificationdata->toArray();
+                        foreach($staff_qualification_data as $key=>$val)
+                        {
+                            $entity->staff_level = $val['level_name'];
+                            return $entity->staff_level;
+                        }   
+                    }
+
+                }
+            }
+                
             }
             return '';
     }
@@ -449,7 +673,9 @@ class TrainingEmployeeQualificationTable extends AppTable
                 'id' => $qualificationtitlespecial->aliasField('id'),
                 'name' => $qualificationtitlespecial->aliasField('name'),
             ])
-            ->where([$qualification->aliasField('staff_id') => $entity->staff_id]);
+            ->where([$qualification->aliasField('staff_id') => $entity->staff_id])
+            ->order([$qualificationtitlespecial->aliasField('order')=>'DESC'])
+            ->limit(1);
             $specialisationss = [];
             if($submajor!=null){
                 $data = $submajor->toArray();
@@ -462,5 +688,42 @@ class TrainingEmployeeQualificationTable extends AppTable
             return $entity->sub_major;
             }
             return '';
+    }
+
+    /**
+    * Get staff subject 
+    */
+    public function onExcelGetStaffSubject(Event $event, Entity $entity)
+    {
+        $qualification = TableRegistry::get('Staff.Qualifications');
+        $StaffSubjects = TableRegistry::get('Staff.StaffQualificationsSubjects');
+        $educationSubjects = TableRegistry::get('Education.EducationSubjects');
+        $subjectRecord = $StaffSubjects->find()
+            ->innerJoin(
+                [$qualification->alias() => $qualification->table()],
+                [$qualification->aliasField('id = ') . $StaffSubjects->aliasField('staff_qualification_id')]
+            )
+            ->innerJoin(
+                [$educationSubjects->alias() => $educationSubjects->table()],
+                [$educationSubjects->aliasField('id = ') .$StaffSubjects->aliasField('education_subject_id')]
+            )
+            ->select([
+                'id' => $educationSubjects->aliasField('id'),
+                'name' => $educationSubjects->aliasField('name'),
+            ])
+            ->where([$qualification->aliasField('staff_id') => $entity->staff_id]);
+            $staffSubjects = [];
+            if($subjectRecord!=null){
+                $data = $subjectRecord->toArray();
+                $entity->subject = '';
+                foreach ($data as $key => $val) {
+                    $staffSubjects[$val['name']] = $val['name'];
+                
+                }
+            $entity->subject =  implode(', ', array_values($staffSubjects));
+            return $entity->subject;
+            }
+            return '';
+
     }
 }
