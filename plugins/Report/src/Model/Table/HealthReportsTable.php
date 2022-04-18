@@ -135,7 +135,8 @@ class HealthReportsTable extends AppTable
                     'areas_name' => 'Areas.name',
                     'identity_type' => 'Users.identity_type_id',
                     'genders' => 'Genders.name',
-                    'area_administratives' => 'BirthplaceAreas.name',
+                    'birthplace_area' => 'BirthplaceAreas.name',
+                    'area_administratives_name' => 'AreaAdministratives.name',
                     'nationalities' => 'Nationalities.name',
                     'blood_type' => 'UserHealths.blood_type',
                     'doctor_name' => 'UserHealths.doctor_name',
@@ -148,7 +149,6 @@ class HealthReportsTable extends AppTable
                     'health_relationships' => 'HealthRelationships.name',
                     'health_conditions' => 'HealthConditions.name',
                     'health_immunization_types' => 'HealthImmunizationTypes.name',
-                    'dosage' => 'UserHealthImmunizations.dosage',
                     'user_health_medications_start' => 'UserHealthMedications.start_date',
                     'user_health_medications_end' => 'UserHealthMedications.end_date',
                     'health_test_types' => 'HealthTestTypes.name',
@@ -190,6 +190,12 @@ class HealthReportsTable extends AppTable
                     'Users.BirthplaceAreas' => [
                         'fields' => [
                             'name'
+                        ]
+                    ],
+                    'Institutions.AreaAdministratives' => [
+                        'fields' => [
+                            'AreaAdministratives.name',
+                            'AreaAdministratives.code'
                         ]
                     ],
                 ])
@@ -1107,162 +1113,8 @@ class HealthReportsTable extends AppTable
             'type' => 'string',
             'label' => __('Code')
         ];
+        if ($healthReportType != 'Summary') {         
 
-        if($healthReportType == 'Summary'){
-            $extraFields[] = [
-                'key' => 'HealthReports.institution_name',
-                'field' => 'institution_name',
-                'type' => 'string',
-                'label' => __('Institution')
-            ];
-            $extraFields[] = [
-                'key' => 'HealthReports.institution_providers',
-                'field' => 'institution_providers',
-                'type' => 'string',
-                'label' => __('Institution Providers')
-            ];
-
-            $extraFields[] = [
-                'key' => 'Areas.name',
-                'field' => 'areas_name',
-                'type' => 'string',
-                'label' => __('Area')
-            ];
-
-            $extraFields[] = [
-                'key' => 'HealthReports.education_grade_name',
-                'field' => 'education_grade_name',
-                'type' => 'string',
-                'label' => __('Education Grade')
-            ];
-
-            $extraFields[] = [
-                'key' => 'Users.identity_type_id',
-                'field' => 'identity_type',
-                'type' => 'string',
-                'label' => __('Identity Type')
-            ];
-
-            $extraFields[] = [
-                'key' => 'Genders.name',
-                'field' => 'genders',
-                'type' => 'string',
-                'label' => __('Genders')
-            ];
-
-            $extraFields[] = [
-                'key' => 'BirthplaceAreas.name',
-                'field' => 'area_administratives',
-                'type' => 'string',
-                'label' => __('Area Administratives')
-            ];
-
-            $extraFields[] = [
-                'key' => 'HealthReports.nationalities',
-                'field' => 'nationalities',
-                'type' => 'string',
-                'label' => __('Nationalities')
-            ];
-
-            $extraFields[] = [
-                'key' => 'health_allergy_type_name',
-                'field' => 'health_allergy_type_name',
-                'type' => 'string',
-                'label' => __('Health Allergy Type')
-            ];
-
-            $extraFields[] = [
-                'key' => 'allergies_description',
-                'field' => 'allergies_description',
-                'type' => 'string',
-                'label' => __('Allergies Description')
-            ];
-
-            $extraFields[] = [
-                'key' => 'health_consultation_treatment',
-                'field' => 'health_consultation_treatment',
-                'type' => 'string',
-                'label' => __('Treatment')
-            ];
-
-            $extraFields[] = [
-                'key' => 'HealthRelationships.name',
-                'field' => 'health_relationships',
-                'type' => 'string',
-                'label' => __('Health Relationships')
-            ];
-
-            $extraFields[] = [
-                'key' => 'HealthConditions.name',
-                'field' => 'health_conditions',
-                'type' => 'string',
-                'label' => __('Health Conditions')
-            ];
-
-            $extraFields[] = [
-                'key' => 'HealthImmunizationTypes.name',
-                'field' => 'health_immunization_types',
-                'type' => 'string',
-                'label' => __('Health Immunization Types Name')
-            ];
-
-            $extraFields[] = [
-                'key' => 'UserHealthImmunizations.dosage',
-                'field' => 'dosage',
-                'type' => 'string',
-                'label' => __('Dosage')
-            ];
-
-            $extraFields[] = [
-                'key' => 'UserHealthMedications.start_date',
-                'field' => 'user_health_medications_start',
-                'type' => 'string',
-                'label' => __('User Health Medications Start Date')
-            ];
-
-            $extraFields[] = [
-                'key' => 'UserHealthMedications.end_date',
-                'field' => 'user_health_medications_end',
-                'type' => 'string',
-                'label' => __('User Health Medications End Date')
-            ];
-
-            $extraFields[] = [
-                'key' => 'HealthTestTypes.name',
-                'field' => 'health_test_types',
-                'type' => 'string',
-                'label' => __('Health Test Types Name')
-            ];
-
-            $extraFields[] = [
-                'key' => 'UserHealthTests.date',
-                'field' => 'user_health_tests_date',
-                'type' => 'string',
-                'label' => __('User Health Tests Date')
-            ];
-
-            $extraFields[] = [
-                'key' => 'UserBodyMasses.height',
-                'field' => 'body_mass_height',
-                'type' => 'string',
-                'label' => __('Body Mass Height')
-            ];
-
-            $extraFields[] = [
-                'key' => 'UserBodyMasses.weight',
-                'field' => 'body_mass_weight',
-                'type' => 'string',
-                'label' => __('Body Mass Weight')
-            ];
-
-            $extraFields[] = [
-                'key' => 'UserBodyMasses.body_mass_index',
-                'field' => 'body_mass_index',
-                'type' => 'string',
-                'label' => __('Body Mass Index')
-            ];
-        }
-        else{            
             $extraFields[] = [
                 'key' => 'HealthReports.institution_id',
                 'field' => 'institution_id',
@@ -1276,71 +1128,72 @@ class HealthReportsTable extends AppTable
                 'type' => 'string',
                 'label' => __('Education Grade')
             ];
+
+            $extraFields[] = [
+                'key' => 'InstitutionClasses.name',
+                'field' => 'class_name',
+                'type' => 'string',
+                'label' => ''
+            ];
+
+            $extraFields[] = [
+                'key' => 'openemis_no',
+                'field' => 'openemis_no',
+                'type' => 'string',
+                'label' => __('OpenEMIS ID')
+            ];
+
+            $extraFields[] = [
+                'key' => 'student_name',
+                'field' => 'student_name',
+                'type' => 'string',
+                'label' => __('Student Name')
+            ];
+
+            // $extraFields[] = [
+            //     'key' => 'first_name',
+            //     'field' => 'first_name',
+            //     'type' => 'string',
+            //     'label' => __('First Name')
+            // ];
+
+            // $extraFields[] = [
+            //     'key' => 'middle_name',
+            //     'field' => 'middle_name',
+            //     'type' => 'string',
+            //     'label' => __('Middle Name')
+            // ];
+
+            // $extraFields[] = [
+            //     'key' => 'last_name',
+            //     'field' => 'last_name',
+            //     'type' => 'string',
+            //     'label' => __('Last Name')
+            // ];
+            $extraFields[] = [
+                'key' => 'Users.date_of_birth',
+                'field' => 'date_of_birth',
+                'type' => 'date',
+                'label' => __('Date Of Birth')
+            ];
+
+            // $extraFields[] = [
+            //     'key' => 'Users.identity_type_id',
+            //     'field' => 'identity_type',
+            //     'type' => 'string',
+            //     'label' => __('Identity Type')
+            // ];
+
+            $extraFields[] = [
+                'key' => 'Users.identity_number',
+                'field' => 'identity_number',
+                'type' => 'string',
+                'label' => __('Identity Number')
+            ];
         }
+        
 
-        $extraFields[] = [
-            'key' => 'InstitutionClasses.name',
-            'field' => 'class_name',
-            'type' => 'string',
-            'label' => ''
-        ];
-
-        $extraFields[] = [
-            'key' => 'openemis_no',
-            'field' => 'openemis_no',
-            'type' => 'string',
-            'label' => __('OpenEMIS ID')
-        ];
-
-        $extraFields[] = [
-            'key' => 'student_name',
-            'field' => 'student_name',
-            'type' => 'string',
-            'label' => __('Student Name')
-        ];
-
-        // $extraFields[] = [
-        //     'key' => 'first_name',
-        //     'field' => 'first_name',
-        //     'type' => 'string',
-        //     'label' => __('First Name')
-        // ];
-
-        // $extraFields[] = [
-        //     'key' => 'middle_name',
-        //     'field' => 'middle_name',
-        //     'type' => 'string',
-        //     'label' => __('Middle Name')
-        // ];
-
-        // $extraFields[] = [
-        //     'key' => 'last_name',
-        //     'field' => 'last_name',
-        //     'type' => 'string',
-        //     'label' => __('Last Name')
-        // ];
-        $extraFields[] = [
-            'key' => 'Users.date_of_birth',
-            'field' => 'date_of_birth',
-            'type' => 'date',
-            'label' => __('Date Of Birth')
-        ];
-
-        // $extraFields[] = [
-        //     'key' => 'Users.identity_type_id',
-        //     'field' => 'identity_type',
-        //     'type' => 'string',
-        //     'label' => __('Identity Type')
-        // ];
-
-        $extraFields[] = [
-            'key' => 'Users.identity_number',
-            'field' => 'identity_number',
-            'type' => 'string',
-            'label' => __('Identity Number')
-        ];
-
-        if($healthReportType == 'Overview' || $healthReportType == 'Summary'){
+        if($healthReportType == 'Overview'){
             $extraFields[] = [
                 'key' => 'blood_type',
                 'field' => 'blood_type',
@@ -1598,6 +1451,229 @@ class HealthReportsTable extends AppTable
                 'field' => 'user_insurance_comment',
                 'type' => 'string',
                 'label' => __('Comment')
+            ];
+        }elseif($healthReportType == 'Summary'){
+            $extraFields[] = [
+                'key' => 'HealthReports.institution_name',
+                'field' => 'institution_name',
+                'type' => 'string',
+                'label' => __('Institution')
+            ];
+            $extraFields[] = [
+                'key' => 'HealthReports.institution_providers',
+                'field' => 'institution_providers',
+                'type' => 'string',
+                'label' => __('Institution Providers')
+            ];
+
+            $extraFields[] = [
+                'key' => 'Areas.name',
+                'field' => 'areas_name',
+                'type' => 'string',
+                'label' => __('Area')
+            ];
+
+            $extraFields[] = [
+                'key' => 'HealthReports.education_grade_name',
+                'field' => 'education_grade_name',
+                'type' => 'string',
+                'label' => __('Education Grade')
+            ];
+
+            $extraFields[] = [
+                'key' => 'Users.identity_type_id',
+                'field' => 'identity_type',
+                'type' => 'string',
+                'label' => __('Identity Type')
+            ];
+
+            $extraFields[] = [
+                'key' => 'Users.identity_number',
+                'field' => 'identity_number',
+                'type' => 'string',
+                'label' => __('Identity Number')
+            ];
+
+            $extraFields[] = [
+                'key' => 'openemis_no',
+                'field' => 'openemis_no',
+                'type' => 'string',
+                'label' => __('OpenEMIS ID')
+            ];
+
+            $extraFields[] = [
+                'key' => 'student_name',
+                'field' => 'student_name',
+                'type' => 'string',
+                'label' => __('Student Name')
+            ];
+
+            $extraFields[] = [
+                'key' => 'Genders.name',
+                'field' => 'genders',
+                'type' => 'string',
+                'label' => __('Genders')
+            ];
+
+            $extraFields[] = [
+                'key' => 'Users.date_of_birth',
+                'field' => 'date_of_birth',
+                'type' => 'date',
+                'label' => __('Date Of Birth')
+            ];
+
+            $extraFields[] = [
+                'key' => 'AreaAdministratives.name',
+                'field' => 'area_administratives_name',
+                'type' => 'string',
+                'label' => __('Area Administratives')
+            ];
+
+            $extraFields[] = [
+                'key' => 'BirthplaceAreas.name',
+                'field' => 'birthplace_area',
+                'type' => 'string',
+                'label' => __('Birthplace Area Administratives')
+            ];
+
+            $extraFields[] = [
+                'key' => 'HealthReports.nationalities',
+                'field' => 'nationalities',
+                'type' => 'string',
+                'label' => __('Nationalities')
+            ];
+
+            $extraFields[] = [
+                'key' => 'InstitutionClasses.name',
+                'field' => 'class_name',
+                'type' => 'string',
+                'label' => ''
+            ];
+
+            $extraFields[] = [
+                'key' => 'blood_type',
+                'field' => 'blood_type',
+                'type' => 'string',
+                'label' => __('Blood Type')
+            ];
+
+            $extraFields[] = [
+                'key' => 'doctor_name',
+                'field' => 'doctor_name',
+                'type' => 'string',
+                'label' => __('Doctor Name')
+            ];
+
+            $extraFields[] = [
+                'key' => 'doctor_contact',
+                'field' => 'doctor_contact',
+                'type' => 'string',
+                'label' => __('Doctor Contact')
+            ];
+
+            $extraFields[] = [
+                'key' => 'medical_facility',
+                'field' => 'medical_facility',
+                'type' => 'string',
+                'label' => __('Medical Facility')
+            ];
+
+            $extraFields[] = [
+                'key' => 'health_insurance',
+                'field' => 'health_insurance',
+                'type' => 'string',
+                'label' => __('Health Insurance')
+            ];
+
+            $extraFields[] = [
+                'key' => 'health_allergy_type_name',
+                'field' => 'health_allergy_type_name',
+                'type' => 'string',
+                'label' => __('Health Allergy Type')
+            ];
+
+            $extraFields[] = [
+                'key' => 'allergies_description',
+                'field' => 'allergies_description',
+                'type' => 'string',
+                'label' => __('Allergies Description')
+            ];
+
+            $extraFields[] = [
+                'key' => 'health_consultation_treatment',
+                'field' => 'health_consultation_treatment',
+                'type' => 'string',
+                'label' => __('Treatment')
+            ];
+
+            $extraFields[] = [
+                'key' => 'HealthRelationships.name',
+                'field' => 'health_relationships',
+                'type' => 'string',
+                'label' => __('Health Relationships')
+            ];
+
+            $extraFields[] = [
+                'key' => 'HealthConditions.name',
+                'field' => 'health_conditions',
+                'type' => 'string',
+                'label' => __('Health Conditions')
+            ];
+
+            $extraFields[] = [
+                'key' => 'HealthImmunizationTypes.name',
+                'field' => 'health_immunization_types',
+                'type' => 'string',
+                'label' => __('Health Immunization Types Name')
+            ];
+
+            $extraFields[] = [
+                'key' => 'UserHealthMedications.start_date',
+                'field' => 'user_health_medications_start',
+                'type' => 'string',
+                'label' => __('User Health Medications Start Date')
+            ];
+
+            $extraFields[] = [
+                'key' => 'UserHealthMedications.end_date',
+                'field' => 'user_health_medications_end',
+                'type' => 'string',
+                'label' => __('User Health Medications End Date')
+            ];
+
+            $extraFields[] = [
+                'key' => 'HealthTestTypes.name',
+                'field' => 'health_test_types',
+                'type' => 'string',
+                'label' => __('Health Test Types Name')
+            ];
+
+            $extraFields[] = [
+                'key' => 'UserHealthTests.date',
+                'field' => 'user_health_tests_date',
+                'type' => 'string',
+                'label' => __('User Health Tests Date')
+            ];
+
+            $extraFields[] = [
+                'key' => 'UserBodyMasses.height',
+                'field' => 'body_mass_height',
+                'type' => 'string',
+                'label' => __('Body Mass Height')
+            ];
+
+            $extraFields[] = [
+                'key' => 'UserBodyMasses.weight',
+                'field' => 'body_mass_weight',
+                'type' => 'string',
+                'label' => __('Body Mass Weight')
+            ];
+
+            $extraFields[] = [
+                'key' => 'UserBodyMasses.body_mass_index',
+                'field' => 'body_mass_index',
+                'type' => 'string',
+                'label' => __('Body Mass Index')
             ];
         }
 
