@@ -92,7 +92,11 @@ class InstitutionReportCardsTable extends AppTable
                 'InstitutionRoomTypesCount',
                 //POCOR-6426 ends
                 'InstitutionAreaName',//POCOR-6481
-                'NonTeachingStaffCount'//POCOR-6481
+                'NonTeachingStaffCount',//POCOR-6481
+                'InstitutionCustomFields',//POCOR-6519
+                'InstitutionCustomFieldValues',//POCOR-6519
+                'ReportStudentAssessmentSummary',//POCOR-6519
+                'InfrastructureRoomCustomFields'//POCOR-6519
             ]
         ]);
     }
@@ -167,6 +171,10 @@ class InstitutionReportCardsTable extends AppTable
         //POCOR-6426 ends
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionAreaName'] = 'onExcelTemplateInitialiseInstitutionAreaName';//POCOR-6481
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseNonTeachingStaffCount'] = 'onExcelTemplateInitialiseNonTeachingStaffCount';//POCOR-6481
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionCustomFields'] = 'onExcelTemplateInitialiseInstitutionCustomFields';//POCOR-6519
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionCustomFieldValues'] = 'onExcelTemplateInitialiseInstitutionCustomFieldValues';//POCOR-6519
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseReportStudentAssessmentSummary'] = 'onExcelTemplateInitialiseReportStudentAssessmentSummary';//POCOR-6519
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureRoomCustomFields'] = 'onExcelTemplateInitialiseInfrastructureRoomCustomFields';//POCOR-6519
         return $events;
     }
 
@@ -286,11 +294,14 @@ class InstitutionReportCardsTable extends AppTable
 							3=>'Multiple Shift Owner',
 							4=>'Multiple Shift Occupier'
 							];
-			if($shift_types[$entity->shift_type]) {
-				$entity->shift_type_name = $shift_types[$entity->shift_type];
-			}
-
-            $entity->date_opened = $entity->date_opened->format('Y-m-d');//POCOR-6328 
+            //POCOR-6519 starts
+            $entity->shift_type_name = '';
+            if($entity->shift_type != 0){
+                if($shift_types[$entity->shift_type]) {
+                    $entity->shift_type_name = $shift_types[$entity->shift_type];
+                }
+            }//POCOR-6519 ends
+			$entity->date_opened = $entity->date_opened->format('Y-m-d');//POCOR-6328 
             return $entity;
 		}
     }
@@ -4150,5 +4161,388 @@ class InstitutionReportCardsTable extends AppTable
     
         return count($NonTeachingStaffData);
     }
-    //POCOR-6481 ends   
+    //POCOR-6481 ends  
+    
+    /**
+     * create placeholder to display custom field names in Institutions Custom Fields
+     * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+     * @ticket POCOR-6519
+     */
+    public function onExcelTemplateInitialiseInstitutionCustomFields(Event $event, array $params, ArrayObject $extra){
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionCustomFieldValues = TableRegistry::get('institution_custom_field_values');
+            $InstitutionCustomFields = TableRegistry::get('institution_custom_fields');
+            $entity = $InstitutionCustomFieldValues
+                        ->find()
+                        ->select([
+                                'id' => $InstitutionCustomFields->aliasField('id'),
+                                'name' => $InstitutionCustomFields->aliasField('name')
+                            ])
+                        ->leftJoin(
+                            [$InstitutionCustomFields->alias() => $InstitutionCustomFields->table()],
+                            [
+                                $InstitutionCustomFields->aliasField('id ='). $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
+                            ]
+                        )
+                        ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $params['institution_id']])
+                        ->group([$InstitutionCustomFields->aliasField('id')])
+                        ->hydrate(false)
+                        ->toArray();
+            return $entity;
+        }
+    }
+    /**
+     * create placeholder to display custom field values and results in Institutions Custom Fields
+     * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+     * @ticket POCOR-6519
+     */
+    public function onExcelTemplateInitialiseInstitutionCustomFieldValues(Event $event, array $params, ArrayObject $extra){
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionCustomFieldValues = TableRegistry::get('institution_custom_field_values');
+            $InstitutionCustomFields = TableRegistry::get('institution_custom_fields');
+            $institutionCustomFieldOptions = TableRegistry::get('institution_custom_field_options');
+            $InstitutionCustomFieldResult = $InstitutionCustomFieldValues
+                        ->find()
+                        ->select([
+                                'id' => $InstitutionCustomFields->aliasField('id'),
+                                'name' => $InstitutionCustomFields->aliasField('name')
+                            ])
+                        ->leftJoin(
+                            [$InstitutionCustomFields->alias() => $InstitutionCustomFields->table()],
+                            [
+                                $InstitutionCustomFields->aliasField('id ='). $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
+                            ]
+                        )
+                        ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $params['institution_id']])
+                        ->group([$InstitutionCustomFields->aliasField('id')])
+                        ->hydrate(false)
+                        ->toArray();
+            
+            $field_arr = [];
+            foreach ($InstitutionCustomFieldResult as $key => $value) {
+                $field_arr[] = $this->getInstitutionCustomFieldValues($params['institution_id'], $value['id']);    
+            }
+
+            $result = [];
+            if(!empty($field_arr)){
+                foreach ($field_arr as $field_key => $field_val) {
+                    $result[$field_key]['id'] = $field_val[0]['id'];
+                    if($field_val[0]['field_type'] == 'CHECKBOX'){
+                        $check_num = [];
+                        foreach ($field_val as $f_k => $f_v) {
+                            $check_data = $institutionCustomFieldOptions
+                                        ->find()
+                                        ->select([
+                                                'name' => $institutionCustomFieldOptions->aliasField('name')
+                                            ])
+                                        ->where([$institutionCustomFieldOptions->aliasField('id IN') => $f_v['number_value']])
+                                        ->hydrate(false)
+                                        ->toArray();
+                            $check_num[] = $check_data[0]['name'];
+                        }
+                        $checkbox = implode(',', $check_num);                    
+                        $result[$field_key]['name'] = !empty($checkbox) ? $checkbox : '';
+                    }else if($field_val[0]['field_type'] == 'TEXT'){
+                        $result[$field_key]['name'] = !empty($field_val[0]['text_value']) ? $field_val[0]['text_value'] : ' ';
+                    }else if($field_val[0]['field_type'] == 'NUMBER'){
+                        $result[$field_key]['name'] = !empty($field_val[0]['number_value']) ? $field_val[0]['number_value'].' ' : '0 ';
+                    }else if($field_val[0]['field_type'] == 'DECIMAL'){
+                        $result[$field_key]['name'] = !empty($field_val[0]['decimal_value']) ? $field_val[0]['decimal_value'].' ' : '0.00 ';
+                    }else if($field_val[0]['field_type'] == 'TEXTAREA'){
+                        $result[$field_key]['name'] = !empty($field_val[0]['textarea_value']) ? $field_val[0]['textarea_value'] : '';
+                    }else if($field_val[0]['field_type'] == 'DROPDOWN'){
+                        $check_data = $institutionCustomFieldOptions
+                                        ->find()
+                                        ->select([
+                                                'name' => $institutionCustomFieldOptions->aliasField('name')
+                                            ])
+                                        ->where([$institutionCustomFieldOptions->aliasField('id IN') => $field_val[0]['number_value']])
+                                        ->hydrate(false)
+                                        ->toArray();
+                        $result[$field_key]['name'] = !empty($check_data[0]['name']) ? $check_data[0]['name'] : '';
+                    }else if($field_val[0]['field_type'] == 'DATE'){
+                        $result[$field_key]['name'] = !empty($field_val[0]['date_value']) ? date("Y-m-d", strtotime($field_val[0]['date_value'])) : '';
+                    }else if($field_val[0]['field_type'] == 'TIME'){
+                        $result[$field_key]['name'] = !empty($field_val[0]['time_value']) ? date("H: i: s", strtotime($field_val[0]['time_value'])) : '';
+                    }else if($field_val[0]['field_type'] == 'COORDINATES'){
+                        if(!empty($field_val[0]['text_value'])){
+                            $cordinate = json_decode($field_val[0]['text_value'], true);
+                            $result[$field_key]['name'] = 'latitude: '.$cordinate['latitude'] .', longitude: '.$cordinate['longitude'] ;
+                        }else{
+                            $result[$field_key]['name'] = '';
+                        }
+                    } 
+                }
+            }
+            
+            $entity = [];
+            foreach ($result as $e_key => $e_val) {
+                $entity[] = [
+                    'id' => $e_val['id'],
+                    'data' => $e_val['name']
+                ];
+            }
+            return $entity;
+        }
+    } 
+    /**
+     * Get Institution Custom Field Values
+     * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+     * @ticket POCOR-6519
+     */
+    public function getInstitutionCustomFieldValues($institution_id, $institution_custom_field_id){
+        $InstitutionCustomFieldValues = TableRegistry::get('institution_custom_field_values');
+        $InstitutionCustomFields = TableRegistry::get('institution_custom_fields');
+        $institutionCustomFieldOptions = TableRegistry::get('institution_custom_field_options');
+        $InstitutionCustomFieldValues = $InstitutionCustomFieldValues
+                        ->find()
+                        ->select([
+                            'text_value' => $InstitutionCustomFieldValues->aliasField('text_value'),
+                            'number_value' => $InstitutionCustomFieldValues->aliasField('number_value'),
+                            'decimal_value' => $InstitutionCustomFieldValues->aliasField('decimal_value'),
+                            'textarea_value' => $InstitutionCustomFieldValues->aliasField('textarea_value'),
+                            'date_value' => $InstitutionCustomFieldValues->aliasField('date_value'),
+                            'time_value' => $InstitutionCustomFieldValues->aliasField('time_value'),
+                            'id' => $InstitutionCustomFields->aliasField('id'),
+                            'field_type' => $InstitutionCustomFields->aliasField('field_type')
+                        ])
+                        ->leftJoin(
+                            [$InstitutionCustomFields->alias() => $InstitutionCustomFields->table()],
+                            [
+                                $InstitutionCustomFields->aliasField('id ='). $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
+                            ]
+                        )
+                        ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $institution_id])
+                        ->where([$InstitutionCustomFieldValues->aliasField('institution_custom_field_id') => $institution_custom_field_id])
+                        ->hydrate(false)
+                        ->toArray();
+        return $InstitutionCustomFieldValues;
+    }
+    /**
+     * Create a placeholder to display institution data from this table report_student_assessment_summary
+     * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+     * @ticket POCOR-6519
+     */
+    public function onExcelTemplateInitialiseReportStudentAssessmentSummary(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $ReportStudentAssessmentSummary = TableRegistry::get('report_student_assessment_summary');
+            $AssessmentSummaryData = $ReportStudentAssessmentSummary->find()
+                ->select([
+                'id' => $ReportStudentAssessmentSummary->aliasField('id'),
+                'academic_period_code' => $ReportStudentAssessmentSummary->aliasField('academic_period_code'),
+                'academic_period_name' => $ReportStudentAssessmentSummary->aliasField('academic_period_name'),
+                'area_code' => $ReportStudentAssessmentSummary->aliasField('area_code'),
+                'area_name' => $ReportStudentAssessmentSummary->aliasField('area_name'),
+                'institution_code' => $ReportStudentAssessmentSummary->aliasField('institution_code'),
+                'institution_name' => $ReportStudentAssessmentSummary->aliasField('institution_name'),
+                'grade_code' => $ReportStudentAssessmentSummary->aliasField('grade_code'),
+                'grade_name' => $ReportStudentAssessmentSummary->aliasField('grade_name'),
+                'subject_code' => $ReportStudentAssessmentSummary->aliasField('subject_code'),
+                'subject_name' => $ReportStudentAssessmentSummary->aliasField('subject_name'),
+                'subject_weight' => $ReportStudentAssessmentSummary->aliasField('subject_weight'),
+                'assessment_code' => $ReportStudentAssessmentSummary->aliasField('assessment_code'),
+                'assessment_name' => $ReportStudentAssessmentSummary->aliasField('assessment_name'),
+                'period_code' => $ReportStudentAssessmentSummary->aliasField('period_code'),
+                'period_name' => $ReportStudentAssessmentSummary->aliasField('period_name'),
+                'period_weight' => $ReportStudentAssessmentSummary->aliasField('period_weight'),
+                'average_marks' => $ReportStudentAssessmentSummary->aliasField('average_marks')
+                ])
+                ->where([$ReportStudentAssessmentSummary->aliasField('institution_id') => $params['institution_id']])    
+                ->where([$ReportStudentAssessmentSummary->aliasField('academic_period_id') => $params['academic_period_id']])    
+                ->hydrate(false)
+                ->toArray(); 
+            $entity = [];
+            if(empty($AssessmentSummaryData)){
+                return $entity;
+            }
+
+            foreach ($AssessmentSummaryData as $e_key => $e_val) {
+                $entity[] = [
+                    'id' => $e_val['id'],
+                    'academic_period_code' => (!empty($e_val['academic_period_code']) ? $e_val['academic_period_code'] : ''),
+                    'academic_period_name' => (!empty($e_val['academic_period_name']) ? $e_val['academic_period_name'] : ''),
+                    'area_code' => (!empty($e_val['area_code']) ? $e_val['area_code'] : ''),
+                    'area_name' => (!empty($e_val['area_name']) ? $e_val['area_name'] : ''),
+                    'institution_code' => (!empty($e_val['institution_code']) ? $e_val['institution_code'] : ''),
+                    'institution_name' => (!empty($e_val['institution_name']) ? $e_val['institution_name'] : ''),
+                    'grade_code' => (!empty($e_val['grade_code']) ? $e_val['grade_code'] : ''),
+                    'grade_name' => (!empty($e_val['grade_name']) ? $e_val['grade_name'] : ''),
+                    'subject_code' => (!empty($e_val['subject_code']) ? $e_val['subject_code'] : ''),
+                    'subject_name' => (!empty($e_val['subject_name']) ? $e_val['subject_name'] : ''),
+                    'subject_weight' => (!empty($e_val['subject_weight']) ? $e_val['subject_weight'] : ''),
+                    'assessment_code' => (!empty($e_val['assessment_code']) ? $e_val['assessment_code'] : ''),
+                    'assessment_name' => (!empty($e_val['assessment_name']) ? $e_val['assessment_name'] : ''),
+                    'period_code' => (!empty($e_val['period_code']) ? $e_val['period_code'] : ''),
+                    'period_name' => (!empty($e_val['period_name']) ? $e_val['period_name'] : ''),
+                    'period_weight' => (!empty($e_val['period_weight']) ? $e_val['period_weight'] : ''),
+                    'average_marks' => (!empty($e_val['average_marks']) ? $e_val['average_marks'].' ' : '')
+                ];
+            }
+            return $entity;
+        }
+    }
+    /**
+     * Create a placeholder to display custom field values and results in Infrastructure Room Custom Fields
+     * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+     * @ticket POCOR-6519
+     */
+    public function onExcelTemplateInitialiseInfrastructureRoomCustomFields(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionRooms = TableRegistry::get('institution_rooms');
+            $RoomTypes = TableRegistry::get('room_types');
+            $RoomCustomFieldValues = TableRegistry::get('room_custom_field_values');
+            $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+            $InstitutionRoomsData = $InstitutionRooms->find()
+                ->select([
+                    'id' => $InstitutionRooms->aliasField('id'),
+                    'code' => $InstitutionRooms->aliasField('code'),
+                    'name' => $InstitutionRooms->aliasField('name'),
+                    'area' => $InstitutionRooms->aliasField('area'),
+                    'room_type' => $RoomTypes->aliasField('name')
+                ])
+                ->LeftJoin([$RoomTypes->alias() => $RoomTypes->table()], [
+                    $InstitutionRooms->aliasField('room_type_id') . '= ' . $RoomTypes->aliasField('id')
+                ])
+                ->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])    
+                ->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])  
+                ->hydrate(false)
+                ->toArray()
+                ;
+            
+            $entity = [];
+            if(empty($InstitutionRoomsData)){
+                return $entity;
+            }
+            $i=0;
+            foreach ($InstitutionRoomsData as $e_key => $e_val) {
+                $RoomCustomFieldValuesData = $RoomCustomFieldValues->find()
+                        ->select([
+                            'id' => $RoomCustomFieldValues->aliasField('id'),
+                            'infrastructure_custom_field_id' => $RoomCustomFieldValues->aliasField('infrastructure_custom_field_id'),
+                            'custom_field_name' => $InfrastructureCustomFields->aliasField('name')
+                        ])
+                        ->LeftJoin([$InfrastructureCustomFields->alias() => $InfrastructureCustomFields->table()], [
+                            $RoomCustomFieldValues->aliasField('infrastructure_custom_field_id') . '= ' . $InfrastructureCustomFields->aliasField('id')
+                        ])
+                        ->where([$RoomCustomFieldValues->aliasField('institution_room_id') => $e_val['id']])
+                        ->group([$RoomCustomFieldValues->aliasField('infrastructure_custom_field_id')]) 
+                        ->hydrate(false)
+                        ->toArray(); 
+                if(!empty($RoomCustomFieldValuesData)){
+                    foreach ($RoomCustomFieldValuesData as $r_key => $r_val) {
+                        //get Custom fields Values by room _id and infrastructure_custom_field_id 
+                        $val_result = $this->getInfrastructureRoomCustomFieldValues($e_val['id'], $r_val['infrastructure_custom_field_id']);    
+                        $entity[$i] = [
+                            'id' => $r_val['id'],
+                            'code' => (!empty($e_val['code']) ? $e_val['code'] : ''),
+                            'name' => (!empty($e_val['name']) ? $e_val['name'] : ''),
+                            'area' => (!empty($e_val['area']) ? $e_val['area'] : ''),
+                            'room_type' => (!empty($e_val['room_type']) ? $e_val['room_type'] : ''),
+                            'infrastructure_custom_field_id' => $r_val['infrastructure_custom_field_id'],
+                            'custom_field_name' => $r_val['custom_field_name'],
+                            'custom_field_value' => $val_result
+                        ];
+                        $i++;
+                    }                     
+                }else{
+                    $entity[$i] = [
+                        'id' => $e_val['id'],
+                        'code' => (!empty($e_val['code']) ? $e_val['code'] : ''),
+                        'name' => (!empty($e_val['name']) ? $e_val['name'] : ''),
+                        'area' => (!empty($e_val['area']) ? $e_val['area'] : ''),
+                        'room_type' => (!empty($e_val['room_type']) ? $e_val['room_type'] : ''),
+                        'infrastructure_custom_field_id' => '',
+                        'custom_field_name' => '',
+                        'custom_field_value' => ''
+                    ];
+                    $i++;
+                }
+            }
+            return $entity; 
+        }
+    }
+    /**
+     * Get Infrastructure Room Custom Field Values using params $room_id & $room_custom_field_id)
+     * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+     * @ticket POCOR-6519
+     */
+    public function getInfrastructureRoomCustomFieldValues($room_id, $room_custom_field_id){
+        $RoomCustomFieldTbl = TableRegistry::get('room_custom_field_values');
+        $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+        $InfrastructureCustomFieldOptions = TableRegistry::get('infrastructure_custom_field_options');
+        $RoomCustomFieldValues[] = $RoomCustomFieldTbl
+                        ->find()
+                        ->select([
+                                'text_value' => $RoomCustomFieldTbl->aliasField('text_value'),
+                                'number_value' => $RoomCustomFieldTbl->aliasField('number_value'),
+                                'decimal_value' => $RoomCustomFieldTbl->aliasField('decimal_value'),
+                                'textarea_value' => $RoomCustomFieldTbl->aliasField('textarea_value'),
+                                'date_value' => $RoomCustomFieldTbl->aliasField('date_value'),
+                                'time_value' => $RoomCustomFieldTbl->aliasField('time_value'),
+                                'institution_room_id' => $RoomCustomFieldTbl->aliasField('institution_room_id'),
+                                'infrastructure_custom_field_id' => $RoomCustomFieldTbl->aliasField('infrastructure_custom_field_id'),
+                                'id' => $InfrastructureCustomFields->aliasField('id'),
+                                'field_type' => $InfrastructureCustomFields->aliasField('field_type'),
+                            ])
+                        ->LeftJoin([$InfrastructureCustomFields->alias() => $InfrastructureCustomFields->table()], [
+                            $RoomCustomFieldTbl->aliasField('infrastructure_custom_field_id') . '= ' . $InfrastructureCustomFields->aliasField('id')
+                        ])
+                        ->where([$RoomCustomFieldTbl->aliasField('institution_room_id') => $room_id])
+                        ->where([$RoomCustomFieldTbl->aliasField('infrastructure_custom_field_id') => $room_custom_field_id])
+                        ->hydrate(false)
+                        ->toArray();
+        $result = [];
+        if(!empty($RoomCustomFieldValues)){
+            foreach ($RoomCustomFieldValues as $field_key => $field_val) {
+                if($field_val[0]['field_type'] == 'CHECKBOX'){
+                    $check_num = [];
+                    foreach ($field_val as $f_k => $f_v) {
+                        $check_data = $InfrastructureCustomFieldOptions
+                                    ->find()
+                                    ->select([
+                                            'name' => $InfrastructureCustomFieldOptions->aliasField('name')
+                                        ])
+                                    ->where([$InfrastructureCustomFieldOptions->aliasField('id IN') => $f_v['number_value']])
+                                    ->hydrate(false)
+                                    ->toArray();
+                        $check_num[] = $check_data[0]['name'];
+                    }
+                    $checkbox = implode(',', $check_num);                    
+                    $result['name'] = !empty($checkbox) ? $checkbox : '';
+                }else if($field_val[0]['field_type'] == 'TEXT'){
+                    $result['name'] = !empty($field_val[0]['text_value']) ? $field_val[0]['text_value'] : ' ';
+                }else if($field_val[0]['field_type'] == 'NUMBER'){
+                    $result['name'] = !empty($field_val[0]['number_value']) ? $field_val[0]['number_value'].' ' : '0 ';
+                }else if($field_val[0]['field_type'] == 'DECIMAL'){
+                    $result['name'] = !empty($field_val[0]['decimal_value']) ? $field_val[0]['decimal_value'].' ' : '0.00 ';
+                }else if($field_val[0]['field_type'] == 'TEXTAREA'){
+                    $result['name'] = !empty($field_val[0]['textarea_value']) ? $field_val[0]['textarea_value'] : '';
+                }else if($field_val[0]['field_type'] == 'DROPDOWN'){
+                    $check_data = $InfrastructureCustomFieldOptions
+                                    ->find()
+                                    ->select([
+                                            'name' => $InfrastructureCustomFieldOptions->aliasField('name')
+                                        ])
+                                    ->where([$InfrastructureCustomFieldOptions->aliasField('id IN') => $field_val[0]['number_value']])
+                                    ->hydrate(false)
+                                    ->toArray();
+                    $result['name'] = !empty($check_data[0]['name']) ? $check_data[0]['name'] : '';
+                }else if($field_val[0]['field_type'] == 'DATE'){
+                    $result['name'] = !empty($field_val[0]['date_value']) ? date("Y-m-d", strtotime($field_val[0]['date_value'])) : '';
+                }else if($field_val[0]['field_type'] == 'TIME'){
+                    $result['name'] = !empty($field_val[0]['time_value']) ? date("H: i: s", strtotime($field_val[0]['time_value'])) : '';
+                }else if($field_val[0]['field_type'] == 'COORDINATES'){
+                    if(!empty($field_val[0]['text_value'])){
+                        $cordinate = json_decode($field_val[0]['text_value'], true);
+                        $result['name'] = 'latitude: '.$cordinate['latitude'] .', longitude: '.$cordinate['longitude'] ;
+                    }else{
+                        $result['name'] = '';
+                    }
+                } 
+            }
+        }  
+        return $result['name'];
+    }//POCOR-6519 ends
 }
