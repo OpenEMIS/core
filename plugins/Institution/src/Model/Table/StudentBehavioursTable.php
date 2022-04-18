@@ -150,6 +150,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->fields['student_id']['sort'] = ['field' => 'Students.first_name']; // POCOR-2547 adding sort
 
         $this->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id']);
+        $this->field('assignee_id', ['visible' => false]);//POCOR-5186
     }
     // setting up index page with required fields
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -314,8 +315,10 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('class', ['entity' => $entity]);
         $this->field('date_of_behaviour', ['entity' => $entity]);
-        $this->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
+        $this->field('assignee_id', ['entity' => $entity]);//POCOR-5186
+        $this->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour','assignee_id']);
         // POCOR 6154 
+
     }
 
     // PHPOE-1916
@@ -401,6 +404,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('openemis_no', ['visible' => ['view' => true,'edit' => false]]);
         $this->field('student_id',['after' => 'openemis_no','visible' => ['view' => true,'edit' => true]]);
         $this->field('student_behaviour_category_id',['after' => 'student_id','visible' => ['view' => true,'edit' => true]]);
+         $this->field('assignee_id',['after' => 'openemis_no','visible' => ['view' => true,'edit' => true]]);//POCOR-5186
 
         // $this->setFieldOrder(['student_id','time_of_behaviour','date_of_behaviour','title', 'student_behaviour_category_id', 'description', 'action']);
     }
@@ -414,6 +418,7 @@ class StudentBehavioursTable extends ControllerActionTable
 
         $this->fields['student_behaviour_category_id']['type'] = 'select';
         $this->field('student_behaviour_category_id', ['attr' => ['label' => __('Student Behaviour Category')]]);
+        $this->field('assignee_id', ['attr' => ['label' => __('Assignee')]]);//POCOR-5186
     }
     /* pocor-6154 */
 
