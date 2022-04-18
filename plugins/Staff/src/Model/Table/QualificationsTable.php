@@ -90,7 +90,7 @@ class QualificationsTable extends ControllerActionTable
         $this->field('gpa', ['visible' => false]);
         $this->field('qualification_country_id', ['visible' => false]);
 
-        $this->field('qualification_level', ['type' => 'string']);
+        $this->field('qualification_level', ['type' => 'string','sort'=>['field'=>'QualificationLevels.name']]); //POCOR-6551
         $this->field('file_type', ['type' => 'string']);
 
         $this->setFieldOrder([
@@ -101,6 +101,14 @@ class QualificationsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['QualificationTitles.QualificationLevels']);
+        // START: POCOR-6551 sort by level
+        $sortList = ['QualificationLevels.name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+        $query->order(['QualificationLevels.order'=>'ASC']);
+        // END: POCOR-6551 sort by level
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
@@ -483,6 +491,7 @@ class QualificationsTable extends ControllerActionTable
             ])
         ->where([
             'staff_id =' .$staffUserId,
-        ]);
+        ])
+        ->order(['QualificationLevels.order'=>'ASC']); //POCOR-6551
     }
 }
