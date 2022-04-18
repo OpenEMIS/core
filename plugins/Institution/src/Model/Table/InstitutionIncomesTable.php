@@ -35,6 +35,8 @@ class InstitutionIncomesTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+
+            $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function beforeAction($event) {
@@ -71,14 +73,14 @@ class InstitutionIncomesTable extends ControllerActionTable
     {
         $this->setupFields($entity);
     }
-	
-    public function indexBeforeAction($event) { 
+
+    public function indexBeforeAction($event) {
         unset($this->fields['academic_period_id']);
         unset($this->fields['description']);
         $this->setFieldOrder(['date', 'income_source_id', 'income_type_id', 'amount']);
     }
 
-    public function viewBeforeAction($event) { 
+    public function viewBeforeAction($event) {
         unset($this->fields['attachment']);
         unset($this->fields['description']);
         $this->setFieldOrder(['date', 'income_source_id', 'income_type_id', 'amount']);
@@ -111,5 +113,58 @@ class InstitutionIncomesTable extends ControllerActionTable
         $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('amount', ['attr' => ['label' => __('Amount')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->setFieldOrder(['academic_period_id', 'income_source_id', 'income_type_id', 'amount','file_name', 'file_content', 'description']);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $academyPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+
+
+		$query
+		->select(['date' => 'InstitutionIncomes.date','amount' => 'InstitutionIncomes.amount', 'source' =>'IncomeSources.name', 'type' => 'IncomeTypes.name'])
+
+        ->LeftJoin([$this->IncomeTypes->alias() => $this->IncomeTypes->table()],[
+            $this->IncomeTypes->aliasField('id').' = ' . 'InstitutionIncomes.income_type_id'
+        ])
+
+		->LeftJoin([$this->IncomeSources->alias() => $this->IncomeSources->table()],[
+			$this->IncomeSources->aliasField('id').' = ' . 'InstitutionIncomes.income_source_id'
+        ]);
+    }
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+
+        $extraField[] = [
+            'key' => 'InstitutionIncomes.date',
+            'field' => 'date',
+            'type' => 'date',
+            'label' => __('Date')
+        ];
+
+        $extraField[] = [
+            'key' => 'IncomeSources.name',
+            'field' => 'source',
+            'type' => 'string',
+            'label' => __('Source')
+        ];
+
+        $extraField[] = [
+            'key' => 'IncomeTypes.name',
+            'field' => 'type',
+            'type' => 'string',
+            'label' => __('Type')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionIncomes.amount',
+            'field' => 'amount',
+            'type' => 'integer',
+            'label' => __('Amount')
+        ];
+
+        $fields->exchangeArray($extraField);
     }
 }
