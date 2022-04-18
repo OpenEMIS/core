@@ -252,6 +252,9 @@ class StudentProfilesTable extends ControllerActionTable
                 'email_status_id' => $this->StudentReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->StudentReportCardEmailProcesses->aliasField('error_message')
             ])
+            ->matching('StudentStatuses', function ($q) {
+                return $q->where(['StudentStatuses.code =' => 'CURRENT']);
+            })
             ->leftJoin([$this->InstitutionStudentsProfileTemplates->alias() => $this->InstitutionStudentsProfileTemplates->table()],
                 [
                     $this->InstitutionStudentsProfileTemplates->aliasField('student_id = ') . $this->aliasField('student_id'),
