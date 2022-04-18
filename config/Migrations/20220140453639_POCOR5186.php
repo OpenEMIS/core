@@ -123,6 +123,14 @@ class POCOR5186 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
+        $InactiveStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $workflow_models_last_inserted_id_value,
+                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('name') => 'Inactive'
+            ])
+            ->extract('id')
+            ->first();
 
         //  workflow_actions
         $workflowActionData = [
