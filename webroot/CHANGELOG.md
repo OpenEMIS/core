@@ -1,3 +1,16 @@
+### [3.75.1] - 2022-04-14
+- Implemented: Add Export button function - Institutions > Finances > Income
+- Bug Fixed: Staff>Career>Subjects : Implement filter and sort
+- Bug Fixed: Institutions > Performance > Report Cards : Subject name to be reflected instead of Education Subjects name
+- Bug Fixed: Personal>General: Demographics and Comments cannot be added and Nationalities cannot be edited
+- Bug Fixed: Reports>Institution/Staff/Student: Large reports get stuck in progress
+- Bug Fixed: Institutions>Students: MEMIS stops loading
+- Bug Fixed: Administration>Profile>Institution: Updates table column Comment on this institution_report_cards table
+- Bug Fixed: Dashboard: Workbench is not working where there are no pending task shown even when they have pending task.
+- Bug Fixed: Add the Profiles feature to Institutions module(Institutions)
+- Bug Fixed: Add the Profiles feature to Institutions module(Staff)
+- Bug Fixed: Staff Payslips API not working
+
 ### [3.75.0] - 2022-04-07
 - Implemented: Add Export button function - Institutions > Infrastructures > Projects
 - Implemented: Add Export button function - Institutions > Transport > Trips
