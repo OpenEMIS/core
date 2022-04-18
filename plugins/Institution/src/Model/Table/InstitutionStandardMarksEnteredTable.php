@@ -151,13 +151,22 @@ class InstitutionStandardMarksEnteredTable extends AppTable
             ->contain([
                 'Users' => [
                    'fields' => [
-                      'openemis_no' => 'Users.openemis_no',
+                        'Users.id',
+                        'openemis_no' => 'Users.openemis_no',
                         'first_name' => 'Users.first_name',
                         'middle_name' => 'Users.middle_name',
                         'third_name' => 'Users.third_name',
                         'last_name' => 'Users.last_name',
+                        'number' => 'Users.identity_number',
                    ]
              ],
+             'Users.Identities.IdentityTypes' => [
+                    'fields' => [
+                        'Identities.number',
+                        'IdentityTypes.name',
+                        'IdentityTypes.default'
+                    ]
+                ],
              'AcademicPeriods' => [
                     'fields' => [
                         'academic_period_id'=>'AcademicPeriods.id',
@@ -203,7 +212,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
             {
                 return $results->map(function ($row)
                 {
-                    $row['referrer_full_name'] = $row['first_name'] .' '. $row['last_name'];
+                    $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
                     return $row;
                 });
             });
@@ -250,10 +259,10 @@ class InstitutionStandardMarksEnteredTable extends AppTable
             'label' => __('OpenEMIS ID'),
         ];
         $newFields[] = [
-            'key'   => 'identityType',
-            'field' => 'identityType',
-            'type'  => 'string',
-            'label' => __('Deafult Identity Type'),
+            'key' => 'Users.identity_number',
+            'field' => 'user_identities_default',
+            'type' => 'string',
+            'label' => __($identity->name)
         ];
         $newFields[] = [
             'key'   => 'referrer_full_name',
@@ -300,28 +309,22 @@ class InstitutionStandardMarksEnteredTable extends AppTable
     /**
      * Get student identity type
      */
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    public function onExcelGetUserIdentitiesDefault(Event $event, Entity $entity)
     {
-         $userIdentities = TableRegistry::get('user_identities');
-        $userIdentitiesResult = $userIdentities->find()
-            ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
-            ->select([
-                'identity_number' => $userIdentities->aliasField('number'),
-                'identity_type_name' => 'IdentityTypes.name',
-                'default_name' => 'IdentityTypes.default',
-            ])
-            ->where([$userIdentities->aliasField('security_user_id') => $entity->staff_id])
-            ->order([$userIdentities->aliasField('id DESC')])
-            ->hydrate(false)->toArray();
-            $entity->identity_type = '';
-            if (!empty($userIdentitiesResult)) {
-                foreach ($userIdentitiesResult as $user_identities_data ) {
-                    if ($user_identities_data['default_name']==1) {
-                        $entity->identity_type= $user_identities_data['IdentityTypes.name'];
+        $return = [];
+        if ($entity->has('user')) {
+            if ($entity->user->has('identities')) {
+                if (!empty($entity->user->identities)) {
+                    $identities = $entity->user->identities;
+                    foreach ($identities as $key => $value) {
+                        if ($value->identity_type->default == 1) {
+                            $return[] = $value->number;
+                        }
                     }
-                    return $entity->identity_type ;
                 }
             }
+        }
+        return implode(', ', array_values($return));
     }
 
     /**
@@ -333,19 +336,23 @@ class InstitutionStandardMarksEnteredTable extends AppTable
         $total = $assessmentType->find()
                         ->select([
                             'marks' => "SUM(".$assessmentType->aliasField('marks').")",
-                            'total_students' => "SUM(".$assessmentType->aliasField('student_id').")"
+                            'total_students' => "COUNT(".$assessmentType->aliasField('student_id').")"
                         ])
                         ->where([$assessmentType->aliasField('assessment_id')=>$entity->assessment_id,
                                 $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
-                            $assessmentType->aliasField('institution_id')=>$entity->institution_id])
+                            $assessmentType->aliasField('institution_id')=>$entity->institution_id,
+                            $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id
+                        ])
                         ->group([$assessmentType->aliasField('student_id')]);
         $entity->marks_entered_per = '';
+        $marks = 0;
+        $student = 0;
         if(!empty($total)){
             $totalMarks = $total->toArray();
             foreach($totalMarks as $value){
                 $marks = $value['marks'];
                 $student = $value['total_students'];
-                return $entity->marks_entered_per = ($marks/$student) * 100;
+                return $entity->marks_entered_per = ($student/$marks) * 100;
                 
             }
         }
@@ -365,24 +372,30 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                 ])
                 ->where([$assessmentType->aliasField('assessment_id')=>$entity->assessment_id,
                         $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
-                    $assessmentType->aliasField('institution_id')=>$entity->institution_id])
-                ->group([$assessmentType->aliasField('student_id')]);
+                    $assessmentType->aliasField('institution_id')=>$entity->institution_id,
+                    $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id
+                ])
+                ->group([$assessmentType->aliasField('education_subject_id')]);
         $entity->marks_not_entered ='';
         if(!empty($total)){
             $totalMarks = $total->toArray();
+            
             foreach($totalMarks as $value){
+                $total_student_subject =0;
+                $marks = 0;
                 $subject = $value['subject'];
                 $TotalStudents = $value['total_students'];
                 $student = $assessmentType->find()
                         ->select([
-                            'total_student_per_subject' => "SUM(".$assessmentType->aliasField('student_id').")",
+                            'total_student_per_subject' => "COUNT(".$assessmentType->aliasField('student_id').")",
                             'marks' => "SUM(".$assessmentType->aliasField('marks').")"
                             ])
                         ->where([$assessmentType->aliasField('education_subject_id')=>$subject,
                         $assessmentType->aliasField('assessment_id')=>$entity->assessment_id,
                         $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
-                        $assessmentType->aliasField('institution_id')=>$entity->institution_id])
-                        ->group([$assessmentType->aliasField('student_id')]);
+                        $assessmentType->aliasField('institution_id')=>$entity->institution_id,
+                        $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id])
+                        ->group([$assessmentType->aliasField('education_subject_id')]);
                 if(!empty($student)){
                     $studentData = $student->toArray();
                     foreach($studentData as $value){
@@ -390,7 +403,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                         $marks = $value['marks'];
                     }
                 }
-              $entity->marks_not_entered = $total_student_subject - $marks;
+              $entity->marks_not_entered = $marks - $total_student_subject;
                return $entity->marks_not_entered; 
             }
             
