@@ -1359,7 +1359,7 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Personal',
                 //POCOR-5886 starts
                 'params' => ['plugin' => 'Profile', 'action' => 'Personal', 0 => $profileUserId],//POCOR-5886 ends
-                'selected' => ['Profiles.Personal.view', 'Profiles.Personal.edit', 'Profiles.Personal.pull', 'Profiles.Accounts', 'Profiles.Demographic', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'ProfileComments.index', 'ProfileComments.view', 'Profiles.Attachments', 'Profiles.History', 'Profiles.Contacts']
+                'selected' => ['Profiles.Personal.view', 'Profiles.Personal.edit', 'Profiles.Personal.pull', 'Profiles.Accounts', 'Profiles.Demographic', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'Profiles.Comments', 'Profiles.Attachments', 'Profiles.History', 'Profiles.Contacts'] // POCOR-6683
             ],
             'Profiles.Healths' => [
                 'title' => 'Health',
