@@ -511,6 +511,8 @@ class ImportAssessmentItemResultsTable extends AppTable {
             $rowInvalidCodeCols['marks'] = __('Marks Should be less then to max Marks');
             $tempRow['marks'] = false;
             return false;
+        }elseif (!empty($enteredMarks) && $enteredMarks <= $maxval) {// starts POCOR-6682
+            return true;
         }
 		/*POCOR-6528 ends*/
         /*POCOR-6486 ends*/
