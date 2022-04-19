@@ -94,6 +94,9 @@ class StudentProfilesTable extends ControllerActionTable
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
 		$events['ControllerAction.Model.downloadAllPdf'] = 'downloadAllPdf';
 		$events['ControllerAction.Model.downloadExcel'] = 'downloadExcel';
+        //START:POCOR-6667
+        $events['ControllerAction.Model.viewPDF'] = 'viewPDF';
+        //END:POCOR-6667
         $events['ControllerAction.Model.downloadPDF'] = 'downloadPDF';
         $events['ControllerAction.Model.publish'] = 'publish';
         $events['ControllerAction.Model.publishAll'] = 'publishAll';
@@ -127,18 +130,26 @@ class StudentProfilesTable extends ControllerActionTable
 			
             // Download button, status must be generated or published
 			if ($this->AccessControl->check(['Profiles', 'StudentProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
-                // $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
-                // $buttons['download'] = [
-                //     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
-                //     'attr' => $indexAttr,
-                //     'url' => $downloadUrl
-                // ];
+                //START:POCOR-6667
+                $viewPdfUrl = $this->setQueryString($this->url('viewPDF'), $params);
+                $buttons['viewPdf'] = [
+                    'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
+                    'attr' => $indexAttr,
+                    'url' => $viewPdfUrl
+                ];
+                //END:POCOR-6667
 				$downloadPdfUrl = $this->setQueryString($this->url('downloadPDF'), $params);
                 $buttons['downloadPdf'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
                     'attr' => $indexAttr,
                     'url' => $downloadPdfUrl
                 ];
+                // $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
+                // $buttons['download'] = [
+                //     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+                //     'attr' => $indexAttr,
+                //     'url' => $downloadUrl
+                // ];
             }
 
             // Generate button, all statuses
@@ -674,6 +685,57 @@ class StudentProfilesTable extends ControllerActionTable
             header("Content-Type: application/octet-stream");
             header("Content-Type: " . $fileType);
             header('Content-Disposition: attachment; filename="' . $fileName . '"');
+
+            echo $file;
+        }
+        exit();
+    }
+
+    /*
+    * Function is created to view PDF in browser
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return file
+    * @ticket POCOR-6667
+    */
+
+    public function viewPDF(Event $event, ArrayObject $extra)
+    {
+		$model = $this->InstitutionStudentsProfileTemplates;
+        $userObj = $this->Auth->user();
+        $studentId = $userObj['id'];
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $userData = $InstitutionStudents->find()
+                    ->matching('StudentStatuses', 
+                        function ($q) {
+                            return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                    })
+                    ->where([$InstitutionStudents->aliasField('student_id') => $studentId])
+                    ->first();
+        if (!empty($userData)) {
+            $institutionId = $userData->institution_id;
+        }
+        $ids['institution_id'] = $institutionId;
+        if ($model->exists($ids)) {
+            $data = $model->find()->where($ids)->first();
+            $fileName = $data->file_name;
+            $fileNameData = explode(".",$fileName);
+			$fileName = $fileNameData[0].'.pdf';
+			$pathInfo['extension'] = 'pdf';
+            $file = $this->getFile($data->file_content_pdf);
+            $fileType = 'image/jpg';
+            if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
+                $fileType = $this->fileTypes[$pathInfo['extension']];
+            }
+
+            // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            // header("Content-Type: application/force-download");
+            header("Content-Type: application/octet-stream");
+            header("Content-Type: " . $fileType);
+            header('Content-Disposition: inline; filename="' . $filename . '"');
 
             echo $file;
         }
