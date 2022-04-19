@@ -52,6 +52,9 @@ class GuardiansTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
+        // Starts POCOR-6592
+        $events['ControllerAction.Model.ajaxUserStaffAutocomplete'] = 'ajaxUserStaffAutocomplete';
+        // Ends  POCOR-6592
         return $events;
     }
 
@@ -341,5 +344,60 @@ class GuardiansTable extends ControllerActionTable
             return $this->editButtonAction;
         }
         $this->editButtonAction = $action;
+    }
+    /**
+    * Add Autocomplete For staff
+    * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
+    * @ticket POCOR-6592
+    */
+    public function ajaxUserStaffAutocomplete()
+    {   
+        $this->controller->autoRender = false;
+        $this->ControllerAction->autoRender = false;
+
+        if ($this->request->is(['ajax'])) {
+            $term = $this->request->query['term'];
+
+            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+
+            $query = $this->Users
+                ->find()
+                ->select([
+                    $this->Users->aliasField('openemis_no'),
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('middle_name'),
+                    $this->Users->aliasField('third_name'),
+                    $this->Users->aliasField('last_name'),
+                    $this->Users->aliasField('preferred_name'),
+                    $this->Users->aliasField('id')
+                ])
+                ->leftJoin(
+                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
+                    [
+                        $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->Users->aliasField('id')
+                    ]
+                )
+                ->group([
+                    $this->Users->aliasField('id')
+                ])
+                ->limit(100);
+
+            $term = trim($term);
+
+            if (!empty($term)) {
+                $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term, 'OR' => ['`Identities`.number LIKE ' => $term . '%']]);
+            }
+
+            $list = $query->all();
+
+            $data = [];
+            foreach ($list as $obj) {
+                $label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
+                $data[] = ['label' => $label, 'value' => $obj->id];
+            }
+
+            echo json_encode($data);
+            die;
+        }
     }
 }
