@@ -113,11 +113,14 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $absentDays = TableRegistry::get('Institution. InstitutionStudentAbsenceDays');
         $where = [];
         if ($gradeId != -1) {
-               $where[$this->aliasField('education_grade_id')] = $gradeId;
+            $where[$this->aliasField('education_grade_id')] = $gradeId;
+        }
+        if ($classId != 0) {
+            $where[$this->aliasField('institution_class_id')] = $classId;
         }
         $where[$this->aliasField('academic_period_id')] = $academicPeriodId;
         $where[$this->aliasField('institution_id')] = $institutionId;
-        $where[$this->aliasField('institution_class_id')] = $classId;
+        
         $date =  '"'.$year.'-'.$month.'%"';
         $query
             ->select([
