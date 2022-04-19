@@ -138,6 +138,7 @@ class ReportsController extends AppController
                 'Report.PositionSummary' => __('Position Summary Report'),
                 'Report.StaffDuties' => __('Duties Report'),
                 'Report.StaffExtracurriculars' => __('Staff Extracurricular'),
+                'Report.InstitutionStaffDetailed' => __('Detailed Staff Data'), //POCOR-6662
 
             ];
         } elseif ($module == 'Textbooks') {
