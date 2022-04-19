@@ -113,8 +113,10 @@ class InstitutionStaffDetailedTable extends AppTable
         $query
             ->select([
                 $this->aliasField('id'),
-               'staff_id'=> $this->aliasField('staff_id'),
+                $this->aliasField('staff_id'),
+                'staff_id' =>'Users.id',
                 $this->aliasField('institution_id'), 
+                'position_date'=>$this->aliasField('start_date'), 
             ])
             ->contain([
                 'Institutions' => [
@@ -188,45 +190,69 @@ class InstitutionStaffDetailedTable extends AppTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($year) {
             return $results->map(function ($row) use ($year){
                 $row['academic_period'] = $year;
-                $StaffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
-                    
-                    $customFieldData = $StaffCustomFieldValues->find()
-                        ->select([
-                            'custom_field_id' => 'StaffCustomFields.id',
-                            'staff_custom_field_values.text_value',
-                            'staff_custom_field_values.number_value',
-                            'staff_custom_field_values.decimal_value',
-                            'staff_custom_field_values.textarea_value',
-                            'staff_custom_field_values.date_value'
-                        ])
-                        ->innerJoin(
-                            ['StaffCustomFields' => 'staff_custom_fields'],
-                            [
-                                'StaffCustomFields.id = staff_custom_field_values.staff_custom_field_id'
-                            ]
-                        )
-                        ->where(['staff_custom_field_values.staff_id' => $row->staff_id]);
-                       $customFieldDatas =$customFieldData->toArray();
-                        print_r($customFieldData->Sql()); print('pkk');
-                    
-                    foreach($customFieldDatas as $data) {
-                        if(!empty($data->text_value)) {
-                            $row[$data->custom_field_id] = $data->text_value;
-                        } 
-                        if(!empty($data->number_value)) {
-                            $row[$data->custom_field_id] = $data->number_value;
+                $Guardians = TableRegistry::get('staff_custom_field_values');
+                $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
+                $staffCustomFields = TableRegistry::get('staff_custom_fields');
+                $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
+    
+                    $guardianData = $Guardians->find()
+                    ->select([
+                        'id'                             => $Guardians->aliasField('id'),
+                        'staff_id'                     => $Guardians->aliasField('staff_id'),
+                        'staff_custom_field_id'        => $Guardians->aliasField('staff_custom_field_id'),
+                        'text_value'                     => $Guardians->aliasField('text_value'),
+                        'number_value'                   => $Guardians->aliasField('number_value'),
+                        'decimal_value'                  => $Guardians->aliasField('decimal_value'),
+                        'textarea_value'                 => $Guardians->aliasField('textarea_value'),
+                        'date_value'                     => $Guardians->aliasField('date_value'),
+                        'time_value'                     => $Guardians->aliasField('time_value'),
+                        'checkbox_value_text'            => 'staffCustomFieldOptions.name',
+                        'question_name'                  => 'staffCustomField.name',
+                        'field_type'                     => 'staffCustomField.field_type',
+                        'field_description'              => 'staffCustomField.description',
+                        'question_field_type'            => 'staffCustomField.field_type',
+                    ])->leftJoin(
+                        ['staffCustomField' => 'staff_custom_fields'],
+                        [
+                            'staffCustomField.id = '.$Guardians->aliasField('staff_custom_field_id')
+                        ]
+                    )->leftJoin(
+                        ['staffCustomFieldOptions' => 'staff_custom_field_options'],
+                        [
+                            'staffCustomFieldOptions.id = '.$Guardians->aliasField('number_value')
+                        ]
+                    )
+                    ->where([
+                        $Guardians->aliasField('staff_id') => $row->user['id'],
+                    ])->toArray();   
+                      //print_r($guardianData); exit;
+                    $existingCheckboxValue = '';
+                    foreach ($guardianData as $guadionRow) {
+                        $fieldType = $guadionRow->field_type;
+
+                        if ($fieldType == 'TEXT') {
+                            //die($guadionRow->text_value);
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->text_value;
+                        } else if ($fieldType == 'CHECKBOX') {
+                            $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = trim($existingCheckboxValue, ',');
+                        } else if ($fieldType == 'NUMBER') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->number_value;
+                        } else if ($fieldType == 'DECIMAL') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->decimal_value;
+                        } else if ($fieldType == 'TEXTAREA') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->textarea_value;
+                        } else if ($fieldType == 'DROPDOWN') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->checkbox_value_text;
+                        } else if ($fieldType == 'DATE') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
+                        } else if ($fieldType == 'TIME') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
+                        } else if ($fieldType == 'COORDINATES') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->text_value;
+                        } else if ($fieldType == 'NOTE') {
+                            $row[$this->_dynamicFieldName.'_'.$guadionRow->staff_custom_field_id] = $guadionRow->field_description;
                         }
-                        if(!empty($data->decimal_value)) {
-                            $row[$data->custom_field_id] = $data->decimal_value;
-                        }
-                        if(!empty($data->textarea_value)) {
-                            $row[$data->custom_field_id] = $data->textarea_value;
-                        }
-                        if(!empty($data->date_value)) {
-                            $row[$data->custom_field_id] = $data->date_value;
-                            
-                        }
-                        
                     }
                 return $row;
             });
@@ -384,28 +410,39 @@ class InstitutionStaffDetailedTable extends AppTable
             'type' => 'string',
             'label' => ''
         ];
-        $StaffCustomFields = TableRegistry::get('staff_custom_fields');
+        $newFields[] = [
+            'key' => 'position_date',
+            'field' => 'position_date',
+            'type' => 'date',
+            'label' => __('Start Date')
+        ];
+        $InfrastructureCustomFields = TableRegistry::get('staff_custom_fields');
+        $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
+            $customFieldData = $InfrastructureCustomFields->find()->select([
+                'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
+                'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+            ])->innerJoin(
+                        ['staffCustomFormsFields' => 'staff_custom_forms_fields'],
+                        [
+                            'staffCustomFormsFields.staff_custom_field_id = '.$InfrastructureCustomFields->aliasField('id')
+                        ]
+                    )->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
+
+            if(!empty($customFieldData)) {
+              // echo "<pre>"; print_r($customFieldData); exit;
+                foreach($customFieldData as $data) {
+                    $custom_field_id = $data->custom_field_id;
+                    $custom_field = $data->custom_field;
+                    $newFields[] = [
+                        'key' => '',
+                        'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
+                        'type' => 'string',
+                        'label' => __($custom_field)
+                    ];
+                }
+            }
                     
-        $customFieldData = $StaffCustomFields->find()
-            ->select([
-                'custom_field_id' => 'staff_custom_fields.id',
-                'custom_field' => 'staff_custom_fields.name'
-            ])
-            ->toArray();
         
-        foreach($customFieldData as $data) {
-            $custom_field_id = $data->custom_field_id;
-            $custom_field = $data->custom_field;
-            $newFields[] = [
-                'key' => '',
-                'field' => $custom_field_id,
-                'type' => 'string',
-                'label' => __($custom_field)
-            ];
-        }
-                    
-        $extraFields = $newFields;
-        
-        $fields->exchangeArray($extraFields);
+        $fields->exchangeArray($newFields);
     }
 }
