@@ -504,15 +504,15 @@ class TrainingEmployeeQualificationTable extends AppTable
                             }
 
                         }else{
-                        
                    $staffQualificationdata = $qualificationtitle->find()
                     ->leftJoin(['QualificationLevels' => 'qualification_levels'], ['QualificationLevels.id = '. $qualificationtitle->aliasField('qualification_level_id')])
                     ->select([
                             'quali_id' => $qualificationtitle->aliasField('id'),
-                            'level_id' => $qualificationLevel->aliasField('id'),
+                            'level_id' => $qualificationtitle->aliasField('qualification_level_id'),
                            
                         ])
-                    ->where([$qualificationLevel->aliasField('id IN') => $level_id])
+                    ->where([$qualificationLevel->aliasField('id IN') => $level_id,
+                        $qualificationtitle->aliasField('id IN') => $titleid])
                     ->order([$qualificationLevel->aliasField('order')=>'ASC'])
                     ->limit(1);
                     if($staffQualificationdata!=null)
@@ -522,6 +522,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                         {
                             $levelval = $val['level_id'];
                             $quali_id = $val['quali_id'];
+                        }
                             $staffQualificationvals = $qualificationtitle->find()
                             ->select([
                                     'name' => $qualificationtitle->aliasField('name'),
@@ -529,7 +530,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                                 ])
                             ->where([$qualificationtitle->aliasField('qualification_level_id') => $levelval,
                                 $qualificationtitle->aliasField('id') => $quali_id
-                        ]);
+                            ]);
                             if(!empty($staffQualificationvals))
                             {
                                 $staffdata = $staffQualificationvals->toArray();
@@ -551,7 +552,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                                     $entity->gpa = $value['gpa'];
                                 }
                             }   
-                         }
+                         
 
                 }  } }
 
