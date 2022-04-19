@@ -4259,6 +4259,7 @@ class InstitutionReportCardsTable extends AppTable
                                 $subjectStudents->aliasField('student_id') => $data['InstitutionSubjectStudents']['student_id'],
                                 $subjectStudents->aliasField('education_subject_id') => $data['InstitutionSubjectStudents']['education_subject_id']
                             ]) 
+                            ->hydrate(false)
                             ->first();
                 $absenceDaysCount = $studentAbsences->find()
                                     ->select(['absent_days' => $this->find()->func()->sum($studentAbsencesDay->aliasField('absent_days'))])
@@ -4269,14 +4270,19 @@ class InstitutionReportCardsTable extends AppTable
                                         $studentAbsences->aliasField('academic_period_id') => $params['academic_period_id'],
                                         $studentAbsences->aliasField('institution_id') => $params['institution_id'],
                                         $studentAbsences->aliasField('student_id') => $data['InstitutionSubjectStudents']['student_id']
-                                    ])->toArray();
+                                    ])
+                                    ->hydrate(false)
+                                    ->first();
+                
                 $totalAvgMarks = $subjectStudents->find()
                                 ->select(['avg_marks' => $this->find()->func()->avg($subjectStudents->aliasField('total_mark'))])
                                 ->where([
                                     $subjectStudents->aliasField('academic_period_id') => $params['academic_period_id'],
                                     $subjectStudents->aliasField('institution_id') => $params['institution_id'],
                                     $subjectStudents->aliasField('student_id') => $data['InstitutionSubjectStudents']['student_id']
-                                ])->toArray();
+                                ])
+                                ->hydrate(false)
+                                ->first();
                 $result = [
                     'id' => $records['id'] + $i,
                     'grade_name' => $records['grade_name'],
@@ -4286,9 +4292,9 @@ class InstitutionReportCardsTable extends AppTable
                     'class_name' => $records['class_name'],
                     'subject_name' => $records['subject_name'],
                     'homeroom_teacher' => $records['homeroom_teacher'],
-                    'absence_day' => !empty($absenceDaysCount[0]['absent_days']) ? $absenceDaysCount[0]['absent_days'] : 0,
+                    'absence_day' => $absenceDaysCount['absent_days'],
                     'individual_result' => $records['individual_result'],
-                    'average_marks' => !empty($totalAvgMarks[0]['avg_marks']) ? $totalAvgMarks[0]['avg_marks'] : 0,
+                    'average_marks' => $totalAvgMarks['avg_marks'],
                 ];
                 $entity[] = $result;
                 $i++;
