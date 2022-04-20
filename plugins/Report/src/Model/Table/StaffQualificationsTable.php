@@ -185,8 +185,9 @@ class StaffQualificationsTable extends AppTable  {
                 ['StaffTypes' => 'staff_types'],
                     ['InstitutionStaff.staff_type_id = StaffTypes.id']
             )
-            ->where([$conditions]);
-      
+            ->where([$conditions])
+            ->order(['QualificationLevels.order'=>'ASC']);   //POCOR-6551
+            
         if (!$superAdmin) {
             $query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
         }

@@ -492,6 +492,6 @@ class QualificationsTable extends ControllerActionTable
         ->where([
             'staff_id =' .$staffUserId,
         ])
-        ->order(['QualificationLevels.order'=>'ASC']); //POCOR-6551
+        ->order(['QualificationLevels.order'=>'ASC']);  //POCOR-6551
     }
 }
