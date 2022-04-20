@@ -474,8 +474,8 @@ class ImportAssessmentItemResultsTable extends AppTable {
 		// ->InnerJoin([$this->AssessmentGradingTypes->alias() => $this->AssessmentGradingTypes->table()],[
         //                             $this->AssessmentGradingTypes->aliasField('id =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
         ->InnerJoin([$this->AssessmentGradingTypes->alias() => $this->AssessmentGradingTypes->table()],[
-                                   $this->AssessmentGradingTypes->aliasField('code =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
-                                ])
+                                   $this->AssessmentGradingTypes->aliasField('id =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
+                                ])// starts POCOR-6682 i've replace to code to ID because wrong code id pick
         //END:POCOR-6640
 		->InnerJoin([$this->AssessmentPeriods->alias() => $this->AssessmentPeriods->table()],[
                                     $this->AssessmentPeriods->aliasField('assessment_id =') . $this->Assessments->aliasField('id')	
@@ -513,7 +513,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
             return false;
         }elseif (!empty($enteredMarks) && $enteredMarks <= $maxval) {// starts POCOR-6682
             return true;
-        }
+        }// end POCOR-6682
 		/*POCOR-6528 ends*/
         /*POCOR-6486 ends*/
         return true;
