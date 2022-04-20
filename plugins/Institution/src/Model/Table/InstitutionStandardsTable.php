@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Log\Log;
+use Cake\Validation\Validator;
 
 /**
  * 
@@ -144,10 +145,11 @@ class InstitutionStandardsTable extends AppTable
                             ->where([$AssesmentTable->aliasField('academic_period_id') => $academicPeriodId])
                             ->order($AssesmentTable->aliasField('name'))
                             ->toArray();
-            $attr['options'] = ['0' => __('All Assessment')] + $assessmentList;
+            $attr['options'] = $assessmentList;
             $attr['type']           = 'select';
-            $attr['select']         = false;
+            $attr['select']         = true;
             $attr['onChangeReload'] = true;
+            $attr['attr']['required'] = true;
             return $attr;
         }
     }
@@ -161,23 +163,33 @@ class InstitutionStandardsTable extends AppTable
         if ($report=='Institution.InstitutionStandardMarksEntered') { 
             $feature                = $this->request->data[$this->alias()]['feature'];
             $assessmentId = $request->data[$this->alias()]['assessment_id'];
-            $AssesmentPeriodTable    = TableRegistry::get('Assessment.AssessmentPeriods');
-            $where = [];
-            if($assessmentId != 0) {
-               $where[$AssesmentPeriodTable->aliasField('assessment_id')] = $assessmentId;
-            }
-            $assessmentPeriodList = $AssesmentPeriodTable->find('list', [
-                                'keyField' => 'id',
-                                'valueField' => 'name'
-                             ])
-                            ->select(['id','name'])
-                            ->where($where)
-                            ->order($AssesmentPeriodTable->aliasField('name'))
-                            ->toArray();
+            $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+            $academic_period = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $getyear = $academic_period->find('all')
+                   ->select(['name'=>$academic_period->aliasField('name')])
+                   ->where(['id'=>$academicPeriodId])
+                   ->limit(1);
+        foreach($getyear->toArray() as $val) {
+            $year  = $val['name'];
+        }
+        $AssesmentPeriodTable    = TableRegistry::get('Assessment.AssessmentPeriods');
+        $where = [];
+        if($assessmentId != 0) {
+           $where[$AssesmentPeriodTable->aliasField('assessment_id')] = $assessmentId;
+        }
+        $assessmentPeriodList = $AssesmentPeriodTable->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'name'
+                         ])
+                        ->select(['id','name'])
+                        ->where($where)
+                        ->order($AssesmentPeriodTable->aliasField('name'))
+                        ->toArray();
             $attr['options']        = $assessmentPeriodList;
             $attr['type']           = 'select';
-            $attr['select']         = false;
+            $attr['select']         = true;
             $attr['onChangeReload'] = true;
+            $attr['attr']['required'] = true;
             return $attr;
         }
     }
@@ -749,4 +761,5 @@ class InstitutionStandardsTable extends AppTable
         ];
         return $extraField;
     }
+    
 }

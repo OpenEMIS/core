@@ -35,6 +35,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses','foreignKey' => 'institution_classes_id']);
+        $this->belongsTo('CreatedUser', ['className' => 'User.Users', 'foreignKey'=>'created_user_id']);
         $this->addBehavior('Report.ReportList');
         // Behaviours
         $this->addBehavior('Excel', [
@@ -130,6 +131,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
         $institutionId         = $requestData->institution_id;
         $assessmentId         = $requestData->assessment_id;
         $assessmentPeriodId   = $requestData->assessment_period_id;
+        $Users = TableRegistry::get('User.Users');
         $where = [];
         if ($assessmentId != 0) {
                $where[$this->aliasField('assessment_id')] = $assessmentId;
@@ -146,7 +148,9 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                 $this->aliasField('assessment_id'),
                 $this->aliasField('assessment_period_id'),
                 $this->aliasField('academic_period_id'),
-                'marks_entered'=> $this->aliasField('marks'),
+                $this->aliasField('created_user_id'),
+               
+                
             ])
             ->contain([
                 'Users' => [
@@ -167,6 +171,14 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                         'IdentityTypes.default'
                     ]
                 ],
+            'CreatedUser' => [
+               'fields' => [
+                    'fname'=> 'CreatedUser.first_name',
+                    'mname'=>'CreatedUser.middle_name',
+                    'tname'=>'CreatedUser.third_name',
+                    'lname'=>'CreatedUser.last_name',
+                ]
+            ],
              'AcademicPeriods' => [
                     'fields' => [
                         'academic_period_id'=>'AcademicPeriods.id',
@@ -200,12 +212,10 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                     ]
                 ],
             ])
-            
-            /*->leftJoin(
-                [$institution->alias() => $institution->table()],
-                [$institution->aliasField('id = ') . 'InstitutionStaff.institution_id']
-            )*/
-            
+            ->leftJoin(
+                [$Users->alias() => $Users->table()],
+                [$Users->aliasField('id = ') . $this->aliasField('created_user_id')]
+            )
             ->group([$this->aliasField('student_id')])
         ->Where($where);
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
@@ -213,6 +223,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                 return $results->map(function ($row)
                 {
                     $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
+                    $row['referrer_teacher_name'] = $row['fname'] .' '.$row['mname'].' '.$row['tname'].' '. $row['lname'];
                     return $row;
                 });
             });
@@ -262,8 +273,15 @@ class InstitutionStandardMarksEnteredTable extends AppTable
             'key' => 'Users.identity_number',
             'field' => 'user_identities_default',
             'type' => 'string',
-            'label' => __($identity->name)
+            'label' => __('Identity Number')
         ];
+        $newFields[] = [
+            'key'   => 'referrer_teacher_name',
+            'field' => 'referrer_teacher_name',
+            'type'  => 'string',
+            'label' => __('Teacher Full Name'),
+        ];
+        
         $newFields[] = [
             'key'   => 'referrer_full_name',
             'field' => 'referrer_full_name',
@@ -278,23 +296,23 @@ class InstitutionStandardMarksEnteredTable extends AppTable
             'label' => __('Assessment Period'),
         ];
         $newFields[] = [
-            'key'   => 'assessment_name',
-            'field' => 'assessment_name',
+            'key'   => 'assessments_name',
+            'field' => 'assessments_name',
             'type'  => 'string',
             'label' => __('Assessment Term'),
         ];
         
         $newFields[] = [
+            'key'   => 'entry_percentage',
+            'field' => 'entry_percentage',
+            'type'  => 'integer',
+            'label' => __('School marks entry percentage'),
+        ];
+        $newFields[] = [
             'key'   => 'marks_entered',
             'field' => 'marks_entered',
             'type'  => 'integer',
             'label' => __('The total number of marks entered'),
-        ];
-        $newFields[] = [
-            'key'   => 'entry_percentage',
-            'field' => 'entry_percentage',
-            'type'  => 'string',
-            'label' => __('School marks entry percentage'),
         ];
         $newFields[] = [
             'key'   => 'marks_not_entered',
@@ -330,32 +348,62 @@ class InstitutionStandardMarksEnteredTable extends AppTable
     /**
      * get total marks entered
     */
+    
     public function onExcelGetEntryPercentage(Event $event, Entity $entity)
     {
         $assessmentType = TableRegistry::get('Assessment.AssessmentItemResults');
-        $total = $assessmentType->find()
+        $class = $assessmentType->find()
                         ->select([
-                            'marks' => "SUM(".$assessmentType->aliasField('marks').")",
-                            'total_students' => "COUNT(".$assessmentType->aliasField('student_id').")"
+                            'class' => $assessmentType->aliasField('institution_classes_id')
                         ])
                         ->where([$assessmentType->aliasField('assessment_id')=>$entity->assessment_id,
                                 $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
                             $assessmentType->aliasField('institution_id')=>$entity->institution_id,
                             $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id
                         ])
-                        ->group([$assessmentType->aliasField('student_id')]);
+                        ->limit(1)
+                        ->toArray();
+                        foreach($class as $value){
+                            $classId = $value['class'];
+                        }
+                        $nullval = 'NULL';
+        $total = $assessmentType->find()
+                        ->select([
+                            'total_students' => "COUNT(".$assessmentType->aliasField('student_id').")"
+                        ])
+                        ->where([$assessmentType->aliasField('institution_classes_id')=>$classId
+                        ]);
+        $totals = $assessmentType->find()
+                        ->select([
+                            'marks_Student' => "COUNT(".$assessmentType->aliasField('student_id').")",
+                        ])
+                        ->where([$assessmentType->aliasField('assessment_id')=>$entity->assessment_id,
+                                $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
+                            $assessmentType->aliasField('institution_id')=>$entity->institution_id,
+                            $assessmentType->aliasField('marks'). ' IS NOT NULL'
+                        ]);
+                        print_r($totals->Sql());
         $entity->marks_entered_per = '';
-        $marks = 0;
-        $student = 0;
+        $entity->marks_not_entered ='';
+        $entity->marks_entered ='';
+        $marks = '';
+        $studentmarks = '';
         if(!empty($total)){
             $totalMarks = $total->toArray();
             foreach($totalMarks as $value){
-                $marks = $value['marks'];
-                $student = $value['total_students'];
-                return $entity->marks_entered_per = ($student/$marks) * 100;
-                
+                $studentmarks = $value['total_students'];
+                 
             }
         }
+        if(!empty($totals)){
+            $totalStudentCount = $totals->toArray();
+            foreach($totalStudentCount as $values){
+                $marks = $values['marks_Student'];
+            }
+        }
+        $entity->marks_not_entered = $marks;
+        $entity->marks_entered = $studentmarks;
+        return $entity->marks_entered_per = ($marks/$studentmarks);
         
     }
 
@@ -364,50 +412,14 @@ class InstitutionStandardMarksEnteredTable extends AppTable
     */
     public function onExcelGetMarksNotEntered(Event $event, Entity $entity)
     {
-        $assessmentType = TableRegistry::get('Assessment.AssessmentItemResults');
-        $total = $assessmentType->find()
-                ->select([
-                    'subject' => $assessmentType->aliasField('education_subject_id'),
-                   // 'total_students' => "SUM(".$assessmentType->aliasField('student_id').")"
-                ])
-                ->where([$assessmentType->aliasField('assessment_id')=>$entity->assessment_id,
-                        $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
-                    $assessmentType->aliasField('institution_id')=>$entity->institution_id,
-                    $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id
-                ])
-                ->group([$assessmentType->aliasField('education_subject_id')]);
-        $entity->marks_not_entered ='';
-        if(!empty($total)){
-            $totalMarks = $total->toArray();
-            
-            foreach($totalMarks as $value){
-                $total_student_subject =0;
-                $marks = 0;
-                $subject = $value['subject'];
-                $TotalStudents = $value['total_students'];
-                $student = $assessmentType->find()
-                        ->select([
-                            'total_student_per_subject' => "COUNT(".$assessmentType->aliasField('student_id').")",
-                            'marks' => "SUM(".$assessmentType->aliasField('marks').")"
-                            ])
-                        ->where([$assessmentType->aliasField('education_subject_id')=>$subject,
-                        $assessmentType->aliasField('assessment_id')=>$entity->assessment_id,
-                        $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
-                        $assessmentType->aliasField('institution_id')=>$entity->institution_id,
-                        $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id])
-                        ->group([$assessmentType->aliasField('education_subject_id')]);
-                if(!empty($student)){
-                    $studentData = $student->toArray();
-                    foreach($studentData as $value){
-                        $total_student_subject = $value['total_student_per_subject'];
-                        $marks = $value['marks'];
-                    }
-                }
-              $entity->marks_not_entered = $marks - $total_student_subject;
-               return $entity->marks_not_entered; 
-            }
-            
-        }
+        return $entity->marks_not_entered ;
     }
-    
+
+    /**
+    *  The total number of marks entered
+    */
+    public function onExcelGetMarksEntered(Event $event, Entity $entity)
+    {
+        return $entity->marks_entered;
+    }
 }
