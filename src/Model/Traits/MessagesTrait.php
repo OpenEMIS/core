@@ -976,6 +976,11 @@ trait MessagesTrait
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
                 ]
             ],
+            'InstitutionDistributions' => [
+                'quantity_received' => [
+                    'genralerror' => 'Quantity received can not be more than meal amount '
+                ]
+            ],
             'InstitutionGrades' => [
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',

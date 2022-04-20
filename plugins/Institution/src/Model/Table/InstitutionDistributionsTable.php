@@ -1,15 +1,20 @@
 <?php
 namespace Institution\Model\Table;
 
-use ArrayObject;
 use Cake\ORM\Query;
+use Cake\ORM\RulesChecker;
+use Cake\ORM\Table;
+use Cake\Validation\Validator;
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
-use Cake\Validation\Validator;
-use Cake\Chronos\Date;
-use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
+use Cake\Datasource\ConnectionManager;
+use Cake\Log\Log;
+use App\Model\Traits\MessagesTrait;
+use Cake\I18n\Date;
 
 class InstitutionDistributionsTable extends ControllerActionTable
 {
@@ -43,11 +48,45 @@ class InstitutionDistributionsTable extends ControllerActionTable
         
     }
 
-    // public function validationDefault(Validator $validator)
-    // {
-    //    $validator = parent::validationDefault($validator);
+    public function validationDefault(Validator $validator)
+    {
+        //START: POCOR-6681
+        $validator->requirePresence('date_received', 'create')->notEmpty('date_received');
+        return $validator;
+        //END: POCOR-6681
+    }
 
-    // }
+    /* 
+    * To check validation entity before save
+    * @auther Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return boolean 
+    * ticket POCOR-6681
+    */
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
+        if ($entity->isNew()) {
+            $MealProgrammesData = TableRegistry::get('Meal.MealProgrammes');
+            $MealProgrammesResult = $MealProgrammesData
+            ->find()
+            ->select(['amount'])
+            ->where(['id' => $entity->meal_programmes_id])
+            ->first();
+            if($entity->quantity_received > $MealProgrammesResult->amount){
+                $this->Alert->error('InstitutionDistributions.quantity_received.genralerror', ['reset' => true]);
+                return false;
+            }
+        }else{
+            $MealProgrammesData = TableRegistry::get('Meal.MealProgrammes');
+            $MealProgrammesResult = $MealProgrammesData
+            ->find()
+            ->select(['amount'])
+            ->where(['id' => $entity->meal_programmes_id])
+            ->first();
+            if($entity->quantity_received > $MealProgrammesResult->amount){
+                $this->Alert->error('Institution.InstitutionDistributions.quantity_received.genralerror', ['reset' => true]);
+                return false;
+            }
+        }
+    }
     
 
 
@@ -366,6 +405,26 @@ class InstitutionDistributionsTable extends ControllerActionTable
                     }
         return $result;
     } 
+
+    /* 
+    * To generate excel report
+    * @auther Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return file 
+    * ticket POCOR-6681
+    */
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId =  ($this->request->query['period']) ? $this->request->query['period'] : $AcademicPeriod->getCurrent();
+        $session = $this->request->session();
+        $institutionId  = $session->read('Institution.Institutions.id');
+        $query
+        ->where([
+            // $this->aliasField('security_user_id = ').$staffUserId
+            $this->aliasField('academic_period_id') => $academicPeriodId,
+            $this->aliasField('institution_id') => $institutionId
+        ]);
+        // echo "<pre>";print_r($query->toArray());die;
+    }
 
     
 }
