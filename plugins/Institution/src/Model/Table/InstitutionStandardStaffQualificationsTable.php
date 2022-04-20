@@ -217,8 +217,9 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
             'institutionStaff.institution_id' => $institutionId,
             $Users->aliasField('is_staff') => 1
         ]);
-
+        $query->order(['QualificationLevels.order'=>'ASC']); //POCOR-6551
         $query->group($Users->aliasField('openemis_no'));
+        
         $_this = $this;
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($_this)
