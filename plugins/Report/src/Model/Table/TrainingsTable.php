@@ -170,7 +170,7 @@ class TrainingsTable extends AppTable
 
     public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
     {
-        $excludedFeature = ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers', 'Report.TrainersSessions', 'Report.ReportTrainingNeedStatistics']; // POCOR-6569
+        $excludedFeature = ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers', 'Report.TrainersSessions', 'Report.ReportTrainingNeedStatistics','Report.TrainingEmployeeQualification']; // POCOR-6569
 
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
