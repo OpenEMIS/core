@@ -761,5 +761,17 @@ class InstitutionStandardsTable extends AppTable
         ];
         return $extraField;
     }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $feature = $this->request->data[$this->alias()]['feature'];
+        if (in_array($feature, ['Institution.InstitutionStandardMarksEntered'])) {
+            $validator = $validator
+                    ->notEmpty('assessment_id')
+                    ->notEmpty('assessment_period_id');
+        }
+        return $validator;
+    }
     
 }
