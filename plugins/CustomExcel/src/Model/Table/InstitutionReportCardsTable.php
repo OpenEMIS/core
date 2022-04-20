@@ -4166,7 +4166,6 @@ class InstitutionReportCardsTable extends AppTable
      */
     public function onExcelTemplateInitialiseStudentDetails(Event $event, array $params, ArrayObject $extra)
     {
-        ini_set('memory_limit', '-1');
         ini_set("pcre.backtrack_limit", "5000000");
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionStudents = TableRegistry::get('Institution.Students');
@@ -4188,7 +4187,6 @@ class InstitutionReportCardsTable extends AppTable
                         ->matching('StudentStatuses', function ($q) {
                             return $q->where(['StudentStatuses.code' => 'CURRENT']);
                         })
-                        ->contain(['Users'])
                         ->leftJoin([$subjectStudents->alias() => $subjectStudents->table()], [
                             $subjectStudents->aliasField('student_id = ') . $InstitutionStudents->aliasField('student_id'),
                             $subjectStudents->aliasField('institution_id = ') . $InstitutionStudents->aliasField('institution_id'),
@@ -4196,7 +4194,10 @@ class InstitutionReportCardsTable extends AppTable
                             $subjectStudents->aliasField('education_grade_id = ') . $InstitutionStudents->aliasField('education_grade_id'),
                             $subjectStudents->aliasField('student_status_id = ') . $InstitutionStudents->aliasField('student_status_id')
                         ])
-                        ->order(['Users.first_name'])
+                        ->leftJoin([$Users->alias() => $Users->table()], [
+                            $Users->aliasField('id = ') . $InstitutionStudents->aliasField('student_id')
+                        ])
+                        ->order([$Users->aliasField('first_name')])
                         ->where([
                             $InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id'],
                             $InstitutionStudents->aliasField('institution_id') => $params['institution_id']
@@ -4207,7 +4208,7 @@ class InstitutionReportCardsTable extends AppTable
                         ])  
                         ->hydrate(false)
                         ->toArray();
-
+            
             $result = [];
             $i = 1;
             foreach ($studentData as $data) {
