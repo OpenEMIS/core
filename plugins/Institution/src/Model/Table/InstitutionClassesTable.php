@@ -269,20 +269,26 @@ class InstitutionClassesTable extends ControllerActionTable
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $action = $this->action;
-        $institutionShiftId = $extra['entity']->institution_shift_id;
-        if ($action != 'add') {
-            $staffOptions = [];
-            $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
-            $institutionId = $extra['institution_id'];
-            if ($selectedAcademicPeriodId > -1) {
-                if ($action == 'index') {
-                    $action = 'view';
+        //Start:POCOR-6644
+    	if(!isset($extra['entity']->institution_shift_id) || empty($extra['entity']->institution_shift_id) || ($extra['entity']->institution_shift_id == "")){
+    		
+    	}else{ 
+            $institutionShiftId = $extra['entity']->institution_shift_id;
+            if ($action != 'add') {
+                $staffOptions = [];
+                $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
+                $institutionId = $extra['institution_id'];
+                if ($selectedAcademicPeriodId > -1) {	
+                    if ($action == 'index') {
+                        $action = 'view';
+                    }
+                    $staffOptions = $this->getStaffOptions($institutionId, $action, $selectedAcademicPeriodId);
                 }
-                $staffOptions = $this->getStaffOptions($institutionId, $action, $selectedAcademicPeriodId);
+                $this->fields['staff_id']['options'] = $staffOptions;
+                $this->fields['staff_id']['select'] = false;
             }
-            $this->fields['staff_id']['options'] = $staffOptions;
-            $this->fields['staff_id']['select'] = false;
-        }
+    	}
+        //End:POCOR-6644
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
