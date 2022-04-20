@@ -201,15 +201,8 @@ class StudentProfilesTable extends ControllerActionTable
         $this->field('started_on');
         $this->field('completed_on');
         $this->field('email_status');
-		$this->setupTabElements();
     }
 	
-	private function setupTabElements() {
-		$options['type'] = 'StaffTemplates';
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Profiles');
-	}
-
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('report_queue');
@@ -255,7 +248,7 @@ class StudentProfilesTable extends ControllerActionTable
 				$this->StudentTemplates->aliasField('academic_period_id') => $selectedAcademicPeriod
 			])
 			->toArray();
-        $reportCardOptions = ['-1' => '-- '.__('Select Student Template').' --'] + $reportCardOptions;
+        $reportCardOptions = ['-1' => '-- '.__('Select Profile').' --'] + $reportCardOptions;//POCOR-6655- renamed filter name
         $selectedReportCard = !is_null($this->request->query('student_profile_template_id')) ? $this->request->query('student_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
         //End
