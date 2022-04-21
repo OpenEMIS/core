@@ -478,15 +478,20 @@ class ImportAssessmentItemResultsTable extends AppTable {
                                 ])// starts POCOR-6682 i've replace to code to ID because wrong code id pick
         //END:POCOR-6640
 		->InnerJoin([$this->AssessmentPeriods->alias() => $this->AssessmentPeriods->table()],[
-                                    $this->AssessmentPeriods->aliasField('assessment_id =') . $this->Assessments->aliasField('id')	
+                                    $this->AssessmentPeriods->aliasField('assessment_id =') . $this->Assessments->aliasField('id'),
+
+                                    $this->AssessmentPeriods->aliasField('id = ') . $this->AssessmentItemsGradingTypes->aliasField('assessment_period_id')	// starts POCOR-6682
                                 ])									
 		->InnerJoin([$this->InstitutionClassGrades->alias() => $this->InstitutionClassGrades->table()],[
                                     $this->InstitutionClassGrades->aliasField('education_grade_id =') . $this->Assessments->aliasField('education_grade_id')
                                 ])
-		->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId])
+		->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId,
+                    $this->AssessmentItems->aliasField('education_subject_id') => $tempRow['education_subject_id'],// starts POCOR-6682
+                    $this->AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $tempRow['assessment_period_id']// starts POCOR-6682
+                ])
 		->first();
         //START: POCOR-6602
-        
+
 		$today_date = date('Y-m-d');
         if (!empty($assessment)) {
             if(strtotime($today_date) > strtotime($assessment->date_disabled)){
