@@ -128,6 +128,12 @@ class EmployeeTrainingCardTable extends AppTable
             'TrainingSessionTraineeResults.training_session_id = ' . $this->aliasField('id'),
             'TrainingSessionTraineeResults.trainee_id = TrainingSessionsTrainees.trainee_id'],
         ];
+        $join['TrainingResultTypes'] = [
+            'type' => 'left',
+            'table' => 'training_result_types',
+            'conditions' => [
+            'TrainingResultTypes.id = TrainingSessionTraineeResults.training_result_type_id'],
+        ];
         $join[' '] = [
             'type' => 'left',
             'table' => '( SELECT qualification_specialisations.name qualification_specialisations_name ,staff_qualifications.staff_id ,qualification_titles.name qualification_titles_name FROM staff_qualifications INNER JOIN staff_qualifications_specialisations ON staff_qualifications_specialisations.staff_qualification_id = staff_qualifications.id INNER JOIN qualification_specialisations ON qualification_specialisations.id = staff_qualifications_specialisations.qualification_specialisation_id INNER JOIN qualification_titles ON qualification_titles.id = staff_qualifications.qualification_title_id ) AS StaffQualificationInfo',
@@ -152,16 +158,18 @@ class EmployeeTrainingCardTable extends AppTable
         $where['SecurityStaffUsers.id'] = $staffid;
         $query->join($join);
         $query->select([
-                'staff_name' => 'SecurityStaffUsers.first_name',
+                'staff_name' => 'CONCAT(SecurityStaffUsers.first_name, " ", SecurityStaffUsers.last_name)',
                 'userid' => 'SecurityStaffUsers.id',
                 'area' => 'Areas.name',
                 'gender' => 'Genders.name',
                 'institution' => 'trainee_institution.name',
-                'qualifications_specializations' => 'StaffQualificationInfo.qualification_titles_name',
+                'qualifications_specializations' => 'StaffQualificationInfo.qualification_specialisations_name',
                 'training_courses' => 'TrainingCourses.name',
-                'result' => 'TrainingSessionTraineeResults.result'
+                //'result' => 'TrainingSessionTraineeResults.result'
+                'result' => 'CONCAT(TrainingResultTypes.name, "-", TrainingSessionTraineeResults.result)'
         ]);
-        $query->where($where);               
+        $query->where($where); 
+       // print_r($query->sql()); die;              
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -171,7 +179,7 @@ class EmployeeTrainingCardTable extends AppTable
             'key' => 'staff_name',
             'field' => 'staff_name',
             'type' => 'string',
-            'label' => __('Staff name')
+            'label' => __('Staff Name')
         ];
         $newFields[] = [
             'key' => 'identity_type',
