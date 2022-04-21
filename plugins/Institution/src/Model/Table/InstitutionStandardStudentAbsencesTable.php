@@ -135,6 +135,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                 'third_name' => 'Users.third_name',
                 'last_name' => 'Users.last_name',
                 'number' => 'Users.identity_number',
+                'absent_on_date' => 'InstitutionStudentAbsenceDays.absent_days',
                 ])
             ->contain([
                 'Users' => [
@@ -190,6 +191,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                 { 
                     $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
                     $row['Absent_Date'] = $date;
+                    $absent_on_date = $row['absent_on_date'];
                     $absent_date  = $row['absent_dates'];
                     $datearray = explode(',', $absent_date);
                     $i_max = 31;
@@ -208,7 +210,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                             { 
                                 if ($i == $day)
                                 {
-                                    $row['Day'.$i] = $val;
+                                    $row['Day'.$i] = $absent_on_date;
                                 }
                             }
                     }
@@ -285,7 +287,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             $newFields[]=[
             'key'   => '',
             'field' => 'Day'.$i,
-            'type'  => 'date',
+            'type'  => 'integer',
             'label' => __('Day'.$i),
             ];
         }
