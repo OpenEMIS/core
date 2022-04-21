@@ -199,7 +199,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
                     $absence->aliasField('student_id')=>$entity->student_id,
                     $absence->aliasField('academic_period_id')=>$entity->academic_period_id]);
         $get_absent_type_data = $findabsent->toArray();
-        $entity->get_absent_unexcused = '';
+        $entity->get_absent_late  ='';
         foreach($get_absent_type_data as $val){
             $entity->get_absent_late = $val['late_count'];
         }
@@ -208,7 +208,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
     }
 
     public function onExcelGetAbsenceTypeUnexcused(Event $event, Entity $entity)
-    {
+    { 
         $type = $entity->absence_type_id;
         $absencetype = TableRegistry::get('Institution.AbsenceTypes');
         $absence = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
@@ -225,7 +225,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
         $get_absent_type_data = $findabsent->toArray();
         $entity->get_absent_unexcused = '';
         foreach($get_absent_type_data as $val){
-            $entity->get_absent_late = $val['unexcused_count'];
+            $entity->get_absent_unexcused = $val['unexcused_count'];
         }
         return $entity->get_absent_unexcused;
     }
