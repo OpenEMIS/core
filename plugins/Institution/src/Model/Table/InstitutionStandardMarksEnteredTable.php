@@ -149,6 +149,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                 $this->aliasField('assessment_period_id'),
                 $this->aliasField('academic_period_id'),
                 $this->aliasField('created_user_id'),
+               // 'marks_entered'=> $this->aliasField('marks'),
                
                 
             ])
@@ -240,30 +241,6 @@ class InstitutionStandardMarksEnteredTable extends AppTable
             'label' => __('Academic Period'),
         ];
         $newFields[] = [
-            'key'   => 'institution_code',
-            'field' => 'institution_code',
-            'type'  => 'string',
-            'label' => __('School Code'),
-        ];
-        $newFields[] = [
-            'key'   => 'institution_name',
-            'field' => 'institution_name',
-            'type'  => 'string',
-            'label' => __('School Name'),
-        ];
-        $newFields[] = [
-            'key'   => 'education_grade_name',
-            'field' => 'education_grade_name',
-            'type'  => 'string',
-            'label' => __('Grade'),
-        ];
-        $newFields[] = [
-            'key'   => 'institution_Class_name',
-            'field' => 'institution_Class_name',
-            'type'  => 'string',
-            'label' => __('Class'),
-        ];
-        $newFields[] = [
             'key'   => 'openemis_no',
             'field' => 'openemis_no',
             'type'  => 'integer',
@@ -348,78 +325,126 @@ class InstitutionStandardMarksEnteredTable extends AppTable
     /**
      * get total marks entered
     */
-    
     public function onExcelGetEntryPercentage(Event $event, Entity $entity)
     {
         $assessmentType = TableRegistry::get('Assessment.AssessmentItemResults');
-        $class = $assessmentType->find()
+        $studentSubject = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $total = $studentSubject->find()
                         ->select([
-                            'class' => $assessmentType->aliasField('institution_classes_id')
+                            'total_students' => "COUNT(".$studentSubject->aliasField('student_id').")"
                         ])
-                        ->where([$assessmentType->aliasField('assessment_id')=>$entity->assessment_id,
-                                $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
-                            $assessmentType->aliasField('institution_id')=>$entity->institution_id,
-                            $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id
-                        ])
-                        ->limit(1)
-                        ->toArray();
-                        foreach($class as $value){
-                            $classId = $value['class'];
-                        }
-                        $nullval = 'NULL';
-        $total = $assessmentType->find()
-                        ->select([
-                            'total_students' => "COUNT(".$assessmentType->aliasField('student_id').")"
-                        ])
-                        ->where([$assessmentType->aliasField('institution_classes_id')=>$classId
-                        ]);
-        $totals = $assessmentType->find()
-                        ->select([
-                            'marks_Student' => "COUNT(".$assessmentType->aliasField('student_id').")",
-                        ])
-                        ->where([$assessmentType->aliasField('assessment_id')=>$entity->assessment_id,
-                                $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
-                            $assessmentType->aliasField('institution_id')=>$entity->institution_id,
-                            $assessmentType->aliasField('marks'). ' IS NOT NULL'
-                        ]);
-                        print_r($totals->Sql());
-        $entity->marks_entered_per = '';
-        $entity->marks_not_entered ='';
-        $entity->marks_entered ='';
-        $marks = '';
-        $studentmarks = '';
-        if(!empty($total)){
-            $totalMarks = $total->toArray();
-            foreach($totalMarks as $value){
-                $studentmarks = $value['total_students'];
-                 
-            }
-        }
-        if(!empty($totals)){
-            $totalStudentCount = $totals->toArray();
-            foreach($totalStudentCount as $values){
-                $marks = $values['marks_Student'];
-            }
-        }
-        $entity->marks_not_entered = $marks;
-        $entity->marks_entered = $studentmarks;
-        return $entity->marks_entered_per = ($marks/$studentmarks);
+                        ->where([$studentSubject->aliasField('academic_period_id')=>$entity->academic_period_id,
+                            $studentSubject->aliasField('institution_id')=>$entity->institution_id,
+                       $studentSubject->aliasField('student_status_id')=>1 ])
+                        ->group([$studentSubject->aliasField('student_id')]);
+                if(!empty($total)){
+                    $studentData = $total->toArray();
+                    $total_student = 0;
+                    foreach($studentData as $value){
+                        $total_student = $value['total_students'];
+                    }
+                }
+        $totalss = $studentSubject->find()
+                ->leftJoin(
+                [$assessmentType->alias() => $assessmentType->table()],
+                [$assessmentType->aliasField('education_subject_id = ') . $studentSubject->aliasField('education_subject_id')]
+            )
+                ->select([
+                    'total_student_per_subject' => "COUNT(".$assessmentType->aliasField('student_id').")",
+                ])
+                ->where([
+                        $studentSubject->aliasField('academic_period_id')=>$entity->academic_period_id,
+                    $studentSubject->aliasField('institution_id')=>$entity->institution_id,
+                ])
+                ->group([$assessmentType->aliasField('education_subject_id'),
+                        $assessmentType->aliasField('student_id')]);
+
+                if(!empty($totalss)){
+                    $totalMarks = $totalss->toArray();
+                    
+                    $marks = 0;
+                    foreach($totalMarks as $value){
+                        $total_student_subject = $value['total_student_per_subject'];
+                    }
+                }
+        return $entity->marks_entery_per = ($total_student-$total_student_subject);
         
     }
 
+
     /**
-    *  total marks not entered
+     * get total marks entered
     */
     public function onExcelGetMarksNotEntered(Event $event, Entity $entity)
     {
+        $assessmentType = TableRegistry::get('Assessment.AssessmentItemResults');
+        $studentSubject = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $total = $studentSubject->find()
+                        ->select([
+                            'total_students' => "COUNT(".$studentSubject->aliasField('student_id').")"
+                        ])
+                        ->where([$studentSubject->aliasField('academic_period_id')=>$entity->academic_period_id,
+                            $studentSubject->aliasField('institution_id')=>$entity->institution_id,
+                       $studentSubject->aliasField('student_status_id')=>1 ])
+                        ->group([$studentSubject->aliasField('student_id')]);
+                
+                if(!empty($total)){
+                    $studentData = $total->toArray();
+                    $total_student = 0;
+                    foreach($studentData as $value){
+                        $total_student = $value['total_students'];
+                    }
+                }
+            $totalMarksVal = $assessmentType->find()
+            ->select([
+                'total_marks' => "SUM(".$assessmentType->aliasField('marks').")"
+            ])
+            ->where([$assessmentType->aliasField('assessment_id')=>$entity->assessment_id,
+                    $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
+                $assessmentType->aliasField('institution_id')=>$entity->institution_id,
+                $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id,
+                $assessmentType->aliasField('student_id')=>$entity->student_id,
+            ]);
+        $entity->marks_not_entered ='';
+        $entity->marks_entered ='';
+        
+        if(!empty($totalMarksVal)){
+            $totalMarks = $totalMarksVal->toArray();
+            $marks_entered = 0;
+            foreach($totalMarks as $value){
+                $marks_entered = $value['total_marks'];
+                $entity->marks_entered = $marks_entered;
+            }
+            $entity->marks_not_entered = $total_student-$marks_entered;
+        }
         return $entity->marks_not_entered ;
     }
 
     /**
-    *  The total number of marks entered
+     * get total marks entered
     */
     public function onExcelGetMarksEntered(Event $event, Entity $entity)
     {
-        return $entity->marks_entered;
+         $assessmentType = TableRegistry::get('Assessment.AssessmentItemResults');
+        $totalMarksVal = $assessmentType->find()
+            ->select([
+                'total_marks' => "SUM(".$assessmentType->aliasField('marks').")"
+            ])
+            ->where([$assessmentType->aliasField('assessment_id')=>$entity->assessment_id,
+                    $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
+                $assessmentType->aliasField('institution_id')=>$entity->institution_id,
+                $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id,
+                $assessmentType->aliasField('student_id')=>$entity->student_id,
+            ]);
+        $entity->marks_entered ='';
+        if(!empty($totalMarksVal)){
+            $totalMarks = $totalMarksVal->toArray();
+            $marks_entered = 0;
+            foreach($totalMarks as $value){
+                $entity->marks_entered= $value['total_marks'];
+            }
+        }
+        return $entity->marks_not_entered ;
     }
+    
 }
