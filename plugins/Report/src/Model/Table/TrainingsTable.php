@@ -31,6 +31,12 @@ class TrainingsTable extends AppTable
 
         $this->addBehavior('Excel', ['pages' => false]);
         $this->addBehavior('Report.ReportList');
+        // Starts POCOR-6592
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
+        $this->addBehavior('OpenEmis.Autocomplete');
+        $this->addBehavior('User.User');
+        $this->addBehavior('User.AdvancedNameSearch');
+        // Ends POCOR-6592
     }
 
     public function validationDefault(Validator $validator) {
@@ -72,7 +78,14 @@ class TrainingsTable extends AppTable
         $this->ControllerAction->field('area_education_id');
         }
         // Ends POCOR-6593
-        $this->ControllerAction->field('status');
+        //$this->ControllerAction->field('status');
+        // Starts POCOR-6592
+        if ($this->request->data[$this->alias()]['feature'] ==  'Report.EmployeeTrainingCard') {
+        $this->ControllerAction->field('guardian_id');
+        }else{
+           $this->ControllerAction->field('status'); 
+        }
+        // Ends POCOR-6592
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('institution_status');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
@@ -211,7 +224,69 @@ class TrainingsTable extends AppTable
             }
         }
     }
+    
+    /**
+    * Add Autocomplete For staff
+    * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
+    * @ticket POCOR-6592
+    */
+    // Starts POCOR-6592
+    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            
+            if (isset($this->request->data[$this->alias()]['feature'])) {
+                $feature = $this->request->data[$this->alias()]['feature'];
 
+            if (in_array($feature, ['Report.EmployeeTrainingCard'])) {
+            $attr['type'] = 'autocomplete';
+            $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
+            $attr['noResults'] = __('No Guardian found.');
+            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
+            $action = 'Guardians';
+            if ($this->controller->name == 'Reports') {
+                $action = 'StudentGuardians';
+            }
+            $attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserStaffAutocomplete'];
+            $requestData = $this->request->data;
+            if (isset($requestData) && !empty($requestData[$this->alias()]['guardian_id'])) {
+                $guardianId = $requestData[$this->alias()]['guardian_id'];
+                $guardianName = $this->Users->get($guardianId)->name_with_id;
+
+                $attr['attr']['value'] = $guardianName;
+            }
+
+            $iconSave = '<i class="fa fa-check"></i> ' . __('Save');
+            $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+            $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
+            $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+            $attr['onSelect'] = "$('#reload').click();";
+        }
+        }
+        } elseif ($action == 'index') {
+            $attr['sort'] = ['field' => 'Guardians.first_name'];
+        }
+        return $attr;
+    }
+
+    public function implementedEvents()
+    {
+
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.ajaxUserStaffAutocomplete'] = 'ajaxUserStaffAutocomplete';
+        return $events;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'guardian_id':
+                return __('Staff');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    //ENDS POCOR-6592
     public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, Request $request)
     {
         $includedFeature     = ['Report.ReportTrainingNeedStatistics'];
