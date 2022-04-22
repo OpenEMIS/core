@@ -155,6 +155,9 @@ class ReportsController extends AppController
                 'Report.StaffTrainingApplications' => __('Applications'),
                 'Report.TrainingTrainers' => __('Trainers'),
                 'Report.TrainingSessionParticipants' => __('Session Participants'),
+                // Starts POCOR-6592
+                'Report.EmployeeTrainingCard' => __('Employee Training Card'),
+                // Ends POCOR-6592
                 'Report.ReportTrainingNeedStatistics' => __('Training Needs Statistics'),
                 'Report.TrainersSessions' => __('Trainers Sessions'), // POCOR-6569
                 'Report.TrainingEmployeeQualification' => __('Detailed employee qualifications') //POCOR-6598
@@ -359,5 +362,16 @@ class ReportsController extends AppController
             if (null !== $cell) return false;
         }
         return true;
+    }
+
+     /**
+     * Add New Feature Report Training  
+     * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
+     * @ticket POCOR-6592
+     */
+    
+    public function StudentGuardians()
+    {
+        $this->ControllerAction->process(['alias' => _FUNCTION_, 'className' => 'Student.Guardians']);
     }
 }
