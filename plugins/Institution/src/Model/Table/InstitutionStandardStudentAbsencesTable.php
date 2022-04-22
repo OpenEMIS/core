@@ -183,8 +183,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             )
             ->Where($where)
             ->andWhere([$this->aliasField('date LIKE '.$date)])
-            ->group([$this->aliasField('student_id')
-            ]);
+            ->group([$this->aliasField('student_id')]);
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($date)
             {
                 return $results->map(function ($row) use($date)
@@ -274,7 +273,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             'key' => 'Users.identity_number',
             'field' => 'user_identities_default',
             'type' => 'string',
-            'label' => __($identity->name)
+            'label' => __('Identity Number')
         ];
         $newFields[] = [
             'key'   => 'total_absence_day',
@@ -308,7 +307,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $studentleave = TableRegistry::get('Institution.InstitutionStudentAbsenceDays');
         $absenceDays = $studentleave->find()
             ->select([
-                'days' => "COUNT(".$studentleave->aliasField('absent_days').")"
+                'days' => "SUM(".$studentleave->aliasField('absent_days').")"
             ])
             ->where([$studentleave->aliasField('student_id') => $userid])
             ->andWhere([$studentleave->aliasField('start_date LIKE '.$Absent_Date)]);
