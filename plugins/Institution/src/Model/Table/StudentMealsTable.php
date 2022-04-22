@@ -375,7 +375,6 @@ class StudentMealsTable extends ControllerActionTable
 
     public function onExcelGetMealReceived(Event $event, Entity $entity)
     {
-
         $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
         $StudentMealMarkedRecords = TableRegistry::get('Meal.StudentMealMarkedRecords');
 
@@ -416,6 +415,7 @@ class StudentMealsTable extends ControllerActionTable
                     $StudentMealMarkedRecords->aliasField('institution_id = ') => $entity->institution_id,
                 ])
                ->first();
+            //    echo "<pre>";print_r($isMarkedRecords);die;
                 if (empty($mealReceived) && empty($isMarkedRecords)) {
                     $mealReceived = "None";
                 }
@@ -483,7 +483,7 @@ class StudentMealsTable extends ControllerActionTable
             'key' => 'StudentMeals.name',
             'field' => 'name',
             'type' => 'string',
-            'label' => 'Name'
+            'label' => 'Full Name'
         ];
 
         $newArray[] = [
