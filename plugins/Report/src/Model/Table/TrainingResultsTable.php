@@ -42,6 +42,9 @@ class TrainingResultsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        
+        
+        
         $TrainingSessionResults = TableRegistry::get('Training.TrainingSessionResults');
         $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         $WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
@@ -56,14 +59,6 @@ class TrainingResultsTable extends AppTable
             $conditions['Courses.id'] = $selectedCourse;
         }
         // START: POCOR-6596
-        if (isset($requestData->area_id->_ids) && !empty($requestData->area_id->_ids)) {
-            // START: POCOR-6596
-            if($requestData->area_id->_ids[0]== -1){
-            $requestData->area_id->_ids[0] = 1;
-            }
-            // END: POCOR-6596
-          $conditions['Sessions.area_id IN '] = $requestData->area_id->_ids;
-        }
         if ($session_name > 0) {
             $conditions['Sessions.id'] = $session_name;
         }
