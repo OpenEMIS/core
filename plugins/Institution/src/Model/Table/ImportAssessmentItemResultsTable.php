@@ -474,19 +474,24 @@ class ImportAssessmentItemResultsTable extends AppTable {
 		// ->InnerJoin([$this->AssessmentGradingTypes->alias() => $this->AssessmentGradingTypes->table()],[
         //                             $this->AssessmentGradingTypes->aliasField('id =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
         ->InnerJoin([$this->AssessmentGradingTypes->alias() => $this->AssessmentGradingTypes->table()],[
-                                   $this->AssessmentGradingTypes->aliasField('code =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
-                                ])
+                                   $this->AssessmentGradingTypes->aliasField('id =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
+                                ])// starts POCOR-6682 i've replace to code to ID because wrong code id pick
         //END:POCOR-6640
 		->InnerJoin([$this->AssessmentPeriods->alias() => $this->AssessmentPeriods->table()],[
-                                    $this->AssessmentPeriods->aliasField('assessment_id =') . $this->Assessments->aliasField('id')	
+                                    $this->AssessmentPeriods->aliasField('assessment_id =') . $this->Assessments->aliasField('id'),
+
+                                    $this->AssessmentPeriods->aliasField('id = ') . $this->AssessmentItemsGradingTypes->aliasField('assessment_period_id')	// starts POCOR-6682
                                 ])									
 		->InnerJoin([$this->InstitutionClassGrades->alias() => $this->InstitutionClassGrades->table()],[
                                     $this->InstitutionClassGrades->aliasField('education_grade_id =') . $this->Assessments->aliasField('education_grade_id')
                                 ])
-		->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId])
+		->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId,
+                    $this->AssessmentItems->aliasField('education_subject_id') => $tempRow['education_subject_id'],// starts POCOR-6682
+                    $this->AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $tempRow['assessment_period_id']// starts POCOR-6682
+                ])
 		->first();
         //START: POCOR-6602
-        
+
 		$today_date = date('Y-m-d');
         if (!empty($assessment)) {
             if(strtotime($today_date) > strtotime($assessment->date_disabled)){
@@ -511,7 +516,9 @@ class ImportAssessmentItemResultsTable extends AppTable {
             $rowInvalidCodeCols['marks'] = __('Marks Should be less then to max Marks');
             $tempRow['marks'] = false;
             return false;
-        }
+        }elseif (!empty($enteredMarks) && $enteredMarks <= $maxval) {// starts POCOR-6682
+            return true;
+        }// end POCOR-6682
 		/*POCOR-6528 ends*/
         /*POCOR-6486 ends*/
         return true;
