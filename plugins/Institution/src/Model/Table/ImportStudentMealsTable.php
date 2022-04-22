@@ -43,6 +43,7 @@ class ImportStudentMealsTable extends AppTable {
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
             'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
+            'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',//POCOR-6681
             'Model.import.onImportPopulateMealReceivedData' => 'onImportPopulateMealReceivedData',
             'Model.import.onImportPopulateMealBenefitData' => 'onImportPopulateMealBenefitData',
             'Model.import.onImportPopulateMealProgrammeData' => 'onImportPopulateMealProgrammeData',
@@ -110,6 +111,40 @@ class ImportStudentMealsTable extends AppTable {
     }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
+    //POCOR-6681 Starts
+    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $modelData = $lookedUpTable->find('all')->select(['id','openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn]);
+       
+        $allStudents = $this->Students
+                        ->find('all')
+                        ->where([$this->Students->aliasField('institution_id') => $this->institutionId])
+                        ;
+        // when extracting the staff_id from $allStudents collection, there will be no duplicates
+        $allStudents = new Collection($allStudents->toArray());
+   
+        $modelData->where([
+            'id IN' => $allStudents->extract('student_id')->toArray()
+        ]);
+
+
+        $nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
+        $columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [
+            $nameHeader,
+            $columnHeader
+        ];
+
+        if (!empty($modelData)) {
+            foreach($modelData->toArray() as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->name,
+                    $row->{$lookupColumn}
+                ];
+            }
+        }
+    }//POCOR-6681 ends
 
     /**
      * Currently only populates students based on current academic period
