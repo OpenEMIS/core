@@ -50,11 +50,13 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_class_id', ['type' => 'hidden']);
         
         $controllerName = $this->controller->name;
         $institutions_crumb = __('Institutions');
         $parent_crumb       = __('Statistics');
-		$reportName         = __('Standard');
+        $reportName         = __('Standard');
         
         //# START: Crumb
         $this->Navigation->removeCrumb($this->getHeader($this->alias));
@@ -120,6 +122,80 @@ class InstitutionStandardsTable extends AppTable
                 $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
             }
             return $attr;
+        }
+    }
+    
+    /**
+    * POCOR-6631,POCOR-6632
+    * Fetch Education Grade  based on institute, acadmic period
+    */
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    {
+        $report = ($request->data[$this->alias()]['feature']);
+        if ($report=='Institution.InstitutionStandardStudentAbsences'||$report=='Institution.InstitutionStandardStudentAbsenceType') {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+            $institutionId = $this->request->data[$this->alias()]['institution_id'];
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $gradeOptions = $InstitutionGrades
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'name'
+                    ])
+                    ->select([
+                        'id' => 'EducationGrades.id',
+                        'name' => 'EducationGrades.name',
+                    ])
+                    ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                    ->where([
+                        $InstitutionGrades->aliasField('institution_id') => $institutionId,
+                        'EducationSystems.academic_period_id' => $academicPeriodId,
+                    ])
+                    ->order([
+                        'EducationProgrammes.order' => 'ASC',
+                        'EducationGrades.name' => 'ASC'
+                    ])
+                    ->toArray();
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
+                $attr['onChangeReload'] = true;
+            
+            return $attr;
+        }
+    }
+
+    /**
+    * POCOR-6632, POCOR-6631
+    * fetch class name based on institute, acadmic period, education grade id 
+    */ 
+    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, Request $request)
+    {   $report = ($request->data[$this->alias()]['feature']);
+        if ($report=='Institution.InstitutionStandardStudentAbsences'||$report=='Institution.InstitutionStandardStudentAbsenceType') { 
+            {
+                $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+                $educationgradeid = $this->request->data[$this->alias()]['education_grade_id'];
+                $institutionId = $this->request->data[$this->alias()]['institution_id'];
+                $InstitutionClass = TableRegistry::get('Institution.InstitutionClasses');
+                $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+                $classes = $InstitutionClass
+                    ->find('list')
+                    ->select([
+                                'id' => 'id',
+                                'name' => 'name',
+                            ])
+                    ->where([$InstitutionClass->aliasField('institution_id') => $institutionId,
+                        $InstitutionClass->aliasField('academic_period_id') => $academicPeriodId,
+                       // 'InstitutionClassGrades.education_grade_id' => $educationgradeid,
+                        ])
+                    ->order($InstitutionClass->aliasField('name'))
+                    ->toArray();
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = ['0' => __('All Classes')] + $classes;
+                $attr['onChangeReload'] = true;
+                return $attr;
+            }
         }
     }
 
