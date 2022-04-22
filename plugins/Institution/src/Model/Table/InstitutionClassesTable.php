@@ -2093,8 +2093,14 @@ class InstitutionClassesTable extends ControllerActionTable
         foreach ($cloneFields as $key => $value) {
             $newFields[] = $value;
             if($value['field'] == 'secondary_teacher'){
-                
-
+                //START:POCOR-6678
+                $newFields[] = [
+                    'key' => '',
+                    'field' => 'subject_teachers',
+                    'type' => 'string',
+                    'label' => 'Subject Teachers'
+                ];
+                //END:POCOR-6678
                 $newFields[] = [
                     'key' => 'InstitutionClasses.total_male_students',
                     'field' => 'total_male_students',
@@ -2128,13 +2134,15 @@ class InstitutionClassesTable extends ControllerActionTable
         $requestQuery = $this->request->query;
         $institutionID = $_SESSION['Institution']['Institutions']['id'];
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        //Start:POCOR-6678 add institution_class_id in field
         $query
-        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'
+        ->select(['institution_class_id'=>'InstitutionClasses.id','total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'
             ])
         ->where([
             $this->aliasField('academic_period_id ='). $selectedAcademicPeriodId,
             $this->aliasField('Institutions.id ='). $institutionID,
         ]);
+        //End:POCOR-6678
         /**
         * added condition to make query on the bases on selected class and exporting student's list
         * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
@@ -2147,5 +2155,36 @@ class InstitutionClassesTable extends ControllerActionTable
             $query->group(['InstitutionClasses.id']);
         }
         //POCOR-6635 ends
+
+        //Start:POCOR-6678
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+
+                $institutionClassSubjectsTable = TableRegistry::get('InstitutionClassSubjects');
+                $institutionClassSubjecs = $institutionClassSubjectsTable->find()
+                                                ->where(['institution_class_id' => $row['institution_class_id']])->all();
+                      
+                                                
+                $arr ="";                                                
+                foreach($institutionClassSubjecs as $key => $institutionClassSubject) { 
+                    $institutionSubjectStaffTable = TableRegistry::get('InstitutionSubjectStaff');
+                    $institutionSubjectStaff = $institutionSubjectStaffTable->find()
+                                                ->where(['institution_subject_id' => $institutionClassSubject['institution_subject_id']])->all();
+
+                    foreach($institutionSubjectStaff as $key1 => $institutionSubjectStaff1) {
+                        $staffUserTable = TableRegistry::get('SecurityUsers');
+                        $staffUserData = $staffUserTable->find()
+                                                    ->where(['id' => $institutionSubjectStaff1['staff_id']])->first();
+                        $arr .=  $staffUserData['first_name'].' '.$staffUserData['last_name'].',';
+                                               
+                    }
+                    If(empty($row['subject_teachers'])){
+                        $row['subject_teachers'] = rtrim($arr,',');
+                    }                     
+                }
+                return $row;
+            });
+        });
+        //End:POCOR-6678
     }
 }
