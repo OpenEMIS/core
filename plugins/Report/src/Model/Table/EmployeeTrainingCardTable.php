@@ -23,6 +23,7 @@ class EmployeeTrainingCardTable extends AppTable
 
     CONST ACTIVE_STATUS = 1;
     CONST WITHDRAWN_STATUS = 2;
+    private $_dynamicFieldName = 'result_type';
 
     public function initialize(array $config)
     {
@@ -136,40 +137,82 @@ class EmployeeTrainingCardTable extends AppTable
         ];
         $join[' '] = [
             'type' => 'left',
-            'table' => '( SELECT qualification_specialisations.name qualification_specialisations_name ,staff_qualifications.staff_id ,qualification_titles.name qualification_titles_name FROM staff_qualifications INNER JOIN staff_qualifications_specialisations ON staff_qualifications_specialisations.staff_qualification_id = staff_qualifications.id INNER JOIN qualification_specialisations ON qualification_specialisations.id = staff_qualifications_specialisations.qualification_specialisation_id INNER JOIN qualification_titles ON qualification_titles.id = staff_qualifications.qualification_title_id ) AS StaffQualificationInfo',
+            'table' => '( SELECT qualification_specialisations.name qualification_specialisations_name ,staff_qualifications.staff_id ,qualification_titles.name qualification_titles_name FROM staff_qualifications INNER JOIN staff_qualifications_specialisations ON staff_qualifications_specialisations.staff_qualification_id = staff_qualifications.id INNER JOIN qualification_specialisations ON qualification_specialisations.id = staff_qualifications_specialisations.qualification_specialisation_id INNER JOIN qualification_titles ON qualification_titles.id = staff_qualifications.qualification_title_id INNER JOIN qualification_levels ON qualification_levels.id = qualification_titles.qualification_level_id WHERE staff_id = '.$staffid.' ORDER BY qualification_levels.order ASC LIMIT 1) AS StaffQualificationInfo ',
             'conditions' => ['StaffQualificationInfo.staff_id = TrainingSessionsTrainees.trainee_id'],   
         ];
-        $join['EmployeeId'] = [
-            'type' => 'left',
-            'table' => 'user_identities',
-            'conditions' => [
-            'EmployeeId.security_user_id = TrainingSessionsTrainees.trainee_id',
-            'EmployeeId.identity_type_id = 179'],
 
-        ];
-        $join['NationalId'] = [
-            'type' => 'left',
-            'table' => 'user_identities',
-            'conditions' => [
-             'NationalId.security_user_id = TrainingSessionsTrainees.trainee_id',
-             'NationalId.identity_type_id = 825'],
-
-        ];
         $where['SecurityStaffUsers.id'] = $staffid;
         $query->join($join);
-        $query->select([
-                'staff_name' => 'CONCAT(SecurityStaffUsers.first_name, " ", SecurityStaffUsers.last_name)',
-                'userid' => 'SecurityStaffUsers.id',
-                'area' => 'Areas.name',
-                'gender' => 'Genders.name',
-                'institution' => 'trainee_institution.name',
-                'qualifications_specializations' => 'StaffQualificationInfo.qualification_specialisations_name',
-                'training_courses' => 'TrainingCourses.name',
-                //'result' => 'TrainingSessionTraineeResults.result'
-                'result' => 'CONCAT(TrainingResultTypes.name, "-", TrainingSessionTraineeResults.result)'
-        ]);
+        // START : Selectable fields
+        $selectable['userid']     = 'SecurityStaffUsers.id';
+        $selectable['first_name'] = 'SecurityStaffUsers.first_name';
+        $selectable['middle_name'] = 'SecurityStaffUsers.middle_name';
+        $selectable['third_name'] = 'SecurityStaffUsers.third_name';
+        $selectable['last_name']  = 'SecurityStaffUsers.last_name';
+        $selectable['area']       = 'Areas.name';
+        $selectable['gender']     = 'Genders.name';
+        $selectable['institution']= 'trainee_institution.name';
+        $selectable['qualifications_specializations'] = 'StaffQualificationInfo.qualification_specialisations_name';
+        $selectable['training_courses']  = 'TrainingCourses.name';
+        $selectable['training_courses_id']  = $this->aliasField('training_course_id');
+        $selectable['training_session_id']  = $this->aliasField('id');
+
+        $query->select($selectable);
+        // END : Selectable fields
         $query->where($where); 
-       // print_r($query->sql()); die;              
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        {
+            return $results->map(function ($row)
+            {
+                $training_session_trainee_results = TableRegistry::get('training_session_trainee_results');
+                $trainingSessionTraineeResultData = $training_session_trainee_results
+                                ->find()
+                                ->where([
+                                    $training_session_trainee_results->aliasField('trainee_id') => $row['userid'],
+                                    $training_session_trainee_results->aliasField('training_session_id') => $row['training_session_id'],
+                                ])
+                                ->first();
+                                
+                if(!empty($trainingSessionTraineeResultData)){
+                    $training_result_types = TableRegistry::get('training_result_types');
+                    $trainingResultTypesData = $training_result_types->find()->select([
+                        'trainingResultTypes_id' => $training_result_types->aliasfield('id'),
+                        'trainingResultTypes_name' => $training_result_types->aliasfield('name')
+                    ])->toArray();
+                    if(!empty($trainingResultTypesData)) {
+                        foreach($trainingResultTypesData as $data) {
+                            $trainingResultTypes_id = $data->trainingResultTypes_id;
+                            $trainingResultTypes_name = $data->trainingResultTypes_name;
+                            if($trainingResultTypes_name == 'Exam'){
+                                $row[$this->_dynamicFieldName.'_'.$data->trainingResultTypes_id] = !empty($trainingSessionTraineeResultData->result) ? $trainingSessionTraineeResultData->result : '-'; 
+                            }
+                            if($trainingResultTypes_name == 'Attendance'){
+                                $row[$this->_dynamicFieldName.'_'.$data->trainingResultTypes_id] = !empty($trainingSessionTraineeResultData->attendance_days) ? $trainingSessionTraineeResultData->attendance_days : '-';  
+                            }
+                            if($trainingResultTypes_name == 'Certificate'){
+                                $row[$this->_dynamicFieldName.'_'.$data->trainingResultTypes_id] = !empty($trainingSessionTraineeResultData->certificate_number) ? $trainingSessionTraineeResultData->certificate_number : '-';  
+                            }
+                            if($trainingResultTypes_name == 'Practical'){
+                                $row[$this->_dynamicFieldName.'_'.$data->trainingResultTypes_id] = !empty($trainingSessionTraineeResultData->practical) ? $trainingSessionTraineeResultData->practical : '-'; 
+                            }
+                        }
+                    }
+                }             
+
+                $fullname = [];
+                $fullname[] = $row['first_name'];
+                if(!empty($row['middle_name'])){
+                    $fullname[] = $row['middle_name'];
+                }
+                if(!empty($row['third_name'])){
+                    $fullname[] = $row['third_name'];
+                } 
+                $fullname[] = $row['last_name'];  
+
+                $row['staff_name'] = implode(" ", $fullname);
+                return $row;
+            });
+        });
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -229,12 +272,26 @@ class EmployeeTrainingCardTable extends AppTable
             'type' => 'string',
             'label' => __('Training Courses')
         ];
-        $newFields[] = [
-            'key' => 'result',
-            'field' => 'result',
-            'type' => 'string',
-            'label' => __('Result')
-        ];
+        //START: POCOR-6592 training result types
+        $training_result_types = TableRegistry::get('training_result_types');
+        $trainingResultTypesData = $training_result_types->find()->select([
+            'trainingResultTypes_id' => $training_result_types->aliasfield('id'),
+            'trainingResultTypes_name' => $training_result_types->aliasfield('name')
+        ])->toArray();
+        
+        if(!empty($trainingResultTypesData)) {
+            foreach($trainingResultTypesData as $data) {
+                $trainingResultTypes_id = $data->trainingResultTypes_id;
+                $trainingResultTypes_name = $data->trainingResultTypes_name;
+                $newFields[] = [
+                    'key' => '',
+                    'field' => $this->_dynamicFieldName.'_'.$trainingResultTypes_id,
+                    'type' => 'string',
+                    'label' => __($trainingResultTypes_name)
+                ];
+            }
+        }
+        //END: POCOR-6592 training result types
         $fields->exchangeArray($newFields);
     }
 
