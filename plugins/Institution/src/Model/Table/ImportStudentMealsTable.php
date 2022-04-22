@@ -115,10 +115,13 @@ class ImportStudentMealsTable extends AppTable {
     public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')->select(['id','openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn]);
-       
+        $currentPeriodId = $this->AcademicPeriods->getCurrent();
         $allStudents = $this->Students
                         ->find('all')
-                        ->where([$this->Students->aliasField('institution_id') => $this->institutionId])
+                        ->where([
+                            $this->Students->aliasField('institution_id') => $this->institutionId,
+                            $this->Students->aliasField('academic_period_id') => $currentPeriodId
+                        ])
                         ;
         // when extracting the staff_id from $allStudents collection, there will be no duplicates
         $allStudents = new Collection($allStudents->toArray());
@@ -232,16 +235,12 @@ class ImportStudentMealsTable extends AppTable {
                             $this->Users->aliasField('openemis_no') => $tempRow['OpenEMIS_ID'],
                             ])
                    ->first();
-                  
-
-
        $tempRow['student_id'] = $userId->id;
 
         if (empty($tempRow['student_id'])) {
             $rowInvalidCodeCols['student_id'] = __('OpenEMIS ID was not defined');
             return false;
         }
-        
         
         if (!$this->institutionId) {
             $rowInvalidCodeCols['institution_id'] = __('No active institution');
@@ -255,8 +254,6 @@ class ImportStudentMealsTable extends AppTable {
         $classId = $this->request->query('class');
         $tempRow['institution_class_id'] = $classId;
 
-        
-       
         if (empty($tempRow['date'])) {
             $rowInvalidCodeCols['date'] = __('This field cannot be left empty');
             return false;
@@ -291,10 +288,10 @@ class ImportStudentMealsTable extends AppTable {
             'institution_id' => $tempRow['institution_id'],
             'student_id' => $tempRow['student_id'],
         ])->first();
-           
+
         if (!$student) {
-            $rowInvalidCodeCols['student_id'] = __('No such student in the institution');
-            $tempRow['student_id'] = false;
+            $rowInvalidCodeCols['OpenEMIS_ID'] = __('No such student in the institution in current academic period.');
+            $tempRow['OpenEMIS_ID'] = false;
             return false;
         }
            
