@@ -230,6 +230,13 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             var academicPeriodObj = response.data.data;
             if (angular.isDefined(academicPeriodObj) && academicPeriodObj.length > 0) {
                 var weeks = academicPeriodObj[0].weeks; // find only 1 academic period entity
+                var log = [];
+                angular.forEach(weeks, function(value, key) {
+                    if(value['name'].includes("Current Week")){
+                        log = key;
+                    }
+                 },log);
+                 weeks.length = log+1;
 
                 if (angular.isDefined(weeks) && weeks.length > 0) {
                     deferred.resolve(weeks);
