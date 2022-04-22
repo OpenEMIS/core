@@ -47,6 +47,22 @@ class InstitutionDistributionsTable extends ControllerActionTable
         
         
     }
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+	{
+		$this->setupFields($entity);
+	}
+
+    public function setupFields(Entity $entity) 
+	{
+		$this->field('date_received', [
+			// 'type' => 'hidden',
+			// 'placeholder' => __('Select Position Grades'),
+			'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true],
+			'attr' => ['required' => true], // to add red asterisk
+			'entity' => $entity,
+			'before' => 'comment'
+		]);
+	}
 
     public function validationDefault(Validator $validator)
     {
@@ -71,7 +87,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
             ->where(['id' => $entity->meal_programmes_id])
             ->first();
             if($entity->quantity_received > $MealProgrammesResult->amount){
-                $this->Alert->error('InstitutionDistributions.quantity_received.genralerror', ['reset' => true]);
+                $this->Alert->error('Institution.InstitutionDistributions.quantity_received.genralerror', ['reset' => true]);
                 return false;
             }
         }else{
