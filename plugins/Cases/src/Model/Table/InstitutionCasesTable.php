@@ -244,11 +244,15 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('linked_records', [
-            'type' => 'custom_linked_records',
-            'valueClass' => 'table-full-width',
-            'after' => 'description'
-        ]);
+        //start POCOR-6210
+        if ($entity->linked_records[0]['feature'] != -1) {
+            $this->field('linked_records', [
+                'type' => 'custom_linked_records',
+                'valueClass' => 'table-full-width',
+                'after' => 'description'
+            ]);
+        }
+        //End POCOR-6210
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -264,7 +268,9 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         if ($action == 'index') {
             if ($entity->has('linked_records')) {
-                $attr['value'] = sizeof($entity->linked_records);
+                if ($entity->linked_records[0]['feature'] != -1) {//start POCOR-6210
+                    $attr['value'] = sizeof($entity->linked_records);
+                }
             }
         } elseif ($action == 'view') {
             $tableHeaders = [__('Feature'), __('Summary')];
