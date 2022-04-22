@@ -444,7 +444,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                 $entity->marks_entered= $value['total_marks'];
             }
         }
-        return $entity->marks_not_entered ;
+        return $entity->marks_entered ;
     }
     
 }
