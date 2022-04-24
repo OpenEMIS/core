@@ -1,9 +1,9 @@
-angular.module('directory.directoryadd.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'directory.directoryadd.svc'])
+angular.module('directory.directoryadd.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'directory.directoryadd.svc', 'kd-angular-tree-dropdown'])
     .controller('DirectoryAddCtrl', DirectoryAddController);
 
-DirectoryAddController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddguardianSvc'];
+DirectoryAddController.$inject = ['$scope', '$q', '$window', '$http', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddSvc'];
 
-function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddguardianSvc) {
+function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddSvc) {
     var scope = $scope;
 
     scope.step = "user_details";
@@ -28,21 +28,33 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     scope.pageSize = 10;
     scope.rowsThisPage = [];
     scope.selectedUser;
+    scope.dobDatepickerOptions = {
+        minDate: new Date('01/01/1900'),
+        maxDate: new Date(),
+        showWeeks: false
+    };
+    scope.error = {};
+    scope.customFields = [];
+    scope.customFieldsArray = [];
+    var todayDate = new Date();
+    scope.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
         scope.selectedUserData.photo = photo;
+        scope.selectedUserData.photo_name = photo.name;
+        let fileReader = new FileReader();
+        fileReader.readAsDataURL(photo);
+        fileReader.onload = () => {
+            console.log(fileReader.result);
+            scope.selectedUserData.photo_base_64 = fileReader.result;
+        }
     }
-
-    scope.datepickerOptions = {
-        maxDate: new Date(),
-        showWeeks: false
-    };
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
         console.log(angular.baseUrl);
-        DirectoryaddguardianSvc.init(angular.baseUrl);
+        DirectoryaddSvc.init(angular.baseUrl);
         scope.translateFields = {
             'openemis_no': 'OpenEMIS ID',
             'name': 'Name',
@@ -59,14 +71,10 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
 
     scope.getUniqueOpenEmisId = function() {
         if(scope.selectedUserData.openemis_no){
-            setTimeout(function(){
-                scope.internalGridOptions = null;
-                scope.getInternalSearchData();
-            }, 1500);
             return;
         }
         UtilsSvc.isAppendLoader(true);
-        DirectoryaddguardianSvc.getUniqueOpenEmisId()
+        DirectoryaddSvc.getUniqueOpenEmisId()
             .then(function(response) {
             var username = scope.selectedUserData.username;
             if(username != scope.selectedUserData.openemis_no && (username == '' || typeof username == 'undefined')){
@@ -78,7 +86,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                 }
                 scope.selectedUserData.openemis_no = response;
             }
-            scope.getInternalSearchData();
+            scope.generatePassword();
         }, function(error) {
             console.log(error);
             UtilsSvc.isAppendLoader(false);
@@ -88,13 +96,12 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     scope.getInternalSearchData = function() {
         var first_name = '';
         var last_name = '';
-        var openemis_no = '';
+        var openemis_no = null;
         var date_of_birth = '';
         var identity_number = '';
         first_name = scope.selectedUserData.first_name;
         last_name = scope.selectedUserData.last_name;
         date_of_birth = scope.selectedUserData.date_of_birth;
-        openemis_no = scope.selectedUserData.openemis_no;
         identity_number = scope.selectedUserData.identity_number;
         var dataSource = {
             pageSize: scope.pageSize,
@@ -108,11 +115,13 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                     openemis_no: openemis_no,
                     date_of_birth: date_of_birth,
                     identity_number: identity_number,
-                }
-                DirectoryaddguardianSvc.getInternalSearchData(param)
+                };
+                DirectoryaddSvc.getInternalSearchData(param)
                 .then(function(response) {
-                    var gridData = response.data;
-                    var totalRowCount = gridData.length;
+                    var gridData = response.data.data;
+                    if(!gridData)
+                        gridData = [];
+                    var totalRowCount = response.data.total;
                     return scope.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
@@ -131,7 +140,6 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         scope.rowsThisPage = userRecords;
 
         params.successCallback(scope.rowsThisPage, lastRow);
-        // scope.externalDataLoaded = true;
         UtilsSvc.isAppendLoader(false);
         return userRecords;
     }
@@ -149,10 +157,12 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
                 UtilsSvc.isAppendLoader(true);
                 param.limit = params.endRow - params.startRow;
                 param.page = params.endRow / (params.endRow - params.startRow);
-                DirectoryaddguardianSvc.getExternalSearchData(param)
+                DirectoryaddSvc.getExternalSearchData(param)
                 .then(function(response) {
-                    var gridData = response.data;
-                    var totalRowCount = gridData.length;
+                    var gridData = response.data.data;
+                    if(!gridData)
+                        gridData = [];
+                    var totalRowCount = response.data.total;
                     return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
@@ -177,8 +187,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     }
 
     scope.generatePassword = function() {
-        UtilsSvc.isAppendLoader(true);
-        DirectoryaddguardianSvc.generatePassword()
+        DirectoryaddSvc.generatePassword()
         .then(function(response) {
             if (scope.selectedUserData.password == '' || typeof scope.selectedUserData.password == 'undefined') {
                 scope.selectedUserData.password = response;
@@ -192,7 +201,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     }
 
     scope.getUserTypes = function() {
-        DirectoryaddguardianSvc.getUserTypes()
+        DirectoryaddSvc.getUserTypes()
         .then(function(response) {
             scope.userTypeOptions = response.data;
             scope.getGenders();
@@ -203,7 +212,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     }
 
     scope.getGenders = function() {
-        DirectoryaddguardianSvc.getGenders()
+        DirectoryaddSvc.getGenders()
         .then(function(response) {
             scope.genderOptions = response.data;
             scope.getNationalities();
@@ -214,7 +223,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     }
 
     scope.getNationalities = function() {
-        DirectoryaddguardianSvc.getNationalities()
+        DirectoryaddSvc.getNationalities()
         .then(function(response) {
             scope.nationalitiesOptions = response.data;
             scope.getIdentityTypes();
@@ -225,7 +234,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     }
 
     scope.getIdentityTypes = function() {
-        DirectoryaddguardianSvc.getIdentityTypes()
+        DirectoryaddSvc.getIdentityTypes()
         .then(function(response) {
             scope.identityTypeOptions = response.data;
             UtilsSvc.isAppendLoader(false);
@@ -236,10 +245,14 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     }
 
     scope.getContactTypes = function() {
-        DirectoryaddguardianSvc.getContactTypes()
+        DirectoryaddSvc.getContactTypes()
         .then(function(response) {
             scope.contactTypeOptions = response.data;
-            UtilsSvc.isAppendLoader(false);
+            if(scope.selectedUserData.userType.name === 'Students') {
+                scope.getStudentCustomFields();
+            } else {
+                UtilsSvc.isAppendLoader(false);
+            }
         }, function(error) {
             console.log(error);
             UtilsSvc.isAppendLoader(false);
@@ -248,7 +261,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
 
     scope.getRedirectToGuardian = function(){
         UtilsSvc.isAppendLoader(true);
-        DirectoryaddguardianSvc.getRedirectToGuardian()
+        DirectoryaddSvc.getRedirectToGuardian()
         .then(function(resp) {
             scope.redirectToGuardian = resp.data;
             UtilsSvc.isAppendLoader(false);
@@ -407,7 +420,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
             };
             setTimeout(function(){
                 scope.getInternalSearchData();
-            }, 1500);
+            }, 2000);
         }, function(error){
             scope.internalGridOptions = {
                 columnDefs: [
@@ -457,7 +470,7 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
             };
             setTimeout(function(){
                 scope.getInternalSearchData();
-            }, 1500);
+            }, 2000);
         });
     }
 
@@ -565,6 +578,49 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         });
     }
 
+    scope.validateDetails = function() {
+        if(scope.step === 'user_details') {
+            if(!scope.selectedUserData.user_type_id){
+                scope.error.user_type_id = 'This field cannot be left empty';
+            }
+            if(!scope.selectedUserData.first_name){
+                scope.error.first_name = 'This field cannot be left empty';
+            }
+            if(!scope.selectedUserData.last_name){
+                scope.error.last_name = 'This field cannot be left empty';
+            }
+            if(!scope.selectedUserData.gender_id){
+                scope.error.gender_id = 'This field cannot be left empty';
+            }
+            if(!scope.selectedUserData.date_of_birth) {
+                scope.error.date_of_birth = 'This field cannot be left empty';
+            } else {
+                // let dob = scope.selectedUserData.date_of_birth.toLocaleDateString();
+                // let dobArray = dob.split('/');
+                scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
+            }
+    
+            if(!scope.selectedUserData.first_name || !scope.selectedUserData.last_name || !scope.selectedUserData.gender_id || !scope.selectedUserData.date_of_birth){
+                return;
+            }
+            scope.step = 'internal_search';
+            scope.internalGridOptions = null;
+            scope.goToInternalSearch();
+        }
+        if(scope.step === 'confirmation') {
+            if(!scope.selectedUserData.username){
+                scope.error.username = 'This field cannot be left empty';
+            }
+            if(!scope.selectedUserData.password){
+                scope.error.password = 'This field cannot be left empty';
+            }
+            if(!scope.selectedUserData.username || !scope.selectedUserData.password){
+                return;
+            }
+            scope.saveDetails();
+        }
+    }
+
     scope.goToPrevStep = function(){
         switch(scope.step){
             case 'internal_search': 
@@ -586,19 +642,20 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
     scope.goToNextStep = function() {
         switch(scope.step){
             case 'user_details': 
-                scope.step = 'internal_search';
-                scope.getUniqueOpenEmisId();
+                scope.internalGridOptions = null;
+                scope.validateDetails();
                 break;
             case 'internal_search': 
                 scope.step = 'external_search';
+                scope.externalGridOptions = null;
                 UtilsSvc.isAppendLoader(true);
                 setTimeout(function(){
-                    scope.getExternalSearchData();
+                    scope.goToExternalSearch();
                 }, 1500);
                 break;
             case 'external_search': 
                 scope.step = 'confirmation';
-                scope.generatePassword();
+                scope.getUniqueOpenEmisId();
                 break;
         }
     }
@@ -607,6 +664,8 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         scope.message = (scope.selectedUserData && scope.selectedUserData.userType ? scope.selectedUserData.userType.name : 'Student') + ' successfully added.';
         scope.messageClass = 'alert-success';
         scope.step = "summary";
+        var todayDate = new Date();
+        scope.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
         scope.getRedirectToGuardian();
     }
 
@@ -827,8 +886,220 @@ function DirectoryAddController($scope, $q, $window, $http, UtilsSvc, AlertSvc, 
         }, log);
     }
 
-    scope.addGuardian=function(){
+    scope.addGuardian = function(){
         $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
     }
     
+    scope.getStudentCustomFields = function() {
+        DirectoryaddSvc.getStudentCustomFields().then(function(resp){
+            scope.customFields = resp.data;
+            scope.customFieldsArray = [];
+            scope.createCustomFieldsArray();
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    scope.createCustomFieldsArray = function() {
+        if(scope.customFields && scope.customFields.length > 0) {
+            var selectedCustomField = scope.customFields;
+            var filteredSections = Array.from(new Set(scope.customFields.map((item)=> scope.mapBySection(item))));
+            filteredSections.forEach((section)=>{
+                let filteredArray = selectedCustomField.filter((item) => scope.filterBySection(item, section));
+                scope.customFieldsArray.push({sectionName: section , data: filteredArray});
+            });
+            scope.customFieldsArray.forEach((customField) => {
+                customField.data.forEach((fieldData) => {
+                    fieldData.answer = '';
+                    fieldData.errorMessage = '';
+                    if(fieldData.field_type === 'DROPDOWN') {
+                        fieldData.selectedOptionId = '';
+                    }
+                    if(fieldData.field_type === 'DATE') {
+                        fieldData.isDatepickerOpen = false;
+                        let params = JSON.parse(fieldData.params);
+                        fieldData.params = params;
+                        fieldData.datePickerOptions = {
+                            minDate: fieldData.params && fieldData.params.start_date ? new Date(fieldData.params.start_date): new Date(),
+                            maxDate: new Date('01/01/2100'),
+                            showWeeks: false
+                        };
+                    }
+                    if(fieldData.field_type === 'TIME') {
+                        fieldData.hourStep = 1;
+                        fieldData.minuteStep = 5;
+                        fieldData.isMeridian = true;
+                        let params = JSON.parse(fieldData.params);
+                        fieldData.params = params;
+                        if(fieldData.params && fieldData.params.start_time) {
+                            var startTimeArray = fieldData.params.start_time.split(" ");
+                            var startTimes = startTimeArray[0].split(":");
+                            if(startTimes[0] === 12) {
+                                var startTimeHour = startTimeArray[1] === 'PM' ? Number(startTimes[0]) : Number(startTimes[0]) - 12;
+                            } else {
+                                var startTimeHour = startTimeArray[1] === 'AM' ? Number(startTimes[0]) : Number(startTimes[0]) + 12;
+                            } 
+                        }
+                        if(fieldData.params && fieldData.params.end_time) {
+                            var endTimeArray = fieldData.params.end_time.split(" ");
+                            var endTimes = endTimeArray[0].split(":");
+                            if(startTimes[0] === 12) {
+                                var endTimeHour = endTimeArray[1] === 'PM' ? Number(endTimes[0]) : Number(endTimes[0]) - 12;
+                            } else {
+                                var endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
+                            }
+                        }
+                        fieldData.answer = fieldData.params && fieldData.params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
+                        fieldData.min = params && params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
+                        fieldData.max = fieldData.params && fieldData.params.end_time ? new Date(new Date(new Date().setHours(endTimeHour)).setMinutes(endTimes[1])): new Date();
+                    }
+                    if(fieldData.field_type === 'CHECKBOX') {
+                        fieldData.answer = [];
+                        fieldData.option.forEach((option) => {
+                            option.selected = false;
+                        })
+                    }
+                    if(fieldData.field_type === 'DECIMAL') {
+                        let params = JSON.parse(fieldData.params);
+                        fieldData.params = params;
+                    }
+                });
+            });
+        }
+        
+    }
+
+    scope.mapBySection = function(item) {
+        return item.section;
+    }
+
+    scope.filterBySection = function(item, section) {
+        return section === item.section;
+    }
+
+    scope.changeOption = function(field, optionId){
+        field.option.forEach((option) => {
+            if(option.option_id === optionId){
+                field.selectedOption = option.option_name;
+            }
+        })
+    }
+
+    scope.changed = function(answer){
+        console.log(answer);
+    }
+
+    scope.selectOption = function (field) {
+        field.answer = [];
+        field.option.forEach((option) => {
+            if(option.selected) {
+                field.answer.push(option.option_id);
+            }
+        })
+    }
+
+    scope.onDecimalNumberChange = function(field) {
+        let timer;
+        if(timer) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(()=>{
+            field.answer = parseFloat(field.answer.toFixed(field.params.precision));
+        }, 3000);
+    }
+
+    scope.saveDetails = function() {
+        scope.selectedUserData.addressArea = DirectoryaddSvc.getAddressArea();
+        scope.selectedUserData.birthplaceArea = DirectoryaddSvc.getBirthplaceArea();
+        let param = {
+            user_type: scope.selectedUserData.user_type_id,
+            openemis_no: scope.selectedUserData.openemis_no,
+            first_name: scope.selectedUserData.first_name,
+            middle_name: scope.selectedUserData.middle_name,
+            third_name: scope.selectedUserData.third_name,
+            last_name: scope.selectedUserData.last_name,
+            preferred_name: scope.selectedUserData.preferred_name,
+            gender_id: scope.selectedUserData.gender_id,
+            date_of_birth: scope.selectedUserData.date_of_birth,
+            identity_number: scope.selectedUserData.identity_number,
+            identity_type_id: scope.selectedUserData.identity_type_id,
+            nationality_id: scope.selectedUserData.nationality_id,
+            username: scope.selectedUserData.username,
+            password: scope.selectedUserData.password,
+            postal_code: scope.selectedUserData.postalCode,
+            address: scope.selectedUserData.address,
+            birthplace_area_id: DirectoryaddSvc.getBirthplaceAreaId(),
+            address_area_id: DirectoryaddSvc.getAddressAreaId(),
+            contact_type: scope.selectedUserData.contact_type_id,
+            contact_value: scope.selectedUserData.contactValue,
+            photo_name: scope.selectedUserData.photo_name,
+            photo_content: scope.selectedUserData.photo_base_64,
+            custom: [],
+        };
+        if(scope.selectedUserData.userType.name === 'Students') {
+            scope.customFieldsArray.forEach((customField)=> {
+                customField.data.forEach((field)=> {
+                    if(field.field_type !== 'CHECKBOX') {
+                        let fieldData = {
+                            student_custom_field_id: field.student_custom_field_id,
+                            text_value:"",
+                            number_value:null,
+                            decimal_value:"",
+                            textarea_value:"",
+                            time_value:"",
+                            date_value:"",
+                            file:"",
+                            institution_id: StudentController.institutionId,
+                        };
+                        if(field.field_type === 'TEXT' || field.field_type === 'NOTE' || field.field_type === 'TEXTAREA') {
+                            fieldData.text_value = field.answer;
+                        }
+                        if(field.field_type === 'NUMBER') {
+                            fieldData.number_value = field.answer;
+                        }
+                        if(field.field_type === 'DECIMAL') {
+                            fieldData.decimal_value = String(field.answer);
+                        }
+                        if(field.field_type === 'DROPDOWN') {
+                            fieldData.number_value = Number(field.answer);
+                        }
+                        if(field.field_type === 'TIME') {
+                            let time = field.answer.toLocaleTimeString();
+                            let timeArray = time.split(':');
+                            fieldData.time_value = `${timeArray[0]}:${timeArray[1]}`;
+                        }
+                        if(field.field_type === 'DATE') {
+                            fieldData.date_value = $filter('date')(field.anser, 'yyyy-MM-dd');
+                        }
+                        params.custom.push(fieldData);
+                    } else {
+                        field.answer.forEach((id )=> {
+                            let fieldData = {
+                                student_custom_field_id: field.student_custom_field_id,
+                                text_value:"",
+                                number_value: Number(id),
+                                decimal_value:"",
+                                textarea_value:"",
+                                time_value:"",
+                                date_value:"",
+                                file:"",
+                                institution_id: StudentController.institutionId,
+                            };
+                            param.custom.push(fieldData);
+                        });
+                    }
+                })
+            });
+        }
+        UtilsSvc.isAppendLoader(true);
+        DirectoryaddSvc.saveDirectoryData(param).then(function(resp){
+            scope.confirmUser();
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
 }

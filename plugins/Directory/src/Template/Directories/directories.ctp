@@ -53,7 +53,7 @@
                 type="button" class="btn btn-prev close-btn" ng-click="goToPrevStep()">Back</button>
             <button
                 ng-if="(step=='confirmation' && step!=='summary')"
-                type="button" class="btn btn-default" ng-click="confirmUser()">Confirm</button>
+                type="button" class="btn btn-default" ng-click="validateDetails()">Confirm</button>
             <button
                 ng-if="(step=='summary')"
                 type="button" class="btn close-btn" ng-click="cancelProcess()">Close</button>
@@ -79,8 +79,8 @@
                                 <option value="" >-- <?= __('Select') ?> --</option>
                             </select>
                         </div>
-                        <div ng-if="postResponse.error.gender_id" class="error-message">
-                            <p ng-repeat="error in postResponse.error.gender_id">{{ error }}</p>
+                        <div ng-if="error.user_type_id" class="error-message">
+                            <p>{{ error.user_type_id }}</p>
                         </div>
                     </div>
                     <div class="input string">
@@ -90,8 +90,8 @@
                     <div class="input string required">
                         <label><?= __('First Name') ?></label>
                         <input ng-model="selectedUserData.first_name" ng-change="setName()" type="string">
-                        <div ng-if="postResponse.error.first_name" class="error-message">
-                            <p ng-repeat="error in postResponse.error.first_name">{{ error }}</p>
+                        <div ng-if="error.first_name" class="error-message">
+                            <p>{{ error.first_name }}</p>
                         </div>
                     </div>
                     <div class="input string">
@@ -105,8 +105,8 @@
                     <div class="input string required">
                         <label><?= __('Last Name') ?></label>
                         <input ng-model="selectedUserData.last_name" ng-change="setName()" type="string">
-                        <div ng-if="postResponse.error.last_name" class="error-message">
-                            <p ng-repeat="error in postResponse.error.last_name">{{ error }}</p>
+                        <div ng-if="error.last_name" class="error-message">
+                            <p>{{ error.last_name }}</p>
                         </div>
                     </div>
                     <div class="input string">
@@ -124,18 +124,18 @@
                                 <option value="" >-- <?= __('Select') ?> --</option>
                             </select>
                         </div>
-                        <div ng-if="postResponse.error.gender_id" class="error-message">
-                            <p ng-repeat="error in postResponse.error.gender_id">{{ error }}</p>
+                        <div ng-if="error.gender_id" class="error-message">
+                            <p>{{ error.gender_id }}</p>
                         </div>
                     </div>
                     <div class="input date required">
                         <label for="User_date_of_birth"><?= __('Date Of Birth') ?></label>
                         <div class="input-group date" id="User_date_of_birth" style="" datepicker="" ng-model="selectedUserData.date_of_birth" ng-click="isDatepickerOpen = !isDatepickerOpen">
-                            <input type="text" class="form-control " ng-model="selectedUserData.date_of_birth" uib-datepicker-popup="dd/MM/yyyy" is-open="isDatepickerOpen" datepicker-options="datepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" />
+                            <input type="text" class="form-control " ng-model="selectedUserData.date_of_birth" uib-datepicker-popup="yyyy/MM/dd" is-open="isDatepickerOpen" datepicker-options="dobDatepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" />
                             <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                         </div>
-                        <div ng-if="postResponse.error.date_of_birth" class="error-message">
-                            <p ng-repeat="error in postResponse.error.date_of_birth">{{ error }}</p>
+                        <div ng-if="error.date_of_birth" class="error-message">
+                            <p>{{ error.date_of_birth }}</p>
                         </div>
                     </div>
                     <div ng-class="nationality_class">
@@ -171,9 +171,6 @@
                     <div ng-class="identity_class" ng-show="selectedUserData.identity_type_name">
                         <label><?= __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
                         <input ng-model="selectedUserData.identity_number" type="string">
-                        <div ng-if="postResponse.error.identities[0].number" class="error-message">
-                            <p ng-repeat="error in postResponse.error.identities[0].number">{{ error }}</p>
-                        </div>
                     </div>
                 </form>
             </div>
@@ -229,11 +226,11 @@
                     </div>
                     <div class="input string">
                         <label><?= __('Middle Name') ?></label>
-                        <input ng-model="selectedUserData.middle_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="true">
+                        <input ng-model="selectedUserData.middle_name" ng-change="setStudentName()" type="string" ng-disabled="true">
                     </div>
                     <div class="input string">
                         <label><?= __('Third Name') ?></label>
-                        <input ng-model="selectedUserData.third_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="true">
+                        <input ng-model="selectedUserData.third_name" ng-change="setStudentName()" type="string" ng-disabled="true">
                     </div>
                     <div class="input string required">
                         <label><?= __('Last Name') ?></label>
@@ -263,27 +260,25 @@
                         <input ng-model="selectedUserData.postalCode" type="string">
                     </div>
                     <div class="row section-header header-space-lg">Address Area</div>
-                    <div class="input string">
+                    <div class="input select">
                         <label><?= __('Address Area') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="Staff[gender_id]" id="staff-gender_id"
-                                ng-options="option.id as option.name for option in genderOptions"
-                                ng-model="selectedUserData.addressArea"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
+                        <div
+                            class="tree-form"
+                            id="address_area"
+                            ng-controller="SgTreeCtrl as SgTree"
+                            ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=null; SgTree.userId=2; SgTree.displayCountry=0; SgTree.triggerOnChange=false;">
+                            <kd-tree-dropdown-ng id="<?=$field ?>-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="addressAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
                         </div>
                     </div>
                     <div class="row section-header header-space-lg">Birthplace Area</div>
                     <div class="input string">
                         <label><?= __('Birthplace Area') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="Staff[gender_id]" id="staff-gender_id"
-                                ng-options="option.id as option.name for option in genderOptions"
-                                ng-model="selectedUserData.birthplaceArea"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
+                        <div
+                            class="tree-form"
+                            id="birthplace_area"
+                            ng-controller="SgTreeCtrl as SgTree"
+                            ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=null; SgTree.userId=2; SgTree.displayCountry=0; SgTree.triggerOnChange=false; ">
+                            <kd-tree-dropdown-ng id="<?=$field ?>-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="birthplaceAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
                         </div>
                     </div>
                     <div class="row section-header header-space-lg">Identities / Nationalities</div>
@@ -319,8 +314,8 @@
                     <div class="input string required">
                         <label><?= __('Username') ?></label>
                         <input ng-model="selectedUserData.username" type="string">
-                        <div ng-if="postResponse.error.username" class="error-message">
-                            <p ng-repeat="error in postResponse.error.username">{{ error }}</p>
+                        <div ng-if="error.username" class="error-message">
+                            <p>{{ error.username }}</p>
                         </div>
                     </div>
                     <div class="input password required">
@@ -328,34 +323,68 @@
                             __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
                         ?></label>
                         <input ng-model="selectedUserData.password" type="string">
-                        <div ng-if="postResponse.error.password" class="error-message">
-                            <p ng-repeat="error in postResponse.error.password">{{ error }}</p>
+                        <div ng-if="error.password" class="error-message">
+                            <p>{{ error.password }}</p>
                         </div>
                     </div>
-                    <div class="row section-header header-space-lg">Parents and Guardian Informations</div>
-                    <div class="input string">
-                        <label><?= __('Mother Living With Student') ?></label>
-                        <input ng-model="selectedUserData.motherLivingWithStudent" type="string" ng-disabled="true" />
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Mother Is Deceased') ?></label>
-                        <input ng-model="selectedUserData.motherDeceased" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Father Living With Student') ?></label>
-                        <input ng-model="selectedUserData.fatherLivingWithStudent" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Father Is Deceased') ?></label>
-                        <input ng-model="selectedUserData.fatherDeceased" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Guardian Living With Student') ?></label>
-                        <input ng-model="selectedUserData.guardianLivingWithStudent" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Guardian Is Deceased') ?></label>
-                        <input ng-model="selectedUserData.guardianDeceased" type="string" ng-disabled="true">
+                    <div ng-if="selectedUserData.userType.name === 'Students" ng-repeat="customField in customFieldsArray">
+                        <div class="row section-header header-space-lg">{{customField.sectionName}}</div>
+                        <div ng-repeat="field in customField.data">
+                            <div class="input string" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL'">
+                                <label>{{field.name}}</label>
+                                <input ng-if="field.field_type === 'TEXT'" ng-model="field.answer" type="text" ng-required="field.is_mandatory !== 0" />
+                                <textarea ng-if="field.field_type === 'TEXTAREA' || field.field_type === 'NOTE'" ng-model="field.answer" type="text" ng-required="field.is_mandatory !== 0"></textarea>
+                                <input ng-if="field.field_type === 'NUMBER'" ng-model="field.answer" type="number" ng-required="field.is_mandatory !== 0" />
+                                <input ng-if="field.field_type === 'DECIMAL'" ng-model="field.answer" type="number" step="0.01" onKeyPress="if(this.value.length === 10) return false;" ng-change="onDecimalNumberChange(field)" ng-required="field.is_mandatory !== 0" />
+                                <div ng-if="field.errorMessage" class="error-message">
+                                    <p>{{ field.errorMessage }}</p>
+                                </div>
+                            </div>
+                            <div class="input select" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'DROPDOWN'">
+                                <label>{{field.name}}</label>
+                                <div class="input-select-wrapper">
+                                    <select name="Student[option_id]" id={{field.student_custom_field_id}}
+                                        ng-options="option.option_id as option.option_name for option in field.option"
+                                        ng-model="field.answer"
+                                        ng-change="changeOption(field,field.answer)" ng-required="field.is_mandatory !== 0"
+                                        >
+                                        <option value="" >-- <?= __('Select') ?> --</option>
+                                    </select>
+                                </div>
+                                <div ng-if="field.errorMessage" class="error-message">
+                                    <p>{{ field.errorMessage }}</p>
+                                </div>
+                            </div>
+                            <div class="input date" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'DATE'">
+                                <label for={{field.student_custom_field_id}}>{{field.name}}</label>
+                                <div class="input-group date" id={{field.student_custom_field_id} style="" datepicker="" ng-model="field.answer" ng-click="[field.isDatepickerOpen = !field.isDatepickerOpen]" ng-init="field.isDatepickerOpen = false">
+                                    <input type="text" class="form-control " ng-model="field.answer" uib-datepicker-popup="MM/dd/yyyy" is-open="field.isDatepickerOpen" datepicker-options="datepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" ng-change="field.isDatepickerOpen = false" ng-required="field.is_mandatory !== 0" />
+                                    <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                                </div>
+                                <div ng-if="field.errorMessage" class="error-message">
+                                    <p>{{ field.errorMessage }}</p>
+                                </div>
+                            </div>
+                            <div class="input date" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'TIME'">
+                                <label for={{field.student_custom_field_id}}>{{field.name}}</label>
+                                <div class="input-group time" uib-timepicker ng-model="field.answer" hour-step="field.hourStep" minute-step="field.minuteStep" show-meridian="field.isMeridian"></div>
+                                <div ng-if="field.errorMessage" class="error-message" style="margin-left: 150px;">
+                                    <p>{{ field.errorMessage }}</p>
+                                </div>
+                            </div>
+                            <div class="input date" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'CHECKBOX'">
+                                <label for={{field.student_custom_field_id}}>{{field.name}}</label>
+                                <div class="input-group check_box">
+                                    <div ng-repeat="option in field.option">
+                                        <input type="checkbox" id={{option.option_id}} name={{option.option_name}} value={{option.option_id}} ng-model="option.selected" ng-change="selectOption(field)" ng-required="field.is_mandatory !== 0">
+                                        <label for={{option.option_id}}> {{option.option_name}}</label>
+                                    </div>
+                                    <div ng-if="field.errorMessage" class="error-message">
+                                    <p>{{ field.errorMessage }}</p>
+                                </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -366,8 +395,8 @@
                             <div class="panel">
                                 <div class="panel-body">
                                     <div class="row section-header">Information</div>
-                                    <div class="row hidden"></div>
-                                    <div class="row">
+                                    <div class="row row-content hidden"></div>
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Photo Content</div>
                                         <div class="form-input">
                                             <div class="table-thumb">
@@ -377,45 +406,45 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">OpenEMIS ID</div>
                                         <div class="form-input">{{selectedUserData.openemis_no}}</div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">First Name</div>
                                         <div class="form-input">{{selectedUserData.first_name}}</div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Middle Name</div>
                                         <div class="form-input">{{selectedUserData.middle_name}}</div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Third Name</div>
                                         <div class="form-input">{{selectedUserData.third_name}}</div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Last Name</div>
                                         <div class="form-input">{{selectedUserData.last_name}}</div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Preferred Name</div>
                                         <div class="form-input">{{selectedUserData.preferred_name}}</div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Gender</div>
                                         <div class="form-input">{{selectedUserData.gender.name}}</div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Date of Birth</div>
-                                        <div class="form-input">{{selectedUserData.dateOfBirth}}</div>
+                                        <div class="form-input">{{selectedUserData.date_of_birth}}</div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Email</div>
                                         <div class="form-input">{{selectedUserData.email}}</div>
                                     </div>
                                     <div class="row section-header">Identities / Nationalities</div>
-                                    <div class="row">
-                                        <div class="col-xs-6 col-md-3 form-label">Nationality</div>
+                                    <div class="row row-content">
+                                        <div class="col-xs-6 col-md-3 form-label">Details</div>
                                         <div class="form-input">
                                             <div class="form-input table-full-width">
                                                 <div class="table-wrapper">
@@ -431,9 +460,9 @@
                                                             </thead>
                                                             <tbody>
                                                                 <tr>
-                                                                    <td class="vertical-align-top">Birth Certificate</td>
-                                                                    <td class="vertical-align-top">1234567890</td>
-                                                                    <td class="vertical-align-top">American</td>
+                                                                    <td class="vertical-align-top">{{selectedUserData.identity_type_name}}</td>
+                                                                    <td class="vertical-align-top">{{selectedUserData.identity_number}}</td>
+                                                                    <td class="vertical-align-top">{{selectedUserData.nationality_name}}</td>
                                                                     <td class="vertical-align-top">No</td>
                                                                 </tr>
                                                             </tbody>				
@@ -444,40 +473,40 @@
                                         </div>
                                     </div>
                                     <div class="row section-header">Location</div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Address</div>
                                         <div class="form-input">{{selectedUserData.address}}</div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Postal Code</div>
                                         <div class="form-input">{{selectedUserData.postalCode}}</div>
                                     </div>
                                     <div class="row section-header">Address Area</div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Address Area</div>
-                                        <div class="form-input">{{selectedUserData.addressArea}}</div>
+                                        <div class="form-input">{{selectedUserData.addressArea.name}}</div>
                                     </div>
                                     <div class="row section-header">Birthplace Area</div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Birthplace Area</div>
-                                        <div class="form-input">{{selectedUserData.birthplaceArea}}</div>
+                                        <div class="form-input">{{selectedUserData.birthplaceArea.name}}</div>
                                     </div>
                                     <div class="row section-header">Other Information</div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Modified By</div>
                                         <div class="form-input">System Administrator</div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Modified On</div>
-                                        <div class="form-input">August 12, 2021 - 04:48:48</div>
+                                        <div class="form-input">{{todayDate}}</div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Created By</div>
                                         <div class="form-input">System Administrator</div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Created On</div>
-                                        <div class="form-input">SApril 05, 2018 - 18:20:27</div>
+                                        <div class="form-input">{{todayDate}}</div>
                                     </div>
                                 </div>
                             </div>
@@ -825,12 +854,41 @@
     .uib-datepicker-popup {
         padding: 5px 10px;
     }
-    
-    .file-input {
-        width: 200%;
-        border: 0px;
-        font-size: 14px;
-        height: 40px;
-        paddi`ng-left: 0px;
+
+    .time {
+        margin-top: -15px !important;
+        margin-bottom: 5px !important;
     }
+
+    .hours {
+        vertical-align: middle !important;
+    }
+
+    .minutes {
+        vertical-align: middle !important;
+    }
+
+    .check_box {
+        margin-top: 2px !important;
+        display: inline-flex !important;
+    }
+
+    .file-input {
+        width: 200% !important;
+        border: 0px !important;
+        font-size: 14px !important;
+        height: 40px !important;
+        padding-left: 0px !important;
+    }
+
+    .selected-items {
+        font-size: 14px !important;
+        padding: 5px 0px 0px 10px !important;
+        display: block !important;
+    }
+
+    .caret {
+        margin-left: 160px !important;
+    }
+
 </style>
