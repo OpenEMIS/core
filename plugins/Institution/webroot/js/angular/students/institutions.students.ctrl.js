@@ -951,7 +951,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     });
                 }
             })
-        })
+        });
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.saveStudentDetails(params).then(function(resp){
             if(resp) {
