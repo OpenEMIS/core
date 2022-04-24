@@ -1,12 +1,12 @@
-angular.module('directory.directoryaddguardian.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'directory.directoryaddguardian.svc'])
+angular.module('directory.directoryaddguardian.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'directory.directoryaddguardian.svc', 'kd-angular-tree-dropdown'])
     .controller('DirectoryaddguardianCtrl', DirectoryaddguardianController);
 
-DirectoryaddguardianController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddguardianSvc'];
+DirectoryaddguardianController.$inject = ['$scope', '$q', '$window', '$http', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddguardianSvc'];
 
-function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddguardianSvc) {
+function DirectoryaddguardianController($scope, $q, $window, $http, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddguardianSvc) {
     var scope = $scope;
     scope.step = 'user_details';
-    scope.selectedGuardianData = {};
+    scope.selectedUserData = {};
     scope.internalGridOptions = null;
     scope.externalGridOptions = null;
     scope.postRespone = null;
@@ -23,12 +23,13 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
     scope.relationTypeOptions = [];
     scope.addressAreaOption = [];
     scope.birthplaceAreaOption = [];
-    scope.isGuardianAdding = false;
     scope.pageSize = 10;
     scope.rowsThisPage = [];
-    scope.selectedStaff;
+    scope.selectedGuardian;
+    scope.error = {};
 
     scope.datepickerOptions = {
+        minDate: new Date('01/01/1900'),
         maxDate: new Date(),
         showWeeks: false
     };
@@ -53,23 +54,26 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
-        scope.selectedGuardianData.photo = photo;
+        scope.selectedUserData.photo = photo;
+        scope.selectedUserData.photo_name = photo.name;
+        let fileReader = new FileReader();
+        fileReader.readAsDataURL(photo);
+        fileReader.onload = () => {
+            console.log(fileReader.result);
+            scope.selectedUserData.photo_base_64 = fileReader.result;
+        }
     }
 
     scope.getUniqueOpenEmisId = function() {
-        if(scope.selectedGuardianData.openemis_no){
-            setTimeout(function(){
-                scope.internalGridOptions = null;
-                scope.getInternalSearchData();
-            }, 1500);
+        if(scope.selectedUserData.openemis_no){
             return;
         }
         UtilsSvc.isAppendLoader(true);
         DirectoryaddguardianSvc.getUniqueOpenEmisId()
         .then(function(response) {
-            scope.selectedGuardianData.username = response;
-            scope.selectedGuardianData.openemis_no = response;
-            scope.getInternalSearchData();
+            scope.selectedUserData.username = response;
+            scope.selectedUserData.openemis_no = response;
+            scope.generatePassword();
         }, function(error) {
             console.log(error);
             UtilsSvc.isAppendLoader(false);
@@ -79,14 +83,13 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
     scope.getInternalSearchData = function() {
         var first_name = '';
         var last_name = '';
-        var openemis_no = '';
+        var openemis_no = null;
         var date_of_birth = '';
         var identity_number = '';
-        first_name = scope.selectedGuardianData.first_name;
-        last_name = scope.selectedGuardianData.last_name;
-        date_of_birth = scope.selectedGuardianData.date_of_birth;
-        openemis_no = scope.selectedGuardianData.openemis_no;
-        identity_number = scope.selectedGuardianData.identity_number;
+        first_name = scope.selectedUserData.first_name;
+        last_name = scope.selectedUserData.last_name;
+        date_of_birth = scope.selectedUserData.date_of_birth;
+        identity_number = scope.selectedUserData.identity_number;
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
@@ -103,6 +106,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
                 DirectoryaddguardianSvc.getInternalSearchData(param)
                 .then(function(response) {
                     var gridData = response.data.data;
+                    if(!gridData)
+                        gridData = [];
                     var totalRowCount = response.data.total;
                     return scope.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
@@ -130,10 +135,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
     scope.getExternalSearchData = function() {
         var param = {};
         param = {
-            first_name: scope.selectedGuardianData.first_name,
-            last_name: scope.selectedGuardianData.last_name,
-            date_of_birth: scope.selectedGuardianData.date_of_birth,
-            identity_number: scope.selectedGuardianData.identity_number,
+            first_name: scope.selectedUserData.first_name,
+            last_name: scope.selectedUserData.last_name,
+            date_of_birth: scope.selectedUserData.date_of_birth,
+            identity_number: scope.selectedUserData.identity_number,
         }
         var dataSource = {
             pageSize: scope.pageSize,
@@ -172,7 +177,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
         UtilsSvc.isAppendLoader(true);
         DirectoryaddguardianSvc.generatePassword()
         .then(function(response) {
-            scope.selectedGuardianData.password = response;
+            scope.selectedUserData.password = response;
             scope.getContactTypes();
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
@@ -238,15 +243,15 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
     }
 
     scope.setName = function() {
-        var guardianData = scope.selectedGuardianData;
+        var guardianData = scope.selectedUserData;
         guardianData.name = '';
         if (guardianData.hasOwnProperty('first_name')) {
-            guardianData.name = userData.first_name.trim();
+            guardianData.name = guardianData.first_name.trim();
         }
         scope.appendName(guardianData, 'middle_name', true);
         scope.appendName(guardianData, 'third_name', true);
         scope.appendName(guardianData, 'last_name', true);
-        scope.selectedGuardianData = guardianData;
+        scope.selectedUserData = guardianData;
     }
 
     scope.appendName = function(dataObj, variableName, trim) {
@@ -262,7 +267,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
     }
 
     scope.changeGender = function() {
-        var guardianData = scope.selectedGuardianData;
+        var guardianData = scope.selectedUserData;
         if (guardianData.hasOwnProperty('gender_id')) {
             var genderOptions = scope.genderOptions;
             for(var i = 0; i < genderOptions.length; i++) {
@@ -272,58 +277,58 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
                     };
                 }
             }
-            scope.selectedGuardianData = guardianData;
+            scope.selectedUserData = guardianData;
         }
         
     }
 
     scope.changeNationality =  function() {
-        var nationalityId = scope.selectedGuardianData.nationality_id;
+        var nationalityId = scope.selectedUserData.nationality_id;
         var options = scope.nationalitiesOptions;
         var identityOptions = scope.identityTypeOptions;
         for (var i = 0; i < options.length; i++) {
             if (options[i].id == nationalityId) {
                 if (options[i].identity_type_id == null) {
-                    scope.selectedGuardianData.identity_type_id = identityOptions['0'].id;
-                    scope.selectedGuardianData.identity_type_name = identityOptions['0'].name;
+                    scope.selectedUserData.identity_type_id = identityOptions['0'].id;
+                    scope.selectedUserData.identity_type_name = identityOptions['0'].name;
                 } else {
-                    scope.selectedGuardianData.identity_type_id = options[i].identity_type_id;
-                    scope.selectedGuardianData.identity_type_name = options[i].identity_type.name;
+                    scope.selectedUserData.identity_type_id = options[i].identity_type_id;
+                    scope.selectedUserData.identity_type_name = options[i].identity_type.name;
                 }
-                scope.selectedGuardianData.nationality_name = options[i].name;
+                scope.selectedUserData.nationality_name = options[i].name;
                 break;
             }
         }
     }
 
     scope.changeIdentityType =  function() {
-        var identityType = scope.selectedGuardianData.identity_type_id;
+        var identityType = scope.selectedUserData.identity_type_id;
         var options = scope.identityTypeOptions;
         for (var i = 0; i < options.length; i++) {
             if (options[i].id == identityType) {
-                scope.selectedGuardianData.identity_type_name = options[i].name;
+                scope.selectedUserData.identity_type_name = options[i].name;
                 break;
             }
         }
     }
 
     scope.changeContactType =  function() {
-        var contactType = scope.selectedGuardianData.contact_type_id;
+        var contactType = scope.selectedUserData.contact_type_id;
         var options = scope.contactTypeOptions;
         for (var i = 0; i < options.length; i++) {
             if (options[i].id == contactType) {
-                scope.selectedGuardianData.contact_type_name = options[i].name;
+                scope.selectedUserData.contact_type_name = options[i].name;
                 break;
             }
         }
     }
 
     scope.changeRelationType = function() {
-        var relationType = scope.selectedGuardianData.relation_type_id;
+        var relationType = scope.selectedUserData.relation_type_id;
         var relationTypeOptions = scope.contactTypeOptions;
         for (var i = 0; i < relationTypeOptions.length; i++) {
             if (relationTypeOptions[i].id == relationType) {
-                scope.selectedGuardianData.relation_type_name = relationTypeOptions[i].name;
+                scope.selectedUserData.relation_type_name = relationTypeOptions[i].name;
                 break;
             }
         }
@@ -541,6 +546,49 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
         });
     }
 
+    scope.validateDetails = function() {
+        if(scope.step === 'user_details') {
+            if(!scope.selectedUserData.relation_type_id){
+                scope.error.relation_type_id = 'This field cannot be left empty';
+            }
+            if(!scope.selectedUserData.first_name){
+                scope.error.first_name = 'This field cannot be left empty';
+            }
+            if(!scope.selectedUserData.last_name){
+                scope.error.last_name = 'This field cannot be left empty';
+            }
+            if(!scope.selectedUserData.gender_id){
+                scope.error.gender_id = 'This field cannot be left empty';
+            }
+            if(!scope.selectedUserData.date_of_birth) {
+                scope.error.date_of_birth = 'This field cannot be left empty';
+            } else {
+                // let dob = scope.selectedUserData.date_of_birth.toLocaleDateString();
+                // let dobArray = dob.split('/');
+                scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
+            }
+    
+            if(!scope.selectedUserData.relation_type_id || !scope.selectedUserData.first_name || !scope.selectedUserData.last_name || !scope.selectedUserData.gender_id || !scope.selectedUserData.date_of_birth){
+                return;
+            }
+            scope.step = 'internal_search';
+            scope.internalGridOptions = null;
+            scope.goToInternalSearch();
+        }
+        if(scope.step === 'confirmation') {
+            if(!scope.selectedUserData.username){
+                scope.error.username = 'This field cannot be left empty';
+            }
+            if(!scope.selectedUserData.password){
+                scope.error.password = 'This field cannot be left empty';
+            }
+            if(!scope.selectedUserData.username || !scope.selectedUserData.password){
+                return;
+            }
+            scope.saveGuardianDetails();
+        }
+    }
+
     scope.goToPrevStep = function(){
         switch(scope.step){
             case 'internal_search': 
@@ -562,28 +610,19 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
     scope.goToNextStep = function() {
         switch(scope.step){
             case 'user_details': 
-                scope.step = 'internal_search';
-                scope.getUniqueOpenEmisId();
+                scope.validateDetails();
                 break;
             case 'internal_search': 
                 scope.step = 'external_search';
+                scope.externalGridOptions = null;
                 UtilsSvc.isAppendLoader(true);
-                setTimeout(function(){
-                    scope.getExternalSearchData();
-                }, 1500);
+                scope.goToExternalSearch();
                 break;
             case 'external_search': 
                 scope.step = 'confirmation';
-                scope.generatePassword();
+                scope.getUniqueOpenEmisId();
                 break;
         }
-    }
-
-    scope.goToFirstStep = function () {
-        scope.step = 'user_details';
-        scope.selectedGuardianData = {};
-        scope.internalGridOptions = null;
-        scope.externalGridOptions = null;
     }
 
     scope.cancelProcess = function() {
@@ -793,39 +832,45 @@ function DirectoryaddguardianController($scope, $q, $window, $http, UtilsSvc, Al
         var log = [];
         angular.forEach(scope.rowsThisPage , function(value) {
             if (value.id == scope.selectedGuardian) {
-                scope.selectedGuardianData = value;
+                scope.selectedUserData = value;
             }
         }, log);
     }
 
     scope.saveGuardianDetails = function() {
+        scope.selectedUserData.addressArea = DirectoryaddguardianSvc.getAddressArea();
+        scope.selectedUserData.birthplaceArea = DirectoryaddguardianSvc.getBirthplaceArea();
         var params = {
-            guardian_relation_id: scope.selectedGuardianData.relation_type_id,
+            guardian_relation_id: scope.selectedUserData.relation_type_id,
             student_id: 1,
-            openemis_no: scope.selectedGuardianData.openemis_no,
-            first_name: scope.selectedGuardianData.first_name,
-            middle_name: scope.selectedGuardianData.middle_name,
-            third_name: scope.selectedGuardianData.third_name,
-            last_name: scope.selectedGuardianData.last_name,
-            preferred_name: scope.selectedGuardianData.preferred_name,
-            gender_id: scope.selectedGuardianData.gender_id,
-            date_of_birth: scope.selectedGuardianData.date_of_birth.toLocaleDateString(),
-            identity_number: scope.selectedGuardianData.identity_number,
-            nationality_id: scope.selectedGuardianData.nationality_id,
-            username: scope.selectedGuardianData.username,
-            password: scope.selectedGuardianData.password,
-            postal_code: scope.selectedGuardianData.postalCode,
-            address: scope.selectedGuardianData.address,
-            birthplace_area_id: 2,
-            address_area_id: 2,
-            identity_type_id: scope.selectedGuardianData.identity_type_id,
+            openemis_no: scope.selectedUserData.openemis_no,
+            first_name: scope.selectedUserData.first_name,
+            middle_name: scope.selectedUserData.middle_name,
+            third_name: scope.selectedUserData.third_name,
+            last_name: scope.selectedUserData.last_name,
+            preferred_name: scope.selectedUserData.preferred_name,
+            gender_id: scope.selectedUserData.gender_id,
+            date_of_birth: scope.selectedUserData.date_of_birth,
+            identity_number: scope.selectedUserData.identity_number,
+            nationality_id: scope.selectedUserData.nationality_id,
+            username: scope.selectedUserData.username,
+            password: scope.selectedUserData.password,
+            postal_code: scope.selectedUserData.postalCode,
+            address: scope.selectedUserData.address,
+            birthplace_area_id: DirectoryaddguardianSvc.getBirthplaceAreaId(),
+            address_area_id: DirectoryaddguardianSvc.getAddressAreaId(),
+            identity_type_id: scope.selectedUserData.identity_type_id,
+            photo_name: scope.selectedUserData.photo_name,
+            photo_content: scope.selectedUserData.photo_base_64,
         };
         UtilsSvc.isAppendLoader(true);
         DirectoryaddguardianSvc.saveGuardianDetails(params)
         .then(function(response) {
-            scope.message = (scope.selectedGuardianData && scope.selectedGuardianData.relation_type_name ? scope.selectedGuardianData.relation_type_name : 'Guardian') + ' successfully added.';
+            scope.message = (scope.selectedUserData && scope.selectedUserData.relation_type_name ? scope.selectedUserData.relation_type_name : 'Guardian') + ' successfully added.';
             scope.messageClass = 'alert-success';
             scope.step = "summary";
+            var todayDate = new Date();
+            scope.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);

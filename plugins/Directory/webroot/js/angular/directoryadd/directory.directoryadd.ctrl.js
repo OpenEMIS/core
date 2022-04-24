@@ -420,7 +420,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             };
             setTimeout(function(){
                 scope.getInternalSearchData();
-            }, 2000);
+            }, 1500);
         }, function(error){
             scope.internalGridOptions = {
                 columnDefs: [
@@ -470,7 +470,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             };
             setTimeout(function(){
                 scope.getInternalSearchData();
-            }, 2000);
+            }, 1500);
         });
     }
 
@@ -600,7 +600,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
             }
     
-            if(!scope.selectedUserData.first_name || !scope.selectedUserData.last_name || !scope.selectedUserData.gender_id || !scope.selectedUserData.date_of_birth){
+            if(!scope.selectedUserData.user_type_id || !scope.selectedUserData.first_name || !scope.selectedUserData.last_name || !scope.selectedUserData.gender_id || !scope.selectedUserData.date_of_birth){
                 return;
             }
             scope.step = 'internal_search';
@@ -649,9 +649,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 scope.step = 'external_search';
                 scope.externalGridOptions = null;
                 UtilsSvc.isAppendLoader(true);
-                setTimeout(function(){
-                    scope.goToExternalSearch();
-                }, 1500);
+                scope.goToExternalSearch();
                 break;
             case 'external_search': 
                 scope.step = 'confirmation';
