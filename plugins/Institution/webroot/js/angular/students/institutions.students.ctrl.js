@@ -39,8 +39,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.customFields = [];
     StudentController.customFieldsArray = [];
     StudentController.selectedSection = '';
-    var todayDate = new Date();
-    StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
 
     StudentController.datepickerOptions = {
         minDate: new Date(),
@@ -111,6 +109,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             'identity_number': 'Identity Number',
             'account_type': 'Account Type'
         };
+        if($window.localStorage.getItem('address_area')) {
+            $window.localStorage.removeItem('address_area')
+        }
+        if($window.localStorage.getItem('address_area_id')) {
+            $window.localStorage.removeItem('address_area_id')
+        }
+        if($window.localStorage.getItem('birthplace_area')) {
+            $window.localStorage.removeItem('birthplace_area')
+        }
+        if($window.localStorage.getItem('birthplace_area_id')) {
+            $window.localStorage.removeItem('birthplace_area_id')
+        }
         StudentController.initGrid();
         StudentController.getGenders();
     });
@@ -816,8 +826,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(!StudentController.selectedStudentData.date_of_birth) {
             StudentController.error.date_of_birth = 'This field cannot be left empty';
         } else {
-            // let dob = StudentController.selectedStudentData.date_of_birth.toLocaleDateString();
-            // let dobArray = dob.split('/');
             StudentController.selectedStudentData.date_of_birth = $filter('date')(StudentController.selectedStudentData.date_of_birth, 'yyyy-MM-dd');
         }
 
@@ -958,6 +966,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.message = (StudentController.selectedStudentData && StudentController.selectedStudentData.userType ? StudentController.selectedStudentData.userType.name : 'Student') + ' successfully added.';
                 StudentController.messageClass = 'alert-success';
                 StudentController.step = "summary";
+                var todayDate = new Date();
+                StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
                 StudentController.getRedirectToGuardian();
             }
         }, function(error){
@@ -978,7 +988,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function cancelProcess() {
-        location.back();
+        $window.history.back();
     }
 
     function addGuardian () {
