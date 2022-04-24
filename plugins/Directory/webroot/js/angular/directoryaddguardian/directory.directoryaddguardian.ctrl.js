@@ -48,6 +48,18 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             'identity_number': 'Identity Number',
             'account_type': 'Account Type'
         };
+        if($window.localStorage.getItem('address_area')) {
+            $window.localStorage.removeItem('address_area')
+        }
+        if($window.localStorage.getItem('address_area_id')) {
+            $window.localStorage.removeItem('address_area_id')
+        }
+        if($window.localStorage.getItem('birthplace_area')) {
+            $window.localStorage.removeItem('birthplace_area')
+        }
+        if($window.localStorage.getItem('birthplace_area_id')) {
+            $window.localStorage.removeItem('birthplace_area_id')
+        }
         scope.initGrid();
         scope.getRelationType();
     });
@@ -626,7 +638,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.cancelProcess = function() {
-        location.href = angular.baseUrl + '/Directory/Directories/Directories/index';
+        $window.history.back();
     }
     
     scope.initGrid = function() {

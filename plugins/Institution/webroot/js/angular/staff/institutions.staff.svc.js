@@ -2,9 +2,9 @@ angular
     .module('institutions.staff.svc', ['kd.orm.svc'])
     .service('InstitutionsStaffSvc', InstitutionsStaffSvc);
 
-InstitutionsStaffSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc'];
+InstitutionsStaffSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc', '$window'];
 
-function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
+function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
 
     var externalSource = null;
     var externalToken = null;
@@ -64,6 +64,10 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getInternalSearchData: getInternalSearchData,
         getExternalSearchData: getExternalSearchData,
         saveStaffDetails: saveStaffDetails,
+        getAddressAreaId: getAddressAreaId,
+        getBirthplaceAreaId: getBirthplaceAreaId,
+        getAddressArea: getAddressArea,
+        getBirthplaceArea: getBirthplaceArea,
     };
 
     var models = {
@@ -112,6 +116,26 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
             deferred.reject(error);
         });
         return deferred.promise;
+    }
+
+    function getAddressAreaId () {
+        selectedAddressAreaId = $window.localStorage.getItem('address_area_id');
+        return JSON.parse(selectedAddressAreaId);
+    }
+
+    function getAddressArea () {
+        selectedAddressArea = $window.localStorage.getItem('address_area');
+        return JSON.parse(selectedAddressArea);
+    }
+
+    function getBirthplaceAreaId () {
+        selectedBirthplcaeAreaId = $window.localStorage.getItem('birthplace_area_id');
+        return JSON.parse(selectedBirthplcaeAreaId);
+    }
+
+    function getBirthplaceArea () {
+        selectedBirthplcaeArea = $window.localStorage.getItem('birthplace_area');
+        return JSON.parse(selectedBirthplcaeArea);
     }
 
     function translate(data) {
@@ -167,7 +191,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
     function getExternalSearchData(param) {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Directories/directoryExternalSearch';
-        $http.get(url, {params: param})
+        $http.post(url, {params: param})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
@@ -203,7 +227,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
     function getPositions(params){
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/getPositions';
-        $http.get(url, {params: params})
+        $http.post(url, {params: params})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
