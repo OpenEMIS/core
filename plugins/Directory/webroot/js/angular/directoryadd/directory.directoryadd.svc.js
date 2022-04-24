@@ -1,10 +1,10 @@
 angular
     .module('directory.directoryadd.svc', ['kd.orm.svc', 'alert.svc'])
-    .service('DirectoryaddguardianSvc', DirectoryaddguardianSvc);
+    .service('DirectoryaddSvc', DirectoryaddSvc);
 
-DirectoryaddguardianSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc', 'AlertSvc', 'UtilsSvc'];
+    DirectoryaddSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc', 'AlertSvc', 'UtilsSvc', '$window'];
 
-function DirectoryaddguardianSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc) {
+function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $window) {
 
     var models = {
         Genders: 'User.Genders',
@@ -22,7 +22,13 @@ function DirectoryaddguardianSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSv
         getInternalSearchData: getInternalSearchData,
         getExternalSearchData: getExternalSearchData,
         getContactTypes: getContactTypes,
-        getRedirectToGuardian: getRedirectToGuardian
+        getRedirectToGuardian: getRedirectToGuardian,
+        getStudentCustomFields: getStudentCustomFields,
+        getAddressAreaId: getAddressAreaId,
+        getAddressArea: getAddressArea,
+        getBirthplaceAreaId: getBirthplaceAreaId,
+        getBirthplaceArea: getBirthplaceArea,
+        saveDirectoryData: saveDirectoryData,
     };
     return service;
     
@@ -122,7 +128,7 @@ function DirectoryaddguardianSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSv
     function getInternalSearchData(params) {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Directories/directoryInternalSearch';
-        $http.get(url, params)
+        $http.post(url, {params: params})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
@@ -134,7 +140,7 @@ function DirectoryaddguardianSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSv
     function getExternalSearchData(params) {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Directories/directoryExternalSearch';
-        $http.get(url, {params: params})
+        $http.post(url, {params: params})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
@@ -147,6 +153,50 @@ function DirectoryaddguardianSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSv
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Directories/getRedirectToGuardian';
         $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getStudentCustomFields(){
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/studentCustomFields';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
+    function getAddressAreaId () {
+        selectedAddressAreaId = $window.localStorage.getItem('address_area_id');
+        return JSON.parse(selectedAddressAreaId);
+    }
+
+    function getAddressArea () {
+        selectedAddressArea = $window.localStorage.getItem('address_area');
+        return JSON.parse(selectedAddressArea);
+    }
+
+    function getBirthplaceAreaId () {
+        selectedBirthplcaeAreaId = $window.localStorage.getItem('birthplace_area_id');
+        return JSON.parse(selectedBirthplcaeAreaId);
+    }
+
+    function getBirthplaceArea () {
+        selectedBirthplcaeArea = $window.localStorage.getItem('birthplace_area');
+        return JSON.parse(selectedBirthplcaeArea);
+    }
+
+    function saveDirectoryData (params) {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institution/Institutions/saveDirectoryData';
+        $http.post(url, params)
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
