@@ -1,5 +1,5 @@
 angular
-    .module('institutions.staff.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.staff.svc', 'angular.chosen'])
+    .module('institutions.staff.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.staff.svc', 'angular.chosen', 'kd-angular-tree-dropdown'])
     .controller('InstitutionsStaffCtrl', InstitutionStaffController);
 
 InstitutionStaffController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsStaffSvc', '$rootScope'];
@@ -36,8 +36,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.shiftsId = [];
     StaffController.rowsThisPage= [];
     StaffController.institutionId = null;
-
+    StaffController.error = {};
+    StaffController.staffShiftsId=[];
     StaffController.datepickerOptions = {
+        minDate: new Date(),
+        maxDate: new Date('01/01/2100'),
+        showWeeks: false
+    };
+    StaffController.dobDatepickerOptions = {
+        minDate: new Date('01/01/1900'),
         maxDate: new Date(),
         showWeeks: false
     };
@@ -80,6 +87,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     $window.savePhoto = function(event) {
         let photo = event.files[0];
         StaffController.selectedStaffData.photo = photo;
+        StaffController.selectedStaffData.photo_name = photo.name;
+        let fileReader = new FileReader();
+        fileReader.readAsDataURL(photo);
+        fileReader.onload = () => {
+            console.log(fileReader.result);
+            StaffController.selectedStaffData.photo_base_64 = fileReader.result;
+        }
     }
 
     angular.element(document).ready(function () {
@@ -97,10 +111,24 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             'identity_number': 'Identity Number',
             'account_type': 'Account Type'
         };
+        if($window.localStorage.getItem('address_area')) {
+            $window.localStorage.removeItem('address_area')
+        }
+        if($window.localStorage.getItem('address_area_id')) {
+            $window.localStorage.removeItem('address_area_id')
+        }
+        if($window.localStorage.getItem('birthplace_area')) {
+            $window.localStorage.removeItem('birthplace_area')
+        }
+        if($window.localStorage.getItem('birthplace_area_id')) {
+            $window.localStorage.removeItem('birthplace_area_id')
+        }
         StaffController.getGenders();
     });
 
     function saveStaffDetails() {
+        StaffController.selectedStaffData.addressArea = InstitutionsStaffSvc.getAddressArea();
+        StaffController.selectedStaffData.birthplaceArea = InstitutionsStaffSvc.getBirthplaceArea();
         var params = {
             openemis_no: StaffController.selectedStaffData.openemis_no,
             first_name: StaffController.selectedStaffData.first_name,
@@ -109,29 +137,31 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             last_name: StaffController.selectedStaffData.last_name,
             preferred_name: StaffController.selectedStaffData.preferred_name,
             gender_id: StaffController.selectedStaffData.gender_id,
-            date_of_birth: StaffController.selectedStaffData.date_of_birth.toLocaleDateString(),
+            date_of_birth: StaffController.selectedStaffData.date_of_birth,
             identity_number: StaffController.selectedStaffData.identity_number,
             nationality_id: StaffController.selectedStaffData.nationality_id,
             username: StaffController.selectedStaffData.username,
             password: StaffController.selectedStaffData.password,
             postal_code: StaffController.selectedStaffData.postalCode,
             address: StaffController.selectedStaffData.address,
-            birthplace_area_id: 2,
-            address_area_id: 2,
+            birthplace_area_id: InstitutionsStaffSvc.getBirthplaceAreaId(),
+            address_area_id: InstitutionsStaffSvc.getAddressAreaId(),
             identity_type_id: StaffController.selectedStaffData.identity_type_id,
-            education_grade_id: 59,
-            academic_period_id: StaffController.selectedStaffData.academic_period_id,
-            start_date: StaffController.selectedStaffData.startDate.toLocaleDateString(),
-            end_date: StaffController.selectedStaffData.endDate?.toLocaleDateString(),
+            start_date: StaffController.selectedStaffData.startDate,
+            end_date: StaffController.selectedStaffData.endDate ? $filter('date')(StaffController.selectedStaffData.endDate, 'yyyy-MM-dd') : '',
             institution_position_id: 1,
+            position_type_id: StaffController.selectedStaffData.position_type_id,
             staff_type_id: StaffController.selectedStaffData.staff_type_id,
             fte: StaffController.selectedStaffData.fte_id,
+            shift_ids: StaffController.staffShiftsId,
         };
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.saveStaffDetails(params).then(function(resp){
             StaffController.message = 'Staff successfully added.';
             StaffController.messageClass = 'alert-success';
             StaffController.step = "summary";
+            var todayDate = new Date();
+            StaffController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
@@ -140,13 +170,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function getUniqueOpenEmisId() {
+        if(StaffController.selectedStaffData.openemis_no)
+            return;
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.getUniqueOpenEmisId()
             .then(function(response) {
                 StaffController.selectedStaffData.openemis_no = response;
                 StaffController.selectedStaffData.username = response;
-                StaffController.getInternalSearchData();
-    }, function(error) {
+                UtilsSvc.isAppendLoader(false);
+        }, function(error) {
             console.log(error);
             UtilsSvc.isAppendLoader(false);
         });
@@ -155,13 +187,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function getInternalSearchData() {
         var first_name = '';
         var last_name = '';
-        var openemis_no = '';
+        var openemis_no = null;
         var date_of_birth = '';
         var identity_number = '';
         first_name = StaffController.selectedStaffData.first_name;
         last_name = StaffController.selectedStaffData.last_name;
         date_of_birth = StaffController.selectedStaffData.date_of_birth;
-        openemis_no = StaffController.selectedStaffData.openemis_no;
         identity_number = StaffController.selectedStaffData.identity_number;
         var dataSource = {
             pageSize: StaffController.pageSize,
@@ -315,8 +346,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var params = {
             institution_id: StaffController.institutionId,
             fte: StaffController.selectedStaffData.position_type_id === 'Full-Time' ? 1 : StaffController.selectedStaffData.fte_id,
-            startDate: StaffController.selectedStaffData.startDate ? StaffController.selectedStaffData.startDate.toLocaleDateString() : new Date().toLocaleDateString(),
-            endDate: StaffController.selectedStaffData.endDate ? StaffController.selectedStaffData.endDate.toLocaleDateString() : new Date().toLocaleDateString(),
+            startDate: StaffController.selectedStaffData.startDate ? $filter('date')(StaffController.selectedStaffData.startDate, 'yyyy-MM-dd') : $filter('date')(new Date(), 'yyyy-MM-dd'),
+            endDate: StaffController.selectedStaffData.endDate ? $filter('date')(StaffController.selectedStaffData.startDate, 'yyyy-MM-dd') : $filter('date')(new Date(), 'yyyy-MM-dd'),
         }
         InstitutionsStaffSvc.getPositions(params).then(function(resp){
             StaffController.institutionPositionOptions.availableOptions = resp.data;
@@ -455,7 +486,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 break;
             }
         }
-        StaffController.getPositions();
     }
 
     function changeFte() {
@@ -681,34 +711,57 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function validateDetails() {
-        if(!StaffController.selectedStaffData.first_name){
-            StaffController.error.first_name = 'This field cannot be left empty';
+        if(StaffController.step === 'user_details') {
+            if(!StaffController.selectedStaffData.first_name){
+                StaffController.error.first_name = 'This field cannot be left empty';
+            }
+            if(!StaffController.selectedStaffData.last_name){
+                StaffController.error.last_name = 'This field cannot be left empty';
+            }
+            if(!StaffController.selectedStaffData.gender_id){
+                StaffController.error.gender_id = 'This field cannot be left empty';
+            }
+            if(!StaffController.selectedStaffData.date_of_birth) {
+                StaffController.error.date_of_birth = 'This field cannot be left empty';
+            } else {
+                StaffController.selectedStaffData.date_of_birth = $filter('date')(StaffController.selectedStaffData.date_of_birth, 'yyyy-MM-dd');
+            }
+    
+            if(!StaffController.selectedStaffData.first_name || !StaffController.selectedStaffData.last_name || !StaffController.selectedStaffData.gender_id || !StaffController.selectedStaffData.date_of_birth){
+                return;
+            }
+            StaffController.step = 'internal_search';
+            StaffController.internalGridOptions = null;
+            StaffController.goToInternalSearch();
         }
-        if(!StaffController.selectedStaffData.last_name){
-            StaffController.error.last_name = 'This field cannot be left empty';
+        if(StaffController.step === 'add_staff') {
+            if(!StaffController.selectedStaffData.startDate) {
+            StaffController.error.start_date = 'This field cannot be left empty';
+            } else {
+                StaffController.selectedStaffData.startDate = $filter('date')(StaffController.selectedStaffData.startDate, 'yyyy-MM-dd');
+            }
+            if(!StaffController.selectedStaffData.position_type_id){
+                StaffController.error.position_type_id = 'This field cannot be left empty';
+            }
+            if(StaffController.selectedStaffData.fte_id === 'Part-Time' && !StaffController.selectedStaffData.position_type_id){
+                StaffController.error.fte_id = 'This field cannot be left empty';
+            }
+            if(!StaffController.selectedStaffData.staff_type_id){
+                StaffController.error.staff_type_id = 'This field cannot be left empty';
+            }
+            if(StaffController.staffShiftsId.length === 0){
+                StaffController.error.staffShiftsId = 'This field cannot be left empty';
+            }
+            if(!StaffController.selectedStaffData.startDate || !StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.staff_type_id || !StaffController.staffShiftsId.length === 0 || StaffController.error.fte_id){
+                return;
+            }
+            StaffController.saveStaffDetails();
         }
-        if(!StaffController.selectedStaffData.gender_id){
-            StaffController.error.gender_id = 'This field cannot be left empty';
-        }
-        if(!StaffController.selectedStaffData.date_of_birth) {
-            StaffController.error.date_of_birth = 'This field cannot be left empty';
-        } else {
-            let dob = StaffController.selectedStaffData.date_of_birth.toLocaleDateString();
-            let dobArray = dob.split('/');
-            StaffController.selectedStaffData.date_of_birth = `${dobArray[2]}-${dobArray[1]}-${dobArray[0]}`;
-        }
-
-        if(!StaffController.selectedStaffData.first_name || !StaffController.selectedStaffData.last_name || !StaffController.selectedStaffData.gender_id || !StaffController.selectedStaffData.date_of_birth){
-            return;
-        }
-        StaffController.step = 'internal_search';
-        StaffController.getUniqueOpenEmisId();
     }
 
     function goToNextStep() {
         switch(StaffController.step){
             case 'user_details': 
-                StaffController.step = 'internal_search';
                 StaffController.validateDetails();
                 break;
             case 'internal_search': 
@@ -718,6 +771,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 break;
             case 'external_search': 
                 StaffController.step = 'confirmation';
+                StaffController.getUniqueOpenEmisId();
                 break;
             case 'confirmation': 
                 StaffController.step = 'add_staff';
@@ -738,7 +792,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function cancelProcess() {
-        location.href = angular.baseUrl + '/Institution/Institutions/eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6ImtjMTBnNThzMjRsaXVsMTZ2Y2lsMmlvN2tpIn0.ZDJiNzg2MTc0ZWJkNTQ4NmZlZjU0ZDFlOTc1ZTEyNjY3OWQwNzk1MTk4MjVmZTIzMDQ4ZjY2OTRmZWVlZjA3OA/Staff/index';
+        $window.history.back();
     }
 
     StaffController.selectStaff = function(id) {
