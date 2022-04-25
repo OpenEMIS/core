@@ -149,11 +149,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             identity_type_id: StaffController.selectedStaffData.identity_type_id,
             start_date: StaffController.selectedStaffData.startDate,
             end_date: StaffController.selectedStaffData.endDate ? $filter('date')(StaffController.selectedStaffData.endDate, 'yyyy-MM-dd') : '',
-            institution_position_id: 1,
+            institution_position_id: StaffController.institutionPositionOptions.selectedOption.value,
             position_type_id: StaffController.selectedStaffData.position_type_id,
             staff_type_id: StaffController.selectedStaffData.staff_type_id,
             fte: StaffController.selectedStaffData.fte_id,
             shift_ids: StaffController.staffShiftsId,
+            photo_name: StaffController.selectedStaffData.photo_name,
+            photo_base_64: StaffController.selectedStaffData.photo_base_64,
         };
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.saveStaffDetails(params).then(function(resp){
@@ -348,9 +350,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             fte: StaffController.selectedStaffData.position_type_id === 'Full-Time' ? 1 : StaffController.selectedStaffData.fte_id,
             startDate: StaffController.selectedStaffData.startDate ? $filter('date')(StaffController.selectedStaffData.startDate, 'yyyy-MM-dd') : $filter('date')(new Date(), 'yyyy-MM-dd'),
             endDate: StaffController.selectedStaffData.endDate ? $filter('date')(StaffController.selectedStaffData.startDate, 'yyyy-MM-dd') : $filter('date')(new Date(), 'yyyy-MM-dd'),
-        }
+            openemis_no: StaffController.selectedStaffData.openemis_no,
+        };
         InstitutionsStaffSvc.getPositions(params).then(function(resp){
             StaffController.institutionPositionOptions.availableOptions = resp.data;
+            StaffController.institutionPositionOptions.selectedOption = null;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
@@ -449,6 +453,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function changePositionType() {
+        StaffController.selectedStaffData.fte_id = null;
         var positionType = StaffController.selectedStaffData.position_type_id;
         var positionTypeOptions = StaffController.positionTypeOptions;
         for (var i = 0; i < positionTypeOptions.length; i++) {
@@ -489,6 +494,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function changeFte() {
+        StaffController.institutionPositionOptions.selectedOption = null;
         var fte = StaffController.selectedStaffData.fte_id;
         var fteOptions = StaffController.fteOptions;
         for (var i = 0; i < fteOptions.length; i++) {
@@ -735,6 +741,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.goToInternalSearch();
         }
         if(StaffController.step === 'add_staff') {
+            let shouldPositionRequired = false;
             if(!StaffController.selectedStaffData.startDate) {
             StaffController.error.start_date = 'This field cannot be left empty';
             } else {
@@ -752,7 +759,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if(StaffController.staffShiftsId.length === 0){
                 StaffController.error.staffShiftsId = 'This field cannot be left empty';
             }
-            if(!StaffController.selectedStaffData.startDate || !StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.staff_type_id || !StaffController.staffShiftsId.length === 0 || StaffController.error.fte_id){
+            StaffController.institutionPositionOptions.availableOptions.forEach((option)=>{
+                if(!option.disabled){
+                    shouldPositionRequired = true;
+                }
+            });
+            if(shouldPositionRequired && !StaffController.institutionPositionOptions.selectedOption) {
+                StaffController.error.position_id = 'This field cannot be left empty';
+            }
+            if(!StaffController.selectedStaffData.startDate || !StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.staff_type_id || !StaffController.staffShiftsId.length === 0 || StaffController.error.fte_id || StaffController.error.position_id){
                 return;
             }
             StaffController.saveStaffDetails();
