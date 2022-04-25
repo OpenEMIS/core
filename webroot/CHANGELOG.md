@@ -1,3 +1,22 @@
+### [3.75.2] - 2022-04-22
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 3
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 9
+- Implemented: Develop a new report : Institutions > Statistics > Standard Report : Student Absences by Type
+- Bug Fixed: Institutions>Add: Administrative District field should be mandatory
+- Bug Fixed: Administrations > Profiles > Institutions : Create placeholders for custom fields, assessments and class area
+- Bug Fixed: Administrations > System Setup > System Configuration > System : Setting up timezone
+- Bug Fixed: Institution>Dashboard: Data on the Dashboard does not tally with the one in the Attendance
+- Bug Fixed: Institution>Students: Issue with the Dashboard data in the student module
+- Bug Fixed: Institution>Academic>Classes: Institution 170130 and 170131 are getting 404 error
+- Bug Fixed: Add the Profiles feature to Institutions module(Student)
+- Bug Fixed: Institutions>Overview: Latitude and Longitude in edit institution should be hidden or read-only
+- Bug Fixed: Reports > Students : Develop Student Health Report > Health
+- Bug Fixed: Reports > Staff : Develop Detailed Staff Data Report Filters : Area Level, Area Education , Institutions
+- Bug Fixed: Institutions > Profiles > Institutions/Staff/Students: Allow user to view PDF without downloading PDF file
+- Bug Fixed: Institutions>Survey>Forms:User is unable to edit and limit needs to be increase
+- Bug Fixed: Institutions>Performance>Assessments: Unable to import assessment mark even when it is within limit
+- Bug Fixed: Personal>General>Comments: Menu on the left are collapsed instead of expanding
+
 ### [3.75.1] - 2022-04-14
 - Implemented: Add Export button function - Institutions > Finances > Income
 - Bug Fixed: Staff>Career>Subjects : Implement filter and sort
