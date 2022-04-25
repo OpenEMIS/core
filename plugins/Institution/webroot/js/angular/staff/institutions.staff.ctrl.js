@@ -156,6 +156,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             shift_ids: StaffController.staffShiftsId,
             photo_name: StaffController.selectedStaffData.photo_name,
             photo_base_64: StaffController.selectedStaffData.photo_base_64,
+            institution_id: StaffController.institutionId,
         };
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.saveStaffDetails(params).then(function(resp){
