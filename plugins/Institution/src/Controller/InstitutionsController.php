@@ -3336,7 +3336,7 @@ class InstitutionsController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate, $staffUserPriId = '', $openemisNo)
+    public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate, $openemisNo, $staffUserPriId = '')
     {
         if ($endDate == 'null') {
             $endDate = null;
