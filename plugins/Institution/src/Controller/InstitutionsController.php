@@ -3336,7 +3336,7 @@ class InstitutionsController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate, $staffUserPriId = '')
+    public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate, $staffUserPriId = '', $openemisNo)
     {
         if ($endDate == 'null') {
             $endDate = null;
@@ -3448,7 +3448,6 @@ class InstitutionsController extends AppController
         $staffPositionsOptions = array_intersect_key($staffPositionsOptions, array_intersect($staffPositionRoles, $roleOptions));
 
         // POCOR-4269 same staff cant add to same position regardsless the FTE
-        $openemisNo = $this->request->params['pass'][3];
         $positionHeldByStaff = $StaffTable->find()
             ->select([
                 'position_id' => $StaffTable->aliasField('institution_position_id'),
@@ -3487,7 +3486,6 @@ class InstitutionsController extends AppController
 
         $this->response->body(json_encode($options, JSON_UNESCAPED_UNICODE));
         $this->response->type('json');
-
         return $this->response;
     }
 
@@ -4444,14 +4442,15 @@ class InstitutionsController extends AppController
     public function getPositions()
     {
         $requestData = $this->request->input('json_decode', true);
-        $fte = $requestData['fte'];
-        $startDate = $requestData['startDate'];
-        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $fte = $requestData['params']['fte'];
+        $startDate = $requestData['params']['startDate'];
+        $institutionId = $requestData['params']['institution_id'];
+        $openemisNo = $requestData['params']['openemis_no'];
         $endDate = null;
         if ($endDate == 'null') {
             $endDate = null;
         }
-        $result = $this->getInstitutionPositions($institutionId, $fte, $startDate, $endDate);
+        $result = $this->getInstitutionPositions($institutionId, $fte, $startDate, $endDate, $openemisNo);
         echo $result; die;
     }
 
