@@ -193,7 +193,7 @@ class CustomFieldsTable extends ControllerActionTable
     }
 
     public function getFieldTypes()
-    {
+    { 
         return $this->fieldTypes;
     }
 
