@@ -978,7 +978,7 @@ trait MessagesTrait
             ],
             'InstitutionDistributions' => [
                 'quantity_received' => [
-                    'genralerror' => 'Quantity received can not be more than meal amount '
+                    'genralerror' => "The 'Quantity Received' should not be more than the amount of meals that was defined in the administration"
                 ]
             ],
             'InstitutionGrades' => [

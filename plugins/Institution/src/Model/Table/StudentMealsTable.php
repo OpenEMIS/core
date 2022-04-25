@@ -138,8 +138,8 @@ class StudentMealsTable extends ControllerActionTable
                          $data = [                    
                             'date' =>!empty($areasData->date) ? $areasData->date : $findDay,
                             // 'paid' => $areasData->paid,                    
-                            'meal_benefit_id' => $areasData->meal_benefit_id,
-                            'meal_benefit' => $areasData->meal_benefit->name,
+                            'meal_benefit_id' => $areasData->meal_benefit_id ,
+                            'meal_benefit' => !empty($areasData->meal_benefit->name) ? $areasData->meal_benefit->name : "-" ,
                             'meal_received_id' => !empty($areasData->meal_received_id) ? $areasData->meal_received_id : "3",
                             'meal_received' => !empty($areasData->meal_received->name) ? $areasData->meal_received->name : "None"
                         ];  
@@ -171,7 +171,7 @@ class StudentMealsTable extends ControllerActionTable
                             // 'paid' => null,
                             'meal_benefit_id' => $isMarkedRecords->meal_benefit_id,
                             'meal_benefit' => $isMarkedRecords->meal_benefit->name,
-                            'meal_received_id' => !empty($isMarkedRecords) ?  "2"  : null,
+                            'meal_received_id' => !empty($isMarkedRecords) ?  "3"  : null,
                             'meal_received' => !empty($isMarkedRecords) ? "No" : "None"
                         ];
                      }
@@ -415,13 +415,15 @@ class StudentMealsTable extends ControllerActionTable
                     $StudentMealMarkedRecords->aliasField('institution_id = ') => $entity->institution_id,
                 ])
                ->first();
-            //    echo "<pre>";print_r($isMarkedRecords);die;
-                if (empty($mealReceived) && empty($isMarkedRecords)) {
+                //START:POCOR-6681
+                // if (empty($mealReceived) && empty($isMarkedRecords)) {
+                if (empty($mealReceived)) {
                     $mealReceived = "None";
                 }
                 else{
                     $mealReceived = "Received";
                 }
+                //END:POCOR-6681
             }
         else{
             $mealReceived = $mealReceived->meal_received->name;

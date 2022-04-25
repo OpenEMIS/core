@@ -25,6 +25,13 @@ class POCOR6681 extends AbstractMigration
                 'name' => 'None'
             ]);
         }
+
+        $this->execute("
+        UPDATE `import_mapping` SET `description` = 'OpenEMIS ID', `foreign_key` = '2', `lookup_plugin` = 'Security', `lookup_model` = 'Users', `lookup_column` = 'openemis_no' WHERE `import_mapping`.`model` = 'Institution.InstitutionMealStudents' AND `import_mapping`.`column_name` = 'OpenEMIS_ID'
+        ");
+        $this->execute("
+        ALTER TABLE `institution_meal_programmes` CHANGE `date_received` `date_received` DATE NOT NULL
+        ");
     }
 
     public function down()

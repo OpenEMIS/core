@@ -47,22 +47,23 @@ class InstitutionDistributionsTable extends ControllerActionTable
         
         
     }
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
-	{
-		$this->setupFields($entity);
-	}
+    //START:POCOR-6681
+    // public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+	// {
+	// 	$this->setupFields($entity);
+	// }
 
-    public function setupFields(Entity $entity) 
-	{
-		$this->field('date_received', [
-			// 'type' => 'hidden',
-			// 'placeholder' => __('Select Position Grades'),
-			'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true],
-			'attr' => ['required' => true], // to add red asterisk
-			'entity' => $entity,
-			'before' => 'comment'
-		]);
-	}
+    // public function setupFields(Entity $entity) 
+	// {
+	// 	$this->field('date_received', [
+	// 		'type' => 'date',
+	// 		'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true],
+	// 		'attr' => ['required' => true], // to add red asterisk
+	// 		'entity' => $entity,
+	// 		'before' => 'comment'
+	// 	]);
+	// }
+    //END:POCOR-6681
 
     public function validationDefault(Validator $validator)
     {
