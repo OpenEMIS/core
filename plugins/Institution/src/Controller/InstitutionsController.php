@@ -212,7 +212,7 @@ class InstitutionsController extends AppController
         $this->attachAngularModules();
         $this->loadModel('Institution.StaffBodyMasses');
         //POCOR-5672 it is used for removing csrf token mismatch condition in save student Api 
-        if ($this->request->action == 'saveStudentData') {
+        if ($this->request->action == 'saveStudentData' || $this->request->action == 'saveStaffData' || $this->request->action == 'saveGuardianData' || $this->request->action == 'saveDirectoryData') {
             $this->eventManager()->off($this->Csrf);
         }//POCOR-5672 ends
     }
@@ -4881,7 +4881,6 @@ class InstitutionsController extends AppController
             
             $institutionPositionId = (array_key_exists('institution_position_id', $requestData))? $requestData['institution_position_id'] : null;
             $fte = (array_key_exists('fte', $requestData))? $requestData['fte'] : null;
-            $academicPeriodId = (array_key_exists('academic_period_id', $requestData))? $requestData['academic_period_id'] : null;
             $startDate = (array_key_exists('start_date', $requestData))? date('y-m-d', strtotime($requestData['start_date'])) : null;
             $endDate = (array_key_exists('end_date', $requestData))? date('y-m-d', strtotime($requestData['end_date'])) : null;
             
@@ -4896,16 +4895,13 @@ class InstitutionsController extends AppController
             //get academic period data
             $academicPeriods = TableRegistry::get('academic_periods');
             $periods = $academicPeriods->find()
-                        ->where([
-                            $academicPeriods->aliasField('id') => $academicPeriodId,
-                        ])
-                        ->first();
+                           ->where(['current'=> 1])
+                           ->first();
             $startYear = $endYear = '';
             if(!empty($periods)){
                 $startYear = $periods->start_year;
                 $endYear = $periods->end_year;
             }
-
             //get prefered language
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
             $pref_lang = $ConfigItems->find()
@@ -4915,9 +4911,9 @@ class InstitutionsController extends AppController
                     ])
                     ->first();
             //get Student Status List        
-            $StaffStatuses = TableRegistry::get('staff_statuses');
+            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
             $statuses = $StaffStatuses->findCodeList();
-        
+            
             $SecurityUsers = TableRegistry::get('security_users');
             $entityData = [
                 'openemis_no' => $openemisNo,
@@ -4992,8 +4988,8 @@ class InstitutionsController extends AppController
                     $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
                     $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
                 }
-
-                if(!empty($academicPeriodId) && !empty($institutionId)){
+                
+                if(!empty($institutionId)){
                     //get id from `security_group_users` table
                     $SecurityGroupUsers = TableRegistry::get('security_group_users');
                     $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
@@ -5001,7 +4997,6 @@ class InstitutionsController extends AppController
                                                 $SecurityGroupUsers->aliasField('security_user_id') => $user_record_id,
                                             ])
                                             ->first();
-
                     $InstitutionStaffs = TableRegistry::get('institution_staff');
                     $entityStaffsData = [
                         'FTE' => $fte,
@@ -5014,7 +5009,7 @@ class InstitutionsController extends AppController
                         'staff_status_id' => $statuses['ASSIGNED'],
                         'institution_id' => $institutionId,
                         'institution_position_id' => $institutionPositionId,
-                        'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $userId : 1,
+                        'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $SecurityGroupUsersTbl->id : null,
                         'created_user_id' => $userId,
                         'created' => date('y-m-d H:i:s')
                     ];
@@ -5022,7 +5017,6 @@ class InstitutionsController extends AppController
                     $entityStaffsData = $InstitutionStaffs->newEntity($entityStaffsData);
                     $InstitutionStaffsResult = $InstitutionStaffs->save($entityStaffsData);
                 }
-
                 if(!empty($custom)){
                     $staffCustomFieldValues =  TableRegistry::get('staff_custom_field_values');
                     foreach ($custom as $skey => $sval) {
