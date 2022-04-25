@@ -1492,8 +1492,10 @@ class DirectoriesController extends AppController
             ->find()
             ->where(['code' => 'RedirectToGuardian'])
             ->toArray();
+        $res = false;
         foreach($config_items_result AS $result){
-            $result_array[] = array("redirecttoguardian_status" => $result['value']);
+            if($result['value'] == 1){ $res = true; }
+            $result_array[] = array("redirecttoguardian_status" => $res);
         }
         echo json_encode($result_array);die;
     }
