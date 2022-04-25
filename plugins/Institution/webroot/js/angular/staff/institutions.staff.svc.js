@@ -109,7 +109,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
     function saveStaffDetails(param) {
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/saveStaffData';
-        $http.get(url, {params: param})
+        $http.post(url, param)
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
