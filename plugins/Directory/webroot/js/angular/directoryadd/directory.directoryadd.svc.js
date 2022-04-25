@@ -196,7 +196,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
     function saveDirectoryData (params) {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institution/Institutions/saveDirectoryData';
-        $http.post(url, {params: params})
+        $http.post(url, params)
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
