@@ -148,6 +148,7 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
         $Institutions          = TableRegistry::get('Institution.Institutions');
         $fieldOfStudy          = TableRegistry::get('education_field_of_studies');
         $Users                 = TableRegistry::get('security_users');
+        $StaffQualifications = TableRegistry::get('staff_qualifications');
         $selectable            = [];
         $group_by              = [];
 
@@ -182,8 +183,9 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
                 'institution_code'          => $Institutions->aliasField('code'),
                 'institution_name'          => $Institutions->aliasField('name'),
                 'openemis_no'               => $Users->aliasField('openemis_no'),
-                'name'                      => $Users->find()->func()->concat(['security_users.first_name' => 'literal',"  ",'security_users.last_name' => 'literal']),
+                'student_name'                      => $Users->find()->func()->concat(['security_users.first_name' => 'literal',"  ",'security_users.last_name' => 'literal']),
                 'graduate_year'             => $this->aliasField('graduate_year'),
+               // 'graduate_year' => $StaffQualifications->aliasField('graduate_year'),
                 'qualification_level'       => $qualificationLevel->aliasField('name'),
                 'qualification_title'       => $qualificationTitles->aliasField('name'),
                 'document_no'               => $this->aliasField('document_no'),
@@ -195,15 +197,15 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
                 [$Users->alias() => $Users->table() ], // Class Object => table_name
                 [$Users->aliasField('id = '). $this->aliasField('staff_id'), // Where
             ])
-            ->leftJoin(
+            ->innerJoin(
                 [$qualificationTitles->alias() => $qualificationTitles->table()],[
                     $qualificationTitles->aliasField('id = ').$this->aliasField('qualification_title_id')
                 ])
-            ->leftJoin(
+            ->innerJoin(
                 [$fieldOfStudy->alias() => $fieldOfStudy->table()],[
                     $fieldOfStudy->aliasField('id = ').$this->aliasField('education_field_of_study_id')
                 ])
-            ->leftJoin(
+            ->innertJoin(
                 [$qualificationLevel->alias() => $qualificationLevel->table()],[
                     $qualificationLevel->aliasField('id = ').$qualificationTitles->aliasField('qualification_level_id')
                 ]
@@ -218,8 +220,9 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
             $Users->aliasField('is_staff') => 1
         ]);
         $query->order(['QualificationLevels.order'=>'ASC']); //POCOR-6551
-        $query->group($Users->aliasField('openemis_no'));
-        
+       // $query->group($Users->aliasField('openemis_no'));
+        $query->group(['InstitutionStandardStaffQualifications.staff_id']);
+       
         $_this = $this;
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($_this)
