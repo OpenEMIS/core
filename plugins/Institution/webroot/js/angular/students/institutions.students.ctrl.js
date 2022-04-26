@@ -121,6 +121,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if($window.localStorage.getItem('birthplace_area_id')) {
             $window.localStorage.removeItem('birthplace_area_id')
         }
+        if($window.localStorage.getItem('studentOpenEmisId')) {
+            $window.localStorage.removeItem('studentOpenEmisId');
+        }
         StudentController.initGrid();
         StudentController.getGenders();
     });
@@ -992,6 +995,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function addGuardian () {
+        if($window.localStorage.getItem('studentOpenEmisId')) {
+            $window.localStorage.removeItem('studentOpenEmisId');
+        }
+        $window.localStorage.setItem('studentOpenEmisId', StudentController.selectedStudentData.openemis_no);
         $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
     }
 
