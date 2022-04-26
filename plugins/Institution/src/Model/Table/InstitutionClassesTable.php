@@ -2164,27 +2164,51 @@ class InstitutionClassesTable extends ControllerActionTable
                 $institutionClassSubjecs = $institutionClassSubjectsTable->find()
                                                 ->where(['institution_class_id' => $row['institution_class_id']])->all();
                       
-                                                
-                $arr ="";                                                
+                $nArr = [];                                    
                 foreach($institutionClassSubjecs as $key => $institutionClassSubject) { 
                     $institutionSubjectStaffTable = TableRegistry::get('InstitutionSubjectStaff');
-                    $institutionSubjectStaff = $institutionSubjectStaffTable->find()
+                    $institutionSubjectStaff[$key] = $institutionSubjectStaffTable->find()
                                                 ->where(['institution_subject_id' => $institutionClassSubject['institution_subject_id']])->all();
+                                                        
+                        foreach($institutionSubjectStaff[$key] as $kj => $singleArr) {
+                            $nArr[$key][$kj] = $singleArr->staff_id;
 
-                    foreach($institutionSubjectStaff as $key1 => $institutionSubjectStaff1) {
-                        $staffUserTable = TableRegistry::get('SecurityUsers');
-                        $staffUserData = $staffUserTable->find()
-                                                    ->where(['id' => $institutionSubjectStaff1['staff_id']])->first();
-                        $arr .=  $staffUserData['first_name'].' '.$staffUserData['last_name'].',';
-                                               
-                    }
-                    If(empty($row['subject_teachers'])){
-                        $row['subject_teachers'] = rtrim($arr,',');
-                    }                     
+                        }
                 }
+                
+                $splArr = array_unique($this->array_flatten($nArr));
+                $subteachers = '';       
+                foreach($splArr as $kjj => $institutionSubjectStaffOne) {
+
+                    $staffUserTable = TableRegistry::get('SecurityUsers');
+                    $staffUserData = $staffUserTable->find()
+                                                ->where(['id' => $institutionSubjectStaffOne])->first();
+                    $subteachers .=  $staffUserData['first_name'].' '.$staffUserData['last_name'].',';
+
+                }
+                if(empty($row['subject_teachers'])){
+                    $row['subject_teachers'] = rtrim($subteachers,',');
+                }              
+
                 return $row;
             });
         });
         //End:POCOR-6678
+    }
+
+    function array_flatten($array) { 
+        if (!is_array($array)) { 
+          return FALSE; 
+        } 
+        $result = array(); 
+        foreach ($array as $key => $value) { 
+          if (is_array($value)) { 
+            $result = array_merge($result, $this->array_flatten($value)); 
+          } 
+          else { 
+            $result[$key] = $value; 
+          } 
+        } 
+        return $result; 
     }
 }
