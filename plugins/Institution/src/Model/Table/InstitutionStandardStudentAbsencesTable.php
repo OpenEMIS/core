@@ -209,7 +209,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                             { 
                                 if ($i == $day)
                                 {
-                                    $row['Day'.$i] = $absent_on_date;
+                                    $row['Day'.$i] = 1;
                                 }
                             }
                     }
