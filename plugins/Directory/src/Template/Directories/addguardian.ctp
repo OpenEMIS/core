@@ -83,7 +83,7 @@
                     </div>
                     <div class="input string">
                         <label><?= __('OpenEMIS ID') ?></label>
-                        <input ng-model="selectedUserData.openemis_no" type="string">
+                        <input ng-model="selectedUserData.openemis_no" type="string" ng-disabled="true">
                     </div>
                     <div class="input string required">
                         <label><?= __('First Name') ?></label>

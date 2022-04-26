@@ -38,6 +38,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.customFieldsArray = [];
     var todayDate = new Date();
     scope.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+    scope.redirectToGuardian = false;
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -76,6 +77,9 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         }
         if($window.localStorage.getItem('birthplace_area_id')) {
             $window.localStorage.removeItem('birthplace_area_id')
+        }
+        if($window.localStorage.getItem('studentOpenEmisId')) {
+            $window.localStorage.removeItem('studentOpenEmisId');
         }
         scope.initGrid();
         scope.getUserTypes();
@@ -275,7 +279,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         UtilsSvc.isAppendLoader(true);
         DirectoryaddSvc.getRedirectToGuardian()
         .then(function(resp) {
-            scope.redirectToGuardian = resp.data;
+            scope.redirectToGuardian = resp.data[0].redirecttoguardian_status;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -676,7 +680,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         scope.step = "summary";
         var todayDate = new Date();
         scope.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
-        scope.getRedirectToGuardian();
+        if(scope.selectedUserData.userType.name === 'Students')
+            scope.getRedirectToGuardian();
     }
 
     scope.goToFirstStep = function () {
@@ -897,6 +902,10 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.addGuardian = function(){
+        if($window.localStorage.getItem('studentOpenEmisId')) {
+            $window.localStorage.removeItem('studentOpenEmisId');
+        }
+        $window.localStorage.setItem('studentOpenEmisId', scope.selectedUserData.openemis_no);
         $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
     }
     
