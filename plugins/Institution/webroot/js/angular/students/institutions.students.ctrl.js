@@ -1004,8 +1004,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function getRedirectToGuardian() {
         InstitutionsStudentsSvc.getRedirectToGuardian().then(function(resp){
-            StudentController.redirectToGuardian = resp.data;
-            StudentController.redirectToGuardian = true;
+            StudentController.redirectToGuardian = resp.data[0].redirecttoguardian_status;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
