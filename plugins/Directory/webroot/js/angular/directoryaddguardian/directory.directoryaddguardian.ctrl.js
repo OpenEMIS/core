@@ -27,6 +27,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.rowsThisPage = [];
     scope.selectedGuardian;
     scope.error = {};
+    scope.studentOpenEmisId;
 
     scope.datepickerOptions = {
         minDate: new Date('01/01/1900'),
@@ -59,6 +60,9 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         }
         if($window.localStorage.getItem('birthplace_area_id')) {
             $window.localStorage.removeItem('birthplace_area_id')
+        }
+        if($window.localStorage.getItem('studentOpenEmisId')) {
+            scope.studentOpenEmisId = $window.localStorage.getItem('studentOpenEmisId');
         }
         scope.initGrid();
         scope.getRelationType();
@@ -854,7 +858,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         scope.selectedUserData.birthplaceArea = DirectoryaddguardianSvc.getBirthplaceArea();
         var params = {
             guardian_relation_id: scope.selectedUserData.relation_type_id,
-            student_id: 1,
+            student_openemis_no: scope.studentOpenEmisId,
             openemis_no: scope.selectedUserData.openemis_no,
             first_name: scope.selectedUserData.first_name,
             middle_name: scope.selectedUserData.middle_name,
@@ -874,6 +878,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             identity_type_id: scope.selectedUserData.identity_type_id,
             photo_name: scope.selectedUserData.photo_name,
             photo_content: scope.selectedUserData.photo_base_64,
+            contact_type: scope.selectedUserData.contact_type_id,
+            contact_value: scope.selectedUserData.contactValue,
         };
         UtilsSvc.isAppendLoader(true);
         DirectoryaddguardianSvc.saveGuardianDetails(params)
