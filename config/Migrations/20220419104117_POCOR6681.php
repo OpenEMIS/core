@@ -25,10 +25,10 @@ class POCOR6681 extends AbstractMigration
         $this->execute('INSERT INTO `zz_6681_import_mapping` SELECT * FROM `import_mapping`');
 
         //Back up
-        //institution_meal_programmesg
-        $this->execute('DROP TABLE IF EXISTS `zz_6681_institution_meal_programmesg`');
-        $this->execute('CREATE TABLE `zz_6681_institution_meal_programmesg` LIKE `institution_meal_programmesg`');
-        $this->execute('INSERT INTO `zz_6681_institution_meal_programmesg` SELECT * FROM `institution_meal_programmesg`');
+        //institution_meal_programmes
+        $this->execute('DROP TABLE IF EXISTS `zz_6681_institution_meal_programmes`');
+        $this->execute('CREATE TABLE `zz_6681_institution_meal_programmes` LIKE `institution_meal_programmes`');
+        $this->execute('INSERT INTO `zz_6681_institution_meal_programmes` SELECT * FROM `institution_meal_programmes`');
 
         $checkDataExist = $this->query("SELECT * FROM meal_received WHERE code = 'none'");
 
