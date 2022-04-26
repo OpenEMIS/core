@@ -357,19 +357,28 @@ class ControllerActionHelper extends Helper
     {
         $html = '';
         $config = $this->_View->get('ControllerAction');
-
-        if (!is_null($config['pageOptions'])) {
-            $pageOptions = $config['pageOptions'];
-
-            if (!empty($pageOptions)) {
+        $ConfigItemOptionsTable = TableRegistry::get('Configuration.ConfigItemOptions');
+        $ConfigItemoption =   $ConfigItemOptionsTable
+                            ->find()
+                            ->select(['listpage' => 'ConfigItemOptions.value'])
+                            ->where([
+                              $ConfigItemOptionsTable->aliasField('option_type') => 'list_page'
+                                   ]);
+        $optionslist = array(); 
+        foreach ($ConfigItemoption->toArray() as $value) {
+        $optionslist[] =  $value['listpage']; 
+        }  		
+        //if (!is_null($config['pageOptions'])) {
+         //   $pageOptions = $config['pageOptions'];
+            if (!empty($optionslist)) {
                 $html .= $this->Form->input('Search.limit', [
                     'label' => false,
-                    'options' => $pageOptions,
+                    'options' => $optionslist,
                     'onchange' => "$(this).closest('form').submit()",
                     'templates' => $this->getFormTemplate()
                 ]);
             }
-        }
+        //}
         return $html;
     }
 
