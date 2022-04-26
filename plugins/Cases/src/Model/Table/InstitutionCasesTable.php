@@ -167,7 +167,7 @@ class InstitutionCasesTable extends ControllerActionTable
         //     $userId = $session->read('Auth.User.id');
         // }
         $userId = $session->read('Auth.User.id');
-        if ($selectedFeature == -1) {
+        if ($selectedFeature != -1 ) { //start POCOR-6210
              $query
             ->select([
                 $this->aliasField('id'),
@@ -192,10 +192,10 @@ class InstitutionCasesTable extends ControllerActionTable
                 [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
                 [
                     [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                    // [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                     [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
                 ]
             )
-            //->where([$this->aliasField('assignee_id') => $userId])
+            ->where([$this->LinkedRecords->aliasField('record_id NOT IN') => 0]) //start POCOR-6210
             ->group($this->aliasField('id'));
         }
         else{
@@ -223,7 +223,7 @@ class InstitutionCasesTable extends ControllerActionTable
                 [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
                 [
                     [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                    [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                    //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
                 ]
             )
             ->group($this->aliasField('id'));
@@ -245,7 +245,7 @@ class InstitutionCasesTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         //start POCOR-6210
-        if ($entity->linked_records[0]['feature'] != -1) {
+        if ($entity->linked_records[0]['record_id'] != 0) {
             $this->field('linked_records', [
                 'type' => 'custom_linked_records',
                 'valueClass' => 'table-full-width',
@@ -268,7 +268,7 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         if ($action == 'index') {
             if ($entity->has('linked_records')) {
-                if ($entity->linked_records[0]['feature'] != -1) {//start POCOR-6210
+                if ($entity->linked_records[0]['record_id'] != 0) {//start POCOR-6210
                     $attr['value'] = sizeof($entity->linked_records);
                 }
             }
