@@ -5106,10 +5106,10 @@ class InstitutionsController extends AppController
     {
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
-        //echo "<pre>"; print_r($requestData); die;
         /*$requestData = json_decode('{"guardian_relation_id":"1","student_id":"1161","login_user_id":"1","openemis_no":"152227434344","first_name":"GuardianPita","middle_name":"","third_name":"","last_name":"GuardianPita","preferred_name":"","gender_id":"1","date_of_birth":"1989-01-01","identity_number":"555555","nationality_id":"2","username":"pita123","password":"pita123","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160",}', true);*/
         
         if(!empty($requestData)){
+            $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData))? $requestData['student_openemis_no']: null;
             $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
             $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
             $middleName = (array_key_exists('middle_name', $requestData))? $requestData['middle_name']: null;
@@ -5229,13 +5229,18 @@ class InstitutionsController extends AppController
                     $entityContactData = $UserContacts->newEntity($entityContactData);
                     $UserContactResult = $UserContacts->save($entityContactData);
                 }
-                //if relationship id and staudent id is not empty
-                if(!empty($guardianRelationId) && !empty($studentId)){
+                //if relationship id and staudent openemis_no is not empty
+                if(!empty($guardianRelationId) && !empty($studentOpenemisNo)){
+                    $SecurityUsers = TableRegistry::get('security_users');
+                    $StudentData = $SecurityUsers->find()
+                                    ->where([
+                                        $SecurityUsers->aliasField('openemis_no') => $studentOpenemisNo
+                                    ])->first();
                     //get id from `security_group_users` table
                     $StudentGuardians = TableRegistry::get('student_guardians');
                     $entityGuardiansData = [
                         'id' => Text::uuid(),
-                        'student_id' => $studentId,
+                        'student_id' => $StudentData->id,
                         'guardian_id' => $user_record_id,
                         'guardian_relation_id' => $guardianRelationId,
                         'created_user_id' => $userId,
