@@ -188,6 +188,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                 'AssessmentPeriods' => [
                     'fields' => [
                        'assessment_periods_name'=> 'AssessmentPeriods.name',
+                       'academic_term'=> 'AssessmentPeriods.academic_term',
                     ]
                 ],
             ])
@@ -243,8 +244,8 @@ class InstitutionStandardMarksEnteredTable extends AppTable
             'label' => __('Assessment Period'),
         ];
         $newFields[] = [
-            'key'   => 'assessments_name',
-            'field' => 'assessments_name',
+            'key'   => 'academic_term',
+            'field' => 'academic_term',
             'type'  => 'string',
             'label' => __('Assessment Term'),
         ];
@@ -299,15 +300,39 @@ class InstitutionStandardMarksEnteredTable extends AppTable
     {
         $assessmentType = TableRegistry::get('Assessment.AssessmentItemResults');
         $studentSubject = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $institutions = TableRegistry::get('Institution.Institutions');
         $total = $studentSubject->find()
-                        ->select([
+                ->innerJoin(
+                    [$academicPeriod->alias() => $academicPeriod->table()],
+                    [$academicPeriod->aliasField('id = ') . $studentSubject->aliasField('academic_period_id')])
+                ->innerJoin(
+                    [$Assessments->alias() => $Assessments->table()],
+                    [$Assessments->aliasField('education_grade_id = ') . $studentSubject->aliasField('education_grade_id'),
+                    $Assessments->aliasField('academic_period_id = ') . $academicPeriod->aliasField('id')
+                ])
+                ->innerJoin(
+                    [$AssessmentPeriods->alias() => $AssessmentPeriods->table()],
+                    [$AssessmentPeriods->aliasField('assessment_id = ') . $Assessments->aliasField('id')])
+                ->innerJoin(
+                    [$institutions->alias() => $institutions->table()],
+                    [$institutions->aliasField('id = ') . $studentSubject->aliasField('institution_id')])
+                    ->select([
                             'total_students' => "COUNT(".$studentSubject->aliasField('id').")"
                         ])
                         ->where([$studentSubject->aliasField('academic_period_id')=>$entity->academic_period_id,
                             $studentSubject->aliasField('institution_id')=>$entity->institution_id,
-                       $studentSubject->aliasField('student_status_id')=>1 ])
+                       $studentSubject->aliasField('student_status_id')=>1,
+                       $AssessmentPeriods->aliasField('id')=>$entity->assessment_period_id, ])
                         ->group([$studentSubject->aliasField('institution_id'),
-                        $studentSubject->aliasField('academic_period_id')]);
+                        $AssessmentPeriods->aliasField('id'),$AssessmentPeriods->aliasField('academic_term')])
+                        ->order([$Assessments->aliasField('id'),
+                                $AssessmentPeriods->aliasField('id'),
+                                $institutions->aliasField('id')]);
+                        
                 if(!empty($total)){
                     $studentData = $total->toArray();
                     $total_student = 0;
@@ -328,14 +353,28 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                 $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id,
                 $assessmentType->aliasField('created_user_id')=>$entity->created_user_id,
             ]);
+            $totalMarksAdd = $assessmentType->find()
+            ->select([
+                'total_marks_sum' => "COUNT(".$assessmentType->aliasField('id').")"
+            ])
+            ->where([
+                    $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
+                $assessmentType->aliasField('institution_id')=>$entity->institution_id,
+                $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id,
+            ]);
+            if(!empty($totalMarksAdd)){
+                    $totalMarks_val = $totalMarksAdd->toArray();
+                    foreach($totalMarks_val as $value){
+                        $sum = $value['total_marks_sum'];
+                    }
+            }
                 if(!empty($totalMarksVal)){
                     $totalMarks = $totalMarksVal->toArray();
-                    $marks = 0;
                     foreach($totalMarks as $value){
                         $total_student_mark_entry = $value['total_marks'];
                     }
                     $entity->marks_entered = $total_student_mark_entry;
-                    $entity->marks_not_entered = $total_student-$total_student_mark_entry;
+                    $entity->marks_not_entered = $total_student-$sum;
                     $entity->marks_entery_per = ($total_student_mark_entry/$total_student)*100;
                 }
         return $entity->marks_entery_per;
