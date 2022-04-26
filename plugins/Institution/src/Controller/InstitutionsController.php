@@ -5106,6 +5106,7 @@ class InstitutionsController extends AppController
     {
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
+        //echo "<pre>"; print_r($requestData); die;
         /*$requestData = json_decode('{"guardian_relation_id":"1","student_id":"1161","login_user_id":"1","openemis_no":"152227434344","first_name":"GuardianPita","middle_name":"","third_name":"","last_name":"GuardianPita","preferred_name":"","gender_id":"1","date_of_birth":"1989-01-01","identity_number":"555555","nationality_id":"2","username":"pita123","password":"pita123","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160",}', true);*/
         
         if(!empty($requestData)){
@@ -5133,6 +5134,8 @@ class InstitutionsController extends AppController
             $photoName = (array_key_exists('photo_name', $requestData))? $requestData['photo_name'] : null;
             
             $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
+            $contactType = (array_key_exists('contact_type', $requestData))? $requestData['contact_type'] : null;
+            $contactValue = (array_key_exists('contact_value', $requestData))? $requestData['contact_value'] : null;
             
             //get prefered language
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
@@ -5211,6 +5214,20 @@ class InstitutionsController extends AppController
                     //save in user_identities table
                     $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
                     $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                }
+                if(!empty($contactType) && !empty($contactValue)){
+                    $UserContacts = TableRegistry::get('user_contacts');
+                    $entityContactData = [
+                        'contact_type_id' => $contactType,
+                        'value' => $contactValue,
+                        'preferred' => 1,
+                        'security_user_id' => $user_record_id,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in user_identities table
+                    $entityContactData = $UserContacts->newEntity($entityContactData);
+                    $UserContactResult = $UserContacts->save($entityContactData);
                 }
                 //if relationship id and staudent id is not empty
                 if(!empty($guardianRelationId) && !empty($studentId)){
