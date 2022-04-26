@@ -4891,6 +4891,7 @@ class InstitutionsController extends AppController
             $photoContent = (array_key_exists('photo_base_64', $requestData))? $requestData['photo_base_64'] : null;
             $photoName = (array_key_exists('photo_name', $requestData))? $requestData['photo_name'] : null;
             $custom = (array_key_exists('custom', $requestData))? $requestData['custom'] : "";
+            $shiftIds = (array_key_exists('shift_ids', $requestData))? $requestData['shift_ids'] : "";
             
             //get academic period data
             $academicPeriods = TableRegistry::get('academic_periods');
@@ -4990,13 +4991,52 @@ class InstitutionsController extends AppController
                 }
                 
                 if(!empty($institutionId)){
-                    //get id from `security_group_users` table
-                    $SecurityGroupUsers = TableRegistry::get('security_group_users');
-                    $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
+                    //get id from `institution_positions` table
+                    $InstitutionPositions = TableRegistry::get('institution_positions');
+                    $InstitutionPositionsTbl = $InstitutionPositions->find()
                                             ->where([
-                                                $SecurityGroupUsers->aliasField('security_user_id') => $user_record_id,
+                                                $InstitutionPositions->aliasField('id') => $institutionPositionId,
                                             ])
                                             ->first();
+
+                    $SecurityGroupUsers = TableRegistry::get('security_group_users');
+                    if(!empty($InstitutionPositionsTbl)){
+                        $SecurityRoles = TableRegistry::get('security_roles');
+                        if($InstitutionPositionsTbl->is_homeroom == 1){
+                            $roleArr = ['STAFF', 'HOMEROOM_TEACHER'];
+                        }else{
+                            $roleArr = ['STAFF'];
+                        }
+                        $SecurityRolesTbl = $SecurityRoles->find()
+                                                    ->where([
+                                                        $SecurityRoles->aliasField('code IN') => $roleArr
+                                                    ])->toArray();
+
+                        if(!empty($SecurityRolesTbl)){
+                            foreach ($SecurityRolesTbl as $rolekey => $roleval) {
+                                $entityGroupData = [
+                                    'id' => Text::uuid(),
+                                    'security_group_id' => $institutionId,
+                                    'security_user_id' => $user_record_id,
+                                    'security_role_id' => $roleval->id,
+                                    'created_user_id' => $userId,
+                                    'created' => date('Y-m-d H:i:s')
+                                ];
+                                //save in security_group_users table
+                                $entityGroupData = $SecurityGroupUsers->newEntity($entityGroupData);
+                                $entityGroupResult = $SecurityGroupUsers->save($entityGroupData);
+                                unset($entityGroupResult);
+                                unset($entityGroupData);
+                            }
+                        }
+                    }                        
+
+                    //get id from `security_group_users` table
+                    $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
+                                            ->where([
+                                                $SecurityGroupUsers->aliasField('security_group_id') => $institutionId,
+                                                $SecurityGroupUsers->aliasField('security_user_id') => $user_record_id,
+                                            ])->first();
                     $InstitutionStaffs = TableRegistry::get('institution_staff');
                     $entityStaffsData = [
                         'FTE' => $fte,
@@ -5016,6 +5056,21 @@ class InstitutionsController extends AppController
                     //save in institution_staff table
                     $entityStaffsData = $InstitutionStaffs->newEntity($entityStaffsData);
                     $InstitutionStaffsResult = $InstitutionStaffs->save($entityStaffsData);
+                }
+                if(!empty($shiftIds)){
+                    $InstitutionStaffShifts = TableRegistry::get('institution_staff_shifts');
+                    foreach ($shiftIds as $shkey => $shval) {
+                        $entityShiftData = [
+                            'staff_id' => $user_record_id,
+                            'shift_id' => $shval,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in institution_staff_shifts table
+                        $entityShiftData = $InstitutionStaffShifts->newEntity($entityShiftData);
+                        $staffShiftResult = $InstitutionStaffShifts->save($entityShiftData);
+                        unset($staffShiftResult);
+                        unset($entityShiftData);
+                    }
                 }
                 if(!empty($custom)){
                     $staffCustomFieldValues =  TableRegistry::get('staff_custom_field_values');
