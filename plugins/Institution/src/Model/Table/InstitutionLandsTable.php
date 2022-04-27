@@ -470,6 +470,9 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
+        //Start:POCOR-6693
+        $this->field('area', ['attr' => ['label' => __('Size')]]); 
+        //End:POCOR-6693
         $toolbarElements = $this->addBreadcrumbElement();
         $this->controller->set('toolbarElements', $toolbarElements);
     }
