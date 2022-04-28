@@ -134,6 +134,9 @@ class InstitutionFloorsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        //Start:POCOR-6693
+        $this->field('area', ['attr' => ['label' => __('Size')]]); 
+        //End:POCOR-6693
         $this->Navigation->substituteCrumb(__('Institution Floors'), __('Institution Floors'));
     }
 
