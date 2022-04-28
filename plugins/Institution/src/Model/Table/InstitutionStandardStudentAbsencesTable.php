@@ -128,14 +128,12 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                 $this->aliasField('institution_id'),
                 'education_grades'=>$this->aliasField('education_grade_id'),
                 'institution_class'=>$this->aliasField('institution_class_id'),
-                'absent_dates'=> "(GROUP_CONCAT(".$this->aliasField('date')."))",
+                'absent_start'=> "(GROUP_CONCAT(DISTINCT".$absentDays->aliasField('start_date').",' / ',".$absentDays->aliasField('end_date')." SEPARATOR ', '))",
                 'openemis_no' => 'Users.openemis_no',
                 'first_name' => 'Users.first_name',
                 'middle_name' => 'Users.middle_name',
                 'third_name' => 'Users.third_name',
                 'last_name' => 'Users.last_name',
-                'number' => 'Users.identity_number',
-                'absent_on_date' => 'InstitutionStudentAbsenceDays.absent_days',
                 ])
             ->contain([
                 'Users' => [
@@ -178,21 +176,22 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                     ]
                 ],
             ])
-            ->leftJoin([$absentDays->alias() => $absentDays->table()],
-                [$absentDays->aliasField('id = ') . $this->aliasField('institution_student_absence_day_id')]
+            ->InnerJoin([$absentDays->alias() => $absentDays->table()],
+                [$absentDays->aliasField('student_id = ') . $this->aliasField('student_id')]
             )
             ->Where($where)
-            ->andWhere([$this->aliasField('date LIKE '.$date)])
-            ->group([$this->aliasField('student_id')]);
-            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($date)
+            ->andWhere([$absentDays->aliasField('start_date LIKE '.$date)])
+            ->group([$this->aliasField('student_id'),
+                $absentDays->aliasField('student_id')]);
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
+                use($date)
             {
                 return $results->map(function ($row) use($date)
                 { 
                     $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
                     $row['Absent_Date'] = $date;
-                    $absent_on_date = $row['absent_on_date'];
-                    $absent_date  = $row['absent_dates'];
-                    $datearray = explode(',', $absent_date);
+                    $alldate = $row['absent_start'];
+                    $split = explode(',', $alldate);
                     $i_max = 31;
                     for( $i=1; $i<=$i_max; $i++ )
                         { 
@@ -200,24 +199,50 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                             $row['Day'.$i] = '';
                             
                         }
-                    foreach($datearray as $key=>$val) 
+                    $index = 0;
+                    foreach($split as $key=>$comma)
                     {
-                        $daytrim = date('d', strtotime($val));
-                        $day  = ltrim($daytrim, '0');
-                        $i_max=31;
-                        for( $i=1; $i<=$i_max; $i++ )
-                            { 
-                                if ($i == $day)
-                                {
-                                    $row['Day'.$i] = 1;
+                        $splits = explode('/', $comma);
+                        $startDate =  $splits[0];
+                        $endDate =  $splits[1];
+                        $datearray = $this->getBetweenDates($startDate, $endDate);
+                        foreach($datearray as $key=>$val) 
+                        {
+                            $daytrim = date('d', strtotime($val));
+                            $day  = ltrim($daytrim, '0');
+                            $i_max=31;
+                            for( $i=1; $i<=$i_max; $i++ )
+                                { 
+                                    if ($i == $day)
+                                    {
+                                        $row['Day'.$i] = 1;
+                                    }
                                 }
-                            }
-                    }
-                            
+                        }
+                        $index++;
+                    }       
                     return $row;
                 });
             });
+            
 
+    }
+
+    function getBetweenDates($startDate, $endDate)
+    {
+        $rangArray = [];
+            
+        $startDate = strtotime($startDate);
+        $endDate = strtotime($endDate);
+             
+        for ($currentDate = $startDate; $currentDate <= $endDate; 
+                                        $currentDate += (86400)) {
+                                                
+            $date = date('Y-m-d', $currentDate);
+            $rangArray[] = $date;
+        }
+  
+        return $rangArray;
     }
 
     /**
