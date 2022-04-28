@@ -327,7 +327,7 @@
                             <p>{{ error.password }}</p>
                         </div>
                     </div>
-                    <div ng-if="selectedUserData.userType.name === 'Students" ng-repeat="customField in customFieldsArray">
+                    <div ng-if="selectedUserData.userType.name === 'Students'" ng-repeat="customField in customFieldsArray">
                         <div class="row section-header header-space-lg">{{customField.sectionName}}</div>
                         <div ng-repeat="field in customField.data">
                             <div class="input string" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL'">
