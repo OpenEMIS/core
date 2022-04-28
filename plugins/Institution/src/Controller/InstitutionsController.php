@@ -5172,7 +5172,12 @@ class InstitutionsController extends AppController
             ];
             //save in security_users table
             $entity = $SecurityUsers->newEntity($entityData);
-            $SecurityUserResult = $SecurityUsers->save($entity);
+            try{
+                $SecurityUserResult = $SecurityUsers->save($entity);
+                unset($entity);
+            }catch (Exception $e) {
+                return null;
+            }
             if($SecurityUserResult){
                 $user_record_id=$SecurityUserResult->id;
                 if(!empty($nationalityId)){
