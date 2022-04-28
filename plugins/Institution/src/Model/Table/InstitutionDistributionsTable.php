@@ -88,7 +88,22 @@ class InstitutionDistributionsTable extends ControllerActionTable
             ->where(['id' => $entity->meal_programmes_id])
             ->first();
             if($entity->quantity_received > $MealProgrammesResult->amount){
-                $this->Alert->error('Institution.InstitutionDistributions.quantity_received.genralerror', ['reset' => true]);
+            $this->Alert->error('Institution.InstitutionDistributions.quantity_received.genralerror', ['reset' => true]);
+                return false;
+            }
+            $query = $this->find();
+            $entityRecord = $query->where([
+                    $this->aliasField('meal_programmes_id') => $entity->meal_programmes_id
+                ])
+            ->select([
+                'quantity_received_sum' => $query->func()->sum($this->aliasField('quantity_received'))
+            ])
+            ->first()
+            ;
+            $total_sum = $entityRecord->quantity_received_sum + $entity->quantity_received;
+            // echo "<pre>";print_r($total_sum);die;
+            if($total_sum > $MealProgrammesResult->amount){
+                $this->Alert->error('Institution.InstitutionDistributions.quantity_received_sum.genralerror', ['reset' => true]);
                 return false;
             }
         }else{
@@ -102,6 +117,22 @@ class InstitutionDistributionsTable extends ControllerActionTable
                 $this->Alert->error('Institution.InstitutionDistributions.quantity_received.genralerror', ['reset' => true]);
                 return false;
             }
+        }
+    }
+
+    /* 
+    * To change default field name to the required field name
+    * @auther Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return boolean 
+    * ticket POCOR-6681
+    */
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'date_received':
+                return __('Date');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
     
@@ -315,11 +346,12 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $data = $request->data[$this->alias()];
-        if($data['delivery_status_id'] == 4){
-             $attr['type'] = 'hidden';          
-             $attr['value'] = Null;          
-        }
-
+        //START:POCOR-6681 // Requirment change to show date received in all condition
+        // if($data['delivery_status_id'] == 4){
+        //      $attr['type'] = 'hidden';          
+        //      $attr['value'] = Null;          
+        // }
+        //END:POCOR-6681
 
         return $attr;
 
@@ -388,7 +420,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
         if($entity->delivery_status_id == 4){
-             $this->updateAll(['date_received' => NULL],['id' => $entity->id]);
+             $this->updateAll(['date_received' => date("Y-m-d H:i:s")],['id' => $entity->id]);
                  return;
         }
         $entity->institution_id = $this->request->session()->read('Institution.Institutions.id');

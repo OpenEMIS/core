@@ -113,14 +113,23 @@ class ImportStudentMealsTable extends AppTable {
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
     //POCOR-6681 Starts
     public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;// for enrolled status //POCOR-6613 ends
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $StudentData = TableRegistry::get('Institution.Students');
+        $classId = $this->request->query('class');
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')->select(['id','openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn]);
         $currentPeriodId = $this->AcademicPeriods->getCurrent();
-        $allStudents = $this->Students
+        $allStudents = $this->InstitutionClassStudents
                         ->find('all')
+                        // ->innerJoin([$StudentData->alias() => $StudentData->table()], [
+                        //     $StudentData->aliasField('student_id = ') . $InstitutionClassStudents->aliasField('student_id')
+                        //    ])
                         ->where([
-                            $this->Students->aliasField('institution_id') => $this->institutionId,
-                            $this->Students->aliasField('academic_period_id') => $currentPeriodId
+                            $this->InstitutionClassStudents->aliasField('institution_id') => $this->institutionId,
+                            $this->InstitutionClassStudents->aliasField('academic_period_id') => $currentPeriodId,
+                            $this->InstitutionClassStudents->aliasField('institution_class_id') => $classId,
+                            $this->InstitutionClassStudents->aliasField('student_status_id') => $enrolledStatus
                         ])
                         ;
         // when extracting the staff_id from $allStudents collection, there will be no duplicates
