@@ -53,6 +53,7 @@ class TrainingsTable extends AppTable
 
     public function beforeAction(Event $event)
     {
+        
         // fix header and breadcrumbs
         $controllerName = $this->controller->name;
         $reportName = __('Trainings');

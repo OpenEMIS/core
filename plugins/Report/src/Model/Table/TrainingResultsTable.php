@@ -43,8 +43,6 @@ class TrainingResultsTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         
-        
-        
         $TrainingSessionResults = TableRegistry::get('Training.TrainingSessionResults');
         $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         $WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
