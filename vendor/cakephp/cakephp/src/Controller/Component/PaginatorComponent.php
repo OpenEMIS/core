@@ -51,7 +51,7 @@ class PaginatorComponent extends Component
     protected $_defaultConfig = [
         'page' => 1,
         'limit' => 20,
-        'maxLimit' => 100,
+        'maxLimit' => 500,  //POCOR-5301 - increase pagination maxlimit
         'whitelist' => ['limit', 'sort', 'page', 'direction']
     ];
 
@@ -164,7 +164,7 @@ class PaginatorComponent extends Component
      * @throws \Cake\Network\Exception\NotFoundException
      */
     public function paginate($object, array $settings = [])
-    {
+    {  
         if ($object instanceof QueryInterface) {
             $query = $object;
             $object = $query->repository();
