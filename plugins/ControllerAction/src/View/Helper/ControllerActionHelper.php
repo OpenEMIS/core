@@ -354,31 +354,27 @@ class ControllerActionHelper extends Helper
     }
 
     public function getPageOptions()
-    {
+    {   
+        /**
+        * This table call for get option value from configitemoption table.
+        * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        * @ticket POCOR-5301
+        */
+        //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         $html = '';
-        $config = $this->_View->get('ControllerAction');
-        $ConfigItemOptionsTable = TableRegistry::get('Configuration.ConfigItemOptions');
-        $ConfigItemoption =   $ConfigItemOptionsTable
-                            ->find()
-                            ->select(['listpage' => 'ConfigItemOptions.value'])
-                            ->where([
-                              $ConfigItemOptionsTable->aliasField('option_type') => 'list_page'
-                                   ]);
-        $optionslist = array(); 
-        foreach ($ConfigItemoption->toArray() as $value) {
-        $optionslist[] =  $value['listpage']; 
-        }  		
-        //if (!is_null($config['pageOptions'])) {
-         //   $pageOptions = $config['pageOptions'];
-            if (!empty($optionslist)) {
+        $config = $this->_View->get('ControllerAction');  		
+        if (!is_null($config['pageOptions'])) {
+            $pageOptions = $config['pageOptions']; 
+            if (!empty($pageOptions)) {
                 $html .= $this->Form->input('Search.limit', [
                     'label' => false,
-                    'options' => $optionslist,
+                    'options' => $pageOptions,
                     'onchange' => "$(this).closest('form').submit()",
                     'templates' => $this->getFormTemplate()
                 ]);
             }
-        //}
+        }
+        //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         return $html;
     }
 

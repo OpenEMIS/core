@@ -9,7 +9,7 @@ class POCOR5301 extends AbstractMigration
      * More information on this method is available here:
      * http://docs.phinx.org/en/latest/migrations.html#the-change-method
      * @return void
-	 * This class is used for add records in list page view.
+	 * This class is used for add records in CongitOptions Table list page view.
 	 * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
 	 * @ticket POCOR-5301
      */
