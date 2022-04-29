@@ -82,6 +82,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     scope.getUniqueOpenEmisId = function() {
         if(scope.selectedUserData.openemis_no){
+            scope.generatePassword();
             return;
         }
         UtilsSvc.isAppendLoader(true);

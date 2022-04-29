@@ -87,6 +87,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.getUniqueOpenEmisId = function() {
         if(scope.selectedUserData.openemis_no){
+            scope.generatePassword();
             return;
         }
         UtilsSvc.isAppendLoader(true);
@@ -209,7 +210,6 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 scope.selectedUserData.password = response;
             }
             scope.getContactTypes();
-            UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
             UtilsSvc.isAppendLoader(false);
@@ -611,8 +611,6 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             if(!scope.selectedUserData.date_of_birth) {
                 scope.error.date_of_birth = 'This field cannot be left empty';
             } else {
-                // let dob = scope.selectedUserData.date_of_birth.toLocaleDateString();
-                // let dobArray = dob.split('/');
                 scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
             }
     
@@ -624,13 +622,31 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             scope.goToInternalSearch();
         }
         if(scope.step === 'confirmation') {
+            let isCustomFieldNotValidated = false;
             if(!scope.selectedUserData.username){
                 scope.error.username = 'This field cannot be left empty';
             }
             if(!scope.selectedUserData.password){
                 scope.error.password = 'This field cannot be left empty';
             }
-            if(!scope.selectedUserData.username || !scope.selectedUserData.password){
+            scope.customFieldsArray.forEach((customField) => {
+                customField.data.forEach((field) => {
+                    if(field.is_mandatory === 1) {
+                        if(field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'DROPDOWN' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL' || field.field_type === 'DATE' || field.field_type === 'TIME') {
+                            if(!field.answer) {
+                                field.errorMessage = 'This field is required.';
+                                isCustomFieldNotValidated = true;
+                            }
+                        } else if(field.field_type === 'CHECKBOX') {
+                            if(field.answer.length === 0) {
+                                field.errorMessage = 'This field is required.';
+                                isCustomFieldNotValidated = true;
+                            }
+                        }
+                    }
+                })
+            });
+            if(!scope.selectedUserData.username || !scope.selectedUserData.password || isCustomFieldNotValidated){
                 return;
             }
             scope.saveDetails();
@@ -1070,7 +1086,6 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                             time_value:"",
                             date_value:"",
                             file:"",
-                            institution_id: StudentController.institutionId,
                         };
                         if(field.field_type === 'TEXT' || field.field_type === 'NOTE' || field.field_type === 'TEXTAREA') {
                             fieldData.text_value = field.answer;
@@ -1092,7 +1107,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                         if(field.field_type === 'DATE') {
                             fieldData.date_value = $filter('date')(field.anser, 'yyyy-MM-dd');
                         }
-                        params.custom.push(fieldData);
+                        param.custom.push(fieldData);
                     } else {
                         field.answer.forEach((id )=> {
                             let fieldData = {
@@ -1104,7 +1119,6 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                                 time_value:"",
                                 date_value:"",
                                 file:"",
-                                institution_id: StudentController.institutionId,
                             };
                             param.custom.push(fieldData);
                         });
