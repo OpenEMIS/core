@@ -129,6 +129,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     });
 
     function getUniqueOpenEmisId() {
+        if(StudentController.selectedStudentData.openemis_no)
+            return;
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getUniqueOpenEmisId()
         .then(function(response) {
@@ -842,6 +844,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function confirmUser() {
+        let isCustomFieldNotValidated = false;
         if(!StudentController.selectedStudentData.username){
             StudentController.error.username = 'This field cannot be left empty';
         }
@@ -857,24 +860,26 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(!StudentController.selectedStudentData.startDate){
             StudentController.error.startDate = 'This field cannot be left empty';
         }
-        if(!StudentController.selectedStudentData.username || !StudentController.selectedStudentData.password || !StudentController.selectedStudentData.academic_period_id || !StudentController.selectedStudentData.startDate){
-            return;
-        }
         StudentController.customFieldsArray.forEach((customField) => {
             customField.data.forEach((field) => {
                 if(field.is_mandatory === 1) {
                     if(field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'DROPDOWN' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL' || field.field_type === 'DATE' || field.field_type === 'TIME') {
                         if(!field.answer) {
                             field.errorMessage = 'This field is required.';
+                            isCustomFieldNotValidated = true;
                         }
                     } else if(field.field_type === 'CHECKBOX') {
                         if(field.answer.length === 0) {
                             field.errorMessage = 'This field is required.';
+                            isCustomFieldNotValidated = true;
                         }
                     }
                 }
             })
-        })
+        });
+        if(!StudentController.selectedStudentData.username || !StudentController.selectedStudentData.password || !StudentController.selectedStudentData.academic_period_id || !StudentController.selectedStudentData.startDate || isCustomFieldNotValidated){
+            return;
+        }
         StudentController.saveStudentDetails();
     }
 
