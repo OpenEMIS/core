@@ -1078,7 +1078,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 customField.data.forEach((field)=> {
                     if(field.field_type !== 'CHECKBOX') {
                         let fieldData = {
-                            student_custom_field_id: field.student_custom_field_id,
+                            custom_field_id: field.student_custom_field_id,
                             text_value:"",
                             number_value:null,
                             decimal_value:"",
@@ -1111,7 +1111,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     } else {
                         field.answer.forEach((id )=> {
                             let fieldData = {
-                                student_custom_field_id: field.student_custom_field_id,
+                                custom_field_id: field.student_custom_field_id,
                                 text_value:"",
                                 number_value: Number(id),
                                 decimal_value:"",
