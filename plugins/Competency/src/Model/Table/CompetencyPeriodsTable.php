@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\TableRegistry;
 
 class CompetencyPeriodsTable extends ControllerActionTable
 {
@@ -283,20 +284,36 @@ class CompetencyPeriodsTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
-
                 $selectedTemplate = $request->data($this->aliasField('competency_template_id'));
                 $selectedPeriod = $request->data($this->aliasField('academic_period_id'));
                 $itemOptions = [];
                 if ($selectedTemplate && $selectedPeriod) {
                     $itemOptions = $this->CompetencyItems->find('ItemList', ['templateId' => $selectedTemplate, 'academicPeriodId' => $selectedPeriod])->toArray();
                 }
-
                 $attr['options'] = $itemOptions;
-
             } else {
-                $attr['type'] = 'element';
-                $attr['element'] = 'Competency.competency_items';
+                //POCOR-6689
+                $getData =  $event->data[0];
+                $arrayData = (array)$getData['entity'];
+                $unset_val = array_shift($arrayData);
+                $itemOptions = [];
+                $tabled = TableRegistry::get('Competency.CompetencyItems');
+                $pc = 0;
+                foreach($arrayData as $value){
+                    if($pc==1) break;
+                    $academicPeriod = $value['academic_period_id'];
+                    $competencytemplate = $value['competency_template_id'];
+                    $academicPeriodId =  preg_replace('~\D~', '', $academicPeriod);
+                    $competencytemplateId =  preg_replace('~\D~', '', $competencytemplate);
+                    $itemOptions = $tabled->find('list', ['keyField' => 'id', 'valueField' => 'name'])->where(['competency_template_id' => $competencytemplateId, 'academic_period_id' => $academicPeriodId])->toArray();
+                    $attr['options'] = $itemOptions;
+                    /*$attr['type'] = 'element';
+                    $attr['element'] = 'Competency.competency_items';*/
+                    $pc++ ;
+                }
+
             }
+            //POCOR-6689
         }
         return $attr;
     }
