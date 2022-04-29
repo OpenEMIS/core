@@ -1,3 +1,12 @@
+### [3.75.3] - 2022-04-29
+- Implemented: Allow users to manually add cases in the Cases feature
+- Implemented: Develop a Grade filter for Institution > Statistics > Custom reports
+- Implemented: Develop a new report : Institutions > Statistics > Standard Report : Marks Entered by Staff
+- Implemented: Develop a new report : Institutions > Statistics > Standard Report : Student Absences
+- Bug Fixed: Institutions>Students>Student1>Withdraw: When they use the arabic interface to withdraw, the status for the withdraw student will still be enrolled.
+- Bug Fixed: Institution > Academic > Classes > Export: Subject teacher is to be included in the report generated
+- Bug Fixed: Institutions>Infrastructure>Overview: Area should change to Size
+
 ### [3.75.2] - 2022-04-22
 - Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 3
 - Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 9
