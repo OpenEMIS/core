@@ -35,6 +35,7 @@ class POCOR6702 extends AbstractMigration
             `institution_code` varchar(100) DEFAULT NULL,
             `institution_name` varchar(100) DEFAULT NULL,
             `grade_id` int(10) DEFAULT NULL,
+            `grade_code` varchar(100) DEFAULT NULL,
             `grade_name` varchar(100) DEFAULT NULL,
             `institution_classes_id` int(11) NOT NULL,
             `institution_classes_name` varchar(250) NOT NULL,
@@ -60,7 +61,7 @@ class POCOR6702 extends AbstractMigration
             `institution_average_mark` float NULL,
             `area_average_mark` float NULL,
             `created` datetime NOT NULL
-        ENGINE=InnoDB DEFAULT CHARSET=utf8;
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
       ');
     }
     //rollback
