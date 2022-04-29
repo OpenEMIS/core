@@ -4179,87 +4179,50 @@ class InstitutionReportCardsTable extends AppTable
      */
     public function onExcelTemplateInitialiseStudentDetails(Event $event, array $params, ArrayObject $extra)
     {
-        ini_set("pcre.backtrack_limit", "5000000");
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionStudents = TableRegistry::get('Institution.Students');
-            $classStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-            $class = TableRegistry::get('Institution.InstitutionClasses');
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
-            $subjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-            $subject = TableRegistry::get('Education.EducationSubjects');
             $Users = TableRegistry::get('User.Users');
             $studentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
             $studentAbsencesDay = TableRegistry::get('Institution.InstitutionStudentAbsenceDays');
-            $studentData = $InstitutionStudents->find()
+            $studentAssessmentSummary = TableRegistry::get('report_student_assessment_summary');
+            $studentData = $studentAssessmentSummary->find()
                             ->select([
-                                'id' => $subjectStudents->aliasField('education_subject_id'),
+                                'id' => $studentAssessmentSummary->aliasField('id'),
                                 'openemis_no' => $Users->aliasField('openemis_no'),
-                                'first_name' => $Users->aliasField('first_name'),
-                                'middle_name' => $Users->aliasField('middle_name'),
-                                'third_name' => $Users->aliasField('third_name'),
-                                'last_name' => $Users->aliasField('last_name'),
-                                'grade_name' => $EducationGrades->aliasField('name'),
-                                'class_name' => $class->aliasField('name'),
-                                'subject_name' => $subject->aliasField('name'),
+                                'student_name' => $studentAssessmentSummary->aliasField('student_name'),
+                                'grade_name' => $studentAssessmentSummary->aliasField('grade_name'),
+                                'class_name' => $studentAssessmentSummary->aliasField('institution_classes_name'),
+                                'subject_name' => $studentAssessmentSummary->aliasField('subject_name'),
                                 'identity_number' => 'UserIdentities.number',
-                                'homeroom_teacher' => $this->find()->func()->concat([
-                                    'Staff.first_name' => 'literal',
-                                        " ",
-                                    'Staff.last_name' => 'literal'
-                                ]),
-                                'individual_result' => $subjectStudents->aliasField('total_mark'),
-                                'student_id' => $InstitutionStudents->aliasField('student_id')
+                                'homeroom_teacher' => $studentAssessmentSummary->aliasField('homeroom_teacher_name'),
+                                'individual_result' => $studentAssessmentSummary->aliasField('latest_mark'),
+                                'avg_marks' => $studentAssessmentSummary->aliasField('average_marks'),
+                                'student_id' => $studentAssessmentSummary->aliasField('student_id')
                             ])
-                        ->innerJoin([$subjectStudents->alias() => $subjectStudents->table()], [
-                            $subjectStudents->aliasField('student_id = ') . $InstitutionStudents->aliasField('student_id'),
-                            $subjectStudents->aliasField('institution_id = ') . $InstitutionStudents->aliasField('institution_id'),
-                            $subjectStudents->aliasField('academic_period_id = ') . $InstitutionStudents->aliasField('academic_period_id'),
-                            $subjectStudents->aliasField('education_grade_id = ') . $InstitutionStudents->aliasField('education_grade_id'),
-                            $subjectStudents->aliasField('student_status_id = ') . $InstitutionStudents->aliasField('student_status_id')
-                        ])
-                        ->innerJoin([$subject->alias() => $subject->table()], [
-                            $subject->aliasField('id = ') . $subjectStudents->aliasField('education_subject_id') 
-                        ])
-                        ->innerJoin([$Users->alias() => $Users->table()], [
-                            $subjectStudents->aliasField('student_id ='). $Users->aliasField('id')
-                        ])
-                        ->leftJoin(['UserIdentities' => 'user_identities'], [
-                            'UserIdentities.security_user_id = ' . $Users->aliasField('id')
-                        ])
-                        ->leftJoin(['IdentityTypes' => 'identity_types'], [
-                            'IdentityTypes.id = UserIdentities.identity_type_id',
-                            'IdentityTypes.default =' . 1
-                        ])
-                        ->innerJoin([$class->alias() => $class->table()], [
-                            $subjectStudents->aliasField('institution_class_id ='). $class->aliasField('id')
-                        ])
-                        ->innerJoin(['Staff' => 'security_users'], [
-                            'Staff.id = ' . $class->aliasField('staff_id')
-                        ])
-                        ->innerJoin([$EducationGrades->alias() => $EducationGrades->table()], [
-                            $subjectStudents->aliasField('education_grade_id ='). $EducationGrades->aliasField('id')
-                        ])
-                        ->order([$Users->aliasField('first_name')])
-                        ->where([
-                            $InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id'],
-                            $InstitutionStudents->aliasField('institution_id') => $params['institution_id'],
-                            $InstitutionStudents->aliasField('student_status_id') => 1  
-                        ])
-                        ->group([
-                            $subjectStudents->aliasField('student_id'),
-                            $subjectStudents->aliasField('education_subject_id')
-                        ])  
-                        ->hydrate(false)
-                        ->toArray();
-            
+                            ->innerJoin([$Users->alias() => $Users->table()], [
+                                $studentAssessmentSummary->aliasField('student_id ='). $Users->aliasField('id')
+                            ])
+                            ->leftJoin(['UserIdentities' => 'user_identities'], [
+                                'UserIdentities.security_user_id = ' . $Users->aliasField('id')
+                            ])
+                            ->leftJoin(['IdentityTypes' => 'identity_types'], [
+                                'IdentityTypes.id = UserIdentities.identity_type_id',
+                                'IdentityTypes.default =' . 1
+                            ])
+                            ->order([$studentAssessmentSummary->aliasField('student_name')])  
+                            ->where([
+                                $studentAssessmentSummary->aliasField('academic_period_id') => $params['academic_period_id'],
+                                $studentAssessmentSummary->aliasField('institution_id') => $params['institution_id']
+                            ])
+                            ->hydrate(false)
+                            ->toArray();
+
             $result = [];
             $entity = [];
-            //$i = 0;
             if (!empty($studentData)) {
-               foreach ($studentData as $key => $data) {
+               foreach ($studentData as $data) {
                     $absenceDaysCount = $studentAbsences->find()
                                         ->select(['absent_days' => $this->find()->func()->sum($studentAbsencesDay->aliasField('absent_days'))])
-                                        ->leftJoin([$studentAbsencesDay->alias() => $studentAbsencesDay->table()], [
+                                        ->innerJoin([$studentAbsencesDay->alias() => $studentAbsencesDay->table()], [
                                             $studentAbsences->aliasField('institution_student_absence_day_id ='). $studentAbsencesDay->aliasField('id')
                                         ])
                                         ->where([
@@ -4269,35 +4232,22 @@ class InstitutionReportCardsTable extends AppTable
                                         ])
                                         ->hydrate(false)
                                         ->first();
-                
-                    $totalAvgMarks = $subjectStudents->find()
-                                    ->select(['avg_marks' => $this->find()->func()->avg($subjectStudents->aliasField('total_mark'))])
-                                    ->where([
-                                        $subjectStudents->aliasField('academic_period_id') => $params['academic_period_id'],
-                                        $subjectStudents->aliasField('institution_id') => $params['institution_id'],
-                                        $subjectStudents->aliasField('student_id') => $data['student_id']
-                                    ])
-                                    ->hydrate(false)
-                                    ->first();
-
                     $result = [
                         'id' => $data['id'],
                         'grade_name' => !empty($data['grade_name']) ? $data['grade_name'] : '',
                         'openemis_no' => !empty($data['openemis_no']) ? $data['openemis_no'] : '',
                         'identity_number' => !empty($data['identity_number']) ? $data['identity_number'] : '',
-                        'student_name' => $data['first_name'].' '.$data['middle_name'].' '.$data['third_name'].' '.$data['last_name'],
+                        'student_name' => $data['student_name'],
                         'class_name' => !empty($data['class_name']) ? $data['class_name'] : '',
                         'subject_name' => !empty($data['subject_name']) ? $data['subject_name'] : '',
                         'homeroom_teacher' => !empty($data['homeroom_teacher']) ? $data['homeroom_teacher'] : '',
                         'absence_day' => $absenceDaysCount['absent_days'],
                         'individual_result' => !empty($data['individual_result']) ? $data['individual_result'] : 0,
-                        'average_marks' => $totalAvgMarks['avg_marks'],
+                        'average_marks' => $data['avg_marks'],
                     ];
                     $entity[] = $result;
-                    //$i++;
                 }
             } 
-            //echo "<pre>";print_r($entity);die();
             return $entity;
         }
     }
