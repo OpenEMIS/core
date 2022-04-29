@@ -358,7 +358,7 @@
                             <div class="input date" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'DATE'">
                                 <label for={{field.student_custom_field_id}}>{{field.name}}</label>
                                 <div class="input-group date" id={{field.student_custom_field_id} style="" datepicker="" ng-model="field.answer" ng-click="[field.isDatepickerOpen = !field.isDatepickerOpen]" ng-init="field.isDatepickerOpen = false">
-                                    <input type="text" class="form-control " ng-model="field.answer" uib-datepicker-popup="MM/dd/yyyy" is-open="field.isDatepickerOpen" datepicker-options="datepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" ng-change="field.isDatepickerOpen = false" ng-required="field.is_mandatory !== 0" />
+                                    <input type="text" class="form-control " ng-model="field.answer" uib-datepicker-popup="yyyy/MM/dd" is-open="field.isDatepickerOpen" datepicker-options="datepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" ng-change="field.isDatepickerOpen = false" ng-required="field.is_mandatory !== 0" />
                                     <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                                 </div>
                                 <div ng-if="field.errorMessage" class="error-message">
