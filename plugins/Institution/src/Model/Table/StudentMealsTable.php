@@ -346,11 +346,11 @@ class StudentMealsTable extends ControllerActionTable
         ])
         ->where($conditions)
         ->first();
-        if (isset($benefit)) {
+        if (isset($benefit) && !empty($benefit)) {
             $benefit = $benefit->meal_benefit->name;
 
         }
-        else{
+        else if(!empty($benefit)){ 
             $isMarkedRecords = $StudentMealMarkedRecords
             ->find()
             ->contain(['MealBenefit'])
@@ -366,9 +366,11 @@ class StudentMealsTable extends ControllerActionTable
                 $StudentMealMarkedRecords->aliasField('institution_id = ') => $entity->institution_id,
             ])
             ->first();
-            if (!empty($isMarkedRecords)) {
+            if (!empty($isMarkedRecords->meal_benefit_id)) {
                 $benefit = $isMarkedRecords->meal_benefit->name;
             }
+        }else{
+            $benefit = '';
         }
         return $benefit;
     } 
