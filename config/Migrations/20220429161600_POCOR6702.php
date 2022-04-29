@@ -64,7 +64,7 @@ class POCOR6702 extends AbstractMigration
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
       ');
     
-      $this->execute("ALTER TABLE `report_student_assessment_summary` ADD KEY `academic_period_id`(`academic_period_id`), ADD KEY `area_id` (`area_id`), ADD KEY `institution_id` (`institution_id`), ADD KEY `grade_id` (`grade_id`), ADD KEY `subject_id` (`subject_id`), ADD KEY `assessment_id` (`assessment_id`), ADD KEY `period_id` (`period_id`), ADD KEY `instituition_classes_id` (`instituition_classes_id`), ADD KEY `homeroom_teacher_id` (`homeroom_teacher_id`), ADD KEY `student_id` (`student_id`)");
+      $this->execute("ALTER TABLE `report_student_assessment_summary` ADD KEY `academic_period_id`(`academic_period_id`), ADD KEY `area_id` (`area_id`), ADD KEY `institution_id` (`institution_id`), ADD KEY `grade_id` (`grade_id`), ADD KEY `subject_id` (`subject_id`), ADD KEY `assessment_id` (`assessment_id`), ADD KEY `period_id` (`period_id`), ADD KEY `institution_classes_id` (`institution_classes_id`), ADD KEY `homeroom_teacher_id` (`homeroom_teacher_id`), ADD KEY `student_id` (`student_id`)");
       $this->execute('DELETE FROM report_queries WHERE name = "report_student_assessment_summary_insert"');
       $this->execute('DELETE FROM report_queries WHERE name = "report_student_assessment_summary_truncate"');
 
