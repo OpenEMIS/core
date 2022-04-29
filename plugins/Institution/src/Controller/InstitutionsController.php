@@ -5394,6 +5394,7 @@ class InstitutionsController extends AppController
                 if(!empty($contactType) && !empty($contactValue)){
                     $UserContacts = TableRegistry::get('user_contacts');
                     $entityContactData = [
+                        'contact_option_id' => $contactType,
                         'contact_type_id' => $contactType,
                         'value' => $contactValue,
                         'preferred' => 1,
@@ -5401,7 +5402,7 @@ class InstitutionsController extends AppController
                         'created_user_id' => $userId,
                         'created' => date('Y-m-d H:i:s')
                     ];
-                    //save in user_identities table
+                    //save in user_contacts table
                     $entityContactData = $UserContacts->newEntity($entityContactData);
                     $UserContactResult = $UserContacts->save($entityContactData);
                 }
