@@ -144,6 +144,9 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        //Start:POCOR-6693
+        $this->field('area', ['attr' => ['label' => __('Size')]]); 
+        //End:POCOR-6693
         $this->Navigation->substituteCrumb(__('Institution Lands'), __('Institution Lands'));
         $this->field('name', ['visible' => false]);
     }
@@ -470,6 +473,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
+        
         $toolbarElements = $this->addBreadcrumbElement();
         $this->controller->set('toolbarElements', $toolbarElements);
     }
