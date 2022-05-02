@@ -33,7 +33,7 @@ class StudentsController extends AppController
         // 'Absences',
         // 'StudentBehaviours',
         'Awards',
-        'Extracurriculars',
+        //'Extracurriculars',
 
         // finance
         'BankAccounts',
@@ -67,7 +67,7 @@ class StudentsController extends AppController
             'Nationalities'     => ['className' => 'User.Nationalities'],
             // 'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
             'Behaviours'        => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
-            'Extracurriculars'  => ['className' => 'Student.Extracurriculars',  'actions' => ['index', 'add', 'edit', 'remove','view']],
+            //'Extracurriculars'  => ['className' => 'Student.Extracurriculars',  'actions' => ['index', 'add', 'edit', 'remove','view']],//POCOR-6700
             'History'           => ['className' => 'User.UserActivities', 'actions' => ['index']],
             'ImportStudents'    => ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
         ];
@@ -828,4 +828,11 @@ class StudentsController extends AppController
         $this->set('ngController', 'StudentTimetableCtrl as $ctrl');
 
     }
+
+    /*POCOR-6700 start - registering function*/
+    public function Extracurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']);
+    }
+    /*POCOR-6700 ends*/
 }
