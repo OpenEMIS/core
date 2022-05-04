@@ -88,19 +88,23 @@ class InstitutionInfrastructuresTable extends AppTable
             'label' => __('Institution Shift')
         ];
 
+        //POCOR-6650 Starts
+        $AreaLevelTbl = TableRegistry::get('area_levels');
+        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->hydrate(false)->toArray();
+         
         $newFields[] = [
             'key' => '',
             'field' => 'region_name',
             'type' => 'string',
-            'label' => 'Region Name'
+            'label' => __($AreaLevelArr[1]['name'])
         ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => __('Area Name')
-        ];
+            'label' => __($AreaLevelArr[0]['name'])
+        ]; //POCOR-6650 Ends
 
         $newFields[] = [
             'key' => 'InstitutionStatuses.name',
