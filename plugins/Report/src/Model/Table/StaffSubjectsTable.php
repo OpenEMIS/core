@@ -38,38 +38,12 @@ class StaffSubjectsTable extends AppTable  {
         $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $Staff = TableRegistry::get('Security.Users');
         $Genders = TableRegistry::get('User.Genders');
-
-        //$Staff = TableRegistry::get('Institution.InstitutionSubjects');
         $MainNationalities = TableRegistry::get('FieldOption.Nationalities');
         $UserIdentities = TableRegistry::get('User.Identities');
-        //$StaffQualifications = TableRegistry::get('StaffQualifications');
+        
         $eduGrade = TableRegistry::get('education_grades');
         $conditions = [];
-        if (!empty($academicPeriodId)) {
-                $conditions['OR'] = [
-                    'OR' => [
-                        [
-                            $InstitutionStaff->aliasField('end_date') . ' IS NOT NULL',
-                            $InstitutionStaff->aliasField('start_date') . ' <=' => $startDate,
-                            $InstitutionStaff->aliasField('end_date') . ' >=' => $startDate
-                        ],
-                        [
-                            $InstitutionStaff->aliasField('end_date') . ' IS NOT NULL',
-                            $InstitutionStaff->aliasField('start_date') . ' <=' => $endDate,
-                            $InstitutionStaff->aliasField('end_date') . ' >=' => $endDate
-                        ],
-                        [
-                            $InstitutionStaff->aliasField('end_date') . ' IS NOT NULL',
-                            $InstitutionStaff->aliasField('start_date') . ' >=' => $startDate,
-                            $InstitutionStaff->aliasField('end_date') . ' <=' => $endDate
-                        ]
-                    ],
-                    [
-                        $InstitutionStaff->aliasField('end_date') . ' IS NULL',
-                        $InstitutionStaff->aliasField('start_date') . ' <=' => $endDate
-                    ]
-                ];
-        }
+        
         if (!empty($institutionId) && $institutionId > 0) {
             $conditions['Institutions.id'] = $institutionId; 
         }
@@ -93,9 +67,7 @@ class StaffSubjectsTable extends AppTable  {
                 'gender' => $Genders->aliasField('name'),
                 'nationality_name' => $MainNationalities->aliasField('name'),
                 'identity_type_id' => $Staff->aliasField('identity_type_id'),
-                
                 'identity_number' => 'Users.identity_number'
-                //'qualification'=>  $StaffQualifications->aliasField('qualification_institution')
             ])
             ->contain([
               
@@ -181,7 +153,6 @@ class StaffSubjectsTable extends AppTable  {
                         $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
                         $Classes = TableRegistry::get('Institution.InstitutionClasses');
                         $GradesClassT = TableRegistry::get('institution_class_grades');
-                        $GradeT = TableRegistry::get('education_grades');
                         
                         $staff_id = $row->staff_id;
                         $obj =$this->find()
@@ -201,15 +172,15 @@ class StaffSubjectsTable extends AppTable  {
                         ->where([$this->aliasField('staff_id') => $staff_id])
                         ->group([$Classes->aliasField('name')]);
                        foreach($obj->toArray() as $k=>$obj1){ 
-                        //Grade
-                            $row['classes'] .= $obj1->InstitutionClasses['name'].",";
-                            $GradesClass = $GradesClassT->find()->where(['institution_class_id' => $obj1->InstitutionClasses['id']])->first();
-                            $Grade = $GradeT->find()->where(['id'=>$GradesClass->education_grade_id])->first();
-                            $row['grades'] .= $Grade->name.",";     
+                            $row['classes'] .= $obj1->InstitutionClasses['name'].",";  
                        }
+                       //grade
+                       $InstitutionSubjectT = TableRegistry::get('institution_subjects');
+                       $GradeT = TableRegistry::get('education_grades');
+                       $InstitutionSubjectDta = $InstitutionSubjectT->find()->where(['id' => $row->institution_subject_id])->first();
+                       $Grade = $GradeT->find()->where(['id'=>$InstitutionSubjectDta->education_grade_id])->first();
+                       $row['grades'] = $Grade->name;
                        $row['classes'] = rtrim($row['classes'], ',');
-                       $row['grades'] = rtrim($row['grades'], ',');
-                       $row['grades'] = implode(',',array_unique(explode(',', $row['grades'])));
 
                     return $row;
                 });
