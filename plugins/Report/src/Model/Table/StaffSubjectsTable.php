@@ -39,10 +39,22 @@ class StaffSubjectsTable extends AppTable  {
         $Staff = TableRegistry::get('Security.Users');
         $Genders = TableRegistry::get('User.Genders');
         $MainNationalities = TableRegistry::get('FieldOption.Nationalities');
-        $UserIdentities = TableRegistry::get('User.Identities');
         
-        $eduGrade = TableRegistry::get('education_grades');
         $conditions = [];
+        if (!empty($academicPeriodId)) {
+            if($this->aliasField('end_date') == null){
+                $conditions = [
+                    $this->aliasField('start_date') . ' >=' => $startDate,
+                    $this->aliasField('end_date') . ' <=' => $endDate
+                ];
+            }else{
+                $conditions = [
+                    $this->aliasField('start_date') . ' >=' => $startDate,
+                    $this->aliasField('start_date') . ' <=' => $endDate
+                ];
+            }
+            
+        }
         
         if (!empty($institutionId) && $institutionId > 0) {
             $conditions['Institutions.id'] = $institutionId; 
@@ -52,6 +64,7 @@ class StaffSubjectsTable extends AppTable  {
         }
         $query
             ->select([
+                'academic_period_id' => 'InstitutionSubjects.id',
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',  
                 'nationality_id' => 'Users.nationality_id',             
@@ -67,7 +80,10 @@ class StaffSubjectsTable extends AppTable  {
                 'gender' => $Genders->aliasField('name'),
                 'nationality_name' => $MainNationalities->aliasField('name'),
                 'identity_type_id' => $Staff->aliasField('identity_type_id'),
-                'identity_number' => 'Users.identity_number'
+                'identity_number' => 'Users.identity_number',
+                'start_date' => $this->aliasField('start_date'),
+                'end_date' => $this->aliasField('end_date'),
+                
             ])
             ->contain([
               
@@ -121,7 +137,7 @@ class StaffSubjectsTable extends AppTable  {
             ->order(['institution_name']);
 
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
-                return $results->map(function ($row) {   
+                return $results->map(function ($row) { 
                         //for identity type *********
                         $IdentityTypesss = TableRegistry::get('identity_types');
                         //Dynamic fields*******identity_types*****
@@ -149,38 +165,20 @@ class StaffSubjectsTable extends AppTable  {
                         $sfieldofStydy = $sfieldofStydyT->find()->where(['id'=>$sQu->education_field_of_study_id])->first();
                         $row['field_of_study'] = $sfieldofStydy->name;
 
-                        //class***********
-                        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-                        $Classes = TableRegistry::get('Institution.InstitutionClasses');
-                        $GradesClassT = TableRegistry::get('institution_class_grades');
                         
-                        $staff_id = $row->staff_id;
-                        $obj =$this->find()
-                        ->select([$Classes->aliasField('name'),$Classes->aliasField('id')])
-                        ->leftJoin(
-                            [$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()],
-                            [
-                                $InstitutionClassSubjects->aliasField('institution_subject_id = ') . $this->aliasField('institution_subject_id')
-                            ]
-                        )
-                        ->leftJoin(
-                            [$Classes->alias() => $Classes->table()],
-                            [
-                                $Classes->aliasField('id = ') . $InstitutionClassSubjects->aliasField('institution_class_id')
-                            ]
-                        )
-                        ->where([$this->aliasField('staff_id') => $staff_id])
-                        ->group([$Classes->aliasField('name')]);
-                       foreach($obj->toArray() as $k=>$obj1){ 
-                            $row['classes'] .= $obj1->InstitutionClasses['name'].",";  
-                       }
                        //grade
                        $InstitutionSubjectT = TableRegistry::get('institution_subjects');
                        $GradeT = TableRegistry::get('education_grades');
                        $InstitutionSubjectDta = $InstitutionSubjectT->find()->where(['id' => $row->institution_subject_id])->first();
                        $Grade = $GradeT->find()->where(['id'=>$InstitutionSubjectDta->education_grade_id])->first();
                        $row['grades'] = $Grade->name;
-                       $row['classes'] = rtrim($row['classes'], ',');
+
+                       //class***********
+                       $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+                       $Classes = TableRegistry::get('Institution.InstitutionClasses');
+                       $GradesClassData = $InstitutionClassSubjects->find()->where(['institution_subject_id'=>$row->institution_subject_id])->first();
+                       $classData = $Classes->find()->where(['id'=>$GradesClassData->institution_class_id])->first();
+                       $row['classes'] = $classData->name;
 
                     return $row;
                 });
