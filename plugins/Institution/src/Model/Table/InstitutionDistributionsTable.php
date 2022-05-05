@@ -466,14 +466,16 @@ class InstitutionDistributionsTable extends ControllerActionTable
         $academicPeriodId =  ($this->request->query['period']) ? $this->request->query['period'] : $AcademicPeriod->getCurrent();
         $session = $this->request->session();
         $institutionId  = $session->read('Institution.Institutions.id');
+        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
         $query
+        ->innerJoin(
+            [$MealInstitutionProgrammes->alias() => $MealInstitutionProgrammes->table()], [
+                $this->aliasField('meal_programmes_id = ') . $MealInstitutionProgrammes->aliasField('id'),
+            ]
+        )
         ->where([
-            // $this->aliasField('security_user_id = ').$staffUserId
             $this->aliasField('academic_period_id') => $academicPeriodId,
             $this->aliasField('institution_id') => $institutionId
         ]);
-        // echo "<pre>";print_r($query->toArray());die;
     }
-
-    
 }
