@@ -89,9 +89,7 @@ class StudentCompetenciesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         //Start:POCOR-6698
-        $url = $this->request->here();
-        $urlA = explode("/",$url);
-        if($urlA[1] == "Profiles"){
+        if($this->request->params['plugin'] == "Profile"){
             $this->field('total_male_students', ['visible' => false]);
             $this->field('total_female_students', ['visible' => false]);
         }
