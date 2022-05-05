@@ -320,7 +320,7 @@ class TrainingsTable extends AppTable
                 $area_options = $Areas->getAreas();
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = true;
-                $attr['select'] = true;
+                $attr['select'] = false;
                 $attr['options'] = ['-1' => __('All Areas')] + $area_options;
                 return $attr;
             }

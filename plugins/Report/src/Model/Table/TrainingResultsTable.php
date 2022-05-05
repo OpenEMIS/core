@@ -42,7 +42,6 @@ class TrainingResultsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        
         $TrainingSessionResults = TableRegistry::get('Training.TrainingSessionResults');
         $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         $WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
@@ -52,6 +51,7 @@ class TrainingResultsTable extends AppTable
         $end_date     = $requestData->end_date; // POCOR-6596
         $selectedStatus = $requestData->status;
 		$selectedCourse = $requestData->training_course_id;
+        $area_id = $requestData->area_id->_ids;
 		$conditions = [];
         if ($selectedCourse > 0) { // POCOR-6596
             $conditions['Courses.id'] = $selectedCourse;
@@ -61,13 +61,18 @@ class TrainingResultsTable extends AppTable
             $conditions['Sessions.id'] = $session_name;
         }
         if (!empty($start_date)) {
-
-           
             $conditions['Sessions.start_date >= '] = date('Y-m-d', strtotime($start_date));
         }
         if (!empty($end_date)) {
-            
             $conditions['Sessions.end_date <= '] = date('Y-m-d', strtotime($end_date));
+        }
+
+        if (!empty($area_id)) {
+            $area_id_arr = [];
+            foreach ($area_id as $akey => $aval) {
+                $area_id_arr[] = $aval;
+            }
+            $conditions['Sessions.area_id IN'] = $area_id_arr;
         }
         // END: POCOR-6596
 
