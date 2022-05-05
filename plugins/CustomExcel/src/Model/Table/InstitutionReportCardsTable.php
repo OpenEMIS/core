@@ -3954,7 +3954,7 @@ class InstitutionReportCardsTable extends AppTable
             $ReportStudentAssessmentSummary = TableRegistry::get('report_student_assessment_summary');
             $AssessmentSummaryData = $ReportStudentAssessmentSummary->find()
                 ->select([
-                'id' => $ReportStudentAssessmentSummary->aliasField('id'),
+                //'id' => $ReportStudentAssessmentSummary->aliasField('id'),
                 'academic_period_code' => $ReportStudentAssessmentSummary->aliasField('academic_period_code'),
                 'academic_period_name' => $ReportStudentAssessmentSummary->aliasField('academic_period_name'),
                 'area_code' => $ReportStudentAssessmentSummary->aliasField('area_code'),
@@ -3971,7 +3971,7 @@ class InstitutionReportCardsTable extends AppTable
                 'period_code' => $ReportStudentAssessmentSummary->aliasField('period_code'),
                 'period_name' => $ReportStudentAssessmentSummary->aliasField('period_name'),
                 'period_weight' => $ReportStudentAssessmentSummary->aliasField('period_weight'),
-                'average_marks' => $ReportStudentAssessmentSummary->aliasField('average_marks')
+                //'average_marks' => $ReportStudentAssessmentSummary->aliasField('average_marks')
                 ])
                 ->where([$ReportStudentAssessmentSummary->aliasField('institution_id') => $params['institution_id']])    
                 ->where([$ReportStudentAssessmentSummary->aliasField('academic_period_id') => $params['academic_period_id']])    
@@ -3984,7 +3984,7 @@ class InstitutionReportCardsTable extends AppTable
 
             foreach ($AssessmentSummaryData as $e_key => $e_val) {
                 $entity[] = [
-                    'id' => $e_val['id'],
+                    //'id' => $e_val['id'],
                     'academic_period_code' => (!empty($e_val['academic_period_code']) ? $e_val['academic_period_code'] : ''),
                     'academic_period_name' => (!empty($e_val['academic_period_name']) ? $e_val['academic_period_name'] : ''),
                     'area_code' => (!empty($e_val['area_code']) ? $e_val['area_code'] : ''),
@@ -4001,7 +4001,7 @@ class InstitutionReportCardsTable extends AppTable
                     'period_code' => (!empty($e_val['period_code']) ? $e_val['period_code'] : ''),
                     'period_name' => (!empty($e_val['period_name']) ? $e_val['period_name'] : ''),
                     'period_weight' => (!empty($e_val['period_weight']) ? $e_val['period_weight'] : ''),
-                    'average_marks' => (!empty($e_val['average_marks']) ? $e_val['average_marks'].' ' : '')
+                    //'average_marks' => (!empty($e_val['average_marks']) ? $e_val['average_marks'].' ' : '')
                 ];
             }
             return $entity;
@@ -4184,29 +4184,21 @@ class InstitutionReportCardsTable extends AppTable
             $studentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
             $studentAbsencesDay = TableRegistry::get('Institution.InstitutionStudentAbsenceDays');
             $studentAssessmentSummary = TableRegistry::get('report_student_assessment_summary');
+            $userIdentity = TableRegistry::get('User.Identities');
             $studentData = $studentAssessmentSummary->find()
                             ->select([
-                                'id' => $studentAssessmentSummary->aliasField('id'),
                                 'openemis_no' => $Users->aliasField('openemis_no'),
                                 'student_name' => $studentAssessmentSummary->aliasField('student_name'),
                                 'grade_name' => $studentAssessmentSummary->aliasField('grade_name'),
                                 'class_name' => $studentAssessmentSummary->aliasField('institution_classes_name'),
                                 'subject_name' => $studentAssessmentSummary->aliasField('subject_name'),
-                                'identity_number' => 'UserIdentities.number',
                                 'homeroom_teacher' => $studentAssessmentSummary->aliasField('homeroom_teacher_name'),
                                 'individual_result' => $studentAssessmentSummary->aliasField('latest_mark'),
-                                'avg_marks' => $studentAssessmentSummary->aliasField('average_marks'),
+                                'avg_marks' => $studentAssessmentSummary->aliasField('average_mark'),
                                 'student_id' => $studentAssessmentSummary->aliasField('student_id')
                             ])
                             ->innerJoin([$Users->alias() => $Users->table()], [
                                 $studentAssessmentSummary->aliasField('student_id ='). $Users->aliasField('id')
-                            ])
-                            ->leftJoin(['UserIdentities' => 'user_identities'], [
-                                'UserIdentities.security_user_id = ' . $Users->aliasField('id')
-                            ])
-                            ->leftJoin(['IdentityTypes' => 'identity_types'], [
-                                'IdentityTypes.id = UserIdentities.identity_type_id',
-                                'IdentityTypes.default =' . 1
                             ])
                             ->order([$studentAssessmentSummary->aliasField('student_name')])  
                             ->where([
@@ -4215,11 +4207,21 @@ class InstitutionReportCardsTable extends AppTable
                             ])
                             ->hydrate(false)
                             ->toArray();
-
+            
             $result = [];
             $entity = [];
             if (!empty($studentData)) {
-               foreach ($studentData as $data) {
+               foreach ($studentData as $key => $data) {
+                    $identityObj = $userIdentity->find()
+                                    ->select(['identity_number' => $userIdentity->aliasField('number')])
+                                    ->leftJoin(['IdentityTypes' => 'identity_types'], [
+                                        'IdentityTypes.id = '. $userIdentity->aliasField('identity_type_id'),
+                                        'IdentityTypes.default =' . 1
+                                    ])
+                                    ->where([$userIdentity->aliasField('security_user_id') => $data['student_id']])
+                                    ->hydrate(false)
+                                    ->first();
+                    //echo "<pre>";print_r($identityObj);die();
                     $absenceDaysCount = $studentAbsences->find()
                                         ->select(['absent_days' => $this->find()->func()->sum($studentAbsencesDay->aliasField('absent_days'))])
                                         ->innerJoin([$studentAbsencesDay->alias() => $studentAbsencesDay->table()], [
@@ -4233,10 +4235,10 @@ class InstitutionReportCardsTable extends AppTable
                                         ->hydrate(false)
                                         ->first();
                     $result = [
-                        'id' => $data['id'],
+                        'id' => $key,
                         'grade_name' => !empty($data['grade_name']) ? $data['grade_name'] : '',
                         'openemis_no' => !empty($data['openemis_no']) ? $data['openemis_no'] : '',
-                        'identity_number' => !empty($data['identity_number']) ? $data['identity_number'] : '',
+                        'identity_number' => !empty($identityObj['identity_number']) ? $identityObj['identity_number'] : '',
                         'student_name' => $data['student_name'],
                         'class_name' => !empty($data['class_name']) ? $data['class_name'] : '',
                         'subject_name' => !empty($data['subject_name']) ? $data['subject_name'] : '',
