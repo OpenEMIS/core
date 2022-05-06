@@ -142,14 +142,20 @@ class ReportListBehavior extends Behavior {
 	    $institutionId  = $session->read('Institution.Institutions.id'); 
 		if($this->_table->alias() == 'InstitutionStandards'){ // Inside the institution module report listing
 			$query = $this->ReportProgress->find('all')
+			//START:POCOR-6629
+			// ->where(['JSON_EXTRACT(params, "$.current_institution_id")=' . "'".$institutionId."'",'module'=>'InstitutionStandards'])
 			->where(['JSON_EXTRACT(params, "$.current_institution_id")=' . $institutionId,'module'=>'InstitutionStandards'])
+			//END:POCOR-6629
 			->order([
 				$this->ReportProgress->aliasField('created') => 'DESC',
 				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
 			]);				
 		}elseif($this->_table->alias() == 'InstitutionStatistics'){ // Inside the institution module report listing
 			$query = $this->ReportProgress->find('all')
-			->where(['JSON_EXTRACT(params, "$.institution_id")=' . $institutionId,'module'=>'InstitutionStatistics'])
+			//START:POCOR-6629
+			// ->where(['JSON_EXTRACT(params, "$.institution_id")=' . "'".$institutionId."'",'module'=>'InstitutionStatistics'])
+			->where(['JSON_EXTRACT(params, "$.institution_id")=' . "'".$institutionId."'",'module'=>'InstitutionStatistics'])
+			//END:POCOR-6629
 			->order([
 				$this->ReportProgress->aliasField('created') => 'DESC',
 				$this->ReportProgress->aliasField('expiry_date') => 'DESC'

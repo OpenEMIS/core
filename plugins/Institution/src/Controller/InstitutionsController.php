@@ -4358,6 +4358,8 @@ class InstitutionsController extends AppController
             'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
             'Institution.InstitutionStaffPositionProfile'  => __('Staff Positions'),//POCOR-6581
             'Institution.InstitutionStandardStudentAbsenceType'  => __('Student Absence Type'),//POCOR-6632
+            'Institution.InstitutionStandardMarksEntered'  => __('Marks Entered by Staff'),//POCOR-6630
+            'Institution.InstitutionStandardStudentAbsences'  => __('Student Absences'),//POCOR-6631
         ];
         return $options;
     }

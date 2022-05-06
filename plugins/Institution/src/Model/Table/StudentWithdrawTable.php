@@ -180,7 +180,31 @@ class StudentWithdrawTable extends ControllerActionTable
         $periodId = $entity->academic_period_id;
         $gradeId = $entity->education_grade_id;
         Log::write('debug', 'initializing insert newEntity to student_status_updates queue: id >>>> '. $entity->student_id.' student_id >>>> '.$entity->student_id);
-        if(!empty($workflowTransitionEntity) && $workflowTransitionEntity->workflow_action_name == 'Approve') {
+        /*POCOR-6651 starts - workflow_action_name Approve was not working on UAT server as it uses Arabic language*/
+        $configItems = TableRegistry::get('Configuration.ConfigItems');
+        $localeContents = TableRegistry::get('locale_contents');
+        $locales = TableRegistry::get('locales');
+        $localeContentTrans = TableRegistry::get('locale_content_translations');
+        $systemLang = $configItems->find()
+                    ->select(['lang_id' => $locales->aliasField('id')])
+                    ->LeftJoin([$locales->alias() => $locales->table()], [
+                        $locales->aliasField('iso').' = ' . $configItems->aliasField('value'),
+                    ])
+                    ->where([$configItems->aliasField('name') => 'Language'])
+                    ->first()->lang_id;
+        $approveName   = $localeContents->find()
+                        ->select(['translation' => $localeContentTrans->aliasField('translation')])
+                        ->LeftJoin([$localeContentTrans->alias() => $localeContentTrans->table()], [
+                            $localeContentTrans->aliasField('locale_content_id').' = ' . $localeContents->aliasField('id'),
+                        ])
+                        ->where([
+                            $localeContents->aliasField('en') => 'Approve',
+                            $localeContentTrans->aliasField('locale_id') => $systemLang
+                        ])
+                        ->first()->translation;
+        
+        /*POCOR-6651 ends*/
+        if(!empty($workflowTransitionEntity) && $workflowTransitionEntity->workflow_action_name == 'Approve' || $workflowTransitionEntity->workflow_action_name == $approveName) {
             $newEntity = $StudentStatusUpdates->newEntity([
                 'model' => $this->registryAlias(),
                 'model_reference' => $entity->id,
