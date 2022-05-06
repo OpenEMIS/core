@@ -98,6 +98,15 @@ class InstitutionStatisticsTable extends AppTable
                     $this->ControllerAction->field('academic_period_id');
                     unset($filters['academic_period_id']);
                 }
+                //START: POCOR-6629
+                // edication grade filter
+                if (array_key_exists('education_grade_id', $filters)) {
+                    // add validation
+                    $validator->notEmpty('education_grade_id');
+                    $this->ControllerAction->field('education_grade_id');
+                    unset($filters['education_grade_id']);
+                }
+                //END: POCOR-6629
 
                 if (isset($this->request->data["submit"]) && $this->request->data["submit"] == "academic_period_id") {
                     $toReset = true;
@@ -249,6 +258,48 @@ class InstitutionStatisticsTable extends AppTable
             return $attr;
         }
     }
+
+    //START: POCOR-6629
+    // education grade filter
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $periodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
+            $selectedPeriod = $AcademicPeriods->getCurrent();
+
+            $selectedPeriod = $request->data['InstitutionStatistics']['academic_period_id'];
+            $institutionId = $request->data['InstitutionStatistics']['institution_id'];
+
+
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $grades = TableRegistry::get('Institution.InstitutionGrades');
+
+            $periodGrades = $EducationGrades->find('list', ['keyField' => 'id', 
+                                'valueField' => 'programme_grade_name'])
+                            ->find('visible')
+                            ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                            ->LeftJoin([$grades->alias() => $grades->table()],[
+                                $EducationGrades->aliasField('id').' = ' . $grades->aliasField('education_grade_id')
+                            ])
+                            ->where([
+                                'EducationSystems.academic_period_id' => $selectedPeriod,
+                                $grades->aliasField('institution_id') => $institutionId
+                            ])
+                            ->order([$EducationGrades->aliasField('id')])
+                            ->toArray();
+
+            $attr['onChangeReload'] = "academic_period_id";
+            $attr['options'] = $periodGrades;
+            $attr['default'] = $selectedPeriod;
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['required'] = true;
+            return $attr;
+        }
+    }
+    //START: POCOR-6629
 
     public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
     {
