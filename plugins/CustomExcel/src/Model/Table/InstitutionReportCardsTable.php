@@ -4221,19 +4221,21 @@ class InstitutionReportCardsTable extends AppTable
                                     ->where([$userIdentity->aliasField('security_user_id') => $data['student_id']])
                                     ->hydrate(false)
                                     ->first();
-                    //echo "<pre>";print_r($identityObj);die();
-                    $absenceDaysCount = $studentAbsences->find()
-                                        ->select(['absent_days' => $this->find()->func()->sum($studentAbsencesDay->aliasField('absent_days'))])
-                                        ->innerJoin([$studentAbsencesDay->alias() => $studentAbsencesDay->table()], [
-                                            $studentAbsences->aliasField('institution_student_absence_day_id ='). $studentAbsencesDay->aliasField('id')
-                                        ])
+                    $absenceDays = $studentAbsencesDay->find()
+                                        ->select(['absent_days' => $studentAbsencesDay->aliasField('absent_days')])
                                         ->where([
-                                            $studentAbsences->aliasField('academic_period_id') => $params['academic_period_id'],
-                                            $studentAbsences->aliasField('institution_id') => $params['institution_id'],
-                                            $studentAbsences->aliasField('student_id') => $data['student_id']
+                                            $studentAbsencesDay->aliasField('institution_id') => $params['institution_id'],
+                                            $studentAbsencesDay->aliasField('student_id') => $data['student_id']
                                         ])
                                         ->hydrate(false)
-                                        ->first();
+                                        ->toArray();
+                    $absenceDaysArr = [];
+                    if (!empty($absenceDays)) {
+                        foreach ($absenceDays as $key => $days) {
+                            $absenceDaysArr[] = $days['absent_days'];
+                        }
+                    }
+                    $absenceDaysCount = array_sum($absenceDaysArr);
                     $result = [
                         'id' => $key,
                         'grade_name' => !empty($data['grade_name']) ? $data['grade_name'] : '',
@@ -4243,7 +4245,7 @@ class InstitutionReportCardsTable extends AppTable
                         'class_name' => !empty($data['class_name']) ? $data['class_name'] : '',
                         'subject_name' => !empty($data['subject_name']) ? $data['subject_name'] : '',
                         'homeroom_teacher' => !empty($data['homeroom_teacher']) ? $data['homeroom_teacher'] : '',
-                        'absence_day' => $absenceDaysCount['absent_days'],
+                        'absence_day' => !empty($absenceDaysCount) ? $absenceDaysCount : 0,
                         'individual_result' => !empty($data['individual_result']) ? $data['individual_result'] : 0,
                         'average_marks' => $data['avg_marks'],
                     ];
