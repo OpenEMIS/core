@@ -72,7 +72,7 @@ class NavigationComponent extends Component
             $this->checkPermissions($navigations);
             $controller->set('_navigations', $navigations);
         } catch (SecurityException $ex) {
-            echo "<pre>";print_r($ex);die();
+           // echo "<pre>";print_r($ex);die(); POCOR-6705
             return $ex;
         }
     }
