@@ -46,6 +46,36 @@ class POCOR6681 extends AbstractMigration
         $this->execute("
         ALTER TABLE `institution_meal_programmes` CHANGE `date_received` `date_received` DATE NOT NULL
         ");
+
+        // For point 2 validation POCOR-6681 delete existing records 
+        $this->execute('TRUNCATE institution_meal_programmes');
+
+        $MealProgrammes = TableRegistry::get('meal_programmes');
+        $MealInstitutionProgrammes = TableRegistry::get('institution_meal_programmes');
+
+        // Delete existing records For Export 
+        $MealProgrammes = $MealProgrammes
+                ->find('all')->select(['id'])
+                ->toArray();
+        if(!empty($MealProgrammes)){
+            $MealProgrammesArr = [];
+            foreach ($MealProgrammes as $mpkey => $mpval) {
+                $MealProgrammesArr[] = $mpval['id'];
+            }
+            if(!empty($MealProgrammesArr)){
+                $InstitutionProgrammes = $MealInstitutionProgrammes
+                    ->find('all')->select(['id'])
+                    ->where([
+                        $MealInstitutionProgrammes->aliasField('meal_programmes_id NOT IN') => $MealProgrammesArr
+                    ])->toArray();
+                if(!empty($InstitutionProgrammes)){
+                    foreach ($InstitutionProgrammes as $key => $Programmes) { 
+                        $MealInstitutionProgrammes->delete($Programmes);
+                    }
+                }
+            }
+            
+        }
     }
 
     public function down()
@@ -53,6 +83,9 @@ class POCOR6681 extends AbstractMigration
 	    // meal_received
         $this->execute('DROP TABLE IF EXISTS `meal_received`');
         $this->execute('RENAME TABLE `zz_6681_meal_received` TO `meal_received`');
+
+        $this->execute('DROP TABLE IF EXISTS `meal_programmes`');
+        $this->execute('RENAME TABLE `zz_6681_meal_programmes` TO `meal_programmes`');
 
         $this->execute('DROP TABLE IF EXISTS `import_mapping`');
         $this->execute('RENAME TABLE `zz_6681_import_mapping` TO `import_mapping`');

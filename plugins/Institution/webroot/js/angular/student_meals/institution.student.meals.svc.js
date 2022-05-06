@@ -823,7 +823,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         eCell.setAttribute("id", dataKey);
         console.log('onedit', data.institution_student_meal[dataKey]);
         if (data.institution_student_meal[dataKey] == null) {
-            data.institution_student_meal[dataKey] = 2;
+            data.institution_student_meal[dataKey] = 3;
         }
 
         var eSelect = document.createElement("select");
