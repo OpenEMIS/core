@@ -4231,7 +4231,7 @@ class InstitutionReportCardsTable extends AppTable
                                         ->toArray();
                     $absenceDaysArr = [];
                     if (!empty($absenceDays)) {
-                        foreach ($absenceDays as $key => $days) {
+                        foreach ($absenceDays as $days) {
                             $absenceDaysArr[] = $days['absent_days'];
                         }
                     }
@@ -4252,6 +4252,7 @@ class InstitutionReportCardsTable extends AppTable
                     $entity[] = $result;
                 }
             } 
+            
             return $entity;
         }
     }
