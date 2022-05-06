@@ -4794,33 +4794,16 @@ class InstitutionReportCardsTable extends AppTable
     {
        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-
-            $entity = $InstitutionRooms->find()
-                        ->select([
-                            'id' => $InstitutionRooms->aliasField('id'),
-                            'area' => $InstitutionRooms->aliasField('area')
-                        ])
-                        ->where([
-                            $InstitutionRooms->aliasField('institution_id') => $params['institution_id'],
-                            $InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id'],
-                            $InstitutionRooms->aliasField('area !=') => 'NULL'
-                        ])
-                        ->hydrate(false)
-                        ->toArray();
-            
-            $addRoomAreaheading[] = [
-                'id' => 0,
-                'area' => 'Room Area'
+            $entity = [
+                [
+                    'id' => 0,
+                    'area' => 'Room Area'
+                ],
+                [
+                    'id' => 1,
+                    'area' => 'Cumulative Size'
+                ]
             ];
-
-            $entity = array_merge($addRoomAreaheading, $entity);
-
-            $totalArray = [];
-            $totalArray = [
-                'id' => count($entity) + 1,
-                'area' => '',
-            ];
-            $entity[] = $totalArray;
             return $entity;
         }
     }
@@ -4969,27 +4952,18 @@ class InstitutionReportCardsTable extends AppTable
             $areaLevelsTbl = TableRegistry::get('area_levels');
             $areaLevelsData = $areaLevelsTbl->find()
                             ->toArray();
-            
-            $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-            $RoomTypeData = $InstitutionRooms->find()
-                            ->select([
-                                $InstitutionRooms->aliasField('id'),
-                                $InstitutionRooms->aliasField('area')
-                            ])
-                            ->where([
-                                //$InstitutionRooms->aliasField('institution_id') => $params['institution_id'],
-                                $InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id'],
-                                $InstitutionRooms->aliasField('area !=') => 'NULL'
-                            ])
-                            ->hydrate(false)
-                            ->toArray();
-
-            $addRoomAreaheading[] = [
-                'id' => 0,
-                'area' => 'Room Area'
+            $RoomTypeData = [
+                [
+                    'id' => 0,
+                    'area' => 'Room Area'
+                ],
+                [
+                    'id' => 1,
+                    'area' => 'Cumulative Size'
+                ]
             ];
 
-            $RoomTypeData = array_merge($addRoomAreaheading, $RoomTypeData);
+            //$RoomTypeData = array_merge($addRoomAreaheading, $RoomTypeData);
             foreach ($RoomTypeData as $edu_key => $edu_val) {
                 $area_level_1 = $area_level_2 = $area_level_3 = $area_level_4 = $area_level_5 = $area_level_6 = $area_level_7 ='';
                 foreach ($insArr as $insKey => $insVal) {
@@ -5011,19 +4985,19 @@ class InstitutionReportCardsTable extends AppTable
                         }
                     }else{
                         if($insKey == 0){
-                            $area_level_1 = $this->getRoomCountByAreaCol($params['academic_period_id'], $edu_val['area'], $insVal);
+                            $area_level_1 = $this->getRoomCountByAreaCol($params['academic_period_id'], $insVal);
                         }else if($insKey == 1){
-                            $area_level_2 = $this->getRoomCountByAreaCol($params['academic_period_id'], $edu_val['area'], $insVal);
+                            $area_level_2 = $this->getRoomCountByAreaCol($params['academic_period_id'], $insVal);
                         }else if($insKey == 2){
-                            $area_level_3 = $this->getRoomCountByAreaCol($params['academic_period_id'], $edu_val['area'], $insVal);
+                            $area_level_3 = $this->getRoomCountByAreaCol($params['academic_period_id'], $insVal);
                         }else if($insKey == 3){
-                            $area_level_4 = $this->getRoomCountByAreaCol($params['academic_period_id'], $edu_val['area'], $insVal);
+                            $area_level_4 = $this->getRoomCountByAreaCol($params['academic_period_id'], $insVal);
                         }else if($insKey == 4){
-                            $area_level_5 = $this->getRoomCountByAreaCol($params['academic_period_id'], $edu_val['area'], $insVal);
+                            $area_level_5 = $this->getRoomCountByAreaCol($params['academic_period_id'], $insVal);
                         }else if($insKey == 5){
-                            $area_level_6 = $this->getRoomCountByAreaCol($params['academic_period_id'], $edu_val['area'], $insVal);
+                            $area_level_6 = $this->getRoomCountByAreaCol($params['academic_period_id'], $insVal);
                         }else{
-                            $area_level_7 = $this->getRoomCountByAreaCol($params['academic_period_id'], $edu_val['area'], $insVal); 
+                            $area_level_7 = $this->getRoomCountByAreaCol($params['academic_period_id'], $insVal); 
                         }    
                     }
                 }
@@ -5055,22 +5029,18 @@ class InstitutionReportCardsTable extends AppTable
      * @return array
      * @ticket POCOR-6691
     */
-    public function getRoomCountByAreaCol($academic_period, $area, $institutionIds =[]){
+    public function getRoomCountByAreaCol($academic_period, $institutionIds =[]){
         $institutionRooms = TableRegistry::get('institution_rooms');
         $institutionRoomsAreaData = $institutionRooms->find()
-                                ->select([
-                                    'room_area' => $institutionRooms->aliasField('area')
-                                ])
+                                ->select(['room_area' => $this->find()->func()->sum($institutionRooms->aliasField('area'))])
                                 ->where([
                                     $institutionRooms->aliasField('academic_period_id') => $academic_period,
                                     $institutionRooms->aliasField('institution_id IN') => $institutionIds,
-                                    $institutionRooms->aliasField('area') => $area,
                                 ])
-                                ->count();
-
-                            // echo "<pre>";print_r($institutionRoomsData);
-                            // die();
-        return $institutionRoomsAreaData;
+                                ->first();
+        $sumOfRoomsArea = $institutionRoomsAreaData['room_area'];
+        
+        return $sumOfRoomsArea;
     }
     /*POCOR-6691 ends*/
 }
