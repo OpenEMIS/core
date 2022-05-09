@@ -288,7 +288,7 @@ class AbsencesTable extends ControllerActionTable
                 //# START: [POCOR-6548] Check if user data not found then add current login user data
                 $userId =  $userData['Student']['ExaminationResults']['student_id'];
                 if ($userId == null || empty($userId) || $userId == '') {
-                    $studentId['id'] = $userData['Student']['ExaminationResults']['student_id'];
+                    $studentId['id'] = $userData['Auth']['User']['id'];//POCOR-6701
                 } else {
                 $studentId = $this->ControllerAction->paramsDecode($userId);
                 }
