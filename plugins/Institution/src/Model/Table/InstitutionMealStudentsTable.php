@@ -77,17 +77,25 @@ class InstitutionMealStudentsTable extends ControllerActionTable
                     ])->first();
                     $MealbenifitId = $MealBenefitData->id;
                 }else{
-                    $MealbenifitId = 1;
+                    $MealbenifitId = $benefitTypeId;
                 }
             //END:POCOR-6681
                 $InstitutionMealStudents
-                ->updateAll(['meal_benefit_id' => 1 ,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
+                ->updateAll(['meal_benefit_id' => $MealbenifitId ,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
                 $event->stopPropagation();
                  return;
             }
             else{
+                if(!isset($benefitTypeId) || empty($benefitTypeId) || $benefitTypeId == null){
+                    $MealBenefitData = $MealBenefit->find()->where([
+                        'default' => 1
+                    ])->first();
+                    $MealbenifitId = $MealBenefitData->id;
+                }else{
+                    $MealbenifitId = $benefitTypeId;
+                }
                  $InstitutionMealStudents
-                ->updateAll(['meal_benefit_id' => $benefitTypeId,'paid' => $paid,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
+                ->updateAll(['meal_benefit_id' => $MealbenifitId,'paid' => $paid,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
                 $event->stopPropagation();
                  return;
             }
