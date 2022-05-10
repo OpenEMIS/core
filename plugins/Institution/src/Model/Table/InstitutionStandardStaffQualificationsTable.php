@@ -181,15 +181,16 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
             ->select([
                 'institution_code'          => $Institutions->aliasField('code'),
                 'institution_name'          => $Institutions->aliasField('name'),
+                'staff_id'               => $Users->aliasField('id'),
                 'openemis_no'               => $Users->aliasField('openemis_no'),
                 'name'                      => $Users->find()->func()->concat(['security_users.first_name' => 'literal',"  ",'security_users.last_name' => 'literal']),
-                'graduate_year'             => $this->aliasField('graduate_year'),
-                'qualification_level'       => $qualificationLevel->aliasField('name'),
-                'qualification_title'       => $qualificationTitles->aliasField('name'),
-                'document_no'               => $this->aliasField('document_no'),
-                'qualification_institution' => $this->aliasField('qualification_institution'),
-                'file_name'                 => $this->aliasField('file_name'),
-                'field_of_study'            => $fieldOfStudy->aliasField('name'),
+                // 'graduate_year'             => $this->aliasField('graduate_year'),
+                // 'qualification_level'       => $qualificationLevel->aliasField('name'),
+                // 'qualification_title'       => $qualificationTitles->aliasField('name'),
+                // 'document_no'               => $this->aliasField('document_no'),
+                // 'qualification_institution' => $this->aliasField('qualification_institution'),
+                // 'file_name'                 => $this->aliasField('file_name'),
+                // 'field_of_study'            => $fieldOfStudy->aliasField('name'),
             ])
             ->innerJoin(
                 [$Users->alias() => $Users->table() ], // Class Object => table_name
@@ -227,7 +228,59 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
             // for getting file type call function getFileTypeForView
             return $results->map(function ($row) use ($_this)
             {
-                $row['file_name'] = ( !empty($row['file_name']) ) ? $_this->getFileTypeForView($row['file_name']) : '' ;
+                $data = $_this->find('all')
+                        ->select('qualification_title_id')
+                        ->where([
+                            $_this->aliasField('staff_id') => $row['staff_id']
+                        ])->toArray();
+                if ($data) {
+                $qualificationId = [];
+                    foreach ($data as $key => $value) {
+                        $qualificationId[] = $value->qualification_title_id;
+                    }
+                    $qualificationTitles   = TableRegistry::get('QualificationTitles');
+                    $qualificationLevel    = TableRegistry::get('QualificationLevels');
+                    $fieldOfStudy          = TableRegistry::get('education_field_of_studies');
+                    $qualification = $qualificationTitles->find('all')
+                            ->where([
+                                $qualificationTitles->aliasField('id IN') => $qualificationId
+                            ])->order([$qualificationTitles->aliasField('order')=>'ASC'])->first();
+
+                    $qualificationdata = $_this->find('all')
+                        ->select([
+                            'graduate_year'             => $_this->aliasField('graduate_year'),
+                            'qualification_level'       => $qualificationLevel->aliasField('name'),
+                            'qualification_title'       => $qualificationTitles->aliasField('name'),
+                            'document_no'               => $_this->aliasField('document_no'),
+                            'qualification_institution' => $_this->aliasField('qualification_institution'),
+                            'file_name'                 => $_this->aliasField('file_name'),
+                            'field_of_study'            => $fieldOfStudy->aliasField('name'),
+                        ])
+                        ->leftJoin(
+                        [$qualificationTitles->alias() => $qualificationTitles->table()],[
+                            $qualificationTitles->aliasField('id = ').$_this->aliasField('qualification_title_id')
+                        ])
+                        ->leftJoin(
+                        [$fieldOfStudy->alias() => $fieldOfStudy->table()],[
+                            $fieldOfStudy->aliasField('id = ').$this->aliasField('education_field_of_study_id')
+                        ])
+                        ->leftJoin(
+                        [$qualificationLevel->alias() => $qualificationLevel->table()],[
+                                $qualificationLevel->aliasField('id = ').$qualificationTitles->aliasField('qualification_level_id')
+                        ])
+                        ->where([
+                            $_this->aliasField('staff_id') => $row['staff_id'],
+                            $_this->aliasField('qualification_title_id') => $qualification['id']
+                        ])->first();
+
+                }
+                $row['graduate_year'] =  $qualificationdata['graduate_year'];
+                $row['qualification_level'] =  $qualificationdata['qualification_level'];
+                $row['qualification_title'] =  $qualificationdata['qualification_title'];
+                $row['document_no'] =  $qualificationdata['document_no'];
+                $row['qualification_institution'] =  $qualificationdata['qualification_institution'];
+                $row['field_of_study'] =  $qualificationdata['field_of_study'];
+                $row['file_name'] = ( !empty($qualificationdata['file_name']) ) ? $_this->getFileTypeForView($row['file_name']) : '' ;
                 return $row;
             });
         });
