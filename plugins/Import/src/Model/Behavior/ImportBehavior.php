@@ -1283,7 +1283,7 @@ class ImportBehavior extends Behavior
         $rowPass = true;
         $customColumnCounter = 0;
 
-        for ($col = 0; $col < $totalColumns; ++$col) {
+        for ($col =0; $col < $totalColumns; ++$col) {
             $cell = $sheet->getCellByColumnAndRow($col, $row); 
 
             if (self::timeTwelvehoursValidator($cell->getFormattedValue()) == 1) {
@@ -1437,7 +1437,7 @@ class ImportBehavior extends Behavior
                 $columnName = $columns[$col];
                 $originalRow[$col] = $originalValue;
             }
-
+            
             //POCOR-5913 starts
             if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id' && $lookupColumn == 'openemis_no' && empty($originalValue)){
                 $i=0;
@@ -1537,7 +1537,7 @@ class ImportBehavior extends Behavior
                                 $lookupColumn = 'openemis_no';
                             }
                         }//POCOR-5913 ends
-
+                        
                         $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
                         $record = $lookupQuery->first();
                         $extra['lookup'][$excelLookupModel->alias()][$cellValue] = $record;
@@ -1558,7 +1558,12 @@ class ImportBehavior extends Behavior
                 }
                 if (!$excludeValidation) {
                     if (!empty($record)) {
-                        $val = $record->id;
+                        //POCOR-6681 starts
+                        if($mappingModel == 'Institution.InstitutionMealStudents'  && $lookupColumnName == 'OpenEMIS_ID' && $lookupColumn == 'openemis_no'){
+                            $val = $record->openemis_no;//POCOR-6681 end
+                        }else{
+                            $val = $record->id;
+                        }
                         $this->directTables[$registryAlias][$val] = $record->name;
                     } else {
                         if (!empty($cellValue)) {
@@ -1621,11 +1626,9 @@ class ImportBehavior extends Behavior
                 $tempRow[$columnName] = $val;
             }
         }
-        
         // add condition to check if its importing institutions
         $plugin = $this->config('plugin');
         $model = $this->config('model');
-
         if ($plugin == 'Institution' && $model == 'Institutions') {
             // if its importing institution will get the userId and super_admin from the session and add the userId and Super_admin to the extracted data.
             $session = $this->_table->Session;
@@ -1635,7 +1638,7 @@ class ImportBehavior extends Behavior
             $tempRow['userId'] = $userId;
             $tempRow['superAdmin'] = $superAdmin;
         }
-       
+
         if ($rowPass) {
             $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
             $rowPass = $rowPassEvent->result;
