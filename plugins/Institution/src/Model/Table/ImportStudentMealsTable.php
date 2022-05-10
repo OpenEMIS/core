@@ -43,6 +43,7 @@ class ImportStudentMealsTable extends AppTable {
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
             'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
+            'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',//POCOR-6681
             'Model.import.onImportPopulateMealReceivedData' => 'onImportPopulateMealReceivedData',
             'Model.import.onImportPopulateMealBenefitData' => 'onImportPopulateMealBenefitData',
             'Model.import.onImportPopulateMealProgrammeData' => 'onImportPopulateMealProgrammeData',
@@ -110,6 +111,52 @@ class ImportStudentMealsTable extends AppTable {
     }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
+    //POCOR-6681 Starts
+    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;// for enrolled status //POCOR-6613 ends
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $StudentData = TableRegistry::get('Institution.Students');
+        $classId = $this->request->query('class');
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $modelData = $lookedUpTable->find('all')->select(['id','openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn]);
+        $currentPeriodId = $this->AcademicPeriods->getCurrent();
+        $allStudents = $this->InstitutionClassStudents
+                        ->find('all')
+                        // ->innerJoin([$StudentData->alias() => $StudentData->table()], [
+                        //     $StudentData->aliasField('student_id = ') . $InstitutionClassStudents->aliasField('student_id')
+                        //    ])
+                        ->where([
+                            $this->InstitutionClassStudents->aliasField('institution_id') => $this->institutionId,
+                            $this->InstitutionClassStudents->aliasField('academic_period_id') => $currentPeriodId,
+                            $this->InstitutionClassStudents->aliasField('institution_class_id') => $classId,
+                            $this->InstitutionClassStudents->aliasField('student_status_id') => $enrolledStatus
+                        ])
+                        ;
+        // when extracting the staff_id from $allStudents collection, there will be no duplicates
+        $allStudents = new Collection($allStudents->toArray());
+   
+        $modelData->where([
+            'id IN' => $allStudents->extract('student_id')->toArray()
+        ]);
+
+
+        $nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
+        $columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [
+            $nameHeader,
+            $columnHeader
+        ];
+
+        if (!empty($modelData)) {
+            foreach($modelData->toArray() as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->name,
+                    $row->{$lookupColumn}
+                ];
+            }
+        }
+    }//POCOR-6681 ends
 
     /**
      * Currently only populates students based on current academic period
@@ -197,16 +244,12 @@ class ImportStudentMealsTable extends AppTable {
                             $this->Users->aliasField('openemis_no') => $tempRow['OpenEMIS_ID'],
                             ])
                    ->first();
-                  
-
-
        $tempRow['student_id'] = $userId->id;
 
         if (empty($tempRow['student_id'])) {
             $rowInvalidCodeCols['student_id'] = __('OpenEMIS ID was not defined');
             return false;
         }
-        
         
         if (!$this->institutionId) {
             $rowInvalidCodeCols['institution_id'] = __('No active institution');
@@ -220,8 +263,6 @@ class ImportStudentMealsTable extends AppTable {
         $classId = $this->request->query('class');
         $tempRow['institution_class_id'] = $classId;
 
-        
-       
         if (empty($tempRow['date'])) {
             $rowInvalidCodeCols['date'] = __('This field cannot be left empty');
             return false;
@@ -256,10 +297,10 @@ class ImportStudentMealsTable extends AppTable {
             'institution_id' => $tempRow['institution_id'],
             'student_id' => $tempRow['student_id'],
         ])->first();
-           
+
         if (!$student) {
-            $rowInvalidCodeCols['student_id'] = __('No such student in the institution');
-            $tempRow['student_id'] = false;
+            $rowInvalidCodeCols['OpenEMIS_ID'] = __('No such student in the institution in current academic period.');
+            $tempRow['OpenEMIS_ID'] = false;
             return false;
         }
            
