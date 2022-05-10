@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Log\Log;
 use Cake\Core\Configure;
 use Cake\Network\Exception\NotFoundException;
+use Cake\ORM\TableRegistry;   //POCOR-5301
 
 class IndexBehavior extends Behavior
 {
@@ -33,28 +34,76 @@ class IndexBehavior extends Behavior
     }
 
     public function index(Event $mainEvent, ArrayObject $extra)
-    {
+    {     
         $model = $this->_table;
-
         $extra['pagination'] = true;
         $extra['options'] = [];
         $extra['auto_contain'] = true;
         $extra['auto_search'] = true;
         $extra['auto_order'] = true;
-        $extra['config']['pageOptions'] = $this->config('pageOptions');
+        /**
+        * This table call for get List page view options value from configitemOptions table.
+        * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        * @ticket POCOR-5301
+        */
+        //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        $ConfigItemOptionsTable = TableRegistry::get('Configuration.ConfigItemOptions');
+        $ConfigItemoption =   $ConfigItemOptionsTable
+                            ->find()
+                            ->select(['listpage' => 'ConfigItemOptions.value'])
+                            ->where([
+                              $ConfigItemOptionsTable->aliasField('option_type') => 'list_page'
+                                   ]);
+        $optionslist = array(); 
+        foreach ($ConfigItemoption->toArray() as $value) {
+        $optionslist[] =  $value['listpage']; 
+        }
+        $extra['config']['pageOptions'] = $optionslist;
+        //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         $query = $model->find();
         $extra['query'] = $query;
 
         $event = $model->dispatchEvent('ControllerAction.Model.index.beforeAction', [$extra], $this);
-
+        /**
+        * This table call for get default value from configitem table.
+        * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        * @ticket POCOR-5301
+        */
+        //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemsTable
+                            ->find()
+                            ->select(['listvalue' => 'ConfigItems.value'])
+                            ->where([
+                              $ConfigItemsTable->aliasField('option_type') => 'list_page'
+                                   ]);
+         
+        foreach ($ConfigItem->toArray() as $defaultval) {
+                     $defaultvals = $defaultval['listvalue'];
+        }
+        if($defaultvals == 10){
+            $defaults = 0;
+        }elseif($defaultvals == 20){
+            $defaults = 1;
+        }elseif($defaultvals == 30){
+            $defaults = 2;
+        }elseif($defaultvals == 40){
+            $defaults = 3;
+        }elseif($defaultvals == 50){
+            $defaults = 4; 
+        }elseif($defaultvals == 100){
+            $defaults = 5;        
+        }elseif($defaultvals == 200){
+            $defaults = 6;       
+        }  
         if ($extra['pagination']) {
             $alias = $model->registryAlias();
             $session = $model->request->session();
             $request = $model->request;
             $pageOptions = $extra['config']['pageOptions'];
 
-            $limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : key($pageOptions);
-
+            $limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : $defaults;
+        //END: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
             if ($request->is(['post', 'put'])) {
                 if (isset($request->data['Search'])) {
                     if (array_key_exists('limit', $request->data['Search'])) {
