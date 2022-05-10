@@ -228,6 +228,7 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
             // for getting file type call function getFileTypeForView
             return $results->map(function ($row) use ($_this)
             {
+                //start 6551
                 $data = $_this->find('all')
                         ->select('qualification_title_id')
                         ->where([
@@ -281,6 +282,7 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
                 $row['qualification_institution'] =  $qualificationdata['qualification_institution'];
                 $row['field_of_study'] =  $qualificationdata['field_of_study'];
                 $row['file_name'] = ( !empty($qualificationdata['file_name']) ) ? $_this->getFileTypeForView($row['file_name']) : '' ;
+                //End 6551
                 return $row;
             });
         });
