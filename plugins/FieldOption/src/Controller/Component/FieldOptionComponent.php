@@ -36,6 +36,7 @@ class FieldOptionComponent extends Component
         'TextbookConditions' => ['className' => 'Textbook.TextbookConditions', 'parent' => 'Institution'],
         'ReportCardCommentCodes' => ['className' => 'ReportCard.ReportCardCommentCodes', 'parent' => 'Institution'],
         'InstitutionCommitteeTypes' => ['className' => 'Institution.InstitutionCommitteeTypes', 'parent' => 'Institution'],
+        'InstitutionAttachmentTypes' => ['className' => 'Institution.InstitutionAttachmentTypes', 'parent' => 'Institution'], //START:POCOR-5067
 
     // Student
         'StudentAbsenceReasons' => ['className' => 'Institution.StudentAbsenceReasons', 'parent' => 'Student'],
@@ -44,6 +45,7 @@ class FieldOptionComponent extends Component
         'StudentWithdrawReasons' => ['className' => 'Student.StudentWithdrawReasons', 'parent' => 'Student'],
         'GuidanceTypes' => ['className' => 'Student.GuidanceTypes', 'parent' => 'Student'],
         'VisitPurposeTypes' => ['className' => 'Student.StudentVisitPurposeTypes', 'parent' => 'Student'],
+        'StudentAttachmentTypes' => ['className' => 'Student.StudentAttachmentTypes', 'parent' => 'Student'], //START:POCOR-5067
 
     // Meals    
         'MealTypes' => ['className' => 'Meal.MealType', 'parent' => 'Meals'],
@@ -57,6 +59,7 @@ class FieldOptionComponent extends Component
         'StaffLeaveTypes' => ['className' => 'Staff.StaffLeaveTypes', 'parent' => 'Staff'],
         'StaffTypes' => ['className' => 'Staff.StaffTypes', 'parent' => 'Staff'],
         'StaffTrainingCategories' => ['className' => 'Staff.StaffTrainingCategories', 'parent' => 'Staff'],
+        'StaffAttachmentTypes' => ['className' => 'Staff.StaffAttachmentTypes', 'parent' => 'Staff'], //START:POCOR-5067
 
     // Finance
         'Banks' => ['className' => 'FieldOption.Banks', 'parent' => 'Finance'],
