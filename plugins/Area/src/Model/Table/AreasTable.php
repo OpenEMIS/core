@@ -794,4 +794,15 @@ class AreasTable extends ControllerActionTable
 
         $this->rebuildLftRght();
     }
+
+    /**
+     * Get all areas ids as key and name as value
+     * @usage  It is used as drop-down options
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6596
+     */
+    public function getAreas()
+    {
+        return $this->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])->order([$this->aliasField('order')])->toArray();
+    }
 }
