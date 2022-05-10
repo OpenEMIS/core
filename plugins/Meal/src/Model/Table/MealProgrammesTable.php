@@ -911,5 +911,24 @@ class MealProgrammesTable extends ControllerActionTable
              ->toArray();
          return $list;
      } 
-    
+
+    /* 
+    * Delete data from `institution_meal_programmes` which is related to `meal_programmes` table
+    * @auther Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * ticket POCOR-6681
+    */ 
+    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $MealInstitutionProgrammes = TableRegistry::get('institution_meal_programmes');
+        $InstitutionProgrammes = $MealInstitutionProgrammes
+                ->find('all')->select(['id'])
+                ->where([
+                    $MealInstitutionProgrammes->aliasField('meal_programmes_id') => $entity->id
+                ])->toArray();
+        if(!empty($InstitutionProgrammes)){
+            foreach ($InstitutionProgrammes as $key => $Programmes) { 
+                $MealInstitutionProgrammes->delete($Programmes);
+            }
+        }
+    }
 }
