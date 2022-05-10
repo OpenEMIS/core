@@ -50,9 +50,10 @@ class TrainingResultsTable extends AppTable
         $session_name = $requestData->session_name; // POCOR-6596
         $end_date     = $requestData->end_date; // POCOR-6596
         $selectedStatus = $requestData->status;
-		$selectedCourse = $requestData->training_course_id;
+        $selectedCourse = $requestData->training_course_id;
         $area_id = $requestData->area_id->_ids;
-		$conditions = [];
+
+        $conditions = [];
         if ($selectedCourse > 0) { // POCOR-6596
             $conditions['Courses.id'] = $selectedCourse;
         }
@@ -68,21 +69,22 @@ class TrainingResultsTable extends AppTable
         }
 
         if (!empty($area_id)) {
-            $area_id_arr = [];
-            foreach ($area_id as $akey => $aval) {
-                $area_id_arr[] = $aval;
+            if($area_id[0] != -1 ){
+                $area_id_arr = [];
+                foreach ($area_id as $akey => $aval) {
+                    $area_id_arr[] = $aval;
+                }
+                $conditions['Sessions.area_id IN'] = $area_id_arr;
             }
-            $conditions['Sessions.area_id IN'] = $area_id_arr;
         }
         // END: POCOR-6596
-
         $query
             ->select([
                 'custom_training_result_type_id' => $this->aliasField('training_result_type_id'), // POCOR-6596
                 'result' => $this->aliasField('result'),
-                //'attendance_days' => $this->aliasField('attendance_days'), // POCOR-6596
-                //'practical' => $this->aliasField('practical'), // POCOR-6596
-                //'certificate_number' => $this->aliasField('certificate_number'), // POCOR-6596
+                'attendance_days' => $this->aliasField('attendance_days'), // POCOR-6596
+                'practical' => $this->aliasField('practical'), // POCOR-6596
+                'certificate_number' => $this->aliasField('certificate_number'), // POCOR-6596
                 'workflow_step_name' => $WorkflowSteps->aliasField('name'),
                 //'openemis_no' => 'Trainees.openemis_no', // POCOR-6596
                 'course_code' => 'Courses.code',
@@ -109,7 +111,7 @@ class TrainingResultsTable extends AppTable
                 ['ResultTypes' => 'training_result_types'],
                 ['ResultTypes.id = ' . $this->aliasField('training_result_type_id')]
             )*///5695
-			->innerJoin(
+            ->innerJoin(
                 [$TrainingSessionResults->alias() => $TrainingSessionResults->table()],
                 [$TrainingSessionResults->aliasField('training_session_id = ') . $this->aliasField('training_session_id')]
             )
@@ -171,7 +173,26 @@ class TrainingResultsTable extends AppTable
         // START : POCOR-6596
         $query->formatResults(function (ResultSetInterface $results) {
             return $results->map(function ($row) {
-                $row[$this->_dynamicFieldName.'_'.$row['custom_training_result_type_id']] = $row['result'];
+                $training_result_types = TableRegistry::get('Training.TrainingResultTypes');
+                $customFieldData = $training_result_types->find()->select(['id','name','order'])->toArray();
+                if(!empty($customFieldData)) {
+                    foreach($customFieldData as $data) {
+                        $custom_field_id = $data->id;
+                        $custom_field = $data->name;
+                        if(!empty($row['result']) && ($data->name == 'Exam')){
+                            $row[$this->_dynamicFieldName.'_'.$custom_field_id] = $row['result'];
+                        }
+                        if(!empty($row['attendance_days']) && ($data->name == 'Attendance')){
+                            $row[$this->_dynamicFieldName.'_'.$custom_field_id] = $row['attendance_days'];
+                        }
+                        if(!empty($row['practical']) && ($data->name == 'Practical')){
+                            $row[$this->_dynamicFieldName.'_'.$custom_field_id] = $row['practical'];
+                        }
+                        if(!empty($row['certificate_number']) && ($data->name == 'Certificate')){
+                            $row[$this->_dynamicFieldName.'_'.$custom_field_id] = $row['certificate_number'];
+                        }
+                    }
+                }
                 return $row;
             });
         });
