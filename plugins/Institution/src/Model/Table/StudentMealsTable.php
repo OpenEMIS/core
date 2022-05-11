@@ -347,7 +347,11 @@ class StudentMealsTable extends ControllerActionTable
         ->where($conditions)
         ->first();
         if (isset($benefit) && !empty($benefit)) {
-            $benefit = $benefit->meal_benefit->name;
+            if($benefit->meal_received_id != 1){
+                $benefit = '';
+            }else{
+                $benefit = $benefit->meal_benefit->name;
+            }
 
         }
         else if(!empty($benefit)){ 
@@ -367,7 +371,11 @@ class StudentMealsTable extends ControllerActionTable
             ])
             ->first();
             if (!empty($isMarkedRecords->meal_benefit_id)) {
-                $benefit = $isMarkedRecords->meal_benefit->name;
+                if($benefit->meal_received_id != 1){
+                    $benefit = '';
+                }else{
+                    $benefit = $isMarkedRecords->meal_benefit->name;
+                }
             }
         }else{
             $benefit = '';
@@ -471,6 +479,17 @@ class StudentMealsTable extends ControllerActionTable
             'dayId' => $dayId,
             'orientation' => 'landscape'
         ];
+    }
+
+    public function onExcelGetName(Event $event, Entity $entity)
+    {
+        
+        $fname = ($entity->user->first_name != null)?$entity->user->first_name:'';
+        $Mname = ($entity->user->middle_name != null)?$entity->user->middle_name:'';
+        $Tname = ($entity->user->third_name != null)?$entity->user->third_name:'';
+        $Lname = ($entity->user->last_name != null)?$entity->user->last_name:'';
+        $fullname = $fname." ".$Mname." ".$Tname." ".$Lname;
+        return $fullname;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
