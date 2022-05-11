@@ -69,13 +69,14 @@ class ReorderBehavior extends Behavior {
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		if ($entity->isNew()) {
 			$orderField = $this->config('orderField');
-			$filter = $this->config('filter');
+			/**POCOR-6677 - commented method because it was updating order and making it duplicate*/
+			/*$filter = $this->config('filter');
 			$filterValues = $this->config('filterValues');
 			$order = 0;
 
-			if (is_null($filter)) {
+			if (is_null($filter)) {die("if");
 				$order = $this->_table->find()->count();
-			} else {
+			} else {die("else");
 				if (!is_null($filterValues)) {
 					$filterValue = null;
 					if (is_array($filterValues)) {
@@ -98,7 +99,14 @@ class ReorderBehavior extends Behavior {
 					->where($condition)
 					->count();
 			}
-			$entity->{$orderField} = $order + 1;
+			$entity->{$orderField} = $order + 1;*/
+			/*POCOR-6677- modified order before storing into the database*/
+			$table = $this->_table;
+			$lastInsertedOrder = $table->find()
+                                ->order([$table->aliasField('order') => 'DESC'])
+                                ->first()->order;
+           
+            $entity->{$orderField} = $lastInsertedOrder + 1;
 		}
 	}
 
@@ -136,12 +144,13 @@ class ReorderBehavior extends Behavior {
 		}
 	}
 
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+	/**POCOR-6677 - commented method because it was updating order and making it duplicate*/
+	/*public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		$orderField = $this->config('orderField');
 		$filter = $this->config('filter');
 		$filterValues = $this->config('filterValues');
 		$this->updateOrder($entity, $orderField, $filter, $filterValues);
-	}
+	}*/
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
 		$orderField = $this->config('orderField');
