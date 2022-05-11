@@ -79,46 +79,46 @@ class InstitutionDistributionsTable extends ControllerActionTable
     * return boolean 
     * ticket POCOR-6681
     */
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
-        if ($entity->isNew()) {
-            $MealProgrammesData = TableRegistry::get('Meal.MealProgrammes');
-            $MealProgrammesResult = $MealProgrammesData
-            ->find()
-            ->select(['amount'])
-            ->where(['id' => $entity->meal_programmes_id])
-            ->first();
-            if($entity->quantity_received > $MealProgrammesResult->amount){
-            $this->Alert->error('Institution.InstitutionDistributions.quantity_received.genralerror', ['reset' => true]);
-                return false;
-            }
-            $query = $this->find();
-            $entityRecord = $query->where([
-                    $this->aliasField('meal_programmes_id') => $entity->meal_programmes_id
-                ])
-            ->select([
-                'quantity_received_sum' => $query->func()->sum($this->aliasField('quantity_received'))
-            ])
-            ->first()
-            ;
-            $total_sum = $entityRecord->quantity_received_sum + $entity->quantity_received;
-            // echo "<pre>";print_r($total_sum);die;
-            if($total_sum > $MealProgrammesResult->amount){
-                $this->Alert->error('Institution.InstitutionDistributions.quantity_received_sum.genralerror', ['reset' => true]);
-                return false;
-            }
-        }else{
-            $MealProgrammesData = TableRegistry::get('Meal.MealProgrammes');
-            $MealProgrammesResult = $MealProgrammesData
-            ->find()
-            ->select(['amount'])
-            ->where(['id' => $entity->meal_programmes_id])
-            ->first();
-            if($entity->quantity_received > $MealProgrammesResult->amount){
-                $this->Alert->error('Institution.InstitutionDistributions.quantity_received.genralerror', ['reset' => true]);
-                return false;
-            }
-        }
-    }
+    // public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
+    //     if ($entity->isNew()) {
+    //         $MealProgrammesData = TableRegistry::get('Meal.MealProgrammes');
+    //         $MealProgrammesResult = $MealProgrammesData
+    //         ->find()
+    //         ->select(['amount'])
+    //         ->where(['id' => $entity->meal_programmes_id])
+    //         ->first();
+    //         if($entity->quantity_received > $MealProgrammesResult->amount){
+    //         $this->Alert->error('Institution.InstitutionDistributions.quantity_received.genralerror', ['reset' => true]);
+    //             return false;
+    //         }
+    //         $query = $this->find();
+    //         $entityRecord = $query->where([
+    //                 $this->aliasField('meal_programmes_id') => $entity->meal_programmes_id
+    //             ])
+    //         ->select([
+    //             'quantity_received_sum' => $query->func()->sum($this->aliasField('quantity_received'))
+    //         ])
+    //         ->first()
+    //         ;
+    //         $total_sum = $entityRecord->quantity_received_sum + $entity->quantity_received;
+    //         // echo "<pre>";print_r($total_sum);die;
+    //         if($total_sum > $MealProgrammesResult->amount){
+    //             $this->Alert->error('Institution.InstitutionDistributions.quantity_received_sum.genralerror', ['reset' => true]);
+    //             return false;
+    //         }
+    //     }else{
+    //         $MealProgrammesData = TableRegistry::get('Meal.MealProgrammes');
+    //         $MealProgrammesResult = $MealProgrammesData
+    //         ->find()
+    //         ->select(['amount'])
+    //         ->where(['id' => $entity->meal_programmes_id])
+    //         ->first();
+    //         if($entity->quantity_received > $MealProgrammesResult->amount){
+    //             $this->Alert->error('Institution.InstitutionDistributions.quantity_received.genralerror', ['reset' => true]);
+    //             return false;
+    //         }
+    //     }
+    // }
 
     /* 
     * To change default field name to the required field name
