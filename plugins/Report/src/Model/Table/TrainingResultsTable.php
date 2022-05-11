@@ -8,11 +8,13 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\Datasource\ResultSetInterface; // POCOR-6596
 
 class TrainingResultsTable extends AppTable
 {
     private $trainingSessionResults = [];
     private $institutionDetails = [];
+    private $_dynamicFieldName = 'custom_field_data'; // POCOR-6596
 
     CONST ACTIVE_STATUS = 1;
 
@@ -43,37 +45,73 @@ class TrainingResultsTable extends AppTable
         $TrainingSessionResults = TableRegistry::get('Training.TrainingSessionResults');
         $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         $WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
-
         $requestData = json_decode($settings['process']['params']);
+        $start_date   = $requestData->start_date; // POCOR-6596
+        $session_name = $requestData->session_name; // POCOR-6596
+        $end_date     = $requestData->end_date; // POCOR-6596
         $selectedStatus = $requestData->status;
-		$selectedCourse = $requestData->training_course_id;
-		$conditions = [];
-        if ($selectedCourse != '-1') {
+        $selectedCourse = $requestData->training_course_id;
+        $area_id = $requestData->area_id->_ids;
+
+        $conditions = [];
+        if ($selectedCourse > 0) { // POCOR-6596
             $conditions['Courses.id'] = $selectedCourse;
         }
+        // START: POCOR-6596
+        if ($session_name > 0) {
+            $conditions['Sessions.id'] = $session_name;
+        }
+        if (!empty($start_date)) {
+            $conditions['Sessions.start_date >= '] = date('Y-m-d', strtotime($start_date));
+        }
+        if (!empty($end_date)) {
+            $conditions['Sessions.end_date <= '] = date('Y-m-d', strtotime($end_date));
+        }
 
+        if (!empty($area_id)) {
+            if($area_id[0] != -1 ){
+                $area_id_arr = [];
+                foreach ($area_id as $akey => $aval) {
+                    $area_id_arr[] = $aval;
+                }
+                $conditions['Sessions.area_id IN'] = $area_id_arr;
+            }
+        }
+        // END: POCOR-6596
         $query
             ->select([
+                'custom_training_result_type_id' => $this->aliasField('training_result_type_id'), // POCOR-6596
                 'result' => $this->aliasField('result'),
-                'attendance_days' => $this->aliasField('attendance_days'),//5695
-                'practical' => $this->aliasField('practical'),//5695
-                'certificate_number' => $this->aliasField('certificate_number'),//5695
+                'attendance_days' => $this->aliasField('attendance_days'), // POCOR-6596
+                'practical' => $this->aliasField('practical'), // POCOR-6596
+                'certificate_number' => $this->aliasField('certificate_number'), // POCOR-6596
                 'workflow_step_name' => $WorkflowSteps->aliasField('name'),
-                'openemis_no' => 'Trainees.openemis_no',
+                //'openemis_no' => 'Trainees.openemis_no', // POCOR-6596
                 'course_code' => 'Courses.code',
                 'course_name' => 'Courses.name',
                 'credit_hours' => 'Courses.credit_hours',
                 'session_code' => 'Sessions.code',
                 'identity_type_name' => 'IdentityTypes.name',
-                'identity_number' => 'Trainees.identity_number'
-                //'result_type' => 'ResultTypes.name'//5695 
+                // START : POCOR-6596
+                'identity_number' => 'Trainees.identity_number',
+                'trainee_info_area' => 'trainee_info.areaname',
+                'trainee_info_openemis_no' => 'trainee_info.openemis_no',
+                'trainee_info_first_name' => 'trainee_info.first_name',
+                'trainee_info_middle_name' => 'trainee_info.middle_name',
+                'trainee_info_third_name' => 'trainee_info.third_name',
+                'trainee_info_last_name' => 'trainee_info.last_name',
+                'trainee_info_gender' => 'trainee_info.gender',
+                'trainee_info_institution_code' => 'trainee_info.institution_code',
+                'trainee_info_institution_name' => 'trainee_info.institution_name',
+                'staff_qualification_info_name' => 'staff_qualification_info.name'
+                // END : POCOR-6596
             ])
             ->contain(['Sessions.Courses'])
             /*->innerJoin(
                 ['ResultTypes' => 'training_result_types'],
                 ['ResultTypes.id = ' . $this->aliasField('training_result_type_id')]
             )*///5695
-			->innerJoin(
+            ->innerJoin(
                 [$TrainingSessionResults->alias() => $TrainingSessionResults->table()],
                 [$TrainingSessionResults->aliasField('training_session_id = ') . $this->aliasField('training_session_id')]
             )
@@ -84,7 +122,7 @@ class TrainingResultsTable extends AppTable
             ->join([
                 'Trainees' => [
                     'type' => 'LEFT',
-                    'table' => 'security_user',
+                    'table' => 'security_users', // POCOR-6596
                     'conditions' => [
                         'Trainees.id = ' . $this->aliasField('trainee_id')
                     ]
@@ -97,6 +135,26 @@ class TrainingResultsTable extends AppTable
                     ]
                 ],
             ])
+            // START : POCOR-6596
+            ->join([
+                'trainee_info' => [
+                    'type' => 'inner',
+                    'table' => '(SELECT security_users.openemis_no, security_users.first_name, security_users.middle_name, security_users.third_name, security_users.last_name, areas.name AS areaname, areas.id AS area_id, institution_staff.staff_id, institutions.code AS institution_code, institutions.name AS institution_name, staff_position_titles.name AS position_name, staff_statuses.name AS status_name, genders.name AS gender FROM institution_staff INNER JOIN security_users ON security_users.id = institution_staff.staff_id INNER JOIN institutions ON institutions.id = institution_staff.institution_id INNER JOIN areas ON areas.id = institutions.area_id INNER JOIN staff_statuses ON staff_statuses.id = institution_staff.staff_status_id AND staff_statuses.id = 1 INNER JOIN institution_positions ON institution_positions.id = institution_staff.institution_position_id INNER JOIN staff_position_titles ON institution_positions.staff_position_title_id = staff_position_titles.id INNER JOIN genders ON genders.id = security_users.gender_id GROUP BY security_users.id ) ',
+                    'conditions' => [
+                        'trainee_info.staff_id = ' . $this->aliasField('trainee_id')
+                    ]
+                ],
+            ])
+            ->join([
+                'staff_qualification_info' => [
+                    'type' => 'left',
+                    'table' => '( SELECT qualification_specialisations.name, staff_qualifications.staff_id FROM staff_qualifications INNER JOIN staff_qualifications_specialisations ON staff_qualifications_specialisations.staff_qualification_id = staff_qualifications.id INNER JOIN qualification_specialisations ON qualification_specialisations.id = staff_qualifications_specialisations.qualification_specialisation_id )',
+                    'conditions' => [
+                        'staff_qualification_info.staff_id = ' . $this->aliasField('trainee_id')
+                    ]
+                ],
+            ])
+            // END : POCOR-6596
             ->where([$conditions])
             ->group([
                 $this->aliasField('training_session_id'),
@@ -112,6 +170,33 @@ class TrainingResultsTable extends AppTable
                 )
                 ->where([$WorkflowStatusesSteps->aliasField('workflow_status_id') => $selectedStatus]);
         }
+        // START : POCOR-6596
+        $query->formatResults(function (ResultSetInterface $results) {
+            return $results->map(function ($row) {
+                $training_result_types = TableRegistry::get('Training.TrainingResultTypes');
+                $customFieldData = $training_result_types->find()->select(['id','name','order'])->toArray();
+                if(!empty($customFieldData)) {
+                    foreach($customFieldData as $data) {
+                        $custom_field_id = $data->id;
+                        $custom_field = $data->name;
+                        if(!empty($row['result']) && ($data->name == 'Exam')){
+                            $row[$this->_dynamicFieldName.'_'.$custom_field_id] = $row['result'];
+                        }
+                        if(!empty($row['attendance_days']) && ($data->name == 'Attendance')){
+                            $row[$this->_dynamicFieldName.'_'.$custom_field_id] = $row['attendance_days'];
+                        }
+                        if(!empty($row['practical']) && ($data->name == 'Practical')){
+                            $row[$this->_dynamicFieldName.'_'.$custom_field_id] = $row['practical'];
+                        }
+                        if(!empty($row['certificate_number']) && ($data->name == 'Certificate')){
+                            $row[$this->_dynamicFieldName.'_'.$custom_field_id] = $row['certificate_number'];
+                        }
+                    }
+                }
+                return $row;
+            });
+        });
+        // END : POCOR-6596
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -125,47 +210,68 @@ class TrainingResultsTable extends AppTable
             'label' => '',
         ];
 
+        // START : POCOR-6596
         $newFields[] = [
-            'key' => 'Users.openemis_no',
-            'field' => 'openemis_no',
+            'key' => 'trainee_info_area',
+            'field' => 'trainee_info_area',
             'type' => 'string',
-            'label' => '',
+            'label' => 'Area Education',
         ];
-
         $newFields[] = [
-            'key' => 'TrainingResults.trainee_id',
-            'field' => 'trainee_id',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'IdentityTypes.name',
-            'field' => 'identity_type_name',
+            'key' => 'trainee_info_openemis_no',
+            'field' => 'trainee_info_openemis_no',
             'type' => 'string',
-            'label' => __('Identity Type'),
+            'label' => 'OpenEMIS ID',
         ];
-
         $newFields[] = [
-            'key' => 'Trainess.identity_number',
+            'key' => 'trainee_info_trainee_name',
+            'field' => 'trainee_info_trainee_name',
+            'type' => 'string',
+            'label' => __('Trainee')
+        ];
+        $newFields[] = [
+            'key' => 'identity_type',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];
+        $newFields[] = [
+            'key' => 'identity_number',
             'field' => 'identity_number',
-            'type' => 'integer',
-            'label' => '',
+            'type' => 'string',
+            'label' => __('Identity Number')
         ];
-
         $newFields[] = [
-            'key' => 'institution_code',
-            'field' => 'institution_code',
-            'type' => 'institution_code',
+            'key' => 'other_identity',
+            'field' => 'other_identity',
+            'type' => 'string',
+            'label' => __('Other Identities')
+        ];
+        $newFields[] = [
+            'key' => 'trainee_info_gender',
+            'field' => 'trainee_info_gender',
+            'type' => 'string',
+            'label' => __('Gender')
+        ];
+        $newFields[] = [
+            'key' => 'trainee_info_institution_code',
+            'field' => 'trainee_info_institution_code',
+            'type' => 'string',
             'label' => __('Institution Code'),
         ];
-
         $newFields[] = [
-            'key' => 'institution_name',
-            'field' => 'institution_name',
-            'type' => 'institution_name',
+            'key' => 'trainee_info_institution_name',
+            'field' => 'trainee_info_institution_name',
+            'type' => 'string',
             'label' => __('Institution Name'),
         ];
+        $newFields[] = [
+            'key' => 'staff_qualification_info_name',
+            'field' => 'staff_qualification_info_name',
+            'type' => 'string',
+            'label' => __('Staff Qualification'),
+        ];
+        // END : POCOR-6596
 
         $newFields[] = [
             'key' => 'Courses.course_code',
@@ -194,49 +300,33 @@ class TrainingResultsTable extends AppTable
             'type' => 'integer',
             'label' => __('Session Name'),
         ];
-
         $newFields[] = [
             'key' => 'Courses.credit_hours',
             'field' => 'credit_hours',
             'type' => 'integer',
             'label' => '',
         ];
-		
-        /*$newFields[] = [
-            'key' => 'result_type',
-            'field' => 'result_type',
-            'type' => 'string',
-            'label' => __('Result Type'),
-        ];*///5695 starts
-		
-        $newFields[] = [
-            'key' => 'result',
-            'field' => 'result',
-            'type' => 'string',
-            'label' => __('Result'),
-        ];
-        //5695 starts
-        $newFields[] = [
-            'key' => 'practical',
-            'field' => 'practical',
-            'type' => 'string',
-            'label' => __('Practical'),
-        ];
 
-        $newFields[] = [
-            'key' => 'attendance_days',
-            'field' => 'attendance_days',
-            'type' => 'string',
-            'label' => __('Attendance Days'),
-        ];
-
-        $newFields[] = [
-            'key' => 'certificate_number',
-            'field' => 'certificate_number',
-            'type' => 'string',
-            'label' => __('Certificate Number'),
-        ];
-        //5695 ends
+        /**
+         * Get all dynamic column from the table TrainingResultTypes
+         * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+         * Ticket: POCOR-6596 START
+         */
+        $training_result_types = TableRegistry::get('Training.TrainingResultTypes');
+        $customFieldData = $training_result_types->find()->select(['id','name','order'])->toArray();
+        if(!empty($customFieldData)) {
+            foreach($customFieldData as $data) {
+                $custom_field_id = $data->id;
+                $custom_field = $data->name;
+                $newFields[] = [
+                    'key' => $this->_dynamicFieldName.'_'.$custom_field_id,
+                    'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
+                    'type' => 'string',
+                    'label' => __('Result Type ' . $custom_field)
+                ];
+            }
+        }
+        /** END POCOR-6596 */
         $fields->exchangeArray($newFields);
     }
 
@@ -283,5 +373,72 @@ class TrainingResultsTable extends AppTable
         ;
 		
         return $institutionDetails;
+    }
+ 
+    /**
+     * Concat the user name
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6596
+     */
+    public function onExcelGetTraineeInfoTraineeName(Event $event, Entity $entity)
+    {
+        return 
+            $entity->trainee_info_first_name  . ' ' .
+            $entity->trainee_info_middle_name . ' ' .
+            $entity->trainee_info_third_name  . ' ' .
+            $entity->trainee_info_last_name;
+    }
+
+    /**
+     * Generate the user identities
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6596
+     */
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentitiesResult = $userIdentities->find()
+            ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
+            ->select([
+                'identity_number' => $userIdentities->aliasField('number'),
+                'identity_type_name' => 'IdentityTypes.name',
+            ])
+            ->where([$userIdentities->aliasField('security_user_id') => $entity->trainee_id])
+            ->order([$userIdentities->aliasField('id DESC')])
+            ->hydrate(false)->toArray();
+            $entity->custom_identity_number = '';
+            $other_identity_array = [];
+            if (!empty($userIdentitiesResult)) {
+                foreach ( $userIdentitiesResult as $index => $user_identities_data ) {
+                    if ($index == 0) {
+                        $entity->custom_identity_number = $user_identities_data['identity_number'];
+                        $entity->custom_identity_name   = $user_identities_data['identity_type_name'];
+                    } else {
+                        $other_identity_array[] = '(['.$user_identities_data['identity_type_name'].'] - '.$user_identities_data['identity_number'].')';
+                    }
+                }
+            }
+        $entity->custom_identity_other_data = implode(',', $other_identity_array);
+        return $entity->custom_identity_name;
+    }
+
+    /**
+     * Generate the user identity number
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6596
+     */
+    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    {
+        return $entity->custom_identity_number;
+    }
+
+    /**
+     * Generate the user other identities
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6596
+     */
+    public function onExcelGetOtherIdentity(Event $event, Entity $entity)
+    {
+        return $entity->custom_identity_other_data;
     }
 }
