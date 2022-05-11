@@ -281,7 +281,7 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
                 $row['document_no'] =  $qualificationdata['document_no'];
                 $row['qualification_institution'] =  $qualificationdata['qualification_institution'];
                 $row['field_of_study'] =  $qualificationdata['field_of_study'];
-                $row['file_name'] = ( !empty($qualificationdata['file_name']) ) ? $_this->getFileTypeForView($row['file_name']) : '' ;
+                $row['file_name'] = ( !empty($qualificationdata['file_name']) ) ? $_this->getFileTypeForView($qualificationdata['file_name']) : '' ;
                 //End 6551
                 return $row;
             });
