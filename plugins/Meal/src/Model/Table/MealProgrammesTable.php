@@ -667,6 +667,16 @@ class MealProgrammesTable extends ControllerActionTable
         // return $entity->area_id;;
     } 
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'amount':
+                return __('Cost');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     /* 
     *Get the list of area field to show in view and edit page
     * @auther Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>

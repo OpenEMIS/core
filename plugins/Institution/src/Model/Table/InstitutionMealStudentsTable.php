@@ -95,7 +95,7 @@ class InstitutionMealStudentsTable extends ControllerActionTable
                     $MealbenifitId = $benefitTypeId;
                 }
                  $InstitutionMealStudents
-                ->updateAll(['meal_benefit_id' => $MealbenifitId,'paid' => $paid,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
+                ->updateAll(['meal_benefit_id' => $benefitTypeId,'paid' => $paid,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
                 $event->stopPropagation();
                  return;
             }
@@ -103,7 +103,16 @@ class InstitutionMealStudentsTable extends ControllerActionTable
              
                 
             } else {
+                if(!isset($benefitTypeId) || empty($benefitTypeId) || $benefitTypeId == null){
+                    $MealBenefitData = $MealBenefit->find()->where([
+                        'default' => 1
+                    ])->first();
+                    $MealbenifitId = $MealBenefitData->id;
+                }else{
+                    $MealbenifitId = $benefitTypeId;
+                }
                 $entity->meal_received_id = $mealReceived;
+                $entity->meal_benefit_id =  $MealbenifitId;
                 $mealEntity = $InstitutionMealStudents->newEntity();
             }
 
