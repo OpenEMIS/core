@@ -667,6 +667,16 @@ class MealProgrammesTable extends ControllerActionTable
         // return $entity->area_id;;
     } 
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'amount':
+                return __('Cost');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     /* 
     *Get the list of area field to show in view and edit page
     * @auther Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
@@ -911,5 +921,24 @@ class MealProgrammesTable extends ControllerActionTable
              ->toArray();
          return $list;
      } 
-    
+
+    /* 
+    * Delete data from `institution_meal_programmes` which is related to `meal_programmes` table
+    * @auther Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * ticket POCOR-6681
+    */ 
+    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $MealInstitutionProgrammes = TableRegistry::get('institution_meal_programmes');
+        $InstitutionProgrammes = $MealInstitutionProgrammes
+                ->find('all')->select(['id'])
+                ->where([
+                    $MealInstitutionProgrammes->aliasField('meal_programmes_id') => $entity->id
+                ])->toArray();
+        if(!empty($InstitutionProgrammes)){
+            foreach ($InstitutionProgrammes as $key => $Programmes) { 
+                $MealInstitutionProgrammes->delete($Programmes);
+            }
+        }
+    }
 }
