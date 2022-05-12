@@ -146,6 +146,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('action', ['visible' => false]);
         $this->field('time_of_behaviour', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
+        $this->field('category_id', ['visible' => false]);//POCOR-5186
 
         $this->fields['student_id']['sort'] = ['field' => 'Students.first_name']; // POCOR-2547 adding sort
 
@@ -203,7 +204,18 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->advancedSelectOptions($classOptions, $selectedClass);
         // End setup class
 
-        $this->controller->set(compact('periodOptions', 'classOptions'));
+        // POCOR-5186 Setup Categories options
+        
+        if (!empty($selectedPeriod)) {
+            $categories = ['0' => __('All Categories'),'1' => 'To Do','2'=>'In Progress','3'=>'Done'];
+            $query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
+        }
+
+        $selectedCategories = $this->queryString('category_id', $categories);
+        $this->advancedSelectOptions($categories, $selectedCategories);
+        // End setup class
+
+        $this->controller->set(compact('periodOptions', 'classOptions','categories'));
 
         if ($selectedClass > 0) {
             $query->innerJoin(
