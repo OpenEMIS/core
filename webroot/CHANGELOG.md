@@ -1,3 +1,21 @@
+### [3.75.4] - 2022-05-11
+- Implemented: Add the option for 100 and 200 records in list page view
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 7
+- Implemented: Administrations > Profiles > Institutions : Development of additional institution profile placeholders for OpenEMIS+
+- Implemented: Develop Staff Subjects report
+- Bug Fixed: Institutions>Statistics>Standard: Develop Staff Qualifications Reports for all staff
+- Bug Fixed: Report>Institution>Infrastructure/Student Body Masses: Area Name and Region Name should show the actual area name and region name
+- Bug Fixed: Institutions>Students/Staff: 404 error when navigating Institutions>Students/Staff and Directory
+- Bug Fixed: Institutions>Meals>Students/Distribution: Changes to Meals
+- Bug Fixed: Administration>Performance>Competencies: Competency item is not showing even though it has been added to the competency Template
+- Bug Fixed: Administration>Profile>Institution: Missing placeholders and renaming of table
+- Bug Fixed: Personal > Academic > Competencies: User is unable to see data of results shown under Personal > Academic > Competencies
+- Bug Fixed: Personal > Students > Academic > Extracurriculars: There is no filter or dropdown to view past academic periods extracurriculars
+- Bug Fixed: Personal>Student>Academic>Absences: Unable to view records
+- Bug Fixed: Directory>Import:Issues downloading data after importing student ID via Directory
+- Bug Fixed: Institutions>Meals>Students/Distribution: Changes to Meals(Point 6)
+- Bug Fixed: Institution > Statistics > Standard > Student Health: Report should not include withdrawn students
+
 ### [3.75.3] - 2022-04-29
 - Implemented: Allow users to manually add cases in the Cases feature
 - Implemented: Develop a Grade filter for Institution > Statistics > Custom reports

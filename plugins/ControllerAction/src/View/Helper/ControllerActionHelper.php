@@ -354,13 +354,17 @@ class ControllerActionHelper extends Helper
     }
 
     public function getPageOptions()
-    {
+    {   
+        /**
+        * This table call for get option value from configitemoption table.
+        * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        * @ticket POCOR-5301
+        */
+        //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         $html = '';
-        $config = $this->_View->get('ControllerAction');
-
+        $config = $this->_View->get('ControllerAction');  		
         if (!is_null($config['pageOptions'])) {
-            $pageOptions = $config['pageOptions'];
-
+            $pageOptions = $config['pageOptions']; 
             if (!empty($pageOptions)) {
                 $html .= $this->Form->input('Search.limit', [
                     'label' => false,
@@ -370,6 +374,7 @@ class ControllerActionHelper extends Helper
                 ]);
             }
         }
+        //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         return $html;
     }
 
