@@ -986,4 +986,19 @@ class TrainingSessionsTable extends ControllerActionTable
 
         return $query;
     }
+
+    /**
+     * Get all session ids as key and name as value
+     * @usage  It is used as drop-down options
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6596
+     */
+    public function getCourses($id)
+    {
+        $query =  $this->find('list', ['keyField' => 'id', 'valueField' => 'name']);
+        if ($id > 0) {
+            $query->where([$this->aliasField('training_course_id =') => $id]);
+        }
+        return $query->toArray();
+    }
 }
