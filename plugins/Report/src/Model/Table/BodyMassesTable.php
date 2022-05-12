@@ -227,12 +227,16 @@ class BodyMassesTable extends AppTable
             'label' => __('Institution Name')
         ];  
 
-         $extraFieldsFirst[] = [
+        //POCOR-6650 Starts
+        $AreaLevelTbl = TableRegistry::get('area_levels');
+        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(1)->hydrate(false)->toArray();
+
+        $extraFieldsFirst[] = [
             'key' => 'area_name',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => __('Area Name')
-        ];
+            'label' => __($AreaLevelArr[0]['name'])
+        ];//POCOR-6650 Ends
         
         $extraFieldsFirst[] = [
             'key' => 'area_code',
