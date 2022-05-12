@@ -50,6 +50,7 @@
 								'student_status' => ['name' => $obj->student_status->name]
 							];
 						} else if (is_array($obj->user)) {
+
 							$userData = $obj->user;
 							$userData['student_status']['name'] = $obj['student_status']['name'];
 						} else {
@@ -142,7 +143,7 @@
 							?></td>
 						<td><?= __($obj->institution_class->name) ?></td>
 						<td><?= $obj->student_gender ?></td>
-						<td><?= __($obj->class_student->student_status->name) ?></td>
+						<td><?= __($obj->student_status->name) ?></td><!-- POCOR-6687 update student status -->
 					</tr>
 
 				<?php endif;?>

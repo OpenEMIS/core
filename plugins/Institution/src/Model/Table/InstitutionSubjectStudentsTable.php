@@ -432,7 +432,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 $InstitutionSubjects->aliasField('institution_id') => $institutionId,
                 $InstitutionClassStudents->aliasField('institution_class_id') => $classId,//POCOR-6572
                 $InstitutionClassStudents->aliasField('institution_id') => $institutionId,//POCOR-6572
-                //$StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']
+                $StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN', 'REPEATED']//POCOR-6687 - uncommented status condition because it was showing "repeated status" student
             ])
             ->group([
                 $this->aliasField('student_id'),
