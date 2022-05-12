@@ -568,9 +568,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'SubjectStudents' => [
                     'Users.Genders',
                     'InstitutionClasses',
-                    'ClassStudents' => [
-                        'StudentStatuses'
-                    ],
+                    'StudentStatuses',//POCOR-6687- update student status previously it was showing class based status
                     'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
                 ]
             ]);
