@@ -683,6 +683,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
+        $institutionId = $this->Session->read('Institution.Institutions.id');//POCOR-6692
         
         if ($hasTemplate) {
             $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id'],$params['academic_period_id']);
@@ -694,6 +695,25 @@ class ReportCardStatusesTable extends ControllerActionTable
                }
 
             $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
+            //POCOR-6692 start
+            if($params['class_id']=='all'){
+                $inProgress = $ReportCardProcesses->find()
+                    ->where([
+                        $ReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
+                        $ReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id'],
+                        $ReportCardProcesses->aliasField('institution_id') => $institutionId
+                    ])
+                    ->count();      
+            }else{
+                $inProgress = $ReportCardProcesses->find()
+                    ->where([
+                      //  $ReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
+                        $ReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id'],
+                        $ReportCardProcesses->aliasField('institution_id') => $institutionId
+                    ])
+                    ->count();  
+            }  
+            //POCOR-6692 end 
             $inProgress = $ReportCardProcesses->find()
                 ->where([
                     $ReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
