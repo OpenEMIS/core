@@ -206,15 +206,15 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         ];
         // START: POCOR-6511
         $extraField[] = [
-            'key' => 'InstitutionStudentsOutOfSchool.email',
-            'field' => 'email',
+            'key' => 'InstitutionStudentsOutOfSchool.student_email',
+            'field' => 'student_email',
             'type' => 'string',
             'label' => __('Student Email')
         ];
 
         $extraField[] = [
             'key' => 'InstitutionStudentsOutOfSchool.contact_id',
-            'field' => 'contact_id',
+            'field' => 'student_contact_id',
             'type' => 'string',
             'label' => __('Student Contact')
         ];
@@ -269,15 +269,15 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         ];
         // START: POCOR-6511
         $extraField[] = [
-            'key' => 'InstitutionStudentsOutOfSchool.email',
-            'field' => 'email',
+            'key' => 'InstitutionStudentsOutOfSchool.guardian_email',
+            'field' => 'guardian_email',
             'type' => 'string',
             'label' => __('Guardian Email')
         ];
 
         $extraField[] = [
-            'key' => 'InstitutionStudentsOutOfSchool.contact_id',
-            'field' => 'contact_id',
+            'key' => 'InstitutionStudentsOutOfSchool.guardian_contact_id',
+            'field' => 'guardian_contact_id',
             'type' => 'string',
             'label' => __('Guardian Contact')
         ];
@@ -383,19 +383,23 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
     }
 
 
-    public function onExcelGetContactId(Event $event, Entity $entity)
+    public function onExcelGetStudentContactId(Event $event, Entity $entity)
     {
         $userId = $entity->id;
 
         $contact = [];
-
+        $guardianContact = [];
         $UserContacts = TableRegistry::get('User.Contacts');
+        //START: POCOR-6511
+        $conditionForStudent[] = $UserContacts->aliasField("contact_type_id  IN (1,2,15) ");
+        //END: POCOR-6511
         $userContactResults = $UserContacts
         ->find()
         ->contain(['ContactTypes.ContactOptions'])
         ->select(['value'])                     
         ->where([
-            $UserContacts->aliasField('security_user_id') => $userId
+            $UserContacts->aliasField('security_user_id') => $userId,
+            'OR' => $conditionForStudent
         ])
         ->all();
         if (!$userContactResults->isEmpty()) {
@@ -404,6 +408,118 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
             }
         }
         return implode(',', $contact);
+    }
+
+    /*
+    * function to get guardian contact number
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return array
+    * @ticket POCOR-6511
+    */
+
+    public function onExcelGetGuardianContactId(Event $event, Entity $entity)
+    {
+        $userId = $entity->id;
+        $guardianContact = [];
+        $StudentGuardiansContact = TableRegistry::get('Student.StudentGuardians');
+        $StudentGuardiansContactResult = $StudentGuardiansContact
+        ->find()
+        ->select($StudentGuardiansContact->aliasField('guardian_id'))                     
+        ->where([
+            $StudentGuardiansContact->aliasField('student_id') => $userId
+        ])
+        ->first();
+
+        
+        $UserContacts = TableRegistry::get('User.Contacts');
+        $conditionForGuardian[] = $UserContacts->aliasField("contact_type_id IN (1,2,15) ");
+        $userContactResults = $UserContacts
+        ->find()
+        ->contain(['ContactTypes.ContactOptions'])
+        ->select(['value'])                     
+        ->where([
+            $UserContacts->aliasField('security_user_id') => $StudentGuardiansContactResult->guardian_id,
+            'OR' => $conditionForGuardian
+        ])
+        ->all();
+        if (!$userContactResults->isEmpty()) {
+             foreach ($userContactResults as $key => $code) {
+                $guardianContact[] = $code->value;
+            }
+        }
+        return implode(',', $guardianContact);
+    }
+
+    /*
+    * function to get student email address
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return array
+    * @ticket POCOR-6511
+    */
+
+    public function onExcelGetStudentEmail(Event $event, Entity $entity)
+    {
+        $userId = $entity->id;
+
+        $contact = [];
+        $guardianContact = [];
+        $UserContacts = TableRegistry::get('User.Contacts');
+        $conditionForStudent[] = $UserContacts->aliasField("contact_type_id = 8 ");
+        $userContactResults = $UserContacts
+        ->find()
+        ->contain(['ContactTypes.ContactOptions'])
+        ->select(['value'])                     
+        ->where([
+            $UserContacts->aliasField('security_user_id') => $userId,
+            'OR' => $conditionForStudent
+        ])
+        ->all();
+        if (!$userContactResults->isEmpty()) {
+             foreach ($userContactResults as $key => $code) {
+                $contact[] = $code->value;
+            }
+        }
+        return implode(',', $contact);
+    }
+
+    /*
+    * function to get guardian email address
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return array
+    * @ticket POCOR-6511
+    */
+
+    public function onExcelGetGuardianEmail(Event $event, Entity $entity)
+    {
+        $userId = $entity->id;
+        $guardianContact = [];
+        $StudentGuardiansContact = TableRegistry::get('Student.StudentGuardians');
+        $StudentGuardiansContactResult = $StudentGuardiansContact
+        ->find()
+        ->select($StudentGuardiansContact->aliasField('guardian_id'))                     
+        ->where([
+            $StudentGuardiansContact->aliasField('student_id') => $userId
+        ])
+        ->first();
+
+        
+        $UserContacts = TableRegistry::get('User.Contacts');
+        $conditionForGuardian[] = $UserContacts->aliasField("contact_type_id = 8 ");
+        $userContactResults = $UserContacts
+        ->find()
+        ->contain(['ContactTypes.ContactOptions'])
+        ->select(['value'])                     
+        ->where([
+            $UserContacts->aliasField('security_user_id') => $StudentGuardiansContactResult->guardian_id,
+            'OR' => $conditionForGuardian
+        ])
+        ->all();
+        if (!$userContactResults->isEmpty()) {
+             foreach ($userContactResults as $key => $code) {
+                $guardianContact[] = $code->value;
+            }
+        }
+        return implode(',', $guardianContact);
     }
 
     public function onExcelGetStudentName(Event $event, Entity $entity)
