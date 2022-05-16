@@ -1,6 +1,7 @@
 <?php
 namespace App\Model\Behavior;
 
+use Cake\ORM\TableRegistry; //POCOR-6538
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
@@ -32,7 +33,7 @@ class ExcelBehavior extends Behavior
         'folder' => 'export',
         'default_excludes' => ['modified_user_id', 'modified', 'created', 'created_user_id', 'password'],
         'excludes' => [],
-        'limit' => 100000,
+        'limit' => 1000000,//POCOR-6603
         'pages' => [],
         'autoFields' => true,
         'orientation' => 'landscape', // or portrait
@@ -453,7 +454,20 @@ class ExcelBehavior extends Behavior
     }
 
     private function getFooter()
-    {
+    {   // START: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemTable
+                            ->find()
+                            ->select(['zonevalue' => 'ConfigItems.value'])
+                            ->where([
+                                $ConfigItemTable->aliasField('name') => 'Time Zone'
+                                   ]);
+                            //->first();
+        foreach ($ConfigItem->toArray() as $value) {
+        $timezone =  $value['zonevalue']; 
+        date_default_timezone_set($timezone);
+        }      
+        // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>              
         $footer = [__("Report Generated") . ": "  . date("Y-m-d H:i:s")];
         return $footer;
     }

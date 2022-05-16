@@ -1,3 +1,62 @@
+### [3.75.4] - 2022-05-11
+- Implemented: Add the option for 100 and 200 records in list page view
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 7
+- Implemented: Administrations > Profiles > Institutions : Development of additional institution profile placeholders for OpenEMIS+
+- Implemented: Develop Staff Subjects report
+- Bug Fixed: Institutions>Statistics>Standard: Develop Staff Qualifications Reports for all staff
+- Bug Fixed: Report>Institution>Infrastructure/Student Body Masses: Area Name and Region Name should show the actual area name and region name
+- Bug Fixed: Institutions>Students/Staff: 404 error when navigating Institutions>Students/Staff and Directory
+- Bug Fixed: Institutions>Meals>Students/Distribution: Changes to Meals
+- Bug Fixed: Administration>Performance>Competencies: Competency item is not showing even though it has been added to the competency Template
+- Bug Fixed: Administration>Profile>Institution: Missing placeholders and renaming of table
+- Bug Fixed: Personal > Academic > Competencies: User is unable to see data of results shown under Personal > Academic > Competencies
+- Bug Fixed: Personal > Students > Academic > Extracurriculars: There is no filter or dropdown to view past academic periods extracurriculars
+- Bug Fixed: Personal>Student>Academic>Absences: Unable to view records
+- Bug Fixed: Directory>Import:Issues downloading data after importing student ID via Directory
+- Bug Fixed: Institutions>Meals>Students/Distribution: Changes to Meals(Point 6)
+- Bug Fixed: Institution > Statistics > Standard > Student Health: Report should not include withdrawn students
+
+### [3.75.3] - 2022-04-29
+- Implemented: Allow users to manually add cases in the Cases feature
+- Implemented: Develop a Grade filter for Institution > Statistics > Custom reports
+- Implemented: Develop a new report : Institutions > Statistics > Standard Report : Marks Entered by Staff
+- Implemented: Develop a new report : Institutions > Statistics > Standard Report : Student Absences
+- Bug Fixed: Institutions>Students>Student1>Withdraw: When they use the arabic interface to withdraw, the status for the withdraw student will still be enrolled.
+- Bug Fixed: Institution > Academic > Classes > Export: Subject teacher is to be included in the report generated
+- Bug Fixed: Institutions>Infrastructure>Overview: Area should change to Size
+
+### [3.75.2] - 2022-04-22
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 3
+- Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 9
+- Implemented: Develop a new report : Institutions > Statistics > Standard Report : Student Absences by Type
+- Bug Fixed: Institutions>Add: Administrative District field should be mandatory
+- Bug Fixed: Administrations > Profiles > Institutions : Create placeholders for custom fields, assessments and class area
+- Bug Fixed: Administrations > System Setup > System Configuration > System : Setting up timezone
+- Bug Fixed: Institution>Dashboard: Data on the Dashboard does not tally with the one in the Attendance
+- Bug Fixed: Institution>Students: Issue with the Dashboard data in the student module
+- Bug Fixed: Institution>Academic>Classes: Institution 170130 and 170131 are getting 404 error
+- Bug Fixed: Add the Profiles feature to Institutions module(Student)
+- Bug Fixed: Institutions>Overview: Latitude and Longitude in edit institution should be hidden or read-only
+- Bug Fixed: Reports > Students : Develop Student Health Report > Health
+- Bug Fixed: Reports > Staff : Develop Detailed Staff Data Report Filters : Area Level, Area Education , Institutions
+- Bug Fixed: Institutions > Profiles > Institutions/Staff/Students: Allow user to view PDF without downloading PDF file
+- Bug Fixed: Institutions>Survey>Forms:User is unable to edit and limit needs to be increase
+- Bug Fixed: Institutions>Performance>Assessments: Unable to import assessment mark even when it is within limit
+- Bug Fixed: Personal>General>Comments: Menu on the left are collapsed instead of expanding
+
+### [3.75.1] - 2022-04-14
+- Implemented: Add Export button function - Institutions > Finances > Income
+- Bug Fixed: Staff>Career>Subjects : Implement filter and sort
+- Bug Fixed: Institutions > Performance > Report Cards : Subject name to be reflected instead of Education Subjects name
+- Bug Fixed: Personal>General: Demographics and Comments cannot be added and Nationalities cannot be edited
+- Bug Fixed: Reports>Institution/Staff/Student: Large reports get stuck in progress
+- Bug Fixed: Institutions>Students: MEMIS stops loading
+- Bug Fixed: Administration>Profile>Institution: Updates table column Comment on this institution_report_cards table
+- Bug Fixed: Dashboard: Workbench is not working where there are no pending task shown even when they have pending task.
+- Bug Fixed: Add the Profiles feature to Institutions module(Institutions)
+- Bug Fixed: Add the Profiles feature to Institutions module(Staff)
+- Bug Fixed: Staff Payslips API not working
+
 ### [3.75.0] - 2022-04-07
 - Implemented: Add Export button function - Institutions > Infrastructures > Projects
 - Implemented: Add Export button function - Institutions > Transport > Trips

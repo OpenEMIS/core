@@ -672,10 +672,15 @@ class StaffTable extends ControllerActionTable
                     if(!empty($item->value_selection)){
                         //get data from Identity Type table 
                         $typesIdentity = $this->getIdentityTypeData($item->value_selection);
-                        $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'staff_status_id']);
+                        if(isset($typesIdentity)){ //POCOR-6679
+                            $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'staff_status_id']);
+                        }
                     }
                 }else{
-                    $this->field($typesIdentity->identity_type, ['visible' => false, 'after' => 'staff_status_id']);
+                    $typesIdentity = $this->getIdentityTypeData($item->value_selection); ////POCOR-6679
+                    if(isset($typesIdentity)){ //POCOR-6679
+                        $this->field($typesIdentity->identity_type, ['visible' => false, 'after' => 'staff_status_id']);
+                    }
                 }
             }
         }//POCOR-6248 ends
@@ -878,48 +883,7 @@ class StaffTable extends ControllerActionTable
                         ]
                     );
             }
-        }//POCOR-6248 ends
-        //POCOR-6645 starts - applied join to get result when not $ConfigItem otherwise it was throwing 404 error 
-        else {
-            $query->select([
-                        'Staff.id',
-                        'Staff.FTE',
-                        'Staff.start_year',
-                        'Staff.start_date',
-                        'Staff.end_year',
-                        'Staff.end_date',
-                        'Staff.staff_id',
-                        'Staff.staff_type_id',
-                        'Staff.staff_status_id',
-                        'Staff.institution_id',
-                        'Staff.institution_position_id',
-                        'Staff.security_group_user_id',
-                        'Positions.id',
-                        'Positions.status_id',
-                        'Positions.position_no',
-                        'Positions.staff_position_title_id',
-                        'Positions.staff_position_grade_id',
-                        'Positions.position_no',
-                        'Positions.institution_id',
-                        'Positions.assignee_id',
-                        'Positions.is_homeroom',
-                        'Users.id',
-                        'Users.username',
-                        'Users.openemis_no',
-                        'Users.first_name',
-                        'Users.middle_name',
-                        'Users.third_name',
-                        'Users.last_name',
-                        'Users.preferred_name',
-            ])
-            ->leftJoin([$UserIdentities->alias() => $UserIdentities->table()], [
-                $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('staff_id')
-            ])
-            ->leftJoin([$IdentityTypes->alias() => $IdentityTypes->table()], [
-                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
-            ]);
-        }
-        //POCOR-6645 ends                  
+        }  //POCOR-6248 ends                  
         $this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
     }
 

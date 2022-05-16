@@ -269,20 +269,26 @@ class InstitutionClassesTable extends ControllerActionTable
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $action = $this->action;
-        $institutionShiftId = $extra['entity']->institution_shift_id;
-        if ($action != 'add') {
-            $staffOptions = [];
-            $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
-            $institutionId = $extra['institution_id'];
-            if ($selectedAcademicPeriodId > -1) {
-                if ($action == 'index') {
-                    $action = 'view';
+        //Start:POCOR-6644
+    	if(!isset($extra['entity']->institution_shift_id) || empty($extra['entity']->institution_shift_id) || ($extra['entity']->institution_shift_id == "")){
+    		
+    	}else{ 
+            $institutionShiftId = $extra['entity']->institution_shift_id;
+            if ($action != 'add') {
+                $staffOptions = [];
+                $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
+                $institutionId = $extra['institution_id'];
+                if ($selectedAcademicPeriodId > -1) {	
+                    if ($action == 'index') {
+                        $action = 'view';
+                    }
+                    $staffOptions = $this->getStaffOptions($institutionId, $action, $selectedAcademicPeriodId);
                 }
-                $staffOptions = $this->getStaffOptions($institutionId, $action, $selectedAcademicPeriodId);
+                $this->fields['staff_id']['options'] = $staffOptions;
+                $this->fields['staff_id']['select'] = false;
             }
-            $this->fields['staff_id']['options'] = $staffOptions;
-            $this->fields['staff_id']['select'] = false;
-        }
+    	}
+        //End:POCOR-6644
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
@@ -2087,8 +2093,14 @@ class InstitutionClassesTable extends ControllerActionTable
         foreach ($cloneFields as $key => $value) {
             $newFields[] = $value;
             if($value['field'] == 'secondary_teacher'){
-                
-
+                //START:POCOR-6678
+                $newFields[] = [
+                    'key' => '',
+                    'field' => 'subject_teachers',
+                    'type' => 'string',
+                    'label' => 'Subject Teachers'
+                ];
+                //END:POCOR-6678
                 $newFields[] = [
                     'key' => 'InstitutionClasses.total_male_students',
                     'field' => 'total_male_students',
@@ -2122,13 +2134,15 @@ class InstitutionClassesTable extends ControllerActionTable
         $requestQuery = $this->request->query;
         $institutionID = $_SESSION['Institution']['Institutions']['id'];
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        //Start:POCOR-6678 add institution_class_id in field
         $query
-        ->select(['total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'
+        ->select(['institution_class_id'=>'InstitutionClasses.id','total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'
             ])
         ->where([
             $this->aliasField('academic_period_id ='). $selectedAcademicPeriodId,
             $this->aliasField('Institutions.id ='). $institutionID,
         ]);
+        //End:POCOR-6678
         /**
         * added condition to make query on the bases on selected class and exporting student's list
         * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
@@ -2141,5 +2155,60 @@ class InstitutionClassesTable extends ControllerActionTable
             $query->group(['InstitutionClasses.id']);
         }
         //POCOR-6635 ends
+
+        //Start:POCOR-6678
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+
+                $institutionClassSubjectsTable = TableRegistry::get('InstitutionClassSubjects');
+                $institutionClassSubjecs = $institutionClassSubjectsTable->find()
+                                                ->where(['institution_class_id' => $row['institution_class_id']])->all();
+                      
+                $nArr = [];                                    
+                foreach($institutionClassSubjecs as $key => $institutionClassSubject) { 
+                    $institutionSubjectStaffTable = TableRegistry::get('InstitutionSubjectStaff');
+                    $institutionSubjectStaff[$key] = $institutionSubjectStaffTable->find()
+                                                ->where(['institution_subject_id' => $institutionClassSubject['institution_subject_id']])->all();
+                                                        
+                        foreach($institutionSubjectStaff[$key] as $kj => $singleArr) {
+                            $nArr[$key][$kj] = $singleArr->staff_id;
+
+                        }
+                }
+                
+                $splArr = array_unique($this->array_flatten($nArr));
+                $subteachers = '';       
+                foreach($splArr as $kjj => $institutionSubjectStaffOne) {
+
+                    $staffUserTable = TableRegistry::get('SecurityUsers');
+                    $staffUserData = $staffUserTable->find()
+                                                ->where(['id' => $institutionSubjectStaffOne])->first();
+                    $subteachers .=  $staffUserData['first_name'].' '.$staffUserData['last_name'].',';
+
+                }
+                if(empty($row['subject_teachers'])){
+                    $row['subject_teachers'] = rtrim($subteachers,',');
+                }              
+
+                return $row;
+            });
+        });
+        //End:POCOR-6678
+    }
+
+    function array_flatten($array) { 
+        if (!is_array($array)) { 
+          return FALSE; 
+        } 
+        $result = array(); 
+        foreach ($array as $key => $value) { 
+          if (is_array($value)) { 
+            $result = array_merge($result, $this->array_flatten($value)); 
+          } 
+          else { 
+            $result[$key] = $value; 
+          } 
+        } 
+        return $result; 
     }
 }

@@ -87,6 +87,9 @@ class StaffProfilesTable extends ControllerActionTable
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
         $events['ControllerAction.Model.downloadAllPdf'] = 'downloadAllPdf';
         $events['ControllerAction.Model.downloadExcel'] = 'downloadExcel';
+        //START:POCOR-6667
+        $events['ControllerAction.Model.viewPDF'] = 'viewPDF';
+        //END:POCOR-6667
         $events['ControllerAction.Model.downloadPDF'] = 'downloadPDF';
         $events['ControllerAction.Model.publish'] = 'publish';
         $events['ControllerAction.Model.publishAll'] = 'publishAll';
@@ -119,17 +122,25 @@ class StaffProfilesTable extends ControllerActionTable
             
             // Download button, status must be generated or published
             if ($this->AccessControl->check(['Institutions', 'StaffProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
-                $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
-                $buttons['download'] = [
-                    'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+                //START:POCOR-6667
+                $viewPdfUrl = $this->setQueryString($this->url('viewPDF'), $params);
+                $buttons['viewPdf'] = [
+                    'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
                     'attr' => $indexAttr,
-                    'url' => $downloadUrl
+                    'url' => $viewPdfUrl
                 ];
+                //END:POCOR-6667
                 $downloadPdfUrl = $this->setQueryString($this->url('downloadPDF'), $params);
                 $buttons['downloadPdf'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
                     'attr' => $indexAttr,
                     'url' => $downloadPdfUrl
+                ];
+                $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
+                $buttons['download'] = [
+                    'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+                    'attr' => $indexAttr,
+                    'url' => $downloadUrl
                 ];
             }
 
@@ -277,11 +288,10 @@ class StaffProfilesTable extends ControllerActionTable
             ->toArray();
        
 
-        $reportCardOptions = ['-1' => '-- '.__('Select Staff Template').' --'] + $reportCardOptions;
+        $reportCardOptions = ['-1' => '-- '.__('Select Profile').' --'] + $reportCardOptions;//POCOR-6654- renamed filter name
         $selectedReportCard = !is_null($this->request->query('staff_profile_template_id')) ? $this->request->query('staff_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
-        //End   
-        $where[$this->StaffReportCards->aliasField('staff_profile_template_id = ')] = $selectedReportCard;
+
         $query
             ->select([
                 'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
@@ -362,7 +372,9 @@ class StaffProfilesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $reportCardId = $this->request->query('staff_profile_template_id');
-        $institutionId = $this->request->query('institution_id');
+        //POCOR-6654 - taking institution id from session as request query doesn't contain it
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
         $academicPeriodId = $this->request->query('academic_period_id');
 
         if (!is_null($reportCardId) && !is_null($institutionId)) {
@@ -500,36 +512,7 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // $params = $this->request->query;
-        // $session = $this->request->session();
-        // $institutionId = $session->read('Institution.Institutions.id');
-        // $query
-        //     ->select([
-        //         'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
-        //         'report_card_status' => $this->StaffReportCards->aliasField('status'),
-        //         'report_card_started_on' => $this->StaffReportCards->aliasField('started_on'),
-        //         'report_card_completed_on' => $this->StaffReportCards->aliasField('completed_on'),
-        //         'email_status_id' => $this->StaffReportCardEmailProcesses->aliasField('status'),
-        //         'email_error_message' => $this->StaffReportCardEmailProcesses->aliasField('error_message')
-        //     ])
-        //     ->leftJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
-        //         [
-        //             $this->StaffReportCards->aliasField('staff_id = ') . $this->aliasField('staff_id'),
-        //             $this->StaffReportCards->aliasField('institution_id = ') . $institutionId,
-        //             $this->StaffReportCards->aliasField('academic_period_id = ') . $params['academic_period_id'],
-        //         ]
-        //     )
-        //     ->leftJoin([$this->StaffReportCardEmailProcesses->alias() => $this->StaffReportCardEmailProcesses->table()],
-        //         [
-        //             $this->StaffReportCardEmailProcesses->aliasField('staff_id = ') . $this->aliasField('staff_id'),
-        //             $this->StaffReportCardEmailProcesses->aliasField('institution_id = ') . $institutionId,
-        //             $this->StaffReportCardEmailProcesses->aliasField('academic_period_id = ') . $params['academic_period_id'],
-        //             //$this->StaffReportCardEmailProcesses->aliasField('staff_profile_template_id = ') . $params['staff_profile_template_id']
-        //         ]
-        //     )
-        //     ->autoFields(true);
-        $query;
-            //echo "<pre>";print_r($query);die();
+        return $query;
     }
 
     public function onGetStatus(Event $event, Entity $entity)
@@ -696,6 +679,47 @@ class StaffProfilesTable extends ControllerActionTable
             header("Content-Type: application/octet-stream");
             header("Content-Type: " . $fileType);
             header('Content-Disposition: attachment; filename="' . $fileName . '"');
+
+            echo $file;
+        }
+        exit();
+    }
+
+    /*
+    * Function is created to view PDF in browser
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return file
+    * @ticket POCOR-6667
+    */
+
+    public function viewPDF(Event $event, ArrayObject $extra)
+    {
+        $model = $this->StaffReportCards;
+        $ids = $this->getQueryString();
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $ids['institution_id'] = $institutionId;
+        if ($model->exists($ids)) {
+            $data = $model->find()->where($ids)->first();
+            $fileName = $data->file_name;
+            $fileNameData = explode(".",$fileName);
+            $fileName = $fileNameData[0].'.pdf';
+            $pathInfo['extension'] = 'pdf';
+            $file = $this->getFile($data->file_content_pdf);
+            $fileType = 'image/jpg';
+            if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
+                $fileType = $this->fileTypes[$pathInfo['extension']];
+            }
+
+            // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            // header("Content-Type: application/force-download");
+            header("Content-Type: application/octet-stream");
+            header("Content-Type: " . $fileType);
+            header('Content-Disposition: inline; filename="' . $filename . '"');
 
             echo $file;
         }

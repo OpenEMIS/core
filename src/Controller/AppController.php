@@ -177,6 +177,20 @@ class AppController extends Controller
             $this->eventManager()->off($this->Csrf);
         }
         $this->loadComponent('TabPermission');
+        // START: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemTable
+                            ->find()
+                            ->select(['zonevalue' => 'ConfigItems.value'])
+                            ->where([
+                                $ConfigItemTable->aliasField('name') => 'Time Zone'
+                                   ]);
+                            //->first();
+        foreach ($ConfigItem->toArray() as $value) {
+        $timezone =  $value['zonevalue']; 
+        date_default_timezone_set($timezone);
+        }    
+        // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>    
     }
 
     private function darkenColour($rgb, $darker = 2)

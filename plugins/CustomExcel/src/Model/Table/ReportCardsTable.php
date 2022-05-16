@@ -710,8 +710,8 @@ class ReportCardsTable extends AppTable
                     $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
                 ->contain([
-                    'EducationSubjects'
-                ])
+                    'EducationSubjects','InstitutionSubjects'
+                ]) //POCOR-5814 requirement subject name from institution_subjects table.
                 ->hydrate(false)
                 ->toArray();
             return $entity;

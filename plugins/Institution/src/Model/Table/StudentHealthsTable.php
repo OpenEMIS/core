@@ -348,6 +348,7 @@ class StudentHealthsTable extends AppTable
         $query->where([
             'InstitutionStudent.academic_period_id' => $academicPeriodId,
             'InstitutionStudent.institution_id'     => $institutionId,
+            ('InstitutionStudent.student_status_id IS NOT')     => 4,//POCOR-6709
             $this->aliasField('is_student')         => 1,
         ]);
         
