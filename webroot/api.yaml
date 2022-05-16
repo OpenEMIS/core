@@ -1485,7 +1485,7 @@ paths:
         "405":
           description: "Invalid Input"
       
-  /restful/v2/Staff-StaffPayslips.json:
+  /restful/v2/Staff-Payslips.json:
     post:
       tags:
       - "CORE"

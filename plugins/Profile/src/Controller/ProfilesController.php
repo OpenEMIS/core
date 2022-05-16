@@ -54,7 +54,7 @@ class ProfilesController extends AppController
             // Student
             // 'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
             'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
-            'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
+            //'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],//POCOR-6700
 
             // Staff
             'StaffPositions'        => ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
@@ -168,6 +168,9 @@ class ProfilesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historical.HistoricalStaffLeave']);
     }
+    // START: POCOR-6353 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
+    public function Comments(){ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
+    // Ends: POCOR-6353 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
     // AngularJS
     public function StaffAttendances()
     {
@@ -368,7 +371,7 @@ class ProfilesController extends AppController
             }
 
             $alias = $model->alias();
-            $excludedModel = ['ScholarshipApplications', 'Leave', 'StudentReportCards', 'Contacts', 'TrainingNeeds']; //POCOR-5695 add TrainingNeeds
+            $excludedModel = ['ScholarshipApplications', 'Leave', 'StudentReportCards', 'Contacts', 'TrainingNeeds','Comments']; //POCOR-5695 add TrainingNeeds POCOR-6353 add comment
 
             if (!in_array($alias, $excludedModel)) {
                 ## Enabled in POCOR-6314
@@ -628,13 +631,7 @@ class ProfilesController extends AppController
                 $tabElements[$key]['url']['action'] = 'Personal';
                 $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
-            } else if ($key == 'Comments' && $this->AccessControl->check(['Profiles', 'ProfileComments'])) {
-                $url = [
-                    'plugin' => $plugin,
-                    'controller' => 'ProfileComments',
-                    'action' => 'index'
-                ];
-                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
+            
             } else if ($key == 'Accounts') {
                 $tabElements[$key]['url']['action'] = 'Accounts';
                 $tabElements[$key]['url'][] = 'view';
@@ -959,4 +956,8 @@ class ProfilesController extends AppController
 
     public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.StudentProfiles']); }
     /*POCOR-6286 ends*/
+
+    /*POCOR-6700 start - registering function*/
+    public function StudentExtracurriculars()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']); }
+    /*POCOR-6700 ends*/
 }

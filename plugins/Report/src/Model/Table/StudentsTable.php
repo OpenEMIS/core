@@ -213,6 +213,7 @@ class StudentsTable extends AppTable
                 ) {
                 //POCOR-5890 starts
                 $healthReportTypeOptions = [
+                    'Summary' => __('Summary'), //POCOR-6661
                     'Overview' => __('Overview'),
                     'Allergies' => __('Allergies'),
                     'Consultations' => __('Consultations'),

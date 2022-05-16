@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class InstitutionStaffAttendancesTable extends ControllerActionTable {
 
@@ -67,24 +68,20 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
     
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-
         $this->startUpdateStaffLateAttendance($entity->staff_id, $entity->date->format('Y-m-d'));
-        
     }
    
     public function startUpdateStaffLateAttendance($staffId, $date) {
-            
-        
         $cmd  = ROOT . DS . 'bin' . DS . 'cake UpdateStaffLateAttendance '.$staffId.' '.$date;
         $logs = ROOT . DS . 'logs' . DS . 'UpdateStaffLateAttendance.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
-//      shell_exec($cmd);
-//              try {
-//			shell_exec($shellCmd);
-//			Log::write('debug', $shellCmd);
-//		} catch(\Exception $ex) {
-//			Log::write('error', __METHOD__ . ' exception when removing inactive roles : '. $ex);
-//		}
+        //shell_exec($cmd);
+        try {
+			shell_exec($shellCmd);
+			Log::write('debug', $shellCmd);
+		} catch(\Exception $ex) {
+			Log::write('error', __METHOD__ . ' exception when removing inactive roles : '. $ex);
+		}
     }
 
 }

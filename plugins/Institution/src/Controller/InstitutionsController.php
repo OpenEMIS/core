@@ -4357,6 +4357,10 @@ class InstitutionsController extends AppController
             'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
             'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
             'Institution.InstitutionStaffPositionProfile'  => __('Staff Positions'),//POCOR-6581
+            'Institution.InstitutionStandardStudentAbsenceType'  => __('Student Absence Type'),//POCOR-6632
+            'Institution.InstitutionStandardMarksEntered'  => __('Marks Entered by Staff'),//POCOR-6630
+            'Institution.InstitutionStandardStudentAbsences'  => __('Student Absences'),//POCOR-6631
+            'Institution.InstitutionStandardStaffQualifications'  => __('Staff Qualification'), //pocor-6551 <vikas.rathore@mail.valuecoders.com>
         ];
         return $options;
     }

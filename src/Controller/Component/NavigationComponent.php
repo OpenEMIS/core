@@ -72,7 +72,7 @@ class NavigationComponent extends Component
             $this->checkPermissions($navigations);
             $controller->set('_navigations', $navigations);
         } catch (SecurityException $ex) {
-            echo "<pre>";print_r($ex);die();
+           // echo "<pre>";print_r($ex);die(); POCOR-6705
             return $ex;
         }
     }
@@ -600,26 +600,26 @@ class NavigationComponent extends Component
                 'parent' => 'Institution.General',
                 'link' => false
             ],
-
-            'Institutions.InstitutionProfiles.generate' => [
+            //POCOR-6653 - updated Institutions selected function to get correct page
+            'Institutions.InstitutionProfiles' => [
                 'title' => 'Institutions',
                 'parent' => 'Profile',
                 'selected' => ['Institutions.InstitutionProfiles'],
-                'params' => ['plugin' => 'Institution', 0 => $institutionId],
+                'params' => ['plugin' => 'Institution'],
             ],
-		    
-            'Institutions.StaffProfiles.generate' => [
+		    //POCOR-6654 modified staff menu
+            'Institutions.StaffProfiles' => [
                 'title' => 'Staff',
                 'parent' => 'Profile',
                 'selected' => ['Institutions.StaffProfiles'],
-                'params' => ['plugin' => 'Institution', 0 => $institutionId],
+                'params' => ['plugin' => 'Institution'],
             ],
-
-            'Institutions.StudentProfiles.generate' => [
+            //POCOR-6655 modified Studentes nav
+            'Institutions.StudentProfiles' => [
                 'title' => 'Students',
                 'parent' => 'Profile',
                 'selected' => ['Institutions.StudentProfiles'],
-                'params' => ['plugin' => 'Institution', 0 => $institutionId],
+                'params' => ['plugin' => 'Institution'],
             ],
             /*POCOR-6286 ends*/
             'Institutions.Shifts' => [
@@ -1359,7 +1359,7 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Personal',
                 //POCOR-5886 starts
                 'params' => ['plugin' => 'Profile', 'action' => 'Personal', 0 => $profileUserId],//POCOR-5886 ends
-                'selected' => ['Profiles.Personal.view', 'Profiles.Personal.edit', 'Profiles.Personal.pull', 'Profiles.Accounts', 'Profiles.Demographic', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'ProfileComments.index', 'ProfileComments.view', 'Profiles.Attachments', 'Profiles.History', 'Profiles.Contacts']
+                'selected' => ['Profiles.Personal.view', 'Profiles.Personal.edit', 'Profiles.Personal.pull', 'Profiles.Accounts', 'Profiles.Demographic', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'Profiles.Comments', 'Profiles.Attachments', 'Profiles.History', 'Profiles.Contacts'] // POCOR-6683
             ],
             'Profiles.Healths' => [
                 'title' => 'Health',
@@ -1495,8 +1495,8 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Student',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours','Profiles.StudentCompetencies',
-                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes','Profiles.StudentRisks','Profiles.StudentAssociations']
-            ],
+                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes','Profiles.StudentRisks','Profiles.StudentAssociations', 'Profiles.Absences']
+            ],//POCOR-6701 added Profiles.Absences becasue navigation was collapsing
             'Profiles.StudentScheduleTimetable' => [
                 'title' => 'Timetables',
                 'parent' => 'Profiles.Student',

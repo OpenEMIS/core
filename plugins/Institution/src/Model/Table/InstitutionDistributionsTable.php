@@ -1,15 +1,20 @@
 <?php
 namespace Institution\Model\Table;
 
-use ArrayObject;
 use Cake\ORM\Query;
+use Cake\ORM\RulesChecker;
+use Cake\ORM\Table;
+use Cake\Validation\Validator;
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
-use Cake\Validation\Validator;
-use Cake\Chronos\Date;
-use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
+use Cake\Datasource\ConnectionManager;
+use Cake\Log\Log;
+use App\Model\Traits\MessagesTrait;
+use Cake\I18n\Date;
 
 class InstitutionDistributionsTable extends ControllerActionTable
 {
@@ -42,12 +47,94 @@ class InstitutionDistributionsTable extends ControllerActionTable
         
         
     }
+    //START:POCOR-6681
+    // public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+	// {
+	// 	$this->setupFields($entity);
+	// }
 
-    // public function validationDefault(Validator $validator)
-    // {
-    //    $validator = parent::validationDefault($validator);
+    // public function setupFields(Entity $entity) 
+	// {
+	// 	$this->field('date_received', [
+	// 		'type' => 'date',
+	// 		'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true],
+	// 		'attr' => ['required' => true], // to add red asterisk
+	// 		'entity' => $entity,
+	// 		'before' => 'comment'
+	// 	]);
+	// }
+    //END:POCOR-6681
 
+    public function validationDefault(Validator $validator)
+    {
+        //START: POCOR-6681
+        $validator->requirePresence('date_received', 'create')->notEmpty('date_received');
+        return $validator;
+        //END: POCOR-6681
+    }
+
+    /* 
+    * To check validation entity before save
+    * @auther Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return boolean 
+    * ticket POCOR-6681
+    */
+    // public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
+    //     if ($entity->isNew()) {
+    //         $MealProgrammesData = TableRegistry::get('Meal.MealProgrammes');
+    //         $MealProgrammesResult = $MealProgrammesData
+    //         ->find()
+    //         ->select(['amount'])
+    //         ->where(['id' => $entity->meal_programmes_id])
+    //         ->first();
+    //         if($entity->quantity_received > $MealProgrammesResult->amount){
+    //         $this->Alert->error('Institution.InstitutionDistributions.quantity_received.genralerror', ['reset' => true]);
+    //             return false;
+    //         }
+    //         $query = $this->find();
+    //         $entityRecord = $query->where([
+    //                 $this->aliasField('meal_programmes_id') => $entity->meal_programmes_id
+    //             ])
+    //         ->select([
+    //             'quantity_received_sum' => $query->func()->sum($this->aliasField('quantity_received'))
+    //         ])
+    //         ->first()
+    //         ;
+    //         $total_sum = $entityRecord->quantity_received_sum + $entity->quantity_received;
+    //         // echo "<pre>";print_r($total_sum);die;
+    //         if($total_sum > $MealProgrammesResult->amount){
+    //             $this->Alert->error('Institution.InstitutionDistributions.quantity_received_sum.genralerror', ['reset' => true]);
+    //             return false;
+    //         }
+    //     }else{
+    //         $MealProgrammesData = TableRegistry::get('Meal.MealProgrammes');
+    //         $MealProgrammesResult = $MealProgrammesData
+    //         ->find()
+    //         ->select(['amount'])
+    //         ->where(['id' => $entity->meal_programmes_id])
+    //         ->first();
+    //         if($entity->quantity_received > $MealProgrammesResult->amount){
+    //             $this->Alert->error('Institution.InstitutionDistributions.quantity_received.genralerror', ['reset' => true]);
+    //             return false;
+    //         }
+    //     }
     // }
+
+    /* 
+    * To change default field name to the required field name
+    * @auther Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return boolean 
+    * ticket POCOR-6681
+    */
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'date_received':
+                return __('Date');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
     
 
 
@@ -259,11 +346,12 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $data = $request->data[$this->alias()];
-        if($data['delivery_status_id'] == 4){
-             $attr['type'] = 'hidden';          
-             $attr['value'] = Null;          
-        }
-
+        //START:POCOR-6681 // Requirment change to show date received in all condition
+        // if($data['delivery_status_id'] == 4){
+        //      $attr['type'] = 'hidden';          
+        //      $attr['value'] = Null;          
+        // }
+        //END:POCOR-6681
 
         return $attr;
 
@@ -332,7 +420,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
         if($entity->delivery_status_id == 4){
-             $this->updateAll(['date_received' => NULL],['id' => $entity->id]);
+             $this->updateAll(['date_received' => date("Y-m-d H:i:s")],['id' => $entity->id]);
                  return;
         }
         $entity->institution_id = $this->request->session()->read('Institution.Institutions.id');
@@ -367,5 +455,27 @@ class InstitutionDistributionsTable extends ControllerActionTable
         return $result;
     } 
 
-    
+    /* 
+    * To generate excel report
+    * @auther Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return file 
+    * ticket POCOR-6681
+    */
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId =  ($this->request->query['period']) ? $this->request->query['period'] : $AcademicPeriod->getCurrent();
+        $session = $this->request->session();
+        $institutionId  = $session->read('Institution.Institutions.id');
+        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+        $query
+        ->innerJoin(
+            [$MealInstitutionProgrammes->alias() => $MealInstitutionProgrammes->table()], [
+                $this->aliasField('meal_programmes_id = ') . $MealInstitutionProgrammes->aliasField('id'),
+            ]
+        )
+        ->where([
+            $this->aliasField('academic_period_id') => $academicPeriodId,
+            $this->aliasField('institution_id') => $institutionId
+        ]);
+    }
 }
