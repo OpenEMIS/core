@@ -281,11 +281,15 @@ class InstitutionClassesTable extends ControllerActionTable
                 if ($selectedAcademicPeriodId > -1) {	
                     if ($action == 'index') {
                         $action = 'view';
-                    }
-                    $staffOptions = $this->getStaffOptions($institutionId, $action, $selectedAcademicPeriodId);
+                    }                
                 }
-                $this->fields['staff_id']['options'] = $staffOptions;
-                $this->fields['staff_id']['select'] = false;
+                /** POCOR-6721 starts - due to getStaffOptions function Institutions>Academic>Classes page was loding long while viewing class */
+                if ($action == 'edit') {
+                    $staffOptions = $this->getStaffOptions($institutionId, $action, $selectedAcademicPeriodId);
+                    $this->fields['staff_id']['options'] = $staffOptions;
+                    $this->fields['staff_id']['select'] = false;
+                }
+                /** POCOR-6721 ends */
             }
     	}
         //End:POCOR-6644
