@@ -140,18 +140,37 @@
 			<?php endif; ?>
 		</label>
 		<div class="input-form-wrapper">
-			<?php if ($data->editable) : ?>
-				<div class="table-toolbar">
-					<button class="btn btn-default btn-xs" onclick="$('#reload').val('addRow').click();return false;">
-						<i class="fa fa-plus"></i>
-						<span><?= __('Add Rows'); ?></span>
-					</button>
-					<button class="btn btn-default btn-xs" onclick="$('#reload').val('addColumn').click();return false;">
-						<i class="fa fa-plus"></i>
-						<span><?= __('Add Columns'); ?></span>
-					</button>
-				</div>
-			<?php endif; ?>
+			<!-- Start:POCOR-6671 -->
+			<?php 
+			if($ControllerAction['table']->alias == "Questions"){ ?>
+				
+					<div class="table-toolbar">
+						<button class="btn btn-default btn-xs" onclick="$('#reload').val('addRow').click();return false;">
+							<i class="fa fa-plus"></i>
+							<span><?= __('Add Rows'); ?></span>
+						</button>
+						<button class="btn btn-default btn-xs" onclick="$('#reload').val('addColumn').click();return false;">
+							<i class="fa fa-plus"></i>
+							<span><?= __('Add Columns'); ?></span>
+						</button>
+					</div>
+				
+			<?php }else{ 
+				if ($data->editable) : ?>
+					<div class="table-toolbar">
+						<button class="btn btn-default btn-xs" onclick="$('#reload').val('addRow').click();return false;">
+							<i class="fa fa-plus"></i>
+							<span><?= __('Add Rows'); ?></span>
+						</button>
+						<button class="btn btn-default btn-xs" onclick="$('#reload').val('addColumn').click();return false;">
+							<i class="fa fa-plus"></i>
+							<span><?= __('Add Columns'); ?></span>
+						</button>
+					</div>
+				<?php endif; ?>
+
+			<?php } ?>
+			 <!-- End:POCOR-6671 -->
 			<?php if (!empty($data->custom_table_columns) || !empty($data->custom_table_rows)) : ?>
 				<div class="table-wrapper">
 					<div class="table-in-view">

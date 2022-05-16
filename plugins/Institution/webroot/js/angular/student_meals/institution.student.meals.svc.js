@@ -228,8 +228,25 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
     function getWeekListOptions(academicPeriodId) {
         var success = function(response, deferred) {
             var academicPeriodObj = response.data.data;
+            console.log('academicPeriodObjFFFFFF')
+            console.log(academicPeriodObj)
             if (angular.isDefined(academicPeriodObj) && academicPeriodObj.length > 0) {
                 var weeks = academicPeriodObj[0].weeks; // find only 1 academic period entity
+                //START:POCOR-6681 // Exclude weeks after current week
+                var log = [];
+                var checkIsCurrent = 0;
+                angular.forEach(weeks, function(value, key) {
+                    if(value['name'].includes("Current Week")){
+                        checkIsCurrent = 1;
+                        log = key;
+                    }
+                 },log);
+                 if(checkIsCurrent == 1){
+                    weeks.length = log+1;
+                 }else{
+                    weeks.length =  weeks.length;
+                 }
+                 //END:POCOR-6681
 
                 if (angular.isDefined(weeks) && weeks.length > 0) {
                     deferred.resolve(weeks);
@@ -251,6 +268,21 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
     function getDayListOptions(academicPeriodId, weekId, institutionId) {
         var success = function(response, deferred) {
             var dayList = response.data.data;
+            //START:POCOR-6681 // Exclude days after current day for current academic period
+            var log = [];
+            var checkIsCurrent = 0;
+            angular.forEach(dayList, function(value, key) {
+                if(value['selected'] == true){
+                    checkIsCurrent = 1;
+                    log = key;
+                }
+                },log);
+                if(checkIsCurrent == 1){
+                    dayList.length = log+1;
+                 }else{
+                    dayList.length =  dayList.length;
+                 }
+            //END:POCOR-6681
             if (angular.isObject(dayList) && dayList.length > 0) {
                 deferred.resolve(dayList);
             } else {
@@ -791,7 +823,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         eCell.setAttribute("id", dataKey);
         console.log('onedit', data.institution_student_meal[dataKey]);
         if (data.institution_student_meal[dataKey] == null) {
-            data.institution_student_meal[dataKey] = 2;
+            data.institution_student_meal[dataKey] = 3;
         }
 
         var eSelect = document.createElement("select");

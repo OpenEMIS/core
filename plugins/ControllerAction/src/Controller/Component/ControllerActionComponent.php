@@ -824,7 +824,40 @@ class ControllerActionComponent extends Component
         $alias = $this->model->alias();
         $controller = $this->controller;
         $request = $this->request;
-        $limit = $this->Session->check($alias.'.search.limit') ? $this->Session->read($alias.'.search.limit') : key($this->pageOptions);
+        /**
+        * This table call for get default value from configitem table.
+        * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        * @ticket POCOR-5301
+        */
+        //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemsTable
+                            ->find()
+                            ->select(['listvalue' => 'ConfigItems.value'])
+                            ->where([
+                              $ConfigItemsTable->aliasField('option_type') => 'list_page'
+                                   ]);
+         
+        foreach ($ConfigItem->toArray() as $defaultval) {
+                     $defaultvals = $defaultval['listvalue'];
+        }
+        if($defaultvals == 10){
+            $defaults = 0;
+        }elseif($defaultvals == 20){
+            $defaults = 1;
+        }elseif($defaultvals == 30){
+            $defaults = 2;
+        }elseif($defaultvals == 40){
+            $defaults = 3;
+        }elseif($defaultvals == 50){
+            $defaults = 4; 
+        }elseif($defaultvals == 100){
+            $defaults = 5;        
+        }elseif($defaultvals == 200){
+            $defaults = 6;       
+        }  
+        $limit = $this->Session->check($alias.'.search.limit') ? $this->Session->read($alias.'.search.limit') : $defaults;
+        //END: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         $search = $this->Session->check($alias.'.search.key') ? $this->Session->read($alias.'.search.key') : '';
         $schema = $this->getSchema($model);
 
@@ -842,21 +875,37 @@ class ControllerActionComponent extends Component
         }
 
         $query = $model->find();
-
+        /**
+        * This table call for get List page view options value from configitemOptions table.
+        * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        * @ticket POCOR-5301
+        */
+        //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        $ConfigItemOptionsTable = TableRegistry::get('Configuration.ConfigItemOptions');
+        $ConfigItemoption =   $ConfigItemOptionsTable
+                            ->find()
+                            ->select(['listpage' => 'ConfigItemOptions.value'])
+                            ->where([
+                              $ConfigItemOptionsTable->aliasField('option_type') => 'list_page'
+                                   ]);
+        $optionslist = array(); 
+        foreach ($ConfigItemoption->toArray() as $value) {
+        $optionslist[] =  $value['listpage']; 
+        }  
+          
         $options = new ArrayObject([
-            'limit' => $this->pageOptions[$limit],
+            'limit' => $optionslist[$limit],
             'auto_contain' => true,
             'auto_search' => true,
             'auto_order' => true
         ]);
-
+    
         $this->Session->write($alias.'.search.key', $search);
         $this->request->data['Search']['searchField'] = $search;
         $this->request->data['Search']['limit'] = $limit;
-
         $this->config['search'] = $search;
-        $this->config['pageOptions'] = $this->pageOptions;
-
+        $this->config['pageOptions'] = $optionslist;
+        //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         $this->debug(__METHOD__, ': Event -> ControllerAction.Controller.beforePaginate');
         $event = new Event('ControllerAction.Controller.beforePaginate', $this, [$this->model, $query, $options]);
         $event = $this->controller->eventManager()->dispatch($event);

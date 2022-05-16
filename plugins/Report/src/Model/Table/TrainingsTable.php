@@ -31,6 +31,12 @@ class TrainingsTable extends AppTable
 
         $this->addBehavior('Excel', ['pages' => false]);
         $this->addBehavior('Report.ReportList');
+        // Starts POCOR-6592
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
+        $this->addBehavior('OpenEmis.Autocomplete');
+        $this->addBehavior('User.User');
+        $this->addBehavior('User.AdvancedNameSearch');
+        // Ends POCOR-6592
     }
 
     public function validationDefault(Validator $validator) {
@@ -58,7 +64,6 @@ class TrainingsTable extends AppTable
         $reportName = __('Trainings');
         $this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
         $this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
-
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('training_course_id', ['type' => 'hidden']);
@@ -67,18 +72,41 @@ class TrainingsTable extends AppTable
         // Starts POCOR-6593
         $feature = $this->request->data[$this->alias()]['feature'];
         if ($feature == 'Report.TrainingSessions') {
-        $this->ControllerAction->field('session_start_date',['type' => 'date']);
-        $this->ControllerAction->field('session_end_date',['type' => 'date']);
-        $this->ControllerAction->field('area_education_id');
+            $this->ControllerAction->field('session_start_date',['type' => 'date']);
+            $this->ControllerAction->field('session_end_date',['type' => 'date']);
+            $this->ControllerAction->field('area_education_id');
         }
         // Ends POCOR-6593
-        $this->ControllerAction->field('status');
-        $this->ControllerAction->field('format');
-        $this->ControllerAction->field('institution_status');
-        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('trainer_name', ['type' => 'hidden']);  // POCOR-6569
+        // Starts POCOR-6592
+        if ($this->request->data[$this->alias()]['feature'] ==  'Report.EmployeeTrainingCard') {
+            $this->ControllerAction->field('guardian_id');
+            $this->ControllerAction->field('format'); 
+        }else if ($feature != 'Report.TrainingResults'){
+            $this->ControllerAction->field('status'); 
+            $this->ControllerAction->field('format'); 
+            $this->ControllerAction->field('institution_status');
+            $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        }
+        // Ends POCOR-6592
+        if($feature == 'Report.TrainersSessions'){
+            $this->ControllerAction->field('trainer_name', ['type' => 'hidden']);  // POCOR-6569
+        }
+        
+        if ($feature == 'Report.TrainingResults') {
+            $this->ControllerAction->field('status');// POCOR-6596
+            $this->ControllerAction->field('session_name', ['type' => 'hidden']); // POCOR-6596
+        }    
         $this->ControllerAction->field('start_date', ['type' => 'hidden']);  // POCOR-6569
         $this->ControllerAction->field('end_date', ['type' => 'hidden']);  // POCOR-6569
+        
+        // Start POCOR-6596 Changed position of format field 
+        if ($feature == 'Report.TrainingResults') {
+            $this->ControllerAction->field('institution_status');
+            $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+            $this->ControllerAction->field('area_id', ['type' => 'hidden']); // POCOR-6596
+		    $this->ControllerAction->field('format');// POCOR-6596
+        }
+		// End POCOR-6596 Changed position of format field
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
@@ -121,7 +149,7 @@ class TrainingsTable extends AppTable
                     $options = $this->Training->getCourseList();
                     $options = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Training Courses')] + $options; //POCOR-6595
 
-					// $options = ['-1' => __('All Training Courses')] + $options;
+                    // $options = ['-1' => __('All Training Courses')] + $options;
 
                     $attr['type'] = 'select';
                     $attr['select'] = false;
@@ -170,7 +198,7 @@ class TrainingsTable extends AppTable
 
     public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
     {
-        $excludedFeature = ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers', 'Report.TrainersSessions', 'Report.ReportTrainingNeedStatistics']; // POCOR-6569
+        $excludedFeature = ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers', 'Report.TrainersSessions', 'Report.ReportTrainingNeedStatistics','Report.TrainingEmployeeQualification']; // POCOR-6569
 
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
@@ -211,7 +239,69 @@ class TrainingsTable extends AppTable
             }
         }
     }
+    
+    /**
+    * Add Autocomplete For staff
+    * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
+    * @ticket POCOR-6592
+    */
+    // Starts POCOR-6592
+    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            
+            if (isset($this->request->data[$this->alias()]['feature'])) {
+                $feature = $this->request->data[$this->alias()]['feature'];
 
+            if (in_array($feature, ['Report.EmployeeTrainingCard'])) {
+            $attr['type'] = 'autocomplete';
+            $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
+            $attr['noResults'] = __('No Guardian found.');
+            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
+            $action = 'Guardians';
+            if ($this->controller->name == 'Reports') {
+                $action = 'StudentGuardians';
+            }
+            $attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserStaffAutocomplete'];
+            $requestData = $this->request->data;
+            if (isset($requestData) && !empty($requestData[$this->alias()]['guardian_id'])) {
+                $guardianId = $requestData[$this->alias()]['guardian_id'];
+                $guardianName = $this->Users->get($guardianId)->name_with_id;
+
+                $attr['attr']['value'] = $guardianName;
+            }
+
+            $iconSave = '<i class="fa fa-check"></i> ' . __('Save');
+            $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+            $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
+            $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+            $attr['onSelect'] = "$('#reload').click();";
+        }
+        }
+        } elseif ($action == 'index') {
+            $attr['sort'] = ['field' => 'Guardians.first_name'];
+        }
+        return $attr;
+    }
+
+    public function implementedEvents()
+    {
+
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.ajaxUserStaffAutocomplete'] = 'ajaxUserStaffAutocomplete';
+        return $events;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'guardian_id':
+                return __('Staff');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    //ENDS POCOR-6592
     public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, Request $request)
     {
         $includedFeature     = ['Report.ReportTrainingNeedStatistics'];
@@ -255,7 +345,7 @@ class TrainingsTable extends AppTable
             }
         }
     }
-    
+
     /**
      * Add Trainer selection drop-down
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
@@ -282,12 +372,12 @@ class TrainingsTable extends AppTable
     /**
      * Add Start Date selection date picker
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
-     * @ticket POCOR-6569
+     * @ticket POCOR-6596
      */
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
     {
         $feature = $this->request->data[$this->alias()]['feature'];
-        $includedFeature = ['Report.TrainersSessions'];
+        $includedFeature = ['Report.TrainersSessions', 'Report.TrainingResults'];
         if (in_array($feature, $includedFeature)) {
             $entity = $attr['entity'];
             $attr['type'] = 'date';
@@ -299,12 +389,12 @@ class TrainingsTable extends AppTable
     /**
      * Add End Date selection date picker
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
-     * @ticket POCOR-6569
+     * @ticket POCOR-6596
      */
     public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request)
     {
         $feature = $this->request->data[$this->alias()]['feature'];
-        $includedFeature = ['Report.TrainersSessions'];
+        $includedFeature = ['Report.TrainersSessions', 'Report.TrainingResults'];
         if (in_array($feature, $includedFeature)) {
             $entity = $attr['entity'];
             $attr['type'] = 'date';
@@ -324,39 +414,27 @@ class TrainingsTable extends AppTable
         return $this->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();
     }
 
-     /**
-
+    /**
      * Add Start Date, End Date, area Education Fields Added   
-
      * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
-
      * @ticket POCOR-6593
-
      */
-        // Starts POCOR-6593
-     public function onUpdateFieldSessionStartDate(Event $event, array $attr, $action, Request $request)
+    // Starts POCOR-6593
+    public function onUpdateFieldSessionStartDate(Event $event, array $attr, $action, Request $request)
     {
-       
         $feature = $this->request->data[$this->alias()]['feature'];
-
         if ($feature!='Report.TrainingSessions') {
-
-                    $attr['visible'] = false;
-            }
-                                
+            $attr['visible'] = false;
+        }
         return $attr;
     }
 
     public function onUpdateFieldSessionEndDate(Event $event, array $attr, $action, Request $request)
     {
-       
         $feature = $this->request->data[$this->alias()]['feature'];
-
         if ($feature!='Report.TrainingSessions') {
-
-                    $attr['visible'] = false;
-            }
-                                
+            $attr['visible'] = false;
+        }
         return $attr;
     }
 
@@ -366,30 +444,26 @@ class TrainingsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
            // $areaLevelId = $this->request->data[$this->alias()]['area_level_id'];//POCOR-6333
             if ($feature=='Report.TrainingSessions')  {
-                
                 $Areas = TableRegistry::get('areas');
                 $entity = $attr['entity'];
-
                 if ($action == 'add') {
-
-                    $where = [];
-                        
-                        $areas = $Areas
-                            ->find('list')
-                           // ->where([$where])
-                            ->order([$Areas->aliasField('order')]);
-                        $areaOptions = $areas->toArray();
-                        $attr['type'] = 'chosenSelect';
-                        $attr['attr']['multiple'] = true;
-                        //$attr['select'] = true;
-                        /*POCOR-6333 starts*/
-                        if (count($areaOptions) > 1) {
-                            $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions;
-                        } else {
-                            $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions;
-                        }
-                        /*POCOR-6333 ends*/
-                        $attr['onChangeReload'] = true;
+                    $where = [];                      
+                    $areas = $Areas
+                        ->find('list')
+                        // ->where([$where])
+                        ->order([$Areas->aliasField('order')]);
+                    $areaOptions = $areas->toArray();
+                    $attr['type'] = 'chosenSelect';
+                    $attr['attr']['multiple'] = true;
+                    //$attr['select'] = true;
+                    /*POCOR-6333 starts*/
+                    if (count($areaOptions) > 1) {
+                        $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions;
+                    } else {
+                        $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions;
+                    }
+                    /*POCOR-6333 ends*/
+                    $attr['onChangeReload'] = true;
                 } else {
                     $attr['type'] = 'hidden';
                 }
@@ -397,6 +471,51 @@ class TrainingsTable extends AppTable
         }
         return $attr;
     }
-
     // Ends POCOR-6593
+
+    /**
+     * Add Trainer selection drop-down
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6596
+     */
+    public function onUpdateFieldSessionName(Event $event, array $attr, $action, Request $request)
+    {
+        $includedFeature = ['Report.TrainingResults'];
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, $includedFeature)) {
+                $courseId = $this->request->data[$this->alias()]['training_course_id'];
+                $training_session_object = TableRegistry::get('Training.TrainingSessions');
+                $session = $training_session_object->getCourses($courseId);
+                $session_options = ['-1' => __('All Session')] + $session;
+                $attr['options'] = $session_options;
+                $attr['type']    = 'select';
+                $attr['select']  = false;
+                $attr['onChangeReload'] = true;
+                return $attr;
+            }
+        }
+    }
+
+    /**
+     * Add Area selection drop-down with multiple select feature
+     * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+     * @ticket POCOR-6596
+     */
+    public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
+    {
+        $includedFeature = ['Report.TrainingResults'];
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, $includedFeature)) {
+                $Areas = TableRegistry::get('Area.Areas');
+                $area_options = $Areas->getAreas();
+                $attr['type'] = 'chosenSelect';
+                $attr['attr']['multiple'] = true;
+                $attr['select'] = false;
+                $attr['options'] = ['-1' => __('All Areas')] + $area_options;
+                return $attr;
+            }
+        }
+    }
 }

@@ -1005,9 +1005,12 @@ class DirectoriesTable extends ControllerActionTable
                             if(!empty($item->value_selection)){
                                 //get data from Identity Type table 
                                 $typesIdentity = $this->getIdentityTypeData($item->value_selection);
-                                $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'date_of_birth']);
+                                if(isset($typesIdentity)){ //POCOR-6679
+                                    $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'date_of_birth']);
+                                }
                             }
                         }else{
+                            $typesIdentity = $this->getIdentityTypeData($item->value_selection); //POCOR-6679
                             $this->field($typesIdentity->identity_type, ['visible' => false, 'after' => 'date_of_birth']);
                         }
                     }
