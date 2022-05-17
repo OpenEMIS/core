@@ -17,7 +17,7 @@ class POCOR5067 extends AbstractMigration
 
         // START INSTITUTION ATTACHMENT TYPE 
         $table = $this->table('institution_attachment_types', [
-            'collation' => 'utf8mb4_unicode_ci',
+            'collation' => 'utf8_general_ci',
             'comment' => 'This table contains the list of Institution Attachment Types'
         ]);
         $table
@@ -82,7 +82,7 @@ class POCOR5067 extends AbstractMigration
 
         // START STUDENT ATTACHMENT TYPE 
         $table = $this->table('student_attachment_types', [
-            'collation' => 'utf8mb4_unicode_ci',
+            'collation' => 'utf8_general_ci',
             'comment' => 'This table contains the list of Institution Attachment Types'
         ]);
         $table
@@ -147,7 +147,7 @@ class POCOR5067 extends AbstractMigration
 
         // START STAFF ATTACHMENT TYPE 
             $table = $this->table('staff_attachment_types', [
-            'collation' => 'utf8mb4_unicode_ci',
+            'collation' => 'utf8_general_ci',
             'comment' => 'This table contains the list of Institution Attachment Types'
         ]);
         $table
@@ -223,6 +223,16 @@ class POCOR5067 extends AbstractMigration
 
         $this->execute('DROP TABLE IF EXISTS `user_attachments`');
         $this->execute('RENAME TABLE `zz_5067_user_attachments` TO `user_attachments`');
+
+        $this->execute('DROP TABLE IF EXISTS `staff_attachment_types`');
+        $this->execute('RENAME TABLE `zz_5067_staff_attachment_types` TO `staff_attachment_types`');
+
+        $this->execute('DROP TABLE IF EXISTS `student_attachment_types`');
+        $this->execute('RENAME TABLE `zz_5067_student_attachment_types` TO `student_attachment_types`');
+
+        $this->execute('DROP TABLE IF EXISTS `institution_attachment_types`');
+        $this->execute('RENAME TABLE `zz_5067_institution_attachment_types` TO `institution_attachment_types`');
+
 
         //$this->execute('RENAME TABLE `zz_6286_security_functions` TO `security_functions`');
     }
