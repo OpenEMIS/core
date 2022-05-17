@@ -41,8 +41,8 @@
 						'options' => $competencyPeriodsOptions,
 						'default' => $selectedCompetencyPeriods,
 						'url' => $baseUrl,
-						'data-named-key' => 'competency',
-						'data-named-group' => 'period'
+						'data-named-key' => 'competencyPeriods',
+						'data-named-group' => 'competency'
 					));
 				}
 				//End 6718
