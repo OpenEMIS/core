@@ -13,7 +13,19 @@ class POCOR5186 extends AbstractMigration
      * @return void
      */
     public function up()
-    {
+    {   // add assignee id start
+        $table = $this->table('student_behaviours');
+        $table
+            ->addColumn('assignee_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true,
+                'after' => 'student_behaviour_category_id'
+            ])
+            ->addIndex('assignee_id')
+            ->update();
+        // add assignee id start
+        // add wrokflow behaviour    
         $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
         $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
         $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
@@ -43,7 +55,7 @@ class POCOR5186 extends AbstractMigration
 
 
         // workflows
-        $workflowData = [
+        $workflowData = [ 
             [
                 'code' => 'INSTITUTION-1001',
                 'name' => 'Institution Behaviour Students',
@@ -177,5 +189,12 @@ class POCOR5186 extends AbstractMigration
         ];
         $this->insert('workflow_actions', $workflowActionData);
 
+    }
+
+    public function down()
+    {
+        $table = $this->table('student_behaviours');
+        $table->removeColumn('assignee_id')
+              ->save();
     }
 }
