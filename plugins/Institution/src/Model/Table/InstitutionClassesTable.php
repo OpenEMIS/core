@@ -1636,7 +1636,7 @@ class InstitutionClassesTable extends ControllerActionTable
                                     [$Staff->aliasField('end_date IS NULL')]
                                 ]
                             ])
-
+                            ->group([$Staff->Users->aliasField('id')]) //POCOR-6735
                             ->order([
                                 $Staff->Users->aliasField('first_name')
                             ]);
