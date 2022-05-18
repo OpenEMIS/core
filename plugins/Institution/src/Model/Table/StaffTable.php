@@ -2085,7 +2085,7 @@ class StaffTable extends ControllerActionTable
                 ->where([
                     $this->aliasField('start_date <= ') => $todayDate,
                     'OR' => [
-                        [$this->aliasField('end_date >= ') => $todayDate],
+                        [$this->aliasField('end_date <= ') => $todayDate], //POCOR-6720
                         [$this->aliasField('end_date IS NULL')]
                     ]
                 ])
