@@ -39,8 +39,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.error = {};
     StaffController.staffShiftsId=[];
     StaffController.datepickerOptions = {
-        minDate: new Date(),
-        maxDate: new Date('01/01/2100'),
         showWeeks: false
     };
     StaffController.dobDatepickerOptions = {
