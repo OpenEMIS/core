@@ -713,14 +713,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ])
                     ->count();  
             }  
-            //POCOR-6692 end 
-            $inProgress = $ReportCardProcesses->find()
-                ->where([
-                    $ReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
-                    $ReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id']
-                ])
-                ->count();      
-                        
+            //POCOR-6692 end       
 
             if (!$inProgress) {                   
                 $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
