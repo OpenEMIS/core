@@ -32,6 +32,20 @@
 						'data-named-group' => 'period'
 					));
 				}
+
+				//Start 6718
+				if (!empty($competencyPeriodsOptions)) {
+					echo $this->Form->input('assessment', array(
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $competencyPeriodsOptions,
+						'default' => $selectedCompetencyPeriods,
+						'url' => $baseUrl,
+						'data-named-key' => 'competencyPeriods',
+						'data-named-group' => 'competency'
+					));
+				}
+				//End 6718
 			?>
 		</div>
 	</div>
