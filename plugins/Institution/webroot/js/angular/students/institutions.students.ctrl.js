@@ -41,8 +41,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.selectedSection = '';
 
     StudentController.datepickerOptions = {
-        minDate: new Date(),
-        maxDate: new Date('01/01/2100'),
         showWeeks: false
     };
     StudentController.dobDatepickerOptions = {
