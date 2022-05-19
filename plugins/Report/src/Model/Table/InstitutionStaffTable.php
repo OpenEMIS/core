@@ -267,31 +267,51 @@ class InstitutionStaffTable extends AppTable
         $grades = [];
 
         if ($entity->has('staff_id')) {
-
-            // echo "<pre>"; print_r($entity); die();
             $staffId = $entity->staff_id;
             $academicPeriodId = $entity->academic_period_id;
             $ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
             $ClassesSecondaryStaffTable = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
-
-            $connection = ConnectionManager::get('default');
-            $institutionClassesData = $connection->execute("SELECT academic_period_id,homeroom_or_secondary.institution_class_id,homeroom_or_secondary.staff_id,education_grade_id FROM
-                institution_classes 
-                INNER JOIN
-                (SELECT id institution_class_id,staff_id FROM institution_classes
-
-                UNION
-                SELECT institution_class_id,secondary_staff_id staff_id FROM institution_classes_secondary_staff) homeroom_or_secondary
-                ON institution_classes.id = homeroom_or_secondary.institution_class_id
-                INNER JOIN institution_class_grades ON institution_class_grades.institution_class_id = institution_classes.id
-                WHERE homeroom_or_secondary.staff_id = '".$staffId."' AND institution_classes.academic_period_id = '".$academicPeriodId."'")->fetchAll(\PDO::FETCH_ASSOC);
-             $query = [];
-            foreach ($institutionClassesData as $key => $value) {
-                $query [$key] = $EducationGrades
-                ->find('all')
-                ->where([$EducationGrades->aliasField('id') => $value['education_grade_id']])->toArray();
+            //Start:POCOR-6714
+            $EducationGrades = TableRegistry::get('education_grades');
+            $subStaffTable = TableRegistry::get('institution_subject_staff');
+            $InsSubTable = TableRegistry::get('institution_subjects');
+            $AcademicTable = TableRegistry::get('academic_periods');
+	     
+	        $AcademicData = $AcademicTable->find()->where(['id'=> $entity->academic_period_id])->first();
+            $startDateYear = $AcademicData->start_year;
+            $edGrade = [];
+            if($entity->end_date == null){
+                $subStaffData = $subStaffTable->find()->where(['staff_id'=>$staffId,'institution_id'=>$entity->institution_id,'start_date >' => "$startDateYear-01-01",'start_date <' => "$startDateYear-12-31"])->toArray();
+            }else{
+                $startDateYear = $AcademicData->end_year;
+                $subStaffData = $subStaffTable->find()->where(['staff_id'=>$staffId,'institution_id'=>$entity->institution_id,'start_date >' => "$startDateYear-01-01",'end_date <' => "$endDateYear-12-31"])->toArray();
             }
+            foreach ($subStaffData as $key => $value) { 
+                $insSubData = $InsSubTable->find()->where(['id' => $value->institution_subject_id])->first();
+                $EducationGradeData = $EducationGrades->find()->where(['id'=> $insSubData->education_grade_id])->first();
+                $edGrade[$key] = $EducationGradeData->name;
+            }
+            //END:POCOR-6714
+            
+            //echo "<pre>"; print_r($value->start_date->format('Y')); 
+            //die();
+            // $connection = ConnectionManager::get('default');
+            // $institutionClassesData = $connection->execute("SELECT academic_period_id,homeroom_or_secondary.institution_class_id,homeroom_or_secondary.staff_id,education_grade_id FROM
+            //     institution_classes 
+            //     INNER JOIN
+            //     (SELECT id institution_class_id,staff_id FROM institution_classes
+
+            //     UNION
+            //     SELECT institution_class_id,secondary_staff_id staff_id FROM institution_classes_secondary_staff) homeroom_or_secondary
+            //     ON institution_classes.id = homeroom_or_secondary.institution_class_id
+            //     INNER JOIN institution_class_grades ON institution_class_grades.institution_class_id = institution_classes.id
+            //     WHERE homeroom_or_secondary.staff_id = '".$staffId."' AND institution_classes.academic_period_id = '".$academicPeriodId."'")->fetchAll(\PDO::FETCH_ASSOC);
+            //  $query = [];
+            // foreach ($institutionClassesData as $key => $value) {
+            //     $query [$key] = $EducationGrades
+            //     ->find('all')
+            //     ->where([$EducationGrades->aliasField('id') => $value['education_grade_id']])->toArray();
+            // }
 
 
             // $query = $ClassesTable
@@ -322,14 +342,14 @@ class InstitutionStaffTable extends AppTable
             //         ]
             //     ]);
 
-            foreach ($query as $grade) {
-                foreach ($grade as $key => $gradeName) {
-                    $grades[$gradeName['id']] = $gradeName['name'];
-                }
-            }
+            // foreach ($query as $grade) {
+            //     foreach ($grade as $key => $gradeName) {
+            //         $grades[$gradeName['id']] = $gradeName['name'];
+            //     }
+            // }
         }
 
-        return implode(', ', array_values($grades));
+        return implode(', ', array_values(array_unique($edGrade))); //POCOR-6714
     }
 
     public function onExcelGetPositionTitleTeaching(Event $event, Entity $entity)
