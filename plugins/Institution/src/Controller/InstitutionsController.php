@@ -4356,7 +4356,7 @@ class InstitutionsController extends AppController
             'Institution.StudentHealths'  => __('Student Health'),
             'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
             'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
-            'Institution.InstitutionStaffPositionProfile'  => __('Staff Positions'),//POCOR-6581
+            'Institution.InstitutionStaffPositionProfile'  => __('Staff Absences'),//POCOR-6581 //POCOR-6715
             'Institution.InstitutionStandardStudentAbsenceType'  => __('Student Absence Type'),//POCOR-6632
             'Institution.InstitutionStandardMarksEntered'  => __('Marks Entered by Staff'),//POCOR-6630
             'Institution.InstitutionStandardStudentAbsences'  => __('Student Absences'),//POCOR-6631
