@@ -1,3 +1,16 @@
+### [3.75.5] - 2022-05-19
+- Implemented: Rename Institution > Statistics > Standard > Staff Positions report to Staff Absences
+- Bug Fixed: Institution>Performance>Assessments: Unable to enter marks for Enrolled(Repeated) Students
+- Bug Fixed: Reports > Institutions> Student Absence Report/Student Attendance Summary Report: Stuck in progress
+- Bug Fixed: Administration>System Setup>System Configuration>Authentication: GoogleSSO cannot be setup
+- Bug Fixed: Institutions>Meals>Students/Distribution: Cost should be able to put decimal place and export in Meal students should show OpenEMIS ID
+- Bug Fixed: Institution>Academic>Classes: Report does not show the education grade(column Y, highlighted yellow) of certain staffs
+- Bug Fixed: Personal/Institution > Students > Academic > Competency tab : The system does not display the competency periods
+- Bug Fixed: Report>Institution>Student Body Masses: Island should be changed to parent of district which is Atoll
+- Bug Fixed: Institutions>Academic>Classes: Page is loading very slow
+- Bug Fixed: Administration > Scholarship > Application: 404 error occur
+- Bug Fixed: Institution>Academic>Classes: Cannot open the classes
+
 ### [3.75.4] - 2022-05-11
 - Implemented: Add the option for 100 and 200 records in list page view
 - Implemented: Development of additional reports indicators and dashboards required by the Professional Development Department 7
