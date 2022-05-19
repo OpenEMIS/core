@@ -9,6 +9,9 @@
 <script data-require="ui-bootstrap@*" data-semver="1.3.2" src="https://cdn.rawgit.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-1.3.2.js"></script>
 
 <div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl'>
+    <div class="alert {{messageClass}}" ng-if="message">
+        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
+    </div>
     <div class="stepper-content-wrapper">
         <div class="steps-container">
             <ul class="steps" style="margin-left: 0">
@@ -61,9 +64,6 @@
                 ng-if="step!=='confirmation' && step!=='summary'" ng-click="goToNextStep()">Next</button>
         </div>
         <div class="step-content">
-            <div class="alert {{messageClass}}" ng-if="message">
-                <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
-            </div>
             <div class="step-pane sample-pane" ng-if="step === 'user_details'">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                     <div class="input select required error">
@@ -83,7 +83,7 @@
                     </div>
                     <div class="input string">
                         <label><?= __('OpenEMIS ID') ?></label>
-                        <input ng-model="selectedUserData.openemis_no" type="string" ng-disabled="true">
+                        <input ng-model="selectedUserData.openemis_no" type="string">
                     </div>
                     <div class="input string required">
                         <label><?= __('First Name') ?></label>
@@ -201,11 +201,13 @@
                             </div>
                             <p class="font-italic mb-0">* Advisable photo dimension 90 by 115</p>
                             <p class="font-italic">* Format Supported: .jpg, .jpeg, .png, .gif</p>
-                            <div class="d-flex">
-                                <div class="position-relative">
-                                    <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >
-                                </div>
-                            </div>
+                            <span class="btn btn-default btn-file">
+                                <span class="fileinput-new">
+                                    <i class="fa fa-folder"></i> 
+                                    <span>Select File</span>
+                                </span>
+                                <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >    
+                            </span>
                         </div>
                     </div>
                     <div class="input string required">
