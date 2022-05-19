@@ -2173,9 +2173,17 @@ class WorkflowBehavior extends Behavior
     {
         // use find instead of get to cater for models with composite keys using a hash id
         $model = $this->_table;
-        $id = $requestData['WorkflowTransitions']['model_reference']; //POCOR-6588
-        $entity = $model->get($id);
-        $this->setStatusId($entity, $requestData);
+        //Start POCOR-6722
+        if ($model->alias() == 'Applications') {
+            $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
+            $this->setStatusId($entity, $requestData);
+        }
+        else{
+            $id = $requestData['WorkflowTransitions']['model_reference']; //POCOR-6588
+            $entity = $model->get($id);
+            $this->setStatusId($entity, $requestData);            
+        }
+        //End POCOR-6722
 
         // get the latest entity after status is updated
         $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
