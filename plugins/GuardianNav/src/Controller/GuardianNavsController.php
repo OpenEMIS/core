@@ -52,7 +52,7 @@ class GuardianNavsController extends AppController
             // Student
             //'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index']],
             'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
-            'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
+            'StudentExtracurriculars' => ['className' => 'Student.GuardianExtracurriculars'],
         ];
         $this->loadComponent('Training.Training');
         $this->loadComponent('User.Image');
