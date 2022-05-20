@@ -335,7 +335,6 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                         
                 if(!empty($total)){
                     $studentData = $total->toArray();
-                    $total_student = 0;
                     foreach($studentData as $value){
                         $total_student = $value['total_students'];
                     }
@@ -368,7 +367,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                         $sum = $value['total_marks_sum'];
                     }
             }
-                if(!empty($totalMarksVal)){
+                if(!empty($totalMarksVal) && $total_student>0 && $sum>0){ // POCOR-6745
                     $totalMarks = $totalMarksVal->toArray();
                     foreach($totalMarks as $value){
                         $total_student_mark_entry = $value['total_marks'];
