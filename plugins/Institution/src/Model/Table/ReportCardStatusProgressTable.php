@@ -140,11 +140,12 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         $query
                 ->select([
                     'id','name','institution_id',
-                    
-                    'inProcess' => $reportCardProcesses->find()->where([
+                    //POCOR-6692
+                    'inProcess' => $institutionStudentsReportCards->find()->where([
                                 'report_card_id' => $reportCardId,
                                 'academic_period_id' => $academicPeriodId,
                                 'institution_id' => $institutionId,
+                                'status' => 2
                             ])->count(),
                     'inCompleted' => $institutionStudentsReportCards->find()->where([
                                 'report_card_id' => $reportCardId,

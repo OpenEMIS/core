@@ -3567,11 +3567,12 @@ class InstitutionsController extends AppController
                 ->find()
                 ->select([
                     'id','name','institution_id',
-
-                    'inProcess' => $reportCardProcesses->find()->where([
+                    //POCOR-6692
+                    'inProcess' => $institutionStudentsReportCards->find()->where([
                                 'report_card_id' => $reportCardId,
                                 'academic_period_id' => $academicPeriodId,
                                 'institution_id' => $institutionId,
+                                'status' => 3
                             ])->count(),
                     'inCompleted' => $institutionStudentsReportCards->find()->where([
                                 'report_card_id' => $reportCardId,
@@ -4360,7 +4361,6 @@ class InstitutionsController extends AppController
             'Institution.InstitutionStandardStudentAbsenceType'  => __('Student Absence Type'),//POCOR-6632
             'Institution.InstitutionStandardMarksEntered'  => __('Marks Entered by Staff'),//POCOR-6630
             'Institution.InstitutionStandardStudentAbsences'  => __('Student Absences'),//POCOR-6631
-            'Institution.InstitutionStandardStaffQualifications'  => __('Staff Qualification'), //pocor-6551 <vikas.rathore@mail.valuecoders.com>
         ];
         return $options;
     }
