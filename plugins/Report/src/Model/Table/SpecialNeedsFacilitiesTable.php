@@ -79,9 +79,8 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
         return $events;
     }
 
-   public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        
         $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
         $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
         $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
@@ -95,16 +94,7 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
         
 
         $institutions = TableRegistry::get('Institution.Institutions');
-        $institutionIds = $institutions->find('list', [
-                                                    'keyField' => 'id',
-                                                    'valueField' => 'id'
-                                                ])
-                        ->where(['institution_type_id' => $institutionTypeId])
-                        ->toArray();
-        
-      
         if (!empty($areaId) && $areaId != -1) {
-
             if($query->repository['registryAlias'] ='Report.SpecialNeedsFacilities' ){
                 $conditionsLands['Institutions.area_id'] = $areaId;
             }
@@ -122,8 +112,7 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
             } 
         }
 
-         if (!empty($institution_id)) {
-
+        if (!empty($institution_id)) {
             if($query->repository['registryAlias'] ='Report.SpecialNeedsFacilities' ){
                 $conditionsLands[$this->aliasField('institution_id')] = $institution_id;
             }
@@ -139,7 +128,6 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
             if($InstitutionBuildings){
                  $conditionsBuildings[$InstitutionBuildings->aliasField('institution_id')] = $institution_id;
             }
-
         }
 
          $query
@@ -153,10 +141,13 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                 'infrastructure_status_name' => 'LandStatuses.name',
                 'infrastructure_type' => 'LandTypes.name',
                 'infrastructure_ownership' => 'InfrastructureOwnership.name',
-                'infrastructure_level' => $query->func()->concat([self::LAND])
+                'infrastructure_level' => $query->func()->concat([self::LAND]),
+                'area_id' => 'Areas.id',//POCOR-6730
+                'area_code' => 'Areas.code',//POCOR-6730
+                'area_name' => 'Areas.name'//POCOR-6730
             ])
             ->where([$this->aliasField('accessibility') => 1,$conditionsLands])
-            ->contain(['InfrastructureConditions', 'LandStatuses', 'LandTypes', 'Institutions', 'InfrastructureOwnership'])
+            ->contain(['InfrastructureConditions', 'LandStatuses', 'LandTypes', 'Institutions', 'InfrastructureOwnership','Institutions.Areas'])
             ->union(
                 $InstitutionFloors->find()
                     ->select([
@@ -169,10 +160,13 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                         'infrastructure_status_name' => 'FloorStatuses.name',
                         'infrastructure_type' => 'FloorTypes.name',
                         'infrastructure_ownership' => $query->func()->concat([""]),
-                        'infrastructure_level' => $query->func()->concat([self::FLOOR])
+                        'infrastructure_level' => $query->func()->concat([self::FLOOR]),
+                        'area_id' => 'Areas.id',//POCOR-6730
+                        'area_code' => 'Areas.code',//POCOR-6730
+                        'area_name' => 'Areas.name'//POCOR-6730
                     ])
                     ->where([$InstitutionFloors->aliasField('accessibility') => 1,$conditionsFloors])
-                    ->contain(['InfrastructureConditions', 'FloorStatuses', 'FloorTypes', 'Institutions'])
+                    ->contain(['InfrastructureConditions', 'FloorStatuses', 'FloorTypes', 'Institutions','Institutions.Areas'])
             )            
             ->union(
                 $InstitutionRooms->find()
@@ -186,10 +180,13 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                         'infrastructure_status_name' => 'RoomStatuses.name',
                         'infrastructure_type' => 'RoomTypes.name',
                         'infrastructure_ownership' => $query->func()->concat([""]),
-                        'infrastructure_level' => $query->func()->concat([self::ROOM])
+                        'infrastructure_level' => $query->func()->concat([self::ROOM]),
+                        'area_id' => 'Areas.id',//POCOR-6730
+                        'area_code' => 'Areas.code',//POCOR-6730
+                        'area_name' => 'Areas.name'//POCOR-6730
                     ])
                     ->where([$InstitutionRooms->aliasField('accessibility') => 1,$conditionsRooms])
-                    ->contain(['InfrastructureConditions', 'RoomStatuses', 'RoomTypes', 'Institutions'])
+                    ->contain(['InfrastructureConditions', 'RoomStatuses', 'RoomTypes', 'Institutions','Institutions.Areas'])
             )
             
             ->union(
@@ -204,12 +201,14 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                         'infrastructure_status_name' => 'BuildingStatuses.name',
                         'infrastructure_type' => 'BuildingTypes.name',
                         'infrastructure_ownership' => 'InfrastructureOwnership.name',
-                        'infrastructure_level' => $query->func()->concat([self::BUILDING])
+                        'infrastructure_level' => $query->func()->concat([self::BUILDING]),
+                        'area_id' => 'Areas.id',//POCOR-6730
+                        'area_code' => 'Areas.code',//POCOR-6730
+                        'area_name' => 'Areas.name'//POCOR-6730
                     ])
                     ->where([$InstitutionBuildings->aliasField('accessibility') => 1,$conditionsBuildings])
-                    ->contain(['InfrastructureConditions', 'BuildingStatuses', 'BuildingTypes', 'Institutions', 'InfrastructureOwnership'])
-        ) ;
-       
+                    ->contain(['InfrastructureConditions', 'BuildingStatuses', 'BuildingTypes', 'Institutions', 'InfrastructureOwnership','Institutions.Areas'])
+        );
     }
 
     public function onExcelRenderAccessibility(Event $event, Entity $entity, $attr)
@@ -237,6 +236,24 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
             'label' => __('Institution Name')
         ];
 
+        //POCOR-6730 Starts
+        $AreaLevelTbl = TableRegistry::get('area_levels');
+        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(1)->hydrate(false)->toArray();
+
+        $newFields[] = [
+            'key' => 'area_name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __($AreaLevelArr[0]['name'])
+        ];
+        
+        $newFields[] = [
+            'key' => 'area_code',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => __('Area Education Code')
+        ];//POCOR-6730 Ends
+
         $newFields[] = [
             'key' => '',
             'field' => 'code',
@@ -250,8 +267,6 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
             'type' => 'string',
             'label' => __('Infrastructure Name')
         ];
-
-        
 
         $newFields[] = [
             'key' => '',
