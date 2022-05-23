@@ -20,7 +20,7 @@ class AttachmentsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
-        $this->addBehavior('User.SetupTab');
+        //$this->addBehavior('User.SetupTab');
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         //START:POCOR-5067
@@ -46,9 +46,24 @@ class AttachmentsTable extends ControllerActionTable
         }
     }
 
+    //START:POCOR-5067
+    public function validationDefault(Validator $validator)
+    {
+        $UserTable = TableRegistry::get('security_users');
+        $queryString = $this->ControllerAction->getQueryString();
+        $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first();
+        if($user->is_staff == 1){
+            $validator->requirePresence('staff_attachment_type_id', 'create')->notEmpty('staff_attachment_type_id');
+        }elseif($user->is_student == 1){
+            $validator->requirePresence('student_attachment_type_id', 'create')->notEmpty('student_attachment_type_id');
+        }
+        return $validator;
+    }
+    //END:POCOR-5067
+
     public function beforeAction(Event $event, ArrayObject $extra)
     { 
-        $this->field('description', ['visible' => false]);//POCOR-5067
+        
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['type' => 'binary', 'visible' => ['edit' => true]]);
 
@@ -57,9 +72,8 @@ class AttachmentsTable extends ControllerActionTable
             'placeholder' => __('Add specific role to share or leave empty to share to All')
         ]);
 
-        $this->setFieldOrder([
-            'name', 'description', 'date_on_file', 'file_content', 'security_roles'
-        ]);
+        $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
+
     }
 
 /******************************************************************************************************************
@@ -69,27 +83,39 @@ class AttachmentsTable extends ControllerActionTable
 ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('file_type');
+        $this->field('description', ['visible' => false]);//POCOR-5067
+        $this->field('file_type', ['visible' => false]);
+        $this->field('file_content', ['visible' => true]);
+        $this->field('date_on_file', ['visible' => true]);
+
+        $this->field('name', ['visible' => true]);
         $this->field('created', ['visible' => true]);
         $this->field('created_user_id', ['visible' => true]);
+        $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
+        $UserTable = TableRegistry::get('security_users');
+        $queryString = $this->ControllerAction->getQueryString();
+        $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first();
+        if($user->is_staff == 1){
+            $this->field('staff_attachment_type_id',  ['attr' => ['label' => __('Type')],'visible' => true]);
+            $this->field('student_attachment_type_id', ['visible' => false]);
+            $this->setFieldOrder([
+                'name','staff_attachment_type_id','file_content','date_on_file','security_roles','created_user_id','created'
+            ]);
+        }elseif($user->is_student == 1){
+            $this->field('student_attachment_type_id', [['attr' => ['label' => __('Type')]],'visible' => true]);
+            $this->field('staff_attachment_type_id', ['visible' => false]);
+            $this->setFieldOrder([
+                'name','student_attachment_type_id','file_content','date_on_file','security_roles','created_user_id','created'
+            ]);
+        }
 
-        $this->setFieldOrder([
-            'name', 'description', 'file_type', 'date_on_file', 'security_roles', 'created_user_id', 'created'
-        ]);
+
+       
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //if not super admin then get the security role for filtering purpose
-        //START:POCOR-5067
-        if($_SESSION['Auth']['User']['is_staff'] == 1 || $_SESSION['Directories']['advanceSearch']['belongsTo']['user_type'] ==2 || $this->request->params['plugin'] == "Staff"){
-            $this->field('student_attachment_type_id', ['visible' => false]);
-            $this->field('staff_attachment_type_id', ['visible' => true]);
-        }else{
-            $this->field('student_attachment_type_id', ['visible' => true]);
-            $this->field('staff_attachment_type_id', ['visible' => false]);
-        }
-        //END:POCOR-5067
         if (!$this->AccessControl->isAdmin()) {
             $AttachmentsRoles = TableRegistry::get('User.AttachmentsRoles');
             $userId = $this->Auth->user('id');
@@ -124,7 +150,19 @@ class AttachmentsTable extends ControllerActionTable
 
         $query->contain(['SecurityRoles']);
     }
-
+    //START:POCOR-5067
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        switch ($field) {
+            case 'staff_attachment_type_id':
+                return __('Type');
+            case 'student_attachment_type_id':
+                return __('Type');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+   // End:POCOR-5067
 /******************************************************************************************************************
 **
 ** edit action logics
@@ -133,15 +171,35 @@ class AttachmentsTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //START:POCOR-5067
-        if($_SESSION['Auth']['User']['is_staff'] == 1 || $_SESSION['Directories']['advanceSearch']['belongsTo']['user_type'] ==2  || $this->request->params['plugin'] == "Staff"){
+        $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
+        $this->field('modified_user_id', ['attr' => ['label' => __('Modified By')]]);
+        $this->field('modified', ['attr' => ['label' => __('Modified On')]]);
+        $this->field('created_user_id', ['attr' => ['label' => __('Created By')]]);
+        $this->field('created', ['attr' => ['label' => __('Created On')]]);
+        $this->field('student_attachment_type_id', ['attr' => ['label' => __('Type')]]);
+
+        $UserTable = TableRegistry::get('security_users');
+        $queryString = $this->ControllerAction->getQueryString();
+        $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first();
+
+        if($user->is_staff == 1){
             $this->field('student_attachment_type_id', ['visible' => false]);
-            $this->field('staff_attachment_type_id', ['visible' => true]);
-        }else{
-            $this->field('student_attachment_type_id', ['visible' => true]);
+            $this->field('staff_attachment_type_id', ['attr' => ['label' => __('Type')],'visible' => true]);
+            $this->setFieldOrder([
+                'name', 'staff_attachment_type_id','description',  'date_on_file','file_content'
+            ]);
+        }elseif($user->is_student == 1){
+            $this->field('student_attachment_type_id', ['attr' => ['label' => __('Type')],'visible' => true]);
             $this->field('staff_attachment_type_id', ['visible' => false]);
+            
+            $this->setFieldOrder([
+                'name', 'student_attachment_type_id','description',  'date_on_file','file_content'
+            ]);
         }
         //END:POCOR-5067
         $query->contain(['SecurityRoles']);
+        
+        
     }
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
@@ -197,31 +255,38 @@ class AttachmentsTable extends ControllerActionTable
 ******************************************************************************************************************/
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        //echo "<pre>";print_r($this->request);die;
-        if($_SESSION['Auth']['User']['is_staff'] == 1 || $_SESSION['Directories']['advanceSearch']['belongsTo']['user_type'] ==2 || $this->request->params['plugin'] == "Staff"){
+        $UserTable = TableRegistry::get('security_users');
+        $queryString = $this->ControllerAction->getQueryString();
+        $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first();
+
+        if($user->is_staff == 1){
+
             $staffAttachmentTypesTable = TableRegistry::get('staff_attachment_types');
             $staffAttachmentTypeOptions = $staffAttachmentTypesTable->find('list',['keyField'=>'id','valueField'=>'name'])->toArray();
             $this->fields['staff_attachment_type_id']['type'] = 'select';
             $this->fields['staff_attachment_type_id']['default'] = '1';
             $this->fields['staff_attachment_type_id']['options'] = $staffAttachmentTypeOptions;
             $this->fields['staff_attachment_type_id']['required'] = true;
-            $this->field('staff_attachment_type_id', ['attr' => ['label' => __('Staff Attachment Type')]]);
-
+            $this->field('staff_attachment_type_id', ['required' => true,'attr' => ['label' => __('Type')]]);
             $this->field('student_attachment_type_id', ['visible' => false]);
-            
-        }else{
-            $staffAttachmentTypesTable = TableRegistry::get('student_attachment_types');
-            $staffAttachmentTypeOptions = $staffAttachmentTypesTable->find('list',['keyField'=>'id','valueField'=>'name'])->toArray();
+            $this->setFieldOrder([
+                'name', 'staff_attachment_type_id','description',  'date_on_file','file_content'
+            ]);
+
+        }elseif($user->is_student == 1){
+            $studentAttachmentTypesTable = TableRegistry::get('student_attachment_types');
+            $studentAttachmentTypeOptions = $studentAttachmentTypesTable->find('list',['keyField'=>'id','valueField'=>'name'])->toArray();
             $this->fields['student_attachment_type_id']['type'] = 'select';
             $this->fields['student_attachment_type_id']['default'] = '1';
-            $this->fields['student_attachment_type_id']['options'] = $staffAttachmentTypeOptions;
+            $this->fields['student_attachment_type_id']['options'] = $studentAttachmentTypeOptions;
             $this->fields['student_attachment_type_id']['required'] = true;
-            $this->field('student_attachment_type_id', ['attr' => ['label' => __('Student Attachment Type')]]);
-
+            $this->field('student_attachment_type_id', ['attr' => ['label' => __('Type')],'required']);
+            $this->setFieldOrder([
+                'name', 'student_attachment_type_id','description',  'date_on_file','file_content'
+            ]);
             $this->field('staff_attachment_type_id', ['visible' => false]);
         }
-        
-        
+        $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
     }
     //END:POCOR-5067
     
