@@ -137,7 +137,6 @@ class ReportCardStatusProgressTable extends ControllerActionTable
             $classIds = array_keys($classLists);
         }
         
-        
         $query
                 ->select([
                     'id','name','institution_id',
@@ -169,9 +168,8 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                             $institutionStudentsReportCards->aliasField('institution_class_id') => $row['id'],
                             $institutionStudentsReportCards->aliasField('status') => 3
                         ])->count();
-                        //$results = $results->toArray();
-                        //echo "<pre>"; print_r($row); die;
                         $row['inCompleted'] = $inCompleted;
+                       //echo "<pre>"; print_r($row);echo "</pre>";
                         return $row;
                     });
                 
