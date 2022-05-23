@@ -19,6 +19,7 @@ use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
 use PHPExcel_IOFactory;
+use Cake\Datasource\ResultSetInterface;
 
 class InstitutionsController extends AppController
 {
@@ -3545,10 +3546,7 @@ class InstitutionsController extends AppController
         }
     }
 
-    /**
-     * comment this code for POCOR-6692
-    */
-    /*public function ajaxGetReportCardStatusProgress()
+    public function ajaxGetReportCardStatusProgress()
     {
         $this->autoRender = false;
         $dataSet = [];
@@ -3571,22 +3569,37 @@ class InstitutionsController extends AppController
                 ->select([
                     'id','name','institution_id',
                     //POCOR-6692
-                    'inProcess' => $institutionStudentsReportCards->find()->where([
+                    'inProcess' => $reportCardProcesses->find()->where([
                                 'report_card_id' => $reportCardId,
                                 'academic_period_id' => $academicPeriodId,
                                 'institution_id' => $institutionId,
-                                'status' => 2
                             ])->count(),
-                    'inCompleted' => $institutionStudentsReportCards->find()->where([
+                    /*'inCompleted' => $institutionStudentsReportCards->find()->where([
                                 'report_card_id' => $reportCardId,
                                 'academic_period_id' => $academicPeriodId,
                                 'institution_id' => $institutionId,
                                 'status' => 3
-                            ])->count()
+                            ])->count()*/
                 ])
                 ->where(['academic_period_id' => $academicPeriodId,
                         $institutionClasses->aliasField('id IN ') => $ids
-                        ])->all();
+                        ])
+
+                ->formatResults(function (ResultSetInterface $results) use ($reportCardId, $institutionId, $academicPeriodId) {
+                    return $results->map(function ($row) use ($reportCardId, $institutionId, $academicPeriodId) {
+                        $institutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+                        $inCompleted = $institutionStudentsReportCards->find()->where([
+                            $institutionStudentsReportCards->aliasField('report_card_id') => $reportCardId,
+                            $institutionStudentsReportCards->aliasField('academic_period_id') => $academicPeriodId,
+                            $institutionStudentsReportCards->aliasField('institution_id') => $institutionId,
+                            $institutionStudentsReportCards->aliasField('institution_class_id') => $row['id'],
+                            $institutionStudentsReportCards->aliasField('status') => 3
+                        ])->count();
+                        $row['inCompleted'] = $inCompleted;
+                        return $row;
+                    });
+                
+            });
 
                 if (!$results->isEmpty()) {
                     foreach ($results as $key => $entity) {
@@ -3616,7 +3629,7 @@ class InstitutionsController extends AppController
 
         echo json_encode($dataSet);
         die;
-    }*/
+    }
     // Delete commitee meeting
     public function deleteCommiteeMeetingById() {
         if (isset($this->request->query['meetingId'])) {
