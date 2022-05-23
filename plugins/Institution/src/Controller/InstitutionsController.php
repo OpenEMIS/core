@@ -3545,7 +3545,10 @@ class InstitutionsController extends AppController
         }
     }
 
-    public function ajaxGetReportCardStatusProgress()
+    /**
+     * comment this code for POCOR-6692
+    */
+    /*public function ajaxGetReportCardStatusProgress()
     {
         $this->autoRender = false;
         $dataSet = [];
@@ -3572,7 +3575,7 @@ class InstitutionsController extends AppController
                                 'report_card_id' => $reportCardId,
                                 'academic_period_id' => $academicPeriodId,
                                 'institution_id' => $institutionId,
-                                'status' => 3
+                                'status' => 2
                             ])->count(),
                     'inCompleted' => $institutionStudentsReportCards->find()->where([
                                 'report_card_id' => $reportCardId,
@@ -3613,7 +3616,7 @@ class InstitutionsController extends AppController
 
         echo json_encode($dataSet);
         die;
-    }
+    }*/
     // Delete commitee meeting
     public function deleteCommiteeMeetingById() {
         if (isset($this->request->query['meetingId'])) {
