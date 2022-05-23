@@ -166,8 +166,24 @@ class ImportStudentMealsTable extends AppTable {
     public function onImportPopulateMealProgrammesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $modelData = $lookedUpTable->find('all')->select(['id', 'name', $lookupColumn]);
-
+        //START: POCOR-6723
+        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+        $MealInstitutionProgrammesData = $MealInstitutionProgrammes
+                                ->find()
+                                ->where([$MealInstitutionProgrammes->aliasField('institution_id') => $this->institutionId])
+                                ->All()
+                                ->toArray();
+        foreach ($MealInstitutionProgrammesData as $MealInstitutionProgrammes_key => $MealInstitutionProgrammes_val) {
+            $meal_programme_id_arr[$MealInstitutionProgrammes_key] = $MealInstitutionProgrammes_val['meal_programme_id'];
+        }
+        $current_date = date('Y-m-d');
+        $modelData = $lookedUpTable->find('all')
+                                    ->select(['id', 'name', $lookupColumn])
+                                    ->where([
+                                        $lookedUpTable->aliasField('end_date >= ') . "'".$current_date."'",
+                                        $lookedUpTable->aliasField('id IN ') => $meal_programme_id_arr
+                                    ]);
+        //END: POCOR-6723
         $nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
         $columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -175,7 +191,7 @@ class ImportStudentMealsTable extends AppTable {
             $nameHeader,
             $columnHeader
         ];
-
+    
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
@@ -184,7 +200,7 @@ class ImportStudentMealsTable extends AppTable {
                 ];
             }
         }
-
+    
     }
 
     public function onImportPopulateMealReceivedData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
