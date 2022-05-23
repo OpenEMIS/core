@@ -90,7 +90,7 @@ $table = $ControllerAction['table'];
         <table class="table table-curved" id="ReportList" url="<?= $url ?>" data-downloadtext="<?= $downloadText ?>">
             <thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
             <tbody>
-                <?php //echo '<pre>';print_r($data);die; ?>
+                <?php// echo '<pre>';print_r($data);die; ?>
                 <?php
                 foreach ($data as $obj) :
 
