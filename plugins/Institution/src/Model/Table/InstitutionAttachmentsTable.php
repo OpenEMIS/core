@@ -39,18 +39,20 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         }
     }
     //START:POCOR-5067
-    public function beforeAction(Event $event, ArrayObject $extra)
-    { 
-        $this->field('description', ['visible' => false]);
-    }
-    //END:POCOR-5067
+    // public function beforeAction(Event $event, ArrayObject $extra)
+    // { 
+    //     $this->field('description', ['visible' => false]);
+    // }
+    // //END:POCOR-5067
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        
+        $this->field('description', ['visible' => false]); //POCOR-5067
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
+        $this->field('institution_attachment_type_id', ['attr'=>['label' => __('Type')]]); //POCOR-5067
         $this->field('file_type');
+        $this->field('created_user_id',['visible' => false]);
         $this->field('created', [
             'type' => 'datetime',
             'visible' => true
@@ -58,6 +60,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
 
         $this->setFieldOrder([
             'name',
+            'institution_attachment_type_id',  //POCOR-5067
             'description',
             'file_type',
             'date_on_file',
@@ -65,10 +68,25 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         ]);
     }
 
+	//Start: POCOR-5067
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        switch ($field) {
+            case 'institution_attachment_type_id':
+                return __('Type');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+	//End: POCOR-5067
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
+        $this->field('institution_attachment_type_id', ['attr' => ['label' => __('Type')]]); //POCOR-5067
+        $this->setFieldOrder([
+            'name', 'institution_attachment_type_id','description',  'date_on_file','file_content'
+        ]);
     }
     //START:POCOR-5067
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -79,8 +97,17 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         $this->fields['institution_attachment_type_id']['default'] = '1';
         $this->fields['institution_attachment_type_id']['options'] = $InsAttachmentTypeOptions;
         $this->fields['institution_attachment_type_id']['required'] = true;
-        $this->field('institution_attachment_type_id', ['attr' => ['label' => __('Institution Attachment Type')]]);
+       
+        $this->field('institution_attachment_type_id', [ 'attr' => ['label' => __('Type')]]);
         $this->field('file_name', ['visible' => false]);
+        $this->setFieldOrder([
+            'name', 'institution_attachment_type_id','description','file_content',  'date_on_file'
+        ]);
+    }
+    public function validationDefault(Validator $validator)
+    {
+        $validator->requirePresence('institution_attachment_type_id', 'create')->notEmpty('institution_attachment_type_id');
+        return $validator;
     }
     //END:POCOR-5067
 
