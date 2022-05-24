@@ -183,7 +183,9 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             }, vm.error)
             .then(function(weekListOptions) {
                 vm.updateWeekList(weekListOptions);
-                return InstitutionStudentMealsSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId);
+                localStorage.setItem('current_week_number', vm.selectedWeek);
+                var current_day_number = localStorage.getItem('current_day_number');
+                return InstitutionStudentMealsSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId, current_week_number_selected = 3, current_day_number);
             }, vm.error)
             .then(function(dayListOptions) {
                 console.log("dayListOptions", dayListOptions)
@@ -196,7 +198,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             }, vm.error)
             .then(function(educationGradeListOptions) {
                 console.log("educationGradeListOptions", educationGradeListOptions)
-                vm.updateEducationGradeList(educationGradeListOptions);                
+                vm.updateEducationGradeList(educationGradeListOptions);             
                 return InstitutionStudentMealsSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay);
             }, vm.error)
             .then(function(attendanceType) { 
@@ -291,6 +293,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                     // localStorage.setItem('academic_period_id', vm.selectedAcademicPeriod);
                     // localStorage.removeItem('academic_period_id');
                     localStorage.setItem('academic_period_id', vm.selectedAcademicPeriod);
+                    let date = new Date(vm.selectedDay);
+                    localStorage.setItem('current_day_number', date.getDay()); 
                     console.log(vm.selectedDay);
                     },1000)
                     //END:POCOR:6609
@@ -609,7 +613,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         InstitutionStudentMealsSvc.getWeekListOptions(vm.selectedAcademicPeriod)
         .then(function(weekListOptions) {
             vm.updateWeekList(weekListOptions);
-            return InstitutionStudentMealsSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId);
+            var current_day_number = localStorage.getItem('current_day_number');
+            return InstitutionStudentMealsSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId, current_week_number_selected = 3, current_day_number);
         }, vm.error)
         .then(function(dayListOptions) {
             vm.updateDayList(dayListOptions);
@@ -655,10 +660,18 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     vm.changeWeek = function() {
         UtilsSvc.isAppendLoader(true);
         var weekObj = vm.weekListOptions.find(obj => obj.id == vm.selectedWeek);
+        var dayObj = vm.dayListOptions.find(obj => obj.date == vm.selectedDay);
         vm.selectedWeekStartDate = weekObj.start_day;
         vm.selectedWeekEndDate = weekObj.end_day;
         vm.gridOptions.context.week = vm.selectedWeek;
-        InstitutionStudentMealsSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId)
+        var current_week_number = localStorage.getItem('current_week_number');
+        var current_day_number = localStorage.getItem('current_day_number');
+        if(vm.selectedWeek < current_week_number){
+            current_week_number_selected = 1;
+        }else{
+            current_week_number_selected = 0;
+        }
+        InstitutionStudentMealsSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId, current_week_number_selected, current_day_number)
         .then(function(dayListOptions) {
             vm.updateDayList(dayListOptions);
             // return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay, vm.selectedEducationGrade);
@@ -696,8 +709,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         var currentMonth = currentDate.getMonth()+1;
         var currentdate = currentDate.getDate();
         vm.currentDayMonthYear = currentYear + '-' +currentMonth + '-' + currentdate;
-        
-        InstitutionStudentMealsSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId)
+        var current_day_number = localStorage.getItem('current_day_number');
+        InstitutionStudentMealsSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId, current_week_number_selected = 3, current_day_number)
 
         .then(function(isMarked) {
                 vm.updateIsMarked(isMarked);
