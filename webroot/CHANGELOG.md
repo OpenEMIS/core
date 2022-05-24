@@ -1,3 +1,12 @@
+### [3.75.6] - 2022-05-24
+- Bug Fixed: Reports > Students > Students Out of School: Add new columns for contacts
+- Bug Fixed: Administration>Security>Roles: Roles that are arranged are not working properly in Appointment>Positions
+- Bug Fixed: Personal > Guardians> Academic > Extracurriculars: 404 error
+- Bug Fixed: Institution>Meals>Students: The template file showing the all Meals programs even those are not relevant to that school and previous week Saturday is only shown
+- Bug Fixed: Administration>Profile>Institution: Update the existing placeholder in Student Performance Summary Tab
+- Bug Fixed: Institution > Statistics > Standard: Marks Entered by Staff-Report is blank
+- Bug Fixed: Institution: Shift filter is not shown on the Institution page
+
 ### [3.75.5] - 2022-05-19
 - Implemented: Rename Institution > Statistics > Standard > Staff Positions report to Staff Absences
 - Bug Fixed: Institution>Performance>Assessments: Unable to enter marks for Enrolled(Repeated) Students
