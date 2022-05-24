@@ -4202,7 +4202,9 @@ class InstitutionReportCardsTable extends AppTable
                                 'homeroom_teacher' => $studentAssessmentSummary->aliasField('homeroom_teacher_name'),
                                 'individual_result' => $studentAssessmentSummary->aliasField('latest_mark'),
                                 'avg_marks' => $studentAssessmentSummary->aliasField('average_mark'),
-                                'student_id' => $studentAssessmentSummary->aliasField('student_id')
+                                'student_id' => $studentAssessmentSummary->aliasField('student_id'),
+                                'institution_average_mark' => $studentAssessmentSummary->aliasField('institution_average_mark'),//POCOR-6742- added new column into the report
+                                'area_average_mark' => $studentAssessmentSummary->aliasField('area_average_mark'),//POCOR-6742- added new column into the report 
                             ])
                             ->innerJoin([$Users->alias() => $Users->table()], [
                                 $studentAssessmentSummary->aliasField('student_id ='). $Users->aliasField('id')
@@ -4255,6 +4257,8 @@ class InstitutionReportCardsTable extends AppTable
                         'absence_day' => !empty($absenceDaysCount) ? $absenceDaysCount : 0,
                         'individual_result' => !empty($data['individual_result']) ? $data['individual_result'] : 0,
                         'average_marks' => $data['avg_marks'],
+                        'institution_average_mark' => $data['institution_average_mark'],//POCOR-6742- added new column into the report
+                        'area_average_mark' => $data['area_average_mark'],//POCOR-6742- added new column into the report
                     ];
                     $entity[] = $result;
                 }
