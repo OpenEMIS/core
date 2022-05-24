@@ -1725,7 +1725,8 @@ class InstitutionsTable extends ControllerActionTable
     {
         $filters = [
             //POCOR-6618 Starts hide shift type filter from advance search
-            /*'shift_type' => [
+            // POCOR-6748 // again add shift filter
+            'shift_type' => [
                 'label' => __('Shift Type'),
                 'options' => $this->shiftTypes
             ],//POCOR-6618 Ends*/
