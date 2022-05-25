@@ -103,7 +103,17 @@ class InstitutionSubjectsTable extends AppTable  {
             ->innerJoin([$EducationGrades->alias() => $EducationGrades->table()], [
                 $EducationGrades->aliasField('id =') . $this->aliasField('education_grade_id')
             ])
-            ->where($conditions);
+            ->where([
+                $conditions,
+                /**POCOR-6726 starts - added condition to fetch subjects which has students*/ 
+                'OR' => [
+                    $this->aliasField('total_male_students !=') => 0,
+                    'AND' => [
+                        $this->aliasField('total_female_students !=') => 0
+                    ]    
+                ],
+                /**POCOR-6726 ends*/ 
+            ]);
             
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
@@ -243,8 +253,8 @@ class InstitutionSubjectsTable extends AppTable  {
                     'type' => 'string',
                     'label' => __('Institution Name')
                 ];
-
-               /* $newFields[] = [
+                /**POCOR-6726 starts - uncommented area column*/
+                $newFields[] = [
                     'key' => '',
                     'field' => 'region_code',
                     'type' => 'string',
@@ -270,8 +280,8 @@ class InstitutionSubjectsTable extends AppTable  {
                     'field' => 'area_name',
                     'type' => 'string',
                     'label' => __('District Name')
-                ];*/
-                
+                ];
+                /**POCOR-6726 ends*/
                 $newFields[] = [
                     'key' => 'InstitutionClasses.name',
                     'field' => 'class_name',
