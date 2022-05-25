@@ -138,7 +138,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData = [];
-                    var totalRowCount = response.data.total;
+                    var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return scope.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
@@ -179,7 +179,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData = [];
-                    var totalRowCount = response.data.total;
+                    var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);

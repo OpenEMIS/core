@@ -68,25 +68,6 @@
         <div class="step-content">
             <div class="step-pane sample-pane" ng-if="step === 'user_details'">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                    <div class="input string row-content">
-                        <label><?= __('Photo Content') ?></label>
-                        <div>
-                            <div class="table-thumb mb-16">
-                                <div class="profile-image-thumbnail">
-                                    <i class="kd-staff"></i>
-                                </div>
-                            </div>
-                            <p class="font-italic mb-0">* Advisable photo dimension 90 by 115</p>
-                            <p class="font-italic">* Format Supported: .jpg, .jpeg, .png, .gif</p>
-                            <span class="btn btn-default btn-file">
-                                <span class="fileinput-new">
-                                    <i class="fa fa-folder"></i> 
-                                    <span>Select File</span>
-                                </span>
-                                <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >    
-                            </span>
-                        </div>
-                    </div>
                     <div class="input select required error">
                         <label>User Type</label>
                         <div class="input-select-wrapper">
@@ -151,7 +132,7 @@
                         <label for="User_date_of_birth"><?= __('Date Of Birth') ?></label>
                         <div class="input-group date" id="User_date_of_birth" style="" datepicker="" ng-model="selectedUserData.date_of_birth" ng-click="isDatepickerOpen = !isDatepickerOpen">
                             <input type="text" class="form-control " ng-model="selectedUserData.date_of_birth" uib-datepicker-popup="yyyy/MM/dd" is-open="isDatepickerOpen" datepicker-options="dobDatepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" />
-                            <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                            <span class="input-group-addon" style="background-color: #6699CC; color: #FFF;"><i class="glyphicon glyphicon-calendar"></i></span>
                         </div>
                         <div ng-if="error.date_of_birth" class="error-message">
                             <p>{{ error.date_of_birth }}</p>
@@ -215,7 +196,7 @@
                     </div>
                 </div>
             </div>
-            <div class="step-pane sample-pane" ng-if="step === 'confirmation'">
+            <div class="step-pane sample-pane" ng-show="step === 'confirmation'">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                     <div class="row section-header header-space-lg">Information</div>
                     <div class="input string row-content">
@@ -281,14 +262,14 @@
                         <input ng-model="selectedUserData.postalCode" type="string">
                     </div>
                     <div class="row section-header header-space-lg">Address Area</div>
-                    <div class="input select">
+                    <div class="input string">
                         <label><?= __('Address Area') ?></label>
                         <div
                             class="tree-form"
-                            id="address_area"
+                            id="address_area_id"
                             ng-controller="SgTreeCtrl as SgTree"
-                            ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=null; SgTree.userId=2; SgTree.displayCountry=0; SgTree.triggerOnChange=false;">
-                            <kd-tree-dropdown-ng id="<?=$field ?>-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="addressAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
+                            ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=null; SgTree.userId=2; SgTree.displayCountry=1; SgTree.triggerOnChange=false;">
+                            <kd-tree-dropdown-ng id="address_area_id-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="addressAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
                         </div>
                     </div>
                     <div class="row section-header header-space-lg">Birthplace Area</div>
@@ -298,8 +279,8 @@
                             class="tree-form"
                             id="birthplace_area"
                             ng-controller="SgTreeCtrl as SgTree"
-                            ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=null; SgTree.userId=2; SgTree.displayCountry=0; SgTree.triggerOnChange=false; ">
-                            <kd-tree-dropdown-ng id="<?=$field ?>-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="birthplaceAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
+                            ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=null; SgTree.userId=2; SgTree.displayCountry=1; SgTree.triggerOnChange=false; ">
+                            <kd-tree-dropdown-ng id="birthplace_area-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="birthplaceAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
                         </div>
                     </div>
                     <div class="row section-header header-space-lg">Identities / Nationalities</div>
@@ -380,7 +361,7 @@
                                 <label for={{field.student_custom_field_id}}>{{field.name}}</label>
                                 <div class="input-group date" id={{field.student_custom_field_id} style="" datepicker="" ng-model="field.answer" ng-click="[field.isDatepickerOpen = !field.isDatepickerOpen]" ng-init="field.isDatepickerOpen = false">
                                     <input type="text" class="form-control " ng-model="field.answer" uib-datepicker-popup="yyyy/MM/dd" is-open="field.isDatepickerOpen" datepicker-options="datepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" ng-change="field.isDatepickerOpen = false" ng-required="field.is_mandatory !== 0" />
-                                    <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                                    <span class="input-group-addon" style="background-color: #6699CC; color: #FFF;"><i class="glyphicon glyphicon-calendar"></i></span>
                                 </div>
                                 <div ng-if="field.errorMessage" class="error-message">
                                     <p>{{ field.errorMessage }}</p>
@@ -590,7 +571,7 @@
         box-shadow: 0 1px 4px rgb(0 0 0 / 7%);
         background-color: #f9f9f9;
         position: relative;
-        min-height: 48px;
+        min-height: 610px;
     }
     .stepper-content-wrapper{
         -webkit-box-shadow: none!important;
@@ -801,6 +782,8 @@
         border-top: 1px solid #DDD;
         border-right: 1px solid #DDD;
         border-left: 1px solid #DDD;
+        border-bottom: 1px solid #DDD;
+        border-radius: 0 0 4px 4px;
         float: left;
         width: 100%;
     }
@@ -845,35 +828,92 @@
         background-color: #fff !important;
         color: #333 !important;
         margin-top: -22px;
-        border-color: #ccc !important;
+        border-color: #fff !important;
+    }
+
+    .uib-title:hover {
+        background-color: #eee !important;
+        color: #000 !important;
     }
 
     .uib-left, .uib-right {
         background-color: #fff !important;
         color: #333 !important;
-        border-color: #ccc !important;
+        border-color: #fff !important;
+    }
+
+    .uib-left:hover {
+        background-color: #eee !important;
+        color: #000 !important;
+    }
+
+    .uib-right:hover {
+        background-color: #eee !important;
+        color: #000 !important;
     }
 
     .uib-day .btn-sm {
         background-color: #fff !important;
         color: #333 !important;
-        border-color: #ccc !important;
+        border-color: #fff !important;
+    }
+
+    .uib-day .btn-sm:hover {
+        background-color: #eee !important;
+        color: #000 !important;
     }
 
     .uib-month .btn-default {
         background-color: #fff !important;
         color: #333 !important;
-        border-color: #ccc !important;
+        border-color: #fff !important;
+    }
+
+    .uib-month .btn-default:hover {
+        background-color: #eee !important;
+        color: #000 !important;
     }
 
     .uib-years .btn-default {
         background-color: #fff !important;
         color: #333 !important;
-        border-color: #ccc !important;
+        border-color: #fff !important;
+    }
+
+    .uib-years .btn-default:hover {
+        background-color: #eee !important;
+        color: #000 !important;
     }
 
     .uib-datepicker-popup {
         padding: 5px 10px;
+    }
+
+    .uib-close {
+        display: none !important;
+    }
+
+    .uib-datepicker-current {
+        width: 230% !important;
+        border-radius: 3px !important;
+        border-color: #fff !important;
+        color: #000 !important;
+        background: #fff !important;
+    }
+
+    .uib-datepicker-current:hover {
+        background: #eee !important;
+    }
+
+    .uib-clear {
+        border-color: #fff !important;
+        border-radius: 3px !important;
+        color: #000 !important;
+        background: #fff !important;
+    }
+
+    .uib-clear:hover {
+        background: #eee !important;
     }
 
     .time {
@@ -900,16 +940,6 @@
         font-size: 14px !important;
         height: 40px !important;
         padding-left: 0px !important;
-    }
-
-    .selected-items {
-        font-size: 14px !important;
-        padding: 5px 0px 0px 10px !important;
-        display: block !important;
-    }
-
-    .caret {
-        margin-left: 160px !important;
     }
 
 </style>

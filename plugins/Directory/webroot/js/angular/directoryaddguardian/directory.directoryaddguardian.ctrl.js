@@ -125,7 +125,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData = [];
-                    var totalRowCount = response.data.total;
+                    var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return scope.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
@@ -165,8 +165,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 param.page = params.endRow / (params.endRow - params.startRow);
                 DirectoryaddguardianSvc.getExternalSearchData(param)
                 .then(function(response) {
-                    var gridData = response.data;
-                    var totalRowCount = gridData.length;
+                    var gridData = response.data.data;
+                    if(!gridData)
+                        gridData = [];
+                    var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
