@@ -126,6 +126,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         vm.action = 'view';
         vm.gridOptions.context.mode = vm.action;
         localStorage.setItem('academic_period_id', vm.selectedAcademicPeriod);
+        localStorage.setItem('current_day_number', currentDate.getDay()); 
        
         UtilsSvc.isAppendLoader(true);
         if (vm.institutionId != null) {
@@ -139,10 +140,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 console.log('mealBenefitTypeOptions',mealBenefitTypeOptions);
                 vm.mealBenefitTypeOptions = mealBenefitTypeOptions;
                 vm.gridOptions.context.mealBenefitTypeOptions = vm.mealBenefitTypeOptions;
-                console.log('Vmdata')
                 setTimeout(()=>{
-                    console.log('SELETED ')
-                    console.log(vm.selectedAcademicPeriod);
                 var get_academic_period_id = vm.selectedAcademicPeriod
                 // localStorage.removeItem('academic_period_id');
                 localStorage.setItem('academic_period_id', vm.selectedAcademicPeriod);
@@ -150,13 +148,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 //START:POCOR:6609
                 setTimeout(()=>{
                 var get_academic_period_id = localStorage.getItem('academic_period_id');
-                console.log('get_academic_period_id1111');
-                console.log(get_academic_period_id)
             },1000)
             var get_academic_period_id = localStorage.getItem('academic_period_id');
-
-            console.log('get_academic_period_id1112');
-                console.log(get_academic_period_id)
                 return InstitutionStudentMealsSvc.mealProgrameOptions(vm.institutionId, get_academic_period_id);
                 //END:POCOR:6609
             }, vm.error)
@@ -293,9 +286,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                     // localStorage.setItem('academic_period_id', vm.selectedAcademicPeriod);
                     // localStorage.removeItem('academic_period_id');
                     localStorage.setItem('academic_period_id', vm.selectedAcademicPeriod);
-                    let date = new Date(vm.selectedDay);
-                    localStorage.setItem('current_day_number', date.getDay()); 
-                    console.log(vm.selectedDay);
+                    // let date = new Date(vm.selectedDay);
+                    // localStorage.setItem('current_day_number', date.getDay());
                     },1000)
                     //END:POCOR:6609
                    
