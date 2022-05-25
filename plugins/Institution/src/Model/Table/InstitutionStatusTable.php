@@ -134,6 +134,7 @@ class InstitutionStatusTable extends ControllerActionTable
         ])
         ->allowEmpty('area_id')
         ->allowEmpty('institution_locality_id')
+        ->allowEmpty('area_administrative_id')
         ->allowEmpty('institution_type_id')
         ->allowEmpty('institution_ownership_id')
         ->allowEmpty('institution_sector_id')
@@ -196,8 +197,9 @@ class InstitutionStatusTable extends ControllerActionTable
         $field = 'area_id';
         $areaLabel = $this->onGetFieldLabel($event, $this->alias(), $field, $language, true);
         $this->field('area_section', ['type' => 'section', 'title' => $areaLabel]);
-        $field = 'area_administrative_id';
-        $areaAdministrativesLabel = $this->onGetFieldLabel($event, $this->alias(), $field, $language, true);
+        $field1 = 'area_administrative_id';
+        $areaAdministrativesLabel = $this->onGetFieldLabel($event, $this->alias(), $field1, $language, true);
+        
         $this->field('area_administrative_section', ['type' => 'section', 'title' => $areaAdministrativesLabel]);
         $this->field('contact_section', ['type' => 'section', 'title' => __('Contact'), 'after' => $field]);
         $this->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => 'website', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
@@ -205,11 +207,11 @@ class InstitutionStatusTable extends ControllerActionTable
         $this->field('longitude', ['visible' => ['view' => false]]);
         $this->field('latitude', ['visible' => ['view' => false]]);
         //pocor-5669
-        if (strtolower($this->action) != 'index') {
+        if (strtolower($this->action) != 'index') { 
             $this->Navigation->addCrumb($this->getHeader($this->action));
         }
 
-        if ($this->action == 'edit') {
+        if ($this->action == 'edit') { 
             // Moved to InstitutionContacts
             $this->field('contact_section', ['visible' => false]);
             $this->field('contact_person', ['visible' => false]);
@@ -232,7 +234,7 @@ class InstitutionStatusTable extends ControllerActionTable
             $this->field('latitude', ['visible' => false]);
         }
 
-        if ($this->controllerAction == 'InstitutionStatus' && $this->webhookAction == 'edit') {
+        if ($this->controllerAction == 'InstitutionStatus' && $this->webhookAction == 'edit') { 
             $this->field('modified', ['visible' => false]);
             $this->field('modified_user_id', ['visible' => false]);
             $this->field('created', ['visible' => false]);
@@ -282,7 +284,7 @@ class InstitutionStatusTable extends ControllerActionTable
             $withdrawStudentsOptions[$databaseType['id']] = __($databaseType['name']);
         }
         $selectedDatabaseType = key($withdrawStudentsOptions);
-
+        //echo "<pre>";print_r($withdrawStudentsOptions);die;
         return compact('withdrawStudentsOptions', 'selectedDatabaseType');
     }
 
@@ -584,7 +586,7 @@ class InstitutionStatusTable extends ControllerActionTable
 
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
+    { 
         $this->Alert->info(__('general.status_update'));
         $data = $this->find()->where(['id' => $entity->id])->first();
         if (!empty($data)) {
@@ -592,8 +594,8 @@ class InstitutionStatusTable extends ControllerActionTable
             if ($status == 1) {
                $statusName = 'Active';
                $newStatus = 'Inactive';
-               $dateClosed = date('d-m-Y');
-               $dateOpen = $data->date_opened->format('d-m-Y');
+               $dateClosed = date('Y-m-d');
+               $dateOpen = $data->date_opened->format('Y-m-d');
                $this->field('name', ['attr' => ['readonly' => 'readonly']]);
                $this->field('code', ['attr' => ['readonly' => 'readonly']]);
                $this->field('date_opened', ['attr' => ['value' => $dateOpen]]);
@@ -606,7 +608,7 @@ class InstitutionStatusTable extends ControllerActionTable
                $this->field('end_staff_positions', ['type' => 'select', 'options' => $withdrawStudentsOptions]);
                $this->field('end_infrastructure_usage', ['type' => 'select', 'options' => $withdrawStudentsOptions]);
            } elseif ($status == 2) {
-            $dateOpened = date('d-m-Y');
+            $dateOpened = date('Y-m-d');
             $statusName = 'Inactive';
             $newStatus = 'Active';
             $this->field('name', ['attr' => ['readonly' => 'readonly']]);
@@ -616,6 +618,7 @@ class InstitutionStatusTable extends ControllerActionTable
             $this->field('current_status', ['attr' => ['readonly' => 'readonly', 'value' => $statusName]]);
             $this->field('institution_status_id', ['type' => 'readonly', 'attr' => ['label' => __('New Status'), 'value' => $newStatus]]);
         }
+       
     }
 
     // hide list button
@@ -653,6 +656,7 @@ class InstitutionStatusTable extends ControllerActionTable
 
 public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
 {
+    // echo "<pre>";print($entity);die;
     if (!$entity->isNew()) {
         $this->validator()->remove('area_id', 'required');
         $this->validator()->remove('institution_locality_id', 'required');
@@ -669,13 +673,28 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
                 $statuses = $StudentStatuses->findCodeList();
                 $query = $institutionStudents->query();
-                $query->where(['student_status_id NOT IN' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
+                $query->where(['student_status_id NOT IN' => [$statuses['TRANSFERRED'],
                     $statuses['PROMOTED'], $statuses['REPEATED'],$statuses['GRADUATED']]]);
                 //End POCOR-6624
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'student_status_id' => 4])
                 ->where(['institution_id' => $entity->id])
                 ->execute();
+
+                //Start:POCOR-6736
+                //also changed the student_status from institution_class_students table..
+                $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+                $query1 = $InstitutionClassStudents->query();
+                $query1->where(['student_status_id NOT IN' => [$statuses['TRANSFERRED'],
+                    $statuses['PROMOTED'], $statuses['REPEATED'],$statuses['GRADUATED']]]);
+               
+                $query1->update()
+                ->set([ 'student_status_id' => 4])
+                ->where(['institution_id' => $entity->id])
+                ->execute();
+                //End:POCOR-6736
+                
+                
             } 
             if(!empty($options['InstitutionStatus']['end_staff_positions']) && $options['InstitutionStatus']['end_staff_positions'] == 1) {
                 $institutionStaff = TableRegistry::get('institution_staff');
@@ -692,6 +711,31 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 ->set(['end_date' => date('Y-m-d'), 'room_status_id' => 2])
                 ->where(['institution_id' => $entity->id])
                 ->execute();
+                //Start:POCOR-6736
+                //floors
+                $institutionRoom = TableRegistry::get('institution_floors');
+                $query = $institutionRoom->query();
+                $query->update()
+                ->set(['end_date' => date('Y-m-d'), 'floor_status_id' => 2])
+                ->where(['institution_id' => $entity->id])
+                ->execute();
+
+                //Building
+                $institutionRoom = TableRegistry::get('institution_buildings');
+                $query = $institutionRoom->query();
+                $query->update()
+                ->set(['end_date' => date('Y-m-d'), 'building_status_id' => 2])
+                ->where(['institution_id' => $entity->id])
+                ->execute();
+
+                //land 
+                $institutionRoom = TableRegistry::get('institution_lands');
+                $query = $institutionRoom->query();
+                $query->update()
+                ->set(['end_date' => date('Y-m-d'), 'land_status_id' => 2])
+                ->where(['institution_id' => $entity->id])
+                ->execute();
+                //End:POCOR-6736
             }
 
             $institutionShifts = TableRegistry::get('institution_shifts');
@@ -733,7 +777,7 @@ public function onUpdateFieldDateOpened(Event $event, array $attr, $action, Requ
     $institutionId = $this->request->pass[1];
     $id = $this->controller->paramsDecode($institutionId)['id'];
     $data = $this->find()->where(['id' => $id])->first();
-    $dateOpen = $data->date_opened->format('d-m-Y');
+    $dateOpen = $data->date_opened->format('Y-m-d');
     $today = new Date();
 
     if ($action == 'edit' && $data->institution_status_id == 1) {
@@ -743,7 +787,7 @@ public function onUpdateFieldDateOpened(Event $event, array $attr, $action, Requ
 
     elseif ($action == 'edit' && $data->institution_status_id == 2) {
         $attr['type'] = 'readonly';
-        $attr['value'] = $today->format('d-m-Y');
+        $attr['value'] = $today->format('Y-m-d');
     }
 
 
@@ -759,7 +803,7 @@ public function onUpdateFieldDateClosed(Event $event, array $attr, $action, Requ
     $today = new Date();
     if ($action == 'edit' && $data->institution_status_id == 1) {
         $attr['type'] = 'readonly';
-        $attr['value'] = $today->format('d-m-Y');
+        $attr['value'] = $today->format('Y-m-d');
     }
 
     elseif ($action == 'edit' && $data->institution_status_id == 2) {
