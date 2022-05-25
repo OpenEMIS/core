@@ -169,7 +169,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData=[];
-                    var totalRowCount = response.data.total;
+                    var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StudentController.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
@@ -210,7 +210,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData = [];
-                    var totalRowCount = response.data.total;
+                    var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
             }, function(error) {
                     console.log(error);

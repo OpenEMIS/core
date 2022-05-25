@@ -213,7 +213,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData=[];
-                    var totalRowCount = response.data.total;
+                    var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StaffController.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
@@ -254,7 +254,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData = [];
-                    var totalRowCount = response.data.total;
+                    var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StaffController.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);

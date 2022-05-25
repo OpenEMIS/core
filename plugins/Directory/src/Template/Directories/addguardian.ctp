@@ -130,7 +130,7 @@
                         <label for="User_date_of_birth"><?= __('Date Of Birth') ?></label>
                         <div class="input-group date" id="User_date_of_birth" style="" datepicker="" ng-model="selectedUserData.date_of_birth" ng-click="isDatepickerOpen = !isDatepickerOpen">
                             <input type="text" class="form-control " ng-model="selectedUserData.date_of_birth" uib-datepicker-popup="yyyy/MM/dd" is-open="isDatepickerOpen" datepicker-options="datepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" />
-                            <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                            <span class="input-group-addon" style="background-color: #6699CC; color: #FFF;"><i class="glyphicon glyphicon-calendar"></i></span>
                         </div>
                         <div ng-if="error.date_of_birth" class="error-message">
                             <p>{{ error.date_of_birth }}</p>
@@ -188,7 +188,7 @@
                     </div>
                 </div>
             </div>
-            <div class="step-pane sample-pane" ng-if="step === 'confirmation'">
+            <div class="step-pane sample-pane" ng-show="step === 'confirmation'">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                     <div class="row section-header header-space-lg">Information</div>
                     <div class="input string row-content">
@@ -258,10 +258,10 @@
                         <label><?= __('Address Area') ?></label>
                         <div
                             class="tree-form"
-                            id="address_area"
+                            id="address_area_id"
                             ng-controller="SgTreeCtrl as SgTree"
                             ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=null; SgTree.userId=2; SgTree.displayCountry=0; SgTree.triggerOnChange=false;">
-                            <kd-tree-dropdown-ng id="<?=$field ?>-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="addressAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
+                            <kd-tree-dropdown-ng id="address_area_id-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="addressAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
                         </div>
                     </div>
                     <div class="row section-header header-space-lg">Birthplace Area</div>
@@ -272,7 +272,7 @@
                             id="birthplace_area"
                             ng-controller="SgTreeCtrl as SgTree"
                             ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=null; SgTree.userId=2; SgTree.displayCountry=0; SgTree.triggerOnChange=false; ">
-                            <kd-tree-dropdown-ng id="<?=$field ?>-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="birthplaceAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
+                            <kd-tree-dropdown-ng id="birthplace_area-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="birthplaceAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
                         </div>
                     </div>
                     <div class="row section-header header-space-lg">Identities / Nationalities</div>
@@ -504,7 +504,7 @@
         box-shadow: 0 1px 4px rgb(0 0 0 / 7%);
         background-color: #f9f9f9;
         position: relative;
-        min-height: 48px;
+        min-height: 610px;
     }
     .stepper-content-wrapper{
         -webkit-box-shadow: none!important;
@@ -715,6 +715,8 @@
         border-top: 1px solid #DDD;
         border-right: 1px solid #DDD;
         border-left: 1px solid #DDD;
+        border-bottom: 1px solid #DDD;
+        border-radius: 0 0 4px 4px;
         float: left;
         width: 100%;
     }
@@ -759,35 +761,92 @@
         background-color: #fff !important;
         color: #333 !important;
         margin-top: -22px;
-        border-color: #ccc !important;
+        border-color: #fff !important;
+    }
+
+    .uib-title:hover {
+        background-color: #eee !important;
+        color: #000 !important;
     }
 
     .uib-left, .uib-right {
         background-color: #fff !important;
         color: #333 !important;
-        border-color: #ccc !important;
+        border-color: #fff !important;
+    }
+
+    .uib-left:hover {
+        background-color: #eee !important;
+        color: #000 !important;
+    }
+
+    .uib-right:hover {
+        background-color: #eee !important;
+        color: #000 !important;
     }
 
     .uib-day .btn-sm {
         background-color: #fff !important;
         color: #333 !important;
-        border-color: #ccc !important;
+        border-color: #fff !important;
+    }
+
+    .uib-day .btn-sm:hover {
+        background-color: #eee !important;
+        color: #000 !important;
     }
 
     .uib-month .btn-default {
         background-color: #fff !important;
         color: #333 !important;
-        border-color: #ccc !important;
+        border-color: #fff !important;
+    }
+
+    .uib-month .btn-default:hover {
+        background-color: #eee !important;
+        color: #000 !important;
     }
 
     .uib-years .btn-default {
         background-color: #fff !important;
         color: #333 !important;
-        border-color: #ccc !important;
+        border-color: #fff !important;
+    }
+
+    .uib-years .btn-default:hover {
+        background-color: #eee !important;
+        color: #000 !important;
     }
 
     .uib-datepicker-popup {
         padding: 5px 10px;
+    }
+
+    .uib-close {
+        display: none !important;
+    }
+
+    .uib-datepicker-current {
+        width: 230% !important;
+        border-radius: 3px !important;
+        border-color: #fff !important;
+        color: #000 !important;
+        background: #fff !important;
+    }
+
+    .uib-datepicker-current:hover {
+        background: #eee !important;
+    }
+
+    .uib-clear {
+        border-color: #fff !important;
+        border-radius: 3px !important;
+        color: #000 !important;
+        background: #fff !important;
+    }
+
+    .uib-clear:hover {
+        background: #eee !important;
     }
 
     .time {
@@ -814,15 +873,5 @@
         font-size: 14px !important;
         height: 40px !important;
         padding-left: 0px !important;
-    }
-
-    .selected-items {
-        font-size: 14px !important;
-        padding: 5px 0px 0px 10px !important;
-        display: block !important;
-    }
-
-    .caret {
-        margin-left: 160px !important;
     }
 </style>
