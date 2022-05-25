@@ -1,5 +1,6 @@
 <?php
 use Migrations\AbstractMigration;
+use Cake\Datasource\ConnectionManager;
 
 class POCOR5067 extends AbstractMigration
 {
@@ -15,203 +16,81 @@ class POCOR5067 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_5067_user_attachments` LIKE `user_attachments`');
         $this->execute('INSERT INTO `zz_5067_user_attachments` SELECT * FROM `user_attachments`');
 
-        // START INSTITUTION ATTACHMENT TYPE 
-        $table = $this->table('institution_attachment_types', [
-            'collation' => 'utf8_general_ci',
-            'comment' => 'This table contains the list of Institution Attachment Types'
-        ]);
-        $table
-        ->addColumn('name', 'string', [
-            'default' => null,
-            'limit' => 50,
-            'null' => false
-        ])
-        ->addColumn('order', 'integer', [
-            'default' => null,
-            'limit' => 3,
-            'null' => false
-        ])
-        ->addColumn('visible', 'integer', [
-            'default' => 1,
-            'limit' => 1,
-            'null' => false
-        ])
-        ->addColumn('editable', 'integer', [
-            'default' => 1,
-            'limit' => 1,
-            'null' => false
-        ])
-        ->addColumn('default', 'integer', [
-            'default' => 0,
-            'limit' => 1,
-            'null' => false
-        ])
-        ->addColumn('international_code', 'string', [
-            'default' => null,
-            'limit' => 50,
-            'null' => true
-        ])
-        ->addColumn('national_code', 'string', [
-            'default' => null,
-            'limit' => 50,
-            'null' => true
-        ])
-        ->addColumn('modified_user_id', 'integer', [
-            'default' => null,
-            'limit' => 11,
-            'null' => true
-        ])
-        ->addColumn('modified', 'datetime', [
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('created_user_id', 'integer', [
-            'default' => null,
-            'limit' => 11,
-            'null' => false
-        ])
-        ->addColumn('created', 'datetime', [
-            'default' => null,
-            'null' => false
-        ])
-        ->addIndex('modified_user_id')
-        ->addIndex('created_user_id')
-        ->save();
-        //END INSTITUTION ATTACHMENT TYPE 
+        
+        $this->execute("CREATE TABLE IF NOT EXISTS `institution_attachment_types` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `name` varchar(50) NOT NULL,
+            `order` int(3) DEFAULT NULL,
+            `visible` int(1) DEFAULT '1',
+			`editable` int(1) DEFAULT '1',
+			`default` int(1) DEFAULT '0',
+			`international_code` varchar(50) DEFAULT NULL,
+			`national_code` varchar(50) DEFAULT NULL,
+            `modified_user_id` int(11) DEFAULT NULL,
+            `modified` datetime DEFAULT NULL,
+            `created_user_id` int(11) NOT NULL,
+            `created` datetime NOT NULL,
+             PRIMARY KEY (`id`)
+          )  ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+        $this->execute("CREATE TABLE IF NOT EXISTS `staff_attachment_types` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `name` varchar(50) NOT NULL,
+            `order` int(3) DEFAULT NULL,
+            `visible` int(1) DEFAULT '1',
+			`editable` int(1) DEFAULT '1',
+			`default` int(1) DEFAULT '0',
+			`international_code` varchar(50) DEFAULT NULL,
+			`national_code` varchar(50) DEFAULT NULL,
+            `modified_user_id` int(11) DEFAULT NULL,
+            `modified` datetime DEFAULT NULL,
+            `created_user_id` int(11) NOT NULL,
+            `created` datetime NOT NULL,
+             PRIMARY KEY (`id`)
+          )  ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+        $this->execute("CREATE TABLE IF NOT EXISTS `student_attachment_types` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `name` varchar(50) NOT NULL,
+            `order` int(3) DEFAULT NULL,
+            `visible` int(1) DEFAULT '1',
+			`editable` int(1) DEFAULT '1',
+			`default` int(1) DEFAULT '0',
+			`international_code` varchar(50) DEFAULT NULL,
+			`national_code` varchar(50) DEFAULT NULL,
+            `modified_user_id` int(11) DEFAULT NULL,
+            `modified` datetime DEFAULT NULL,
+            `created_user_id` int(11) NOT NULL,
+            `created` datetime NOT NULL,
+             PRIMARY KEY (`id`)
+          )  ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 
-        // START STUDENT ATTACHMENT TYPE 
-        $table = $this->table('student_attachment_types', [
-            'collation' => 'utf8_general_ci',
-            'comment' => 'This table contains the list of Institution Attachment Types'
-        ]);
-        $table
-        ->addColumn('name', 'string', [
-            'default' => null,
-            'limit' => 50,
-            'null' => false
-        ])
-        ->addColumn('order', 'integer', [
-            'default' => null,
-            'limit' => 3,
-            'null' => false
-        ])
-        ->addColumn('visible', 'integer', [
-            'default' => 1,
-            'limit' => 1,
-            'null' => false
-        ])
-        ->addColumn('editable', 'integer', [
-            'default' => 1,
-            'limit' => 1,
-            'null' => false
-        ])
-        ->addColumn('default', 'integer', [
-            'default' => 0,
-            'limit' => 1,
-            'null' => false
-        ])
-        ->addColumn('international_code', 'string', [
-            'default' => null,
-            'limit' => 50,
-            'null' => true
-        ])
-        ->addColumn('national_code', 'string', [
-            'default' => null,
-            'limit' => 50,
-            'null' => true
-        ])
-        ->addColumn('modified_user_id', 'integer', [
-            'default' => null,
-            'limit' => 11,
-            'null' => true
-        ])
-        ->addColumn('modified', 'datetime', [
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('created_user_id', 'integer', [
-            'default' => null,
-            'limit' => 11,
-            'null' => false
-        ])
-        ->addColumn('created', 'datetime', [
-            'default' => null,
-            'null' => false
-        ])
-        ->addIndex('modified_user_id')
-        ->addIndex('created_user_id')
-        ->save();
-        //END STUDENT ATTACHMENT TYPE 
+        $connection = ConnectionManager::get('default');
 
+        $dbConfig = $connection->config();
+        $dbname = $dbConfig['database']; 
+        $CheckAreaIDExist = "SELECT COUNT(*)
+         FROM information_schema.columns 
+         WHERE table_name   = 'institution_attachments'
+         AND table_schema = '$dbname'
+         AND column_name  = 'institution_attachment_type_id'";
+         $tableData = $this->fetchAll($CheckAreaIDExist);
+         if($tableData[0][0] == 0){
+            $this->execute('ALTER TABLE `institution_attachments` ADD `institution_attachment_type_id` INT(11) NULL AFTER `id`');
+         }
 
-        // START STAFF ATTACHMENT TYPE 
-            $table = $this->table('staff_attachment_types', [
-            'collation' => 'utf8_general_ci',
-            'comment' => 'This table contains the list of Institution Attachment Types'
-        ]);
-        $table
-        ->addColumn('name', 'string', [
-            'default' => null,
-            'limit' => 50,
-            'null' => false
-        ])
-        ->addColumn('order', 'integer', [
-            'default' => null,
-            'limit' => 3,
-            'null' => false
-        ])
-        ->addColumn('visible', 'integer', [
-            'default' => 1,
-            'limit' => 1,
-            'null' => false
-        ])
-        ->addColumn('editable', 'integer', [
-            'default' => 1,
-            'limit' => 1,
-            'null' => false
-        ])
-        ->addColumn('default', 'integer', [
-            'default' => 0,
-            'limit' => 1,
-            'null' => false
-        ])
-        ->addColumn('international_code', 'string', [
-            'default' => null,
-            'limit' => 50,
-            'null' => true
-        ])
-        ->addColumn('national_code', 'string', [
-            'default' => null,
-            'limit' => 50,
-            'null' => true
-        ])
-        ->addColumn('modified_user_id', 'integer', [
-            'default' => null,
-            'limit' => 11,
-            'null' => true
-        ])
-        ->addColumn('modified', 'datetime', [
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('created_user_id', 'integer', [
-            'default' => null,
-            'limit' => 11,
-            'null' => false
-        ])
-        ->addColumn('created', 'datetime', [
-            'default' => null,
-            'null' => false
-        ])
-        ->addIndex('modified_user_id')
-        ->addIndex('created_user_id')
-        ->save();
-        //END STUDENT ATTACHMENT TYPE 
-
-
-        $this->execute('ALTER TABLE `user_attachments` ADD `student_attachment_type_id` INT(11) NULL AFTER `id`, ADD `staff_attachment_type_id` INT(11) NULL AFTER `student_attachment_type_id`');
-        $this->execute('ALTER TABLE `institution_attachments` ADD `institution_attachment_type_id` INT(11) NULL AFTER `id`');
+        $dbConfig = $connection->config();
+        $dbname = $dbConfig['database']; 
+        $CheckAreaIDExist = "SELECT COUNT(*)
+         FROM information_schema.columns 
+         WHERE table_name   = 'user_attachments'
+         AND table_schema = '$dbname'
+         AND column_name  = 'student_attachment_type_id'";
+         $tableData = $this->fetchAll($CheckAreaIDExist);
+         if($tableData[0][0] == 0){
+            $this->execute('ALTER TABLE `user_attachments` ADD `student_attachment_type_id` INT(11) NULL AFTER `id`, ADD `staff_attachment_type_id` INT(11) NULL AFTER `student_attachment_type_id`');
+         }
         //END USER ATTACHMENT..
 
     }
@@ -232,7 +111,6 @@ class POCOR5067 extends AbstractMigration
 
         $this->execute('DROP TABLE IF EXISTS `institution_attachment_types`');
         $this->execute('RENAME TABLE `zz_5067_institution_attachment_types` TO `institution_attachment_types`');
-
 
         //$this->execute('RENAME TABLE `zz_6286_security_functions` TO `security_functions`');
     }
