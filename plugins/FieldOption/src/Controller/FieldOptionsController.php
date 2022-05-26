@@ -171,4 +171,9 @@ class FieldOptionsController extends AppController
     public function MealImplementers()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     //student Meal benefit type POCOR-5692
     public function MealBenefitTypes()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
+    //START:POCOR-5067
+    public function InstitutionAttachmentTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
+    public function StaffAttachmentTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
+    public function StudentAttachmentTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
+    //END:POCOR-5067
 }
