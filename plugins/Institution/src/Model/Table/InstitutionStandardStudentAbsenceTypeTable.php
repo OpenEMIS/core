@@ -374,13 +374,13 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
             'key'   => 'institution_code',
             'field' => 'institution_code',
             'type'  => 'string',
-            'label' => __('School Code'),
+            'label' => __('Institution Code'),
         ];
         $newFields[] = [
             'key'   => 'institution_name',
             'field' => 'institution_name',
             'type'  => 'string',
-            'label' => __('School Name'),
+            'label' => __('Institution Name'),
         ];
         $newFields[] = [
             'key'   => 'education_grade_name',
