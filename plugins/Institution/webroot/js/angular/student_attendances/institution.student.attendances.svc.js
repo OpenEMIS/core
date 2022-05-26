@@ -105,6 +105,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         saveAbsences: saveAbsences,
         savePeriodMarked: savePeriodMarked,
+        getsavePeriodMarked: getsavePeriodMarked,//POCOR-6658
         isMarkableSubjectAttendance: isMarkableSubjectAttendance
     };
 
@@ -490,6 +491,40 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         .finally(function() {
             UtilsSvc.isAppendSpinner(false, 'institution-student-attendances-table');
         });        
+    }
+    /*
+     * PCOOR-6658 STARTS 
+     * Create function for save attendance for multigrade class also.
+     * author : Anubhav Jain <anubhav.jain@mail.vinove.com>
+     */
+    function getsavePeriodMarked(params) {
+        var extra = {
+            institution_id: params.institution_id,
+            institution_class_id: params.institution_class_id,
+            education_grade_id: params.education_grade_id,
+            academic_period_id: params.academic_period_id,
+            attendance_period_id: params.attendance_period_id,
+            day_id: params.day_id,
+            week_id: params.week_id,
+            week_start_day: params.week_start_day,
+            week_end_day: params.week_end_day,
+            subject_id : params.subject_id
+        };
+      
+        var success = function(response, deferred) {
+            console.log('getsavePeriodMarked');
+            console.log(response);
+            var classStudents = response;
+            if (angular.isObject(classStudents)) {
+                deferred.resolve(classStudents);
+            } else {
+                deferred.reject('There was an error when saving the record');
+            }
+        };
+
+        return StudentAttendances
+            .find('classStudentsWithAbsenceSave', extra)
+            .ajax({success: success, defer: true});
     }
 
     // column definitions
