@@ -1305,6 +1305,64 @@ class ReportCardsTable extends AppTable
                 })
                 ->toArray();
 
+             //After transferring from School A to School B all data copy but report card is blank now this issue fixed Start POCOR-6752,   
+            if (empty($entity)) {
+                $condition = [];
+                if (!empty($subjectList)) {
+                    $condition = [
+                        $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
+                        $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
+                        $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
+                        $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
+                        $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
+                        $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
+                    ];
+                } else {
+                    $condition = ['1 = 0'];
+                }
+
+                $entity = $AssessmentItemResults->find()
+                ->innerJoin(
+                    [$this->alias() => $this->table()],
+                    [
+                        $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
+                        $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
+                        $this->aliasField('education_grade_id = ') . $AssessmentItemResults->aliasField('education_grade_id'),
+                        $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id')
+                    ]
+                )
+                ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
+                ->where($condition)
+                ->formatResults(function (ResultSetInterface $results) {
+                    return $results->map(function ($row) {
+                        $resultType = $row['assessment_grading_option']['assessment_grading_type']['result_type'];
+
+                        switch ($resultType) {
+                            case 'MARKS':
+                                $row['marks_formatted'] = number_format($row['marks'], 2);
+                                break;
+                            case 'GRADES':
+                                $row['marks_formatted'] = $row['assessment_grading_option']['code'] . ' - ' . $row['assessment_grading_option']['name'];
+                                break;
+                            case 'DURATION':
+                                if (strlen($row['marks']) > 0) {
+                                    $duration = number_format($row['marks'], 2);
+
+                                    list($minutes, $seconds) = explode(".", $duration, 2);
+                                    $row['marks_formatted'] = $minutes . " : " . $seconds;
+                                    break;
+                                }
+                            default:
+                                $row['marks_formatted'] = '';
+                                break;
+                        }
+
+                        return $row;
+                    });
+                })
+                ->toArray();
+            }// End POCOR-6752
+
             return $entity;
         }
     }
