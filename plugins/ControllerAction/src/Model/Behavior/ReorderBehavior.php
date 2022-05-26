@@ -43,6 +43,7 @@ class ReorderBehavior extends Behavior {
 			}
 
 			if (!empty($ids)) {
+				$init = 1;
 				$originalOrder = $model
 					->find()
 					->select($primaryKey)
@@ -55,7 +56,14 @@ class ReorderBehavior extends Behavior {
 				$originalOrder = array_reverse($originalOrder);
 				foreach ($ids as $id) {
 					$orderValue = array_pop($originalOrder);
-					$model->updateAll([$orderField => $orderValue[$orderField]], [$id]);
+					/** POCOR-6677 starts - storing order as per reorder numbering to overcome duplication of order no*/
+					if ($model->alias() == 'SecurityRoles') {
+						$model->updateAll([$orderField => $init], [$id]);
+						$init++; 
+					} else {
+						$model->updateAll([$orderField => $orderValue[$orderField]], [$id]);
+					}
+					/** POCOR-6677 ends*/ 
 				}
 
 				$event = $model->dispatchEvent('ControllerAction.Model.afterReorder', [$ids], $model);
@@ -67,7 +75,9 @@ class ReorderBehavior extends Behavior {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		if ($entity->isNew()) {
+		/** POCOR-6677 starts- added AND condition to not do anything when model is SecurityRoles*/
+		$model = $this->_table;
+		if ($entity->isNew() && $model->alias() != 'SecurityRoles') {
 			$orderField = $this->config('orderField');
 			$filter = $this->config('filter');
 			$filterValues = $this->config('filterValues');
@@ -137,10 +147,14 @@ class ReorderBehavior extends Behavior {
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		$orderField = $this->config('orderField');
-		$filter = $this->config('filter');
-		$filterValues = $this->config('filterValues');
-		$this->updateOrder($entity, $orderField, $filter, $filterValues);
+		/** POCOR-6677 starts- added AND condition to not do anything when model is SecurityRoles*/
+		$model = $this->_table;
+		if ($model->alias() != 'SecurityRoles') {
+			$orderField = $this->config('orderField');
+			$filter = $this->config('filter');
+			$filterValues = $this->config('filterValues');
+			$this->updateOrder($entity, $orderField, $filter, $filterValues);
+		}
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
