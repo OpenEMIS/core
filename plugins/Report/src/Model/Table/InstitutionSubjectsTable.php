@@ -254,32 +254,21 @@ class InstitutionSubjectsTable extends AppTable  {
                     'label' => __('Institution Name')
                 ];
                 /**POCOR-6726 starts - uncommented area column*/
-                $newFields[] = [
-                    'key' => '',
-                    'field' => 'region_code',
-                    'type' => 'string',
-                    'label' => 'Region Code'
-                ];
-        
+                $AreaLevelTbl = TableRegistry::get('area_levels');
+                $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->hydrate(false)->toArray();
+                
                 $newFields[] = [
                     'key' => '',
                     'field' => 'region_name',
                     'type' => 'string',
-                    'label' => 'Region Name'
-                ];
-                
-                $newFields[] = [
-                    'key' => 'area_code',
-                    'field' => 'area_code',
-                    'type' => 'string',
-                    'label' => __('District Code')
+                    'label' => __($AreaLevelArr[1]['name'])
                 ];
 
                 $newFields[] = [
-                    'key' => 'area_name',
+                    'key' => '',
                     'field' => 'area_name',
                     'type' => 'string',
-                    'label' => __('District Name')
+                    'label' => __($AreaLevelArr[0]['name'])
                 ];
                 /**POCOR-6726 ends*/
                 $newFields[] = [
