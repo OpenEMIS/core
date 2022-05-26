@@ -16,7 +16,6 @@ class POCOR6753 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_6753_config_items` LIKE `config_items`');
         $this->execute('INSERT INTO `zz_6753_config_items` SELECT * FROM `config_items`');
 
-        //Update security functions for Absence delete permission
         $this->execute(
             'UPDATE `config_items` SET `value` = 1 
             WHERE `name` = "First Day of Week" AND `code` = "first_day_of_week"
