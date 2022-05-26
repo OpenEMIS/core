@@ -13,8 +13,8 @@ class POCOR6753 extends AbstractMigration
     public function up()
     {
         //backup
-        // $this->execute('CREATE TABLE `zz_6753_config_items` LIKE `config_items`');
-        // $this->execute('INSERT INTO `zz_6753_config_items` SELECT * FROM `config_items`');
+        $this->execute('CREATE TABLE `zz_6753_config_items` LIKE `config_items`');
+        $this->execute('INSERT INTO `zz_6753_config_items` SELECT * FROM `config_items`');
 
         //Update security functions for Absence delete permission
         $this->execute(
