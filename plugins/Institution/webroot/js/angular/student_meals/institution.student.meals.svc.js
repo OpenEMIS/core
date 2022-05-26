@@ -265,23 +265,17 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             .ajax({success: success, defer: true});
     }
 
-    function getDayListOptions(academicPeriodId, weekId, institutionId) {
+    function getDayListOptions(academicPeriodId, weekId, institutionId, current_week_number_selected, current_day_number) {
         var success = function(response, deferred) {
+            console.log('response.data.data');
+            console.log(response.data.data);
             var dayList = response.data.data;
             //START:POCOR-6681 // Exclude days after current day for current academic period
-            var log = [];
-            var checkIsCurrent = 0;
-            angular.forEach(dayList, function(value, key) {
-                if(value['selected'] == true){
-                    checkIsCurrent = 1;
-                    log = key;
-                }
-                },log);
-                if(checkIsCurrent == 1){
-                    dayList.length = log+1;
-                 }else{
-                    dayList.length =  dayList.length;
-                 }
+            if(current_week_number_selected == 3 || current_week_number_selected == 0){
+                dayList.length = ++current_day_number;
+            }else{
+                dayList.length =  dayList.length;
+            }
             //END:POCOR-6681
             if (angular.isObject(dayList) && dayList.length > 0) {
                 deferred.resolve(dayList);
@@ -295,7 +289,8 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                 academic_period_id: academicPeriodId,
                 week_id: weekId,
                 institution_id: institutionId,
-                school_closed_required: true
+                school_closed_required: true,
+                current_week_number_selected:current_week_number_selected
             })
             .ajax({success: success, defer: true});
     }
