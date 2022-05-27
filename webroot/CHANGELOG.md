@@ -1,3 +1,12 @@
+### [3.75.7] - 2022-05-27
+- Implemented: Add a Type field to Institution, Staff and Student Attachments
+- Bug Fixed: Institutions>Academic>Classes: Unable to assign particular teacher
+- Bug Fixed: Report>Institutions>Subjects: Atoll to be included in the report before area and Subjects which there are no assigned students to be removed from the report
+- Bug Fixed: Reports>Institution>Special Needs Facilities: Report to include Atoll and Island as well.
+- Bug Fixed: Administration>Localisation>Translation : Student Absences by Absence Type
+- Bug Fixed: Institution>Performance>Report Cards: Report card is not showing in progress
+- Bug Fixed: Institution>Meals>Students: Current week is not showing properly
+
 ### [3.75.6] - 2022-05-24
 - Bug Fixed: Reports > Students > Students Out of School: Add new columns for contacts
 - Bug Fixed: Administration>Security>Roles: Roles that are arranged are not working properly in Appointment>Positions
