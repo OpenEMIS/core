@@ -48,7 +48,7 @@ $this->start('panelBody');
         <div class="select">
             <label><?=__('Competency Period');?>:</label>
             <div class="input-select-wrapper">
-                <select name="competency_period" ng-options="period.id as period.name for period in InstitutionStudentCompetenciesController.periodOptions" ng-model="InstitutionStudentCompetenciesController.selectedPeriod" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(true);">
+                <select name="competency_period" ng-options="period.id as period.code_name for period in InstitutionStudentCompetenciesController.periodOptions" ng-model="InstitutionStudentCompetenciesController.selectedPeriod" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(true);">
                     <option value="" ng-if="InstitutionStudentCompetenciesController.periodOptions.length == 0"><?= __('No Options') ?></option>
                 </select>
             </div>
