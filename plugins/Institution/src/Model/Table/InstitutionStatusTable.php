@@ -57,7 +57,6 @@ class InstitutionStatusTable extends ControllerActionTable
          */
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
-        
 
         $this->hasMany('InstitutionActivities', ['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionAttachments', ['className' => 'Institution.InstitutionAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -284,7 +283,6 @@ class InstitutionStatusTable extends ControllerActionTable
             $withdrawStudentsOptions[$databaseType['id']] = __($databaseType['name']);
         }
         $selectedDatabaseType = key($withdrawStudentsOptions);
-        //echo "<pre>";print_r($withdrawStudentsOptions);die;
         return compact('withdrawStudentsOptions', 'selectedDatabaseType');
     }
 
@@ -657,7 +655,6 @@ class InstitutionStatusTable extends ControllerActionTable
 
 public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
 {
-    // echo "<pre>";print($entity);die;
     if (!$entity->isNew()) {
         $this->validator()->remove('area_id', 'required');
         $this->validator()->remove('institution_locality_id', 'required');
