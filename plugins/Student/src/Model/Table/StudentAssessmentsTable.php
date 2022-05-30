@@ -36,20 +36,33 @@ class StudentAssessmentsTable extends ControllerActionTable
 
     public function getTemplateOptions($period, $templateQuerystring)
     {
-        $templateOptions = $this->Assessments
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $studentGrades = $InstitutionStudents->find()
+            ->where([
+                $InstitutionStudents->aliasField('student_id') => $this->Auth->User('id'),
+                $InstitutionStudents->aliasField('academic_period_id') => $period
+            ])
+            ->extract('education_grade_id')
+            ->toArray();
+        if(!empty($studentGrades)){
+            $templateOptions = $this->Assessments
                                 ->find('list')
                                 ->where([
-                                    $this->Assessments->aliasField('academic_period_id') => $period
+                                    $this->Assessments->aliasField('academic_period_id') => $period,
+                                    $this->Assessments->aliasField('education_grade_id IN ') => $studentGrades
                                 ])
                                 ->order([$this->Assessments->aliasField('created') => 'DESC'])
                                 ->toArray();
+        }else{
+            $templateOptions = [];
+        }
         if (empty($templateOptions) && $this->action == 'index') { //show no template option on index page only.
-            $templateOptions['empty'] = $this->getMessage('Assessments.noTemplates');
+           // $templateOptions['empty'] = $this->getMessage('Assessments.noTemplates');
         }
         if ($templateQuerystring) {
             $selectedTemplate = $templateQuerystring;
-        } else {
-            $selectedTemplate = key($templateOptions);
+        } else { 
+             $selectedTemplate = key($templateOptions);
         }
         return compact('templateOptions', 'selectedTemplate');
     }
