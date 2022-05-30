@@ -57,7 +57,7 @@ class InstitutionStatusTable extends ControllerActionTable
          */
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
-        $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
+        
 
         $this->hasMany('InstitutionActivities', ['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionAttachments', ['className' => 'Institution.InstitutionAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -368,6 +368,7 @@ class InstitutionStatusTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
         $this->setFieldOrder([
             'information_section',
             'logo_content',
