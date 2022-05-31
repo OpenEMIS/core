@@ -14,7 +14,7 @@ class POCOR6725 extends AbstractMigration
     {
         /** Create OpenEMIS Core report_assessment_missing_mark_entry table */
         $this->execute('
-        CREATE TABLE `summary_institution_student_absences`(
+        CREATE TABLE IF NOT EXISTS `summary_institution_student_absences`(
             `institution_id` int(10) DEFAULT NULL,
             `institution_code` varchar(100) DEFAULT NULL,
             `institution_name` varchar(100) DEFAULT NULL,
