@@ -17,8 +17,8 @@ class POCOR6757 extends AbstractMigration
         $this->execute('CREATE TABLE `z_6757_report_queries` LIKE `report_queries`');
 
         /** UPDATE OpenEMIS Core report_queries */
-        $this->execute('UPDATE report_queries SET frequency = `week` WHERE name = `report_student_assessment_summary_truncate`');
-        $this->execute('UPDATE report_queries SET frequency = `week` WHERE name = `report_student_assessment_summary_insert`');
+        $this->execute('UPDATE report_queries SET frequency = week WHERE name = report_student_assessment_summary_truncate');
+        $this->execute('UPDATE report_queries SET frequency = week WHERE name = report_student_assessment_summary_insert');
         
     }
 
