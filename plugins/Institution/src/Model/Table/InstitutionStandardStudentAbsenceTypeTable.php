@@ -175,27 +175,26 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
             {
                 return $results->map(function ($row)
                 {
-                    $studentAbsenceReasonData = TableRegistry::get('student_absence_reasons');
-                   // $absence = TableRegistry::get('institution_student_absence_details');
-                   // print_r($studentAbsenceReason);die('pkk');
+                    $studentAbsenceReasonData = TableRegistry::get('Institution.StudentAbsenceReasons');
+                    //$where[$this->aliasField('student_absence_reason_id')] = $row['student_absence_reason_id'];
+                    $where[$this->aliasField('student_id')] = $row['student_id'];
+                    $where[$this->aliasField('absence_type_id')] = 1;
                     $row['referrer_full_name'] = $row['first_name'].' '.$row['middle_name'].' '.$row['third_name'].' '.$row['last_name'];
                     //POCOR-6754
                     if($row['absence_type_id']==1){
-                        $absenceType = $studentAbsenceReasonData->find('list')
+                        $absenceType = $studentAbsenceReasonData->find()
                         ->select([
                             'name' => "COUNT(".$this->aliasField('student_absence_reason_id').")",
-                            'custom_field_id' => 'student_absence_reasons.id',
+                            'custom_field_id' => $studentAbsenceReasonData->aliasField('id'),
+                            /*'reason' => $this->aliasField('student_absence_reason_id'),
+                            'absence_type' => $this->aliasField('absence_type_id')*/
                         ])
-                        ->leftJoin([$studentAbsenceReasonData->alias() => $studentAbsenceReasonData->table()],
-                                [$studentAbsenceReasonData->aliasField('id = ') . $this->aliasField('student_absence_reason_id')])
-                        /*->innerJoin(
-                            ['StudentAbsenceReasons' => 'student_absence_reasons'],
-                            [
-                                'StudentAbsenceReasons.id' => $this->aliasField('student_absence_reason_id')
-                            ]
-                        )*/
-                        ->where(['student_absence_reasons.id'=>$row['student_absence_reason_id']])
-                        ->toArray();
+                        ->innerJoin([$this->alias() => $this->table()],
+                                [$this->aliasField('student_absence_reason_id = ') . $studentAbsenceReasonData->aliasField('id')])
+                        ->Where($where);
+                        //->group([$this->aliasField('student_id')])
+                        //->toArray();
+                        //print_r($absenceType->Sql());die('pk');
                         if(!empty($absenceType)){
                             foreach($absenceType as $data) {
                                // $row['name'] = $data->name;
