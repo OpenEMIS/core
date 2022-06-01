@@ -1,3 +1,14 @@
+### [3.75.8] - 2022-06-01
+- Bug Fixed: Institutions>Attendance>Students: Teacher is unable to mark attendance for multigrade classes
+- Bug Fixed: Institutions>Performance>Report Cards: All classes dropdown is showing all classes process even when it is only generate all for one class
+- Bug Fixed: Personal>Student>Academic: No filter or dropdown button to allow student to view past years assessment
+- Bug Fixed: Institutions>General>Overview: Error and notification message appears
+- Bug Fixed: Institution > Performance > Competencies: Unable to see competencies as in view mode when editing
+- Bug Fixed: Institutions > Report Card > Comments: Total Mark for a subject should be the same value as Institutions > Performance > Assessments > Subject tab > Total Mark column
+- Bug Fixed: Report : Events and Procedures are not updating Summary Tables
+- Bug Fixed: Administration>Meals:Cannot put the amount higher than 1000
+- Bug Fixed: Administration>System Setup>Academic Period: 404 error when deleting academic period
+
 ### [3.75.7] - 2022-05-27
 - Implemented: Add a Type field to Institution, Staff and Student Attachments
 - Bug Fixed: Institutions>Academic>Classes: Unable to assign particular teacher
