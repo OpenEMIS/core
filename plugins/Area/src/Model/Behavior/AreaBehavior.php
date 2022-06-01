@@ -32,4 +32,33 @@ class AreaBehavior extends Behavior {
 			return $query;
 		}
 	}
+
+	/** Get the feature of advance search of the InstitutionShifts
+		* @author Rahul Singh <rahul.singh@mail.valuecoder.com>
+		*return array
+		*POCOR-6764
+	*/
+
+	public function findShiftOptions(Query $query, array $options) {
+		if (array_key_exists('shift_option_id', $options) && array_key_exists('columnName', $options) && array_key_exists('table', $options)) {
+			$Table = '';
+			if ($options['table'] == 'institution_shifts') {
+				$Table = TableRegistry::get('Institution.InstitutionShifts');
+			}
+			if (!empty($options['table'])) {
+				$tableAlias = $options['columnName'].'institution_shifts';
+				$query->LeftJoin([ $tableAlias => $options['table']], [
+					$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
+				])
+				->LeftJoin(['ShiftOptions' => 'shift_options'], [
+					'ShiftOptions.id = '. $tableAlias.'.shift_option_id',
+					$tableAlias.'.shift_option_id =' => $options['shift_option_id'],
+				])
+				->where([$tableAlias.'.shift_option_id =' => $options['shift_option_id']])
+				->group($tableAlias.'.institution_id');
+			}
+		} else {
+			return $query;
+		}
+	}
 }
