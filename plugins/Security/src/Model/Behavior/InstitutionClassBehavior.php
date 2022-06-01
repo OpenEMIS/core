@@ -86,13 +86,13 @@ class InstitutionClassBehavior extends Behavior
                                         "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
                                     ]
                                 ],
-                                'InstitutionSubjectStaff.staff_id' => $userId,
+                                //'InstitutionSubjectStaff.staff_id' => $userId, //POCOR-6658 - commented condition as it was stopping staff to view classes option which are not linked with class's subjects, which is incorrect.
                                 'OR' => [
                                     'InstitutionSubjectStaff.end_date IS NULL',
                                     'InstitutionSubjectStaff.end_date >= ' => $today->format('Y-m-d')
                                 ],
                                 'SecurityRoles.code' => 'TEACHER',
-                                "InstitutionClasses.staff_id != " => $userId  
+                                "InstitutionClasses.staff_id" => $userId //POCOR-6658 modified condition != to = as class should linked with logged in staff
                             ]
                         ]
                     ]
