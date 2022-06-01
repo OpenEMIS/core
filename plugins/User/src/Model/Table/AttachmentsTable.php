@@ -20,7 +20,7 @@ class AttachmentsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
-        //$this->addBehavior('User.SetupTab');
+        $this->addBehavior('User.SetupTab'); //POCOR-6756
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         //START:POCOR-5067
