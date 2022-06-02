@@ -753,4 +753,14 @@ class SecurityRolesTable extends ControllerActionTable
 
         return (!empty($deputyPrincipalData))? $deputyPrincipalData->id: null;
     }
+    //POCOR-6734 starts
+    public function getTeacherRoleId()
+    {
+        $teacherData = $this->find()
+            ->select([$this->primaryKey()])
+            ->where([$this->aliasField('code') => 'TEACHER'])
+            ->first();
+
+        return (!empty($teacherData))? $teacherData->id: null;
+    }//POCOR-6734 ends
 }

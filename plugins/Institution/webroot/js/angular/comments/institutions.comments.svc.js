@@ -38,7 +38,11 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         renderSelect: renderSelect,
         getRowData: getRowData,
         checkStudentReportCardExists: checkStudentReportCardExists,
-        saveSingleRecordData: saveSingleRecordData
+        saveSingleRecordData: saveSingleRecordData,
+        getPrincipalViewPermissions : getPrincipalViewPermissions,//POCOR-6734 
+        getHomeroomTeacherViewPermissions : getHomeroomTeacherViewPermissions,//POCOR-6734 
+        getMySubjectTeacherViewPermissions : getMySubjectTeacherViewPermissions,//POCOR-6734 
+        getAllSubjectTeacherViewPermissions : getAllSubjectTeacherViewPermissions//POCOR-6734
     };
 
     return service;
@@ -57,6 +61,115 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 defer: true
             });
     };
+
+    //POCOR-6734 starts
+    function getPrincipalViewPermissions(params, institutionId) {
+        var extra = {
+            staff_id: params.id,
+            is_staff: params.is_staff,
+            super_admin: params.super_admin,
+            institution_id: institutionId
+        };
+        console.log('PrincipalViewPermissions->extra svc==>>');
+        console.log(extra);
+        
+        var success = function(response, deferred) {
+            console.log('getprincipalViewPermissions response svc==>>');
+            console.log(response);
+            var permissionData = response;
+            if (angular.isObject(permissionData)) {
+                deferred.resolve(permissionData);
+            } else {
+                deferred.reject('No proper data found regarding to permission.');
+            }
+        };
+
+        return StaffTable
+            .find('principalViewPermissions', extra)
+            .ajax({success: success, defer: true});
+    }
+
+    function getHomeroomTeacherViewPermissions(params,institutionId, classId) {
+        var extra = {
+            staff_id: params.id,
+            is_staff: params.is_staff,
+            super_admin: params.super_admin,
+            institution_class_id: classId,
+            institution_id: institutionId
+        };
+        console.log('HomeroomTeacherViewPermissions->extra svc==>>');
+        console.log(extra);
+        
+        var success = function(response, deferred) {
+            console.log('getHomeroomViewPermissions response svc==>>');
+            console.log(response);
+            var permissionData = response;
+            if (angular.isObject(permissionData)) {
+                deferred.resolve(permissionData);
+            } else {
+                deferred.reject('No proper data found regarding to permission.');
+            }
+        };
+
+        return StaffTable
+            .find('homeroomViewPermissions', extra)
+            .ajax({success: success, defer: true});
+    }
+
+    function getMySubjectTeacherViewPermissions(params,institutionId, classId) {
+        var extra = {
+            staff_id: params.id,
+            is_staff: params.is_staff,
+            super_admin: params.super_admin,
+            institution_class_id: classId,
+            institution_id: institutionId
+        };
+        console.log('MySubjectTeacherViewPermissions->extra svc==>>');
+        console.log(extra);
+        
+        var success = function(response, deferred) {
+            console.log('getMySubjectTeacherViewPermissions response svc==>>');
+            console.log(response);
+            var permissionData = response;
+            if (angular.isObject(permissionData)) {
+                deferred.resolve(permissionData);
+            } else {
+                deferred.reject('No proper data found regarding to permission.');
+            }
+        };
+
+        return StaffTable
+            .find('mySubjectTeacherViewPermissions', extra)
+            .ajax({success: success, defer: true});
+    }
+
+    function getAllSubjectTeacherViewPermissions(params,institutionId,role) {
+        var extra = {
+            staff_id: params.id,
+            is_staff: params.is_staff,
+            super_admin: params.super_admin,
+            institution_id: institutionId,
+            role: role,
+        };
+        console.log('AllSubjectTeacherViewPermissions->extra svc==>>');
+        console.log(extra);
+      
+        var success = function(response, deferred) {
+            console.log('getAllSubjectTeacherViewPermissions response svc==>>');
+            console.log(response);
+            var permissionData = response;
+            if (angular.isObject(permissionData)) {
+                deferred.resolve(permissionData);
+            } else {
+                deferred.reject('No proper data found regarding to permission.');
+            }
+        };
+
+        return StaffTable
+            .find('allSubjectTeacherViewPermissions', extra)
+            .ajax({success: success, defer: true});
+    }
+    //POCOR-6734 ends
 
     function getEditPermissions(reportCardId, institutionId, classId, currentUserId) {
         var promises = [];
@@ -119,6 +232,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
 
         this.getEditPermissions(reportCardId, institutionId, classId, currentUserId)
             .then(function(response) {
+                console.log('getEditPermissions svc==>>');
+                console.log(response);
                 isSuperAdmin = response[0];
                 principalPermission = response[1].data;
                 homeroomTeacherPermission = response[2].data;
@@ -164,7 +279,25 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                             });
                         }, tabs);
                     }
-                }
+                }else if((myteacherPermission == 1) && (teacherCommentsRequired == 0)){//POCOR-6734 starts
+                    subjects = response.data;
+                    console.log('subjects svc===>>>>>>>');
+                    console.log(response.data);
+                    if (angular.isObject(subjects) && subjects.length > 0) {
+                        angular.forEach(subjects, function(subject, key) {
+                            editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0);
+                            if((myteacherPermission == 1) && (teacherCommentsRequired == 0) && currentUserId == subject.staff_id){
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });   
+                            }
+                        }, tabs);
+                    }
+                }//POCOR-6734 ends
             }, function(error) {
                 console.log(error);
             })
