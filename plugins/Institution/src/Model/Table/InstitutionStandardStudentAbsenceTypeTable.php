@@ -176,7 +176,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
                 return $results->map(function ($row)
                 {
                     $studentAbsenceReasonData = TableRegistry::get('Institution.StudentAbsenceReasons');
-                    //$where[$this->aliasField('student_absence_reason_id')] = $row['student_absence_reason_id'];
+                    $absence = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
                     $where[$this->aliasField('student_id')] = $row['student_id'];
                     $where[$this->aliasField('absence_type_id')] = 1;
                     $row['referrer_full_name'] = $row['first_name'].' '.$row['middle_name'].' '.$row['third_name'].' '.$row['last_name'];
@@ -184,23 +184,63 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
                     if($row['absence_type_id']==1){
                         $absenceType = $studentAbsenceReasonData->find()
                         ->select([
-                            'name' => "COUNT(".$this->aliasField('student_absence_reason_id').")",
-                            'custom_field_id' => $studentAbsenceReasonData->aliasField('id'),
-                            /*'reason' => $this->aliasField('student_absence_reason_id'),
-                            'absence_type' => $this->aliasField('absence_type_id')*/
+                            
+                            'reason' => $this->aliasField('student_absence_reason_id'),
+                            'absence_type' => $this->aliasField('absence_type_id')
                         ])
                         ->innerJoin([$this->alias() => $this->table()],
                                 [$this->aliasField('student_absence_reason_id = ') . $studentAbsenceReasonData->aliasField('id')])
-                        ->Where($where);
-                        //->group([$this->aliasField('student_id')])
-                        //->toArray();
-                        //print_r($absenceType->Sql());die('pk');
+                        ->Where($where)
+                        ->toArray();
+                        $one = [];
+                        
                         if(!empty($absenceType)){
-                            foreach($absenceType as $data) {
-                               // $row['name'] = $data->name;
-                                $row[$data->custom_field_id] = $data->name;
+                            foreach($absenceType as $val) {
+                                if($val['reason']==1){
+                                  $one[] = $val['absence_type'];
+                                }elseif($val['reason']==2){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==3){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==4){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==5){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==6){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==7){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==8){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==9){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==10){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==11){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==12){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==13){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==14){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==15){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==16){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==17){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==18){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==19){
+                                    $one[] = $val['absence_type'];
+                                }elseif($val['reason']==20){
+                                    $one[] = $val['absence_type'];
+                                }
                                 
                             }
+                            $row[$val->reason] = count($one);
+                            
                         }
 
                     }
@@ -292,13 +332,13 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
             'key'   => 'institution_code',
             'field' => 'institution_code',
             'type'  => 'string',
-            'label' => __('School Code'),
+            'label' => __('Institution Code'),
         ];
         $newFields[] = [
             'key'   => 'institution_name',
             'field' => 'institution_name',
             'type'  => 'string',
-            'label' => __('School Name'),
+            'label' => __('Institution Name'),
         ];
         $newFields[] = [
             'key'   => 'education_grade_name',
@@ -346,14 +386,14 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
         $studentAbsenceReason = TableRegistry::get('student_absence_reasons');        
         $customFieldData = $studentAbsenceReason->find()
             ->select([
-                'custom_field_id' => 'student_absence_reasons.id',
+                'reason' => 'student_absence_reasons.id',
                 'custom_field' => 'student_absence_reasons.name',
             ])
             ->toArray();
         
-        foreach($customFieldData as $data) {
-            $custom_field_id = $data->custom_field_id;
-            $custom_field = $data->custom_field;
+        foreach($customFieldData as $val) {
+            $custom_field_id = $val->reason;
+            $custom_field = $val->custom_field;
             $newFields[] = [
                 'key' => '',
                 'field' => $custom_field_id,
@@ -361,7 +401,6 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
                 'label' => __($custom_field)
             ];
         }
-        
 
         $fields->exchangeArray($newFields);
     } 
