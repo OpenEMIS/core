@@ -2327,41 +2327,59 @@ class StaffTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
         $staffId = $options['staff_id'];
         $superAdmin = $options['super_admin'];
-        $role = $options['role'];
-
-        $permissionModule = ['My Subjects','Comments'];
-        $categories = ['Academic','Report Cards'];
-        $SecurityFunctionsTbl = TableRegistry::get('security_functions');
-        $SecurityFunctions = $SecurityFunctionsTbl->find()
-                                ->select([$SecurityFunctionsTbl->aliasField('id')])
-                                ->where([
-                                    $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
-                                    $SecurityFunctionsTbl->aliasField('category IN') => $categories,
-                                ])->hydrate(false)->toArray();
-
-        /**/
-        $funArr = [];
-        if(!empty($SecurityFunctions)){
-            foreach ($SecurityFunctions as $funkey => $funval) {
-                $funArr[$funkey] = $funval['id'];
-            }
-        }
-
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-        $RoleId = $SecurityRoles->getTeacherRoleId();
-        $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
-        $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
-                                ->where([
-                                    $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $funArr,
-                                    $SecurityRoleFunctionsTbl->aliasField('security_role_id') => $RoleId,
-                                    $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
-                                ])->hydrate(false)->toArray();
         
-        if(!empty($SecurityRoleFunctions)){
-            foreach ($SecurityRoleFunctions as $rkey => $rvalue) {
-                if($rvalue['_view'] == 1){
-                    $count++;
-                } 
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $teacherRoleId = $SecurityRoles->getTeacherRoleId();
+
+        $SecurityGroupInsTbl = TableRegistry::get('security_group_institutions');
+        $SecurityGroupsTbl = TableRegistry::get('security_groups');
+        $SecurityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $SecurityGroupIns = $SecurityGroupInsTbl->find()
+                            ->innerJoin([$SecurityGroupsTbl->alias() => $SecurityGroupsTbl->table()], [
+                                $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('institution_id')
+                            ])
+                            ->innerJoin([$SecurityGroupUsersTbl->alias() => $SecurityGroupUsersTbl->table()], [
+                                $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $SecurityGroupsTbl->aliasField('id')
+                            ])
+                            ->where([
+                                $SecurityGroupInsTbl->aliasField('institution_id') => $institutionId,
+                                $SecurityGroupUsersTbl->aliasField('security_user_id') => $staffId,
+                                $SecurityGroupUsersTbl->aliasField('security_role_id') => $teacherRoleId,
+                            ])->count();
+        $count = 0;
+        if($SecurityGroupIns > 0){
+            $permissionModule = ['My Subjects','Comments'];
+            $categories = ['Academic','Report Cards'];
+            $SecurityFunctionsTbl = TableRegistry::get('security_functions');
+            $SecurityFunctions = $SecurityFunctionsTbl->find()
+                                    ->select([$SecurityFunctionsTbl->aliasField('id')])
+                                    ->where([
+                                        $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
+                                        $SecurityFunctionsTbl->aliasField('category IN') => $categories,
+                                    ])->hydrate(false)->toArray();
+
+            /**/
+            $funArr = [];
+            if(!empty($SecurityFunctions)){
+                foreach ($SecurityFunctions as $funkey => $funval) {
+                    $funArr[$funkey] = $funval['id'];
+                }
+            }
+
+            $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
+            $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
+                                    ->where([
+                                        $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $funArr,
+                                        $SecurityRoleFunctionsTbl->aliasField('security_role_id') => $teacherRoleId,
+                                        $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
+                                    ])->hydrate(false)->toArray();
+            
+            if(!empty($SecurityRoleFunctions)){
+                foreach ($SecurityRoleFunctions as $rkey => $rvalue) {
+                    if($rvalue['_view'] == 1){
+                        $count++;
+                    } 
+                }
             }
         }
 
