@@ -173,9 +173,8 @@ class InstitutionsTable extends ControllerActionTable
 
         // specify order of advanced search fields
         $advancedSearchFieldOrder = [
-            'shift_type','alternative_name', 'classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'education_programmes',
-            'code', 'name'
+            'code', 'name','classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id',
+            'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'education_programmes','alternative_name','shift_type'
         ];
         $this->addBehavior('AdvanceSearch', [
             'display_country' => false,
