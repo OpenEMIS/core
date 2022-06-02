@@ -61,4 +61,105 @@ class AreaBehavior extends Behavior {
 			return $query;
 		}
 	}
+
+	/** Get the feature of advance search of the  (Owner/Occupier)
+		* @author Rahul Singh <rahul.singh@mail.valuecoder.com>
+		*return array
+		*POCOR-6764
+	*/
+
+	public function findShiftOwnership(Query $query, array $options) {
+		if (array_key_exists('shift_ownership', $options) && array_key_exists('columnName', $options) && array_key_exists('table', $options)) {
+			$Table = '';
+			if ($options['table'] == 'institution_shifts') {
+				$Table = TableRegistry::get('Institution.InstitutionShifts');
+			}
+			if (!empty($options['table'])) {
+				$tableAlias = $options['columnName'].'institution_shifts';
+
+				if ($options['shift_ownership'] == 1) {
+					$query->LeftJoin([ $tableAlias => $options['table']], [
+						$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
+					])->group($tableAlias.'.institution_id');
+				}
+				else{
+					$InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+					$academicPeriod = $this->getCurrent();
+					$data = $InstitutionShifts->find('all')
+							->select(['institution_id','location_institution_id',
+								'shift_ownershipss' => '(
+								CASE
+								WHEN '.$InstitutionShifts->aliasField('institution_id = location_institution_id').' THEN '."false".'
+								ELSE '."true".'
+								END
+							  )',
+							])
+							->where(['academic_period_id =' => $academicPeriod])
+							->group('location_institution_id')
+							->toArray();
+
+					$institutionId = [];
+					foreach ($data as $key => $value) {
+						if ($value->shift_ownershipss == 1){
+							$institutionId [] =$value->location_institution_id;
+						}
+					}
+
+					if (!empty($institutionId)) {
+						$query->LeftJoin([ $tableAlias => $options['table']], [
+							$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
+						])
+						->where([$tableAlias.'.location_institution_id IN' => $institutionId])
+						->group($tableAlias.'.location_institution_id');
+					}
+					else{
+						return $query;
+					}
+				}
+			}
+		} else {
+			return $query;
+		}
+	}
+
+	/** Get the feature of get current
+		* @author Rahul Singh <rahul.singh@mail.valuecoder.com>
+		*return array
+		*POCOR-6764
+	*/
+
+	public function getCurrent()
+    {
+    	$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $query = $AcademicPeriod->find('all')
+                    ->select([$AcademicPeriod->aliasField('id')])
+                    ->where([
+                        $AcademicPeriod->aliasField('editable') => 1,
+                        $AcademicPeriod->aliasField('visible').' > 0',
+                        $AcademicPeriod->aliasField('current') => 1,
+                        $AcademicPeriod->aliasField('parent_id').' > 0',
+                    ])
+                    ->order(['start_date DESC']);
+        $countQuery = $query->count();
+        if ($countQuery > 0) {
+            $result = $query->first();
+            return $result->id;
+        } else {
+            $query = $AcademicPeriod->find('all')
+                    ->select([$AcademicPeriod->aliasField('id')])
+                    ->where([
+                        $AcademicPeriod->aliasField('editable') => 1,
+                        $AcademicPeriod->aliasField('visible').' > 0',
+                        $AcademicPeriod->aliasField('parent_id').' > 0',
+                    ])
+                    ->order(['start_date DESC']);
+            $countQuery = $query->count();
+            if ($countQuery > 0) {
+                $result = $query->first();
+                return $result->id;
+            } else {
+                return 0;
+            }
+        }
+    }
 }
