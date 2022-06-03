@@ -314,13 +314,13 @@ class AdvanceSearchBehavior extends Behavior
                             $tableName = 'institution_shifts';
                             $id = $advancedSearchBelongsTo[$key];
                             $InstitutionShiftsTable = TableRegistry::get('Institution.InstitutionShifts');
-                           $query->find('ShiftOptions', ['shift_option_id' => $id, 'columnName' => 'shift_option_id', 'table' => $tableName]);
+                           $query->find('ShiftOptions', ['shift_option_id' => $id, 'columnName' => 'shift_option_id', 'table' => $tableName,'conditionCheck' => $advancedSearchBelongsTo]);
                             break;
                         case 'alternative_name':
                             $tableName = 'institution_shifts';
                             $id = $advancedSearchBelongsTo[$key];
                             $InstitutionShiftsTable = TableRegistry::get('Institution.InstitutionShifts');
-                           $query->find('ShiftOwnership', ['shift_ownership' => $id, 'columnName' => 'shift_ownership', 'table' => $tableName]);
+                           $query->find('ShiftOwnership', ['shift_ownership' => $id, 'columnName' => 'shift_ownership', 'table' => $tableName,'conditionCheck' => $advancedSearchBelongsTo]);
                             break;
 
                            //End POCOR-6764
