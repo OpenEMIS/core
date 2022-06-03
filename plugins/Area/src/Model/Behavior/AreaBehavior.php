@@ -90,11 +90,6 @@ class AreaBehavior extends Behavior {
 							$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
 						])->where([$conditions])->group($tableAlias.'.institution_id');
 					}
-					else{
-						$query->LeftJoin([ $tableAlias => $options['table']], [
-							$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
-						])->group($tableAlias.'.institution_id');
-					}
 				}
 				else{
 					$InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
