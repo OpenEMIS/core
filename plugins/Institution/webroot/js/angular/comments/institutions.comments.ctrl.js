@@ -91,7 +91,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             if(homeroomTeacherPermissionData.data <= 0){
                 vm.homeroomTeacherCommentsRequired = 0;
             }
-            return InstitutionsCommentsSvc.getMySubjectTeacherViewPermissions(userData, $scope.institutionId);
+            return InstitutionsCommentsSvc.getMySubjectTeacherViewPermissions(userData, $scope.institutionId,$scope.classId);
         }, function(error)
         {
             // No getHomeroomTeacherViewPermissions
