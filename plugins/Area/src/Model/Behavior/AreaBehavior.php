@@ -46,16 +46,21 @@ class AreaBehavior extends Behavior {
 				$Table = TableRegistry::get('Institution.InstitutionShifts');
 			}
 			if (!empty($options['table'])) {
-				$tableAlias = $options['columnName'].'institution_shifts';
-				$query->LeftJoin([ $tableAlias => $options['table']], [
-					$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
-				])
-				->LeftJoin(['ShiftOptions' => 'shift_options'], [
-					'ShiftOptions.id = '. $tableAlias.'.shift_option_id',
-					$tableAlias.'.shift_option_id =' => $options['shift_option_id'],
-				])
-				->where([$tableAlias.'.shift_option_id =' => $options['shift_option_id']])
-				->group($tableAlias.'.institution_id');
+				if (!empty($options['conditionCheck']['alternative_name']) && !empty($options['shift_option_id'])) {
+					return $query;
+				}
+				else{
+					$tableAlias = $options['columnName'].'institution_shifts';
+					$query->LeftJoin([ $tableAlias => $options['table']], [
+						$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
+					])
+					->LeftJoin(['ShiftOptions' => 'shift_options'], [
+						'ShiftOptions.id = '. $tableAlias.'.shift_option_id',
+						$tableAlias.'.shift_option_id =' => $options['shift_option_id'],
+					])
+					->where([$tableAlias.'.shift_option_id =' => $options['shift_option_id']])
+					->group($tableAlias.'.institution_id');					
+				}
 			}
 		} else {
 			return $query;
@@ -69,6 +74,7 @@ class AreaBehavior extends Behavior {
 	*/
 
 	public function findShiftOwnership(Query $query, array $options) {
+		
 		if (array_key_exists('shift_ownership', $options) && array_key_exists('columnName', $options) && array_key_exists('table', $options)) {
 			$Table = '';
 			if ($options['table'] == 'institution_shifts') {
@@ -85,6 +91,14 @@ class AreaBehavior extends Behavior {
 				else{
 					$InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
 					$academicPeriod = $this->getCurrent();
+					$conditions = [];
+					if (!empty($academicPeriod)) {
+						$conditions[$InstitutionShifts->aliasField('academic_period_id')] = $academicPeriod;
+					}
+					if (!empty($options['conditionCheck']['shift_type'])) {
+						$conditions[$InstitutionShifts->aliasField('shift_option_id')] = $options['conditionCheck']['shift_type'];
+					}
+
 					$data = $InstitutionShifts->find('all')
 							->select(['institution_id','location_institution_id',
 								'shift_ownershipss' => '(
@@ -94,7 +108,7 @@ class AreaBehavior extends Behavior {
 								END
 							  )',
 							])
-							->where(['academic_period_id =' => $academicPeriod])
+							->where([$conditions])
 							->group('location_institution_id')
 							->toArray();
 
