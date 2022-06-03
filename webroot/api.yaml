@@ -2521,8 +2521,8 @@ definitions:
         example: 6
       institution_position_id:
         example: 220
-      security_group_user_id:
-       example: "1ec69383-7703-43fb-a568-d87bb1da2949"
+      #security_group_user_id:
+       #example: "1ec69383-7703-43fb-a568-d87bb1da2949"
       modified_user_id:
        example: 
       modified:
