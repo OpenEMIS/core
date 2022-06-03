@@ -84,9 +84,17 @@ class AreaBehavior extends Behavior {
 				$tableAlias = $options['columnName'].'institution_shifts';
 
 				if ($options['shift_ownership'] == 1) {
-					$query->LeftJoin([ $tableAlias => $options['table']], [
-						$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
-					])->group($tableAlias.'.institution_id');
+					if (!empty($options['conditionCheck']['shift_type'])) {
+						$conditions[$tableAlias.'.shift_option_id'] = $options['conditionCheck']['shift_type'];
+						$query->LeftJoin([ $tableAlias => $options['table']], [
+							$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
+						])->where([$conditions])->group($tableAlias.'.institution_id');
+					}
+					else{
+						$query->LeftJoin([ $tableAlias => $options['table']], [
+							$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
+						])->group($tableAlias.'.institution_id');
+					}
 				}
 				else{
 					$InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
