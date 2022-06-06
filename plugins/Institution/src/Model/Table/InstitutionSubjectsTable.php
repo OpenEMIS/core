@@ -561,16 +561,30 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     { 
+        $classId = $this->request->query['class_id'];
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $query->contain([
                 'Classes.ClassesSecondaryStaff',
                 'Teachers',
                 'Rooms',
-                'SubjectStudents' => [
-                    'Users.Genders',
-                    'InstitutionClasses',
-                    'StudentStatuses',//POCOR-6687- update student status previously it was showing class based status
-                    'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
-                ]
+                'SubjectStudents'  => function ($q) use($InstitutionClassStudents,  $classId) {
+                    return $q
+                        ->contain(['Users.Genders',
+                        'InstitutionClasses',
+                        'StudentStatuses'
+                        ])
+                        ->innerJoin([$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()], [
+                            'SubjectStudents.student_id = ' . $InstitutionClassStudents->aliasField('student_id'),
+                            'SubjectStudents.institution_id = ' . $InstitutionClassStudents->aliasField('institution_id'),
+                            'SubjectStudents.academic_period_id = ' . $InstitutionClassStudents->aliasField('academic_period_id'),
+                            'SubjectStudents.education_grade_id = ' . $InstitutionClassStudents->aliasField('education_grade_id'),
+                            'SubjectStudents.institution_class_id = ' . $InstitutionClassStudents->aliasField('institution_class_id'),
+                            'SubjectStudents.student_status_id = ' . $InstitutionClassStudents->aliasField('student_status_id')
+                        ])
+                        ->where([
+                            'SubjectStudents.institution_class_id' =>  $classId
+                        ]);
+                }
             ]);
     }
 
