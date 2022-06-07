@@ -1116,6 +1116,8 @@ class DirectoriesController extends AppController
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
+        $institutionId = (array_key_exists('institution_id', $requestData))? $requestData['institution_id']: null;
+        $userTypeId = (array_key_exists('user_type_id', $requestData))? $requestData['user_type_id']: null;
         $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
         $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
         $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
@@ -1143,6 +1145,17 @@ class DirectoriesController extends AppController
         if (!empty($dateOfBirth)) {
             $conditions[$security_users->aliasField('date_of_birth')] = date_create($dateOfBirth)->format('Y-m-d');
         }
+
+        if (!empty($userTypeId)) {
+            if($userTypeId ==1){
+                $conditions[$security_users->aliasField('is_student')] = 1;
+            }else if($userTypeId ==2){
+                $conditions[$security_users->aliasField('is_staff')] = 1;
+            }else if($userTypeId ==3){
+                $conditions[$security_users->aliasField('is_guardian')] = 1;
+            }
+        }
+
         //it is user for getting single user data
         if (!empty($get_user_id)) {
             $conditions[$security_users->aliasField('id')] = $get_user_id;
@@ -1268,6 +1281,11 @@ class DirectoriesController extends AppController
 
             $totalCount = $this->getCountInernalSearch($conditions, $identityNumber);
         }
+
+        $institutionStudents = TableRegistry::get('institution_students');
+        $institutionStaff = TableRegistry::get('institution_staff');
+        $institutions = TableRegistry::get('institutions');
+
         $result_array = [];
         foreach($security_users_result AS $result){
             $MainNationalities_id = !empty($result['MainNationalities_id']) ? $result['MainNationalities_id'] : '';
@@ -1282,9 +1300,63 @@ class DirectoriesController extends AppController
                             ->count();
             $has_special_needs = ($SpecialNeeds == 1) ? true : false;
 
-            $result_array[] = array('id' => $result['id'],'username' => $result['username'],'password' => $result['password'],'openemis_no' => $result['openemis_no'],'first_name' => $result['first_name'],'middle_name' => $result['middle_name'],'third_name' => $result['third_name'],'last_name' => $result['last_name'],'preferred_name' => $result['preferred_name'],'email' => $result['email'],'address' => $result['address'],'postal_code' => $result['postal_code'],'gender_id' => $result['gender_id'],'external_reference' => $result['external_reference'],'last_login' => $result['last_login'],'photo_name' => $result['photo_name'],'photo_content' => $result['photo_content'],'preferred_language' => $result['preferred_language'],'address_area_id' => $result['address_area_id'],'birthplace_area_id' => $result['birthplace_area_id'],'super_admin' => $result['super_admin'],'status' => $result['status'],'is_student' => $result['is_student'],'is_staff' => $result['is_staff'],'is_guardian' => $result['is_guardian'],'name'=>$result['first_name']." ".$result['last_name'],'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'),'gender'=>$result['Genders_name'],'nationality_id'=>$MainNationalities_id,'nationality'=>$MainNationalities_name,'identity_type_id'=>$MainIdentityTypes_id,'identity_type'=>$MainIdentityTypes_name,'identity_number'=>$identity_number,'has_special_needs'=>$has_special_needs);
+            $is_same_school = $is_diff_school = 0;
+            $institution_name = '';
+            if (!empty($userTypeId)) {
+                if($userTypeId == 1){
+                    $institutionStudTbl = $institutionStudents
+                                    ->find()
+                                    ->select([
+                                       'institution_id'=> $institutionStudents->aliasField('institution_id'),
+                                        'student_id'=>$institutionStudents->aliasField('student_id'),
+                                        'student_status_id'=>$institutionStudents->aliasField('student_status_id'),
+                                        'institution_name'=>$institutions->aliasField('name')
+                                    ])
+                                    ->InnerJoin([$institutions->alias() => $institutions->table()], [
+                                        $institutions->aliasField('id =') . $institutionStudents->aliasField('institution_id')
+                                    ])
+                                    ->where([
+                                        $institutionStudents->aliasField('student_id') => $result['id'],
+                                        $institutionStudents->aliasField('student_status_id') => 1
+                                    ])->toArray();
+                    if(!empty($institutionStudTbl)){
+                        $institution_name = $institutionStudTbl['institution_name'];
+                        if($institutionStudTbl['institution_id'] == $institutionId){
+                            $is_same_school = 1;
+                        }else{
+                            $is_diff_school = 1;
+                        }
+                    }
+                }else if($userTypeId == 2){
+                    $institutionStaffTbl = $institutionStaff
+                                    ->find()
+                                    ->select([
+                                       'institution_id'=> $institutionStaff->aliasField('institution_id'),
+                                        'student_id'=>$institutionStaff->aliasField('staff_id'),
+                                        'staff_status_id'=>$institutionStaff->aliasField('staff_status_id'),
+                                        'institution_name'=>$institutions->aliasField('name')
+                                    ])
+                                    ->InnerJoin([$institutions->alias() => $institutions->table()], [
+                                        $institutions->aliasField('id =') . $institutionStaff->aliasField('institution_id')
+                                    ])
+                                    ->where([
+                                        $institutionStaff->aliasField('staff_id') => $result['id'],
+                                        $institutionStaff->aliasField('staff_status_id') => 1
+                                    ])->toArray();
+                    if(!empty($institutionStaffTbl)){
+                        $institution_name = $institutionStaffTbl['institution_name'];
+                        if($institutionStaffTbl['institution_id'] == $institutionId){
+                            $is_same_school = 1;
+                        }else{
+                            $is_diff_school = 1;
+                        }
+                    }
+                }
+            }
+
+            $result_array[] = array('id' => $result['id'],'username' => $result['username'],'password' => $result['password'],'openemis_no' => $result['openemis_no'],'first_name' => $result['first_name'],'middle_name' => $result['middle_name'],'third_name' => $result['third_name'],'last_name' => $result['last_name'],'preferred_name' => $result['preferred_name'],'email' => $result['email'],'address' => $result['address'],'postal_code' => $result['postal_code'],'gender_id' => $result['gender_id'],'external_reference' => $result['external_reference'],'last_login' => $result['last_login'],'photo_name' => $result['photo_name'],'photo_content' => $result['photo_content'],'preferred_language' => $result['preferred_language'],'address_area_id' => $result['address_area_id'],'birthplace_area_id' => $result['birthplace_area_id'],'super_admin' => $result['super_admin'],'status' => $result['status'],'is_student' => $result['is_student'],'is_staff' => $result['is_staff'],'is_guardian' => $result['is_guardian'],'name'=>$result['first_name']." ".$result['last_name'],'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'),'gender'=>$result['Genders_name'],'nationality_id'=>$MainNationalities_id,'nationality'=>$MainNationalities_name,'identity_type_id'=>$MainIdentityTypes_id,'identity_type'=>$MainIdentityTypes_name,'identity_number'=>$identity_number,'has_special_needs'=>$has_special_needs, 'is_same_school'=>$is_same_school, 'is_diff_school'=>$is_diff_school, 'institution_name'=> $institution_name);
         }
-        echo json_encode(['data' => $result_array, 'total' => $totalCount], JSON_PRETTY_PRINT); die;
+        echo json_encode(['data' => $result_array, 'total' => $totalCount], JSON_PARTIAL_OUTPUT_ON_ERROR); die;
     }
 
     public function getCountInernalSearch($conditions = [], $identityNumber){
