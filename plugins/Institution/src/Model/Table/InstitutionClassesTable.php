@@ -1315,7 +1315,8 @@ class InstitutionClassesTable extends ControllerActionTable
                                     $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
                                     $InstitutionClassStudents->aliasField('institution_id') => $institutionId,
                                     $InstitutionClassStudents->aliasField('academic_period_id') => $periodId,
-                                    $InstitutionClassStudents->aliasField('education_grade_id IN') => $grades
+                                    $InstitutionClassStudents->aliasField('education_grade_id IN') => $grades,
+                                    $InstitutionClassStudents->aliasField('student_status_id') => 1  //POCOR-6733
                                 ]);
         $count = 0;
         if (!empty($totalStudentRecord)) {
