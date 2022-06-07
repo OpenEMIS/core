@@ -232,6 +232,7 @@ class GuardiansTable extends AppTable {
             'date_of_birth' => 'Users.date_of_birth',
             'institution_name' => 'Institutions.name',
             'education_grade_name' => 'EducationGrades.name',
+            'education_grade_code' => 'EducationGrades.code',//POCOR-6728
             'institution_class_name' => 'InstitutionClasses.name',
             'institution_code' => 'Institutions.code',
             'gender_name' => 'Genders.name',
@@ -241,7 +242,8 @@ class GuardiansTable extends AppTable {
             'address' => 'Guardian.address',
             'email' => 'Guardian.email',
             'area_code' => 'Areas.code',
-            'area_name' => 'Areas.name'
+            'area_name' => 'Areas.name',
+            'contact_no' => 'UserContacts.value'
         ])
         ->leftJoin(['Users' => 'security_users'], [
             'Users.id = ' . 'Guardians.student_id'
@@ -277,7 +279,7 @@ class GuardiansTable extends AppTable {
             'InstitutionStudents.student_status_id = ' . 'StudentStatuses.id'
         ])
         ->leftJoin(['UserContacts' => 'user_contacts'], [
-            'Guardian.id = ' . 'UserContacts.security_user_id'
+            'Guardians.guardian_id = ' . 'UserContacts.security_user_id'
         ])
         ->group('Users.first_name')
         ->where(['StudentStatuses.code' => 'CURRENT',
@@ -346,6 +348,13 @@ class GuardiansTable extends AppTable {
             'label' => __('Education Grade')
         ];
 
+        $extraFields[] = [ // POCOR-6728
+            'key' => 'EducationGrades.code',
+            'field' => 'education_grade_code',
+            'type' => 'string',
+            'label' => __('Education Code')
+        ];
+
         $extraFields[] = [
             'key' => 'InstitutionClasses.name',
             'field' => 'institution_class_name',
@@ -396,9 +405,9 @@ class GuardiansTable extends AppTable {
         ];
 
         $extraFields[] = [
-            'key' => 'UserContacts.value',
+            'key' => 'contact_no',
             'field' => 'contact_no',
-            'type' => 'string',
+            'type' => 'integer',
             'label' => __('Guardians Primary Phone Contact')
         ];
         $newFields = $extraFields;
