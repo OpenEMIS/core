@@ -1,12 +1,104 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Directory.angular/directoryadd/directory.directoryadd.svc', ['block' => true]); ?>
 <?= $this->Html->script('Directory.angular/directoryadd/directory.directoryadd.ctrl', ['block' => true]); ?>
+<style type="text/css">
+    .breadcrumb {
+      padding: 8px 15px !important;
+      margin-bottom: 0px !important;
+      list-style: none !important;
+      background-color: white !important;
+      border-radius: 4px !important;
+    }
+    .breadcrumb.panel-breadcrumb li {
+          direction: ltr !important;
+        }
 
+        .panel-breadcrumb {
+  background-color: #FFF!important;
+  border-bottom: 1px solid #DDD!important;
+  border-radius: 0!important;
+  padding: 8px 0!important;
+  margin: 0!important;
+}
+.page-header {
+  padding-bottom: 9px!important;
+  margin: 0px 0 20px!important;
+  border-bottom: 1px solid #eee!important;
+}
+
+.h2, h2 {
+  font-size: 20px!important;
+    font-weight: 400!important;
+}
+
+.page-header h2 {
+  display: inline-block!important;
+  position: relative!important;
+  padding: 8px 24px 8px 0!important;
+  margin: 0!important;
+  max-width: 350px!important;
+  white-space: nowrap!important;
+  overflow: hidden!important;
+  text-overflow: ellipsis!important;
+}
+
+
+.breadcrumb > li + li::before {
+
+    font-family: 'FontAwesome'!important;
+    content: "\f054"!important;
+    font-size: 0.6em!important;
+    color: #999!important;
+    font-weight: normal!important;
+    margin: 4px!important;
+    line-height: 12px!important;
+    display: inline!important;
+    float: left!important;
+
+}
+
+.breadcrumb > li + li::before {
+  padding: 0 5px!important;
+  content: "/\00a0";
+}
+.content-wrapper {
+    height: 22% !important;
+}
+</style>
 <script data-require="jquery@1.11.3" data-semver="1.11.3" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 <link data-require="bootstrap@3.3.2" data-semver="3.3.2" rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
 <script data-require="bootstrap@3.3.2" data-semver="3.3.2" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 <script data-require="angularjs@1.4.9" data-semver="1.4.9" src="https://code.angularjs.org/1.4.9/angular.min.js"></script>
 <script data-require="ui-bootstrap@*" data-semver="1.3.2" src="https://cdn.rawgit.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-1.3.2.js"></script>
+<?php
+    $baseUrl = $this->Url->build([
+        'plugin' => $this->request->params['plugin'],
+        'controller' => $this->request->params['controller'],
+        'action' => $this->request->params['action']
+    ]);
+    if (empty($homeUrl)) {
+        $homeUrl = [];
+    }
+    $backUrl = [
+        'plugin' => $this->request->params['plugin'],
+        'controller' => $this->request->params['controller'],
+        'action' => $this->request->params['action'],
+        'index'
+    ];
+?>
+<div class="content-wrapper">
+    <ul class="breadcrumb panel-breadcrumb">
+    <li><a href="<?= $this->Url->build($homeUrl) ?>"><i class="fa fa-home"></i></a></li>
+        <li>
+        <a href="<?= $baseUrl ?>">Directory</a> </li>
+    </ul>
+
+    <div class="page-header">
+        <h2 id="main-header">Directory</h2>
+        <div class="toolbar ">
+           <?php echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false]); ?> </div>
+    </div>
+</div>
 
 <div class="pd-10" ng-controller = 'DirectoryAddCtrl'>
     <div class="alert {{messageClass}}" ng-if="message">
