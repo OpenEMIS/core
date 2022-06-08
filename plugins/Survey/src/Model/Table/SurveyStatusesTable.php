@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\I18n\Time;
 
 class SurveyStatusesTable extends ControllerActionTable
 {
@@ -137,5 +138,50 @@ class SurveyStatusesTable extends ControllerActionTable
         $selectedForm = isset($query['form']) ? $query['form'] : key($formOptions);
 
         return compact('moduleOptions', 'selectedModule', 'formOptions', 'selectedForm');
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
+        $surveyFormId = $entity->survey_form_id;
+        $SurveyFormsFilterObj = $SurveyFormsFilters->find()
+                            ->where([$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId])
+                            ->toArray();
+        $institutionTypeIds = [];
+        if (!empty($SurveyFormsFilterObj)) {
+            foreach ($SurveyFormsFilterObj as $value) {
+                $institutionTypeIds[] = $value->survey_filter_id;
+            }
+        }
+        $getInstitutionObj = $Institutions->find()
+                            ->select([$Institutions->aliasField('id')])
+                            ->where([$Institutions->aliasField('institution_type_id IN') => $institutionTypeIds])
+                            ->toArray();
+        $institutionIds = [];
+        if (!empty($getInstitutionObj)) {
+            foreach ($getInstitutionObj as $val) {
+                $institutionIds[] = $val->id;
+            }
+        }
+        if (!empty($entity->academic_periods)) {
+            foreach ($entity->academic_periods as $periodObj) {
+                foreach ($institutionIds as $instId) {
+                    $InstitutionSurveys->deleteAll(['institution_id' => $instId, 'academic_period_id' => $periodObj->id, 'survey_form_id' => $surveyFormId]);
+                    $surveyData = [
+                        'status_id' => 1,
+                        'academic_period_id' => $periodObj->id,
+                        'survey_form_id' => $surveyFormId,
+                        'institution_id' => $instId,
+                        'created_user_id' => 1,
+                        'created' => new Time('NOW')
+                    ];
+    
+                    $surveyEntity = $InstitutionSurveys->newEntity($surveyData);
+                    $InstitutionSurveys->save($surveyEntity);
+                }
+            }
+        }
     }
 }
