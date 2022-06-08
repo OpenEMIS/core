@@ -232,7 +232,6 @@ class GuardiansTable extends AppTable {
             'date_of_birth' => 'Users.date_of_birth',
             'institution_name' => 'Institutions.name',
             'education_grade_name' => 'EducationGrades.name',
-            'education_grade_code' => 'EducationGrades.code',//POCOR-6728
             'institution_class_name' => 'InstitutionClasses.name',
             'institution_code' => 'Institutions.code',
             'gender_name' => 'Genders.name',
@@ -243,7 +242,9 @@ class GuardiansTable extends AppTable {
             'email' => 'Guardian.email',
             'area_code' => 'Areas.code',
             'area_name' => 'Areas.name',
-            'contact_no' => 'UserContacts.value'
+            'contact_no' => 'UserContacts.value',
+            'atoll' => 'AreaAdministrativeLevels.name',//POCOR-6728
+            'education_code' => 'AreaAdministratives.code'//POCOR-6728
         ])
         ->leftJoin(['Users' => 'security_users'], [
             'Users.id = ' . 'Guardians.student_id'
@@ -268,6 +269,12 @@ class GuardiansTable extends AppTable {
         ])
         ->leftJoin(['Areas' => 'areas'], [
             'Institutions.area_id = ' . 'Areas.id'
+        ])
+        ->leftJoin(['AreaAdministratives' => 'area_administratives'], [
+            'Institutions.area_administrative_id = ' . 'AreaAdministratives.id'
+        ])
+        ->leftJoin(['AreaAdministrativeLevels' => 'area_administrative_levels'], [
+            'AreaAdministratives.area_administrative_level_id = ' . 'AreaAdministrativeLevels.id'
         ])
         ->leftJoin(['InstitutionClassStudents' => 'institution_class_students'], [
             'InstitutionClassStudents.student_id = ' . 'Users.id'
@@ -319,6 +326,19 @@ class GuardiansTable extends AppTable {
             'type' => 'string',
             'label' => __('Area Name')
         ];
+        $extraFields[] = [ // POCOR-6728
+            'key' => 'atoll',
+            'field' => 'atoll',
+            'type' => 'string',
+            'label' => __('Atoll')
+        ];
+
+        $extraFields[] = [ // POCOR-6728
+            'key' => 'education_code',
+            'field' => 'education_code',
+            'type' => 'string',
+            'label' => __('Education Code')
+        ];
 
         $extraFields[] = [
             'key' => 'Users.first_name',
@@ -346,13 +366,6 @@ class GuardiansTable extends AppTable {
             'field' => 'education_grade_name',
             'type' => 'string',
             'label' => __('Education Grade')
-        ];
-
-        $extraFields[] = [ // POCOR-6728
-            'key' => 'EducationGrades.code',
-            'field' => 'education_grade_code',
-            'type' => 'string',
-            'label' => __('Education Code')
         ];
 
         $extraFields[] = [
