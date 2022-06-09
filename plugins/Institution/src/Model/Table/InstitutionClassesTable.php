@@ -270,15 +270,15 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         $action = $this->action;
         //Start:POCOR-6644
-    	if(!isset($extra['entity']->institution_shift_id) || empty($extra['entity']->institution_shift_id) || ($extra['entity']->institution_shift_id == "")){
-    		
-    	}else{ 
+        if(!isset($extra['entity']->institution_shift_id) || empty($extra['entity']->institution_shift_id) || ($extra['entity']->institution_shift_id == "")){
+            
+        }else{ 
             $institutionShiftId = $extra['entity']->institution_shift_id;
             if ($action != 'add') {
                 $staffOptions = [];
                 $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
                 $institutionId = $extra['institution_id'];
-                if ($selectedAcademicPeriodId > -1) {	
+                if ($selectedAcademicPeriodId > -1) {   
                     if ($action == 'index') {
                         $action = 'view';
                     }                
@@ -291,7 +291,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 }
                 /** POCOR-6721 ends */
             }
-    	}
+        }
         //End:POCOR-6644
     }
 
