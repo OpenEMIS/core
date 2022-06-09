@@ -1036,6 +1036,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         angular.forEach(StudentController.rowsThisPage , function(value) {
             if (value.id == StudentController.selectedStudent) {
                 StudentController.selectedStudentData = value;
+                StudentController.selectedStudentData.username = value.openemis_no;
             }
         }, log);
     }

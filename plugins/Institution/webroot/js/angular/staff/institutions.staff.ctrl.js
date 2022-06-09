@@ -819,6 +819,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         angular.forEach(StaffController.rowsThisPage , function(value) {
             if (value.id == StaffController.selectedUser) {
                 StaffController.selectedStaffData = value;
+                StaffController.selectedStaffData.username = value.openemis_no;
             }
         }, log);
     }
