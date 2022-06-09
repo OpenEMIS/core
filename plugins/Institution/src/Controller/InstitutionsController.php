@@ -1685,6 +1685,9 @@ class InstitutionsController extends AppController
         }
         if($this->request->params['action'] == 'saveDirectoryData'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveDirectoryData';
+        }
+        if($this->request->params['action'] == 'getStudentTransferReason'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStudentTransferReason';
         }//for api purpose POCOR-5672 ends
         return $events;
     }
@@ -4454,6 +4457,21 @@ class InstitutionsController extends AppController
         echo $result; die;
     }
 
+    public function getStudentTransferReason()
+    {
+        $student_transfer_reasons = TableRegistry::get('student_transfer_reasons');
+        $student_transfer_reasons_result = $student_transfer_reasons
+            ->find()
+            ->select(['id','name'])
+            ->where(['visible' => 1])
+            ->order([$student_transfer_reasons->aliasField('order ASC')])
+            ->toArray();
+        foreach($student_transfer_reasons_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+        }
+        echo json_encode($result_array);die;
+    }
+
     public function studentCustomFields()
     {
         $studentCustomForms =  TableRegistry::get('student_custom_forms');
@@ -4582,7 +4600,15 @@ class InstitutionsController extends AppController
             $custom = (array_key_exists('custom', $requestData))? $requestData['custom'] : "";
             $photoContent = (array_key_exists('photo_base_64', $requestData))? $requestData['photo_base_64'] : null;
             $photoName = (array_key_exists('photo_name', $requestData))? $requestData['photo_name'] : null;
-
+            //when student transfer in other institution starts
+            $isDiffSchool = (array_key_exists('is_diff_school', $requestData))? $requestData['is_diff_school'] : 0;
+            $studentId = (array_key_exists('student_id', $requestData))? $requestData['student_id'] : 0;
+            $previousInstitutionId = (array_key_exists('previous_institution_id', $requestData))? $requestData['previous_institution_id'] : 0;
+            $previousAcademicPeriodId = (array_key_exists('previous_academic_period_id', $requestData))? $requestData['previous_academic_period_id'] : 0;
+            $previousEducationGradeId = (array_key_exists('previous_education_grade_id', $requestData))? $requestData['previous_education_grade_id'] : 0;
+            $studentTransferReasonId = (array_key_exists('student_transfer_reason_id', $requestData))? $requestData['student_transfer_reason_id'] : 0;
+            $comment = (array_key_exists('comment', $requestData))? $requestData['comment'] : '';
+            //when student transfer in other institution end
             //get academic period data
             $academicPeriods = TableRegistry::get('academic_periods');
             $periods = $academicPeriods->find()
@@ -4607,249 +4633,295 @@ class InstitutionsController extends AppController
             //get Student Status List        
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
-        
-            $SecurityUsers = TableRegistry::get('security_users');
-            $entityData = [
-                'openemis_no' => $openemisNo,
-                'first_name' => $firstName,
-                'middle_name' => $middleName,
-                'third_name' => $thirdName,
-                'last_name' => $lastName,
-                'preferred_name' => $preferredName,
-                'gender_id' => $genderId,
-                'date_of_birth' => $dateOfBirth,
-                'nationality_id' => $nationalityId,
-                'preferred_language' => $pref_lang->value,
-                'username' => $username,
-                'password' => $password,
-                'address' => $address,
-                'address_area_id' => $addressAreaId,
-                'birthplace_area_id' => $birthplaceAreaId,
-                'postal_code' => $postalCode,
-                'photo_name' => $photoName,
-                'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
-                'is_student' => 1,
-                'created_user_id' => $userId,
-                'created' => date('Y-m-d H:i:s')
-            ];
-            //save in security_users table
-            $entity = $SecurityUsers->newEntity($entityData);
-            try{
-                $SecurityUserResult = $SecurityUsers->save($entity);
-                unset($entity);
-            }catch (Exception $e) {
-                return null;
-            }     
-            if($SecurityUserResult){
-                $user_record_id=$SecurityUserResult->id;
-                if(!empty($nationalityId)){
-                    $UserNationalities = TableRegistry::get('user_nationalities');
-                    $primaryKey = $UserNationalities->primaryKey();
-                    $hashString = [];
-                    foreach ($primaryKey as $key) {
-                        if($key == 'nationality_id'){
-                            $hashString[] = $nationalityId;
-                        }
-                        if($key == 'security_user_id'){
-                            $hashString[] = $user_record_id;
-                        }
-                    }
-         
-                    $entityNationalData = [
-                        'id' => Security::hash(implode(',', $hashString), 'sha256'),
-                        'preferred' => 1,
-                        'nationality_id' => $nationalityId,
-                        'security_user_id' => $user_record_id,
-                        'created_user_id' => $userId,
-                        'created' => date('Y-m-d H:i:s')
-                    ];
-                    //save in user_nationalities table
-                    $entityNationalData = $UserNationalities->newEntity($entityNationalData);
-                    $UserNationalitiesResult = $UserNationalities->save($entityNationalData);
-                }
-
-                if(!empty($nationalityId) && !empty($identityTypeId) && !empty($identityNumber)){
-                    $UserIdentities = TableRegistry::get('user_identities');
-                    $entityIdentitiesData = [
-                        'identity_type_id' => $identityTypeId,
-                        'number' => $identityNumber,
-                        'nationality_id' => $nationalityId,
-                        'security_user_id' => $user_record_id,
-                        'created_user_id' => $userId,
-                        'created' => date('Y-m-d H:i:s')
-                    ];
-                    //save in user_identities table
-                    $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
-                    $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
-                }
-
-                if(!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId)){
-                    $InstitutionStudents = TableRegistry::get('institution_students');
-                    $entityStudentsData = [
-                        'id' => Text::uuid(),
-                        'student_status_id' => $studentStatusId,
-                        'student_id' => $user_record_id,
-                        'education_grade_id' => $educationGradeId,
-                        'academic_period_id' => $academicPeriodId,
-                        'start_date' => $startDate,
-                        'start_year' => $startYear,
-                        'end_date' => $endDate,
-                        'end_year' => $endYear,
-                        'institution_id' => $institutionId,
-                        'created_user_id' => $userId,
-                        'created' => date('Y-m-d H:i:s')
-                    ];
-                    //save in institution_students table
-                    $entityStudentsData = $InstitutionStudents->newEntity($entityStudentsData);
-                    $InstitutionStudentsResult = $InstitutionStudents->save($entityStudentsData);
-                }
-
+            //transfer student in other institution
+            if($isDiffSchool == 1){
                 $workflows = TableRegistry::get('workflows');
                 $workflowSteps = TableRegistry::get('workflow_steps');
                 $workflowResults = $workflows->find()
                             ->select(['workflowSteps_id'=>$workflowSteps->aliasField('id')])
                             ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
                                 $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
-                                $workflowSteps->aliasField('name')=> 'Approved'
+                                $workflowSteps->aliasField('name')=> 'Open'
                             ])
                             ->where([
-                                $workflows->aliasField('name') => 'Student Admission'
+                                $workflows->aliasField('name') => 'Student Transfer - Receiving'
                             ])
-                            ->first();          
-                if(!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId) && !empty($workflowResults)){
-                    $institutionStudentAdmission = TableRegistry::get('institution_student_admission');
-                    $entityAdmissionData = [
-                        'start_date' => $startDate,
-                        'end_date' => $endDate,
-                        'student_id' => $user_record_id,
-                        'status_id' => $workflowResults->workflowSteps_id, 
-                        'assignee_id' => 0,
-                        'institution_id' => $institutionId,
-                        'academic_period_id' => $academicPeriodId,
-                        'education_grade_id' => $educationGradeId,
-                        'institution_class_id' => $institutionClassId,
-                        'created_user_id' => $userId,
-                        'created' => date('Y-m-d H:i:s')
-                    ];
-                    //save in institution_student_admission table
-                    $entityAdmissionData = $institutionStudentAdmission->newEntity($entityAdmissionData);
-                    $InstitutionAdmissionResult = $institutionStudentAdmission->save($entityAdmissionData);
-                }
+                            ->first();
 
-                if(!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)){
-                    $institutionClassStudents = TableRegistry::get('institution_class_students');
-                    $entityAdmissionData = [
-                        'id' => Text::uuid(),
-                        'student_id' => $user_record_id,
-                        'institution_class_id' => $institutionClassId,
-                        'education_grade_id' => $educationGradeId,
-                        'academic_period_id' => $academicPeriodId,
-                        'institution_id' => $institutionId,
-                        'student_status_id' => $statuses['CURRENT'], 
-                        'created_user_id' => $userId,
-                        'created' => date('Y-m-d H:i:s')
-                    ];
-                    //save in institution_class_students table
-                    $entityClassData = $institutionClassStudents->newEntity($entityAdmissionData);
-                    $InstitutionClassResult = $institutionClassStudents->save($entityClassData);
-                }
+                $InstitutionStudentTransfers = TableRegistry::get('institution_student_transfers');
+                $entityTransferData = [
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                    'requested_date' => null,
+                    'student_id' => $studentId,
+                    'status_id' => $workflowResults->workflowSteps_id,
+                    'assignee_id' => 0,
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'education_grade_id' => $educationGradeId,
+                    'institution_class_id' => $institutionClassId,
+                    'previous_institution_id' => $previousInstitutionId,
+                    'previous_academic_period_id' => $previousAcademicPeriodId,
+                    'previous_education_grade_id' => $previousEducationGradeId,
+                    'student_transfer_reason_id' => $studentTransferReasonId,
+                    'comment' => $comment,
+                    'all_visible' => 1,
+                    'modified_user_id' => null,
+                    'modified' => null,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
 
-                if(!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)){
-                    $institutionClassSubjects = TableRegistry::get('institution_class_subjects');
-                    $institutionSubjects = TableRegistry::get('institution_subjects');
-                    $SubjectsResult = $institutionClassSubjects
-                        ->find()
-                        ->select([
-                            $institutionClassSubjects->aliasField('institution_class_id'),
-                            $institutionClassSubjects->aliasField('institution_subject_id'),
-                            'name' => $institutionSubjects->aliasField('name'),
-                            'institution_id' => $institutionSubjects->aliasField('institution_id'),
-                            'education_grade_id' => $institutionSubjects->aliasField('education_grade_id'),
-                            'education_subject_id' => $institutionSubjects->aliasField('education_subject_id'),
-                            'academic_period_id' => $institutionSubjects->aliasField('academic_period_id'),
-                        ])
-                        ->LeftJoin([$institutionSubjects->alias() => $institutionSubjects->table()], [
-                            $institutionSubjects->aliasField('id =') . $institutionClassSubjects->aliasField('institution_subject_id')
-                        ])
-                        ->where([
-                            $institutionClassSubjects->aliasField('institution_class_id') => $institutionClassId
-                        ])
-                        ->toArray();
-                       
-                    if(!empty($SubjectsResult)){
-                        $institutionSubjectStudents = TableRegistry::get('institution_subject_students');
-                        foreach ($SubjectsResult as $skey => $sval) {
-                            $primaryKey = $institutionSubjectStudents->primaryKey();
-                            $hashString = [];
-                            foreach ($primaryKey as $key) {
-                                if($key == 'student_id'){
-                                    $hashString[] = $user_record_id;
-                                }
-                                if($key == 'institution_class_id'){
-                                    $hashString[] = $institutionClassId;
-                                }
-                                if($key == 'academic_period_id'){
-                                    $hashString[] = $academicPeriodId;
-                                }
-                                if($key == 'education_grade_id'){
-                                    $hashString[] = $educationGradeId;
-                                }
-                                if($key == 'institution_id'){
-                                    $hashString[] = $institutionId;
-                                }
-                                if($key == 'education_subject_id'){
-                                    $hashString[] = $sval->education_subject_id;
-                                }
+                try{
+                    $InstitutionStudentTransferResult = $InstitutionStudentTransfers->save($entityTransferData);
+                    unset($entityTransferData);
+                }catch (Exception $e) {
+                    return null;
+                }
+            }else{
+                $SecurityUsers = TableRegistry::get('security_users');
+                $entityData = [
+                    'openemis_no' => $openemisNo,
+                    'first_name' => $firstName,
+                    'middle_name' => $middleName,
+                    'third_name' => $thirdName,
+                    'last_name' => $lastName,
+                    'preferred_name' => $preferredName,
+                    'gender_id' => $genderId,
+                    'date_of_birth' => $dateOfBirth,
+                    'nationality_id' => $nationalityId,
+                    'preferred_language' => $pref_lang->value,
+                    'username' => $username,
+                    'password' => $password,
+                    'address' => $address,
+                    'address_area_id' => $addressAreaId,
+                    'birthplace_area_id' => $birthplaceAreaId,
+                    'postal_code' => $postalCode,
+                    'photo_name' => $photoName,
+                    'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                    'is_student' => 1,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                //save in security_users table
+                $entity = $SecurityUsers->newEntity($entityData);
+                try{
+                    $SecurityUserResult = $SecurityUsers->save($entity);
+                    unset($entity);
+                }catch (Exception $e) {
+                    return null;
+                }     
+                if($SecurityUserResult){
+                    $user_record_id=$SecurityUserResult->id;
+                    if(!empty($nationalityId)){
+                        $UserNationalities = TableRegistry::get('user_nationalities');
+                        $primaryKey = $UserNationalities->primaryKey();
+                        $hashString = [];
+                        foreach ($primaryKey as $key) {
+                            if($key == 'nationality_id'){
+                                $hashString[] = $nationalityId;
                             }
-                            
-                            $entitySubjectsData = [
-                                'id' => Security::hash(implode(',', $hashString), 'sha256'),
-                                'student_id' => $user_record_id,
-                                'institution_subject_id' => $sval->institution_subject_id,
-                                'institution_class_id' => $institutionClassId,
-                                'institution_id' => $institutionId,
-                                'academic_period_id' => $academicPeriodId,
-                                'education_subject_id' => $sval->education_subject_id,
-                                'education_grade_id' => $educationGradeId,
-                                'student_status_id' => $statuses['CURRENT'],
-                                'created_user_id' => $userId,
-                                'created' => date('Y-m-d H:i:s')
-                            ];
-                            //save in institution_subject_students table
-                            $entitySubjectsData = $institutionSubjectStudents->newEntity($entitySubjectsData);
-                            $institutionSubjectStudentsResult = $institutionSubjectStudents->save($entitySubjectsData);
-
-                            unset($entitySubjectsData);
-                            unset($hashString);
+                            if($key == 'security_user_id'){
+                                $hashString[] = $user_record_id;
+                            }
                         }
-                    }        
-                }
-                
-                if(!empty($custom)){
-                    $studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
-                    foreach ($custom as $skey => $sval) {
-                        $entityCustomData = [
-                            'id' => Text::uuid(),
-                            'text_value' => $sval['text_value'],
-                            'number_value' => $sval['number_value'],
-                            'decimal_value' => $sval['decimal_value'],
-                            'textarea_value' => $sval['textarea_value'],
-                            'time_value' => $sval['time_value'],
-                            'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
-                            'student_custom_field_id' => $sval['student_custom_field_id'],
-                            'student_id' => $user_record_id,
+             
+                        $entityNationalData = [
+                            'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                            'preferred' => 1,
+                            'nationality_id' => $nationalityId,
+                            'security_user_id' => $user_record_id,
                             'created_user_id' => $userId,
                             'created' => date('Y-m-d H:i:s')
                         ];
-                        //save in student_custom_field_values table
-                        $entityCustomData = $studentCustomFieldValues->newEntity($entityCustomData);
-                        $studentCustomFieldsResult = $studentCustomFieldValues->save($entityCustomData);
-                        unset($studentCustomFieldsResult);
-                        unset($entityCustomData);
+                        //save in user_nationalities table
+                        $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                        $UserNationalitiesResult = $UserNationalities->save($entityNationalData);
                     }
+
+                    if(!empty($nationalityId) && !empty($identityTypeId) && !empty($identityNumber)){
+                        $UserIdentities = TableRegistry::get('user_identities');
+                        $entityIdentitiesData = [
+                            'identity_type_id' => $identityTypeId,
+                            'number' => $identityNumber,
+                            'nationality_id' => $nationalityId,
+                            'security_user_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in user_identities table
+                        $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                        $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                    }
+
+                    if(!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId)){
+                        $InstitutionStudents = TableRegistry::get('institution_students');
+                        $entityStudentsData = [
+                            'id' => Text::uuid(),
+                            'student_status_id' => $studentStatusId,
+                            'student_id' => $user_record_id,
+                            'education_grade_id' => $educationGradeId,
+                            'academic_period_id' => $academicPeriodId,
+                            'start_date' => $startDate,
+                            'start_year' => $startYear,
+                            'end_date' => $endDate,
+                            'end_year' => $endYear,
+                            'institution_id' => $institutionId,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in institution_students table
+                        $entityStudentsData = $InstitutionStudents->newEntity($entityStudentsData);
+                        $InstitutionStudentsResult = $InstitutionStudents->save($entityStudentsData);
+                    }
+
+                    $workflows = TableRegistry::get('workflows');
+                    $workflowSteps = TableRegistry::get('workflow_steps');
+                    $workflowResults = $workflows->find()
+                                ->select(['workflowSteps_id'=>$workflowSteps->aliasField('id')])
+                                ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
+                                    $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                                    $workflowSteps->aliasField('name')=> 'Approved'
+                                ])
+                                ->where([
+                                    $workflows->aliasField('name') => 'Student Admission'
+                                ])
+                                ->first();          
+                    if(!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId) && !empty($workflowResults)){
+                        $institutionStudentAdmission = TableRegistry::get('institution_student_admission');
+                        $entityAdmissionData = [
+                            'start_date' => $startDate,
+                            'end_date' => $endDate,
+                            'student_id' => $user_record_id,
+                            'status_id' => $workflowResults->workflowSteps_id, 
+                            'assignee_id' => 0,
+                            'institution_id' => $institutionId,
+                            'academic_period_id' => $academicPeriodId,
+                            'education_grade_id' => $educationGradeId,
+                            'institution_class_id' => $institutionClassId,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in institution_student_admission table
+                        $entityAdmissionData = $institutionStudentAdmission->newEntity($entityAdmissionData);
+                        $InstitutionAdmissionResult = $institutionStudentAdmission->save($entityAdmissionData);
+                    }
+
+                    if(!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)){
+                        $institutionClassStudents = TableRegistry::get('institution_class_students');
+                        $entityAdmissionData = [
+                            'id' => Text::uuid(),
+                            'student_id' => $user_record_id,
+                            'institution_class_id' => $institutionClassId,
+                            'education_grade_id' => $educationGradeId,
+                            'academic_period_id' => $academicPeriodId,
+                            'institution_id' => $institutionId,
+                            'student_status_id' => $statuses['CURRENT'], 
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in institution_class_students table
+                        $entityClassData = $institutionClassStudents->newEntity($entityAdmissionData);
+                        $InstitutionClassResult = $institutionClassStudents->save($entityClassData);
+                    }
+
+                    if(!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)){
+                        $institutionClassSubjects = TableRegistry::get('institution_class_subjects');
+                        $institutionSubjects = TableRegistry::get('institution_subjects');
+                        $SubjectsResult = $institutionClassSubjects
+                            ->find()
+                            ->select([
+                                $institutionClassSubjects->aliasField('institution_class_id'),
+                                $institutionClassSubjects->aliasField('institution_subject_id'),
+                                'name' => $institutionSubjects->aliasField('name'),
+                                'institution_id' => $institutionSubjects->aliasField('institution_id'),
+                                'education_grade_id' => $institutionSubjects->aliasField('education_grade_id'),
+                                'education_subject_id' => $institutionSubjects->aliasField('education_subject_id'),
+                                'academic_period_id' => $institutionSubjects->aliasField('academic_period_id'),
+                            ])
+                            ->LeftJoin([$institutionSubjects->alias() => $institutionSubjects->table()], [
+                                $institutionSubjects->aliasField('id =') . $institutionClassSubjects->aliasField('institution_subject_id')
+                            ])
+                            ->where([
+                                $institutionClassSubjects->aliasField('institution_class_id') => $institutionClassId
+                            ])
+                            ->toArray();
+                           
+                        if(!empty($SubjectsResult)){
+                            $institutionSubjectStudents = TableRegistry::get('institution_subject_students');
+                            foreach ($SubjectsResult as $skey => $sval) {
+                                $primaryKey = $institutionSubjectStudents->primaryKey();
+                                $hashString = [];
+                                foreach ($primaryKey as $key) {
+                                    if($key == 'student_id'){
+                                        $hashString[] = $user_record_id;
+                                    }
+                                    if($key == 'institution_class_id'){
+                                        $hashString[] = $institutionClassId;
+                                    }
+                                    if($key == 'academic_period_id'){
+                                        $hashString[] = $academicPeriodId;
+                                    }
+                                    if($key == 'education_grade_id'){
+                                        $hashString[] = $educationGradeId;
+                                    }
+                                    if($key == 'institution_id'){
+                                        $hashString[] = $institutionId;
+                                    }
+                                    if($key == 'education_subject_id'){
+                                        $hashString[] = $sval->education_subject_id;
+                                    }
+                                }
+                                
+                                $entitySubjectsData = [
+                                    'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                                    'student_id' => $user_record_id,
+                                    'institution_subject_id' => $sval->institution_subject_id,
+                                    'institution_class_id' => $institutionClassId,
+                                    'institution_id' => $institutionId,
+                                    'academic_period_id' => $academicPeriodId,
+                                    'education_subject_id' => $sval->education_subject_id,
+                                    'education_grade_id' => $educationGradeId,
+                                    'student_status_id' => $statuses['CURRENT'],
+                                    'created_user_id' => $userId,
+                                    'created' => date('Y-m-d H:i:s')
+                                ];
+                                //save in institution_subject_students table
+                                $entitySubjectsData = $institutionSubjectStudents->newEntity($entitySubjectsData);
+                                $institutionSubjectStudentsResult = $institutionSubjectStudents->save($entitySubjectsData);
+
+                                unset($entitySubjectsData);
+                                unset($hashString);
+                            }
+                        }        
+                    }
+                    
+                    if(!empty($custom)){
+                        $studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
+                        foreach ($custom as $skey => $sval) {
+                            $entityCustomData = [
+                                'id' => Text::uuid(),
+                                'text_value' => $sval['text_value'],
+                                'number_value' => $sval['number_value'],
+                                'decimal_value' => $sval['decimal_value'],
+                                'textarea_value' => $sval['textarea_value'],
+                                'time_value' => $sval['time_value'],
+                                'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
+                                'student_custom_field_id' => $sval['student_custom_field_id'],
+                                'student_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in student_custom_field_values table
+                            $entityCustomData = $studentCustomFieldValues->newEntity($entityCustomData);
+                            $studentCustomFieldsResult = $studentCustomFieldValues->save($entityCustomData);
+                            unset($studentCustomFieldsResult);
+                            unset($entityCustomData);
+                        }
+                    }
+                }else{
+                    return false;
                 }
-            }else{
-                return false;
             }
         }
         return true;
