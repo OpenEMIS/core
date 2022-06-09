@@ -852,6 +852,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         angular.forEach(scope.rowsThisPage , function(value) {
             if (value.id == scope.selectedGuardian) {
                 scope.selectedUserData = value;
+                scope.selectedUserData.username = value.openemis_no;
             }
         }, log);
     }

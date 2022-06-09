@@ -913,6 +913,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         angular.forEach(scope.rowsThisPage , function(value) {
             if (value.id == scope.selectedUser) {
                 scope.selectedUserData = value;
+                scope.selectedUserData.username = value.openemis_no;
             }
         }, log);
     }
