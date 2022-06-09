@@ -46,6 +46,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         maxDate: new Date(),
         showWeeks: false
     };
+    StaffController.isInternalSearchSelected = false;
+    StaffController.isExternalSearchSelected = false;
+
 
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
@@ -545,7 +548,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStudent(_e.node.data.id);
+                    StaffController.selectStaffFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -590,7 +593,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id);
+                    StaffController.selectStaffFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -639,7 +642,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id);
+                    StaffController.selectStaffFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -682,7 +685,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.c(_e.node.data.id);
+                    StaffController.selectStaffFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -696,24 +699,34 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
     
     function goToPrevStep(){
-        switch(StaffController.step){
-            case 'internal_search': 
-                StaffController.selectedStaffData.date_of_birth = new Date(StaffController.selectedStaffData.date_of_birth);
-                StaffController.step = 'user_details';
-                break;
-            case 'external_search': 
-                StaffController.step = 'internal_search';
-                StaffController.internalGridOptions = null;
-                StaffController.goToInternalSearch();
-                break;
-            case 'confirmation': 
-                StaffController.step = 'external_search';
-                StaffController.externalGridOptions = null;
-                StaffController.goToExternalSearch();
-                break;
-            case 'add_staff': 
-                StaffController.step = 'confirmation';
-                break;
+        if(StaffController.isInternalSearchSelected) {
+            StaffController.step = 'internal_search';
+            StaffController.internalGridOptions = null;
+            StaffController.goToInternalSearch();
+        } else if(StaffController.isExternalSearchSelected) {
+            StaffController.step = 'external_search';
+            StaffController.externalGridOptions = null;
+            StaffController.goToExternalSearch();
+        } else {
+            switch(StaffController.step){
+                case 'internal_search': 
+                    StaffController.selectedStaffData.date_of_birth = new Date(StaffController.selectedStaffData.date_of_birth);
+                    StaffController.step = 'user_details';
+                    break;
+                case 'external_search': 
+                    StaffController.step = 'internal_search';
+                    StaffController.internalGridOptions = null;
+                    StaffController.goToInternalSearch();
+                    break;
+                case 'confirmation': 
+                    StaffController.step = 'external_search';
+                    StaffController.externalGridOptions = null;
+                    StaffController.goToExternalSearch();
+                    break;
+                case 'add_staff': 
+                    StaffController.step = 'confirmation';
+                    break;
+            }
         }
     }
 
@@ -776,23 +789,31 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function goToNextStep() {
-        switch(StaffController.step){
-            case 'user_details': 
-                StaffController.validateDetails();
-                break;
-            case 'internal_search': 
-                StaffController.step = 'external_search';
-                StaffController.externalGridOptions = null;
-                StaffController.goToExternalSearch();
-                break;
-            case 'external_search': 
-                StaffController.step = 'confirmation';
-                StaffController.getUniqueOpenEmisId();
-                break;
-            case 'confirmation': 
-                StaffController.step = 'add_staff';
-                StaffController.generatePassword();
-                break;
+        if(StaffController.isInternalSearchSelected) {
+            StaffController.step = 'add_staff';
+            StaffController.generatePassword();
+        } else if(StaffController.isExternalSearchSelected) {
+            StaffController.step = 'add_staff';
+            StaffController.generatePassword();
+        } else {
+            switch(StaffController.step){
+                case 'user_details': 
+                    StaffController.validateDetails();
+                    break;
+                case 'internal_search': 
+                    StaffController.step = 'external_search';
+                    StaffController.externalGridOptions = null;
+                    StaffController.goToExternalSearch();
+                    break;
+                case 'external_search': 
+                    StaffController.step = 'confirmation';
+                    StaffController.getUniqueOpenEmisId();
+                    break;
+                case 'confirmation': 
+                    StaffController.step = 'add_staff';
+                    StaffController.generatePassword();
+                    break;
+            }
         }
     }
 
@@ -811,8 +832,17 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         $window.history.back();
     }
 
-    StaffController.selectStaff = function(id) {
+    StaffController.selectStaffFromInternalSearch = function(id) {
         StaffController.selectedUser = id;
+        StaffController.isInternalSearchSelected = true;
+        StaffController.isExternalSearchSelected = false;
+        StaffController.getStaffData();
+    }
+
+    StaffController.selectStaffFromExternalSearch = function(id) {
+        StaffController.selectedUser = id;
+        StaffController.isInternalSearchSelected = false;
+        StaffController.isExternalSearchSelected = true;
         StaffController.getStaffData();
     }
 
@@ -863,7 +893,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id);
+                    StaffController.selectStaffFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -903,7 +933,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id);
+                    StaffController.selectStaffFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -943,7 +973,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id);
+                    StaffController.selectStaffFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -982,7 +1012,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id);
+                    StaffController.selectStaffFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
