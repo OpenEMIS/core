@@ -163,6 +163,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     openemis_no: openemis_no,
                     date_of_birth: date_of_birth,
                     identity_number: identity_number,
+                    institution_id: StudentController.institutionId,
+                    user_type_id: 1,
                 }
                 InstitutionsStudentsSvc.getInternalSearchData(param)
                 .then(function(response) {
