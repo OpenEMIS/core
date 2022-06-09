@@ -39,6 +39,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.customFields = [];
     StudentController.customFieldsArray = [];
     StudentController.selectedSection = '';
+    StudentController.isInternalSearchSelected = false;
+    StudentController.isExternalSearchSelected = false;
+    StudentController.transferReasonsOptions = [];
 
     StudentController.datepickerOptions = {
         showWeeks: false
@@ -124,6 +127,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         StudentController.initGrid();
         StudentController.getGenders();
+        StudentController.getStudentTransferReason();
     });
 
     function getUniqueOpenEmisId() {
@@ -604,7 +608,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StudentController.selectStudent(_e.node.data.id);
+                    StudentController.selectStudentFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -649,7 +653,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StudentController.selectStudent(_e.node.data.id);
+                    StudentController.selectStudentFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -698,7 +702,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StudentController.selectStudent(_e.node.data.id);
+                    StudentController.selectStudentFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -741,7 +745,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StudentController.c(_e.node.data.id);
+                    StudentController.selectStudentFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -755,7 +759,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function goToPrevStep(){
-        if(!StudentController.isGuardianAdding){
+        if(StudentController.isInternalSearchSelected) {
+            StudentController.step = 'internal_search';
+            StudentController.internalGridOptions = null;
+            StudentController.goToInternalSearch();
+        } else if(StudentController.isExternalSearchSelected) {
+            StudentController.step = 'external_search';
+            StudentController.externalGridOptions = null;
+            StudentController.goToExternalSearch();
+        } else {
             switch(StudentController.step){
                 case 'internal_search': 
                     StudentController.selectedStudentData.date_of_birth = new Date(StudentController.selectedStudentData.date_of_birth);
@@ -775,46 +787,40 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     StudentController.step = 'confirmation';
                     break;
             }
-        } else{
-            switch(StudentController.guardianStep){
-                case 'internal_search': 
-                    StudentController.guardianStep = 'user_details';
-                    break;
-                case 'external_search': 
-                    StudentController.guardianStep = 'internal_search';
-                    StudentController.internalGridOptions = null;
-                    StudentController.goToInternalSearch();
-                    break;
-                case 'confirmation': 
-                    StudentController.guardianStep = 'external_search';
-                    StudentController.externalGridOptions = null;
-                    StudentController.goToExternalSearch();
-                    break;
-            }
         }
     }
 
     function goToNextStep() {
-        switch(StudentController.step){
-            case 'user_details': 
-                StudentController.validateDetails();
-                break;
-            case 'internal_search': 
-                StudentController.step = 'external_search';
-                StudentController.externalGridOptions = null;
-                StudentController.goToExternalSearch();
-                break;
-            case 'external_search': 
-                StudentController.step = 'confirmation';
-                if(!StudentController.selectedStudentData.openemis_no) {
-                    StudentController.getUniqueOpenEmisId();
-                }
-                break;
-            case 'confirmation': 
-                StudentController.step = 'add_student';
-                StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
-                StudentController.generatePassword();
-                break;
+        if(StudentController.isInternalSearchSelected) {
+            StudentController.step = 'add_student';
+            StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
+            StudentController.generatePassword();
+        } else if(StudentController.isExternalSearchSelected) {
+            StudentController.step = 'add_student';
+            StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
+            StudentController.generatePassword();
+        } else {
+            switch(StudentController.step){
+                case 'user_details': 
+                    StudentController.validateDetails();
+                    break;
+                case 'internal_search': 
+                    StudentController.step = 'external_search';
+                    StudentController.externalGridOptions = null;
+                    StudentController.goToExternalSearch();
+                    break;
+                case 'external_search': 
+                    StudentController.step = 'confirmation';
+                    if(!StudentController.selectedStudentData.openemis_no) {
+                        StudentController.getUniqueOpenEmisId();
+                    }
+                    break;
+                case 'confirmation': 
+                    StudentController.step = 'add_student';
+                    StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
+                    StudentController.generatePassword();
+                    break;
+            }
         }
     }
 
@@ -1028,8 +1034,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         });
     }
 
-    StudentController.selectStudent = function(id) {
+    StudentController.selectStudentFromInternalSearch = function(id) {
         StaffController.selectedStudent = id;
+        StudentController.isInternalSearchSelected = true;
+        StudentController.isExternalSearchSelected = false;
+        StudentController.getStudentData();
+    }
+
+    StudentController.selectStudentFromExternalSearch = function(id) {
+        StaffController.selectedStudent = id;
+        StudentController.isInternalSearchSelected = false;
+        StudentController.isExternalSearchSelected = true;
         StudentController.getStudentData();
     }
 
@@ -1041,6 +1056,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.selectedStudentData.username = value.openemis_no;
             }
         }, log);
+    }
+
+    StudentController.getStudentTransferReason = function() {
+        UtilsSvc.isAppendLoader(true);
+        InstitutionsStudentsSvc.getStudentTransferReason().then(function(resp){
+            StudentController.transferReasonsOptions = resp.data;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
     }
 
     function initGrid() {
@@ -1080,7 +1106,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StudentController.selectStudent(_e.node.data.id);
+                    StudentController.selectStudentFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -1120,7 +1146,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StudentController.c(_e.node.data.id);
+                    StudentController.selectStudentFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -1160,7 +1186,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StudentController.selectStudent(_e.node.data.id);
+                    StudentController.selectStudentFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -1199,7 +1225,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StudentController.selectStudent(_e.node.data.id);
+                    StudentController.selectStudentFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
