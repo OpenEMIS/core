@@ -874,4 +874,16 @@
         height: 40px !important;
         padding-left: 0px !important;
     }
+    
+    .alert {
+        color: #FFF !important;
+        padding: 10px !important;
+        margin: 0 0 10px !important;
+    }
+
+    .alert-success {
+        background-color: #77B576 !important;
+        border: 1px solid #77B576 !important;
+        color:
+    }
 </style>
