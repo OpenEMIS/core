@@ -36,6 +36,7 @@ class InstitutionsTable extends ControllerActionTable
         4 => "Contact People"
     ];
     public $shiftTypes = [];
+    public $shiftOwnership = [];
 
     private $classificationOptions = [];
 
@@ -47,6 +48,9 @@ class InstitutionsTable extends ControllerActionTable
     // For Academic / Non-Academic Institution type
     const ACADEMIC = 1;
     const NON_ACADEMIC = 2;
+
+    const Owner = 1;
+    const Occupier = 2;
 
     private $defaultLogoView = "<div class='profile-image'><i class='fa kd-institutions'></i></div>";
     private $defaultImgIndexClass = "logo-thumbnail";
@@ -169,14 +173,13 @@ class InstitutionsTable extends ControllerActionTable
 
         // specify order of advanced search fields
         $advancedSearchFieldOrder = [
-            'shift_type', 'classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'education_programmes',
-            'code', 'name',
+            'code', 'name','classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id',
+            'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'education_programmes','alternative_name','shift_type'
         ];
         $this->addBehavior('AdvanceSearch', [
             'display_country' => false,
             'include' =>[
-                'code', 'name'
+                'code', 'name','alternative_name'
             ],
             'order' => $advancedSearchFieldOrder
         ]);
@@ -207,14 +210,24 @@ class InstitutionsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('ControllerAction.Image');
+        /*POCOR-6764 starts*/
         /*POCOR-6346 starts*/
-        $this->shiftTypes = [
-            self::SINGLE_OWNER => __('Single Owner'),
-            self::SINGLE_OCCUPIER => __('Single Occupier'),
-            self::MULTIPLE_OWNER => __('Multiple Owner'),
-            self::MULTIPLE_OCCUPIER => __('Multiple Occupier')
-        ];
+        // $this->shiftTypes = [
+        //     self::SINGLE_OWNER => __('Single Owner'),
+        //     self::SINGLE_OCCUPIER => __('Single Occupier'),
+        //     self::MULTIPLE_OWNER => __('Multiple Owner'),
+        //     self::MULTIPLE_OCCUPIER => __('Multiple Occupier')
+        // ];
         /*POCOR-6346 ends*/
+
+        $this->shiftTypes = $this->getShiftTypesOptions();
+
+        $this->shiftOwnership = [
+            self::Owner => __('Owner'),
+            self::Occupier => __('Occupier')
+        ];
+        /*POCOR-6764 End*/
+
         $this->classificationOptions = [
             self::ACADEMIC => __('Academic Institution'),
             self::NON_ACADEMIC => __('Non-Academic Institution')
@@ -1733,6 +1746,11 @@ class InstitutionsTable extends ControllerActionTable
             'classification' => [
                 'label' => __('Classification'),
                 'options' => $this->classificationOptions
+            ],
+            //alternative_name rename to Shift Ownership filter from advance search because Institutions table only column showing in filter advance search
+            'alternative_name' => [
+                'label' => __('Shift Ownership'),
+                'options' => $this->shiftOwnership
             ]
         ];
         return $filters;
@@ -1945,5 +1963,21 @@ class InstitutionsTable extends ControllerActionTable
 
         //echo $query; die;
         return $query;
+    }
+
+    /** Get the feature the value of Shift Options
+        * @author Rahul Singh <rahul.singh@mail.valuecoder.com>
+        *return array
+        *POCOR-6764
+    */
+    public function getShiftTypesOptions(){
+        $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+
+        $shiftOptionsOptions = $ShiftOptions
+        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+        ->find('visible')
+        ->find('order')
+        ->toArray();   
+        return $shiftOptionsOptions;
     }
 }

@@ -270,15 +270,15 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         $action = $this->action;
         //Start:POCOR-6644
-    	if(!isset($extra['entity']->institution_shift_id) || empty($extra['entity']->institution_shift_id) || ($extra['entity']->institution_shift_id == "")){
-    		
-    	}else{ 
+        if(!isset($extra['entity']->institution_shift_id) || empty($extra['entity']->institution_shift_id) || ($extra['entity']->institution_shift_id == "")){
+            
+        }else{ 
             $institutionShiftId = $extra['entity']->institution_shift_id;
             if ($action != 'add') {
                 $staffOptions = [];
                 $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
                 $institutionId = $extra['institution_id'];
-                if ($selectedAcademicPeriodId > -1) {	
+                if ($selectedAcademicPeriodId > -1) {   
                     if ($action == 'index') {
                         $action = 'view';
                     }                
@@ -291,7 +291,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 }
                 /** POCOR-6721 ends */
             }
-    	}
+        }
         //End:POCOR-6644
     }
 
@@ -1315,7 +1315,8 @@ class InstitutionClassesTable extends ControllerActionTable
                                     $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
                                     $InstitutionClassStudents->aliasField('institution_id') => $institutionId,
                                     $InstitutionClassStudents->aliasField('academic_period_id') => $periodId,
-                                    $InstitutionClassStudents->aliasField('education_grade_id IN') => $grades
+                                    $InstitutionClassStudents->aliasField('education_grade_id IN') => $grades,
+                                    $InstitutionClassStudents->aliasField('student_status_id') => 1  //POCOR-6733
                                 ]);
         $count = 0;
         if (!empty($totalStudentRecord)) {

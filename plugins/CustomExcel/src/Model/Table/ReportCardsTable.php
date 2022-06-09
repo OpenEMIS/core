@@ -1053,7 +1053,8 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseSubjectTeacher(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('assessment_id', $extra) && array_key_exists('institution_class_id', $params)) {
-            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+            //Start: POCOR-6769
+            /*$AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
             $StudentSubjects = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $AssessmentItemData = $AssessmentItems
                 ->find('assessmentItemsInClass', [
@@ -1073,7 +1074,22 @@ class ReportCardsTable extends AppTable
                 ])
                 ->group('education_subject_id')
 
+                ->toArray();*/
+            $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $AssessmentItemData = $SubjectStudents->find()
+                ->where([
+                    $SubjectStudents->aliasField('student_id') => $params['student_id'],
+                    $SubjectStudents->aliasField('institution_class_id') => $params['institution_class_id'],
+                    $SubjectStudents->aliasField('institution_id') => $params['institution_id'],
+                    $SubjectStudents->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
+                ])
+                ->contain([
+                    'EducationSubjects','InstitutionSubjects'
+                ]) 
+                ->hydrate(false)
                 ->toArray();
+            //End: POCOR-6769
             //POCOR-6327 starts
             if(empty($AssessmentItemData)){
                 $entity = [];
@@ -1092,7 +1108,7 @@ class ReportCardsTable extends AppTable
                     'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
                 ])
                 ->where([
-                    $StudentSubjectStaff->aliasField('institution_subject_id') => $value->institution_subject_id,
+                    $StudentSubjectStaff->aliasField('institution_subject_id') => $value['institution_subject_id'],
                 ])
                 ->toArray();
 				$name = [];
@@ -1100,7 +1116,7 @@ class ReportCardsTable extends AppTable
 					$name[] = $data->first_name.' '.$data->last_name;
 				}
 				$entity[] = [
-					'education_subject_id' => $value->education_subject_id,
+					'education_subject_id' => $value['education_subject_id'],
 					'name' => implode(",",$name)
 				];	
 			}				
