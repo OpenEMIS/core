@@ -1,3 +1,15 @@
+### [3.75.9] - 2022-06-09
+- Bug Fixed: Institutions>Academic>Classes: The number of total students should only count the number of enrolled students
+- Bug Fixed: Institution>Report Card>Comments: Changes to Performance-Assessments
+- Bug Fixed: API: Add staff page in Institution and updating of school classes for students
+- Bug Fixed: Institutions > Statistics > Standard Report > Student Absences by Absence Type : Rename Columns, Absence Reason columns should not be hardcoded
+- Bug Fixed: Institution>Students/Staff>General>Attachment: Attachment tab should allow students to see other tabs
+- Bug Fixed: Institution > Students > Academic : Extracurricular record is not showing
+- Bug Fixed: Institutions > Advanced Search : Changes on Shift filter
+- Bug Fixed: Personal > Student > Academic>Competencies: Naming is confusing
+- Bug Fixed: Institutions>Performance>Report Cards: Teacher does not match with the report card
+- Bug Fixed: Administration>Security>Users: Edit permission is not working for homeroom teacher
+
 ### [3.75.8] - 2022-06-01
 - Bug Fixed: Institutions>Attendance>Students: Teacher is unable to mark attendance for multigrade classes
 - Bug Fixed: Institutions>Performance>Report Cards: All classes dropdown is showing all classes process even when it is only generate all for one class
