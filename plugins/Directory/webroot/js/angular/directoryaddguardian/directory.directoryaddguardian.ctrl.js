@@ -119,6 +119,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     openemis_no: openemis_no,
                     date_of_birth: date_of_birth,
                     identity_number: identity_number,
+                    institution_id: null,
+                    user_type_id: 3,
                 }
                 DirectoryaddguardianSvc.getInternalSearchData(param)
                 .then(function(response) {
