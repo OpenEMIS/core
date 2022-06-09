@@ -176,7 +176,24 @@ class StaffTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1]; //POCOR-6749: to enable Staff api
         return $events;
+    }
+
+    /*
+    * Function to enable staff api call for view and add
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return boolean
+    * @ticket POCOR-6749
+    */
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'index' || $action == 'add') {
+            // check for the user permission to view here
+            $event->stopPropagation();
+            return true;
+        }
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
@@ -1035,6 +1052,7 @@ class StaffTable extends ControllerActionTable
             $newEndDate = $entity->end_date;
 
             $entity->FTE = $entity->getOriginal('FTE');
+            $entity->start_year = $entity->getOriginal('start_year'); //POCOR-6749
             $entity->newFTE = $newFTE;
             $todayDate = new Date();
 
@@ -1051,6 +1069,7 @@ class StaffTable extends ControllerActionTable
                 }
             }
         }
+        $entity->start_year = $entity->getOriginal('start_year'); //POCOR-6749
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
