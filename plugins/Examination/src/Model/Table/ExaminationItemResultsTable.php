@@ -86,10 +86,12 @@ class ExaminationItemResultsTable extends AppTable
                 $this->ExaminationGradingOptions->aliasField('name'),
                 $this->ExaminationGradingOptions->aliasField('examination_grading_type_id'),
             ])
+            ->contain('ExaminationGradingOptions') //POCOR-6761
+            ->contain('ExaminationGradingOptions.ExaminationGradingTypes') //POCOR-6761
             ->innerJoinWith('Examinations')
             ->innerJoinWith('ExaminationItems')
             ->leftJoinWith('EducationSubjects')
-            ->innerJoinWith('ExaminationGradingOptions')
+            //->innerJoinWith('ExaminationGradingOptions')
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('student_id') => $studentId,
