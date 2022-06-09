@@ -18,15 +18,15 @@ class ExtracurricularsTable extends ControllerActionTable {
 		$this->belongsTo('ExtracurricularTypes', ['className' => 'FieldOption.ExtracurricularTypes']);
 	}
 
-	// public function beforeAction() {
+	public function beforeAction() {
 		
-	// 	$this->fields['academic_period_id']['type'] = 'select';
-	// 	$this->fields['extracurricular_type_id']['type'] = 'select';
+		$this->fields['academic_period_id']['type'] = 'select';
+		$this->fields['extracurricular_type_id']['type'] = 'select';
 
-	// 	if (strtolower($this->action) != 'index') {
-	// 		$this->Navigation->addCrumb($this->getHeader($this->action));
-	// 	}
-	// }
+		if (strtolower($this->action) != 'index') {
+			$this->Navigation->addCrumb($this->getHeader($this->action));
+		}
+	}
 
 	public function indexBeforeAction(Event $event) {
 		
