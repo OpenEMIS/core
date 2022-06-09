@@ -163,6 +163,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     openemis_no: openemis_no,
                     date_of_birth: date_of_birth,
                     identity_number: identity_number,
+                    institution_id: StudentController.institutionId,
+                    user_type_id: 1,
                 }
                 InstitutionsStudentsSvc.getInternalSearchData(param)
                 .then(function(response) {
@@ -1036,6 +1038,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         angular.forEach(StudentController.rowsThisPage , function(value) {
             if (value.id == StudentController.selectedStudent) {
                 StudentController.selectedStudentData = value;
+                StudentController.selectedStudentData.username = value.openemis_no;
             }
         }, log);
     }
