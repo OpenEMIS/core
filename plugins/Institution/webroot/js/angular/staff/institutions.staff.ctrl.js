@@ -207,6 +207,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     openemis_no: openemis_no,
                     date_of_birth: date_of_birth,
                     identity_number: identity_number,
+                    institution_id: StaffController.institutionId,
+                    user_type_id: 2,
                 }
                 InstitutionsStaffSvc.getInternalSearchData(param)
                 .then(function(response) {
