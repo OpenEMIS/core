@@ -293,7 +293,54 @@ class GuardiansTable extends AppTable {
             'InstitutionClassStudents.student_status_id = ' . 'StudentStatuses.id',
             'Areas.area_level_id !=' . 1,
              $conditions
-        ]);
+        ]);/**POCOR-6728 starts*/
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                
+                $areas1 = TableRegistry::get('areas');
+                $areasData = $areas1
+                            ->find()
+                            ->where([$areas1->alias('code')=>$row->area_code])
+                            ->first();
+                $row['region_code'] = '';            
+                $row['region_name'] = '';
+                if(!empty($areasData)){
+                    $areas = TableRegistry::get('areas');
+                    $areaLevels = TableRegistry::get('area_levels');
+                    $institutions = TableRegistry::get('institutions');
+                    $val = $areas
+                                ->find()
+                                ->select([
+                                    $areas1->aliasField('code'),
+                                    $areas1->aliasField('name'),
+                                    ])
+                                ->leftJoin(
+                                    [$areaLevels->alias() => $areaLevels->table()],
+                                    [
+                                        $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
+                                    ]
+                                )
+                                ->leftJoin(
+                                    [$institutions->alias() => $institutions->table()],
+                                    [
+                                        $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
+                                    ]
+                                )    
+                                ->where([
+                                    $areaLevels->aliasField('level !=') => 1,
+                                    $areas->aliasField('id') => $areasData->parent_id
+                                ])->first();
+                    
+                    if (!empty($val->name) && !empty($val->code)) {
+                        $row['region_code'] = $val->code;
+                        $row['region_name'] = $val->name;
+                    }
+                }            
+                
+                return $row;
+            });
+        });
+        /**POCOR-6728 end*/
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
@@ -319,19 +366,24 @@ class GuardiansTable extends AppTable {
             'type' => 'string',
             'label' => __('Area Code')
         ];
+        /**POCOR-6728 starts - uncommented area column*/
+        $AreaLevelTbl = TableRegistry::get('area_levels');
+        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->hydrate(false)->toArray();
+        
+        $extraFields[] = [
+            'key' => '',
+            'field' => 'region_name',
+            'type' => 'string',
+            'label' => __($AreaLevelArr[1]['name'])
+        ];
 
         $extraFields[] = [
-            'key' => 'Areas.name',
+            'key' => '',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => __('Area Name')
+            'label' => __($AreaLevelArr[0]['name'])
         ];
-        $extraFields[] = [ // POCOR-6728
-            'key' => 'atoll',
-            'field' => 'atoll',
-            'type' => 'string',
-            'label' => __('Atoll')
-        ];
+        /**POCOR-6728 ends*/
 
         $extraFields[] = [ // POCOR-6728
             'key' => 'education_code',
