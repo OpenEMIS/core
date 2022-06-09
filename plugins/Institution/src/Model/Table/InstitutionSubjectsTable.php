@@ -561,18 +561,29 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     { 
-        $classId = $this->request->query['class_id'];
+        /**POCOR-6768 starts - added innerjoin to get correct student records*/ 
+        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $encodedSubjectId = $this->request->params['pass'][1];
+        $decodedSubjectId = $this->paramsDecode($encodedSubjectId);
+        $subjectId = $decodedSubjectId['id'];
+        $getClassesObj = $InstitutionClassSubjects->find()
+                        ->select(['class_id' => $InstitutionClassSubjects->aliasField('institution_class_id')])
+                        ->where([$InstitutionClassSubjects->aliasField('institution_subject_id') => $subjectId])
+                        ->toArray();
+        $classIds = [];
+        if (!empty($getClassesObj)) {
+            foreach ($getClassesObj as $class) {
+                $classIds[] = $class->class_id;
+            }
+        }
+
         $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $query->contain([
                 'Classes.ClassesSecondaryStaff',
                 'Teachers',
                 'Rooms',
-                'SubjectStudents'  => function ($q) use($InstitutionClassStudents,  $classId) {
+                'SubjectStudents'  => function ($q) use($InstitutionClassStudents,  $classIds, $subjectId) {
                     return $q
-                        ->contain(['Users.Genders',
-                        'InstitutionClasses',
-                        'StudentStatuses'
-                        ])
                         ->innerJoin([$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()], [
                             'SubjectStudents.student_id = ' . $InstitutionClassStudents->aliasField('student_id'),
                             'SubjectStudents.institution_id = ' . $InstitutionClassStudents->aliasField('institution_id'),
@@ -582,10 +593,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             'SubjectStudents.student_status_id = ' . $InstitutionClassStudents->aliasField('student_status_id')
                         ])
                         ->where([
-                            'SubjectStudents.institution_class_id' =>  $classId
+                            'SubjectStudents.institution_class_id IN' => $classIds,
+                            'SubjectStudents.institution_subject_id' => $subjectId
+                        ])
+                        ->contain(['Users.Genders',
+                            'InstitutionClasses',
+                            'StudentStatuses'
                         ]);
                 }
             ]);
+        /**POCOR-6768 ends*/ 
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -1906,7 +1923,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                 $institutionSubjectStudents->aliasField('institution_id') => $institutionId,
                                 $institutionSubjectStudents->aliasField('academic_period_id') => $periodId,
                                 $institutionSubjectStudents->aliasField('student_status_id') => 1,
-                            ])->count();
+                            ])->group([$institutionSubjectStudents->aliasField('student_id')])//POCOR-6768
+                            ->count();
         //echo "<pre>"; print_r($totalStudentCount); exit;
         // foreach ($entity->subject_students as $key => $data) {
         //     if ($data->student_status_id == 1) {
@@ -1938,7 +1956,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                 $institutionSubjectStudents->aliasField('academic_period_id') => $periodId,
                                 $institutionSubjectStudents->aliasField('student_status_id') => 1,
                                 $users->aliasField('gender_id') => $genderId
-                            ])->count();
+                            ])->group([$institutionSubjectStudents->aliasField('student_id')])//POCOR-6768
+                            ->count();
         
         return $totalMaleStudentCount;
     }
@@ -1961,7 +1980,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                 $institutionSubjectStudents->aliasField('academic_period_id') => $periodId,
                                 $institutionSubjectStudents->aliasField('student_status_id') => 1,
                                 $users->aliasField('gender_id') => $genderId
-                            ])->count();
+                            ])
+                            ->group([$institutionSubjectStudents->aliasField('student_id')])//POCOR-6768
+                            ->count();
         
         return $totalFemaleStudentCount;
     }
