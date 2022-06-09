@@ -673,7 +673,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             ])
             ->first();
 
-            return $competencyEntity->name; 
+            return $competencyEntity->code.'-'.$competencyEntity->name;//POCOR-6767
         }
 
         $competencyEntity = $CompetencyPeriods->find()
@@ -684,7 +684,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         ])
         ->first();
 
-        return $competencyEntity->name;
+        return $competencyEntity->code.'-'.$competencyEntity->name; //POCOR-6767
 
     }
 }
