@@ -70,6 +70,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         getBirthplaceAreaId: getBirthplaceAreaId,
         getAddressArea: getAddressArea,
         getBirthplaceArea: getBirthplaceArea,
+        getStudentTransferReason: getStudentTransferReason,
     };
 
     var models = {
@@ -171,6 +172,18 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
     function getRelationType() {
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Directories/getRelationshipType';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getStudentTransferReason() {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/getStudentTransferReason';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response);

@@ -28,6 +28,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.selectedGuardian;
     scope.error = {};
     scope.studentOpenEmisId;
+    scope.isInternalSearchSelected = false;
 
     scope.datepickerOptions = {
         minDate: new Date('01/01/1900'),
@@ -82,6 +83,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     scope.getUniqueOpenEmisId = function() {
         if(scope.selectedUserData.openemis_no){
+            scope.selectedUserData.username = scope.selectedUserData.openemis_no;
             scope.generatePassword();
             return;
         }
@@ -393,7 +395,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    scope.selectGuardian(_e.node.data.id);
+                    scope.selectGuardianFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -443,7 +445,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    scope.selectGuardian(_e.node.data.id);
+                    scope.selectGuardianFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -499,7 +501,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    scope.selectGuardian(_e.node.data.id);
+                    scope.selectGuardianFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -548,7 +550,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    scope.selectGuardian(_e.node.data.id);
+                    scope.selectGuardianFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -611,38 +613,49 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.goToPrevStep = function(){
-        switch(scope.step){
-            case 'internal_search': 
-                scope.step = 'user_details';
-                break;
-            case 'external_search': 
-                scope.step = 'internal_search';
-                scope.internalGridOptions = null;
-                scope.goToInternalSearch();
-                break;
-            case 'confirmation': 
-                scope.step = 'external_search';
-                scope.externalGridOptions = null;
-                scope.goToExternalSearch();
-                break;
+        if(scope.isInternalSearchSelected) {
+            scope.step = 'internal_search';
+            scope.internalGridOptions = null;
+            scope.goToInternalSearch();
+        } else {
+            switch(scope.step){
+                case 'internal_search': 
+                    scope.step = 'user_details';
+                    break;
+                case 'external_search': 
+                    scope.step = 'internal_search';
+                    scope.internalGridOptions = null;
+                    scope.goToInternalSearch();
+                    break;
+                case 'confirmation': 
+                    scope.step = 'external_search';
+                    scope.externalGridOptions = null;
+                    scope.goToExternalSearch();
+                    break;
+            }
         }
     }
 
     scope.goToNextStep = function() {
-        switch(scope.step){
-            case 'user_details': 
-                scope.validateDetails();
-                break;
-            case 'internal_search': 
-                scope.step = 'external_search';
-                scope.externalGridOptions = null;
-                UtilsSvc.isAppendLoader(true);
-                scope.goToExternalSearch();
-                break;
-            case 'external_search': 
-                scope.step = 'confirmation';
-                scope.getUniqueOpenEmisId();
-                break;
+        if(scope.isInternalSearchSelected) {
+            scope.step = 'confirmation';
+            scope.getUniqueOpenEmisId();
+        } else {
+            switch(scope.step){
+                case 'user_details': 
+                    scope.validateDetails();
+                    break;
+                case 'internal_search': 
+                    scope.step = 'external_search';
+                    scope.externalGridOptions = null;
+                    UtilsSvc.isAppendLoader(true);
+                    scope.goToExternalSearch();
+                    break;
+                case 'external_search': 
+                    scope.step = 'confirmation';
+                    scope.getUniqueOpenEmisId();
+                    break;
+            }
         }
     }
 
@@ -687,7 +700,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    scope.selectGuardian(_e.node.data.id);
+                    scope.selectGuardianFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -734,7 +747,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    scope.selectGuardian(_e.node.data.id);
+                    scope.selectGuardianFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -781,7 +794,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    scope.selectGuardian(_e.node.data.id);
+                    scope.selectGuardianFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -827,7 +840,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    scope.selectGuardian(_e.node.data.id);
+                    scope.selectGuardianFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -844,8 +857,15 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         });
     };
 
-    scope.selectGuardian = function(id) {
+    scope.selectGuardianFromInternalSearch = function(id) {
         scope.selectedGuardian = id;
+        scope.isInternalSearchSelected = true;
+        scope.getGuardianData();
+    }
+
+    scope.selectGuardianFromExternalSearch = function(id) {
+        scope.selectedGuardian = id;
+        scope.isInternalSearchSelected = false;
         scope.getGuardianData();
     }
 
@@ -854,7 +874,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         angular.forEach(scope.rowsThisPage , function(value) {
             if (value.id == scope.selectedGuardian) {
                 scope.selectedUserData = value;
-                scope.selectedUserData.username = value.openemis_no;
             }
         }, log);
     }
