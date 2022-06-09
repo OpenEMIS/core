@@ -585,7 +585,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'SubjectStudents'  => function ($q) use($InstitutionClassStudents,  $classIds, $subjectId) {
                     return $q
                         ->innerJoin([$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()], [
-                            'SubjectStudents.student_id = ' . $InstitutionClassStudents->aliasField('student_id'),
+                            //'SubjectStudents.student_id = ' . $InstitutionClassStudents->aliasField('student_id'),
                             'SubjectStudents.institution_id = ' . $InstitutionClassStudents->aliasField('institution_id'),
                             'SubjectStudents.academic_period_id = ' . $InstitutionClassStudents->aliasField('academic_period_id'),
                             'SubjectStudents.education_grade_id = ' . $InstitutionClassStudents->aliasField('education_grade_id'),
@@ -599,7 +599,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         ->contain(['Users.Genders',
                             'InstitutionClasses',
                             'StudentStatuses'
-                        ]);
+                        ])
+                        ->group(['SubjectStudents.student_id']);
                 }
             ]);
         /**POCOR-6768 ends*/ 
