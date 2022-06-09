@@ -1132,6 +1132,7 @@ class DirectoriesController extends AppController
         $genders = TableRegistry::get('genders');
         $mainIdentityTypes = TableRegistry::get('identity_types');
         $mainNationalities = TableRegistry::get('nationalities');
+        $areaAdministratives = TableRegistry::get('area_administratives');
 
         if (!empty($firstName)) {
             $conditions[$security_users->aliasField('first_name').' LIKE'] = $firstName . '%';
@@ -1200,6 +1201,8 @@ class DirectoriesController extends AppController
                 'MainIdentityTypes_name'=> $mainIdentityTypes->aliasField('name'),
                 'MainNationalities_id'=> $mainNationalities->aliasField('id'),
                 'MainNationalities_name'=> $mainNationalities->aliasField('name'),
+                'area_name'=> $areaAdministratives->aliasField('name'),
+                'area_code'=> $areaAdministratives->aliasField('code'),
             ])
             ->LeftJoin(['Identities' => 'user_identities'],[
                 'Identities.security_user_id'=> $security_users->aliasField('id'),
@@ -1212,6 +1215,9 @@ class DirectoriesController extends AppController
             ])
             ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
                 $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
+            ])
+            ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
+                $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
             ])
             ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
             ->group([$security_users->aliasField('id')])
@@ -1259,6 +1265,8 @@ class DirectoriesController extends AppController
                 'MainIdentityTypes_name'=> $mainIdentityTypes->aliasField('name'),
                 'MainNationalities_id'=> $mainNationalities->aliasField('id'),
                 'MainNationalities_name'=> $mainNationalities->aliasField('name'),
+                'area_name'=> $areaAdministratives->aliasField('name'),
+                'area_code'=> $areaAdministratives->aliasField('code'),
             ])
             ->InnerJoin(['Identities' => 'user_identities'],[
                 'Identities.security_user_id'=> $security_users->aliasField('id'),
@@ -1272,6 +1280,9 @@ class DirectoriesController extends AppController
             ])
             ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
                 $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
+            ])
+            ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
+                $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
             ])
             ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
             ->group([$security_users->aliasField('id')])
@@ -1301,11 +1312,13 @@ class DirectoriesController extends AppController
             $has_special_needs = ($SpecialNeeds == 1) ? true : false;
 
             $is_same_school = $is_diff_school = $academic_period_id = $academic_period_year = 0;
-            $institution_id = $institution_code = $institution_name = '';
-            //$userTypeId = 1;
-            //$institutionId = 13;
+            $education_grade_id = $institution_id = $institution_code = $institution_name = '';
+            
             if (!empty($userTypeId)) {
                 if($userTypeId == 1){
+                    $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+                    $statuses = $StudentStatuses->findCodeList();
+
                     $institutionStudTbl = $institutionStudents
                                     ->find()
                                     ->select([
@@ -1315,14 +1328,15 @@ class DirectoriesController extends AppController
                                         'institution_name'=>$institutions->aliasField('name'),
                                         'institution_code'=>$institutions->aliasField('code'),
                                         'academic_period_id'=>$institutionStudents->aliasField('academic_period_id'),
-                                        'academic_period_year'=>$institutionStudents->aliasField('start_year')
+                                        'academic_period_year'=>$institutionStudents->aliasField('start_year'),
+                                        'education_grade_id'=>$institutionStudents->aliasField('education_grade_id')
                                     ])
                                     ->InnerJoin([$institutions->alias() => $institutions->table()], [
                                         $institutions->aliasField('id =') . $institutionStudents->aliasField('institution_id')
                                     ])
                                     ->where([
                                         $institutionStudents->aliasField('student_id') => $result['id'],
-                                        $institutionStudents->aliasField('student_status_id') => 1
+                                        $institutionStudents->aliasField('student_status_id') => $statuses['CURRENT']
                                     ])->first();
                     if(!empty($institutionStudTbl)){
                         $institution_id = $institutionStudTbl->institution_id;
@@ -1337,6 +1351,9 @@ class DirectoriesController extends AppController
                         }
                     }
                 }else if($userTypeId == 2){
+                    $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+                    $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+                    
                     $institutionStaffTbl = $institutionStaff
                                     ->find()
                                     ->select([
@@ -1351,7 +1368,7 @@ class DirectoriesController extends AppController
                                     ])
                                     ->where([
                                         $institutionStaff->aliasField('staff_id') => $result['id'],
-                                        $institutionStaff->aliasField('staff_status_id') => 1
+                                        $institutionStaff->aliasField('staff_status_id') => $assignedStatus
                                     ])->first();
                     if(!empty($institutionStaffTbl)){
                         $institution_id = $institutionStaffTbl->institution_id;
@@ -1366,7 +1383,7 @@ class DirectoriesController extends AppController
                 }
             }
 
-            $result_array[] = array('id' => $result['id'],'username' => $result['username'],'password' => $result['password'],'openemis_no' => $result['openemis_no'],'first_name' => $result['first_name'],'middle_name' => $result['middle_name'],'third_name' => $result['third_name'],'last_name' => $result['last_name'],'preferred_name' => $result['preferred_name'],'email' => $result['email'],'address' => $result['address'],'postal_code' => $result['postal_code'],'gender_id' => $result['gender_id'],'external_reference' => $result['external_reference'],'last_login' => $result['last_login'],'photo_name' => $result['photo_name'],'photo_content' => $result['photo_content'],'preferred_language' => $result['preferred_language'],'address_area_id' => $result['address_area_id'],'birthplace_area_id' => $result['birthplace_area_id'],'super_admin' => $result['super_admin'],'status' => $result['status'],'is_student' => $result['is_student'],'is_staff' => $result['is_staff'],'is_guardian' => $result['is_guardian'],'name'=>$result['first_name']." ".$result['last_name'],'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'),'gender'=>$result['Genders_name'],'nationality_id'=>$MainNationalities_id,'nationality'=>$MainNationalities_name,'identity_type_id'=>$MainIdentityTypes_id,'identity_type'=>$MainIdentityTypes_name,'identity_number'=>$identity_number,'has_special_needs'=>$has_special_needs, 'is_same_school'=>$is_same_school, 'is_diff_school'=>$is_diff_school, 'current_enrol_institution_id'=> $institution_id, 'current_enrol_institution_name'=> $institution_name, 'current_enrol_institution_code'=> $institution_code, 'current_enrol_academic_period_id'=> $academic_period_id, 'current_enrol_academic_period_year'=> $academic_period_year);
+            $result_array[] = array('id' => $result['id'],'username' => $result['username'],'password' => $result['password'],'openemis_no' => $result['openemis_no'],'first_name' => $result['first_name'],'middle_name' => $result['middle_name'],'third_name' => $result['third_name'],'last_name' => $result['last_name'],'preferred_name' => $result['preferred_name'],'email' => $result['email'],'address' => $result['address'],'postal_code' => $result['postal_code'],'gender_id' => $result['gender_id'],'external_reference' => $result['external_reference'],'last_login' => $result['last_login'],'photo_name' => $result['photo_name'],'photo_content' => $result['photo_content'],'preferred_language' => $result['preferred_language'],'address_area_id' => $result['address_area_id'],'birthplace_area_id' => $result['birthplace_area_id'],'super_admin' => $result['super_admin'],'status' => $result['status'],'is_student' => $result['is_student'],'is_staff' => $result['is_staff'],'is_guardian' => $result['is_guardian'],'name'=>$result['first_name']." ".$result['last_name'],'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'),'gender'=>$result['Genders_name'],'nationality_id'=>$MainNationalities_id,'nationality'=>$MainNationalities_name,'identity_type_id'=>$MainIdentityTypes_id,'identity_type'=>$MainIdentityTypes_name,'identity_number'=>$identity_number,'has_special_needs'=>$has_special_needs,'area_name'=>$area_name,'area_code'=>$area_code, 'is_same_school'=>$is_same_school, 'is_diff_school'=>$is_diff_school, 'current_enrol_institution_id'=> $institution_id, 'current_enrol_institution_name'=> $institution_name, 'current_enrol_institution_code'=> $institution_code, 'current_enrol_academic_period_id'=> $academic_period_id, 'current_enrol_academic_period_year'=> $academic_period_year, 'education_grade_id'=> $education_grade_id);
         }
         echo json_encode(['data' => $result_array, 'total' => $totalCount], JSON_PARTIAL_OUTPUT_ON_ERROR); die;
     }
