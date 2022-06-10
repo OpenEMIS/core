@@ -47,7 +47,8 @@ class ReportCardSubjectsTable extends ControllerActionTable
                     'code' => $this->EducationSubjects->aliasField('code'),
                     'name' => $InstitutionSubjects->aliasField('name'),
                     'id' => $InstitutionSubjects->aliasField('id'),
-                    $this->EducationSubjects->aliasField('order')
+                    $this->EducationSubjects->aliasField('order'),
+                    'staff_id' => $staffSubject->aliasField('staff_id'),//POCOR-6734
                 ])
                 ->innerJoinWith('EducationSubjects')
                 ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
