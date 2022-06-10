@@ -1016,11 +1016,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
                 $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
                 if (!$StudentsReportCards->exists($recordIdKeys)) {
-                    //START: POCOR-6782
-                    $ReportCardProcesses->updateAll([
-                        'modified' => date('Y-m-d H:i:s')
-                    ], $recordIdKeys);
-                    //END: POCOR-6782
 
                     // insert student report card record if it does not exist
                     $recordIdKeys['status'] = $StudentsReportCards::IN_PROGRESS;
@@ -1028,11 +1023,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $newEntity = $StudentsReportCards->newEntity($recordIdKeys);
                     $StudentsReportCards->save($newEntity);
                 } else {
-                    //START: POCOR-6782
-                    $ReportCardProcesses->updateAll([
-                        'modified' => date('Y-m-d H:i:s')
-                    ], $recordIdKeys);
-                    //END: POCOR-6782
                     // update status to in progress if record exists
                     $StudentsReportCards->updateAll([
                         'status' => $StudentsReportCards::IN_PROGRESS,
