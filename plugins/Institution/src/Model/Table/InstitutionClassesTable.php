@@ -415,7 +415,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     $newStudents[$student['student_id']] = $student;
                 }
                 $institutionClassId = $entity->id;
-
+                $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');//POCOR-6768
                 $existingStudents = $this->ClassStudents
                     ->find('all')
                     ->select([
@@ -432,14 +432,25 @@ class InstitutionClassesTable extends ControllerActionTable
                 foreach ($existingStudents as $key => $classStudentEntity) {
                     if (!array_key_exists($classStudentEntity->student_id, $newStudents)) { // if current student does not exists in the new list of students
                         $this->ClassStudents->delete($classStudentEntity);
+                        /** POCOR-6768 starts - removing student from institution_subject_students which is unassigned from class*/ 
+                        $SubjectStudents->deleteAll([
+                            $SubjectStudents->aliasField('institution_class_id') => $institutionClassId,
+                            $SubjectStudents->aliasField('student_id') => $classStudentEntity->student_id,
+                        ]);
+                        /**POCOR-6768 ends*/
                     } else { // if student exists, then remove from the array to get the new student records to be added
-                        unset($newStudents[$classStudentEntity->student_id]);
+                        unset($newStudents[$classStudentEntity->student_id]); 
                     }
                 }
 
                 foreach ($newStudents as $key => $student) {
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
-                    $this->ClassStudents->save($newClassStudentEntity);
+                    $store = $this->ClassStudents->save($newClassStudentEntity);
+                    if ($store) {
+                        /** POCOR-6768 starts- updating student's class in institution_subject_students table which is reassigning into a class*/ 
+                        $SubjectStudents->updateAll(['institution_class_id' => $newClassStudentEntity->institution_class_id], ['id' => $newClassStudentEntity->id]);
+                        /**POCOR-6768 ends*/
+                    }
                 }
             }
 
