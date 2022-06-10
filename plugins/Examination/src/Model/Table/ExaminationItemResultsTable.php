@@ -61,7 +61,12 @@ class ExaminationItemResultsTable extends AppTable
         if ($session->check('Student.ExaminationResults.student_id')) {
             $studentId = $session->read('Student.ExaminationResults.student_id');
         }
-
+        //POCOR-6761 start
+        $stdID = $session->read('Student.ExaminationResults.student_id');
+        if($stdID==''){
+            $studentId = $session->read('Auth.User.id');
+        }
+        //POCOR-6761 end
         return $query
             ->select([
                 $this->aliasField('id'),
