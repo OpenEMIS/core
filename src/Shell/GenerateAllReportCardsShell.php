@@ -6,6 +6,7 @@ use Exception;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 use Cake\Console\Shell;
 
 class GenerateAllReportCardsShell extends Shell
@@ -23,6 +24,8 @@ class GenerateAllReportCardsShell extends Shell
     public function main()
     {
         if (!empty($this->args[0]) && !empty($this->args[1])) {
+            $todayDate = Date::now();
+            $todayDate = $todayDate->format('Y-m-d');
             $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllReportCards', getmypid(), $this->args[0], '', $this->args[1]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
 
@@ -44,15 +47,22 @@ class GenerateAllReportCardsShell extends Shell
                 ])
                 ->hydrate(false)
                 ->first();
+                echo "<pre>";print_r($recordToProcess);
 
             if (!empty($recordToProcess)) {
                 $this->out('Generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
-                $this->ReportCardProcesses->updateAll(['status' => $this->ReportCardProcesses::RUNNING], [
-                    'report_card_id' => $recordToProcess['report_card_id'],
-                    'institution_class_id' => $recordToProcess['institution_class_id'],
-                    'student_id' => $recordToProcess['student_id'],
-                    'modified' => date('Y-m-d H:i:s')
-                ]);
+                try {
+                    //'status' => $this->ReportCardProcesses::RUNNING change to 2
+                    $this->ReportCardProcesses->updateAll(['status' => 2, 'modified' => $todayDate], [
+                        'report_card_id' => $recordToProcess['report_card_id'],
+                        'institution_class_id' => $recordToProcess['institution_class_id'],
+                        'student_id' => $recordToProcess['student_id']
+                    ]);
+                }
+                catch (\Exception $e) {
+                    $this->out('Error in update report ' . $recordToProcess['student_id']);
+                    $this->out($e->getMessage());
+                }
 
                 $excelParams = new ArrayObject([]);
                 $excelParams['className'] = 'CustomExcel.ReportCards';
