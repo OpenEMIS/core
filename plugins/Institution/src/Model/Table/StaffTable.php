@@ -2183,7 +2183,7 @@ class StaffTable extends ControllerActionTable
                                 $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('institution_id')
                             ])
                             ->innerJoin([$SecurityGroupUsersTbl->alias() => $SecurityGroupUsersTbl->table()], [
-                                $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $SecurityGroupsTbl->aliasField('id')
+                                $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6783
                             ])
                             ->where([
                                 $SecurityGroupInsTbl->aliasField('institution_id') => $institutionId,
@@ -2260,7 +2260,7 @@ class StaffTable extends ControllerActionTable
                                 $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('institution_id')
                             ])
                             ->innerJoin([$SecurityGroupUsersTbl->alias() => $SecurityGroupUsersTbl->table()], [
-                                $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $SecurityGroupsTbl->aliasField('id')
+                                $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6783
                             ])
                             ->where([
                                 $SecurityGroupInsTbl->aliasField('institution_id') => $institutionId,
