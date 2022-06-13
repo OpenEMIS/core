@@ -209,7 +209,7 @@ class Session
         }
 
         if (!empty($config['ini']) && is_array($config['ini'])) {
-            $this->options($config['ini']);
+            //$this->options($config['ini']);
         }
 
         if (!empty($config['handler']['engine'])) {
