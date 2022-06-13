@@ -1,3 +1,12 @@
+### [3.75.10] - 2022-06-14
+- Bug Fixed: Reports > Institutions> Student Absence Report: Optimise query and create summary table
+- Bug Fixed: Report>Institution>Guardians: Changes to the Report
+- Bug Fixed: Institution>Academic>Subjects: Duplicate students appearing
+- Bug Fixed: JO-UAT : Administrations > Data Management > Transfer : Unable to Transfer data
+- Bug Fixed: System should update modified column in report_card_processes whenever the report card status changed from New to In Progress
+- Bug Fixed: Institution>Performance>Report Cards>Comments: Teachers are unable to view comments
+- Bug Fixed: Institutions > Performances > Report Cards : Introduce Error Status as (-1)
+
 ### [3.75.9] - 2022-06-09
 - Bug Fixed: Institutions>Academic>Classes: The number of total students should only count the number of enrolled students
 - Bug Fixed: Institution>Report Card>Comments: Changes to Performance-Assessments
