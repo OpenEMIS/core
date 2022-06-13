@@ -42,6 +42,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.isInternalSearchSelected = false;
     StudentController.isExternalSearchSelected = false;
     StudentController.transferReasonsOptions = [];
+    StudentController.isStudentRegisteredSameSchool = false;
+    StudentController.isStudentRegisteredDiffSchool = false;
+    StudentController.currentYear = new Date().getFullYear();
+    StudentController.studentStatus = 'Pending Transfer';
 
     StudentController.datepickerOptions = {
         showWeeks: false
@@ -292,8 +296,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function getEducationGrades() {
-        if(!StudentController.selectedStudentData.academic_period_id)
-            return;
+        if(!StudentController.selectedStudentData.academic_period_id){
+            StudentController.selectedStudentData.academic_period_id = StudentController.academicPeriodOptions[0].id;
+        }
         UtilsSvc.isAppendLoader(true);
         StudentController.selectedStudentData.education_grade_id = null;
         var param = {
@@ -816,8 +821,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     }
                     break;
                 case 'confirmation': 
-                    StudentController.step = 'add_student';
-                    StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
+                    StudentController.step = 'transfer_student';
+                    StudentController.selectedStudentData.endDate = StudentController.currentYear + '-12-31';
                     StudentController.generatePassword();
                     break;
             }
