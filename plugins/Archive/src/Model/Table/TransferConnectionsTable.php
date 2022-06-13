@@ -287,10 +287,31 @@ class TransferConnectionsTable extends ControllerActionTable
                 $connected = $connection->connect();
                 $this->Alert->success('Connection.testConnectionSuccess', ['reset' => true]);
                 $this->Session->write('is_connection_stablished', "1");
+                //START: POCOR-6770
+                $this->updateAll(
+                    ['conn_status_id' => 1],    //field
+                    [
+                     'host' => $post_data['TransferConnections']['host'], 
+                     'db_name'=> $post_data['TransferConnections']['db_name'],
+                     'username' => $post_data['TransferConnections']['username']
+                     ] //condition
+                );
+                //END: POCOR-6770
     
             }catch (Exception $connectionError) {
                 $this->Session->write('is_connection_stablished', "0");
                 $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+                //START: POCOR-6770
+                $this->updateAll(
+                    ['conn_status_id' => 0],    //field
+                    [
+                     'host' => $post_data['TransferConnections']['host'], 
+                     'db_name'=> $post_data['TransferConnections']['db_name'],
+                     'username' => $post_data['TransferConnections']['username']
+                     ] //condition
+                );
+                //END: POCOR-6770
+                
             }
         }
         $is_connection_stablished = $this->Session->read('is_connection_stablished');
