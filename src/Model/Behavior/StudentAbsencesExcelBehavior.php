@@ -260,7 +260,7 @@ class StudentAbsencesExcelBehavior extends Behavior
                 ])
                 ->group([
                     $InstitutionStudentAbsenceDetails->aliasField('student_id'),
-                    $InstitutionStudentAbsenceDetails->aliasField('date'),
+                    //$InstitutionStudentAbsenceDetails->aliasField('date'), //POCOR-6725
                     $InstitutionStudentAbsenceDetails->aliasField('subject_id'),
                     $InstitutionStudentAbsenceDetails->aliasField('period')
                 ])
@@ -312,7 +312,13 @@ class StudentAbsencesExcelBehavior extends Behavior
                     
                     //attendance per day
                     if ($value->period != 0 && $value->isSubject == 0 ) {
-                        $result[$key][] = $periodData->period_name;
+                        //START:POCOR-6725
+                    	if(!empty($periodData->period_name)){
+                    		$result[$key][] = $periodData->period_name;
+                    	}else{
+                    		$result[$key][] = '';
+                    	}
+                       //END:POCOR-6725
                     }  else{
                         $result[$key][] = '';
                     }
