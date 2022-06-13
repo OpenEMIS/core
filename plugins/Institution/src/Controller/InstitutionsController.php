@@ -4964,6 +4964,14 @@ class InstitutionsController extends AppController
             $photoName = (array_key_exists('photo_name', $requestData))? $requestData['photo_name'] : null;
             $custom = (array_key_exists('custom', $requestData))? $requestData['custom'] : "";
             $shiftIds = (array_key_exists('shift_ids', $requestData))? $requestData['shift_ids'] : "";
+
+            //when staff transfer in other institution starts
+            $isSameSchool = (array_key_exists('is_same_school', $requestData))? $requestData['is_same_school'] : 0;
+            $isDiffSchool = (array_key_exists('is_diff_school', $requestData))? $requestData['is_diff_school'] : 0;
+            $staffId = (array_key_exists('staff_id', $requestData))? $requestData['staff_id'] : 0;
+            $previousInstitutionId = (array_key_exists('previous_institution_id', $requestData))? $requestData['previous_institution_id'] : 0;
+            $comment = (array_key_exists('comment', $requestData))? $requestData['comment'] : '';
+            //when staff transfer in other institution end
             
             //get academic period data
             $academicPeriods = TableRegistry::get('academic_periods');
@@ -4986,82 +4994,8 @@ class InstitutionsController extends AppController
             //get Student Status List        
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
             $statuses = $StaffStatuses->findCodeList();
-            
-            $SecurityUsers = TableRegistry::get('security_users');
-            $entityData = [
-                'openemis_no' => $openemisNo,
-                'first_name' => $firstName,
-                'middle_name' => $middleName,
-                'third_name' => $thirdName,
-                'last_name' => $lastName,
-                'preferred_name' => $preferredName,
-                'gender_id' => $genderId,
-                'date_of_birth' => $dateOfBirth,
-                'nationality_id' => $nationalityId,
-                'preferred_language' => $pref_lang->value,
-                'username' => $username,
-                'password' => $password,
-                'address' => $address,
-                'address_area_id' => $addressAreaId,
-                'birthplace_area_id' => $birthplaceAreaId,
-                'postal_code' => $postalCode,
-                'photo_name' => $photoName,
-                'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
-                'is_staff' => 1,
-                'created_user_id' => $userId,
-                'created' => date('y-m-d H:i:s'),
-            ];
-            //save in security_users table
-            $entity = $SecurityUsers->newEntity($entityData);
-            try{
-                $SecurityUserResult = $SecurityUsers->save($entity);
-                unset($entity);
-            }catch (Exception $e) {
-                return null;
-            }
-            if($SecurityUserResult){
-                $user_record_id=$SecurityUserResult->id;
-                if(!empty($nationalityId)){
-                    $UserNationalities = TableRegistry::get('user_nationalities');
-                    $primaryKey = $UserNationalities->primaryKey();
-                    $hashString = [];
-                    foreach ($primaryKey as $key) {
-                        if($key == 'nationality_id'){
-                            $hashString[] = $nationalityId;
-                        }
-                        if($key == 'security_user_id'){
-                            $hashString[] = $user_record_id;
-                        }
-                    }
-         
-                    $entityNationalData = [
-                        'id' => Security::hash(implode(',', $hashString), 'sha256'),
-                        'preferred' => 1,
-                        'nationality_id' => $nationalityId,
-                        'security_user_id' => $user_record_id,
-                        'created_user_id' => $userId,
-                        'created' => date('y-m-d H:i:s')
-                    ];
-                    //save in user_nationalities table
-                    $entityNationalData = $UserNationalities->newEntity($entityNationalData);
-                    $UserNationalitiesResult = $UserNationalities->save($entityNationalData);
-                }
 
-                if(!empty($nationalityId) && !empty($identityTypeId) && !empty($identityNumber)){
-                    $UserIdentities = TableRegistry::get('user_identities');
-                    $entityIdentitiesData = [
-                        'identity_type_id' => $identityTypeId,
-                        'number' => $identityNumber,
-                        'nationality_id' => $nationalityId,
-                        'security_user_id' => $user_record_id,
-                        'created_user_id' => $userId,
-                        'created' => date('y-m-d H:i:s')
-                    ];
-                    //save in user_identities table
-                    $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
-                    $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
-                }
-                
+            if($isSameSchool == 1){
                 if(!empty($institutionId)){
                     //get id from `institution_positions` table
                     $InstitutionPositions = TableRegistry::get('institution_positions');
@@ -5080,16 +5014,16 @@ class InstitutionsController extends AppController
                             $roleArr = ['STAFF'];
                         }
                         $SecurityRolesTbl = $SecurityRoles->find()
-                                                    ->where([
-                                                        $SecurityRoles->aliasField('code IN') => $roleArr
-                                                    ])->toArray();
+                                            ->where([
+                                                $SecurityRoles->aliasField('code IN') => $roleArr
+                                            ])->toArray();
 
                         if(!empty($SecurityRolesTbl)){
                             foreach ($SecurityRolesTbl as $rolekey => $roleval) {
                                 $entityGroupData = [
                                     'id' => Text::uuid(),
                                     'security_group_id' => $institutionId,
-                                    'security_user_id' => $user_record_id,
+                                    'security_user_id' => $staffId,
                                     'security_role_id' => $roleval->id,
                                     'created_user_id' => $userId,
                                     'created' => date('Y-m-d H:i:s')
@@ -5107,7 +5041,7 @@ class InstitutionsController extends AppController
                     $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
                                             ->where([
                                                 $SecurityGroupUsers->aliasField('security_group_id') => $institutionId,
-                                                $SecurityGroupUsers->aliasField('security_user_id') => $user_record_id,
+                                                $SecurityGroupUsers->aliasField('security_user_id') => $staffId,
                                             ])->first();
                     $InstitutionStaffs = TableRegistry::get('institution_staff');
                     $entityStaffsData = [
@@ -5116,7 +5050,7 @@ class InstitutionsController extends AppController
                         'start_year' => $startYear,
                         'end_date' => $endDate,
                         'end_year' => $endYear,
-                        'staff_id' => $user_record_id,
+                        'staff_id' => $staffId,
                         'staff_type_id' => $staffTypeId,
                         'staff_status_id' => $statuses['ASSIGNED'],
                         'institution_id' => $institutionId,
@@ -5133,7 +5067,7 @@ class InstitutionsController extends AppController
                     $InstitutionStaffShifts = TableRegistry::get('institution_staff_shifts');
                     foreach ($shiftIds as $shkey => $shval) {
                         $entityShiftData = [
-                            'staff_id' => $user_record_id,
+                            'staff_id' => $staffId,
                             'shift_id' => $shval,
                             'created' => date('Y-m-d H:i:s')
                         ];
@@ -5144,31 +5078,236 @@ class InstitutionsController extends AppController
                         unset($entityShiftData);
                     }
                 }
-                if(!empty($custom)){
-                    $staffCustomFieldValues =  TableRegistry::get('staff_custom_field_values');
-                    foreach ($custom as $skey => $sval) {
-                        $entityCustomData = [
-                            'id' => Text::uuid(),
-                            'text_value' => $sval['text_value'],
-                            'number_value' => $sval['number_value'],
-                            'decimal_value' => $sval['decimal_value'],
-                            'textarea_value' => $sval['textarea_value'],
-                            'time_value' => $sval['time_value'],
-                            'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
-                            'staff_custom_field_id' => $sval['staff_custom_field_id'],
-                            'staff_id' => $user_record_id,
-                            'created_user_id' => $userId,
-                            'created' => date('Y-m-d H:i:s')
-                        ];
-                        //save in staff_custom_field_values table
-                        $entityCustomData = $staffCustomFieldValues->newEntity($entityCustomData);
-                        $staffCustomFieldsResult = $staffCustomFieldValues->save($entityCustomData);
-                        unset($staffCustomFieldsResult);
-                        unset($entityCustomData);
-                    }
+            }else if($isDiffSchool == 1){
+                $workflows = TableRegistry::get('workflows');
+                $workflowSteps = TableRegistry::get('workflow_steps');
+                $workflowResults = $workflows->find()
+                            ->select(['workflowSteps_id'=>$workflowSteps->aliasField('id')])
+                            ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
+                                $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                                $workflowSteps->aliasField('name')=> 'Open'
+                            ])
+                            ->where([
+                                $workflows->aliasField('name') => 'Staff Transfer - Receiving'
+                            ])
+                            ->first();
+                $institutionStaffTransfers = TableRegistry::get('institution_staff_transfers');
+                $entityTransferData = [
+                    'staff_id' => $staffId,
+                    'new_institution_id' => $institutionId,
+                    'previous_institution_id' => $previousInstitutionId,
+                    'status_id' => $workflowResults->workflowSteps_id,
+                    'assignee_id' => 0,
+                    'new_institution_position_id' => $institutionPositionId,
+                    'new_staff_type_id' => $staffTypeId,
+                    'new_FTE' => $fte,
+                    'new_start_date' => $startDate,
+                    'new_end_date' => $endDate,
+                    'previous_institution_staff_id' => '',
+                    'previous_staff_type_id' => '',
+                    'previous_FTE' => '',
+                    'previous_end_date' => '',
+                    'previous_effective_date' => '',
+                    'comment' => '',
+                    'transfer_type' => '',
+                    'all_visible' => 1,
+                    'modified_user_id' => '',
+                    'modified' => '',
+                    'created_user_id' => $userId,
+                    'created' => date('y-m-d H:i:s'),
+                ];
+                //save in `institution_staff_transfers` table
+                $entity = $institutionStaffTransfers->newEntity($entityTransferData);
+                try{
+                    $StaffTransfersResult = $institutionStaffTransfers->save($entity);
+                    unset($entity);
+                }catch (Exception $e) {
+                    return null;
                 }
             }else{
-                return false;
+                $SecurityUsers = TableRegistry::get('security_users');
+                $entityData = [
+                    'openemis_no' => $openemisNo,
+                    'first_name' => $firstName,
+                    'middle_name' => $middleName,
+                    'third_name' => $thirdName,
+                    'last_name' => $lastName,
+                    'preferred_name' => $preferredName,
+                    'gender_id' => $genderId,
+                    'date_of_birth' => $dateOfBirth,
+                    'nationality_id' => $nationalityId,
+                    'preferred_language' => $pref_lang->value,
+                    'username' => $username,
+                    'password' => $password,
+                    'address' => $address,
+                    'address_area_id' => $addressAreaId,
+                    'birthplace_area_id' => $birthplaceAreaId,
+                    'postal_code' => $postalCode,
+                    'photo_name' => $photoName,
+                    'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                    'is_staff' => 1,
+                    'created_user_id' => $userId,
+                    'created' => date('y-m-d H:i:s'),
+                ];
+                //save in security_users table
+                $entity = $SecurityUsers->newEntity($entityData);
+                try{
+                    $SecurityUserResult = $SecurityUsers->save($entity);
+                    unset($entity);
+                }catch (Exception $e) {
+                    return null;
+                }
+                if($SecurityUserResult){
+                    $user_record_id=$SecurityUserResult->id;
+                    if(!empty($nationalityId)){
+                        $UserNationalities = TableRegistry::get('user_nationalities');
+                        $primaryKey = $UserNationalities->primaryKey();
+                        $hashString = [];
+                        foreach ($primaryKey as $key) {
+                            if($key == 'nationality_id'){
+                                $hashString[] = $nationalityId;
+                            }
+                            if($key == 'security_user_id'){
+                                $hashString[] = $user_record_id;
+                            }
+                        }
+             
+                        $entityNationalData = [
+                            'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                            'preferred' => 1,
+                            'nationality_id' => $nationalityId,
+                            'security_user_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('y-m-d H:i:s')
+                        ];
+                        //save in user_nationalities table
+                        $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                        $UserNationalitiesResult = $UserNationalities->save($entityNationalData);
+                    }
+
+                    if(!empty($nationalityId) && !empty($identityTypeId) && !empty($identityNumber)){
+                        $UserIdentities = TableRegistry::get('user_identities');
+                        $entityIdentitiesData = [
+                            'identity_type_id' => $identityTypeId,
+                            'number' => $identityNumber,
+                            'nationality_id' => $nationalityId,
+                            'security_user_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('y-m-d H:i:s')
+                        ];
+                        //save in user_identities table
+                        $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                        $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                    }
+                    
+                    if(!empty($institutionId)){
+                        //get id from `institution_positions` table
+                        $InstitutionPositions = TableRegistry::get('institution_positions');
+                        $InstitutionPositionsTbl = $InstitutionPositions->find()
+                                                ->where([
+                                                    $InstitutionPositions->aliasField('id') => $institutionPositionId,
+                                                ])
+                                                ->first();
+
+                        $SecurityGroupUsers = TableRegistry::get('security_group_users');
+                        if(!empty($InstitutionPositionsTbl)){
+                            $SecurityRoles = TableRegistry::get('security_roles');
+                            if($InstitutionPositionsTbl->is_homeroom == 1){
+                                $roleArr = ['STAFF', 'HOMEROOM_TEACHER'];
+                            }else{
+                                $roleArr = ['STAFF'];
+                            }
+                            $SecurityRolesTbl = $SecurityRoles->find()
+                                                        ->where([
+                                                            $SecurityRoles->aliasField('code IN') => $roleArr
+                                                        ])->toArray();
+
+                            if(!empty($SecurityRolesTbl)){
+                                foreach ($SecurityRolesTbl as $rolekey => $roleval) {
+                                    $entityGroupData = [
+                                        'id' => Text::uuid(),
+                                        'security_group_id' => $institutionId,
+                                        'security_user_id' => $user_record_id,
+                                        'security_role_id' => $roleval->id,
+                                        'created_user_id' => $userId,
+                                        'created' => date('Y-m-d H:i:s')
+                                    ];
+                                    //save in security_group_users table
+                                    $entityGroupData = $SecurityGroupUsers->newEntity($entityGroupData);
+                                    $entityGroupResult = $SecurityGroupUsers->save($entityGroupData);
+                                    unset($entityGroupResult);
+                                    unset($entityGroupData);
+                                }
+                            }
+                        }                        
+
+                        //get id from `security_group_users` table
+                        $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
+                                                ->where([
+                                                    $SecurityGroupUsers->aliasField('security_group_id') => $institutionId,
+                                                    $SecurityGroupUsers->aliasField('security_user_id') => $user_record_id,
+                                                ])->first();
+                        $InstitutionStaffs = TableRegistry::get('institution_staff');
+                        $entityStaffsData = [
+                            'FTE' => $fte,
+                            'start_date' => $startDate,
+                            'start_year' => $startYear,
+                            'end_date' => $endDate,
+                            'end_year' => $endYear,
+                            'staff_id' => $user_record_id,
+                            'staff_type_id' => $staffTypeId,
+                            'staff_status_id' => $statuses['ASSIGNED'],
+                            'institution_id' => $institutionId,
+                            'institution_position_id' => $institutionPositionId,
+                            'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $SecurityGroupUsersTbl->id : null,
+                            'created_user_id' => $userId,
+                            'created' => date('y-m-d H:i:s')
+                        ];
+                        //save in institution_staff table
+                        $entityStaffsData = $InstitutionStaffs->newEntity($entityStaffsData);
+                        $InstitutionStaffsResult = $InstitutionStaffs->save($entityStaffsData);
+                    }
+                    if(!empty($shiftIds)){
+                        $InstitutionStaffShifts = TableRegistry::get('institution_staff_shifts');
+                        foreach ($shiftIds as $shkey => $shval) {
+                            $entityShiftData = [
+                                'staff_id' => $user_record_id,
+                                'shift_id' => $shval,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in institution_staff_shifts table
+                            $entityShiftData = $InstitutionStaffShifts->newEntity($entityShiftData);
+                            $staffShiftResult = $InstitutionStaffShifts->save($entityShiftData);
+                            unset($staffShiftResult);
+                            unset($entityShiftData);
+                        }
+                    }
+                    if(!empty($custom)){
+                        $staffCustomFieldValues =  TableRegistry::get('staff_custom_field_values');
+                        foreach ($custom as $skey => $sval) {
+                            $entityCustomData = [
+                                'id' => Text::uuid(),
+                                'text_value' => $sval['text_value'],
+                                'number_value' => $sval['number_value'],
+                                'decimal_value' => $sval['decimal_value'],
+                                'textarea_value' => $sval['textarea_value'],
+                                'time_value' => $sval['time_value'],
+                                'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
+                                'staff_custom_field_id' => $sval['staff_custom_field_id'],
+                                'staff_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in staff_custom_field_values table
+                            $entityCustomData = $staffCustomFieldValues->newEntity($entityCustomData);
+                            $staffCustomFieldsResult = $staffCustomFieldValues->save($entityCustomData);
+                            unset($staffCustomFieldsResult);
+                            unset($entityCustomData);
+                        }
+                    }
+                }else{
+                    return false;
+                }
             }
         }
         return true;
