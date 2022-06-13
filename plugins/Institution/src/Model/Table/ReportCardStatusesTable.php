@@ -24,6 +24,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     CONST IN_PROGRESS = 2;
     CONST GENERATED = 3;
     CONST PUBLISHED = 4;
+    CONST ERROR = -1; //POCOR-6788
 
     CONST MAX_PROCESSES = 2;
 
@@ -55,7 +56,8 @@ class ReportCardStatusesTable extends ControllerActionTable
             self::NEW_REPORT => __('New'),
             self::IN_PROGRESS => __('In Progress'),
             self::GENERATED => __('Generated'),
-            self::PUBLISHED => __('Published')
+            self::PUBLISHED => __('Published'),
+            self::ERROR => __('Error') //POCOR-6788
         ];
     }
 
