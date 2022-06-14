@@ -42,10 +42,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.isInternalSearchSelected = false;
     StudentController.isExternalSearchSelected = false;
     StudentController.transferReasonsOptions = [];
-    StudentController.isStudentRegisteredSameSchool = false;
-    StudentController.isStudentRegisteredDiffSchool = false;
+    StudentController.isSameSchool = false;
+    StudentController.isDiffSchool = false;
     StudentController.currentYear = new Date().getFullYear();
     StudentController.studentStatus = 'Pending Transfer';
+    StudentController.StudentData = {};
 
     StudentController.datepickerOptions = {
         showWeeks: false
@@ -98,6 +99,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.changed = changed;
     StudentController.selectOption = selectOption;
     StudentController.onDecimalNumberChange = onDecimalNumberChange;
+    StudentController.setStudentData = setStudentData;
+    StudentController.getAreaDetails = getAreaDetails;
     
 
     angular.element(document).ready(function () {
@@ -763,6 +766,26 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         });
     }
 
+    function setStudentData() {
+        UtilsSvc.isAppendLoader(true);
+        StudentController.selectedStudentData.openemis_no = StudentController.studentData.openemis_no;
+        StudentController.selectedStudentData.first_name = StudentController.studentData.first_name;
+        StudentController.selectedStudentData.middle_name = StudentController.studentData.middle_name;
+        StudentController.selectedStudentData.third_name = StudentController.studentData.third_name;
+        StudentController.selectedStudentData.last_name = StudentController.studentData.last_name;
+        StudentController.selectedStudentData.preferred_name = StudentController.studentData.preferred_name;
+        StudentController.selectedStudentData.gender.name = StudentController.studentData.gender;
+        StudentController.selectedStudentData.date_of_birth = StudentController.studentData.date_of_birth;
+        StudentController.selectedStudentData.email = StudentController.studentData.email;
+        StudentController.selectedStudentData.identity_type_name = StudentController.studentData.identity_type;
+        StudentController.selectedStudentData.identity_number = StudentController.studentData.identity_number;
+        StudentController.selectedStudentData.nationality_name = StudentController.studentData.nationality;
+        StudentController.selectedStudentData.address = StudentController.studentData.address;
+        StudentController.selectedStudentData.postalCode = StudentController.studentData.postal_code;
+        var todayDate = new Date();
+        StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+    }
+
     function goToPrevStep(){
         if(StudentController.isInternalSearchSelected) {
             StudentController.step = 'internal_search';
@@ -797,9 +820,23 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function goToNextStep() {
         if(StudentController.isInternalSearchSelected) {
-            StudentController.step = 'add_student';
-            StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
-            StudentController.generatePassword();
+            if(StudentController.isSameSchool > 0) {
+                StudentController.step = 'summary';
+                StudentController.messageClass = 'alert-warning';
+                StudentController.message = 'This student is already allocated to the current institution';
+                StudentController.setStudentData();
+                StudentController.getRedirectToGuardian();
+            } else if(StudentController.isDiffSchool > 0) {
+                StudentController.step = 'summary';
+                StudentController.messageClass = 'alert-warning';
+                StudentController.message = `This student is already allocated to ${StudentController.studentData.current_enrol_institution_code} - ${StudentController.studentData.current_enrol_institution_name}`;
+                StudentController.setStudentData();
+                StudentController.getStudentTransferReason();
+            } else {
+                StudentController.step = 'add_student';
+                StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
+                StudentController.generatePassword();
+            }
         } else if(StudentController.isExternalSearchSelected) {
             StudentController.step = 'add_student';
             StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
@@ -1040,14 +1077,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     StudentController.selectStudentFromInternalSearch = function(id) {
-        StaffController.selectedStudent = id;
+        StudentController.selectedStudent = id;
         StudentController.isInternalSearchSelected = true;
         StudentController.isExternalSearchSelected = false;
         StudentController.getStudentData();
     }
 
     StudentController.selectStudentFromExternalSearch = function(id) {
-        StaffController.selectedStudent = id;
+        StudentController.selectedStudent = id;
         StudentController.isInternalSearchSelected = false;
         StudentController.isExternalSearchSelected = true;
         StudentController.getStudentData();
@@ -1057,17 +1094,20 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var log = [];
         angular.forEach(StudentController.rowsThisPage , function(value) {
             if (value.id == StudentController.selectedStudent) {
+                StudentController.StudentData = value;
                 StudentController.selectedStudentData = value;
                 StudentController.selectedStudentData.username = value.openemis_no;
+                StudentController.isSameSchool = value.is_same_school;
+                StudentController.isDiffSchool = value.is_diff_school;
             }
         }, log);
     }
 
     StudentController.getStudentTransferReason = function() {
-        UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getStudentTransferReason().then(function(resp){
             StudentController.transferReasonsOptions = resp.data;
             UtilsSvc.isAppendLoader(false);
+            StudentController.getEducationGrades();
         }, function(error){
             console.log(error);
             UtilsSvc.isAppendLoader(false);
