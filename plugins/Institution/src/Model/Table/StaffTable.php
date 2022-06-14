@@ -2278,7 +2278,6 @@ class StaffTable extends ControllerActionTable
                                     ->where([
                                         $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
                                     ])->hydrate(false)->toArray();
-            /**/
             $funArr = [];
             if(!empty($SecurityFunctions)){
                 foreach ($SecurityFunctions as $funkey => $funval) {
@@ -2300,43 +2299,79 @@ class StaffTable extends ControllerActionTable
                 }
             }
         }
-        /*echo "<pre>"; print_r($count); die;*/
+        
         if(($count > 0) || ($superAdmin == 1)){
+            //POCOR-6789 STARTS
             $securityGroupId = $Institution->get($institutionId)->security_group_id;
-            $query
+            //to find records for homeroom teacher staff   
+            $institutionClassesTbl = TableRegistry::get('institution_classes');
+            $institutionClasses = $institutionClassesTbl
+                ->find()
                 ->select([ // to find records for homeroom teacher
-                    'staff_id' => $this->aliasField('staff_id')
-                ])
-                ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
-                    $InstitutionClasses->aliasField('staff_id = ') . $this->aliasField('staff_id')
+                    'staff_id' => $institutionClassesTbl->aliasField('staff_id')
                 ])
                 ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
-                    $SecurityGroupUsers->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
-                    //$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                    $SecurityGroupUsers->aliasField('security_user_id = ') . $institutionClassesTbl->aliasField('staff_id'),
                     $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
                 ])
                 ->where([
-                    $InstitutionClasses->aliasField('id') => $classId,//POCOR-6508
-                    $this->aliasField('institution_id') => $institutionId,
-                    $this->aliasField('staff_id') => $staffId
-                ])
-                ->union( // to find records for secondary_staff_id
-                    $InstitutionClassesSecondaryStaff
-                        ->find()
-                        ->select([
-                            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
-                        ])
-                        ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
-                                $SecurityGroupUsers->aliasField('security_user_id = ') . $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id'),
-                                $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
-                                $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
-                        ])
-                        ->where([
-                            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId,
-                            $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId
-                        ])
-                );
-            return $query;
+                    $institutionClassesTbl->aliasField('id') => $classId,
+                    $institutionClassesTbl->aliasField('institution_id') => $institutionId,
+                    $institutionClassesTbl->aliasField('staff_id') => $staffId
+                ])->count();
+            //to find records for secondar staff    
+            $InstitutionClassesSecondary = $InstitutionClassesSecondaryStaff
+                            ->find()
+                            ->select([
+                                $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
+                            ])
+                            ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
+                                    $SecurityGroupUsers->aliasField('security_user_id = ') . $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id'),
+                                    $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                                    $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
+                            ])
+                            ->where([
+                                $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId,
+                                $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId
+                            ])->count();
+            if(!empty($institutionClasses) || !empty($InstitutionClassesSecondary) || ($superAdmin == 1)){ //POCOR-6789 ENDS
+                $query
+                    ->select([ // to find records for homeroom teacher
+                        'staff_id' => $this->aliasField('staff_id')
+                    ])
+                    ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                        $InstitutionClasses->aliasField('staff_id = ') . $this->aliasField('staff_id')
+                    ])
+                    ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
+                        $SecurityGroupUsers->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
+                        //$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                        $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
+                    ])
+                    ->where([
+                        $InstitutionClasses->aliasField('id') => $classId,//POCOR-6508
+                        $this->aliasField('institution_id') => $institutionId,
+                        $this->aliasField('staff_id') => $staffId
+                    ])
+                    ->union( // to find records for secondary_staff_id
+                        $InstitutionClassesSecondaryStaff
+                            ->find()
+                            ->select([
+                                $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
+                            ])
+                            ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
+                                    $SecurityGroupUsers->aliasField('security_user_id = ') . $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id'),
+                                    $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                                    $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
+                            ])
+                            ->where([
+                                $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId,
+                                $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId
+                            ])
+                    );
+                return $query;        
+            }else{
+                die('0');
+            }
         }else{
             die('0');
         }
