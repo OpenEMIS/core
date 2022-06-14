@@ -31,73 +31,146 @@ class InstitutionClassBehavior extends Behavior
             if ($user['super_admin'] == 0) { // if he is not super admin
                 $userId = $user['id'];
                 $today = Date::now();
-
-                $query->innerJoin(['SecurityRoleFunctions' => 'security_role_functions'], [
-                    'SecurityRoleFunctions.security_role_id = SecurityAccess.security_role_id',
-                    'SecurityRoleFunctions.`_view` = 1' // check if the role have view access
+                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                //Start POCOR-POCOR-6772
+                $data = $SecurityGroupUsers->find()
+                ->select([
+                    'security_group_id' => 'SecurityGroupUsers.security_group_id',
+                    'security_role_id' => 'SecurityGroupUsers.security_role_id',
+                    'code' => 'SecurityRoles.code'
                 ])
                 ->innerJoin(['SecurityRoles' => 'security_roles'], [
-                    'SecurityRoles.id = SecurityRoleFunctions.security_role_id'
-                ])
-                ->innerJoin(['SecurityFunctions' => 'security_functions'], [
-                    'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-                    "SecurityFunctions.controller = 'Institutions'" // only restricted to permissions of Institutions
-                ])
-                ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
-                    'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id'
-                ])
-                ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
-                    'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
-                ])
-                ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                    'InstitutionClasses.id = InstitutionClassesSecondaryStaff.institution_class_id'
+                    'SecurityRoles.id = SecurityGroupUsers.security_role_id'
                 ])
                 ->where([
+                    'SecurityGroupUsers.security_user_id' => $userId,
+                    'SecurityRoles.code' => 'HOMEROOM_TEACHER'
+                ])->toArray();
+
+                if (!empty($data)) {
+                    $query->innerJoin(['SecurityRoleFunctions' => 'security_role_functions'], [
+                        'SecurityRoleFunctions.security_role_id = SecurityAccess.security_role_id',
+                    'SecurityRoleFunctions.`_view` = 1' // check if the role have view access
+                ])
+                    ->innerJoin(['SecurityRoles' => 'security_roles'], [
+                        'SecurityRoles.id = SecurityRoleFunctions.security_role_id'
+                    ])
+                    ->innerJoin(['SecurityFunctions' => 'security_functions'], [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    "SecurityFunctions.controller = 'Institutions'" // only restricted to permissions of Institutions
+                ])
+                    ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+                        'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id'
+                    ])
+                    ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+                        'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
+                    ])
+                    ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                        'InstitutionClasses.id = InstitutionClassesSecondaryStaff.institution_class_id'
+                    ])
+                    ->where([
                     // basically if AllClasses permission is granted, the user should see all classes of that institution
                     // if MyClasses permission is granted, the user must either be a homeroom teacher or a secondary teacher of that class in order to see that class
-                    'OR' => [
-                        [
+                        'OR' => [
+                            [
                             'OR' => [ // AllClasses permissions
-                                "SecurityFunctions.`_view` LIKE '%AllClasses.index%'",
-                                "SecurityFunctions.`_view` LIKE '%AllClasses.view%'",
-                                "SecurityFunctions.`_view` LIKE '%AllSubjects.index%'",
-                                "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'"
-                            ]
-                        ], [
-                            'AND' => [
-                                [
+                            "SecurityFunctions.`_view` LIKE '%AllClasses.index%'",
+                            "SecurityFunctions.`_view` LIKE '%AllClasses.view%'",
+                            "SecurityFunctions.`_view` LIKE '%AllSubjects.index%'",
+                            "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'"
+                        ]
+                    ], [
+                        'AND' => [
+                            [
                                     'OR' => [ // MyClasses permissions
-                                        "SecurityFunctions.`_view` LIKE '%Classes.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%Classes.view%'"
-                                    ]
-                                ], [
+                                    "SecurityFunctions.`_view` LIKE '%Classes.index%'",
+                                    "SecurityFunctions.`_view` LIKE '%Classes.view%'"
+                                ]
+                            ], [
                                     'OR' => [ // cater for both homeroom teacher and secondary teacher
-                                        "InstitutionClasses.staff_id" => $userId,
-                                        "InstitutionClassesSecondaryStaff.secondary_staff_id" => $userId
-                                    ]
-                                ],
-                                'SecurityRoles.code' => 'HOMEROOM_TEACHER'
-                            ]
-                        ], [
-                            'AND' => [
-                                [
+                                    "InstitutionClasses.staff_id" => $userId,
+                                    "InstitutionClassesSecondaryStaff.secondary_staff_id" => $userId
+                                ]
+                            ],
+                            'SecurityRoles.code' => 'HOMEROOM_TEACHER'
+                        ]
+                    ]
+                    ]
+                ])
+                ->group([$this->_table->aliasField('id')]); // so it doesn't show duplicate classes
+                }
+                else{
+                    $query->innerJoin(['SecurityRoleFunctions' => 'security_role_functions'], [
+                        'SecurityRoleFunctions.security_role_id = SecurityAccess.security_role_id',
+                    'SecurityRoleFunctions.`_view` = 1' // check if the role have view access
+                ])
+                    ->innerJoin(['SecurityRoles' => 'security_roles'], [
+                        'SecurityRoles.id = SecurityRoleFunctions.security_role_id'
+                    ])
+                    ->innerJoin(['SecurityFunctions' => 'security_functions'], [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    "SecurityFunctions.controller = 'Institutions'" // only restricted to permissions of Institutions
+                ])
+                    ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+                        'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id'
+                    ])
+                    ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+                        'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
+                    ])
+                    ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                        'InstitutionClasses.id = InstitutionClassesSecondaryStaff.institution_class_id'
+                    ])
+                    ->where([
+                    // basically if AllClasses permission is granted, the user should see all classes of that institution
+                    // if MyClasses permission is granted, the user must either be a homeroom teacher or a secondary teacher of that class in order to see that class
+                        'OR' => [
+                            [
+                            'OR' => [ // AllClasses permissions
+                            "SecurityFunctions.`_view` LIKE '%AllClasses.index%'",
+                            "SecurityFunctions.`_view` LIKE '%AllClasses.view%'",
+                            "SecurityFunctions.`_view` LIKE '%AllSubjects.index%'",
+                            "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'"
+                        ]
+                    ], [
+                        'AND' => [
+                            [
+                                    'OR' => [ // MyClasses permissions
+                                    "SecurityFunctions.`_view` LIKE '%Classes.index%'",
+                                    "SecurityFunctions.`_view` LIKE '%Classes.view%'"
+                                ]
+                            ], [
+                                    'OR' => [ // cater for both homeroom teacher and secondary teacher
+                                    "InstitutionClasses.staff_id" => $userId,
+                                    "InstitutionClassesSecondaryStaff.secondary_staff_id" => $userId
+                                ]
+                            ],
+                            'SecurityRoles.code' => 'HOMEROOM_TEACHER'
+                        ]
+                    ], [
+                        'AND' => [
+                            [
                                     'OR' => [ // MySubjects permissions
-                                        "SecurityFunctions.`_view` LIKE '%Subjects.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
-                                    ]
-                                ],
+                                    "SecurityFunctions.`_view` LIKE '%Subjects.index%'",
+                                    "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
+                                ]
+                            ],
                                 //'InstitutionSubjectStaff.staff_id' => $userId, //POCOR-6658 - commented condition as it was stopping staff to view classes option which are not linked with class's subjects, which is incorrect.
-                                'OR' => [
-                                    'InstitutionSubjectStaff.end_date IS NULL',
-                                    'InstitutionSubjectStaff.end_date >= ' => $today->format('Y-m-d')
-                                ],
-                                'SecurityRoles.code' => 'TEACHER',
+                            'OR' => [
+                                'InstitutionSubjectStaff.end_date IS NULL',
+                                'InstitutionSubjectStaff.end_date >= ' => $today->format('Y-m-d')
+                            ],
+                            'SecurityRoles.code' => 'TEACHER',
                                 "InstitutionClasses.staff_id" => $userId //POCOR-6658 modified condition != to = as class should linked with logged in staff
                             ]
                         ]
                     ]
                 ])
                 ->group([$this->_table->aliasField('id')]); // so it doesn't show duplicate classes
+                }
+
+                //End POCOR-POCOR-6772
+
+                
 
                 /* Generated conditions */
                 // INNER JOIN security_role_functions
