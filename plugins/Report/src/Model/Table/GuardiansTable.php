@@ -241,7 +241,10 @@ class GuardiansTable extends AppTable {
             'address' => 'Guardian.address',
             'email' => 'Guardian.email',
             'area_code' => 'Areas.code',
-            'area_name' => 'Areas.name'
+            'area_name' => 'Areas.name',
+            'contact_no' => 'UserContacts.value',
+            'atoll' => 'AreaAdministrativeLevels.name',//POCOR-6728
+            'education_code' => 'AreaAdministratives.code'//POCOR-6728
         ])
         ->leftJoin(['Users' => 'security_users'], [
             'Users.id = ' . 'Guardians.student_id'
@@ -267,6 +270,12 @@ class GuardiansTable extends AppTable {
         ->leftJoin(['Areas' => 'areas'], [
             'Institutions.area_id = ' . 'Areas.id'
         ])
+        ->leftJoin(['AreaAdministratives' => 'area_administratives'], [
+            'Institutions.area_administrative_id = ' . 'AreaAdministratives.id'
+        ])
+        ->leftJoin(['AreaAdministrativeLevels' => 'area_administrative_levels'], [
+            'AreaAdministratives.area_administrative_level_id = ' . 'AreaAdministrativeLevels.id'
+        ])
         ->leftJoin(['InstitutionClassStudents' => 'institution_class_students'], [
             'InstitutionClassStudents.student_id = ' . 'Users.id'
         ])
@@ -277,14 +286,61 @@ class GuardiansTable extends AppTable {
             'InstitutionStudents.student_status_id = ' . 'StudentStatuses.id'
         ])
         ->leftJoin(['UserContacts' => 'user_contacts'], [
-            'Guardian.id = ' . 'UserContacts.security_user_id'
+            'Guardians.guardian_id = ' . 'UserContacts.security_user_id'
         ])
         ->group('Users.first_name')
         ->where(['StudentStatuses.code' => 'CURRENT',
             'InstitutionClassStudents.student_status_id = ' . 'StudentStatuses.id',
             'Areas.area_level_id !=' . 1,
              $conditions
-        ]);
+        ]);/**POCOR-6728 starts*/
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                
+                $areas1 = TableRegistry::get('areas');
+                $areasData = $areas1
+                            ->find()
+                            ->where([$areas1->alias('code')=>$row->area_code])
+                            ->first();
+                $row['region_code'] = '';            
+                $row['region_name'] = '';
+                if(!empty($areasData)){
+                    $areas = TableRegistry::get('areas');
+                    $areaLevels = TableRegistry::get('area_levels');
+                    $institutions = TableRegistry::get('institutions');
+                    $val = $areas
+                                ->find()
+                                ->select([
+                                    $areas1->aliasField('code'),
+                                    $areas1->aliasField('name'),
+                                    ])
+                                ->leftJoin(
+                                    [$areaLevels->alias() => $areaLevels->table()],
+                                    [
+                                        $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
+                                    ]
+                                )
+                                ->leftJoin(
+                                    [$institutions->alias() => $institutions->table()],
+                                    [
+                                        $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
+                                    ]
+                                )    
+                                ->where([
+                                    $areaLevels->aliasField('level !=') => 1,
+                                    $areas->aliasField('id') => $areasData->parent_id
+                                ])->first();
+                    
+                    if (!empty($val->name) && !empty($val->code)) {
+                        $row['region_code'] = $val->code;
+                        $row['region_name'] = $val->name;
+                    }
+                }            
+                
+                return $row;
+            });
+        });
+        /**POCOR-6728 end*/
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
@@ -310,12 +366,30 @@ class GuardiansTable extends AppTable {
             'type' => 'string',
             'label' => __('Area Code')
         ];
+        /**POCOR-6728 starts - uncommented area column*/
+        $AreaLevelTbl = TableRegistry::get('area_levels');
+        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->hydrate(false)->toArray();
+        
+        $extraFields[] = [
+            'key' => '',
+            'field' => 'region_name',
+            'type' => 'string',
+            'label' => __($AreaLevelArr[1]['name'])
+        ];
 
         $extraFields[] = [
-            'key' => 'Areas.name',
+            'key' => '',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => __('Area Name')
+            'label' => __($AreaLevelArr[0]['name'])
+        ];
+        /**POCOR-6728 ends*/
+
+        $extraFields[] = [ // POCOR-6728
+            'key' => 'education_code',
+            'field' => 'education_code',
+            'type' => 'string',
+            'label' => __('Education Code')
         ];
 
         $extraFields[] = [
@@ -396,9 +470,9 @@ class GuardiansTable extends AppTable {
         ];
 
         $extraFields[] = [
-            'key' => 'UserContacts.value',
+            'key' => 'contact_no',
             'field' => 'contact_no',
-            'type' => 'string',
+            'type' => 'integer',
             'label' => __('Guardians Primary Phone Contact')
         ];
         $newFields = $extraFields;
