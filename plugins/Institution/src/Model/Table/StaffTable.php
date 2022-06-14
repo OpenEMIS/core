@@ -2180,7 +2180,7 @@ class StaffTable extends ControllerActionTable
         $SecurityGroupUsersTbl = TableRegistry::get('security_group_users');
         $SecurityGroupIns = $SecurityGroupInsTbl->find()
                             ->innerJoin([$SecurityGroupsTbl->alias() => $SecurityGroupsTbl->table()], [
-                                $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('institution_id')
+                                $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('security_group_id')//POCOR-6791
                             ])
                             ->innerJoin([$SecurityGroupUsersTbl->alias() => $SecurityGroupUsersTbl->table()], [
                                 $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6783
@@ -2257,7 +2257,7 @@ class StaffTable extends ControllerActionTable
         $SecurityGroupUsersTbl = TableRegistry::get('security_group_users');
         $SecurityGroupIns = $SecurityGroupInsTbl->find()
                             ->innerJoin([$SecurityGroupsTbl->alias() => $SecurityGroupsTbl->table()], [
-                                $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('institution_id')
+                                $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('security_group_id')//POCOR-6791
                             ])
                             ->innerJoin([$SecurityGroupUsersTbl->alias() => $SecurityGroupUsersTbl->table()], [
                                 $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6783
@@ -2355,7 +2355,7 @@ class StaffTable extends ControllerActionTable
         $SecurityGroupUsersTbl = TableRegistry::get('security_group_users');
         $SecurityGroupIns = $SecurityGroupInsTbl->find()
                             ->innerJoin([$SecurityGroupsTbl->alias() => $SecurityGroupsTbl->table()], [
-                                $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('institution_id')
+                                $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('security_group_id')//POCOR-6791
                             ])
                             ->innerJoin([$SecurityGroupUsersTbl->alias() => $SecurityGroupUsersTbl->table()], [
                                 $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6783
