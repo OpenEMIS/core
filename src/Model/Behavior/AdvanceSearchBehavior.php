@@ -290,11 +290,13 @@ class AdvanceSearchBehavior extends Behavior
             $request->data['AdvanceSearch'][$alias] = $model->Session->read($alias.'.advanceSearch');
         }
 
+        $areaKeys[] = 'shift_type'; //POCOR-6764
+        $areaKeys[] = 'alternative_name'; //POCOR-6764
         $areaKeys[] = 'area_id';
         $areaKeys[] = 'area_administrative_id';
         $areaKeys[] = 'birthplace_area_id';
         $areaKeys[] = 'address_area_id';
-
+        
         foreach ($advancedSearchBelongsTo as $key => $value) {
             if (!empty($value) && $value>0) {
                 if (in_array($key, $areaKeys)) {
@@ -307,6 +309,21 @@ class AdvanceSearchBehavior extends Behavior
 
                         case 'area_administrative_id':
                         case 'birthplace_area_id':
+                        // start POCOR-6764
+                        case 'shift_type':
+                            $tableName = 'institution_shifts';
+                            $id = $advancedSearchBelongsTo[$key];
+                            $InstitutionShiftsTable = TableRegistry::get('Institution.InstitutionShifts');
+                           $query->find('ShiftOptions', ['shift_option_id' => $id, 'columnName' => 'shift_option_id', 'table' => $tableName,'conditionCheck' => $advancedSearchBelongsTo]);
+                            break;
+                        case 'alternative_name':
+                            $tableName = 'institution_shifts';
+                            $id = $advancedSearchBelongsTo[$key];
+                            $InstitutionShiftsTable = TableRegistry::get('Institution.InstitutionShifts');
+                           $query->find('ShiftOwnership', ['shift_ownership' => $id, 'columnName' => 'shift_ownership', 'table' => $tableName,'conditionCheck' => $advancedSearchBelongsTo]);
+                            break;
+
+                           //End POCOR-6764
                         case 'address_area_id':
                             $tableName = 'area_administratives';
                             $id = $advancedSearchBelongsTo[$key];
