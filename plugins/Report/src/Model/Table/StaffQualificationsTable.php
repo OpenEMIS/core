@@ -160,7 +160,8 @@ class StaffQualificationsTable extends AppTable  {
                         'first_name',
                         'last_name',
                         'identity_type_id',
-                        'identity_number'
+                        'identity_number',
+                        'openemis_no' //POCOR-6078
                     ]
                 ]
 
@@ -187,6 +188,24 @@ class StaffQualificationsTable extends AppTable  {
             )
             ->where([$conditions])
             ->order(['QualificationLevels.order'=>'ASC']);   //POCOR-6551
+            //Start:POCOR-6078
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
+                return $results->map(function ($row) { 
+                    //For Default ID NO
+                    $identity_typesTable = TableRegistry::get('identity_types');
+                    $identity_types = $identity_typesTable->find()->where(['default'=> '1'])->first();
+                    $identity_type_id = $identity_types->id;
+                    if($row->identity_type_id == $identity_type_id){
+                        $row['default_identity_type'] = $row->identity_number;
+                    }else{
+                        $row['default_identity_type'] = '';
+                    }
+
+                    $row['openemisid'] = $row->user->openemis_no;
+                    return $row;
+                });
+            });
+            //End:POCOR-6078
             
         if (!$superAdmin) {
             $query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
@@ -236,14 +255,28 @@ class StaffQualificationsTable extends AppTable  {
             'type' => 'string',
             'label' => __('Institution Code')
         ];
-
+        //Start:POCOR-6078
+        $newFields[] = [
+            'key' => '',
+            'field' => 'openemisid',
+            'type' => 'string',
+            'label' => 'OpenEMIS ID'
+        ];
+        //End:POCOR-6078
         $newFields[] = [
             'key' => 'StaffQualifications.staff_id',
             'field' => 'staff_id',
             'type' => 'integer',
             'label' => ''
         ];
-
+        //Start:POCOR-6078
+        $newFields[] = [
+            'key' => '',
+            'field' => 'default_identity_type',
+            'type' => 'string',
+            'label' => 'Default Identity Number'
+        ];
+        //End:POCOR-6078
         $newFields[] = [
             'key' => 'StaffPositionTitles.name',
             'field' => 'staff_position_name',
