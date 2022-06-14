@@ -224,6 +224,27 @@ class StudentSubjectsTable extends ControllerActionTable
             ]);  
     }
 
+    /*
+    * Function is get the total mark of the subject
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-6776
+    */
+
+    public function onGetTotalMark(Event $event, Entity $entity)
+    {
+        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $studentId = $entity->student_id;
+        $academicPeriodId =  $entity->academic_period_id;
+        $educationSubjectId =  $entity->education_subject_id;
+        $educationGradeId =  $entity->education_grade_id;
+        $institutionClassesId =  $entity->institution_class_id;
+        $assessmentPeriodId =  '';
+        $institutionId = $entity->institution_id;
+        $totalMark = $ItemResults->getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId );//POCOR-6479
+        return round($totalMark, 2);
+    }
+
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
