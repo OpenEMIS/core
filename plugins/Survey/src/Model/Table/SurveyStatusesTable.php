@@ -140,6 +140,7 @@ class SurveyStatusesTable extends ControllerActionTable
         return compact('moduleOptions', 'selectedModule', 'formOptions', 'selectedForm');
     }
 
+    /**POCOR-6676 starts - modified conditions to save record before add*/ 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
@@ -174,6 +175,7 @@ class SurveyStatusesTable extends ControllerActionTable
                         'academic_period_id' => $periodObj->id,
                         'survey_form_id' => $surveyFormId,
                         'institution_id' => $instId,
+                        'assignee_id' => 0,
                         'created_user_id' => 1,
                         'created' => new Time('NOW')
                     ];
@@ -184,4 +186,5 @@ class SurveyStatusesTable extends ControllerActionTable
             }
         }
     }
+    /**POCOR-6676 ends*/ 
 }
