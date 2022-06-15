@@ -1,3 +1,8 @@
+### [3.75.11] - 2022-06-14
+- Implemented: Reports > Data Quality > Potential Students Duplicates > Add programme and enrollment status columns
+- Implemented: Add OpenEMIS ID field to Reports > Staff > Qualifications Report
+- Bug Fixed: Institution>Performance>Report Cards>Comments: Teachers are unable to view comments
+
 ### [3.75.10] - 2022-06-14
 - Bug Fixed: Reports > Institutions> Student Absence Report: Optimise query and create summary table
 - Bug Fixed: Report>Institution>Guardians: Changes to the Report
