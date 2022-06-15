@@ -1133,6 +1133,7 @@ class DirectoriesController extends AppController
         $mainIdentityTypes = TableRegistry::get('identity_types');
         $mainNationalities = TableRegistry::get('nationalities');
         $areaAdministratives = TableRegistry::get('area_administratives');
+        $birthAreaAdministratives = TableRegistry::get('area_administratives');
 
         if (!empty($firstName)) {
             $conditions[$security_users->aliasField('first_name').' LIKE'] = $firstName . '%';
@@ -1203,6 +1204,8 @@ class DirectoriesController extends AppController
                 'MainNationalities_name'=> $mainNationalities->aliasField('name'),
                 'area_name'=> $areaAdministratives->aliasField('name'),
                 'area_code'=> $areaAdministratives->aliasField('code'),
+                'birth_area_name'=> $birthAreaAdministratives->aliasField('name'),
+                'birth_area_code'=> $birthAreaAdministratives->aliasField('code'),
             ])
             ->LeftJoin(['Identities' => 'user_identities'],[
                 'Identities.security_user_id'=> $security_users->aliasField('id'),
@@ -1218,6 +1221,9 @@ class DirectoriesController extends AppController
             ])
             ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
                 $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
+            ])
+            ->LeftJoin([$birthAreaAdministratives->alias() => $birthAreaAdministratives->table()], [
+                $birthAreaAdministratives->aliasField('id =') . $security_users->aliasField('birthplace_area_id')
             ])
             ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
             ->group([$security_users->aliasField('id')])
@@ -1267,6 +1273,8 @@ class DirectoriesController extends AppController
                 'MainNationalities_name'=> $mainNationalities->aliasField('name'),
                 'area_name'=> $areaAdministratives->aliasField('name'),
                 'area_code'=> $areaAdministratives->aliasField('code'),
+                'birth_area_name'=> $birthAreaAdministratives->aliasField('name'),
+                'birth_area_code'=> $birthAreaAdministratives->aliasField('code'),
             ])
             ->InnerJoin(['Identities' => 'user_identities'],[
                 'Identities.security_user_id'=> $security_users->aliasField('id'),
@@ -1283,6 +1291,9 @@ class DirectoriesController extends AppController
             ])
             ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
                 $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
+            ])
+            ->LeftJoin([$birthAreaAdministratives->alias() => $birthAreaAdministratives->table()], [
+                $birthAreaAdministratives->aliasField('id =') . $security_users->aliasField('birthplace_area_id')
             ])
             ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
             ->group([$security_users->aliasField('id')])
@@ -1383,7 +1394,7 @@ class DirectoriesController extends AppController
                 }
             }
 
-            $result_array[] = array('id' => $result['id'],'username' => $result['username'],'password' => $result['password'],'openemis_no' => $result['openemis_no'],'first_name' => $result['first_name'],'middle_name' => $result['middle_name'],'third_name' => $result['third_name'],'last_name' => $result['last_name'],'preferred_name' => $result['preferred_name'],'email' => $result['email'],'address' => $result['address'],'postal_code' => $result['postal_code'],'gender_id' => $result['gender_id'],'external_reference' => $result['external_reference'],'last_login' => $result['last_login'],'photo_name' => $result['photo_name'],'photo_content' => $result['photo_content'],'preferred_language' => $result['preferred_language'],'address_area_id' => $result['address_area_id'],'birthplace_area_id' => $result['birthplace_area_id'],'super_admin' => $result['super_admin'],'status' => $result['status'],'is_student' => $result['is_student'],'is_staff' => $result['is_staff'],'is_guardian' => $result['is_guardian'],'name'=>$result['first_name']." ".$result['last_name'],'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'),'gender'=>$result['Genders_name'],'nationality_id'=>$MainNationalities_id,'nationality'=>$MainNationalities_name,'identity_type_id'=>$MainIdentityTypes_id,'identity_type'=>$MainIdentityTypes_name,'identity_number'=>$identity_number,'has_special_needs'=>$has_special_needs,'area_name'=>$area_name,'area_code'=>$area_code, 'is_same_school'=>$is_same_school, 'is_diff_school'=>$is_diff_school, 'current_enrol_institution_id'=> $institution_id, 'current_enrol_institution_name'=> $institution_name, 'current_enrol_institution_code'=> $institution_code, 'current_enrol_academic_period_id'=> $academic_period_id, 'current_enrol_academic_period_year'=> $academic_period_year, 'education_grade_id'=> $education_grade_id);
+            $result_array[] = array('id' => $result['id'],'username' => $result['username'],'password' => $result['password'],'openemis_no' => $result['openemis_no'],'first_name' => $result['first_name'],'middle_name' => $result['middle_name'],'third_name' => $result['third_name'],'last_name' => $result['last_name'],'preferred_name' => $result['preferred_name'],'email' => $result['email'],'address' => $result['address'],'postal_code' => $result['postal_code'],'gender_id' => $result['gender_id'],'external_reference' => $result['external_reference'],'last_login' => $result['last_login'],'photo_name' => $result['photo_name'],'photo_content' => $result['photo_content'],'preferred_language' => $result['preferred_language'],'address_area_id' => $result['address_area_id'],'birthplace_area_id' => $result['birthplace_area_id'],'super_admin' => $result['super_admin'],'status' => $result['status'],'is_student' => $result['is_student'],'is_staff' => $result['is_staff'],'is_guardian' => $result['is_guardian'],'name'=>$result['first_name']." ".$result['last_name'],'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'),'gender'=>$result['Genders_name'],'nationality_id'=>$MainNationalities_id,'nationality'=>$MainNationalities_name,'identity_type_id'=>$MainIdentityTypes_id,'identity_type'=>$MainIdentityTypes_name,'identity_number'=>$identity_number,'has_special_needs'=>$has_special_needs,'area_name'=>$result['area_name'],'area_code'=>$result['area_code'],'birth_area_name'=>$result['birth_area_name'],'birth_area_code'=>$result['birth_area_code'], 'is_same_school'=>$is_same_school, 'is_diff_school'=>$is_diff_school, 'current_enrol_institution_id'=> $institution_id, 'current_enrol_institution_name'=> $institution_name, 'current_enrol_institution_code'=> $institution_code, 'current_enrol_academic_period_id'=> $academic_period_id, 'current_enrol_academic_period_year'=> $academic_period_year, 'education_grade_id'=> $education_grade_id);
         }
         echo json_encode(['data' => $result_array, 'total' => $totalCount], JSON_PARTIAL_OUTPUT_ON_ERROR); die;
     }
