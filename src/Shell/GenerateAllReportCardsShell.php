@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
+use DateTime;
 use Cake\Console\Shell;
 
 class GenerateAllReportCardsShell extends Shell
@@ -24,8 +25,8 @@ class GenerateAllReportCardsShell extends Shell
     public function main()
     {
         if (!empty($this->args[0]) && !empty($this->args[1])) {
-            $todayDate = Date::now();
-            $todayDate = $todayDate->format('Y-m-d');
+            $todayDate = DateTime::now();
+            $todayDate = $todayDate->format('Y-m-d H:i:s');
             $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllReportCards', getmypid(), $this->args[0], '', $this->args[1]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
 
