@@ -520,8 +520,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
@@ -565,8 +565,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
@@ -851,6 +851,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         angular.forEach(StaffController.rowsThisPage , function(value) {
             if (value.id == StaffController.selectedUser) {
                 StaffController.selectedStaffData = value;
+                StaffController.staffData = value;
+                StaffController.staffData.currentlyAssignedTo = value.current_enrol_institution_code + ' - ' + value.current_enrol_institution_name;
                 StaffController.selectedStaffData.username = value.openemis_no;
             }
         }, log);
@@ -865,8 +867,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
@@ -947,8 +949,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 enableColResize: false,
