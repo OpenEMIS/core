@@ -25,8 +25,6 @@ class GenerateAllReportCardsShell extends Shell
     public function main()
     {
         if (!empty($this->args[0]) && !empty($this->args[1])) {
-            $todayDate = DateTime::now();
-            $todayDate = $todayDate->format('Y-m-d H:i:s');
             $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllReportCards', getmypid(), $this->args[0], '', $this->args[1]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
 
@@ -53,6 +51,8 @@ class GenerateAllReportCardsShell extends Shell
             if (!empty($recordToProcess)) {
                 $this->out('Generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
                 try {
+                    $todayDate = DateTime::now();
+                    $todayDate = $todayDate->format('Y-m-d H:i:s');
                     //'status' => $this->ReportCardProcesses::RUNNING change to 2
                     $this->ReportCardProcesses->updateAll(['status' => 2, 'modified' => $todayDate], [
                         'report_card_id' => $recordToProcess['report_card_id'],
