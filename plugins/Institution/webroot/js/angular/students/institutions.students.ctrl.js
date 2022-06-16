@@ -100,7 +100,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.selectOption = selectOption;
     StudentController.onDecimalNumberChange = onDecimalNumberChange;
     StudentController.setStudentData = setStudentData;
-    StudentController.getAreaDetails = getAreaDetails;
+    StudentController.changeTransferReason = changeTransferReason;
+    StudentController.transferStudent = transferStudent;
     
 
     angular.element(document).ready(function () {
@@ -134,7 +135,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         StudentController.initGrid();
         StudentController.getGenders();
-        StudentController.getStudentTransferReason();
     });
 
     function getUniqueOpenEmisId() {
@@ -300,7 +300,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function getEducationGrades() {
         if(!StudentController.selectedStudentData.academic_period_id){
-            StudentController.selectedStudentData.academic_period_id = StudentController.academicPeriodOptions[0].id;
+            StudentController.selectedStudentData.academic_period_id = StudentController.studentData.current_enrol_academic_period_id;
         }
         UtilsSvc.isAppendLoader(true);
         StudentController.selectedStudentData.education_grade_id = null;
@@ -578,6 +578,19 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.getClasses();
     }
 
+    function changeTransferReason() {
+        StudentController.selectedStudentData.transferReason = {};
+        var transferReason = StudentController.selectedStudentData.transfer_reason_id;
+        var transferReasonOptions = StudentController.transferReasonsOptions;
+        for (var i = 0; i < transferReasonOptions.length; i++) {
+            if (transferReasonOptions[i].id == transferReason) {
+                StudentController.selectedStudentData.transferReason.name = transferReasonOptions[i].name;
+                break;
+            }
+        }
+        StudentController.error.transfer_reason_id = '';
+    }
+
     function goToInternalSearch(){
         UtilsSvc.isAppendLoader(true);
         AggridLocaleSvc.getTranslatedGridLocale()
@@ -588,8 +601,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
@@ -633,8 +646,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
@@ -768,6 +781,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function setStudentData() {
         UtilsSvc.isAppendLoader(true);
+        StudentController.selectedStudentData.addressArea = {};
+        StudentController.selectedStudentData.birthplaceArea = {};
         StudentController.selectedStudentData.openemis_no = StudentController.studentData.openemis_no;
         StudentController.selectedStudentData.first_name = StudentController.studentData.first_name;
         StudentController.selectedStudentData.middle_name = StudentController.studentData.middle_name;
@@ -782,8 +797,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.nationality_name = StudentController.studentData.nationality;
         StudentController.selectedStudentData.address = StudentController.studentData.address;
         StudentController.selectedStudentData.postalCode = StudentController.studentData.postal_code;
+        StudentController.selectedStudentData.addressArea.name = StudentController.studentData.area_name;
+        StudentController.selectedStudentData.birthplaceArea.name = StudentController.studentData.birth_area_name;
+        StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
         var todayDate = new Date();
         StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+        StudentController.isSameSchool = StudentController.studentData.is_same_school > 0 ? true : false;
+        StudentController.isDiffSchool = StudentController.studentData.is_diff_school > 0 ? true : false;
     }
 
     function goToPrevStep(){
@@ -820,19 +840,21 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function goToNextStep() {
         if(StudentController.isInternalSearchSelected) {
-            if(StudentController.isSameSchool > 0) {
+            if(StudentController.studentData.is_same_school) {
                 StudentController.step = 'summary';
                 StudentController.messageClass = 'alert-warning';
                 StudentController.message = 'This student is already allocated to the current institution';
                 StudentController.setStudentData();
                 StudentController.getRedirectToGuardian();
-            } else if(StudentController.isDiffSchool > 0) {
-                StudentController.step = 'summary';
+                StudentController.isInternalSearchSelected = false;
+        } else if(StudentController.studentData.is_diff_school) {
                 StudentController.messageClass = 'alert-warning';
                 StudentController.message = `This student is already allocated to ${StudentController.studentData.current_enrol_institution_code} - ${StudentController.studentData.current_enrol_institution_name}`;
+                StudentController.step = 'summary';
                 StudentController.setStudentData();
                 StudentController.getStudentTransferReason();
-            } else {
+                StudentController.isInternalSearchSelected = false;
+        } else {
                 StudentController.step = 'add_student';
                 StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
                 StudentController.generatePassword();
@@ -932,7 +954,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function saveStudentDetails() {
-        let startDate = $filter('date')(StudentController.selectedStudentData.startDate, 'yyyy-MM-dd');
+        let startDate = StudentController.studentData.is_diff_school > 0 ? $filter('date')(StudentController.selectedStudentData.transferStartDate, 'yyyy-MM-dd') : $filter('date')(StudentController.selectedStudentData.startDate, 'yyyy-MM-dd');
         StudentController.selectedStudentData.addressArea = InstitutionsStudentsSvc.getAddressArea();
         StudentController.selectedStudentData.birthplaceArea = InstitutionsStudentsSvc.getBirthplaceArea();
         var params = {
@@ -950,8 +972,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             password: StudentController.selectedStudentData.password,
             postal_code: StudentController.selectedStudentData.postalCode,
             address: StudentController.selectedStudentData.address,
-            birthplace_area_id: InstitutionsStudentsSvc.getBirthplaceAreaId(),
-            address_area_id: InstitutionsStudentsSvc.getAddressAreaId(),
+            birthplace_area_id: StudentController.studentData.is_diff_school > 0 ? StudentController.studentData.birthplace_area_id : InstitutionsStudentsSvc.getBirthplaceAreaId(),
+            address_area_id: StudentController.studentData.is_diff_school > 0 ? StudentController.studentData.address_area_id : InstitutionsStudentsSvc.getAddressAreaId(),
             identity_type_id: StudentController.selectedStudentData.identity_type_id,
             education_grade_id: StudentController.selectedStudentData.education_grade_id,
             academic_period_id: StudentController.selectedStudentData.academic_period_id,
@@ -961,6 +983,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             student_status_id: 1,
             photo_base_64: StudentController.selectedStudentData.photo_base_64,
             photo_name: StudentController.selectedStudentData.photo_name,
+            is_diff_school: StudentController.studentData.is_diff_school,
+            student_id: StudentController.studentData.id,
+            previous_institution_id: StudentController.studentData.current_enrol_institution_id,
+            previous_academic_period_id: StudentController.studentData.current_enrol_academic_period_id,
+            previous_education_grade_id: StudentController.studentData.education_grade_id,
+            student_transfer_reason_id: StudentController.studentData.current_enrol_institution_id,
+            comment: StudentController.selectedStudentData.transferComment,
             custom: [],
         };
         StudentController.customFieldsArray.forEach((customField)=> {
@@ -1019,17 +1048,39 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.saveStudentDetails(params).then(function(resp){
             if(resp) {
-                StudentController.message = (StudentController.selectedStudentData && StudentController.selectedStudentData.userType ? StudentController.selectedStudentData.userType.name : 'Student') + ' successfully added.';
-                StudentController.messageClass = 'alert-success';
-                StudentController.step = "summary";
-                var todayDate = new Date();
-                StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
-                StudentController.getRedirectToGuardian();
+                if(StudentController.studentData.is_diff_school > 0) {
+                    $window.history.back();
+                } else {
+                    StudentController.message = (StudentController.selectedStudentData && StudentController.selectedStudentData.userType ? StudentController.selectedStudentData.userType.name : 'Student') + ' successfully added.';
+                    StudentController.messageClass = 'alert-success';
+                    StudentController.step = "summary";
+                    var todayDate = new Date();
+                    StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+                    StudentController.getRedirectToGuardian();
+                }
             }
         }, function(error){
             console.log(error);
             UtilsSvc.isAppendLoader(false);
         });
+    }
+
+    function transferStudent() {
+        if(!StudentController.selectedStudentData.education_grade_id){
+            StudentController.error.education_grade_id = 'This field cannot be left empty';
+        }
+        if(!StudentController.selectedStudentData.transferStartDate) {
+            StudentController.error.transferStartDate = 'This field cannot be left empty';
+        } else {
+            StudentController.selectedStudentData.transferStartDate = $filter('date')(StudentController.selectedStudentData.transferStartDate, 'yyyy-MM-dd');
+        }
+        if(!StudentController.selectedStudentData.transfer_reason_id){
+            StudentController.error.transfer_reason_id = 'This field cannot be left empty';
+        }
+        if(!StudentController.selectedStudentData.education_grade_id || !StudentController.selectedStudentData.transferStartDate || !StudentController.selectedStudentData.transfer_reason_id) {
+            return;
+        }
+        StudentController.saveStudentDetails();
     }
 
     function goToFirstStep() {
@@ -1094,11 +1145,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var log = [];
         angular.forEach(StudentController.rowsThisPage , function(value) {
             if (value.id == StudentController.selectedStudent) {
-                StudentController.StudentData = value;
+                StudentController.studentData = value;
+                StudentController.studentData.currentlyAllocatedTo = value.current_enrol_institution_code + ' - ' + value.current_enrol_institution_name;
                 StudentController.selectedStudentData = value;
                 StudentController.selectedStudentData.username = value.openemis_no;
-                StudentController.isSameSchool = value.is_same_school;
-                StudentController.isDiffSchool = value.is_diff_school;
             }
         }, log);
     }
@@ -1123,8 +1173,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
@@ -1205,8 +1255,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 enableColResize: false,
