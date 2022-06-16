@@ -46,15 +46,14 @@ class GenerateAllReportCardsShell extends Shell
                 ])
                 ->hydrate(false)
                 ->first();
-                echo "<pre>";print_r($recordToProcess);
 
             if (!empty($recordToProcess)) {
                 $this->out('Generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
                 try {
-                    $todayDate = DateTime::now();
-                    $todayDate = $todayDate->format('Y-m-d H:i:s');
-                    //'status' => $this->ReportCardProcesses::RUNNING change to 2
-                    $this->ReportCardProcesses->updateAll(['status' => 2, 'modified' => $todayDate], [
+                    $todayDate = Time::now();
+                    $todayDate = Time::parse('now');
+                    $_now = $todayDate->i18nFormat('yyyy-MM-dd HH:mm:ss');
+                    $this->ReportCardProcesses->updateAll(['status' => $this->ReportCardProcesses::RUNNING, 'modified' => $_now], [
                         'report_card_id' => $recordToProcess['report_card_id'],
                         'institution_class_id' => $recordToProcess['institution_class_id'],
                         'student_id' => $recordToProcess['student_id']
