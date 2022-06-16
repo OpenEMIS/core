@@ -241,8 +241,8 @@ class StudentSubjectsTable extends ControllerActionTable
         $institutionClassesId =  $entity->institution_class_id;
         $assessmentPeriodId =  '';
         $institutionId = $entity->institution_id;
-        $totalMark = $ItemResults->getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId );//POCOR-6479
-        return round($totalMark, 2);
+        $totalMark = $ItemResults->getTotalMarksForSubject($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId );//POCOR-6479
+        return round($totalMark->calculated_total, 2);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
