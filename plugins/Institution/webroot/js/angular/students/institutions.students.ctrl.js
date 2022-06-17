@@ -958,6 +958,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.addressArea = InstitutionsStudentsSvc.getAddressArea();
         StudentController.selectedStudentData.birthplaceArea = InstitutionsStudentsSvc.getBirthplaceArea();
         var params = {
+            institution_id: StudentController.institutionId,
             openemis_no: StudentController.selectedStudentData.openemis_no,
             first_name: StudentController.selectedStudentData.first_name,
             middle_name: StudentController.selectedStudentData.middle_name,
