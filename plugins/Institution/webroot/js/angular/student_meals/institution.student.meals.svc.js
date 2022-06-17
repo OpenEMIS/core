@@ -270,8 +270,12 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             console.log('response.data.data');
             console.log(response.data.data);
             var dayList = response.data.data;
+            //START:POCOR-6778
+            if(current_day_number > 5){
+                dayList.length =  dayList.length;
+            }
             //START:POCOR-6681 // Exclude days after current day for current academic period
-            if(current_week_number_selected == 3 || current_week_number_selected == 0){
+            else if(current_week_number_selected == 3 || current_week_number_selected == 0){
                 dayList.length = ++current_day_number;
             }else{
                 dayList.length =  dayList.length;
