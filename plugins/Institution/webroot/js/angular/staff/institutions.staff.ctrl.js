@@ -161,12 +161,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         };
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.saveStaffDetails(params).then(function(resp){
-            StaffController.message = 'Staff successfully added.';
-            StaffController.messageClass = 'alert-success';
-            StaffController.step = "summary";
-            var todayDate = new Date();
-            StaffController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
-            UtilsSvc.isAppendLoader(false);
+            if(StaffController.staffData.is_diff_school > 0) {
+                $window.history.back();
+            } else {
+                StaffController.message = 'Staff is added successfully.';
+                StaffController.messageClass = 'alert-success';
+                StaffController.step = "summary";
+                var todayDate = new Date();
+                StaffController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+                UtilsSvc.isAppendLoader(false);
+            }
         }, function(error){
             console.log(error);
             UtilsSvc.isAppendLoader(false);
@@ -468,6 +472,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
         if(positionType === 'Full-Time'){
             StaffController.selectedStaffData.fte_id = 1;
+            StaffController.selectedStaffData.fte_name = '100%';
             StaffController.getPositions();
         }
         else{
@@ -784,7 +789,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if(!StaffController.selectedStaffData.startDate || !StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.staff_type_id || !StaffController.staffShiftsId.length === 0 || StaffController.error.fte_id || StaffController.error.position_id){
                 return;
             }
-            StaffController.saveStaffDetails();
+            if(StaffController.staffData.is_diff_school > 0) {
+                StaffController.step = 'transfer_staff';
+                StaffController.messageClass = 'alert-warning';
+                StaffController.message = 'Staff is currently assigned to another institution';
+            } else {
+                StaffController.saveStaffDetails();
+            }
         }
     }
 
