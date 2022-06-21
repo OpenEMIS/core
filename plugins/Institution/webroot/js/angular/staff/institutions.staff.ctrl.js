@@ -48,6 +48,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     };
     StaffController.isInternalSearchSelected = false;
     StaffController.isExternalSearchSelected = false;
+    StaffController.staffStatus = 'Pending';
 
 
     //controller function
@@ -158,10 +159,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             photo_name: StaffController.selectedStaffData.photo_name,
             photo_base_64: StaffController.selectedStaffData.photo_base_64,
             institution_id: StaffController.institutionId,
+            is_same_school: StaffController.staffData.is_same_school,
+            is_diff_school: StaffController.staffData.is_diff_school,
+            staff_id: StaffController.staffData.id,
+            previous_institution_id: StaffController.staffData.current_enrol_institution_id,
+            comment: StaffController.selectedStaffData.comment,
         };
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.saveStaffDetails(params).then(function(resp){
+            UtilsSvc.isAppendLoader(false);
             if(StaffController.staffData.is_diff_school > 0) {
+                StaffController.message = 'Staff transfer request is added successfully.';
+                StaffController.messageClass = 'alert-success';
                 $window.history.back();
             } else {
                 StaffController.message = 'Staff is added successfully.';
@@ -169,7 +178,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 StaffController.step = "summary";
                 var todayDate = new Date();
                 StaffController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
-                UtilsSvc.isAppendLoader(false);
             }
         }, function(error){
             console.log(error);
@@ -363,6 +371,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         InstitutionsStaffSvc.getPositions(params).then(function(resp){
             StaffController.institutionPositionOptions.availableOptions = resp.data;
             StaffController.institutionPositionOptions.selectedOption = null;
+            if(StaffController.staffData.is_same_school > 0) {
+                StaffController.institutionPositionOptions.availableOptions.forEach((option) => {
+                    if(option.value === StaffController.staffData.current_position_id) {
+                        option.disabled = true;
+                    }
+                });
+            }
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
@@ -859,11 +874,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     StaffController.getStaffData = function() {
         var log = [];
+        
         angular.forEach(StaffController.rowsThisPage , function(value) {
             if (value.id == StaffController.selectedUser) {
                 StaffController.selectedStaffData = value;
                 StaffController.staffData = value;
-                StaffController.staffData.currentlyAssignedTo = value.current_enrol_institution_code + ' - ' + value.current_enrol_institution_name;
+                if(StaffController.isInternalSearchSelected) {
+                    StaffController.staffStatus = 'Assigned';
+                }
+                StaffController.staffData.currentlyAssignedTo = value.current_enrol_institution_code + ' - ' + value.institution_name;
+                StaffController.staffData.requestedBy = value.institution_code + ' - ' + value.current_enrol_institution_name;
                 StaffController.selectedStaffData.username = value.openemis_no;
             }
         }, log);
