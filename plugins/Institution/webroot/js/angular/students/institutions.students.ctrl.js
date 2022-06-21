@@ -1050,9 +1050,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         InstitutionsStudentsSvc.saveStudentDetails(params).then(function(resp){
             if(resp) {
                 if(StudentController.studentData.is_diff_school > 0) {
+                    StudentController.message ='Student transfer request is added successfully.';
+                    StudentController.messageClass = 'alert-success';
+                    UtilsSvc.isAppendLoader(false);
                     $window.history.back();
                 } else {
-                    StudentController.message = (StudentController.selectedStudentData && StudentController.selectedStudentData.userType ? StudentController.selectedStudentData.userType.name : 'Student') + ' successfully added.';
+                    StudentController.message ='Student is added successfully.';
                     StudentController.messageClass = 'alert-success';
                     StudentController.step = "summary";
                     var todayDate = new Date();
