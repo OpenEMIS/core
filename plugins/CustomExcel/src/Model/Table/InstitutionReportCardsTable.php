@@ -4007,7 +4007,7 @@ class InstitutionReportCardsTable extends AppTable
                     'period_code' => (!empty($e_val['period_code']) ? $e_val['period_code'] : ''),
                     'period_name' => (!empty($e_val['period_name']) ? $e_val['period_name'] : ''),
                     'period_weight' => (!empty($e_val['period_weight']) ? $e_val['period_weight'] : ''),
-                    'average_marks' => (!empty($e_val['average_mark']) ? $e_val['average_mark'].' ' : '')//POCOR-6708-alter column name as per table column average_mark
+                    'average_marks' => (!empty($e_val['average_marks']) ? $e_val['average_marks'].' ' : '')
                 ];
             }
             return $entity;
