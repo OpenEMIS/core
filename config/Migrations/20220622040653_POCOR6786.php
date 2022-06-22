@@ -13,11 +13,13 @@ class POCOR6786 extends AbstractMigration
     public function up()
     {
         /**Backup api_securities table*/
-        $this->execute('CREATE TABLE `z_6786_api_securities` LIKE `api_securities`');
-        $this->execute('INSERT INTO `z_6786_api_securities` SELECT * FROM `api_securities`');
-        
+        $this->execute('CREATE TABLE `zz_6786_api_securities` LIKE `api_securities`');
+        $this->execute('INSERT INTO `zz_6786_api_securities` SELECT * FROM `api_securities`');
+        $row = $this->fetchRow("SELECT `id` FROM `api_securities` ORDER BY `id` DESC LIMIT 1");
+        $id = $row['id'];
         /**Inserting record*/
         $this->insert('api_securities', [
+            'id' => $id + 1,
             'name' => 'Assessment',
             'model' => 'Assessment.Assessments'
         ]);
@@ -26,7 +28,7 @@ class POCOR6786 extends AbstractMigration
     /**rollback*/
     public function down()
     {
-        $this->execute('DROP TABLE IF EXISTS `api_securities`');
-        $this->execute('RENAME TABLE `z_6786_api_securities` TO `api_securities`');
+        //$this->execute('DROP TABLE IF EXISTS `api_securities`');
+        //$this->execute('RENAME TABLE `zz_6786_api_securities` TO `api_securities`');
     }
 }
