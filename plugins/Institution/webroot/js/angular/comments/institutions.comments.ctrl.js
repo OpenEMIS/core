@@ -56,6 +56,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 vm.currentUserName = userData.first_name + ' ' + userData.last_name;
                 vm.currentUserId = userData.id;
             }
+            //console.log(userData);
             //POCOR-6734 starts
             return InstitutionsCommentsSvc.getPrincipalViewPermissions(userData, $scope.institutionId);}, function(error)
         {
@@ -69,7 +70,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             principalPermissionData = response;
             console.log('principalPermissionData ctrl==>>>');
             console.log(principalPermissionData);
-            if(principalPermissionData.data <= 0){
+            if((userData.super_admin != 1) && ((vm.principalCommentsRequired == 0) || (principalPermissionData.data <= 0))){
                 vm.principalCommentsRequired = 0;
             }else{
                 vm.principalCommentsRequired = 1;
@@ -87,9 +88,10 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             homeroomTeacherPermissionData = response;
             console.log('homeroomTeacherPermissionData ctrl==>>>');
             console.log(homeroomTeacherPermissionData.data);
-            vm.homeroomTeacherCommentsRequired = 1;
-            if(homeroomTeacherPermissionData.data <= 0){
+            if((userData.super_admin != 1) && ((vm.homeroomTeacherCommentsRequired == 0) || (homeroomTeacherPermissionData.data <= 0))){
                 vm.homeroomTeacherCommentsRequired = 0;
+            }else{
+                vm.homeroomTeacherCommentsRequired = 1;
             }
             return InstitutionsCommentsSvc.getMySubjectTeacherViewPermissions(userData, $scope.institutionId,$scope.classId);
         }, function(error)
@@ -103,9 +105,10 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             mySubjectTeacherPermissionData = response;
             console.log('MySubjectTeacherPermissionData ctrl==>>>');
             console.log(mySubjectTeacherPermissionData.data);
-            vm.mySubjectTeacherCommentsRequired = 1;
-            if(mySubjectTeacherPermissionData.data.result <= 0){
+            if((userData.super_admin != 1) && ((vm.teacherCommentsRequired == 0) || (mySubjectTeacherPermissionData.data.result <= 0))){
                 vm.mySubjectTeacherCommentsRequired = 0;
+            }else{
+                vm.mySubjectTeacherCommentsRequired = 1;
             }
             roleflag = '';
             if(vm.principalCommentsRequired == 1){
@@ -130,9 +133,10 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             allSubjectTeacherPermissionData = response;
             console.log('AllSubjectTeacherPermissionData ctrl==>>>');
             console.log(allSubjectTeacherPermissionData.data);
-            vm.teacherCommentsRequired = 1;
-            if(allSubjectTeacherPermissionData.data.result <= 0){
+            if((userData.super_admin != 1) && ((vm.teacherCommentsRequired == 0) || (allSubjectTeacherPermissionData.data.result <= 0))){
                 vm.teacherCommentsRequired = 0;
+            }else{
+                vm.teacherCommentsRequired = 1;
             }
             return InstitutionsCommentsSvc.getTabs($scope.reportCardId, $scope.classId, $scope.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.teacherCommentsRequired, vm.mySubjectTeacherCommentsRequired);
         }, function(error)
