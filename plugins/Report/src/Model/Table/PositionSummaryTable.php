@@ -121,6 +121,7 @@ class PositionSummaryTable extends AppTable
                     ]
                 )
 			->where([$conditions])
+            ->andWhere([$this->aliasField('institution_id !=') => 0]) //POCOR-6777
 			->group(['institution_id',$this->aliasField('staff_position_title_id')])
 			->order(['institution_name']);
 			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
@@ -144,8 +145,10 @@ class PositionSummaryTable extends AppTable
 					foreach($positionData as $data) {
 						$positionIds[] = $data->id;
 					}
-					
-					$staffData = $InstitutionStaff
+
+                    //Start:POCOR-6777
+					if(!empty($positionIds)){
+						$staffData = $InstitutionStaff
 						->find()
 						->select([
 							'gender_id' => $Genders->aliasField('id'),
@@ -168,7 +171,31 @@ class PositionSummaryTable extends AppTable
 							]
 						)
 						->toArray();
-						
+					}else{ //END:POCOR-6777
+					
+                        $staffData = $InstitutionStaff
+                            ->find()
+                            ->select([
+                                'gender_id' => $Genders->aliasField('id'),
+                                'gender' => $Genders->aliasField('name'),
+                            ])
+                            ->where([
+                                $InstitutionStaff->aliasField('institution_id') => $row['institution_id']
+                            ])
+                            ->innerJoin(
+                                [$Staff->alias() => $Staff->table()],
+                                [
+                                    $Staff->aliasField('id = ') . $InstitutionStaff->aliasField('staff_id')
+                                ]
+                            )
+                            ->innerJoin(
+                                [$Genders->alias() => $Genders->table()],
+                                [
+                                    $Genders->aliasField('id = ') . $Staff->aliasField('gender_id')
+                                ]
+                            )
+                            ->toArray();
+                    }	//POCOR-6777
 						foreach($staffData as $staff) {
 							if($staff->gender_id == 1) {
 								$male_occupancy[] = $staff->gender;

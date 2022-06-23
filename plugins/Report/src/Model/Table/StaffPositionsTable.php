@@ -181,6 +181,7 @@ class StaffPositionsTable extends AppTable
                     ]
                 )
             ->where([$conditions])
+            ->andWhere([$this->aliasField('institution_id !=') => 0]) //POCOR-6777
             ->order(['institution_name', 'position_no']);
     }
 
