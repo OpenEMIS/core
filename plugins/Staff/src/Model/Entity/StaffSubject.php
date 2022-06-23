@@ -39,7 +39,8 @@ class StaffSubject extends Entity
 			foreach ($data as $class) {
                 $name[] = $class->institution_class->name;
             }
-        	sort($name);
+            unset($name[0]);
+            sort($name);
         	return implode(', ', $name);
         	//POCOR-6710 end
 		}
