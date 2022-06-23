@@ -128,7 +128,7 @@ class StaffSubjectsTable extends ControllerActionTable {
                     $Classes->aliasField('id = ') . $InstitutionClassSubjects->aliasField('institution_class_id')
                 ]
             )
-            ->where([$this->aliasField('staff_id') => $staff_id]);
+            ->where([$this->aliasField('staff_id') => $staff_id])
             ->group([$InstitutionClassSubjects->aliasField('institution_subject_id')]);//POCOR-6710
     }
     //end:POCOR-5274   
