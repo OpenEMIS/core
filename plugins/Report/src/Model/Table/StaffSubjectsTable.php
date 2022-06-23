@@ -30,6 +30,10 @@ class StaffSubjectsTable extends AppTable  {
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
+        //Start:POCOR-6779
+        $indSubjectId = $requestData->education_subject_id;
+        $education_grade_id = $requestData->education_grade_id;
+        //End:POCOR-6779
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
@@ -39,7 +43,17 @@ class StaffSubjectsTable extends AppTable  {
         $Staff = TableRegistry::get('Security.Users');
         $Genders = TableRegistry::get('User.Genders');
         $MainNationalities = TableRegistry::get('FieldOption.Nationalities');
-        
+        $InstitutionSubjj = TableRegistry::get('institution_subjects'); //POCOR-6779
+        //Start:POCOR-6779
+        if(!empty($academicPeriodId) && !empty($institutionId) && !empty($education_grade_id) && !empty($indSubjectId)){
+            $institutionStaffaa = $InstitutionSubjj->find()->where(['institution_id'=>$institutionId,'education_grade_id'=>$education_grade_id,'education_subject_id'=>$indSubjectId,'academic_period_id'=>$academicPeriodId])->first();
+        }else if(!empty($academicPeriodId) && !empty($education_grade_id) && !empty($indSubjectId)){
+            $institutionStaffaa = $InstitutionSubjj->find()->where(['education_grade_id'=>$education_grade_id,'education_subject_id'=>$indSubjectId,'academic_period_id'=>$academicPeriodId])->first();
+        }else if(!empty($academicPeriodId) && !empty($indSubjectId)){
+            $institutionStaffaa = $InstitutionSubjj->find()->where(['education_subject_id'=>$indSubjectId,'academic_period_id'=>$academicPeriodId])->first();
+        }
+        $ins_SubId = $institutionStaffaa->id;
+        //End:POCOR-6779
         $conditions = [];
         if (!empty($academicPeriodId)) {
             if($this->aliasField('end_date') == null){
@@ -55,7 +69,11 @@ class StaffSubjectsTable extends AppTable  {
             }
             
         }
-        
+        //Start:POCOR-6779
+        if(!empty($indSubjectId)){
+            $conditions['institution_subject_id'] = $ins_SubId; 
+        }
+        //End:POCOR-6779
         if (!empty($institutionId) && $institutionId > 0) {
             $conditions['Institutions.id'] = $institutionId; 
         }
@@ -91,7 +109,8 @@ class StaffSubjectsTable extends AppTable  {
                     'fields' => [
                         'Institutions.id',
                         'Institutions.name',
-                        'Institutions.code'
+                        'Institutions.code',
+                        'Institutions.area_id'//POCOR-6779
                     ]
                 ],
                 'InstitutionSubjects' => [
@@ -179,7 +198,21 @@ class StaffSubjectsTable extends AppTable  {
                        $GradesClassData = $InstitutionClassSubjects->find()->where(['institution_subject_id'=>$row->institution_subject_id])->first();
                        $classData = $Classes->find()->where(['id'=>$GradesClassData->institution_class_id])->first();
                        $row['classes'] = $classData->name;
+                        
+                       //Start:POCOR-6779
+                       //Staff Area Name**
+                       $AreaT = TableRegistry::get('areas');
+                       $AreaData = $AreaT->find()->where(['id' => $row->institution->area_id])->first();
+                       $row['area_name'] = $AreaData->name;
 
+                       //Staff Status Name**
+                       $institution_staffT = TableRegistry::get('institution_staff');
+                       $StaffStatusT = TableRegistry::get('staff_statuses');
+                       $insStaff = $institution_staffT->find()->where(['staff_id' => $row->staff_id,'institution_id'=>$row->institution->id])->first();
+                       $staffStatusss = $StaffStatusT->find()->where(['id' => $insStaff->staff_status_id])->first();
+                       
+                       $row['staff_status'] = $staffStatusss->name;
+                       //End:POCOR-6779
                     return $row;
                 });
             });
@@ -199,7 +232,14 @@ class StaffSubjectsTable extends AppTable  {
         $userIdTypes = $IdentityTypesss->find()->all();
 
         $newFields = [];
-
+        //Start:POCOR-6779
+        $newFields[] = [
+            'key' => '',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __('Area Education')
+        ];
+        //End:POCOR-6779
         $newFields[] = [
             'key' => 'Institutions.code',
             'field' => 'institution_code',
@@ -213,7 +253,14 @@ class StaffSubjectsTable extends AppTable  {
             'type' => 'string',
             'label' => __('Institution')
         ];
-
+        //Start:POCOR-6779
+        $newFields[] = [
+            'key' => 'openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+        //End:POCOR-6779
         foreach($userIdTypes as $userIdType){
             $newFields[] = [
                 'key' => '',
@@ -264,7 +311,14 @@ class StaffSubjectsTable extends AppTable  {
             'type' => 'string',
             'label' => __('Nationality')
         ];
-
+        //Start:POCOR-6779
+        $newFields[] = [
+            'key' => '',
+            'field' => 'staff_status',
+            'type' => 'string',
+            'label' => __('Staff Status')
+        ];
+        //End:POCOR-6779
 		$newFields[] = [
             'key' => '',
             'field' => 'qualification',
