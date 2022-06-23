@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
+use DateTime;
 use Cake\Console\Shell;
 
 class GenerateAllReportCardsShell extends Shell
@@ -24,8 +25,6 @@ class GenerateAllReportCardsShell extends Shell
     public function main()
     {
         if (!empty($this->args[0]) && !empty($this->args[1])) {
-            $todayDate = Date::now();
-            $todayDate = $todayDate->format('Y-m-d');
             $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllReportCards', getmypid(), $this->args[0], '', $this->args[1]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
 
@@ -47,13 +46,14 @@ class GenerateAllReportCardsShell extends Shell
                 ])
                 ->hydrate(false)
                 ->first();
-                echo "<pre>";print_r($recordToProcess);
 
             if (!empty($recordToProcess)) {
                 $this->out('Generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
                 try {
-                    //'status' => $this->ReportCardProcesses::RUNNING change to 2
-                    $this->ReportCardProcesses->updateAll(['status' => 2, 'modified' => $todayDate], [
+                    $todayDate = Time::now();
+                    $todayDate = Time::parse('now');
+                    $_now = $todayDate->i18nFormat('yyyy-MM-dd HH:mm:ss');
+                    $this->ReportCardProcesses->updateAll(['status' => $this->ReportCardProcesses::RUNNING, 'modified' => $_now], [
                         'report_card_id' => $recordToProcess['report_card_id'],
                         'institution_class_id' => $recordToProcess['institution_class_id'],
                         'student_id' => $recordToProcess['student_id']
