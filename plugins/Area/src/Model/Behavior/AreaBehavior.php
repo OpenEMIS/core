@@ -46,8 +46,16 @@ class AreaBehavior extends Behavior {
 				$Table = TableRegistry::get('Institution.InstitutionShifts');
 			}
 			if (!empty($options['table'])) {
-				if (!empty($options['conditionCheck']['alternative_name']) && !empty($options['shift_option_id'])) {
-					return $query;
+				if (!empty($options['conditionCheck']['alternative_name'] == 2) && !empty($options['shift_option_id'])) {
+					$tableAlias = $options['columnName'].'institution_shifts';
+					$query->LeftJoin([ $tableAlias => $options['table']], [
+						$tableAlias.'.location_institution_id = '. $this->_table->alias().'.id'
+					])
+					->LeftJoin(['ShiftOptions' => 'shift_options'], [
+						'ShiftOptions.id = '. $tableAlias.'.shift_option_id',
+						$tableAlias.'.shift_option_id =' => $options['shift_option_id'],
+					])
+					->where([$tableAlias.'.shift_option_id =' => $options['shift_option_id']]);
 				}
 				else{
 					$tableAlias = $options['columnName'].'institution_shifts';
@@ -124,7 +132,7 @@ class AreaBehavior extends Behavior {
 
 					if (!empty($institutionId)) {
 						$query->LeftJoin([ $tableAlias => $options['table']], [
-							$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
+							$tableAlias.'.location_institution_id = '. $this->_table->alias().'.id'
 						])
 						->where([$tableAlias.'.location_institution_id IN' => $institutionId])
 						->group($tableAlias.'.location_institution_id');
