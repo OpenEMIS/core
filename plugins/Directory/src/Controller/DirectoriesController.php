@@ -1379,7 +1379,8 @@ class DirectoriesController extends AppController
                                     ->find()
                                     ->select([
                                        'institution_id'=> $institutionStaff->aliasField('institution_id'),
-                                        'student_id'=>$institutionStaff->aliasField('staff_id'),
+                                        'staff_id'=>$institutionStaff->aliasField('staff_id'),
+                                        'institution_position_id'=>$institutionStaff->aliasField('institution_position_id'),
                                         'staff_status_id'=>$institutionStaff->aliasField('staff_status_id'),
                                         'institution_name'=>$institutions->aliasField('name'),
                                         'institution_code'=>$institutions->aliasField('code')
@@ -1389,22 +1390,26 @@ class DirectoriesController extends AppController
                                     ])
                                     ->where([
                                         $institutionStaff->aliasField('staff_id') => $result['id'],
-                                        $institutionStaff->aliasField('staff_status_id') => $assignedStatus
-                                    ])->first();
+                                        $institutionStaff->aliasField('staff_status_id') => $assignedStatus,
+                                        $institutionStaff->aliasField('institution_id') => $institutionId
+                                    ])->toArray();
+                    
                     if(!empty($institutionStaffTbl)){
-                        $institution_id = $institutionStaffTbl->institution_id;
-                        $institution_name = $institutionStaffTbl->institution_name;
-                        $institution_code = $institutionStaffTbl->institution_code;
-                        if($institutionStaffTbl->institution_id == $institutionId){
-                            $is_same_school = 1;
-                        }else{
-                            $is_diff_school = 1;
+                        $positionArray = [];
+                        $is_same_school = 1;
+                        foreach ($institutionStaffTbl as $skey => $sval) {
+                            $institution_id = $sval->institution_id;
+                            $institution_name = $sval->institution_name;
+                            $institution_code = $sval->institution_code;
+                            $positionArray[$skey] = $sval->institution_position_id;  
                         }
+                    }else{
+                        $is_diff_school = 1;
                     }
                 }
             }
 
-            $result_array[] = array('id' => $result['id'],'username' => $result['username'],'password' => $result['password'],'openemis_no' => $result['openemis_no'],'first_name' => $result['first_name'],'middle_name' => $result['middle_name'],'third_name' => $result['third_name'],'last_name' => $result['last_name'],'preferred_name' => $result['preferred_name'],'email' => $result['email'],'address' => $result['address'],'postal_code' => $result['postal_code'],'gender_id' => $result['gender_id'],'external_reference' => $result['external_reference'],'last_login' => $result['last_login'],'photo_name' => $result['photo_name'],'photo_content' => $result['photo_content'],'preferred_language' => $result['preferred_language'],'address_area_id' => $result['address_area_id'],'birthplace_area_id' => $result['birthplace_area_id'],'super_admin' => $result['super_admin'],'status' => $result['status'],'is_student' => $result['is_student'],'is_staff' => $result['is_staff'],'is_guardian' => $result['is_guardian'],'name'=>$result['first_name']." ".$result['last_name'],'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'),'gender'=>$result['Genders_name'],'nationality_id'=>$MainNationalities_id,'nationality'=>$MainNationalities_name,'identity_type_id'=>$MainIdentityTypes_id,'identity_type'=>$MainIdentityTypes_name,'identity_number'=>$identity_number,'has_special_needs'=>$has_special_needs,'area_name'=>$result['area_name'],'area_code'=>$result['area_code'],'birth_area_name'=>$result['birth_area_name'],'birth_area_code'=>$result['birth_area_code'], 'is_same_school'=>$is_same_school, 'is_diff_school'=>$is_diff_school, 'current_enrol_institution_id'=> $institution_id, 'current_enrol_institution_name'=> $institution_name, 'current_enrol_institution_code'=> $institution_code, 'current_enrol_academic_period_id'=> $academic_period_id, 'current_enrol_academic_period_year'=> $academic_period_year, 'education_grade_id'=> $education_grade_id, 'institution_name'=>$institutionsTbl->institution_name, 'institution_code'=>$institutionsTbl->institution_code);
+            $result_array[] = array('id' => $result['id'],'username' => $result['username'],'password' => $result['password'],'openemis_no' => $result['openemis_no'],'first_name' => $result['first_name'],'middle_name' => $result['middle_name'],'third_name' => $result['third_name'],'last_name' => $result['last_name'],'preferred_name' => $result['preferred_name'],'email' => $result['email'],'address' => $result['address'],'postal_code' => $result['postal_code'],'gender_id' => $result['gender_id'],'external_reference' => $result['external_reference'],'last_login' => $result['last_login'],'photo_name' => $result['photo_name'],'photo_content' => $result['photo_content'],'preferred_language' => $result['preferred_language'],'address_area_id' => $result['address_area_id'],'birthplace_area_id' => $result['birthplace_area_id'],'super_admin' => $result['super_admin'],'status' => $result['status'],'is_student' => $result['is_student'],'is_staff' => $result['is_staff'],'is_guardian' => $result['is_guardian'],'name'=>$result['first_name']." ".$result['last_name'],'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'),'gender'=>$result['Genders_name'],'nationality_id'=>$MainNationalities_id,'nationality'=>$MainNationalities_name,'identity_type_id'=>$MainIdentityTypes_id,'identity_type'=>$MainIdentityTypes_name,'identity_number'=>$identity_number,'has_special_needs'=>$has_special_needs,'area_name'=>$result['area_name'],'area_code'=>$result['area_code'],'birth_area_name'=>$result['birth_area_name'],'birth_area_code'=>$result['birth_area_code'], 'is_same_school'=>$is_same_school, 'is_diff_school'=>$is_diff_school, 'current_enrol_institution_id'=> $institution_id, 'current_enrol_institution_name'=> $institution_name, 'current_enrol_institution_code'=> $institution_code, 'current_enrol_academic_period_id'=> $academic_period_id, 'current_enrol_academic_period_year'=> $academic_period_year, 'education_grade_id'=> $education_grade_id, 'institution_name'=>$institutionsTbl->institution_name, 'institution_code'=>$institutionsTbl->institution_code, 'positions'=>$positionArray);
         }
         echo json_encode(['data' => $result_array, 'total' => $totalCount], JSON_PARTIAL_OUTPUT_ON_ERROR); die;
     }
