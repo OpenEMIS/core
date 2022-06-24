@@ -56,7 +56,8 @@ class AreaBehavior extends Behavior {
 						'ShiftOptions.id = '. $tableAlias.'.shift_option_id',
 						$tableAlias.'.shift_option_id =' => $options['shift_option_id'],
 					])
-					->where([$tableAlias.'.shift_option_id =' => $options['shift_option_id']]);
+					->where([$tableAlias.'.shift_option_id =' => $options['shift_option_id']])
+					->group($tableAlias.'.location_institution_id');
 				}//end POCOR-6797
 				else{
 					$tableAlias = $options['columnName'].'institution_shifts';
