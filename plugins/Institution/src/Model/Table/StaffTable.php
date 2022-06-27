@@ -2164,6 +2164,54 @@ class StaffTable extends ControllerActionTable
             });
     }
 
+    /*
+    * Function to check whether logged in user have "All Comments" view permission
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-6800
+    */
+    public function findAllCommentsViewPermissions(Query $query, array $options)
+    {
+        $loggedInUserId = $options['staff_id'];
+        $superAdmin = $options['super_admin'];
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $userRoleId = $SecurityRoles->getLoggedInUserRoles($loggedInUserId);
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $permission = 'All Comments';
+        $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+        $functionsData = $SecurityFunctions->find()
+                                    ->select([$SecurityFunctions->aliasField('id')])
+                                    ->where([
+                                        $SecurityFunctions->aliasField('name') => $permission
+                                    ])->hydrate(false)->first();
+        if (!empty($functionsData)) {
+            $funId = $functionsData['id'];
+        }
+        $SecurityRoleFunctionsTbl = TableRegistry::get('Security.SecurityRoleFunctions');
+        if ($superAdmin) {
+            $data = array('result' => 1);
+            echo json_encode($data, true); die;
+        } else {
+            if (!empty($funId) && !empty($userRoleId)) {
+                $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
+                                    ->select([$SecurityRoleFunctionsTbl->aliasField('_view')])
+                                    ->where([
+                                        $SecurityRoleFunctionsTbl->aliasField('security_function_id') => $funId,
+                                        $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $userRoleId,
+                                        $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
+                                    ])->hydrate(false)->first();
+                
+                    if (!empty( $SecurityRoleFunctions) && $SecurityRoleFunctions['_view'] == 1) {
+                        $data = array('result' => 1);
+                        echo json_encode($data, true); die;
+                    } else {
+                        $data = array('result' => 0);
+                        echo json_encode($data, true); die;
+                    }
+            }
+        } 
+    }
+
     //used for hide and show tabs according to role 
     //POCOR-6734 starts
     public function findPrincipalViewPermissions(Query $query, array $options)

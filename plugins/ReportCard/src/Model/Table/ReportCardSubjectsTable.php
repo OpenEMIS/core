@@ -40,7 +40,7 @@ class ReportCardSubjectsTable extends ControllerActionTable
            $orWhere[$staffSubject->aliasField('staff_id')] = $staffId;
            //$orWhere[$InstitutionClasses->aliasField('staff_id')] = $staffId;//POCOR-6809 - commented condition as it's not compulsory to have same staff for class and subject
         }
-        return $query
+        $query
                 ->select([
                     'education_subject_id' => $this->aliasField('education_subject_id'),
                     'code' => $this->EducationSubjects->aliasField('code'),
@@ -70,5 +70,7 @@ class ReportCardSubjectsTable extends ControllerActionTable
                 //->orWhere([$orWhere])//POCOR-6809 - commented condition as it's not compulsory to have same staff for class and subject
                 ->group([$InstitutionSubjects->alias('name')])
                 ->order([$this->EducationSubjects->aliasField('order')]);
+               // echo "<pre>"; print_r($query); die;
+        return $query;
     }
 }
