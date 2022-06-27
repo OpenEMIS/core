@@ -85,7 +85,7 @@ $this->start('panelBody');
 			foreach ($instituteprofileCompletness as $pcVal) : 
 		?>
          <tr>
-            <td class="vertical-align-top"><?= $pcVal['feature']?></td>
+            <td class="vertical-align-top"><?= __($pcVal['feature'])?></td>
             <td class="vertical-align-top"><?= $pcVal['modifiedDate'] ;?></td>
             <td class="vertical-align-top"><?php echo ($pcVal['complete']=='yes') ?  '<i class="fa fa-check" aria-hidden="true"></i>' : '<i class="fa fa-close" aria-hidden="true"></i>'?></td>
          </tr>

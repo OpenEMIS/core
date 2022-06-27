@@ -20,20 +20,29 @@ class StaffSubject extends Entity
 	}
 
 	protected function _getInstitutionClass() {
-		$name = '';
+		$name[] = '';
 		if ($this->has('institution_subject') && $this->institution_subject->has('id')) {
 			$InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
 			$data = $InstitutionClassSubjects
 			->find()
 			->contain('InstitutionClasses')
-			->where([$InstitutionClassSubjects->aliasField('institution_subject_id') => $this->institution_subject->id])
-			->first();
+			->where([$InstitutionClassSubjects->aliasField('institution_subject_id') => $this->institution_subject->id]);
+			//->first();
 
-			if (!empty($data)) {
+			/*if (!empty($data)) {
 				if ($data->has('institution_class')) {
 					$name = $data->institution_class->name;
 				}
-			}
+			}*/
+
+			//POCOR-6710 start
+			foreach ($data as $class) {
+                $name[] = $class->institution_class->name;
+            }
+            unset($name[0]);
+            sort($name);
+        	return implode(', ', $name);
+        	//POCOR-6710 end
 		}
 		return $name;
 	}
