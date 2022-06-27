@@ -372,11 +372,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.institutionPositionOptions.availableOptions = resp.data;
             StaffController.institutionPositionOptions.selectedOption = null;
             if(StaffController.staffData.is_same_school > 0) {
-                StaffController.institutionPositionOptions.availableOptions.forEach((option) => {
-                    if(option.value === StaffController.staffData.current_position_id) {
-                        option.disabled = true;
-                    }
+                StaffController.staffData.positions.forEach((positionId) => {
+                    StaffController.institutionPositionOptions.availableOptions.forEach((option) => {
+                        if(option.value === positionId) {
+                            option.disabled = true;
+                        }
+                    });
                 });
+                
             }
             UtilsSvc.isAppendLoader(false);
         }, function(error){
