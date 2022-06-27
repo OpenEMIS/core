@@ -43,7 +43,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         getHomeroomTeacherViewPermissions : getHomeroomTeacherViewPermissions,//POCOR-6734 
         getMySubjectTeacherViewPermissions : getMySubjectTeacherViewPermissions,//POCOR-6734 
         getAllSubjectTeacherViewPermissions : getAllSubjectTeacherViewPermissions,//POCOR-6734
-        getAllCommentTeacherViewPermissions : getAllCommentTeacherViewPermissions//POCOR-6800
+        getAllCommentTeacherViewPermissions : getAllCommentTeacherViewPermissions,//POCOR-6800
+        getAllCommentTeacherEditPermissions : getAllCommentTeacherEditPermissions//POCOR-6800
     };
 
     return service;
@@ -195,6 +196,30 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         return StaffTable
             .find('allCommentsViewPermissions', extra)
             .ajax({success: success, defer: true});
+    }
+
+    function getAllCommentTeacherEditPermissions(params,institutionId) {
+        var extra = {
+            staff_id: params.id,
+            is_staff: params.is_staff,
+            super_admin: params.super_admin,
+            institution_id: institutionId
+        };
+        console.log('AllCommentTeacherEditPermissions->extra svc==>>');
+        console.log(extra);
+      
+        var success = function(response, deferred) {
+            var permissionData = response
+            if (angular.isObject(permissionData)) {
+                deferred.resolve(permissionData);
+            } else {
+                deferred.reject('No proper data found regarding to permission.');
+            }
+        };
+
+        return StaffTable
+            .find('allCommentsEditPermissions', extra)
+            .ajax({success: success, defer: true});
     }//POCOR-6800:END
 
     function getEditPermissions(reportCardId, institutionId, classId, currentUserId) {
@@ -246,7 +271,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         return $q.all(promises);
     };
 
-    function getTabs(reportCardId, classId, institutionId, currentUserId, principalCommentsRequired, homeroomTeacherCommentsRequired, teacherCommentsRequired, myteacherPermission, allCommentsViewRequired) {
+    function getTabs(reportCardId, classId, institutionId, currentUserId, principalCommentsRequired, homeroomTeacherCommentsRequired, teacherCommentsRequired, myteacherPermission) {
         var deferred = $q.defer();
         var tabs = [];
 
@@ -260,7 +285,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             .then(function(response) {
                 console.log('getEditPermissions svc==>>');
                 console.log(response);
-                //console.log(allCommentsViewRequired);
                 isSuperAdmin = response[0];
                 principalPermission = response[1].data;
                 homeroomTeacherPermission = response[2].data;
@@ -286,9 +310,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                         editable: editable
                     });
                 }
-
-                //console.log(principalPermission);
-
                 return getSubjects(reportCardId, classId, principalPermission, nonTeacherPermission);
             }, function(error) {
                 console.log(error);
