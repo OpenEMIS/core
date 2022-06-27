@@ -1,3 +1,18 @@
+### [3.75.12] - 2022-06-27
+- Bug Fixed: Administration > Survey > Forms > Statuses: System does not automatically populate the instituion_surveys table with the news surveys for the new academic period
+- Bug Fixed: Administrations > Profiles > Institutions : Report assessment summary in General is not appearing
+- Bug Fixed: Institutions>Staff>Staff1>Career>Subjects: Duplicate subjects are showing
+- Bug Fixed: Institutions > Students > Academic: Examinations: Results are not showing
+- Bug Fixed: Institution > Students > Subjects: Total Mark: Total marks should tally with Performance>Assessments
+- Bug Fixed: Report>Staff>Staff Position Names: Should not show staffs without institutions
+- Bug Fixed: Report>Institution: Time completed shows before time started
+- Bug Fixed: Institution>Performance>Report Cards>Comments: Homeroom teacher should only see classes that he or she is homeroom teacher of
+- Bug Fixed: Administrations > Performances > Report Cards : Modified column does not capture the time
+- Bug Fixed: Administration > Performance > Report Cards: Principal comments set to no but can see Principal tab
+- Bug Fixed: Institutions>Dashboard: Dashboard items should be translated to Arabic
+- Bug Fixed: Institutions>Advanced Search: Multiple education programmes are showing
+- Bug Fixed: Institutions>Report Cards>Comments: User is unable to see subjects even though she is subject teacher
+
 ### [3.75.11] - 2022-06-14
 - Implemented: Reports > Data Quality > Potential Students Duplicates > Add programme and enrollment status columns
 - Implemented: Add OpenEMIS ID field to Reports > Staff > Qualifications Report
