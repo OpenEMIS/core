@@ -61,7 +61,12 @@ class ExaminationItemResultsTable extends AppTable
         if ($session->check('Student.ExaminationResults.student_id')) {
             $studentId = $session->read('Student.ExaminationResults.student_id');
         }
-
+        //POCOR-6761 start
+        $stdID = $session->read('Student.ExaminationResults.student_id');
+        if($stdID==''){
+            $studentId = $session->read('Auth.User.id');
+        }
+        //POCOR-6761 end
         return $query
             ->select([
                 $this->aliasField('id'),
@@ -86,10 +91,12 @@ class ExaminationItemResultsTable extends AppTable
                 $this->ExaminationGradingOptions->aliasField('name'),
                 $this->ExaminationGradingOptions->aliasField('examination_grading_type_id'),
             ])
+            ->contain('ExaminationGradingOptions') //POCOR-6761
+            ->contain('ExaminationGradingOptions.ExaminationGradingTypes') //POCOR-6761
             ->innerJoinWith('Examinations')
             ->innerJoinWith('ExaminationItems')
             ->leftJoinWith('EducationSubjects')
-            ->innerJoinWith('ExaminationGradingOptions')
+            //->innerJoinWith('ExaminationGradingOptions')
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('student_id') => $studentId,

@@ -396,12 +396,12 @@ class InstitutionSurveysTable extends ControllerActionTable
         $selectedStatus = $this->request->query('status');
 
         if (is_null($selectedStatus) || $selectedStatus == -1) {
-            $this->buildSurveyRecords();
+            //$this->buildSurveyRecords();
             $this->field('last_modified');
             $fieldOrder[] = 'last_modified';
         } else {
             if ($selectedStatus == $this->openStatusId) {   // Open
-                $this->buildSurveyRecords();
+                //$this->buildSurveyRecords();
                 $this->field('to_be_completed_by');
                 $fieldOrder[] = 'to_be_completed_by';
             } elseif ($selectedStatus == $this->closedStatusId) {  // Closed
