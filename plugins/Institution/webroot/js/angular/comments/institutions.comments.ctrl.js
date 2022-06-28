@@ -183,7 +183,8 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 vm.teacherCommentsRequired = 1;
                 $scope.checkEditAction = 1;//POCOR-6800
             }
-            return InstitutionsCommentsSvc.getTabs($scope.reportCardId, $scope.classId, $scope.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.teacherCommentsRequired, vm.mySubjectTeacherCommentsRequired);
+            vm.allCommentsEditRequired = $scope.checkEditAction;//POCOR-6800
+            return InstitutionsCommentsSvc.getTabs($scope.reportCardId, $scope.classId, $scope.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.teacherCommentsRequired, vm.mySubjectTeacherCommentsRequired, vm.allCommentsEditRequired);//POCOR-6800 add vm.allCommentsEditRequired
         }, function(error)
         {
             // No getAllSubjectTeacherViewPermissions
