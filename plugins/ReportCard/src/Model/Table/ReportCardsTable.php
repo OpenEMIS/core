@@ -13,7 +13,6 @@ use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
-use Cake\Datasource\ConnectionManager; //POCOR-6785
 
 class ReportCardsTable extends ControllerActionTable
 {
@@ -123,11 +122,6 @@ class ReportCardsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        //Start:POCOR-6785 need to convert this custom query to cake query
-        $conn = ConnectionManager::get('default');
-        $stmt = $conn->query("UPDATE report_card_processes SET status = CASE WHEN TIMESTAMPDIFF(MINUTE,(report_card_processes.modified), CURRENT_TIMESTAMP) BETWEEN 5 AND 30 THEN 1 WHEN TIMESTAMPDIFF(MINUTE,(report_card_processes.modified), CURRENT_TIMESTAMP) > 30 THEN -1 END WHERE modified IS NOT NULL AND TIMESTAMPDIFF(MINUTE,(report_card_processes.modified), CURRENT_TIMESTAMP) >= 5");
-        $successQ = $stmt->execute();
-        //END:POCOR-6785
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['description']['visible'] = false;
         $this->fields['principal_comments_required']['visible'] = false;

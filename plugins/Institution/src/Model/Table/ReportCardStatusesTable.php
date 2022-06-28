@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use ZipArchive;
-
+use DateTime;//POCOR-6785
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -230,9 +230,27 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         //Start:POCOR-6785 need to convert this custom query to cake query
         $conn = ConnectionManager::get('default');
-        $stmt = $conn->query("UPDATE report_card_processes SET status = CASE WHEN TIMESTAMPDIFF(MINUTE,(report_card_processes.modified), CURRENT_TIMESTAMP) BETWEEN 5 AND 30 THEN 1 WHEN TIMESTAMPDIFF(MINUTE,(report_card_processes.modified), CURRENT_TIMESTAMP) > 30 THEN -1 END WHERE modified IS NOT NULL AND TIMESTAMPDIFF(MINUTE,(report_card_processes.modified), CURRENT_TIMESTAMP) >= 5");
-        $successQ = $stmt->execute();
-
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $ReportCardProcessesTable = TableRegistry::get('report_card_processes');
+        $entitydata = $ReportCardProcessesTable->find('all',['conditions'=>[
+                'institution_id' =>$institutionId,
+                'status !=' =>'-1'
+        ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();
+       
+        foreach($entitydata as $keyy =>$entity ){ 
+            $now = new DateTime();
+            $c_timestap = $now->getTimestamp();
+            $modifiedDate = $entity->modified;
+            $m_timestap =$modifiedDate->getTimestamp();
+            $diff_mins = abs($c_timestap - $m_timestap) / 60;
+            if($diff_mins > 5 && $diff_mins < 30){
+                $entity->status = 1;
+                $ReportCardProcessesTable->save($entity);
+            }elseif($diff_mins > 30){
+                $entity->status = -1;
+                $ReportCardProcessesTable->save($entity);
+            }
+        }
         $stmtNew = $conn->query("UPDATE institution_students_report_cards INNER JOIN report_card_processes ON institution_students_report_cards.report_card_id = report_card_processes.report_card_id AND institution_students_report_cards.student_id = report_card_processes.student_id AND institution_students_report_cards.institution_id = report_card_processes.institution_id AND institution_students_report_cards.academic_period_id = report_card_processes.academic_period_id AND institution_students_report_cards.education_grade_id = report_card_processes.education_grade_id AND institution_students_report_cards.institution_class_id = report_card_processes.institution_class_id SET institution_students_report_cards.status = report_card_processes.status");
         $successQQ =$stmtNew->execute();
         //END:POCOR-6785
