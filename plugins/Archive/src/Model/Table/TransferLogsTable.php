@@ -95,8 +95,8 @@ use Cake\Utility\Security;
         $this->field('academic_period_id');    
         $this->field('generated_on');
         $this->field('generated_by');
-
-        $this->setFieldOrder(['academic_period_id','generated_on','generated_by']);
+        $this->field('features', ['sort' => false]); // POCOR-6816 
+        $this->setFieldOrder(['academic_period_id','features','generated_on','generated_by']);
 
         //$this->Alert->info('Archive.backupReminder', ['reset' => false]);
     }
@@ -106,12 +106,12 @@ use Cake\Utility\Security;
         $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"];
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
         $this->field('academic_period_id', ['type' => 'select', 'options' => $academicPeriodOptions]);
-        
+        $this->field('features', ['type' => 'select', 'options' => $this->getFeatureOptions()]); // POCOR-6816 
         $this->field('id', ['visible' => false]);
         $this->field('generated_on', ['visible' => false]);
         $this->field('generated_by', ['visible' => false]);
         
-        $this->setFieldOrder(['academic_period_id']);
+        $this->setFieldOrder(['academic_period_id','features']); // POCOR-6816 
 
     }
 
@@ -250,6 +250,19 @@ use Cake\Utility\Security;
         $shellCmd = $cmd . ' >> ' . $logs;
         exec($shellCmd);
         Log::write('debug', $shellCmd);
+    }
+
+    /**
+     * POCOR-6816 
+     * add features dropdown
+    */
+    public function getFeatureOptions(){
+        $options = [
+            'Student Attendance' => __('Student Attendance'),
+            'Staff Attendances' => __('Staff Attendances'),
+            'Student Assessments' => __('Student Assessments'),
+        ];
+        return $options;
     }
     
 }
