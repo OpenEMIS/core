@@ -2259,8 +2259,12 @@ class StaffTable extends ControllerActionTable
         }
     }
     /**POCOR-6800 ends*/
-    //used for hide and show tabs according to role 
-    //POCOR-6734 starts
+    /*
+     * Function to check whether Principal role user have "'My Classes','All Classes'" view permission
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-6734
+    */
     public function findPrincipalViewPermissions(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
@@ -2331,7 +2335,12 @@ class StaffTable extends ControllerActionTable
             die('0');
         }
     }
-
+    /*
+     * Function to check whether Homeroom role user have "'My Classes','All Classes'" view permission
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-6734
+    */
     public function findHomeroomViewPermissions(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
@@ -2471,7 +2480,12 @@ class StaffTable extends ControllerActionTable
             die('0');
         }
     }
-
+    /*
+     * Function to check whether Teacher role user have "'My Subjects','Comments'" view permission for my subject
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-6734
+    */
     public function findMySubjectTeacherViewPermissions(Query $query, array $options){
         $institutionId = $options['institution_id'];
         $staffId = $options['staff_id'];
@@ -2540,7 +2554,12 @@ class StaffTable extends ControllerActionTable
             echo json_encode($data, true); die;
         }
     }
-
+    /*
+     * Function to check whether Teacher role user have "'All Subjects','Comments'" view permission for all subject
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-6734
+    */
     public function findAllSubjectTeacherViewPermissions(Query $query, array $options){
         $institutionId = $options['institution_id'];
         $staffId = $options['staff_id'];
@@ -2556,8 +2575,6 @@ class StaffTable extends ControllerActionTable
                                     $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
                                     $SecurityFunctionsTbl->aliasField('category IN') => $categories,
                                 ])->hydrate(false)->toArray();
-
-        /**/
         $funArr = [];
         if(!empty($SecurityFunctions)){
             foreach ($SecurityFunctions as $funkey => $funval) {
@@ -2642,16 +2659,16 @@ class StaffTable extends ControllerActionTable
             ->where([$StaffPositionTitles->aliasField('type') => 0,
                     $this->aliasField('staff_id') => $staffId            
             ]);
-    //     $staffList = $query->toArray();   
-    //     $nonTeacherIds = [];
-    //     if(!empty($staffList)){
-    //         foreach($staffList as $staffVal) {
-    //             $nonTeacherIds[] = $staffVal->staff_id;
-    //         }
-    //  }
-    //    if (in_array($staffId,$nonTeacherIds)) {
-    //        $isNonTeacher = true;
-    //    }       
+        //     $staffList = $query->toArray();   
+        //     $nonTeacherIds = [];
+        //     if(!empty($staffList)){
+        //         foreach($staffList as $staffVal) {
+        //             $nonTeacherIds[] = $staffVal->staff_id;
+        //         }
+        //  }
+        //    if (in_array($staffId,$nonTeacherIds)) {
+        //        $isNonTeacher = true;
+        //    }       
     }
     
     // used for student report cards
