@@ -92,7 +92,7 @@ class AssessmentItemResultsTable extends AppTable
         $academicPeriodId = $options['academic_period_id'];
         $controller = $options['_controller'];
         $session = $controller->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $session->read('Institution.Institutions.id'); //POCOR-6823
 
         
         $studentId = -1;
@@ -136,7 +136,7 @@ class AssessmentItemResultsTable extends AppTable
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('student_id') => $studentId,
-                $this->aliasField('institution_id') => $institutionId
+                $this->aliasField('institution_id') => $institutionId    //POCOR-6823
             ])
             ->order([
                 $this->Assessments->aliasField('code'), $this->Assessments->aliasField('name')
