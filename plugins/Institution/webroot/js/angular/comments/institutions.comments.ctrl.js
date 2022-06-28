@@ -39,8 +39,8 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             vm.principalCommentsRequired = reportCardData.principal_comments_required;
             vm.homeroomTeacherCommentsRequired = reportCardData.homeroom_teacher_comments_required;
             vm.teacherCommentsRequired = reportCardData.teacher_comments_required;
-            vm.allCommentsViewRequired = 0;
-            vm.allCommentsEditRequired = 0;
+            vm.allCommentsViewRequired = 0;//POCOR-6800
+            vm.allCommentsEditRequired = 0;//POCOR-6800
 
             return InstitutionsCommentsSvc.getCurrentUser();
         }, function(error)
@@ -181,7 +181,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 vm.teacherCommentsRequired = 0;
             }else{
                 vm.teacherCommentsRequired = 1;
-                $scope.checkEditAction = 1;
+                $scope.checkEditAction = 1;//POCOR-6800
             }
             return InstitutionsCommentsSvc.getTabs($scope.reportCardId, $scope.classId, $scope.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.teacherCommentsRequired, vm.mySubjectTeacherCommentsRequired);
         }, function(error)
@@ -194,12 +194,10 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
         .then(function(tabs)
         {
             vm.tabs = tabs;
-
             if (angular.isObject(tabs) && tabs.length > 0) {
                 var tab = tabs[0];
                 vm.initGrid(tab);
             }
-
             return InstitutionsCommentsSvc.getCommentCodeOptions();
         }, function(error)
         {
