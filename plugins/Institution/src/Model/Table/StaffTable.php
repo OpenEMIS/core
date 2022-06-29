@@ -2371,7 +2371,6 @@ class StaffTable extends ControllerActionTable
                                 $SecurityGroupUsersTbl->aliasField('security_user_id') => $staffId,
                                 $SecurityGroupUsersTbl->aliasField('security_role_id') => $homeroomRoleId,
                             ])->count();
-
         $count = 0;
         if($SecurityGroupIns > 0){
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
@@ -2403,7 +2402,7 @@ class StaffTable extends ControllerActionTable
                 }
             }
         }
-        
+         
         if(($count > 0) || ($superAdmin == 1)){
             //POCOR-6789 STARTS
             $securityGroupId = $Institution->get($institutionId)->security_group_id;

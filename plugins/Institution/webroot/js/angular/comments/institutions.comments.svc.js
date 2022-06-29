@@ -271,7 +271,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         return $q.all(promises);
     };
 
-    function getTabs(reportCardId, classId, institutionId, currentUserId, principalCommentsRequired, homeroomTeacherCommentsRequired, teacherCommentsRequired, myteacherPermission, allCommentsEditRequired) {
+    function getTabs(reportCardId, classId, institutionId, currentUserId, principalCommentsRequired, homeroomTeacherCommentsRequired, teacherCommentsRequired, myteacherPermission, allCommentsViewRequired, allCommentsEditRequired) {
         var deferred = $q.defer();
         var tabs = [];
 
@@ -291,7 +291,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 teacherPermission = response[3].data;
                 nonTeacherPermission = response[4].data;
 
-                if ((allCommentsEditRequired == 1) || principalCommentsRequired) {//POCOR-6800 add vm.allCommentsEditRequired
+                if (((allCommentsViewRequired == 1) && (allCommentsEditRequired == 1)) || principalCommentsRequired) {//POCOR-6800 add vm.allCommentsEditRequired
                     editable = (angular.isObject(principalPermission) && principalPermission.length > 0) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0) || (allCommentsEditRequired == 1);//POCOR-6800 add allCommentsEditRequired
                     tabs.push({
                         tabName: "Principal",
@@ -301,7 +301,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     });
                 }
 
-                if ((allCommentsEditRequired == 1) || homeroomTeacherCommentsRequired) {//POCOR-6800 add vm.allCommentsEditRequired
+                if (((allCommentsViewRequired == 1) && (allCommentsEditRequired == 1)) || homeroomTeacherCommentsRequired) {//POCOR-6800 add vm.allCommentsEditRequired
                     editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0) || (allCommentsEditRequired == 1);//POCOR-6800 add allCommentsEditRequired
                     tabs.push({
                         tabName: "Homeroom Teacher",
