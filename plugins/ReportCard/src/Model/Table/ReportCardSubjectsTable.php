@@ -65,9 +65,8 @@ class ReportCardSubjectsTable extends ControllerActionTable
                 ])
                 ->where([
                     $this->aliasField('report_card_id') => $reportCardId,
-                    $orWhere
                 ])
-                //->orWhere([$orWhere])//POCOR-6809 - commented condition as it's not compulsory to have same staff for class and subject
+                ->orWhere([$orWhere])
                 ->group([$InstitutionSubjects->alias('name')])
                 ->order([$this->EducationSubjects->aliasField('order')]);
     }
