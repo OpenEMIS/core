@@ -184,7 +184,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 $scope.checkEditAction = 1;//POCOR-6800
             }
             vm.allCommentsEditRequired = $scope.checkEditAction;//POCOR-6800
-            return InstitutionsCommentsSvc.getTabs($scope.reportCardId, $scope.classId, $scope.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.teacherCommentsRequired, vm.mySubjectTeacherCommentsRequired, vm.allCommentsEditRequired);//POCOR-6800 add vm.allCommentsEditRequired
+            return InstitutionsCommentsSvc.getTabs($scope.reportCardId, $scope.classId, $scope.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.teacherCommentsRequired, vm.mySubjectTeacherCommentsRequired, vm.allCommentsViewRequired, vm.allCommentsEditRequired);//POCOR-6800 add vm.allCommentsEditRequired
         }, function(error)
         {
             // No getAllSubjectTeacherViewPermissions
