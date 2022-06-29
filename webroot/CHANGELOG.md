@@ -1,3 +1,6 @@
+### [3.75.13] - 2022-06-29
+- Bug Fixed: Administration>Security>Roles: All comments should be created and edit permission should allow user to edit permission
+
 ### [3.75.12] - 2022-06-27
 - Bug Fixed: Administration > Survey > Forms > Statuses: System does not automatically populate the instituion_surveys table with the news surveys for the new academic period
 - Bug Fixed: Administrations > Profiles > Institutions : Report assessment summary in General is not appearing
