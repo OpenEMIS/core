@@ -20,7 +20,7 @@ class AssessmentItemResultsTable extends AppTable
         parent::initialize($config);
 
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
-         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('AssessmentGradingOptions', ['className' => 'Assessment.AssessmentGradingOptions']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
