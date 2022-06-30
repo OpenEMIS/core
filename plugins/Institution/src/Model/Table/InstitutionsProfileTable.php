@@ -128,6 +128,13 @@ class InstitutionsProfileTable extends ControllerActionTable
                     'attr' => $indexAttr,
                     'url' => $downloadPdfUrl
                 ];
+                //START:POCOR-6793
+                $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
+                $buttons['download'] = [
+                    'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+                    'attr' => $indexAttr,
+                    'url' => $downloadUrl
+                ];
             }
 
             // Generate button, all statuses
