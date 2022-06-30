@@ -120,10 +120,13 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                     var examinationItemId = studentExaminationResult.examination_item_id;
                     var subjectId = studentExaminationResult.education_subject_id;
                     var gradingOptionId = studentExaminationResult.examination_grading_option_id;
-
-                    var gradingOption = studentExaminationResult._matchingData.ExaminationGradingOptions;
-                    var gradingType = properties.examinationGradingTypes[gradingOption.examination_grading_type_id];
-
+                    var marks = studentExaminationResult.marks;
+                     if(gradingOptionId!=null){ //POCOR-6761
+                        var gradingOption = studentExaminationResult.examination_grading_option;
+                        //var gradingOption = studentExaminationResult._matchingData.ExaminationGradingOptions;
+                        var gradingType = properties.examinationGradingTypes[gradingOption.examination_grading_type_id];
+                        
+                    }
                     if (angular.isUndefined(results[academicPeriodId])) {
                         results[academicPeriodId] = {};
                     }
@@ -135,19 +138,26 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
                     if (angular.isUndefined(results[academicPeriodId][examinationId][examinationItemId])) {
                         properties.examinationItems[examinationItemId] = studentExaminationResult._matchingData.ExaminationItems;
-                        properties.examinationItems[examinationItemId]['examination_grading_type'] = gradingType;
+                        if(gradingOptionId!=null){ //POCOR-6761
+                            properties.examinationItems[examinationItemId]['examination_grading_type'] = gradingType;
+                        }
                         results[academicPeriodId][examinationId][examinationItemId] = {};
                     }
 
                     if (angular.isUndefined(properties.subjects[subjectId])) {
                         properties.subjects[subjectId] = studentExaminationResult._matchingData.EducationSubjects;
                     }
-                    if (angular.isUndefined(properties.examinationGradingOptions[gradingOptionId])) {
-                        properties.examinationGradingOptions[gradingOptionId] = gradingOption;
+                    if(gradingOptionId!=null){ //POCOR-6761
+                        if (angular.isUndefined(properties.examinationGradingOptions[gradingOptionId])) {
+                            properties.examinationGradingOptions[gradingOptionId] = gradingOption;
+                        }
                     }
 
                     results[academicPeriodId][examinationId][examinationItemId]['education_subject_id'] = subjectId;
-                    results[academicPeriodId][examinationId][examinationItemId]['examination_grading_option_id'] = gradingOptionId;
+                    if(gradingOptionId!=null){ //POCOR-6761
+                       
+                        results[academicPeriodId][examinationId][examinationItemId]['examination_grading_option_id'] = gradingOptionId;
+                    }
                     results[academicPeriodId][examinationId][examinationItemId]['marks'] = studentExaminationResult.marks;
                 });
 
@@ -194,6 +204,8 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             filterParams: filterParams,
             cellStyle: function(params) {
                 var examinationItemId = params.data['examination_item_id'];
+               // var examinationgrade = params.data['examination_grading_option_id']; //POCOR-6761
+                var examinationmarks = params.data['marks']; //POCOR-6761
 
                 var passMark = 0;
                 if (angular.isDefined(properties.examinationItems[examinationItemId]) && angular.isDefined(properties.examinationItems[examinationItemId]['examination_grading_type'])) {
@@ -209,16 +221,36 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             },
             valueGetter: function(params) {
                 var examinationItemId = params.data['examination_item_id'];
+                var examinationmarkk = params.data['marks']; //POCOR-6761
 
                 var resultType = "MARKS";
-                if (angular.isDefined(properties.examinationItems[examinationItemId]) && angular.isDefined(properties.examinationItems[examinationItemId]['examination_grading_type'])) {
+                //POCOR-6761 start
+                   function checkExaminationGradingTypesIdIsNull(){
+                        var counter=0;
+                        for(var key in properties.examinationGradingOptions)
+                        {
+                            if(properties.examinationGradingOptions[key].examination_grading_type_id==null)
+                            {
+                                 counter=counter+1;
+                            }
+                        } 
+                         return counter==0?true:false;
+                    }
+                    //POCOR-6761 end    
+                if (angular.isDefined(properties.examinationItems[examinationItemId]) && angular.isDefined(properties.examinationItems[examinationItemId]['examination_grading_type']) && checkExaminationGradingTypesIdIsNull()) {
                     gradingType = properties.examinationItems[examinationItemId]['examination_grading_type'];
                     resultType = gradingType.result_type;
+                    
+                }else { //POCOR-6761
+                    var resultType="MARK";
+                    
                 }
 
                 var value = params.data[params.colDef.field];
 
                 if (resultType == 'MARKS') {
+                    return $filter('number')(value, 2);
+                }else if(resultType=='MARK'){ //POCOR-6761
                     return $filter('number')(value, 2);
                 } else {
                     // for GRADES type
@@ -272,24 +304,33 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             var itemWeight = properties.examinationItems[examinationItemId].weight;
             var subjectId = resultObj.education_subject_id;
             var subjectDisplayName = properties.subjects[subjectId].code_name;
-
+            var examinationgradingoptionid = resultObj.examination_grading_option_id; //POCOR-6761
             var data = {
                 examination_item_id: examinationItemId,
                 examination_item: examinationItemDisplayName,
                 subject_id: subjectId,
                 subject: subjectDisplayName,
                 weight: itemWeight,
+                gradingTypes : examinationgradingoptionid,
             };
-
-            var examinationGradingOption = properties.examinationGradingOptions[resultObj.examination_grading_option_id];
-            var gradingType = properties.examinationGradingTypes[examinationGradingOption.examination_grading_type_id];
-            var resultType = gradingType.result_type;
+            if(examinationgradingoptionid!=null){ //POCOR-6761
+                var examinationGradingOption = properties.examinationGradingOptions[resultObj.examination_grading_option_id];
+                var gradingType = properties.examinationGradingTypes[examinationGradingOption.examination_grading_type_id];
+                var resultType = gradingType.result_type;
+            }else { //POCOR-6761
+                var resultType ="MARK";
+            }
 
             var result = '';
             switch (resultType) {
                 case 'MARKS':
                     result = resultObj.marks;
                     break;
+                //POCOR-6761 start
+                case 'MARK':
+                    result = resultObj.marks;
+                    break;
+                //POCOR-6761 start
                 case 'GRADES':
                     result = examinationGradingOption.code_name;
                     break;

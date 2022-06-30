@@ -17,9 +17,10 @@ $this->start('toolbar');
     ?>
     <?php if ($_edit) : ?>
         <!-- Show buttons when action is view: -->
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view'" ng-click="InstitutionCommentsController.onEditClick()">
-            <i class="fa kd-edit"></i>
-        </button>
+        <!-- POCOR-6800: added ng-show="action == 'view' && checkaction == 1" || initial value ng-show="action == 'view'" -->
+         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view' && checkEditAction == 1" ng-click="InstitutionCommentsController.onEditClick()">
+             <i class="fa kd-edit"></i>
+         </button>
         <!-- End -->
 
         <!-- Show buttons when action is edit: -->

@@ -177,7 +177,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseNonTeachingStaffCount'] = 'onExcelTemplateInitialiseNonTeachingStaffCount';//POCOR-6481
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionCustomFields'] = 'onExcelTemplateInitialiseInstitutionCustomFields';//POCOR-6519
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionCustomFieldValues'] = 'onExcelTemplateInitialiseInstitutionCustomFieldValues';//POCOR-6519
-        //$events['ExcelTemplates.Model.onExcelTemplateInitialiseReportStudentAssessmentSummary'] = 'onExcelTemplateInitialiseReportStudentAssessmentSummary';//POCOR-6519
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseReportStudentAssessmentSummary'] = 'onExcelTemplateInitialiseReportStudentAssessmentSummary';//POCOR-6519
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureRoomCustomFields'] = 'onExcelTemplateInitialiseInfrastructureRoomCustomFields';//POCOR-6519
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentDetails'] = 'onExcelTemplateInitialiseStudentDetails';//POCOR-6646 - triggering event
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentRepeater'] = 'onExcelTemplateInitialiseInstitutionStudentRepeater';//POCOR-6691
@@ -3977,7 +3977,7 @@ class InstitutionReportCardsTable extends AppTable
                 'period_code' => $ReportStudentAssessmentSummary->aliasField('period_code'),
                 'period_name' => $ReportStudentAssessmentSummary->aliasField('period_name'),
                 'period_weight' => $ReportStudentAssessmentSummary->aliasField('period_weight'),
-                //'average_marks' => $ReportStudentAssessmentSummary->aliasField('average_marks')
+                'average_marks' => $ReportStudentAssessmentSummary->aliasField('average_mark')//POCOR-6708-alter column name as per table column average_mark
                 ])
                 ->where([$ReportStudentAssessmentSummary->aliasField('institution_id') => $params['institution_id']])    
                 ->where([$ReportStudentAssessmentSummary->aliasField('academic_period_id') => $params['academic_period_id']])    
@@ -3990,7 +3990,7 @@ class InstitutionReportCardsTable extends AppTable
 
             foreach ($AssessmentSummaryData as $e_key => $e_val) {
                 $entity[] = [
-                    //'id' => $e_val['id'],
+                    'id' => $e_key,
                     'academic_period_code' => (!empty($e_val['academic_period_code']) ? $e_val['academic_period_code'] : ''),
                     'academic_period_name' => (!empty($e_val['academic_period_name']) ? $e_val['academic_period_name'] : ''),
                     'area_code' => (!empty($e_val['area_code']) ? $e_val['area_code'] : ''),
@@ -4007,7 +4007,7 @@ class InstitutionReportCardsTable extends AppTable
                     'period_code' => (!empty($e_val['period_code']) ? $e_val['period_code'] : ''),
                     'period_name' => (!empty($e_val['period_name']) ? $e_val['period_name'] : ''),
                     'period_weight' => (!empty($e_val['period_weight']) ? $e_val['period_weight'] : ''),
-                    //'average_marks' => (!empty($e_val['average_marks']) ? $e_val['average_marks'].' ' : '')
+                    'average_marks' => (!empty($e_val['average_marks']) ? $e_val['average_marks'].' ' : '')
                 ];
             }
             return $entity;
