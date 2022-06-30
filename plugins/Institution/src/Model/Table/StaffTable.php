@@ -2164,8 +2164,107 @@ class StaffTable extends ControllerActionTable
             });
     }
 
-    //used for hide and show tabs according to role 
-    //POCOR-6734 starts
+    /*
+    * Function to check whether logged in user have "All Comments" view permission
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-6800
+    */
+    public function findAllCommentsViewPermissions(Query $query, array $options)
+    {
+        $loggedInUserId = $options['staff_id'];
+        $superAdmin = $options['super_admin'];
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $userRoleId = $SecurityRoles->getLoggedInUserRoles($loggedInUserId);
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $permission = 'All Comments';
+        $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+        $functionsData = $SecurityFunctions->find()
+                                    ->select([$SecurityFunctions->aliasField('id')])
+                                    ->where([
+                                        $SecurityFunctions->aliasField('name') => $permission
+                                    ])->hydrate(false)->first();
+        if (!empty($functionsData)) {
+            $funId = $functionsData['id'];
+        }
+        $SecurityRoleFunctionsTbl = TableRegistry::get('Security.SecurityRoleFunctions');
+        if ($superAdmin) {
+            $data = array('result' => 1);
+            echo json_encode($data, true); die;
+        } else {
+            if (!empty($funId) && !empty($userRoleId)) {
+                $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
+                                    ->select([$SecurityRoleFunctionsTbl->aliasField('_view')])
+                                    ->where([
+                                        $SecurityRoleFunctionsTbl->aliasField('security_function_id') => $funId,
+                                        $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $userRoleId,
+                                        $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
+                                    ])->hydrate(false)->first();
+                
+                    if (!empty( $SecurityRoleFunctions) && $SecurityRoleFunctions['_view'] == 1) {
+                        $data = array('result' => 1);
+                        echo json_encode($data, true); die;
+                    } else {
+                        $data = array('result' => 0);
+                        echo json_encode($data, true); die;
+                    }
+            }
+        } 
+    }
+
+    /*
+    * Function to check whether logged in user have "All Comments" edit permission
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-6800
+    */
+    public function findAllCommentsEditPermissions(Query $query, array $options)
+    {
+        $loggedInUserId = $options['staff_id'];
+        $superAdmin = $options['super_admin'];
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $userRoleId = $SecurityRoles->getLoggedInUserRoles($loggedInUserId);
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $permission = 'All Comments';
+        $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+        $functionsData = $SecurityFunctions->find()
+                                    ->select([$SecurityFunctions->aliasField('id')])
+                                    ->where([
+                                        $SecurityFunctions->aliasField('name') => $permission
+                                    ])->hydrate(false)->first();
+        if (!empty($functionsData)) {
+            $funId = $functionsData['id'];
+        }
+        $SecurityRoleFunctionsTbl = TableRegistry::get('Security.SecurityRoleFunctions');
+        if ($superAdmin) {
+            $data = array('result' => 1);
+            echo json_encode($data, true); die;
+        } else {
+            if (!empty($funId) && !empty($userRoleId)) {
+                $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
+                                    ->select([$SecurityRoleFunctionsTbl->aliasField('_edit')])
+                                    ->where([
+                                        $SecurityRoleFunctionsTbl->aliasField('security_function_id') => $funId,
+                                        $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $userRoleId,
+                                        $SecurityRoleFunctionsTbl->aliasField('_edit') => 1,
+                                    ])->hydrate(false)->first();
+                if (!empty( $SecurityRoleFunctions) && $SecurityRoleFunctions['_edit'] == 1) {
+                    $data = array('result' => 1);
+                    echo json_encode($data, true); die;
+                } else {
+                    $data = array('result' => 0);
+                    echo json_encode($data, true); die;
+                }
+            }
+        }
+    }
+    /**POCOR-6800 ends*/
+    /*
+     * Function to check whether Principal role user have "'My Classes','All Classes'" view permission
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-6734
+    */
     public function findPrincipalViewPermissions(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
@@ -2236,7 +2335,12 @@ class StaffTable extends ControllerActionTable
             die('0');
         }
     }
-
+    /*
+     * Function to check whether Homeroom role user have "'My Classes','All Classes'" view permission
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-6734
+    */
     public function findHomeroomViewPermissions(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
@@ -2267,7 +2371,6 @@ class StaffTable extends ControllerActionTable
                                 $SecurityGroupUsersTbl->aliasField('security_user_id') => $staffId,
                                 $SecurityGroupUsersTbl->aliasField('security_role_id') => $homeroomRoleId,
                             ])->count();
-
         $count = 0;
         if($SecurityGroupIns > 0){
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
@@ -2278,7 +2381,6 @@ class StaffTable extends ControllerActionTable
                                     ->where([
                                         $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
                                     ])->hydrate(false)->toArray();
-            /**/
             $funArr = [];
             if(!empty($SecurityFunctions)){
                 foreach ($SecurityFunctions as $funkey => $funval) {
@@ -2300,48 +2402,89 @@ class StaffTable extends ControllerActionTable
                 }
             }
         }
-        /*echo "<pre>"; print_r($count); die;*/
+         
         if(($count > 0) || ($superAdmin == 1)){
+            //POCOR-6789 STARTS
             $securityGroupId = $Institution->get($institutionId)->security_group_id;
-            $query
+            //to find records for homeroom teacher staff   
+            $institutionClassesTbl = TableRegistry::get('institution_classes');
+            $institutionClasses = $institutionClassesTbl
+                ->find()
                 ->select([ // to find records for homeroom teacher
-                    'staff_id' => $this->aliasField('staff_id')
-                ])
-                ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
-                    $InstitutionClasses->aliasField('staff_id = ') . $this->aliasField('staff_id')
+                    'staff_id' => $institutionClassesTbl->aliasField('staff_id')
                 ])
                 ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
-                    $SecurityGroupUsers->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
-                    //$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                    $SecurityGroupUsers->aliasField('security_user_id = ') . $institutionClassesTbl->aliasField('staff_id'),
                     $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
                 ])
                 ->where([
-                    $InstitutionClasses->aliasField('id') => $classId,//POCOR-6508
-                    $this->aliasField('institution_id') => $institutionId,
-                    $this->aliasField('staff_id') => $staffId
-                ])
-                ->union( // to find records for secondary_staff_id
-                    $InstitutionClassesSecondaryStaff
-                        ->find()
-                        ->select([
-                            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
-                        ])
-                        ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
-                                $SecurityGroupUsers->aliasField('security_user_id = ') . $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id'),
-                                $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
-                                $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
-                        ])
-                        ->where([
-                            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId,
-                            $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId
-                        ])
-                );
-            return $query;
+                    $institutionClassesTbl->aliasField('id') => $classId,
+                    $institutionClassesTbl->aliasField('institution_id') => $institutionId,
+                    $institutionClassesTbl->aliasField('staff_id') => $staffId
+                ])->count();
+            //to find records for secondar staff    
+            $InstitutionClassesSecondary = $InstitutionClassesSecondaryStaff
+                            ->find()
+                            ->select([
+                                $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
+                            ])
+                            ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
+                                    $SecurityGroupUsers->aliasField('security_user_id = ') . $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id'),
+                                    $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                                    $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
+                            ])
+                            ->where([
+                                $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId,
+                                $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId
+                            ])->count();
+            if(!empty($institutionClasses) || !empty($InstitutionClassesSecondary) || ($superAdmin == 1)){ //POCOR-6789 ENDS
+                $query
+                    ->select([ // to find records for homeroom teacher
+                        'staff_id' => $this->aliasField('staff_id')
+                    ])
+                    ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                        $InstitutionClasses->aliasField('staff_id = ') . $this->aliasField('staff_id')
+                    ])
+                    ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
+                        $SecurityGroupUsers->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
+                        //$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                        $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
+                    ])
+                    ->where([
+                        $InstitutionClasses->aliasField('id') => $classId,//POCOR-6508
+                        $this->aliasField('institution_id') => $institutionId,
+                        $this->aliasField('staff_id') => $staffId
+                    ])
+                    ->union( // to find records for secondary_staff_id
+                        $InstitutionClassesSecondaryStaff
+                            ->find()
+                            ->select([
+                                $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
+                            ])
+                            ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
+                                    $SecurityGroupUsers->aliasField('security_user_id = ') . $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id'),
+                                    $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                                    $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
+                            ])
+                            ->where([
+                                $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId,
+                                $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId
+                            ])
+                    );
+                return $query;        
+            }else{
+                die('0');
+            }
         }else{
             die('0');
         }
     }
-
+    /*
+     * Function to check whether Teacher role user have "'My Subjects','Comments'" view permission for my subject
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-6734
+    */
     public function findMySubjectTeacherViewPermissions(Query $query, array $options){
         $institutionId = $options['institution_id'];
         $staffId = $options['staff_id'];
@@ -2410,7 +2553,12 @@ class StaffTable extends ControllerActionTable
             echo json_encode($data, true); die;
         }
     }
-
+    /*
+     * Function to check whether Teacher role user have "'All Subjects','Comments'" view permission for all subject
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-6734
+    */
     public function findAllSubjectTeacherViewPermissions(Query $query, array $options){
         $institutionId = $options['institution_id'];
         $staffId = $options['staff_id'];
@@ -2426,8 +2574,6 @@ class StaffTable extends ControllerActionTable
                                     $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
                                     $SecurityFunctionsTbl->aliasField('category IN') => $categories,
                                 ])->hydrate(false)->toArray();
-
-        /**/
         $funArr = [];
         if(!empty($SecurityFunctions)){
             foreach ($SecurityFunctions as $funkey => $funval) {
@@ -2512,16 +2658,16 @@ class StaffTable extends ControllerActionTable
             ->where([$StaffPositionTitles->aliasField('type') => 0,
                     $this->aliasField('staff_id') => $staffId            
             ]);
-    //     $staffList = $query->toArray();   
-    //     $nonTeacherIds = [];
-    //     if(!empty($staffList)){
-    //         foreach($staffList as $staffVal) {
-    //             $nonTeacherIds[] = $staffVal->staff_id;
-    //         }
-    //  }
-    //    if (in_array($staffId,$nonTeacherIds)) {
-    //        $isNonTeacher = true;
-    //    }       
+        //     $staffList = $query->toArray();   
+        //     $nonTeacherIds = [];
+        //     if(!empty($staffList)){
+        //         foreach($staffList as $staffVal) {
+        //             $nonTeacherIds[] = $staffVal->staff_id;
+        //         }
+        //  }
+        //    if (in_array($staffId,$nonTeacherIds)) {
+        //        $isNonTeacher = true;
+        //    }       
     }
     
     // used for student report cards
