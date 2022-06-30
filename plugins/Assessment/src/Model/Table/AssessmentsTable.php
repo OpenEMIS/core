@@ -174,13 +174,30 @@ class AssessmentsTable extends ControllerActionTable {
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         if ($this->action == 'edit')
-        {
+        {   $subejctitems = [];
+           $subejctid = [];
             $assessmentItems = $entity->assessment_items;
-
+            $gradeIds =  $entity['education_grade_id'];
             //this is to sort array based on certain value on subarray, in this case based on education order value
             usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} );
 
             $entity->assessment_items = $assessmentItems;
+            //
+            $EducationSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+            $subjectname = $EducationSubjects->find()
+                        ->select(['id'=>'EducationSubjects.id',
+                            'name'=>'EducationSubjects.name',
+                            'code'=>'EducationSubjects.code'])
+                        ->contain(['EducationSubjects'])
+                        ->where([$EducationSubjects->aliasField('education_grade_id')=> $gradeIds])
+                        ->toArray();
+            
+            foreach($subjectname as $value) {
+                $subejctid[]= $value['id'];
+                $subejctitems[] = $value['code'].'-'.$value['name'];
+            }
+            $results =  array_combine($subejctid, $subejctitems);
+            $entity->assessment_subject = $results;
         }
 
         $this->setupFields($entity);
