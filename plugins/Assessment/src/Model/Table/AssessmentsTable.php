@@ -182,6 +182,12 @@ class AssessmentsTable extends ControllerActionTable {
             usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} );
 
             $entity->assessment_items = $assessmentItems;
+           
+           $subejctids = [];
+           foreach($assessmentItems as $value) {
+                $subejctids[]= $value['education_subject_id'];
+            }
+           // echo "<pre>"; print_r($subejctids);die('dd');
             //
             $EducationSubjects = TableRegistry::get('Education.EducationGradesSubjects');
             $subjectname = $EducationSubjects->find()
@@ -198,6 +204,7 @@ class AssessmentsTable extends ControllerActionTable {
             }
             $results =  array_combine($subejctid, $subejctitems);
             $entity->assessment_subject = $results;
+            //$entity->assessment_select = $subejctid;
         }
 
         $this->setupFields($entity);
@@ -205,12 +212,15 @@ class AssessmentsTable extends ControllerActionTable {
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
+      // echo "<pre>"; print_r($entity);die;
         //patch data to handle fail save because of validation error.
         if (array_key_exists($this->alias(), $requestData)) {
             if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
+
                 $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
                 foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
-                    $subjectId = $item['education_subject_id'];
+
+                    $subjectId = $item['assessment_items']['education_subject_id'];
                     $requestData[$this->alias()]['assessment_items'][$key]['education_subject'] = $EducationSubjects->get($subjectId);
                 }
             } else { //logic to capture error if no subject inside the grade.
