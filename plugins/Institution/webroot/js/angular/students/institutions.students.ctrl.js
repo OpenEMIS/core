@@ -789,7 +789,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.third_name = StudentController.studentData.third_name;
         StudentController.selectedStudentData.last_name = StudentController.studentData.last_name;
         StudentController.selectedStudentData.preferred_name = StudentController.studentData.preferred_name;
-        StudentController.selectedStudentData.gender.name = StudentController.studentData.gender;
+        StudentController.selectedStudentData.gender = {
+            name: StudentController.studentData.gender
+        };
         StudentController.selectedStudentData.date_of_birth = StudentController.studentData.date_of_birth;
         StudentController.selectedStudentData.email = StudentController.studentData.email;
         StudentController.selectedStudentData.identity_type_name = StudentController.studentData.identity_type;

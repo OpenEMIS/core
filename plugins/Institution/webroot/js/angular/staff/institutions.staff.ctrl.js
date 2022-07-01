@@ -85,6 +85,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.validateDetails = validateDetails;
     StaffController.goToInternalSearch = goToInternalSearch;
     StaffController.goToExternalSearch = goToExternalSearch;
+    StaffController.setstaffData = setstaffData;
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -151,7 +152,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             identity_type_id: StaffController.selectedStaffData.identity_type_id,
             start_date: StaffController.selectedStaffData.startDate,
             end_date: StaffController.selectedStaffData.endDate ? $filter('date')(StaffController.selectedStaffData.endDate, 'yyyy-MM-dd') : '',
-            institution_position_id: StaffController.institutionPositionOptions.selectedOption.value,
+            institution_position_id: StaffController.institutionPositionOptions.selectedOption ? StaffController.institutionPositionOptions.selectedOption.value : null,
             position_type_id: StaffController.selectedStaffData.position_type_id,
             staff_type_id: StaffController.selectedStaffData.staff_type_id,
             fte: StaffController.selectedStaffData.fte_id,
@@ -754,6 +755,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function validateDetails() {
+        StaffController.error = {};
         if(StaffController.step === 'user_details') {
             if(!StaffController.selectedStaffData.first_name){
                 StaffController.error.first_name = 'This field cannot be left empty';
@@ -817,12 +819,39 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
     }
 
+    function setstaffData() {
+        StaffController.selectedStaffData.addressArea = {};
+        StaffController.selectedStaffData.birthplaceArea = {};
+        StaffController.selectedStaffData.openemis_no = StaffController.staffData.openemis_no;
+        StaffController.selectedStaffData.first_name = StaffController.staffData.first_name;
+        StaffController.selectedStaffData.middle_name = StaffController.staffData.middle_name;
+        StaffController.selectedStaffData.third_name = StaffController.staffData.third_name;
+        StaffController.selectedStaffData.last_name = StaffController.staffData.last_name;
+        StaffController.selectedStaffData.preferred_name = StaffController.staffData.preferred_name;
+        StaffController.selectedStaffData.gender = {
+            name: StaffController.staffData.gender
+        };
+        StaffController.selectedStaffData.date_of_birth = StaffController.staffData.date_of_birth;
+        StaffController.selectedStaffData.email = StaffController.staffData.email;
+        StaffController.selectedStaffData.identity_type_name = StaffController.staffData.identity_type;
+        StaffController.selectedStaffData.identity_number = StaffController.staffData.identity_number;
+        StaffController.selectedStaffData.nationality_name = StaffController.staffData.nationality;
+        StaffController.selectedStaffData.address = StaffController.staffData.address;
+        StaffController.selectedStaffData.postalCode = StaffController.staffData.postal_code;
+        StaffController.selectedStaffData.addressArea.name = StaffController.staffData.area_name;
+        StaffController.selectedStaffData.birthplaceArea.name = StaffController.staffData.birth_area_name;
+        StaffController.isSameSchool = StaffController.staffData.is_same_school > 0 ? true : false;
+        StaffController.isDiffSchool = StaffController.staffData.is_diff_school > 0 ? true : false;
+    }
+
     function goToNextStep() {
         if(StaffController.isInternalSearchSelected) {
             StaffController.step = 'add_staff';
+            StaffController.setstaffData();
             StaffController.generatePassword();
         } else if(StaffController.isExternalSearchSelected) {
             StaffController.step = 'add_staff';
+            StaffController.setstaffData();
             StaffController.generatePassword();
         } else {
             switch(StaffController.step){
