@@ -733,7 +733,7 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('student_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
             $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-            $entity = $SubjectStudents->find()
+            $subjectObj = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
                     $SubjectStudents->aliasField('institution_class_id') => $params['institution_class_id'],
