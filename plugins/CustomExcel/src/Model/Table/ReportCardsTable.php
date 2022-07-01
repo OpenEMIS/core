@@ -746,6 +746,20 @@ class ReportCardsTable extends AppTable
                 ]) //POCOR-5814 requirement subject name from institution_subjects table.
                 ->hydrate(false)
                 ->toArray();
+            //POCOR-6810 Starts
+            $entity = [];
+            if (!empty($subjectObj)) {
+                $i=1;
+               foreach ($subjectObj as  $subject) {
+                $id = $subject['id'].$i;
+                $entity[] = [
+                    'education_subject_id' => $subject['education_subject_id'],
+                    'id' => $id,
+                    'name' => $subject['institution_subject']['name']
+                ];
+                $i++;
+               }
+            }//POCOR-6810 Ends
             return $entity;
         }
     }
