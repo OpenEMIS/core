@@ -1,3 +1,12 @@
+### [3.75.14] - 2022-07-01
+- Bug Fixed: Administration/Institutions>Performance>Report Card: Update stuck student report card to error status
+- Bug Fixed: Institutions > General > Profiles > Institutions : System should allow users to download Excel
+- Bug Fixed: Institutions>Advanced Search>Shift Type:Shift type is not searching properly
+- Bug Fixed: Institutions>Advanced Search>Area Administrative: Institution page is not showing any institution when searching by filter 'Area Administrative'
+- Bug Fixed: Institution>Performance>Report Card>Report card template : Update assessment marks placeholder query to select class rather than institution
+- Bug Fixed: Reports>Students>Students: No options when selecting Area Education
+- Bug Fixed: Institution>Performance>Report Cards>Comments: Academic period and grade not filtering properly
+
 ### [3.75.13] - 2022-06-29
 - Bug Fixed: Administration>Security>Roles: All comments should be created and edit permission should allow user to edit permission
 
