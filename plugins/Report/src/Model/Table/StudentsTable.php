@@ -405,7 +405,7 @@ class StudentsTable extends AppTable
 
         $conditions = [];
         if ($areaId != -1) {
-            //$conditions['Institution.area_id'] = $areaId;
+            $conditions['Institution.area_id IN'] = $finalIds;
         }
         if (!empty($academicPeriodId)) {
             $conditions['InstitutionStudent.academic_period_id'] = $academicPeriodId;
@@ -493,7 +493,7 @@ class StudentsTable extends AppTable
             'external_reference' => 'Students.external_reference'
         ])
         ->contain(['Genders', 'AddressAreas', 'BirthplaceAreas', 'MainNationalities', 'MainIdentityTypes'])
-        ->where([$this->aliasField('is_student') => 1,'Institution.area_id IN' => $finalIds, $conditions])
+        ->where([$this->aliasField('is_student') => 1,$conditions])
         ->group([$this->aliasField('openemis_no')]);
 
 
