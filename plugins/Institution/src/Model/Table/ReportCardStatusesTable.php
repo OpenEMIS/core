@@ -73,8 +73,12 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events['ControllerAction.Model.unpublish'] = 'unpublish';
         $events['ControllerAction.Model.unpublishAll'] = 'unpublishAll';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
-        $events['ControllerAction.Model.email'] = 'email';
-        $events['ControllerAction.Model.emailAll'] = 'emailAll';
+        /**POCOR-6836 starts - modified existing functions and added new functions*/ 
+        $events['ControllerAction.Model.emailPdf'] = 'emailPdf';
+        $events['ControllerAction.Model.emailAllPdf'] = 'emailAllPdf';
+        $events['ControllerAction.Model.emailExcel'] = 'emailExcel';
+        $events['ControllerAction.Model.emailAllExcel'] = 'emailAllExcel';
+        /**POCOR-6836 ends*/ 
         return $events;
     }
 
@@ -191,7 +195,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
 
             // Single email button, status must be published
-            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'email']) 
+            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'emailPdf']) 
                     && $entity->has('report_card_status')
                     && ( $entity->report_card_status == self::PUBLISHED 
                             || $entity->report_card_status == '16' 
@@ -199,14 +203,33 @@ class ReportCardStatusesTable extends ControllerActionTable
                )
                {
                 if (empty($entity->email_status_id) || ($entity->has('email_status_id') && $entity->email_status_id != $this->ReportCardEmailProcesses::SENDING)) {
-                    $emailUrl = $this->setQueryString($this->url('email'), $params);
-                    $buttons['email'] = [
-                        'label' => '<i class="fa fa-envelope"></i>'.__('Email'),
+                    $emailUrl = $this->setQueryString($this->url('emailPdf'), $params);
+                    $buttons['emailPdf'] = [
+                        'label' => '<i class="fa fa-envelope"></i>'.__('Email Pdf'),
                         'attr' => $indexAttr,
                         'url' => $emailUrl
                     ];
                 }
             }
+
+            /** POCOR-6836 starts - Single email excel button, status must be published */ 
+            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'emailExcel']) 
+                    && $entity->has('report_card_status')
+                    && ( $entity->report_card_status == self::PUBLISHED 
+                            || $entity->report_card_status == '16' 
+                        )
+               )
+               {
+                if (empty($entity->email_status_id) || ($entity->has('email_status_id') && $entity->email_status_id != $this->ReportCardEmailProcesses::SENDING)) {
+                    $emailUrl = $this->setQueryString($this->url('emailExcel'), $params);
+                    $buttons['emailExcel'] = [
+                        'label' => '<i class="fa fa-envelope"></i>'.__('Email Excel'),
+                        'attr' => $indexAttr,
+                        'url' => $emailUrl
+                    ];
+                }
+            }
+            /** POCOR-6836 ends*/
         }
         return $buttons;
     }
@@ -489,14 +512,24 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
                 }
 
-                // Email all button is published
+                // Email all pdf button is published
                 if ($publishedCount > 0) {
-                    $emailButton['url'] = $this->setQueryString($this->url('emailAll'), $params);
+                    $emailButton['url'] = $this->setQueryString($this->url('emailAllPdf'), $params);
                     $emailButton['type'] = 'button';
                     $emailButton['label'] = '<i class="fa fa-envelope"></i>';
                     $emailButton['attr'] = $toolbarAttr;
-                    $emailButton['attr']['title'] = __('Email All');
-                    $extra['toolbarButtons']['emailAll'] = $emailButton;
+                    $emailButton['attr']['title'] = __('Email All PDF');
+                    $extra['toolbarButtons']['emailAllPdf'] = $emailButton;
+                }
+
+                // Email all excel button is published
+                if ($publishedCount > 0) {
+                    $emailExcelButton['url'] = $this->setQueryString($this->url('emailAllExcel'), $params);
+                    $emailExcelButton['type'] = 'button';
+                    $emailExcelButton['label'] = '<i class="fa fa-envelope"></i>';
+                    $emailExcelButton['attr'] = $toolbarAttr;
+                    $emailExcelButton['attr']['title'] = __('Email All Excel');
+                    $extra['toolbarButtons']['emailAllExcel'] = $emailExcelButton;
                 }
             }
         }
@@ -897,7 +930,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function email(Event $event, ArrayObject $extra)
+    public function emailPdf(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $this->addReportCardsToEmailProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
@@ -908,7 +941,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function emailAll(Event $event, ArrayObject $extra)
+    public function emailAllPdf(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
@@ -1257,4 +1290,97 @@ class ReportCardStatusesTable extends ControllerActionTable
          return false;
         
     }
+
+    /**
+     * send email of single student in excel format
+     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+     * @ticket POCOR-6836
+     */
+    public function emailExcel(Event $event, ArrayObject $extra)
+    {
+        $params = $this->getQueryString();
+        $this->addReportCardsToEmailProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
+        $this->triggerEmailAllExcelReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
+        $this->Alert->warning('ReportCardStatuses.email');
+
+        $event->stopPropagation();
+        return $this->controller->redirect($this->url('index'));
+    }
+
+    /**
+     * send email of all students in excel format
+     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+     * @ticket POCOR-6836
+     */
+    public function emailAllExcel(Event $event, ArrayObject $extra)
+    {
+        $params = $this->getQueryString();
+
+        $inProgress = $this->ReportCardEmailProcesses->find()
+            ->where([
+                $this->ReportCardEmailProcesses->aliasField('report_card_id') => $params['report_card_id'],
+                $this->ReportCardEmailProcesses->aliasField('institution_class_id') => $params['institution_class_id'],
+                $this->ReportCardEmailProcesses->aliasField('status') => $this->ReportCardEmailProcesses::SENDING
+            ])
+            ->count();
+
+        if (!$inProgress) {
+            $this->addReportCardsToEmailProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
+            $this->triggerEmailAllExcelReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
+
+            $this->Alert->warning('ReportCardStatuses.emailAll');
+        } else {
+            $this->Alert->warning('ReportCardStatuses.emailInProgress');
+        }
+
+        $event->stopPropagation();
+        return $this->controller->redirect($this->url('index'));
+    }
+
+    /**
+     * trigger event to sent studnet's email in excel format
+     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+     * @ticket POCOR-6836
+     */
+    private function triggerEmailAllExcelReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
+    {
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->ReportCardEmailProcesses->registryAlias());
+
+        // to-do: add logic to purge shell which is 30 minutes old
+
+        if (count($runningProcess) <= self::MAX_PROCESSES) {
+            $name = 'EmailAllReportExcelCards';
+            $pid = '';
+            $processModel = $this->ReportCardEmailProcesses->registryAlias();
+            $eventName = '';
+            $passArray = [
+                'institution_id' => $institutionId,
+                'institution_class_id' => $institutionClassId,
+                'report_card_id' => $reportCardId
+            ];
+            if (!is_null($studentId)) {
+                $name = 'EmailReportCardsExcel';
+                $passArray['student_id'] = $studentId;
+            }
+            $params = json_encode($passArray);
+            $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
+            $SystemProcesses->updateProcess($systemProcessId, null, $SystemProcesses::RUNNING, 0);
+
+            $args = '';
+            $args .= !is_null($systemProcessId) ? ' '.$systemProcessId : '';
+
+            $cmd = ROOT . DS . 'bin' . DS . 'cake EmailAllExcelReportCards'.$args;
+            $logs = ROOT . DS . 'logs' . DS . 'EmailAllExcelReportCardsExcel.log & echo $!';
+            $shellCmd = $cmd . ' >> ' . $logs;
+
+            try {
+                $pid = exec($shellCmd);
+                Log::write('debug', $shellCmd);
+            } catch(\Exception $ex) {
+                Log::write('error', __METHOD__ . ' exception when email all report cards : '. $ex);
+            }
+        }
+    }
+    /**POCOR-6836 ends*/  
 }
