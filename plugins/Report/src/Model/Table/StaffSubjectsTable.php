@@ -162,11 +162,19 @@ class StaffSubjectsTable extends AppTable  {
                         //Dynamic fields*******identity_types*****
                         $user_identities_table = TableRegistry::get('user_identities');
                         $userIdTypes = $user_identities_table->find()->where(['security_user_id'=>$row->staff_id])->all();
+                        //Start:POCOR-6779
+                        $defaultIdType = $IdentityTypesss->find()->where(['default' =>1 ])->first();
                         $row['userIdentityTypes'] =[];
                         foreach($userIdTypes as $ss =>$userIDType){
-                            $row['userIdentityTypes'][$ss] =  $IdentityTypesss->find()->where(['id'=>$userIDType->identity_type_id])->first();
-                            $row['userIdentityTypes'][$ss]['number'] = $userIDType->number;
+                            if($userIDType->identity_type_id == $defaultIdType->id){   
+                                $row[str_replace(' ', '_',$defaultIdType->name)] = $userIDType->number;
+                            }else{
+                                $idTypeData = $IdentityTypesss->find()->where(['id'=>$userIDType->identity_type_id])->first();
+                                $row['other_ids'] .=  '(['.$idTypeData->name.'] - '.$userIDType->number.'),';
+                            }
                         }
+                        $row['other_ids'] = rtrim( $row['other_ids'],',');
+                        //End:POCOR-6779
                         //assign value in column
                         foreach($row['userIdentityTypes'] as $sss =>$useroneIDType){
                             $row[str_replace(" ","_",$useroneIDType->name)] = $useroneIDType->number;
@@ -174,7 +182,7 @@ class StaffSubjectsTable extends AppTable  {
                         //staff qulification staff_qualifications************
                         $staffQualificationss = TableRegistry::get('staff_qualifications');
                         $Qualificationss = TableRegistry::get('qualification_titles');
-                        $sQu= $staffQualificationss->find()->where(['staff_id'=>$row->staff_id])->first();
+                        $sQu= $staffQualificationss->find()->where(['staff_id'=>$row->staff_id])->order(['qualification_title_id'=>'DESC'])->first(); //POCOR-6779
 
                         $qulifi = $Qualificationss->find()->where(['id'=>$sQu->qualification_title_id])->first();
                         $row['qualification'] = $qulifi->name;
@@ -230,6 +238,7 @@ class StaffSubjectsTable extends AppTable  {
     {
         $IdentityTypesss = TableRegistry::get('identity_types');
         $userIdTypes = $IdentityTypesss->find()->all();
+        $defaultIdType = $IdentityTypesss->find()->where(['default' =>1 ])->first();
 
         $newFields = [];
         //Start:POCOR-6779
@@ -260,16 +269,23 @@ class StaffSubjectsTable extends AppTable  {
             'type' => 'string',
             'label' => __('OpenEMIS ID')
         ];
-        //End:POCOR-6779
-        foreach($userIdTypes as $userIdType){
-            $newFields[] = [
-                'key' => '',
-                'field' => str_replace(' ', '_',$userIdType->name),
-                'type' => 'string',
-                'label' => __($userIdType->name)
-            ];
-        }
+        
 
+        $newFields[] = [
+            'key' => '',
+            'field' => str_replace(' ', '_',$defaultIdType->name),
+            'type' => 'string',
+            'label' => __($defaultIdType->name)
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'other_ids',
+            'type' => 'string',
+            'label' => __('Other Identities')
+        ];
+        //End:POCOR-6779
+        
 		$newFields[] = [
             'key' => '',
             'field' => 'first_name',
