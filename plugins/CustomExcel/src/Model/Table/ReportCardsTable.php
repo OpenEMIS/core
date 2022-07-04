@@ -739,31 +739,18 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
-
-            $startDate = $extra['report_card_start_date']->format('Y-m-d');
-            $endDate = $extra['report_card_end_date']->format('Y-m-d');
-
-            $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+            /**POCOR-6685 starts - modified main table as suggested by client*/ 
+            $InstitutionStudentAbsences = TableRegistry::get('summary_institution_student_absences');
             $studentAbsenceResults = $InstitutionStudentAbsences
-                ->find()
-                // ->find('inDateRange', ['start_date' => $extra['report_card_start_date'], 'end_date' => $extra['report_card_end_date']])
-                ->innerJoin(
-                    [$this->alias() => $this->table()],
-                    [
-                        $this->aliasField('institution_class_id') => $params['institution_class_id'],
-                        $this->aliasField('institution_id = ') . $InstitutionStudentAbsences->aliasField('institution_id'),
-                        $this->aliasField('student_id = ') . $InstitutionStudentAbsences->aliasField('student_id'),
-                    ]
-                )
-                ->where([
-                    $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
-                    $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
-                    $InstitutionStudentAbsences->aliasField('date') . ' >= ' => $startDate,
-                    $InstitutionStudentAbsences->aliasField('date') . ' <= ' => $endDate,
-                ])
-                ->hydrate(false)
-                ->all();
-
+                    ->find()
+                    ->where([
+                        $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
+                        $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
+                        $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id']
+                    ])
+                    ->hydrate(false)
+                    ->all();
+            /**POCOR-6685 ends*/
             $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
             $absenceTypes = $AbsenceTypes->getCodeList();
 
