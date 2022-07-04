@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 use Cake\I18n\Time;
+use Cake\I18n\Date;//POCOR-6841
 use Cake\Log\Log;
 use Cake\Datasource\ConnectionManager; //POCOR-6785
 
@@ -242,12 +243,14 @@ class ReportCardStatusesTable extends ControllerActionTable
             $c_timestap = $now->getTimestamp();
             $modifiedDate = $entity->modified;
             $m_timestap =$modifiedDate->getTimestamp();
+            $todayDateTime = $now->i18nFormat('yyyy-MM-dd HH:mm:ss');//POCOR-6841
             $diff_mins = abs($c_timestap - $m_timestap) / 60;
             if($diff_mins > 5 && $diff_mins < 30){
                 $entity->status = 1;
                 $ReportCardProcessesTable->save($entity);
             }elseif($diff_mins > 30){
                 $entity->status = -1;
+                $entity->modified = $todayDateTime;//POCOR-6841
                 $ReportCardProcessesTable->save($entity);
             }
         }
