@@ -5122,9 +5122,9 @@ class InstitutionsController extends AppController
                     'previous_FTE' => '',
                     'previous_end_date' => '',
                     'previous_effective_date' => '',
-                    'comment' => '',
-                    'transfer_type' => '',
-                    'all_visible' => 1,
+                    'comment' => $comment,
+                    'transfer_type' => 0,
+                    'all_visible' => 0,
                     'modified_user_id' => '',
                     'modified' => '',
                     'created_user_id' => $userId,
@@ -5255,7 +5255,6 @@ class InstitutionsController extends AppController
                                 }
                             }
                         }                        
-
                         //get id from `security_group_users` table
                         $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
                                                 ->where([
