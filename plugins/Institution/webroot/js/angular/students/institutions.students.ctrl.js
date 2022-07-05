@@ -842,14 +842,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function goToNextStep() {
         if(StudentController.isInternalSearchSelected) {
-            if(StudentController.studentData.is_same_school) {
+            if(StudentController.studentData && StudentController.studentData.is_same_school) {
                 StudentController.step = 'summary';
                 StudentController.messageClass = 'alert-warning';
                 StudentController.message = 'This student is already allocated to the current institution';
                 StudentController.setStudentData();
                 StudentController.getRedirectToGuardian();
                 StudentController.isInternalSearchSelected = false;
-        } else if(StudentController.studentData.is_diff_school) {
+        } else if(StudentController.studentData && StudentController.studentData.is_diff_school) {
                 StudentController.messageClass = 'alert-warning';
                 StudentController.message = `This student is already allocated to ${StudentController.studentData.current_enrol_institution_code} - ${StudentController.studentData.current_enrol_institution_name}`;
                 StudentController.step = 'summary';
@@ -882,7 +882,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     }
                     break;
                 case 'confirmation': 
-                    StudentController.step = 'transfer_student';
+                    StudentController.step = 'add_student';
                     StudentController.selectedStudentData.endDate = StudentController.currentYear + '-12-31';
                     StudentController.generatePassword();
                     break;
@@ -956,7 +956,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function saveStudentDetails() {
-        let startDate = StudentController.studentData.is_diff_school > 0 ? $filter('date')(StudentController.selectedStudentData.transferStartDate, 'yyyy-MM-dd') : $filter('date')(StudentController.selectedStudentData.startDate, 'yyyy-MM-dd');
+        let startDate = StudentController.studentData && StudentController.studentData.is_diff_school > 0 ? $filter('date')(StudentController.selectedStudentData.transferStartDate, 'yyyy-MM-dd') : $filter('date')(StudentController.selectedStudentData.startDate, 'yyyy-MM-dd');
         StudentController.selectedStudentData.addressArea = InstitutionsStudentsSvc.getAddressArea();
         StudentController.selectedStudentData.birthplaceArea = InstitutionsStudentsSvc.getBirthplaceArea();
         var params = {
@@ -975,8 +975,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             password: StudentController.selectedStudentData.password,
             postal_code: StudentController.selectedStudentData.postalCode,
             address: StudentController.selectedStudentData.address,
-            birthplace_area_id: StudentController.studentData.is_diff_school > 0 ? StudentController.studentData.birthplace_area_id : InstitutionsStudentsSvc.getBirthplaceAreaId(),
-            address_area_id: StudentController.studentData.is_diff_school > 0 ? StudentController.studentData.address_area_id : InstitutionsStudentsSvc.getAddressAreaId(),
+            birthplace_area_id: StudentController.studentData && StudentController.studentData.is_diff_school > 0 ? StudentController.studentData.birthplace_area_id : InstitutionsStudentsSvc.getBirthplaceAreaId(),
+            address_area_id: StudentController.studentData && StudentController.studentData.is_diff_school > 0 ? StudentController.studentData.address_area_id : InstitutionsStudentsSvc.getAddressAreaId(),
             identity_type_id: StudentController.selectedStudentData.identity_type_id,
             education_grade_id: StudentController.selectedStudentData.education_grade_id,
             academic_period_id: StudentController.selectedStudentData.academic_period_id,
@@ -986,12 +986,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             student_status_id: 1,
             photo_base_64: StudentController.selectedStudentData.photo_base_64,
             photo_name: StudentController.selectedStudentData.photo_name,
-            is_diff_school: StudentController.studentData.is_diff_school,
-            student_id: StudentController.studentData.id,
-            previous_institution_id: StudentController.studentData.current_enrol_institution_id,
-            previous_academic_period_id: StudentController.studentData.current_enrol_academic_period_id,
-            previous_education_grade_id: StudentController.studentData.education_grade_id,
-            student_transfer_reason_id: StudentController.studentData.current_enrol_institution_id,
+            is_diff_school: StudentController.studentData && StudentController.studentData.is_diff_school ? StudentController.studentData.is_diff_school : 0,
+            student_id: StudentController.studentData && StudentController.studentData.id ? StudentController.studentData.id : null,
+            previous_institution_id: StudentController.studentData && StudentController.studentData.current_enrol_institution_id ? StudentController.studentData.current_enrol_institution_id : null,
+            previous_academic_period_id: StudentController.studentData && StudentController.studentData.current_enrol_academic_period_id ? StudentController.studentData.current_enrol_academic_period_id : null,
+            previous_education_grade_id: StudentController.studentData && StudentController.studentData.education_grade_id ? StudentController.studentData.education_grade_id : null,
+            student_transfer_reason_id: StudentController.studentData && StudentController.studentData.current_enrol_institution_id ? StudentController.studentData.current_enrol_institution_id : null,
             comment: StudentController.selectedStudentData.transferComment,
             custom: [],
         };
@@ -1051,7 +1051,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.saveStudentDetails(params).then(function(resp){
             if(resp) {
-                if(StudentController.studentData.is_diff_school > 0) {
+                if(StudentController.studentData && StudentController.studentData.is_diff_school > 0) {
                     StudentController.message ='Student transfer request is added successfully.';
                     StudentController.messageClass = 'alert-success';
                     UtilsSvc.isAppendLoader(false);
