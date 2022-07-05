@@ -160,16 +160,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             photo_name: StaffController.selectedStaffData.photo_name,
             photo_base_64: StaffController.selectedStaffData.photo_base_64,
             institution_id: StaffController.institutionId,
-            is_same_school: StaffController.staffData.is_same_school,
-            is_diff_school: StaffController.staffData.is_diff_school,
-            staff_id: StaffController.staffData.id,
-            previous_institution_id: StaffController.staffData.current_enrol_institution_id,
+            is_same_school: StaffController.staffData && StaffController.staffData.is_same_school ? StaffController.staffData.is_same_school : 0,
+            is_diff_school: StaffController.staffData && StaffController.staffData.is_diff_school ?  StaffController.staffData.is_diff_school : 0,
+            staff_id: StaffController.staffData && StaffController.staffData.id ? StaffController.staffData.id : null,
+            previous_institution_id: StaffController.staffData && StaffController.staffData.current_enrol_institution_id ? StaffController.staffData.current_enrol_institution_id : null,
             comment: StaffController.selectedStaffData.comment,
         };
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.saveStaffDetails(params).then(function(resp){
             UtilsSvc.isAppendLoader(false);
-            if(StaffController.staffData.is_diff_school > 0) {
+            if(StaffController.staffData && StaffController.staffData.is_diff_school > 0) {
                 StaffController.message = 'Staff transfer request is added successfully.';
                 StaffController.messageClass = 'alert-success';
                 $window.history.back();
@@ -809,7 +809,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if(!StaffController.selectedStaffData.startDate || !StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.staff_type_id || !StaffController.staffShiftsId.length === 0 || StaffController.error.fte_id || StaffController.error.position_id){
                 return;
             }
-            if(StaffController.staffData.is_diff_school > 0) {
+            if(StaffController.staffData && StaffController.staffData.is_diff_school > 0) {
                 StaffController.step = 'transfer_staff';
                 StaffController.messageClass = 'alert-warning';
                 StaffController.message = 'Staff is currently assigned to another institution';
@@ -840,8 +840,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.postalCode = StaffController.staffData.postal_code;
         StaffController.selectedStaffData.addressArea.name = StaffController.staffData.area_name;
         StaffController.selectedStaffData.birthplaceArea.name = StaffController.staffData.birth_area_name;
-        StaffController.isSameSchool = StaffController.staffData.is_same_school > 0 ? true : false;
-        StaffController.isDiffSchool = StaffController.staffData.is_diff_school > 0 ? true : false;
     }
 
     function goToNextStep() {

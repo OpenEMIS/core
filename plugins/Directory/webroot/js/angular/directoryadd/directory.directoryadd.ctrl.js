@@ -395,8 +395,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
@@ -447,8 +447,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 enableColResize: false,
@@ -732,8 +732,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
@@ -828,8 +828,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 enableColResize: false,
@@ -929,13 +929,37 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         scope.getUserData();
     }
 
+    scope.setUserData = function(selectedData) {
+        scope.selectedUserData.openemis_no = selectedData.openemis_no;
+        scope.selectedUserData.first_name = selectedData.first_name;
+        scope.selectedUserData.middle_name = selectedData.middle_name;
+        scope.selectedUserData.third_name = selectedData.third_name;
+        scope.selectedUserData.last_name = selectedData.last_name;
+        scope.selectedUserData.preferred_name = selectedData.preferred_name;
+        scope.selectedUserData.date_of_birth = selectedData.date_of_birth;
+        scope.selectedUserData.email = selectedData.email;
+        scope.selectedUserData.gender_id = selectedData.gender_id;
+        scope.selectedUserData.gender = {name: selectedData.gender};
+        scope.selectedUserData.nationality_id = selectedData.nationality_id;
+        scope.selectedUserData.nationality_name = selectedData.nationality;
+        scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
+        scope.selectedUserData.identity_type_name = selectedData.identity_type;
+        scope.selectedUserData.identity_number = selectedData.identity_number;
+        scope.selectedUserData.username = selectedData.username;
+        scope.selectedUserData.password = selectedData.password;
+        scope.selectedUserData.address = selectedData.address;
+        scope.selectedUserData.postalCode = selectedData.postal_code;
+        scope.selectedUserData.address_area_id = selectedData.address_area_id;
+        scope.selectedUserData.birthplace_area_id = selectedData.birthplace_area_id;
+        scope.selectedUserData.addressArea = {name: selectedData.area_name};
+        scope.selectedUserData.birthplaceArea = {name: selectedData.birth_area_name};
+    }
+
     scope.getUserData = function() {
         var log = [];
         angular.forEach(scope.rowsThisPage , function(value) {
             if (value.id == scope.selectedUser) {
-                scope.selectedUserData = value;
-                scope.selectedUserData.gender = {name: value.gender};
-                scope.selectedUserData.username = value.openemis_no;
+                scope.setUserData(value);
             }
         }, log);
     }
