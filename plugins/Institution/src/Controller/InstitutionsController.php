@@ -4956,8 +4956,8 @@ class InstitutionsController extends AppController
             
             $institutionPositionId = (array_key_exists('institution_position_id', $requestData))? $requestData['institution_position_id'] : null;
             $fte = (array_key_exists('fte', $requestData))? $requestData['fte'] : null;
-            $startDate = (array_key_exists('start_date', $requestData))? date('y-m-d', strtotime($requestData['start_date'])) : null;
-            $endDate = (array_key_exists('end_date', $requestData))? date('y-m-d', strtotime($requestData['end_date'])) : null;
+            $startDate = (array_key_exists('start_date', $requestData))? date('y-m-d', strtotime($requestData['start_date'])) : NULL;
+            $endDate = (array_key_exists('end_date', $requestData) && !empty($requestData['end_date']))? date('y-m-d', strtotime($requestData['end_date'])) : '';
             
             //$institutionId = $this->request->session()->read('Institution.Institutions.id');
             $institutionId = (array_key_exists('institution_id', $requestData))? $requestData['institution_id'] : null;
@@ -4984,7 +4984,11 @@ class InstitutionsController extends AppController
             $startYear = $endYear = '';
             if(!empty($periods)){
                 $startYear = $periods->start_year;
-                $endYear = $periods->end_year;
+                if($endDate == NULL || $endDate == ''){
+                    $endYear = NULL;
+                }else{
+                    $endYear = $periods->end_year;
+                }
             }
             //get prefered language
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
@@ -5081,6 +5085,12 @@ class InstitutionsController extends AppController
                         unset($entityShiftData);
                     }
                 }
+
+                try{
+                    die('success');
+                }catch (Exception $e) {
+                    return null;
+                }
             }else if($isDiffSchool == 1){
                 $workflows = TableRegistry::get('workflows');
                 $workflowSteps = TableRegistry::get('workflow_steps');
@@ -5094,6 +5104,7 @@ class InstitutionsController extends AppController
                                 $workflows->aliasField('name') => 'Staff Transfer - Receiving'
                             ])
                             ->first();
+
                 $institutionStaffTransfers = TableRegistry::get('institution_staff_transfers');
                 $entityTransferData = [
                     'staff_id' => $staffId,
@@ -5124,6 +5135,7 @@ class InstitutionsController extends AppController
                 try{
                     $StaffTransfersResult = $institutionStaffTransfers->save($entity);
                     unset($entity);
+                    die('success');
                 }catch (Exception $e) {
                     return null;
                 }
