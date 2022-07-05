@@ -34,7 +34,7 @@ class InstitutionContactsTable extends ControllerActionTable {
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
         $this->belongsTo('SecurityGroups', ['className' => 'Security.SystemGroups']);
 
-        $this->excludeDefaultValidations(['area_id', 'institution_provider_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_gender_id']);
+        $this->excludeDefaultValidations(['area_id', 'institution_provider_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_gender_id','area_administrative_id']);
 
         $this->toggle('add', false);
         $this->toggle('remove', false);
