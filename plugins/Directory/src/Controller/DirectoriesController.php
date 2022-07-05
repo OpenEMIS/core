@@ -1359,6 +1359,7 @@ class DirectoriesController extends AppController
                                         $institutionStudents->aliasField('student_id') => $result['id'],
                                         $institutionStudents->aliasField('student_status_id') => $statuses['CURRENT']
                                     ])->first();
+
                     if(!empty($institutionStudTbl)){
                         $institution_id = $institutionStudTbl->institution_id;
                         $institution_name = $institutionStudTbl->institution_name;
@@ -1404,7 +1405,31 @@ class DirectoriesController extends AppController
                             $positionArray[$skey] = $sval->institution_position_id;  
                         }
                     }else{
+                        $institutionStaffTbl = $institutionStaff
+                                    ->find()
+                                    ->select([
+                                       'institution_id'=> $institutionStaff->aliasField('institution_id'),
+                                        'staff_id'=>$institutionStaff->aliasField('staff_id'),
+                                        'institution_position_id'=>$institutionStaff->aliasField('institution_position_id'),
+                                        'staff_status_id'=>$institutionStaff->aliasField('staff_status_id'),
+                                        'institution_name'=>$institutions->aliasField('name'),
+                                        'institution_code'=>$institutions->aliasField('code')
+                                    ])
+                                    ->InnerJoin([$institutions->alias() => $institutions->table()], [
+                                        $institutions->aliasField('id =') . $institutionStaff->aliasField('institution_id')
+                                    ])
+                                    ->where([
+                                        $institutionStaff->aliasField('staff_id') => $result['id'],
+                                        $institutionStaff->aliasField('staff_status_id') => $assignedStatus
+                                    ])->toArray();
+                        $positionArray = [];
                         $is_diff_school = 1;
+                        foreach ($institutionStaffTbl as $skey => $sval) {
+                            $institution_id = $sval->institution_id;
+                            $institution_name = $sval->institution_name;
+                            $institution_code = $sval->institution_code;
+                            $positionArray[$skey] = $sval->institution_position_id;  
+                        }
                     }
                 }
             }
