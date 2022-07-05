@@ -372,7 +372,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         InstitutionsStaffSvc.getPositions(params).then(function(resp){
             StaffController.institutionPositionOptions.availableOptions = resp.data;
             StaffController.institutionPositionOptions.selectedOption = null;
-            if(StaffController.staffData.is_same_school > 0) {
+            if(StaffController.staffData && StaffController.staffData.is_same_school > 0) {
                 StaffController.staffData.positions.forEach((positionId) => {
                     StaffController.institutionPositionOptions.availableOptions.forEach((option) => {
                         if(option.value === positionId) {
