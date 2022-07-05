@@ -144,7 +144,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             identity_number: StaffController.selectedStaffData.identity_number,
             nationality_id: StaffController.selectedStaffData.nationality_id,
             username: StaffController.selectedStaffData.username,
-            password: StaffController.selectedStaffData.password,
+            password: StaffController.isInternalSearchSelected ? '' : StaffController.selectedStaffData.password,
             postal_code: StaffController.selectedStaffData.postalCode,
             address: StaffController.selectedStaffData.address,
             birthplace_area_id: InstitutionsStaffSvc.getBirthplaceAreaId(),
