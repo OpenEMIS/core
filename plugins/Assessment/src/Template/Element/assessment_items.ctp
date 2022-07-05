@@ -43,21 +43,25 @@
                         // echo "<pre>"; print_r($data['assessment_items']);die('iyjhju');?>
                         <tbody>
                             <?php foreach ($data['assessment_subject'] as $j => $itemName) : ?>
-                                <?php
-                                    $fieldPrefix = "$alias.assessment_items.$j";
-                                ?>
-                                <?php $key = array_search($j, array_column($data['assessment_items'], 'education_subject_id')); 
+                                <?php $key = array_search($j, array_column($data['assessment_items'], 'education_subject_id'));
+                              //  print_r($fieldPrefix);  die;
+                             // echo "<pre>"; print_r($data['assessment_items']); die;
                                 ?>
                               
-                                <?php if(isset($key) && $key !== false){ ?>
+                                <?php 
+                                    if(isset($key) && $key !==false){
+                                        $fieldPrefix = "$alias.assessment_items.$key";
+
+                                     ?>
                                 <tr>
                                     <td>
                                         <?php
-                                        echo $this->Form->checkbox("$fieldPrefix.$key.education_subject_id", ['checked' => $data['assessment_items'][$key]['education_subject_id'], 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);?>
+                                        echo $this->Form->checkbox("$fieldPrefix.$key.education_subject_check", ['checked' => $data['assessment_items'][$key]['education_subject_id'], 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);?>
                                         </td>
                                         <td> <?php echo $itemName; ?></td>
                                         <?php
                                             echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $data['assessment_items'][$key]['education_subject_id']]);
+                                            echo $this->Form->hidden("$fieldPrefix.assessment_items_id", ['value' => $data['assessment_items'][0]['assessment_id']]);
                                             if (isset($data['assessment_items'][$key]['id'])) {
                                                 echo $this->Form->hidden("$fieldPrefix.id", ['value' => $data['assessment_items'][$key]['id']]);
                                             }
@@ -65,7 +69,7 @@
                                     
                                     <td>
                                         <?php
-                                            echo $this->Form->input("$fieldPrefix".$data['assessment_items'][$key]['weight'], [
+                                            echo $this->Form->input("$fieldPrefix.weight", [
                                                 'type' => 'float',
                                                 'label' => false,
                                                 'onblur' => "return utility.checkDecimal(this, 2);",
@@ -75,7 +79,7 @@
                                     </td>
                                     <td>
                                         <?php
-                                            echo $this->Form->input("$fieldPrefix".$data['assessment_items'][$key]['classification'], [
+                                            echo $this->Form->input("$fieldPrefix.classification", [
                                                 'type' => 'string',
                                                 'label' => false
                                             ]);
@@ -83,17 +87,18 @@
                                     </td>
 
                                 </tr>
-                            <?php } else{ ?>
+                            <?php } else { ?>
                                 <tr>
 
                                     <td>
 
                                         <?php
-                                        echo $this->Form->checkbox("$fieldPrefix.$key.education_subject_id", ['class' => 'no-selection-label', 'kd-checkbox-radio' => '']);?>
+                                        echo $this->Form->checkbox("$fieldPrefix.$key.education_subject_check", ['class' => 'no-selection-label', 'kd-uncheckbox-radio' => '']);?>
                                         </td>
                                         <td><?php echo $itemName; ?></td>
                                         <?php
                                             echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $j]);
+                                            echo $this->Form->hidden("$fieldPrefix.assessment_items_id", ['value' => $data['assessment_items'][0]['assessment_id']]);
                                             if (isset($j)) {
                                                 echo $this->Form->hidden("$fieldPrefix.id", ['value' => $j]);
                                             }
