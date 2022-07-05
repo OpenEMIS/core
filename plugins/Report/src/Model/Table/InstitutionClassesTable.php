@@ -114,6 +114,7 @@ class InstitutionClassesTable extends AppTable
                 'area_administrative_name' => 'AreaAdministratives.name',
                 'shift_name' => 'ShiftOptions.name',
                 'name' => 'InstitutionClasses.name',
+                'capacity' => 'InstitutionClasses.capacity', //POCOR-6787
                 'staff_name' => $query->func()->concat([
                     'Staff.openemis_no' => 'literal',
                     " - ",
@@ -336,6 +337,15 @@ class InstitutionClassesTable extends AppTable
             'type' => 'string',
             'label' => self::ASSISTANT_TEACHER
         ];
+
+        //Start:POCOR-6787
+        $newFields[] = [
+            'key' => 'InstitutionClasses.capacity',
+            'field' => 'capacity',
+            'type' => 'string',
+            'label' => 'Class Capacity'
+        ];
+        //End:POCOR-6787
 
         $newFields[] = [
             'key' => 'InstitutionClasses.total_male_students',
