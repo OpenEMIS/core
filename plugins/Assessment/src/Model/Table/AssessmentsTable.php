@@ -15,6 +15,7 @@ use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
+use Cake\Utility\Text;
 
 class AssessmentsTable extends ControllerActionTable {
     use MessagesTrait;
@@ -209,59 +210,79 @@ class AssessmentsTable extends ControllerActionTable {
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-       //echo "<pre>"; print_r($requestData[$this->alias()]['assessment_items']);die;
+        if ($this->action == 'edit'){
+   // echo "<pre>"; print_r($requestData[$this->alias()]['assessment_items']); die;
         //patch data to handle fail save because of validation error.
         $currentTimeZone = date("Y-m-d H:i:s");
         if (array_key_exists($this->alias(), $requestData)) {
             if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
                 $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
                 foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
-                    $subjectcheck = $item[$key]['education_subject_check'];
+                    $subjectchecks = $item[0]['education_subject_checks'];
+                    $subjectcheck = $item[0]['education_subject_check'];
+                   // print_r($subjectcheck);die;
                     $subjectId = $item['education_subject_id'];
                     $weight = $item['weight'];
                     $classification = $item['classification'];
-                    $assessmentId = $item['assessment_id'];
-                    $itemId = $item['id'];
+                    $assessmentId = $entity['id'];
                     $assessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-                  //  echo "<pre>"; print_r($item['id']);die;
                     if($subjectcheck == 1){
-                        $checkdata = $assessmentItems->find()->select(['id'])
-                            ->where([$assessmentItems->aliasField('id')=>$itemId]);
-                            if(!empty($checkdata)){
-                                $this->updateAll(
-                                ['id' => $itemId, 'weight' => $weight, 'classification' => $classification, 'assessment_id' => $assessmentId,'education_subject_id' => $subjectId, 'modified_user_id' => 1,'modified' => $currentTimeZone],
-                            );
-                            }else{
-                                $data = [
-                                    'id' => $itemId,
-                                    'weight' => $weight,
-                                    'classification' => $classification,
-                                    'assessment_id' => $assessmentId,
-                                    'subjectId' => $subjectId,
-                                    'created_user_id' => 1,
-                                    'created' => $currentTimeZone
-                                ];
+                        $itemId = $item['id'];
+                        $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->first();
+                        if(isset($checkdata) && (!empty($checkdata))){
+                            $assessmentItemResultsData = $assessmentItems->get($itemId);
+                            $assessmentItemResultsData->id =  $itemId;
+                            $assessmentItemResultsData->weight = $weight;
+                            $assessmentItemResultsData->classification = $classification;
+                            $assessmentItemResultsData->assessment_id = $assessmentId;
+                            $assessmentItemResultsData->education_subject_id = $subjectId;
+                            $assessmentItemResultsData->modified_user_id = 1;
+                            $assessmentItemResultsData->modified = $currentTimeZone;
+                            $assessmentItems->save($assessmentItemResultsData);
 
-                                $entity = $this->newEntity($data);
-                                $this->save($entity);
-                            }
+                        }else{
+                            $data = [
+                                'id' => Text::uuid(),
+                                'weight' => $weight,
+                                'classification' => $classification,
+                                'assessment_id' => $assessmentId,
+                                'education_subject_id' => $subjectId,
+                                'created_user_id' => 1,
+                                'created' => $currentTimeZone,
+                            ];
+
+                            $entity = $assessmentItems->newEntity($data);
+                            $this->save($entity);
+                        }
                     }else{
-                        $checkdata = $assessmentItems->find()->select(['id'])
-                            ->where([$assessmentItems->aliasField('id')=>$itemId])->first();
-                            if(!empty($checkdata)){
-                                $assessmentItems->delete($item);
+                            $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->first();
+                            if(isset($checkdata) && (!empty($checkdata))){
+                                $Item = $assessmentItems->find()->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->first();
+                                $assessmentItems->delete($Item);
                             }
                     }
                 }
                     
-                    
-                  //  $requestData[$this->alias()]['assessment_items'][$key]['education_subject'] = $EducationSubjects->get($subjectId);
                 }
             } else { //logic to capture error if no subject inside the grade.
                 $errorMessage = $this->aliasField('noSubjects');
                 $requestData['errorMessage'] = $errorMessage;
             }
+        }else{
+            if (array_key_exists($this->alias(), $requestData)) {
+                if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
+                    $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                    foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
+                        $subjectId = $item['education_subject_id'];
+                        $requestData[$this->alias()]['assessment_items'][$key]['education_subject'] = $EducationSubjects->get($subjectId);
+                    }
+                } else { //logic to capture error if no subject inside the grade.
+                    $errorMessage = $this->aliasField('noSubjects');
+                    $requestData['errorMessage'] = $errorMessage;
+                }
+            }  
         }
+    }
 
     
 
