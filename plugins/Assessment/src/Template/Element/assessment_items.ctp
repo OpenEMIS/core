@@ -96,15 +96,9 @@
                          //echo "<pre>"; print_r($data['assessment_items']); die();?>
                         <tbody>
                             <?php foreach ($data['assessment_subject'] as $j => $itemName) : 
-                              $fieldPrefix = "$alias.assessment_items.$j";
-                                ?>
-
+                              $fieldPrefix = "$alias.assessment_items.$j"; ?>
                                 <?php $key = array_search($j, array_column($data['assessment_items'], 'education_subject_id'));
-                              //  print_r($fieldPrefix);  die;
-                              //  print_r($key);  die;
-                              //echo "<pre>"; print_r($data['assessment_items']); die;
                                 ?>
-                              
                                 <?php 
                                     if(isset($key) && $key !==false){
                                         $fieldPrefix = "$alias.assessment_items.$key";
@@ -129,7 +123,7 @@
                                                 'onblur' => "return utility.checkDecimal(this, 2);",
                                                 'onkeypress' => "return utility.floatCheck(event)",
                                                 'required'=>false,
-                                                'value'=>0
+                                                
                                             ]);
                                         ?>
                                     </td>
@@ -153,6 +147,9 @@
                                         <?php
                                             echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $j]);
                                             echo $this->Form->hidden("$fieldPrefix.assessment_items_id", ['value' => $data['assessment_items'][0]['assessment_id']]);
+                                            if (isset($j)) {
+                                                echo $this->Form->hidden("$fieldPrefix.id_check", ['value' => $j]);
+                                            }
                                         ?>
                                     
                                     <td>

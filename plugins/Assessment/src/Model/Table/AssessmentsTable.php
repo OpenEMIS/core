@@ -218,28 +218,27 @@ class AssessmentsTable extends ControllerActionTable {
             if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
                 $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
                 foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
-               // echo "<pre>"; print_r($item);
                     $subjectcheck = $item[0]['education_subject_check'];
-                   // echo "<pre>"; print_r($subjectcheck);die;
                     $subjectId = $item['education_subject_id'];
                     $weight = $item['weight'];
                     $classification = $item['classification'];
                     $assessmentId = $entity['id'];
+                    $checkid = $item['id_check'];
+                    //print_r($checkid);die;
                     $assessmentItems = TableRegistry::get('Assessment.AssessmentItems');
                     if($subjectcheck == 1){
-                       // $itemId = $item['id'];
-                        $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->first();
-                        if(isset($checkdata) && (!empty($checkdata))){
-                            $assessmentItems->updateAll(
-                                ['weight' => $weight,'classification'=>$classification],    //field
-                                [
-                                 'assessment_id' => $assessmentId, 
-                                 'education_subject_id'=> $subjectId
-                                 ] //condition
-                            );
+                        $checkdata = $assessmentItems->find()->select(['id'])->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->first();
+                        if(isset($checkdata) && (!empty($checkdata)) && $checkid==null){
+                           
+                        $ids = $checkdata->id;
+                        $assessmentItems->updateAll(
+                        ['weight' => $weight,'classification'=>$classification],    //field
+                        [
+                         'id' => $ids, 
+                        ] //condition
+                        );
 
                         }else{
-                            die('jhjhj');
                             $data = [
                                 'id' => Text::uuid(),
                                 'weight' => $weight,
@@ -249,15 +248,19 @@ class AssessmentsTable extends ControllerActionTable {
                                 'created_user_id' => 1,
                                 'created' => $currentTimeZone,
                             ];
-
                             $entity = $assessmentItems->newEntity($data);
                             $this->save($entity);
                         }
                     }else{
                             $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->first();
+
                             if(isset($checkdata) && (!empty($checkdata))){
-                                $Item = $assessmentItems->find()->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->first();
-                                $assessmentItems->delete($Item);
+
+                                $Item = $assessmentItems->find()->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->toArray();
+                                foreach($Item as $val){
+                                    $dlt = $assessmentItems->delete($val);
+                                }
+                               
                             }
                     }
                 }
