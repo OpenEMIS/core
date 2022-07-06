@@ -119,9 +119,6 @@
                                         <?php
                                             echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $data['assessment_items'][$key]['education_subject_id']]);
                                             echo $this->Form->hidden("$fieldPrefix.assessment_items_id", ['value' => $data['assessment_items'][0]['assessment_id']]);
-                                            if (isset($data['assessment_items'][$key]['id'])) {
-                                                echo $this->Form->hidden("$fieldPrefix.id", ['value' => $data['assessment_items'][$key]['id']]);
-                                            }
                                         ?>
                                     
                                     <td>
@@ -156,9 +153,6 @@
                                         <?php
                                             echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $j]);
                                             echo $this->Form->hidden("$fieldPrefix.assessment_items_id", ['value' => $data['assessment_items'][0]['assessment_id']]);
-                                            if (isset($j)) {
-                                                echo $this->Form->hidden("$fieldPrefix.id", ['value' => $j]);
-                                            }
                                         ?>
                                     
                                     <td>
