@@ -1337,6 +1337,12 @@ class ReportCardsTable extends AppTable
                     ]
                 )
                 ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
+                //POCOR-6846: START
+                ->order([
+                    $AssessmentItemResults->aliasField('created') => 'DESC'
+                    
+                ])
+                //POCOR-6846: END
                 ->where($conditions)
                 ->formatResults(function (ResultSetInterface $results) {
                     return $results->map(function ($row) {
