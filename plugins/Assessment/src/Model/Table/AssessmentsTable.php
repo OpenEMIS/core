@@ -211,34 +211,33 @@ class AssessmentsTable extends ControllerActionTable {
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         if ($this->action == 'edit'){
-   // echo "<pre>"; print_r($requestData[$this->alias()]['assessment_items']); die;
+    //echo "<pre>"; print_r($requestData[$this->alias()]['assessment_items']); die;
         //patch data to handle fail save because of validation error.
         $currentTimeZone = date("Y-m-d H:i:s");
         if (array_key_exists($this->alias(), $requestData)) {
             if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
                 $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
                 foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
-                    $subjectchecks = $item[0]['education_subject_checks'];
+               // echo "<pre>"; print_r($item);
                     $subjectcheck = $item[0]['education_subject_check'];
-                   // print_r($subjectcheck);die;
+                   // echo "<pre>"; print_r($subjectcheck);die;
                     $subjectId = $item['education_subject_id'];
                     $weight = $item['weight'];
                     $classification = $item['classification'];
                     $assessmentId = $entity['id'];
                     $assessmentItems = TableRegistry::get('Assessment.AssessmentItems');
                     if($subjectcheck == 1){
-                        $itemId = $item['id'];
+                       // $itemId = $item['id'];
                         $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->first();
                         if(isset($checkdata) && (!empty($checkdata))){
                             $assessmentItemResultsData = $assessmentItems->get($itemId);
-                            $assessmentItemResultsData->id =  $itemId;
-                            $assessmentItemResultsData->weight = $weight;
-                            $assessmentItemResultsData->classification = $classification;
-                            $assessmentItemResultsData->assessment_id = $assessmentId;
-                            $assessmentItemResultsData->education_subject_id = $subjectId;
-                            $assessmentItemResultsData->modified_user_id = 1;
-                            $assessmentItemResultsData->modified = $currentTimeZone;
-                            $assessmentItems->save($assessmentItemResultsData);
+                            $assessmentItems->updateAll(
+                                ['weight' => $weight,'classification'=>$classification],    //field
+                                [
+                                 'assessment_id' => $assessmentId, 
+                                 'education_subject_id'=> $subjectId
+                                 ] //condition
+                            );
 
                         }else{
                             $data = [
