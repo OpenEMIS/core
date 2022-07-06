@@ -21,7 +21,13 @@ class POCOR6786 extends AbstractMigration
         $this->insert('api_securities', [
             'id' => $id + 1,
             'name' => 'Assessment',
-            'model' => 'Assessment.Assessments'
+            'model' => 'Assessment.Assessments',
+            'index' => 1,
+            'view' => 1,
+            'add' => 1,
+            'edit' => 1,
+            'delete' => 0,
+            'execute' => 0
         ]);
     }
 
