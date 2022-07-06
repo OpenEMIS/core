@@ -230,7 +230,6 @@ class AssessmentsTable extends ControllerActionTable {
                        // $itemId = $item['id'];
                         $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->first();
                         if(isset($checkdata) && (!empty($checkdata))){
-                            $assessmentItemResultsData = $assessmentItems->get($itemId);
                             $assessmentItems->updateAll(
                                 ['weight' => $weight,'classification'=>$classification],    //field
                                 [
@@ -240,6 +239,7 @@ class AssessmentsTable extends ControllerActionTable {
                             );
 
                         }else{
+                            die('jhjhj');
                             $data = [
                                 'id' => Text::uuid(),
                                 'weight' => $weight,
