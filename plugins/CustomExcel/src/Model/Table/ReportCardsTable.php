@@ -520,9 +520,32 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('report_card_id', $params) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
             $StudentsReportCardsComments = TableRegistry::get('Institution.InstitutionStudentsReportCardsComments');
             $ReportCardSubjects = TableRegistry::get('ReportCard.ReportCardSubjects');
-
-            $entity = $StudentsReportCardsComments->find()
-                ->select(['comment_code_name' => 'CommentCodes.name'])
+            /**POCOR-6810 starts- modified query to get only assigned subjects of student*/ 
+            $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $AssessmentItemData = $SubjectStudents->find()
+                ->where([
+                    $SubjectStudents->aliasField('student_id') => $params['student_id'],
+                    $SubjectStudents->aliasField('institution_class_id') => $params['institution_class_id'],
+                    $SubjectStudents->aliasField('institution_id') => $params['institution_id'],
+                    $SubjectStudents->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
+                ])
+                ->contain([
+                    'EducationSubjects','InstitutionSubjects'
+                ]) 
+                ->hydrate(false)
+                ->toArray();
+            if(empty($AssessmentItemData)){
+                $entity = [];
+                return $entity;
+            }
+             
+			foreach ($AssessmentItemData as $value) {
+                $reprotCardComment = $StudentsReportCardsComments->find()
+                ->select([
+                    'comment_code_name' => 'CommentCodes.name', 
+                    'comment' => $StudentsReportCardsComments->aliasField('comments')
+                ])
                 ->leftJoinWith('CommentCodes')
                 ->innerJoin([$ReportCardSubjects->alias() => $ReportCardSubjects->table()], [
                     $ReportCardSubjects->aliasField('report_card_id = ') .  $StudentsReportCardsComments->aliasField('report_card_id'),
@@ -534,10 +557,19 @@ class ReportCardsTable extends AppTable
                     $StudentsReportCardsComments->aliasField('student_id') => $params['student_id'],
                     $StudentsReportCardsComments->aliasField('institution_id') => $params['institution_id'],
                     $StudentsReportCardsComments->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $StudentsReportCardsComments->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
+                    $StudentsReportCardsComments->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
+                    $StudentsReportCardsComments->aliasField('education_subject_id') => $value['education_subject_id']
                 ])
                 ->autoFields(true)
-                ->toArray();
+                ->hydrate(false)
+                ->first();
+				$entity[] = [
+					'education_subject_id' => $value['education_subject_id'],
+					'comment_code_name' => $reprotCardComment['comment_code_name'],
+                    'comments' => $reprotCardComment['comment']
+				];
+                /**POCOR-6810 ends*/ 
+            }
             return $entity;
         }
     }
@@ -701,7 +733,7 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('student_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
             $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-            $entity = $SubjectStudents->find()
+            $subjectObj = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
                     $SubjectStudents->aliasField('institution_class_id') => $params['institution_class_id'],
@@ -714,6 +746,20 @@ class ReportCardsTable extends AppTable
                 ]) //POCOR-5814 requirement subject name from institution_subjects table.
                 ->hydrate(false)
                 ->toArray();
+            //POCOR-6810 Starts
+            $entity = [];
+            if (!empty($subjectObj)) {
+                $i=1;
+               foreach ($subjectObj as  $subject) {
+                $id = $subject['id'].$i;
+                $entity[] = [
+                    'education_subject_id' => $subject['education_subject_id'],
+                    'id' => $id,
+                    'name' => $subject['institution_subject']['name']
+                ];
+                $i++;
+               }
+            }//POCOR-6810 Ends
             return $entity;
         }
     }

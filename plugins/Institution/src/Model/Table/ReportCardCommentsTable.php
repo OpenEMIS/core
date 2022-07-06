@@ -114,6 +114,14 @@ class ReportCardCommentsTable extends ControllerActionTable
             }
         }
         /*POCOR-6508 ends*/
+
+        /*POCOR-6821 start*/
+        $conditions[$ReportCards->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        if (!empty($selectedReportCard)) {
+            $conditions[$ReportCards->aliasField('id')] = $selectedReportCard;
+        }
+        /*POCOR-6821 end*/
+
         $query
             ->select([
                 'name' => $this->aliasField('name'),
@@ -164,7 +172,7 @@ class ReportCardCommentsTable extends ControllerActionTable
                'InstitutionSubjects.academic_period_id  = '. $ReportCards->aliasField('academic_period_id')
             ])
             ->where([
-                $where,
+                $where,$conditions, //POCOR-6821
                 // only show record if at least one comment type is needed
                 'OR' => [
                     $ReportCards->aliasField('principal_comments_required') => 1,
