@@ -7,6 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use DateTime;//POCOR-6785
 
 class ReportCardProcessesTable extends ControllerActionTable
 {
@@ -50,7 +51,28 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-
+        //Start:POCOR-6785 need to convert this custom query to cake query
+        $ReportCardProcessesTable = TableRegistry::get('report_card_processes');
+        $entitydata = $ReportCardProcessesTable->find('all',['conditions'=>[
+                'status !=' =>'-1'
+        ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();
+    
+        foreach($entitydata as $keyy =>$entity ){ 
+            $now = new DateTime();
+            $c_timestap = $now->getTimestamp();
+            $modifiedDate = $entity->modified;
+            $m_timestap =$modifiedDate->getTimestamp();
+            $diff_mins = abs($c_timestap - $m_timestap) / 60;
+            if($diff_mins > 5 && $diff_mins < 30){
+                $entity->status = 1;
+                $ReportCardProcessesTable->save($entity);
+            }elseif($diff_mins > 30){
+                $entity->status = -1;
+                $ReportCardProcessesTable->save($entity);
+            }
+        }
+         //END:POCOR-6785
+        
         $sortList = ['status', 'Users.openemis_no', 'InstitutionClasses.name', 'Institutions.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
@@ -90,6 +112,7 @@ class ReportCardProcessesTable extends ControllerActionTable
             'openemis_no',
             'status'
         ]);
+        
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)

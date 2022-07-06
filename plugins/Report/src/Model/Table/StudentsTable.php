@@ -293,13 +293,24 @@ class StudentsTable extends AppTable
 
                     $institutionList = $institutionQuery->toArray();
                 } elseif (!$institutionTypeId && array_key_exists('area_education_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['area_education_id']) && $areaId != -1) {
+                    //Start:POCOR-6818
+                    $AreaT = TableRegistry::get('areas');
+                    $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
+                    $childArea =[];
+                    foreach($AreaData as $kkk =>$AreaData11 ){
+                        $childArea[$kkk] = $AreaData11->id;
+                    }
+                    array_push($childArea,$areaId);
+                    $finalIds = implode(',',$childArea);
+                    $finalIds = explode(',',$finalIds);
+                    //End:POCOR-6818
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
                             'valueField' => 'code_name'
                         ])
                         ->where([
-                            $InstitutionsTable->aliasField('area_id') => $areaId
+                            $InstitutionsTable->aliasField('area_id').' IN' => $finalIds //POCOR-6818
                         ])
                         ->order([
                             $InstitutionsTable->aliasField('code') => 'ASC',
@@ -379,9 +390,22 @@ class StudentsTable extends AppTable
         $institutionId = $requestData->institution_id;
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
+
+        //Start:POCOR-6818
+        $AreaT = TableRegistry::get('areas');
+        $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
+        $childArea =[];
+        foreach($AreaData as $kkk =>$AreaData11 ){
+            $childArea[$kkk] = $AreaData11->id;
+        }
+        array_push($childArea,$areaId);
+        $finalIds = implode(',',$childArea);
+        $finalIds = explode(',',$finalIds);
+        //End:POCOR-6818
+
         $conditions = [];
         if ($areaId != -1) {
-            $conditions['Institution.area_id'] = $areaId;
+            $conditions['Institution.area_id IN'] = $finalIds;
         }
         if (!empty($academicPeriodId)) {
             $conditions['InstitutionStudent.academic_period_id'] = $academicPeriodId;
@@ -469,7 +493,7 @@ class StudentsTable extends AppTable
             'external_reference' => 'Students.external_reference'
         ])
         ->contain(['Genders', 'AddressAreas', 'BirthplaceAreas', 'MainNationalities', 'MainIdentityTypes'])
-        ->where([$this->aliasField('is_student') => 1, $conditions])
+        ->where([$this->aliasField('is_student') => 1,$conditions])
         ->group([$this->aliasField('openemis_no')]);
 
 
