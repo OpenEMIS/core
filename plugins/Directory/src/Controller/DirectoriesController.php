@@ -1664,6 +1664,7 @@ class DirectoriesController extends AppController
         }
         echo json_encode($result_array);die;
     }//POCOR-5673 ends
+    
     public function StudentAbsences()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
