@@ -48,13 +48,52 @@ class TrainingSessionParticipantsTable extends AppTable
         $Positions = TableRegistry::get('Institution.InstitutionPositions');
         $Areas = TableRegistry::get('areas'); //POCOR-6594 <vikas.rathore@mail.valuecoders.com>
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+        $TrainingSession = TableRegistry::get('Training.TrainingSessions');
 
         $requestData = json_decode($settings['process']['params']);
         $trainingCourseId = $requestData->training_course_id;
         $trainingSessionId = $requestData->training_session_id;
 
         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-        
+
+        $academicPeriodId = $requestData->academic_period_id;
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $periodEntity = $AcademicPeriods->get($academicPeriodId);
+        $startDate = $periodEntity->start_date->format('Y-m-d');
+        $endDate = $periodEntity->end_date->format('Y-m-d'); 
+
+        $conditions = [];
+        //POCOR-6828 Starts
+        if($trainingCourseId != '-1'){
+            $conditions['Courses.id'] = $trainingCourseId;
+        }
+
+        if (!empty($academicPeriodId)) {
+                $conditions['OR'] = [
+                    'OR' => [
+                        [
+                            $TrainingSession->aliasField('end_date') . ' IS NOT NULL',
+                            $TrainingSession->aliasField('start_date') . ' <=' => $startDate,
+                            $TrainingSession->aliasField('end_date') . ' >=' => $startDate
+                        ],
+                        [
+                            $TrainingSession->aliasField('end_date') . ' IS NOT NULL',
+                            $TrainingSession->aliasField('start_date') . ' <=' => $endDate,
+                            $TrainingSession->aliasField('end_date') . ' >=' => $endDate
+                        ],
+                        [
+                            $TrainingSession->aliasField('end_date') . ' IS NOT NULL',
+                            $TrainingSession->aliasField('start_date') . ' >=' => $startDate,
+                            $TrainingSession->aliasField('end_date') . ' <=' => $endDate
+                        ]
+                    ],
+                    [
+                        $TrainingSession->aliasField('end_date') . ' IS NULL',
+                        $TrainingSession->aliasField('start_date') . ' <=' => $endDate
+                    ]
+                ];
+        }//POCOR-6828 Ends
+      
         $query
             ->select([
                 $this->aliasField('trainee_id'),
@@ -121,6 +160,12 @@ class TrainingSessionParticipantsTable extends AppTable
                     $Areas->aliasField('id = ') . $Institutions->aliasField('area_id')
                 ]
             )
+            ->innerJoin(//POCOR-6828 Starts
+                [$TrainingSession->alias() => $TrainingSession->table()],
+                [
+                    $TrainingSession->aliasField('id = ') . $this->aliasField('training_session_id')
+                ]
+            )//POCOR-6828 Ends
             //POCOR-6594 end <vikas.rathore@mail.valuecoders.com>
             ->leftJoin(
                 [$Positions->alias() => $Positions->table()],
@@ -134,7 +179,7 @@ class TrainingSessionParticipantsTable extends AppTable
                     $StaffPositionTitles->aliasField('id = ') . $Positions->aliasField('staff_position_title_id')
                 ]
             )
-            ->where(['Courses.id' => $trainingCourseId])
+            ->where([$conditions])
             ->group([
                 $this->aliasField('training_session_id'),
                 $this->aliasField('trainee_id')
@@ -143,7 +188,7 @@ class TrainingSessionParticipantsTable extends AppTable
         if (!empty($trainingSessionId)) {
             $query->where([$this->aliasField('training_session_id') => $trainingSessionId]);
         }
-
+        
         // POCOR-6594 get other identities data
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
@@ -170,7 +215,6 @@ class TrainingSessionParticipantsTable extends AppTable
                         }
                     }
                 $row->custom_identity_other_data = implode(',', $other_identity_array);
-                
                 return $row;
             });
         });
