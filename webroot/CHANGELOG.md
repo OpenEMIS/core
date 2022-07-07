@@ -1,3 +1,13 @@
+### [3.75.15] - 2022-07-07
+- Implemented: Update OpenEMIS Core Russian Translation files
+- Implemented: Add capacity column to Reports > Institution: Classes
+- Bug Fixed: Reports > Staff > Staff Subjects: Changes to standard report
+- Bug Fixed: Administration>System Setup>APIS>Securities: Assessment api is missing
+- Bug Fixed: Institution > Statistics > Standard and Institution > Appointments > Positions: Changes to report
+- Bug Fixed: Institution>General>Contacts: Unable to edit
+- Bug Fixed: Guardian>Personal>Report Card: Unable to download report cards
+- Bug Fixed: Institutions>Performance>Report Cards: Grades are showing wrongly
+
 ### [3.75.14] - 2022-07-01
 - Bug Fixed: Administration/Institutions>Performance>Report Card: Update stuck student report card to error status
 - Bug Fixed: Institutions > General > Profiles > Institutions : System should allow users to download Excel
