@@ -175,24 +175,22 @@ class TrainingsTable extends AppTable
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
-
                 if (in_array($feature, ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers'])) {
                     if (!empty($this->request->data[$this->alias()]['training_course_id'])) {
                         $courseId = $this->request->data[$this->alias()]['training_course_id'];
                         $options = $this->Training->getSessionList(['training_course_id' => $courseId]);
-                        if ($courseId == -1 ) {
-                            $options = ['-1' => _('All training sessions.')] + $options; //POCOR-6595
-                        }
+                        //POCOR-6828 Starts
+                        $attr['type'] = 'chosenSelect';
+                        $attr['attr']['multiple'] = false;
+                        $attr['select'] = true;
+                        $attr['options'] = ['' => '-- ' . ('Select') . ' --', '-1' => ('All Areas Level')] + $options;
+                        $attr['onChangeReload'] = true;//POCOR-6828 Ends
                     } else {
-                        $options = [];
+                        $attr['type'] = 'hidden';
                     }
-
-                    $attr['options'] = $options;
-                    $attr['type'] = 'select';
-                    $attr['select'] = false;
-                    return $attr;
                 }
             }
+            return $attr;
         }
     }
 
@@ -234,7 +232,6 @@ class TrainingsTable extends AppTable
                     $attr['options'] = $workflowStatuses;
                 }
                 // End POCOR-4072
-
                 return $attr;
             }
         }
@@ -286,7 +283,6 @@ class TrainingsTable extends AppTable
 
     public function implementedEvents()
     {
-
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxUserStaffAutocomplete'] = 'ajaxUserStaffAutocomplete';
         return $events;
@@ -326,10 +322,9 @@ class TrainingsTable extends AppTable
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
-        $includedFeature     = ['Report.ReportTrainingNeedStatistics'];
+        $includedFeature = ['Report.ReportTrainingNeedStatistics','Report.TrainingSessionParticipants'];//POCOR-6828 add 'Report.TrainingSessionParticipants'
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-
             if (in_array($feature, $includedFeature)) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
