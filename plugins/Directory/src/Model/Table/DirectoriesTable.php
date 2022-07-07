@@ -11,6 +11,8 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\Log\Log;
+use Cake\Http\Client;
+use Cake\Network\Response;
 
 class DirectoriesTable extends ControllerActionTable
 {
@@ -1286,4 +1288,5 @@ class DirectoriesTable extends ControllerActionTable
 
         return $tooltipMessage;
     }
+
 }
