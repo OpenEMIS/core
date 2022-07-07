@@ -11,6 +11,7 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class StaffTable extends AppTable  {
+    const NO_FILTER = 0; //POCOR-6779
     public function initialize(array $config) {
         $this->table('security_users');
         parent::initialize($config);
@@ -90,6 +91,8 @@ class StaffTable extends AppTable  {
         $this->ControllerAction->field('system_usage', ['type' => 'hidden']);
         $this->ControllerAction->field('staff_leave_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('health_report_type',['type' => 'hidden']);
+        $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']); //POCOR-6779
+        $this->ControllerAction->field('education_subject_id', ['type' => 'hidden']); //POCOR-6779
         $this->ControllerAction->field('format');
 
     }
@@ -421,13 +424,24 @@ class StaffTable extends AppTable  {
                 'Report.StaffTrainingReports','Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects'])) {
                 $areaId = $this->request->data[$this->alias()]['area_education_id'];
                 if(!empty($areaId) && $areaId != -1) {
+                    //Start:POCOR-6779
+                    $AreaT = TableRegistry::get('areas');
+                    $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
+                    $childArea =[];
+                    foreach($AreaData as $kkk =>$AreaData11 ){
+                        $childArea[$kkk] = $AreaData11->id;
+                    }
+                    array_push($childArea,$areaId);
+                    $finalIds = implode(',',$childArea);
+                    $finalIds = explode(',',$finalIds);
+                    //End:POCOR-6779
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
                             'valueField' => 'code_name'
                         ])
                         ->where([
-                                $InstitutionsTable->aliasField('area_id') => $areaId
+                                $InstitutionsTable->aliasField('area_id').' IN' => $finalIds //POCOR-6779
                         ])
                         ->order([
                             $InstitutionsTable->aliasField('code') => 'ASC',
@@ -505,6 +519,139 @@ class StaffTable extends AppTable  {
             return $attr;
         }
     }
+    //Start:POCOR-6779
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['academic_period_id'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+            if (in_array($feature,
+                        [
+                            'Report.StaffSubjects'
+                        ])
+                ) {
+
+                $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                $gradeOptions = $EducationGrades
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'name'
+                    ])
+                    ->select([
+                        'id' => $EducationGrades->aliasField('id'),
+                        'name' => $EducationGrades->aliasField('name'),
+                        'education_programme_name' => 'EducationProgrammes.name'
+                    ])
+                    ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                    ->where([
+                        'EducationSystems.academic_period_id' => $academicPeriodId,
+                    ])
+                    ->order([
+                        'EducationProgrammes.order' => 'ASC',
+                        $EducationGrades->aliasField('name') => 'ASC'
+                    ])
+                    ->toArray();
+                if (in_array($feature, ['Report.StaffSubjects'])) {
+                    $attr['onChangeReload'] = true;
+                } 
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
+            } elseif (in_array($feature,
+                               [
+                                   'Report.StudentAttendanceSummary'
+                               ])
+                      ) {
+                $gradeList = [];
+                if (array_key_exists('institution_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_id']) && array_key_exists('academic_period_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['academic_period_id'])) {
+                    $institutionId = $request->data[$this->alias()]['institution_id'];
+                    $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+
+                    $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
+                    $gradeList = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId);
+                }
+
+                if (empty($gradeList)) {
+                    $gradeOptions = ['' => $this->getMessage('general.select.noOptions')];
+                } else {
+                    $gradeOptions = ['-1' => __('All Grades')] + $gradeList;
+                }
+
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $gradeOptions;
+                $attr['attr']['required'] = true;
+            } else {
+                $attr['value'] = self::NO_FILTER;
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+    {
+
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature,
+                        [
+                            'Report.InstitutionSubjects'
+                            
+                        ])
+                ) {
+
+                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                $subjectOptions = $EducationSubjects
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                    ->find('visible')
+                    ->order([
+                        $EducationSubjects->aliasField('order') => 'ASC'
+                    ])
+                    ->toArray();
+
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = ['' => __('All Subjects')] + $subjectOptions;
+            } elseif(in_array($feature, ['Report.StaffSubjects'])){ 
+
+                $EducationGradesSubjects = TableRegistry::get('education_grades_subjects');
+                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                $subjectOptions = $EducationGradesSubjects
+                                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                                    ->select([
+                                        'education_subject_id' => $EducationGradesSubjects->aliasField('education_subject_id'),
+                                        'education_grade_id' => $EducationGradesSubjects->aliasField('education_grade_id'),
+                                        'id' => $EducationSubjects->aliasField('id'),
+                                        'name' => $EducationSubjects->aliasField('name')
+                                    ])
+                                    ->leftJoin(
+                                        [$EducationSubjects->alias() => $EducationSubjects->table()],
+                                        [
+                                            $EducationSubjects->aliasField('id = ') . $EducationGradesSubjects->aliasField('education_subject_id')
+                                        ]
+                                    )
+                                    ->where([
+                                        $EducationGradesSubjects->aliasField('education_grade_id') => $this->request->data[$this->alias()]['education_grade_id']
+                                    ])
+                                    ->order([
+                                        $EducationSubjects->aliasField('order') => 'ASC'
+                                    ])->toArray();
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+
+                if($this->request->data[$this->alias()]['education_grade_id'] == -1){ //for all grades
+                    $attr['options'] = ['' => __('All Subjects')];
+                }else{
+                    $attr['options'] = $subjectOptions;
+                }
+            } else {
+                $attr['value'] = self::NO_FILTER;
+            }
+            return $attr;
+        }
+    }
+    //End:POCOR-6779
+
     public function onUpdateFieldHealthReportType(Event $event, array $attr, $action, Request $request){
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
