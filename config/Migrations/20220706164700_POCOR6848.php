@@ -93,7 +93,7 @@ class POCOR6848 extends AbstractMigration
 
         /*drop temporary tables*/
         $this->execute('INSERT INTO report_queries (`name`, `query_sql`, `frequency`, `status`, `created_user_id`, `created`) 
-        VALUES ("drop_summary_student_assessment_mark_entry_temporary_tables","DROP TABLE IF EXISTS `get_grouped_students_subjects`, `get_marked_students`, `get_total_student_subjects`;","day", 1, 1, NOW())');
+        VALUES ("drop_summary_student_assessment_mark_entry_tmp","DROP TABLE IF EXISTS `get_grouped_students_subjects`, `get_marked_students`, `get_total_student_subjects`;","day", 1, 1, NOW())');
         
 
     }
