@@ -17,7 +17,7 @@ class POCOR6848 extends AbstractMigration
         $this->execute('INSERT INTO `zz_6848_report_queries` SELECT * FROM `report_queries`');
         $this->execute('CREATE TABLE IF NOT EXISTS `zz_6848_report_assessment_missing_mark_entry` LIKE `report_assessment_missing_mark_entry`');
         $this->execute('INSERT INTO `zz_6848_report_assessment_missing_mark_entry` SELECT * FROM `report_assessment_missing_mark_entry`');
-        $this->execute('DROP IF EXISTS `report_assessment_missing_mark_entry`');
+        $this->execute('DROP TABLE IF EXISTS `report_assessment_missing_mark_entry`');
 
         /*delete existing report_assessment_missing_mark_entry in report_queries table */
         $this->execute('DELETE IF EXISTS FROM report_queries WHERE report_queries.name = "report_assessment_missing_mark_entry_truncate"'); 
