@@ -20,8 +20,8 @@ class POCOR6848 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `report_assessment_missing_mark_entry`');
 
         /*delete existing report_assessment_missing_mark_entry in report_queries table */
-        $this->execute('DELETE IF EXISTS FROM report_queries WHERE report_queries.name = "report_assessment_missing_mark_entry_truncate"'); 
-        $this->execute('DELETE IF EXISTS FROM report_queries WHERE report_queries.name = "report_assessment_missing_mark_entry_insert"');
+        $this->execute('DELETE FROM report_queries WHERE report_queries.name = "report_assessment_missing_mark_entry_truncate"'); 
+        $this->execute('DELETE FROM report_queries WHERE report_queries.name = "report_assessment_missing_mark_entry_insert"');
 
         /*create summary_student_assessment_mark_entry summary table */
         $this->execute('CREATE TABLE IF NOT EXISTS `summary_student_assessment_mark_entry`(
