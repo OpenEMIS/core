@@ -403,4 +403,56 @@ class AssessmentItemResultsTable extends AppTable
 
         return $totalMarks;
     }
+
+    /** 
+    * API to get student's subject assessment results data
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * @return json
+    * @ticket POCOR-6806 starts 
+    */
+    public function findAssessmentGradesOptions(Query $query, array $options)
+    {
+        $academicPeriodId = $options['academic_period_id'];
+        $assessmentGradingOptionId = $options['assessment_grading_option_id'];
+        $educationGradeId = $options['education_grade_id'];
+        $educationSubjectId = $options['education_subject_id'];
+        $studentId = $options['student_id'];
+        $assessmentId = $options['assessment_id'];
+        $assessmentPeriodId = $options['assessment_period_id'];
+        $institutionId = $options['institution_id'];
+        $optionalCondition = [];
+        if ($assessmentId || $assessmentPeriodId || $institutionId) {
+            $optionalCondition[$this->aliasField('assessment_id')] = $assessmentId;
+            $optionalCondition[$this->aliasField('assessment_period_id')] = $assessmentPeriodId;
+            $optionalCondition[$this->aliasField('institution_id')] = $institutionId;
+        }
+        
+        $getRecord = $this->find()
+                    ->select([
+                        'academic_period_id' => $this->aliasField('academic_period_id'),
+                        'assessment_grading_option_id' => $this->aliasField('assessment_grading_option_id'),
+                        'assessment_id' => $this->aliasField('assessment_id '),
+                        'assessment_period_id' => $this->aliasField('assessment_period_id'),
+                        'education_grade_id' => $this->aliasField('education_grade_id'),
+                        'education_subject_id' => $this->aliasField('education_subject_id'),
+                        'institution_id' => $this->aliasField('institution_id'),
+                        'marks' => $this->aliasField('marks'),
+                        'student_id' => $this->aliasField('student_id')
+                    ])
+                    ->where([
+                        $this->aliasField('academic_period_id') => $academicPeriodId,
+                        $this->aliasField('assessment_grading_option_id') => $assessmentGradingOptionId,
+                        $this->aliasField('education_grade_id') => $educationGradeId,
+                        $this->aliasField('education_subject_id') => $educationSubjectId,
+                        $this->aliasField('student_id') => $studentId,
+                    ])
+                    ->orWhere([$optionalCondition])
+                    ->hydrate(false)
+                    ->first();
+        $response['result'] = $getRecord;
+        $response['message'] = 'Record Found successfuly.';
+        $dataArr = array("data" => $response);
+        echo json_encode($dataArr);exit;
+    }
+    /** POCOR-6806 ends */ 
 }
