@@ -12,16 +12,16 @@ class POCOR6848 extends AbstractMigration
      */
     public function up()
     {
-
         /*backup report_queries table */
         $this->execute('CREATE TABLE IF NOT EXISTS `zz_6848_report_queries` LIKE `report_queries`');
         $this->execute('INSERT INTO `zz_6848_report_queries` SELECT * FROM `report_queries`');
         $this->execute('CREATE TABLE IF NOT EXISTS `zz_6848_report_assessment_missing_mark_entry` LIKE `report_assessment_missing_mark_entry`');
         $this->execute('INSERT INTO `zz_6848_report_assessment_missing_mark_entry` SELECT * FROM `report_assessment_missing_mark_entry`');
+        $this->execute('DROP IF EXISTS `report_assessment_missing_mark_entry`');
 
         /*delete existing report_assessment_missing_mark_entry in report_queries table */
-        $this->execute('DELETE FROM report_queries WHERE report_queries.name = "report_assessment_missing_mark_entry_truncate"'); 
-        $this->execute('DELETE FROM report_queries WHERE report_queries.name = "report_assessment_missing_mark_entry_insert"');
+        $this->execute('DELETE IF EXISTS FROM report_queries WHERE report_queries.name = "report_assessment_missing_mark_entry_truncate"'); 
+        $this->execute('DELETE IF EXISTS FROM report_queries WHERE report_queries.name = "report_assessment_missing_mark_entry_insert"');
 
         /*create summary_student_assessment_mark_entry summary table */
         $this->execute('CREATE TABLE IF NOT EXISTS `summary_student_assessment_mark_entry`(
@@ -94,8 +94,6 @@ class POCOR6848 extends AbstractMigration
         /*drop temporary tables*/
         $this->execute('INSERT INTO report_queries (`name`, `query_sql`, `frequency`, `status`, `created_user_id`, `created`) 
         VALUES ("drop_summary_student_assessment_mark_entry_tmp","DROP TABLE IF EXISTS `get_grouped_students_subjects`, `get_marked_students`, `get_total_student_subjects`;","day", 1, 1, NOW())');
-        
-
     }
     //rollback
     public function down()
@@ -103,7 +101,7 @@ class POCOR6848 extends AbstractMigration
         /* Restore backup tables */
         $this->execute('DROP TABLE IF EXISTS `report_queries`');
         $this->execute('RENAME TABLE `zz_6848_report_queries` TO `report_queries`');
+        $this->execute('CREATE TABLE IF NOT EXISTS `report_assessment_missing_mark_entry` LIKE `zz_6848_report_assessment_missing_mark_entry`');
         $this->execute('DROP TABLE IF EXISTS `zz_6848_report_assessment_missing_mark_entry`');
-        $this->execute('RENAME TABLE `zz_6848_report_assessment_missing_mark_entry` TO `report_assessment_missing_mark_entry`');
     }
 }
