@@ -80,10 +80,10 @@ class TrainingsTable extends AppTable
         // Starts POCOR-6592
         if ($this->request->data[$this->alias()]['feature'] ==  'Report.EmployeeTrainingCard') {
             $this->ControllerAction->field('guardian_id');
-            $this->ControllerAction->field('format'); 
+            //$this->ControllerAction->field('format'); 
         }else if ($feature != 'Report.TrainingResults'){
             $this->ControllerAction->field('status'); 
-            $this->ControllerAction->field('format'); 
+           // $this->ControllerAction->field('format'); 
             $this->ControllerAction->field('institution_status');
             $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         }
@@ -104,8 +104,9 @@ class TrainingsTable extends AppTable
             $this->ControllerAction->field('institution_status');
             $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
             $this->ControllerAction->field('area_id', ['type' => 'hidden']); // POCOR-6596
-		    $this->ControllerAction->field('format');// POCOR-6596
+		    //$this->ControllerAction->field('format');// POCOR-6596
         }
+        $this->ControllerAction->field('format');
 		// End POCOR-6596 Changed position of format field
     }
 
@@ -365,12 +366,24 @@ class TrainingsTable extends AppTable
                 $username = TableRegistry::get('User.Users');
                 $session = TableRegistry::get('Training.TrainingSessions');
                 $getCourses = TableRegistry::get('Training.TrainingCourses');
-                $getTraininerName = $training_trainer->find('list', [
-                            'keyField' => $username->alias('id'),
-                            'valueField' => $username->alias('name')
+                $getTraininerName = $username->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'name'
                         ])
-                        ->leftJoin([$username->alias() => $username->table()], [
-                            $username->aliasField('id = ') . $training_trainer->aliasField('trainer_id')
+                        ->select([
+                            'id' => $username->aliasField('id'),
+                            'name' => $this->find()->func()->concat([
+                                'first_name' => 'literal',
+                                " ",
+                                'middle_name' => 'literal',
+                                " ",
+                                'third_name' => 'literal',
+                                " ",
+                                'last_name' => 'literal',
+                            ]),
+                        ])
+                        ->leftJoin([$training_trainer->alias() => $training_trainer->table()], [
+                            $training_trainer->aliasField('trainer_id = ') . $username->aliasField('id')
                         ])
                         ->leftJoin([$session->alias() => $session->table()], 
                             [$session->aliasField('id = ') . $training_trainer->aliasField('training_session_id')
@@ -379,8 +392,9 @@ class TrainingsTable extends AppTable
                             [$getCourses->aliasField('id = ') . $session->aliasField('training_course_id')
                         ])
                         ->where([$session->aliasField('training_course_id')=>$trainingCourseId])
-                        ->toArray();
-                // POCOR-6827 end
+                        ->group([$training_trainer->aliasField('trainer_id')])
+                        ->hydrate(false)
+                        ->toArray();// POCOR-6827 end
                 $trainer_options = ['-1' => __('All Trainers')] + $getTraininerName;
                 $attr['options'] = $trainer_options;
                 $attr['type']    = 'select';
