@@ -276,7 +276,9 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             }
             //START:POCOR-6681 // Exclude days after current day for current academic period
             else if(current_week_number_selected == 3 || current_week_number_selected == 0){
-                dayList.length = ++current_day_number;
+                //POCOR-6778: START
+                dayList.length = ++current_day_number + 1;
+                //POCOR-6778: END
             }else{
                 dayList.length =  dayList.length;
             }
