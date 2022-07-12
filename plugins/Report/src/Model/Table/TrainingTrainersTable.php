@@ -41,6 +41,40 @@ class TrainingTrainersTable extends AppTable
         $trainingCourseId = $requestData->training_course_id;
         $trainingSessionId = $requestData->training_session_id;
 
+        //POCOR-6829 Start
+        $academicPeriodId = $requestData->academic_period_id;
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $periodEntity = $AcademicPeriods->get($academicPeriodId);
+        $startDate = $periodEntity->start_date->format('Y-m-d');
+        $endDate = $periodEntity->end_date->format('Y-m-d'); 
+        $conditions = [];
+
+        if (!empty($academicPeriodId)) {
+                $conditions['OR'] = [
+                    'OR' => [
+                        [
+                            'Sessions.end_date' . ' IS NOT NULL',
+                            'Sessions.start_date' . ' <=' => $startDate,
+                            'Sessions.end_date' . ' >=' => $startDate
+                        ],
+                        [
+                            'Sessions.end_date' . ' IS NOT NULL',
+                            'Sessions.start_date' . ' <=' => $endDate,
+                            'Sessions.end_date' . ' >=' => $endDate
+                        ],
+                        [
+                            'Sessions.end_date' . ' IS NOT NULL',
+                            'Sessions.start_date' . ' >=' => $startDate,
+                            'Sessions.end_date' . ' <=' => $endDate
+                        ]
+                    ],
+                    [
+                        'Sessions.end_date' . ' IS NULL',
+                        'Sessions.start_date' . ' <=' => $endDate
+                    ]
+                ];
+        }//POCOR-6829 Ends
+
         $query
             ->select([
                 'session_code' => 'Sessions.code',
@@ -48,6 +82,7 @@ class TrainingTrainersTable extends AppTable
                 'session_start_date' => 'Sessions.start_date',
                 'session_end_date' => 'Sessions.end_date',
                 'openemis_no' => 'Trainers.openemis_no',
+                'area_id' => 'Sessions.area_id',
             ])
             ->matching('Sessions.Courses')
             ->join([
@@ -59,6 +94,7 @@ class TrainingTrainersTable extends AppTable
                     ]
                 ],
             ])
+            ->where([$conditions]) //POCOR-6829 
             //->where(['Courses.id' => $trainingCourseId])
             ->order([$this->aliasField('name')]);
         if (!empty($trainingCourseId) && $trainingCourseId != -1) { //POCOR-6595 one condition add
@@ -68,7 +104,18 @@ class TrainingTrainersTable extends AppTable
         if (!empty($trainingSessionId) && $trainingSessionId != -1) { //POCOR-6595 one condition add
             $query->where([$this->aliasField('training_session_id') => $trainingSessionId]);
         }
+        //POCOR-6829 Start
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
+            return $results->map(function ($row) { 
+                   //Staff Area Name**
+                   $AreaT = TableRegistry::get('areas');
+                   $AreaData = $AreaT->find()->where(['id' => $row->area_id])->first();
+                   $row['area_name'] = $AreaData->name;
 
+                return $row;
+            });
+        });
+        //POCOR-6829 Ends
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -197,7 +244,8 @@ class TrainingTrainersTable extends AppTable
         return $entity->custom_identity_other_data;
     }
 
-    public function onExcelGetAreaName(Event $event, Entity $entity)
+    //POCOR-6829 Commented this code for area
+    /*public function onExcelGetAreaName(Event $event, Entity $entity)
     {
         if (!empty($entity->trainer_id)) {
             $InstitutionStaff = TableRegistry::get('Institution.Staff');
@@ -227,7 +275,7 @@ class TrainingTrainersTable extends AppTable
                     return ' - ';
                 }            
         }
-    }
+    }*/
     // END POCOR-6595
 
 
