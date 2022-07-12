@@ -450,7 +450,7 @@ class AssessmentItemResultsTable extends AppTable
                     ->hydrate(false)
                     ->first();
         $response['result'] = $getRecord;
-        $response['message'] = 'Record Found successfuly.';
+        $response['message'] = 'Successful Operation';
         $dataArr = array("data" => $response);
         echo json_encode($dataArr);exit;
     }
