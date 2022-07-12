@@ -62,11 +62,32 @@ class SecurityRolesTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
-    {
-      
+    {      
         // webhook create role starts
          if($entity->isNew()) {
           
+          /*POCOR-6844 starts*/
+            if ($entity->security_group_id > 0) {
+                $roles = $this->find('all')->select('order')->where(['security_group_id' => $entity->security_group_id])->max('order')->toArray();
+                 $order = $roles['order'] + 1;
+                if ($entity->has('id') && $entity->submit == 'save') {
+                    $this->updateAll(
+                        ['order' => $order],
+                        ['id' => $entity->id]
+                    );
+                }
+            }
+            else{
+                $roles = $this->find('all')->select('order')->max('order')->toArray();
+                $order = $roles['order'] + 1;
+                if ($entity->has('id') && $entity->submit == 'save') {
+                    $this->updateAll(
+                        ['order' => $order],
+                        ['id' => $entity->id]
+                    );
+                }
+            }
+            /*POCOR-6844 End*/
             $body = array();
             $createRole = [
                 'role_id' =>$entity->id,
