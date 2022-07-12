@@ -13,6 +13,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use ArrayObject;
 use Cake\ORM\Table;
+use Cake\Datasource\ResultSetInterface;
 
 class InstitutionSubjectStaffTable extends AppTable
 {
@@ -488,6 +489,7 @@ class InstitutionSubjectStaffTable extends AppTable
     {
         $staffId = $options['staff_id'];
         $institutionId = $options['institution_id'];
+        $classes = $students = [];
         $getRecord = $this->find()
                     ->select([
                         'education_systems_name' => 'EducationSystems.name',
@@ -526,30 +528,44 @@ class InstitutionSubjectStaffTable extends AppTable
                         $this->aliasField('staff_id') => $staffId,
                         $this->aliasField('institution_id') => $institutionId
                     ])
-                    ->hydrate(false);
-        $studentData = $className = [];
-        if(isset($getRecord)) {
-            foreach ($getRecord->toArray() as $value) {
-                $classSubject = TableRegistry::get('Institution.InstitutionClassSubjects');
-                $classObj = $classSubject->find()
-                        ->select(['InstitutionClasses.name'])
-                        ->contain('InstitutionClasses')
-                        ->where([
-                            $classSubject->aliasField('institution_subject_id') => $value['institution_subjects_id']
-                        ])
-                        ->hydrate(false);
-                if(!empty($classObj)) {
-                    foreach ($classObj as $class) {
-                        $className[] = $class['InstitutionClasses']['name'];
-                    }
-                }
-            }
-        }
-        $classData = implode(',', $className);
-        //$getRecord['institution_classes_name'] = $classData;
-        //echo "<pre>";print_r($getRecord);die;
+                    ->hydrate(false)
+                    ->formatResults(function (ResultSetInterface $results) {
+                        return $results->map(function ($row) {
+                            $classSubject = TableRegistry::get('Institution.InstitutionClassSubjects');
+                            $subjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+                            /**fetching institution subject's classed data*/
+                            $classObj = $classSubject->find()
+                                    ->select(['InstitutionClasses.name'])
+                                    ->contain('InstitutionClasses')
+                                    ->where([
+                                        $classSubject->aliasField('institution_subject_id') => $row['institution_subjects_id']
+                                    ])
+                                    ->hydrate(false);
+                            if(!empty($classObj)) {
+                                foreach ($classObj as $class) {
+                                    $classes[] = $class['InstitutionClasses']['name'];
+                                }
+                            }
+                            /**fetching institution subject's students data*/
+                            $studentObj = $subjectStudents->find()
+                                    ->select(['Users.openemis_no'])
+                                    ->contain('Users')
+                                    ->where([
+                                        $subjectStudents->aliasField('institution_subject_id') => $row['institution_subjects_id']
+                                    ])
+                                    ->hydrate(false);
+                            if(!empty($studentObj)) {
+                                foreach ($studentObj as $student) {
+                                    $students[] = $student['Users']['openemis_no'];
+                                }
+                            }
+                            $row['institution_classes_name'] = $classes;
+                            $row['security_users_openemis_no_students'] = $students;
+                            return $row;
+                        });
+                    });
         $response['result'] = $getRecord;
-        $response['message'] = 'Record Found successfuly.';
+        $response['message'] = 'Successful Operation';
         $dataArr = array("data" => $response);
         echo json_encode($dataArr);exit;
     }
