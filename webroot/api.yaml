@@ -2085,7 +2085,7 @@ paths:
         "404":
           description: "404 Not Found"
   # author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
-  # POCOR-6807
+  # POCOR-6806
   /restful/v2/Assessment-AssessmentItemResults.json:
     get:
       tags:
