@@ -22,6 +22,7 @@ class InstitutionPositionsTable extends AppTable
     //POCOR-6614 start
     const TEACHING = 1;
     const NON_TEACHING = 0;
+    const ALL_STAFF = -1;
     //POCOR-6614 end
 
     public function initialize(array $config)
@@ -57,15 +58,17 @@ class InstitutionPositionsTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
         $teachingFilter = $requestData->teaching_filter;
+
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
         $where = [];
         if ($institution_id != 0) {
             $where[$this->aliasField('institution_id')] = $institution_id;
         }
-        
+        if ($teachingFilter != -1) {
             $where[$StaffPositionTitles->aliasField('type')] = $teachingFilter;
-        
+        }
+        $where[$this->aliasField('status_id')] = 29;//POCOR-6850
         if ($areaId != -1) {
             $where['Institutions.area_id'] = $areaId;
         }
