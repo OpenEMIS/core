@@ -157,12 +157,14 @@ class AssessmentItemResultsTable extends AppTable
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('student_id') => $studentId,
-                $this->aliasField('institution_classes_id ') => $className,  // POCOR-6823
+                // $this->aliasField('institution_classes_id ') => $className,  // POCOR-6823
                 $this->aliasField('institution_id') => $institutionId    //POCOR-6823
             ])
             ->order([
+                $this->aliasField('created') => 'DESC', //POCOR-6823
+                $this->aliasField('modified') => 'DESC', //POCOR-6823
                 $this->Assessments->aliasField('code'), $this->Assessments->aliasField('name')
-            ]);
+            ])->first();
     }
 
     /**
