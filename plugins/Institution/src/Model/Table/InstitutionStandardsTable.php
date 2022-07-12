@@ -312,7 +312,13 @@ class InstitutionStandardsTable extends AppTable
         $group_by[]            = $this->aliasField('openemis_no');
         $group_by[]            = 'InstitutionStudent.student_status_id';
 
-        $birth_certificate_code_id = $IdentityTypesTable->getIdByName('Birth Certificate');
+        // $birth_certificate_code_id = $IdentityTypesTable->getIdByName('Birth Certificate');
+        // START:POCOR-6819
+        $birth_certificate_code_id = $IdentityTypesTable->find('all')
+                                     ->select('id')   
+                                     ->where(['visible' => 1,'editable' => 1,'default' => 1])
+                                     ->first();
+        // End:POCOR-6819
 
         // START: JOINs
         $join = [
@@ -360,7 +366,8 @@ class InstitutionStandardsTable extends AppTable
             $selectable['nationality_name'] = 'MainNationalities.name';
             $query->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
                 $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->aliasField('id'),
-                $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id",
+                // $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id",
+                 $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id->id", //POCOR-6819
             ]);
         
         } else if ( $sheet_tab_name == 'Academic' ) {
