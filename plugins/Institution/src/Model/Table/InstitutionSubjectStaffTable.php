@@ -12,6 +12,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use ArrayObject;
+use Cake\ORM\Table;
 
 class InstitutionSubjectStaffTable extends AppTable
 {
@@ -517,20 +518,40 @@ class InstitutionSubjectStaffTable extends AppTable
                         'InstitutionSubjects.EducationGrades.EducationProgrammes.EducationCycles',
                         'InstitutionSubjects.EducationGrades.EducationProgrammes.EducationCycles.EducationLevels',
                         'InstitutionSubjects.EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems',
-                        'InstitutionSubjects.AcademicPeriods'
+                        'InstitutionSubjects.AcademicPeriods',
+                        'InstitutionSubjects.Students',
+                        'InstitutionSubjects.Classes'
                     ])
                     ->where([
                         $this->aliasField('staff_id') => $staffId,
                         $this->aliasField('institution_id') => $institutionId
                     ])
-                    ->hydrate(false)
-                    ->toArray();
-
+                    ->hydrate(false);
+        $studentData = $className = [];
+        if(isset($getRecord)) {
+            foreach ($getRecord->toArray() as $value) {
+                $classSubject = TableRegistry::get('Institution.InstitutionClassSubjects');
+                $classObj = $classSubject->find()
+                        ->select(['InstitutionClasses.name'])
+                        ->contain('InstitutionClasses')
+                        ->where([
+                            $classSubject->aliasField('institution_subject_id') => $value['institution_subjects_id']
+                        ])
+                        ->hydrate(false);
+                if(!empty($classObj)) {
+                    foreach ($classObj as $class) {
+                        $className[] = $class['InstitutionClasses']['name'];
+                    }
+                }
+            }
+        }
+        $classData = implode(',', $className);
+        //$getRecord['institution_classes_name'] = $classData;
+        //echo "<pre>";print_r($getRecord);die;
         $response['result'] = $getRecord;
         $response['message'] = 'Record Found successfuly.';
         $dataArr = array("data" => $response);
         echo json_encode($dataArr);exit;
-
     }
     /**POCOR-6807 ends*/ 
     
