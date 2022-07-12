@@ -185,10 +185,10 @@ class TrainingSessionParticipantsTable extends AppTable
                 $this->aliasField('trainee_id')
             ]);
 
-        if (!empty($trainingSessionId)) {
+        if (!empty($trainingSessionId) && ($trainingSessionId != -1)) {
             $query->where([$this->aliasField('training_session_id') => $trainingSessionId]);
         }
-        
+
         // POCOR-6594 get other identities data
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
