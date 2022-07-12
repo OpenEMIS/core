@@ -63,20 +63,26 @@ class ReportCardProcessesTable extends ControllerActionTable
             $now = new DateTime();
             $c_timestap = $now->getTimestamp();
             $modifiedDate = $entity->modified;
-            $m_timestap =$modifiedDate->getTimestamp();
-            $todayDateTime = $now->i18nFormat('yyyy-MM-dd HH:mm:ss');//POCOR-6841
-            $diff_mins = abs($c_timestap - $m_timestap) / 60;
-            if($diff_mins > 5 && $diff_mins < 30){
-                $entity->status = 1;
-                $ReportCardProcessesTable->save($entity);
-            }elseif($diff_mins > 30){
-                $entity->status = -1;
-                $entity->modified = $todayDateTime;//POCOR-6841
-                $ReportCardProcessesTable->save($entity);
-            }
+            //POCOR-6841 starts
+            if($entity->status == 2){
+                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $timeZone= $ConfigItems->value("time_zone");
+                date_default_timezone_set($timeZone);
+                $currentTimeZone = new DateTime();
+                $modifiedDate = ($modifiedDate === null) ? $currentTimeZone : $modifiedDate;
+                $m_timestap =$modifiedDate->getTimestamp();
+                $diff_mins = abs($c_timestap - $m_timestap) / 60;
+                if($diff_mins > 5 && $diff_mins < 30){
+                    $entity->status = 1;
+                    $ReportCardProcessesTable->save($entity);
+                }elseif($diff_mins > 30){
+                    $entity->status = -1;
+                    $entity->modified = $currentTimeZone;//POCOR-6841
+                    $ReportCardProcessesTable->save($entity);
+                }
+            }//POCOR-6841 ends
         }
          //END:POCOR-6785
-        
         $sortList = ['status', 'Users.openemis_no', 'InstitutionClasses.name', 'Institutions.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
