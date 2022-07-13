@@ -206,6 +206,22 @@ class InstitutionClassStudentsTable extends AppTable
             'label' => '',
         ];
 
+        // Start:POCOR-6854
+        $fields[] = [
+            'key' => 'Institutions.code',
+            'field' => 'code',
+            'type' => 'string',
+            'label' => '',
+        ];
+
+        $fields[] = [
+            'key' => 'Institutions.name',
+            'field' => 'institution_id',
+            'type' => 'string',
+            'label' => '',
+        ];
+        // End:POCOR-6854
+
         $fields[] = [
             'key' => 'InstitutionClassStudents.student_id',
             'field' => 'student_id',
