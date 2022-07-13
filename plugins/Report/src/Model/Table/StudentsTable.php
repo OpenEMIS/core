@@ -391,17 +391,28 @@ class StudentsTable extends AppTable
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
 
-        //Start:POCOR-6818
-        $AreaT = TableRegistry::get('areas');
+        //Start:POCOR-6818 Modified this for POCOR-6859
+        $AreaT = TableRegistry::get('areas');                    
+        //Level-1
         $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
         $childArea =[];
+        $childAreaMain = [];
         foreach($AreaData as $kkk =>$AreaData11 ){
             $childArea[$kkk] = $AreaData11->id;
         }
-        array_push($childArea,$areaId);
-        $finalIds = implode(',',$childArea);
+        //level-2
+        foreach($childArea as $kyy =>$AreaDatal2 ){
+            $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
+            foreach($AreaDatas as $ky =>$AreaDatal22 ){
+             $childAreaMain[$ky] = $AreaDatal22->id;
+         }
+        }
+        $mergeArr = array_merge($childAreaMain,$childArea);
+        array_push($mergeArr,$areaId);
+        $finalIds = implode(',',$mergeArr);
         $finalIds = explode(',',$finalIds);
-        //End:POCOR-6818
+        //End:POCOR-6818 Modified this for POCOR-6859
+
 
         $conditions = [];
         if ($areaId != -1) {
