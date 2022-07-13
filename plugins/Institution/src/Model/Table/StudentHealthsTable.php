@@ -136,8 +136,11 @@ class StudentHealthsTable extends AppTable
         $selectable            = [];
         $group_by              = [];
         $group_by[]            = $this->aliasField('openemis_no');
+        // START:POCOR-6819
         $ClassStudents         = TableRegistry::get('Institution.InstitutionClassStudents');
         $Classes               = TableRegistry::get('Institution.InstitutionClasses');
+        // End:POCOR-6819
+
         //$group_by[]            = 'InstitutionStudent.student_status_id';
 
         // START: JOINs & dynamically fields
