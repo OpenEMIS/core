@@ -92,6 +92,7 @@ class AssessmentItemResultsTable extends AppTable
         $academicPeriodId = $options['academic_period_id'];
         $controller = $options['_controller'];
         $session = $controller->request->session();
+        $institutionId = $session->read('Institution.Institutions.id'); //POCOR-6823
 
         
         $studentId = -1;
@@ -105,6 +106,27 @@ class AssessmentItemResultsTable extends AppTable
              $studentId = $options['user']['id'];
        }
 
+       //Start POCOR-6823
+       $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $conditionsClassStudents = [
+            $InstitutionClassStudents->aliasField('academic_period_id = ') => $academicPeriodId,
+            $InstitutionClassStudents->aliasField('student_id = ') => $studentId,
+            $InstitutionClassStudents->aliasField('institution_id = ') => $institutionId,
+            $InstitutionClassStudents->aliasField('student_status_id = ') => 1,
+        ];
+
+        $ClassStudentsStatusUpdate = $InstitutionClassStudents
+        ->find()
+        ->where($conditionsClassStudents)
+        ->all();
+
+        $className = '';
+        if (!$ClassStudentsStatusUpdate->isEmpty()) {
+            $ClassStudents = $ClassStudentsStatusUpdate->first();
+            $className = $ClassStudents->institution_class_id;
+        }
+        //End POCOR-6823
+       
         return $query
             ->select([
                 $this->aliasField('id'),
@@ -134,11 +156,15 @@ class AssessmentItemResultsTable extends AppTable
             ->innerJoinWith('AssessmentPeriods')
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
-                $this->aliasField('student_id') => $studentId
+                $this->aliasField('student_id') => $studentId,
+                // $this->aliasField('institution_classes_id ') => $className,  // POCOR-6823
+                $this->aliasField('institution_id') => $institutionId    //POCOR-6823
             ])
             ->order([
+                $this->aliasField('created') => 'DESC', //POCOR-6823
+                $this->aliasField('modified') => 'DESC', //POCOR-6823
                 $this->Assessments->aliasField('code'), $this->Assessments->aliasField('name')
-            ]);
+            ])->first();
     }
 
     /**
