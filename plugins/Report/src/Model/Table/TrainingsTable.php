@@ -184,7 +184,7 @@ class TrainingsTable extends AppTable
                         $attr['type'] = 'chosenSelect';
                         $attr['attr']['multiple'] = false;
                         $attr['select'] = true;
-                        $attr['options'] = ['' => '-- ' . ('Select') . ' --', '-1' => ('All Areas Level')] + $options;
+                        $attr['options'] = ['' => '-- ' . ('Select') . ' --', '-1' => ('All training sessions')] + $options;
                         $attr['onChangeReload'] = true;
                     } else {
                         $attr['type'] = 'hidden';
