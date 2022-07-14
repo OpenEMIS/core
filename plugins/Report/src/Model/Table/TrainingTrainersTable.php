@@ -105,16 +105,16 @@ class TrainingTrainersTable extends AppTable
             $query->where([$this->aliasField('training_session_id') => $trainingSessionId]);
         }
         //POCOR-6829 Start
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
-            return $results->map(function ($row) { 
-                   //Staff Area Name**
-                   $AreaT = TableRegistry::get('areas');
-                   $AreaData = $AreaT->find()->where(['id' => $row->area_id])->first();
-                   $row['area_name'] = $AreaData->name;
+        // $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
+        //     return $results->map(function ($row) { 
+        //            //Staff Area Name**
+        //            $AreaT = TableRegistry::get('areas');
+        //            $AreaData = $AreaT->find()->where(['id' => $row->area_id])->first();
+        //            $row['area_name'] = $AreaData->name;
 
-                return $row;
-            });
-        });
+        //         return $row;
+        //     });
+        // });
         //POCOR-6829 Ends
     }
 
@@ -244,8 +244,8 @@ class TrainingTrainersTable extends AppTable
         return $entity->custom_identity_other_data;
     }
 
-    //POCOR-6829 Commented this code for area
-    /*public function onExcelGetAreaName(Event $event, Entity $entity)
+    //POCOR-6829 Modify this code for area
+    public function onExcelGetAreaName(Event $event, Entity $entity)
     {
         if (!empty($entity->trainer_id)) {
             $InstitutionStaff = TableRegistry::get('Institution.Staff');
@@ -266,7 +266,7 @@ class TrainingTrainersTable extends AppTable
                     )
                     ->where([
                         $InstitutionStaff->aliasField('staff_id') => $entity->trainer_id,
-                        $InstitutionStaff->aliasField('staff_status_id') => 1
+                        //$InstitutionStaff->aliasField('staff_status_id') => 1
                     ])->first();
 
                 if (!empty($data)) {
@@ -275,7 +275,7 @@ class TrainingTrainersTable extends AppTable
                     return ' - ';
                 }            
         }
-    }*/
+    }
     // END POCOR-6595
 
 
