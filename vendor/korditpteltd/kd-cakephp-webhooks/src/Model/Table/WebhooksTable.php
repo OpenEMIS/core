@@ -7,6 +7,7 @@ use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Exception;
+use Cake\Log\Log;//POCOR-6808
 
 class WebhooksTable extends Table
 {
@@ -85,17 +86,14 @@ class WebhooksTable extends Table
             $webhooks[$key]->url = str_replace('{username}', $username, $value->url);
         }
         foreach ($webhooks as $webhook) {
-            $cmd = ROOT . DS . 'bin' . DS . 'cake WebhookAccess' . $webhook->url . ' ' . $webhook->method . ' ' . $body ;
+            $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook' . $webhook->url . ' ' . $webhook->method . ' ' . $body ;
             $logs = ROOT . DS . 'logs' . DS . 'webhook-access.log & echo $!';
-            //$shellCmd = $cmd . ' >> ' . $logs;
-            $shellCmd = '';
+            $shellCmd = $cmd . ' >> ' . $logs;
             try {
-                // if($shellCmd == '') {
-                //     throw new Exception("Value must be 1 or below");
-                // }
                 $pid = exec($shellCmd);
             } catch (Exception $ex) {
-                Log::write('error', __METHOD__ . ' exception when triggering : '. $ex);
+                ////POCOR-6808 added custom log file intead of error log
+                Log::write('exception', __METHOD__ . ' exception when triggering : '. $ex);
             }
         }
     }
