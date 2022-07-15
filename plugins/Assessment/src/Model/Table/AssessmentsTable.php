@@ -183,6 +183,7 @@ class AssessmentsTable extends ControllerActionTable {
             usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} );
 
             $entity->assessment_items = $assessmentItems;
+            $entity->assessment_ids = $entity->id;
            
            $subejctids = [];
            foreach($assessmentItems as $value) {
@@ -203,15 +204,16 @@ class AssessmentsTable extends ControllerActionTable {
             }
             $results =  array_combine($subejctid, $subejctitems);
             $entity->assessment_subject = $results;
+            $entity->assessment_subject = $results;
         }
 
         $this->setupFields($entity);
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         if ($this->action == 'edit'){
-    //echo "<pre>"; print_r($requestData[$this->alias()]['assessment_items']); die;
+        //echo "<pre>"; print_r($requestData); die;
         //patch data to handle fail save because of validation error.
         $currentTimeZone = date("Y-m-d H:i:s");
         if (array_key_exists($this->alias(), $requestData)) {
@@ -224,21 +226,23 @@ class AssessmentsTable extends ControllerActionTable {
                     $classification = $item['classification'];
                     $assessmentId = $entity['id'];
                     $checkid = $item['id_check'];
-                    //print_r($checkid);die;
+                    if($checkid!=null){
+                        $subjectcheck = $item[1]['education_subject_check'];
+                    }
                     $assessmentItems = TableRegistry::get('Assessment.AssessmentItems');
                     if($subjectcheck == 1){
                         $checkdata = $assessmentItems->find()->select(['id'])->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->first();
                         if(isset($checkdata) && (!empty($checkdata)) && $checkid==null){
-                           
-                        $ids = $checkdata->id;
-                        $assessmentItems->updateAll(
-                        ['weight' => $weight,'classification'=>$classification],    //field
-                        [
-                         'id' => $ids, 
-                        ] //condition
-                        );
+                            $ids = $checkdata->id;
+                            $assessmentItems->updateAll(
+                            ['weight' => $weight,'classification'=>$classification],    //field
+                            [
+                             'id' => $ids, 
+                            ] //condition
+                            );
 
                         }else{
+                            //die('jku');
                             $data = [
                                 'id' => Text::uuid(),
                                 'weight' => $weight,
