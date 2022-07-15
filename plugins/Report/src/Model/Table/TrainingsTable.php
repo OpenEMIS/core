@@ -484,17 +484,22 @@ class TrainingsTable extends AppTable
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, $includedFeature)) {
-                $courseId = $this->request->data[$this->alias()]['training_course_id'];
-                $training_session_object = TableRegistry::get('Training.TrainingSessions');
-                $session = $training_session_object->getCourses($courseId);
-                $session_options = ['-1' => __('All Session')] + $session;
-                $attr['options'] = $session_options;
-                $attr['type']    = 'select';
-                $attr['select']  = false;
-                $attr['onChangeReload'] = true;
-                return $attr;
+                /************** START::POCOR-6830 */
+                if ($action == 'add') {
+                    $courseId = $this->request->data[$this->alias()]['training_course_id'];
+                    $training_session_object = TableRegistry::get('Training.TrainingSessions');
+                    $session = $training_session_object->getCourses($courseId);
+                    $attr['type'] = 'chosenSelect';
+                    $attr['attr']['multiple'] = false;
+                    $attr['select'] = true;
+                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Session')] + $session;
+                    $attr['onChangeReload'] = true;
+                } else {
+                    $attr['type'] = 'hidden';
+                }
             }
         }
+        return $attr; /************** END::POCOR-6830 */
     }
 
     /**
