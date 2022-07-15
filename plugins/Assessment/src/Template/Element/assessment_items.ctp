@@ -146,7 +146,7 @@
                                         <td><?php echo $itemName; ?></td>
                                         <?php
                                             echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $j]);
-                                            echo $this->Form->hidden("$fieldPrefix.assessment_items_id", ['value' => $data['assessment_items'][0]['assessment_id']]);
+                                            echo $this->Form->hidden("$fieldPrefix.assessment_items_id", ['value' => $data['assessment_ids']]);
                                             if (isset($j)) {
                                                 echo $this->Form->hidden("$fieldPrefix.id_check", ['value' => $j]);
                                             }
