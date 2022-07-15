@@ -1918,7 +1918,12 @@ class NavigationComponent extends Component
                 'title' => 'Institutions',
                 'parent' => 'ProfileTemplates',
                 'selected' => ['ProfileTemplates.InstitutionProfiles', 'ProfileTemplates.view', 'ProfileTemplates.add', 'ProfileTemplates.edit', 'ProfileTemplates.delete']
-            ],
+            ],//POCOR-6822 Starts Add menu classes
+            'ProfileTemplates.Classes' => [
+                'title' => 'Classes',
+                'parent' => 'ProfileTemplates',
+                'selected' => ['ProfileTemplates.ClassProfiles', 'Class.view', 'Class.add', 'Class.edit', 'Class.delete']
+            ],//POCOR-6822 Ends
             'ProfileTemplates.Staff' => [
                 'title' => 'Staff',
                 'parent' => 'ProfileTemplates',
