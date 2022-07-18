@@ -1400,6 +1400,10 @@ class ReportCardsTable extends AppTable
                     ]
                 )
                 ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
+                ->order([
+                    $AssessmentItemResults->aliasField('created') => 'DESC'
+                    
+                ])
                 ->where($condition)
                 ->formatResults(function (ResultSetInterface $results) {
                     return $results->map(function ($row) {

@@ -179,18 +179,20 @@ class TrainingResultsTable extends AppTable
                     foreach($customFieldData as $data) {
                         $custom_field_id = $data->id;
                         $custom_field = $data->name;
-                        if(!empty($row['result']) && ($data->name == 'Exam')){
+                        /*******START::POCOR-6830 */ //add or condition for jo-moe server
+                        if(!empty($row['result']) && ($data->name == 'Exam' || $data->name == 'إمتحان') ){
                             $row[$this->_dynamicFieldName.'_'.$custom_field_id] = $row['result'];
                         }
-                        if(!empty($row['attendance_days']) && ($data->name == 'Attendance')){
+                        if(!empty($row['attendance_days']) && ($data->name == 'Attendance' || $data->name == 'حضور وغياب')){
                             $row[$this->_dynamicFieldName.'_'.$custom_field_id] = $row['attendance_days'];
                         }
-                        if(!empty($row['practical']) && ($data->name == 'Practical')){
+                        if(!empty($row['practical']) && ($data->name == 'Practical' || $data->name == 'تطبيق عملي')){
                             $row[$this->_dynamicFieldName.'_'.$custom_field_id] = $row['practical'];
                         }
                         if(!empty($row['certificate_number']) && ($data->name == 'Certificate')){
                             $row[$this->_dynamicFieldName.'_'.$custom_field_id] = $row['certificate_number'];
                         }
+                        /*******END::POCOR-6830 */
                     }
                 }
                 return $row;
