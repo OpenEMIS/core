@@ -92,6 +92,7 @@ class AssessmentItemResultsTable extends AppTable
         $academicPeriodId = $options['academic_period_id'];
         $controller = $options['_controller'];
         $session = $controller->request->session();
+        $institutionId = $session->read('Institution.Institutions.id'); //POCOR-6823
 
         
         $studentId = -1;
@@ -105,6 +106,27 @@ class AssessmentItemResultsTable extends AppTable
              $studentId = $options['user']['id'];
        }
 
+       //Start POCOR-6823
+       $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $conditionsClassStudents = [
+            $InstitutionClassStudents->aliasField('academic_period_id = ') => $academicPeriodId,
+            $InstitutionClassStudents->aliasField('student_id = ') => $studentId,
+            $InstitutionClassStudents->aliasField('institution_id = ') => $institutionId,
+            $InstitutionClassStudents->aliasField('student_status_id = ') => 1,
+        ];
+
+        $ClassStudentsStatusUpdate = $InstitutionClassStudents
+        ->find()
+        ->where($conditionsClassStudents)
+        ->all();
+
+        $className = '';
+        if (!$ClassStudentsStatusUpdate->isEmpty()) {
+            $ClassStudents = $ClassStudentsStatusUpdate->first();
+            $className = $ClassStudents->institution_class_id;
+        }
+        //End POCOR-6823
+       
         return $query
             ->select([
                 $this->aliasField('id'),
@@ -134,11 +156,15 @@ class AssessmentItemResultsTable extends AppTable
             ->innerJoinWith('AssessmentPeriods')
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
-                $this->aliasField('student_id') => $studentId
+                $this->aliasField('student_id') => $studentId,
+                // $this->aliasField('institution_classes_id ') => $className,  // POCOR-6823
+                $this->aliasField('institution_id') => $institutionId    //POCOR-6823
             ])
             ->order([
+                $this->aliasField('created') => 'DESC', //POCOR-6823
+                $this->aliasField('modified') => 'DESC', //POCOR-6823
                 $this->Assessments->aliasField('code'), $this->Assessments->aliasField('name')
-            ]);
+            ])->first();
     }
 
     /**
@@ -403,4 +429,56 @@ class AssessmentItemResultsTable extends AppTable
 
         return $totalMarks;
     }
+
+    /** 
+    * API to get student's subject assessment results data
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * @return json
+    * @ticket POCOR-6806 starts 
+    */
+    public function findAssessmentGradesOptions(Query $query, array $options)
+    {
+        $academicPeriodId = $options['academic_period_id'];
+        $assessmentGradingOptionId = $options['assessment_grading_option_id'];
+        $educationGradeId = $options['education_grade_id'];
+        $educationSubjectId = $options['education_subject_id'];
+        $studentId = $options['student_id'];
+        $assessmentId = $options['assessment_id'];
+        $assessmentPeriodId = $options['assessment_period_id'];
+        $institutionId = $options['institution_id'];
+        $optionalCondition = [];
+        if ($assessmentId || $assessmentPeriodId || $institutionId) {
+            $optionalCondition[$this->aliasField('assessment_id')] = $assessmentId;
+            $optionalCondition[$this->aliasField('assessment_period_id')] = $assessmentPeriodId;
+            $optionalCondition[$this->aliasField('institution_id')] = $institutionId;
+        }
+        
+        $getRecord = $this->find()
+                    ->select([
+                        'academic_period_id' => $this->aliasField('academic_period_id'),
+                        'assessment_grading_option_id' => $this->aliasField('assessment_grading_option_id'),
+                        'assessment_id' => $this->aliasField('assessment_id '),
+                        'assessment_period_id' => $this->aliasField('assessment_period_id'),
+                        'education_grade_id' => $this->aliasField('education_grade_id'),
+                        'education_subject_id' => $this->aliasField('education_subject_id'),
+                        'institution_id' => $this->aliasField('institution_id'),
+                        'marks' => $this->aliasField('marks'),
+                        'student_id' => $this->aliasField('student_id')
+                    ])
+                    ->where([
+                        $this->aliasField('academic_period_id') => $academicPeriodId,
+                        $this->aliasField('assessment_grading_option_id') => $assessmentGradingOptionId,
+                        $this->aliasField('education_grade_id') => $educationGradeId,
+                        $this->aliasField('education_subject_id') => $educationSubjectId,
+                        $this->aliasField('student_id') => $studentId,
+                    ])
+                    ->orWhere([$optionalCondition])
+                    ->hydrate(false)
+                    ->first();
+        $response['result'] = $getRecord;
+        $response['message'] = 'Successful Operation';
+        $dataArr = array("data" => $response);
+        echo json_encode($dataArr);exit;
+    }
+    /** POCOR-6806 ends */ 
 }

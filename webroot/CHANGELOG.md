@@ -1,3 +1,16 @@
+### [3.75.16] - 2022-07-15
+- Implemented: E. Develop OpenEMIS APIS for JoLearn - Develop assessment grades API (MoE EMIS Operational Plan Activity 1.1.4b3.1)
+- Bug Fixed: Institutions>Meals>Students: Date should show current and past dates
+- Bug Fixed: Institution > Statistics > Standard: Changes to report
+- Bug Fixed: Institution > Students > Academic > Assessments : Marks are displayed from previous institution for transferred students
+- Bug Fixed: Reports>Training: Changes to Results
+- Bug Fixed: Administration>Security>Roles: Unable to add new roles
+- Bug Fixed: Institutions:Add sort icons to the Type and Area columns
+- Bug Fixed: Reports>Positions: Add All options under Teaching Filter and only include Active Staff
+- Bug Fixed: Institutions>Performance>Report Cards: Grades are showing wrongly when using Generate All
+- Bug Fixed: Administrative > System Setup > Field Options: Vaccination Type: Increase the character length from 50 to 100
+- Bug Fixed: Review and run queries for migration
+
 ### [3.75.15] - 2022-07-07
 - Implemented: Update OpenEMIS Core Russian Translation files
 - Implemented: Add capacity column to Reports > Institution: Classes
