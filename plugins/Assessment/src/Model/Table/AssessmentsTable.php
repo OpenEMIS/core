@@ -174,6 +174,7 @@ class AssessmentsTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        
         if ($this->action == 'edit')
         {   $subejctitems = [];
            $subejctid = [];
@@ -210,87 +211,58 @@ class AssessmentsTable extends ControllerActionTable {
         $this->setupFields($entity);
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    /**
+    * POCOR-6780
+    * add edit education subject based on assessment item
+    */
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         if ($this->action == 'edit'){
-        //echo "<pre>"; print_r($requestData); die;
-        //patch data to handle fail save because of validation error.
-        $currentTimeZone = date("Y-m-d H:i:s");
-        if (array_key_exists($this->alias(), $requestData)) {
-            if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
-                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-                foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
-                    $subjectcheck = $item[0]['education_subject_check'];
-                    $subjectId = $item['education_subject_id'];
-                    $weight = $item['weight'];
-                    $classification = $item['classification'];
-                    $assessmentId = $entity['id'];
-                    $checkid = $item['id_check'];
-                    if($checkid!=null){
-                        $subjectcheck = $item[1]['education_subject_check'];
-                    }
+            $currentTimeZone = date("Y-m-d H:i:s");
+            $assessmentId = $entity['id'];
+            if (array_key_exists($this->alias(), $requestData)) {
+                if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
+                    $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
                     $assessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-                    if($subjectcheck == 1){
-                        $checkdata = $assessmentItems->find()->select(['id'])->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->first();
-                        if(isset($checkdata) && (!empty($checkdata)) && $checkid==null){
-                            $ids = $checkdata->id;
-                            $assessmentItems->updateAll(
-                            ['weight' => $weight,'classification'=>$classification],    //field
-                            [
-                             'id' => $ids, 
-                            ] //condition
-                            );
-
-                        }else{
-                            //die('jku');
-                            $data = [
-                                'id' => Text::uuid(),
-                                'weight' => $weight,
-                                'classification' => $classification,
-                                'assessment_id' => $assessmentId,
-                                'education_subject_id' => $subjectId,
-                                'created_user_id' => 1,
-                                'created' => $currentTimeZone,
-                            ];
-                            $entity = $assessmentItems->newEntity($data);
-                            $this->save($entity);
+                    $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('assessment_id')=>$assessmentId])->toArray();
+                    if(isset($checkdata) && (!empty($checkdata))){
+                        foreach($checkdata as $val){
+                            $dlt = $assessmentItems->delete($val);
                         }
-                    }else{
-                            $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->first();
-
-                            if(isset($checkdata) && (!empty($checkdata))){
-
-                                $Item = $assessmentItems->find()->where([$assessmentItems->aliasField('education_subject_id')=>$subjectId,$assessmentItems->aliasField('assessment_id')=>$assessmentId])->toArray();
-                                foreach($Item as $val){
-                                    $dlt = $assessmentItems->delete($val);
-                                }
-                               
-                            }
+                       
                     }
-                }
-                    
-                }
+                    foreach ($requestData[$this->alias()]['assessment_items'] as $item) {
+                        $subjectcheck = $item['education_subject_check'];
+                        $subjectId = $item['education_subject_id'];
+                        $weight = $item['weight'];
+                        $classification = $item['classification'];
+                        $checkid = $item['id_check'];
+                        $ids = Text::uuid();
+                        if($subjectcheck == 1){
+                                $data = [
+                                    'id' => $ids ,
+                                    'weight' => $weight,
+                                    'classification' => $classification,
+                                    'assessment_id' => $assessmentId,
+                                    'education_subject_id' => $subjectId,
+                                    'created_user_id' => 1,
+                                    'created' => $currentTimeZone,
+                                ];
+                                $entity = $assessmentItems->newEntity($data);
+
+                               $save =  $assessmentItems->save($entity);
+                               
+                            
+                        }
+                    }
+                       
+                    }
             } else { //logic to capture error if no subject inside the grade.
                 $errorMessage = $this->aliasField('noSubjects');
                 $requestData['errorMessage'] = $errorMessage;
             }
-        }else{
-            if (array_key_exists($this->alias(), $requestData)) {
-                if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
-                    $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-                    foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
-                        $subjectId = $item['education_subject_id'];
-                        $requestData[$this->alias()]['assessment_items'][$key]['education_subject'] = $EducationSubjects->get($subjectId);
-                    }
-                } else { //logic to capture error if no subject inside the grade.
-                    $errorMessage = $this->aliasField('noSubjects');
-                    $requestData['errorMessage'] = $errorMessage;
-                }
-            }  
         }
     }
-
-    
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
