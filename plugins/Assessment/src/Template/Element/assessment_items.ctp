@@ -1,3 +1,4 @@
+
 <?php
     $alias = $ControllerAction['table']->alias();
     $this->Form->unlockField('Assessments.assessment_items');
@@ -78,22 +79,19 @@
             </div>
         </div>
     </div>
-<?php elseif ($ControllerAction['action'] == 'edit') : ?>
+<?php elseif ($ControllerAction['action'] == 'edit') : //POCOR-6780 ?> 
     <div class="input requireds">
         <label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
         <div class="table-wrapper">
             <div class="table-in-view">
                 <table class="table">
                     <thead>
-                        <th></th>
+                        <th><?php echo $this->Form->checkbox("all_check", ['id'=>'selectAll','class' => 'no-selection-label', 'kd-checkbox-radio' => '']);?></th>
                         <th><?= $this->Label->get('Assessments.educationSubject'); ?></th>
                         <th><?= $this->Label->get('Assessments.subjectWeight'); ?></th>
                         <th><?= $this->Label->get('Assessments.classification'); ?></th>
                     </thead>
                     <?php if (isset($data['assessment_items'])) : ?>
-                        
-                         <?php //echo "<pre>"; print_r($data['assessment_subject']);
-                         //echo "<pre>"; print_r($data['assessment_items']); die();?>
                         <tbody>
                             <?php $counter = 0; ?>
                             <?php foreach ($data['assessment_subject'] as $j => $itemName) : 
@@ -177,7 +175,7 @@
                                 </tr>
                             <?php } ?>
 
-                        <?php //endforeach 
+                        <?php  
                             $counter++;
                         ?>
 
@@ -189,3 +187,11 @@
         </div>
     </div>
 <?php endif ?>
+<!-- <script>
+    $(document).ready(function(){
+        $("#selectAll").click(function(){
+                $("input[type=checkbox]").prop('checked', $(this).prop('checked'));
+
+        });
+    });
+</script> -->
