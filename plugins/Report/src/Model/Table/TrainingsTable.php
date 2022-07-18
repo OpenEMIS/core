@@ -77,6 +77,14 @@ class TrainingsTable extends AppTable
             $this->ControllerAction->field('area_education_id');
         }
         // Ends POCOR-6593
+        //Start:POCOR-6829 
+        if($feature == 'Report.TrainingTrainers'){
+            $this->ControllerAction->field('academic_period_id');
+            $this->ControllerAction->field('training_course_id');
+            $this->ControllerAction->field('training_session_id');
+		    $this->ControllerAction->field('format');
+        }
+        //End:POCOR-6829
         // Starts POCOR-6592
         if ($this->request->data[$this->alias()]['feature'] ==  'Report.EmployeeTrainingCard') {
             $this->ControllerAction->field('guardian_id');
