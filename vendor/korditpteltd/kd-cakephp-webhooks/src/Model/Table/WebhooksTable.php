@@ -68,7 +68,6 @@ class WebhooksTable extends Table
 
     public function triggerShell($eventKey, $params = [], $body = [])
     { 
-		
         $webhooks = $this->find()
             ->innerJoinWith('WebhookEvents')
             ->where([
@@ -86,13 +85,13 @@ class WebhooksTable extends Table
             $webhooks[$key]->url = str_replace('{username}', $username, $value->url);
         }
         foreach ($webhooks as $webhook) {
-            $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook' . $webhook->url . ' ' . $webhook->method . ' ' . $body ;
+            $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook ' . $webhook->url . ' ' . $webhook->method . ' ' . $body ;
             $logs = ROOT . DS . 'logs' . DS . 'webhook-access.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
             try {
                 $pid = exec($shellCmd);
             } catch (Exception $ex) {
-                ////POCOR-6808 added custom log file intead of error log
+                //POCOR-6808 added custom log file intead of error log
                 Log::write('exception', __METHOD__ . ' exception when triggering : '. $ex);
             }
         }
