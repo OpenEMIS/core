@@ -490,7 +490,8 @@ class InstitutionSubjectStaffTable extends AppTable
         $staffId = $options['staff_id'];
         $institutionId = $options['institution_id'];
         $classes = $students = [];
-        $getRecord = $this->find()
+        if (!empty($staffId) && !empty($institutionId)) {
+            $getRecord = $this->find()
                     ->select([
                         'education_systems_name' => 'EducationSystems.name',
                         'education_levels_name' => 'EducationLevels.name',
@@ -564,10 +565,39 @@ class InstitutionSubjectStaffTable extends AppTable
                             return $row;
                         });
                     });
-        $response['result'] = $getRecord;
-        $response['message'] = 'Successful Operation';
-        $dataArr = array("data" => $response);
-        echo json_encode($dataArr);exit;
+            $response['result'] = $getRecord;
+            $response['message'] = 'Successful Operation';
+            $dataArr = array("data" => $response);
+            echo json_encode($dataArr);exit;
+        } else {
+            $response['result'] = [];
+            $response['message'] = "Mandatory field can't empty";
+            $dataArr = array("data" => $response);
+            echo json_encode($dataArr);exit;
+        }
+    }
+
+    /**
+    * Custom validation
+    * This function will validate whether the mandatory fields has exist or not
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * @return json
+    * @ticket - POCOR-6807 
+    */
+    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    {
+        $url = $_SERVER['REQUEST_URI'];
+        $url_components = parse_url($url);
+        parse_str($url_components['query'], $params);
+        $param = preg_match_all('/\\[(.*?)\\]/', $params['_finder'], $matches);
+        $paramsString = $matches[1];
+        $paramsArray = explode(';', $paramsString[0]);
+        if (empty($paramsArray[0]) || empty($paramsArray[1])) {
+            $response['result'] = [];
+            $response['message'] = "Mandatory field can't empty";
+            $dataArr = array("data" => $response);
+            echo json_encode($dataArr);exit;
+        }    
     }
     /**POCOR-6807 ends*/ 
     
