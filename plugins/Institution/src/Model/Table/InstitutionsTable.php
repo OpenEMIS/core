@@ -1189,7 +1189,8 @@ class InstitutionsTable extends ControllerActionTable
         $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->alias(), 'image'];
         $imageDefault = 'fa kd-institutions';
         $this->field('logo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
-
+        $this->field('area_id', [ 'sort' => ['field' => 'Areas.name']]); //POCOR-6849
+        $this->field('institution_type_id', [ 'sort' => ['field' => 'Types.name']]); //POCOR-6849
         $this->setFieldOrder([
             'logo_content', 'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
         ]);
@@ -1279,6 +1280,14 @@ class InstitutionsTable extends ControllerActionTable
         $extra['auto_contain'] = false;
         $query->contain($extra['query']['contain']);
         $query->select($extra['query']['select']);
+
+        // Start:POCOR-6849
+        $sortList = ['Areas.name','name','code','Types.name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+        // End:POCOR-6849
 
         // POCOR-3983 if no sort, active status will be followed by inactive status
         if (!isset($this->request->query['sort'])) {
