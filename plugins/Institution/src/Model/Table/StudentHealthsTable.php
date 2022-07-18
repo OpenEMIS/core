@@ -136,6 +136,11 @@ class StudentHealthsTable extends AppTable
         $selectable            = [];
         $group_by              = [];
         $group_by[]            = $this->aliasField('openemis_no');
+        // START:POCOR-6819
+        $ClassStudents         = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Classes               = TableRegistry::get('Institution.InstitutionClasses');
+        // End:POCOR-6819
+
         //$group_by[]            = 'InstitutionStudent.student_status_id';
 
         // START: JOINs & dynamically fields
@@ -154,7 +159,13 @@ class StudentHealthsTable extends AppTable
                 'type' => 'inner',
                 'table' => 'academic_periods',
                 'conditions' => ['AcademicPeriod.id = InstitutionStudent.academic_period_id']
-            ],
+            ],// START:POCOR-6819
+            'EducationGrades' => [
+                'type' => 'inner',
+                'table' => 'education_grades',
+                'conditions' => ['EducationGrades.id = InstitutionStudent.education_grade_id']
+            ],// End:POCOR-6819
+            
         ];
 
         if ( $sheet_tab_name == 'Overview' ) {
@@ -332,6 +343,20 @@ class StudentHealthsTable extends AppTable
         }
 
         $query->join($join);
+
+        // START:POCOR-6819
+        $query->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+            $ClassStudents->aliasField('student_id = ') . 'InstitutionStudent.student_id',
+            $ClassStudents->aliasField('institution_id = ') . 'InstitutionStudent.institution_id',
+            $ClassStudents->aliasField('education_grade_id = ') . 'InstitutionStudent.education_grade_id',
+            $ClassStudents->aliasField('student_status_id = ') . 'InstitutionStudent.student_status_id',
+            $ClassStudents->aliasField('academic_period_id = ') . 'InstitutionStudent.academic_period_id'
+        ]);
+
+        $query->leftJoin([$Classes->alias() => $Classes->table()], [
+            $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
+        ]);
+        // End:POCOR-6819
         // END: JOINs & dynamically fields
 
         // START : General Selectable fields
@@ -339,6 +364,8 @@ class StudentHealthsTable extends AppTable
         $selectable['institution_name']    = 'Institution.name';
         $selectable['openemis_no']         = $this->aliasField('openemis_no');
         $selectable['student_id']          = $this->aliasField('id');
+        $selectable['education_grade']     = 'EducationGrades.name';   // POCOR-6819
+        $selectable['class_name']          = 'InstitutionClasses.name';  // POCOR-6819
         $selectable['first_name']          = $this->aliasField('first_name');
         $selectable['last_name']           = $this->aliasField('last_name');
         $selectable['academic_year_name']  = 'AcademicPeriod.name';
@@ -783,6 +810,20 @@ class StudentHealthsTable extends AppTable
             'type'  => 'string',
             'label' => __('Student'),
         ];
+        // START:POCOR-6819
+        $extraField[] = [
+            'key'   => 'EducationGrades.name',
+            'field' => 'education_grade',
+            'type'  => 'string',
+            'label' => __('Education Grades'),
+        ];
+        $extraField[] = [
+            'key'   => 'InstitutionClasses.name',
+            'field' => 'class_name',
+            'type'  => 'string',
+            'label' => __('Class'),
+        ];
+        // End:POCOR-6819
         return $extraField;
     }
 }

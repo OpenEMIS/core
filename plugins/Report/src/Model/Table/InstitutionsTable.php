@@ -647,6 +647,7 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.InstitutionPositions'])) {
                 $options = [
+                    InstitutionPositions::ALL_STAFF => __('All Staff'),//POCOR-6850
                     InstitutionPositions::TEACHING => __('Teaching'),
                     InstitutionPositions::NON_TEACHING => __('Non Teaching')
                 ];
