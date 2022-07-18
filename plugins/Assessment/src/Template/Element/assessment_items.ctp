@@ -95,8 +95,9 @@
                          <?php //echo "<pre>"; print_r($data['assessment_subject']);
                          //echo "<pre>"; print_r($data['assessment_items']); die();?>
                         <tbody>
+                            <?php $counter = 0; ?>
                             <?php foreach ($data['assessment_subject'] as $j => $itemName) : 
-                              $fieldPrefix = "$alias.assessment_items.$j"; ?>
+                              $fieldPrefix = "$alias.assessment_items.$counter"; ?>
                                 <?php $key = array_search($j, array_column($data['assessment_items'], 'education_subject_id'));
                                 ?>
                                 <?php 
@@ -107,7 +108,7 @@
                                 <tr>
                                     <td>
                                         <?php
-                                        echo $this->Form->checkbox("$fieldPrefix.$key.education_subject_check", ['checked' => $data['assessment_items'][$key]['education_subject_id'], 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);?>
+                                        echo $this->Form->checkbox("$fieldPrefix.education_subject_check", ['checked' => $data['assessment_items'][$key]['education_subject_id'],'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);?>
                                         </td>
                                         <td> <?php echo $itemName; ?></td>
                                         <?php
@@ -141,7 +142,7 @@
                                 <tr>
                                     <td>
                                         <?php
-                                        echo $this->Form->checkbox("$fieldPrefix.$key.education_subject_check", ['class' => 'no-selection-label', 'kd-checkbox-radio' => '']);?>
+                                        echo $this->Form->checkbox("$fieldPrefix.education_subject_check", ['class' => 'no-selection-label', 'kd-checkbox-radio' => '']);?>
                                         </td>
                                         <td><?php echo $itemName; ?></td>
                                         <?php
@@ -176,7 +177,10 @@
                                 </tr>
                             <?php } ?>
 
-                        <?php //endforeach ?>
+                        <?php //endforeach 
+                            $counter++;
+                        ?>
+
                             <?php endforeach ?>
                         </tbody>
                     <?php endif ?>
