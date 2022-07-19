@@ -181,9 +181,9 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             ->InnerJoin([$absentDays->alias() => $absentDays->table()],
                 [$absentDays->aliasField('student_id = ') . $this->aliasField('student_id')]
             )
-            ->Where($where)
             ->andWhere([$absentDays->aliasField('start_date LIKE '.$date)])
             ->orWhere([$absentDays->aliasField('start_date LIKE '.$dateSecond)])  //POCOR-6854
+            ->Where($where)
             ->group([$this->aliasField('student_id'),
                 $absentDays->aliasField('student_id')]);
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
