@@ -142,20 +142,20 @@
         <div class="actions top">
             <button
                 ng-if="(step=='user_details')"
-                type="button" class="btn close-btn" ng-click="cancelProcess()">Cancel</button>
+                type="button" class="btn close-btn" ng-click="cancelProcess()" style="font-size: 12px;">Cancel</button>
             <button
                 ng-if="(step!=='user_details' && step!=='summary')"
-                type="button" class="btn btn-prev close-btn" ng-click="goToPrevStep()">Back</button>
+                type="button" class="btn btn-prev close-btn" ng-click="goToPrevStep()" style="font-size: 12px;">Back</button>
             <button
                 ng-if="(step=='confirmation' && step!=='summary')"
-                type="button" class="btn btn-default" ng-click="validateDetails()">Confirm</button>
+                type="button" class="btn btn-default" ng-click="validateDetails()" style="font-size: 12px;">Confirm</button>
             <button
                 ng-if="(step=='summary')"
-                type="button" class="btn close-btn" ng-click="cancelProcess()">Close</button>
+                type="button" class="btn close-btn" ng-click="cancelProcess()" style="font-size: 12px;">Close</button>
             <button type="button" class="btn btn-default btn-next"
-                ng-if="step!=='confirmation' && step!=='summary'" ng-click="goToNextStep()">Next</button>
+                ng-if="step!=='confirmation' && step!=='summary'" ng-click="goToNextStep()" style="font-size: 12px;">Next</button>
             <button type="button" class="btn btn-default btn-next"
-                ng-if="step==='summary' && redirectToGuardian" ng-click="addGuardian()">Add Guardian</button>
+                ng-if="step==='summary' && redirectToGuardian" ng-click="addGuardian()" style="font-size: 12px;">Add Guardian</button>
         </div>
         <div class="step-content">
             <div class="step-pane sample-pane" ng-if="step === 'user_details'">
@@ -293,21 +293,23 @@
                     <div class="row section-header header-space-lg">Information</div>
                     <div class="input string row-content">
                         <label><?= __('Photo Content') ?></label>
-                        <div>
+                        <div class="fileinput fileinput-new fileinput-preview">
                             <div class="table-thumb mb-16">
                                 <div class="profile-image-thumbnail">
                                     <i class="kd-staff"></i>
                                 </div>
                             </div>
-                            <p class="font-italic mb-0">* Advisable photo dimension 90 by 115</p>
-                            <p class="font-italic">* Format Supported: .jpg, .jpeg, .png, .gif</p>
-                            <span class="btn btn-default btn-file">
-                                <span class="fileinput-new">
-                                    <i class="fa fa-folder"></i> 
-                                    <span>Select File</span>
+                            <div class="file-input-buttons">
+                                <p>* Advisable photo dimension 90 by 115<br />
+                                * Format Supported: .jpg, .jpeg, .png, .gif</p>
+                                <span class="btn btn-default btn-file" style="font-size: 12px !important;">
+                                    <span class="fileinput-new">
+                                        <i class="fa fa-folder"></i> 
+                                        <span style="font-size: 12px;">Select File</span>
+                                    </span>
+                                    <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >    
                                 </span>
-                                <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >    
-                            </span>
+                            </div>
                         </div>
                     </div>
                     <div class="input string required">
