@@ -14,6 +14,7 @@ use Cake\ORM\Entity;
 use ArrayObject;
 use Cake\ORM\Table;
 use Cake\Datasource\ResultSetInterface;
+use Firebase\JWT\JWT;
 
 class InstitutionSubjectStaffTable extends AppTable
 {
@@ -586,17 +587,19 @@ class InstitutionSubjectStaffTable extends AppTable
     */
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
     {
-        $url = $_SERVER['REQUEST_URI'];
-        $url_components = parse_url($url);
-        parse_str($url_components['query'], $params);
-        $param = preg_match_all('/\\[(.*?)\\]/', $params['_finder'], $matches);
-        $paramsString = $matches[1];
-        $paramsArray = explode(';', $paramsString[0]);
-        if (empty($paramsArray[0]) || empty($paramsArray[1])) {
-            $response['result'] = [];
-            $response['message'] = "Mandatory field can't empty";
-            $dataArr = array("data" => $response);
-            echo json_encode($dataArr);exit;
+        if ($primary) {
+            $url = $_SERVER['REQUEST_URI'];
+            $url_components = parse_url($url);
+            parse_str($url_components['query'], $params);
+            $param = preg_match_all('/\\[(.*?)\\]/', $params['_finder'], $matches);
+            $paramsString = $matches[1];
+            $paramsArray = explode(';', $paramsString[0]);
+            if (empty($paramsArray[0]) || empty($paramsArray[1])) {
+                $response['result'] = [];
+                $response['message'] = "Mandatory field can't empty";
+                $dataArr = array("data" => $response);
+                echo json_encode($dataArr);exit;
+            }
         }    
     }
     /**POCOR-6807 ends*/ 
