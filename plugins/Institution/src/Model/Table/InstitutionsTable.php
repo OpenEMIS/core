@@ -1020,8 +1020,8 @@ class InstitutionsTable extends ControllerActionTable
                 $clss = 'Non-academic institution';
             }
 
-            $body = array();
-            $body = [
+            $bodys = array();
+            $bodys = [
                 'institution_id' => $entity->id,
                 'institution_name' => $entity->name,
                 'institution_alternative_name' => $entity->alternative_name,
@@ -1046,6 +1046,44 @@ class InstitutionsTable extends ControllerActionTable
                 'institution_email' => $entity->email,
                 'institution_website' => $entity->website,
             ];
+            $InstitutionCustomFields = TableRegistry::get('institution_custom_fields');
+            $InstitutionCustomFieldValues = TableRegistry::get('institution_custom_field_values');
+            $custom_fieldData = $InstitutionCustomFieldValues
+                        ->find()
+                        ->select([
+                                'id' => $InstitutionCustomFields->aliasField('id'),
+                                'name' => $InstitutionCustomFields->aliasField('name'),
+                                'text_value' => $InstitutionCustomFieldValues->aliasField('text_value'),
+                                'number_value' => $InstitutionCustomFieldValues->aliasField('number_value'),
+                                'decimal_value' => $InstitutionCustomFieldValues->aliasField('decimal_value'),
+                                'textarea_value' => $InstitutionCustomFieldValues->aliasField('textarea_value'),
+                                'date_value' => $InstitutionCustomFieldValues->aliasField('date_value'),
+                                'time_value' => $InstitutionCustomFieldValues->aliasField('time_value'),
+                            ])
+                        ->leftJoin(
+                            [$InstitutionCustomFields->alias() => $InstitutionCustomFields->table()],
+                            [
+                                $InstitutionCustomFields->aliasField('id ='). $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
+                            ]
+                        )
+                        ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $entity->id])
+                        ->group([$InstitutionCustomFields->aliasField('id')])
+                        ->hydrate(false)
+                        ->toArray();
+            $custom_field = array();
+            $count = 0;
+            foreach($custom_fieldData as $val){
+                $custom_field['custom_field'][$count]['id']= (!empty($val['id']) ? $val['id'] : '');
+                $custom_field['custom_field'][$count]['name']= (!empty($val['name']) ? $val['name'] : '');
+                $custom_field['custom_field'][$count]['text_value'] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                $custom_field['custom_field'][$count]['number_value'] = (!empty($val['number_value']) ? $val['number_value'] : '');
+                $custom_field['custom_field'][$count]['decimal_value'] =  (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                $custom_field['custom_field'][$count]['textarea_value'] =  (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                $custom_field['custom_field'][$count]['date_value'] =  (!empty($val['date_value']) ? $val['date_value'] : '');
+                $custom_field['custom_field'][$count]['time_value'] =  (!empty($val['time_value']) ? $val['time_value'] : '');
+                $count++;
+            }
+            $body = array_merge($bodys, $custom_field);
             if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
                 $Webhooks = TableRegistry::get('Webhook.Webhooks');
                 if ($this->Auth->user()) {
