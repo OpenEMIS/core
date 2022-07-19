@@ -34,6 +34,7 @@ class GenerateAllClassReportCardsShell extends Shell
                 ->select([
                     $this->ClassReportCardProcesses->aliasField('report_card_id'),
                     $this->ClassReportCardProcesses->aliasField('institution_id'),
+                    $this->ClassReportCardProcesses->aliasField('institution_class_id'),
                     $this->ClassReportCardProcesses->aliasField('academic_period_id')
                 ])
                 ->where([
@@ -46,11 +47,12 @@ class GenerateAllClassReportCardsShell extends Shell
                 ->first();
 
             if (!empty($recordToProcess)) {
-                $this->out('Generating report card for Class of Institution '.$recordToProcess['institution_id'].' ('. Time::now() .')');
+                $this->out('Generating report card for Class '.$recordToProcess['institution_class_id'].' of Institution '.$recordToProcess['institution_id'].' ('. Time::now() .')');
                 $this->ClassReportCardProcesses->updateAll(['status' => $this->ClassReportCardProcesses::RUNNING], [
                     'report_card_id' => $recordToProcess['report_card_id'],
                     'institution_id' => $recordToProcess['institution_id'],
                     'academic_period_id' => $recordToProcess['academic_period_id'],
+                    'institution_class_id' => $recordToProcess['institution_class_id']
                 ]);
 
                 $excelParams = new ArrayObject([]);
@@ -60,11 +62,11 @@ class GenerateAllClassReportCardsShell extends Shell
                 try {
                     $this->ClassReportCards->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {
-                    $this->out('Error generating Report Card for Class of Institution ' . $recordToProcess['institution_id']);
+                    $this->out('Error generating Report Card for Class '.$recordToProcess['institution_class_id'].' of Institution ' . $recordToProcess['institution_id']);
                     $this->out($e->getMessage());
                 }
 
-                $this->out('End generating report card for Class of Institution '.$recordToProcess['institution_id'].' ('. Time::now() .')');
+                $this->out('End generating report card for Class '.$recordToProcess['institution_class_id'].' of Institution '.$recordToProcess['institution_id'].' ('. Time::now() .')');
                 $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
                 $this->recursiveCallToMyself($this->args);
             } else {
