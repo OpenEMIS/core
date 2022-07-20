@@ -114,12 +114,12 @@ class POCOR6822 extends AbstractMigration
         ->addColumn('report_card_id', 'integer', [
             'limit' => 11,
             'null' => false,
-            'comment' => 'links to academic_periods.id'
+            'comment' => 'links to report_cards.id'
         ])
         ->addColumn('institution_id', 'integer', [
             'limit' => 11,
             'null' => false,
-            'comment' => 'links to academic_periods.id'
+            'comment' => 'links to institutions.id'
         ])
         ->addColumn('academic_period_id', 'integer', [
             'limit' => 11,
