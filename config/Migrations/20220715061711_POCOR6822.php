@@ -41,7 +41,7 @@ class POCOR6822 extends AbstractMigration
         //class_report_card_processes
         $this->table('class_report_card_processes', [
             'id' => false,
-            'collation' => 'utf8mb4_unicode_ci',
+            'collation' => 'utf8_general_ci',
             'primary_key' => ['report_card_id', 'institution_id'],
         ])
         ->addColumn('report_card_id', 'integer', [
@@ -77,7 +77,7 @@ class POCOR6822 extends AbstractMigration
         $this->table('class_report_cards', [
             'id' => false,
             'primary_key' => ['report_card_id', 'institution_id', 'academic_period_id'],
-            'collation' => 'utf8mb4_unicode_ci'
+            'collation' => 'utf8_general_ci'
         ])
         ->addColumn('id', 'char', [
             'limit' => 64,
@@ -157,7 +157,7 @@ class POCOR6822 extends AbstractMigration
         $this->execute('ALTER TABLE `class_report_card_processes` ADD `institution_class_id` INT(11) NOT NULL COMMENT "links to institution_classes.id" AFTER `academic_period_id`');
         $this->execute('ALTER TABLE `class_report_card_processes` ADD INDEX(`institution_class_id`)');
 
-        $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL');
+        $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8_general_ci NULL DEFAULT NULL');
 
         $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_content` `file_content` LONGBLOB NULL DEFAULT NULL');
 
@@ -169,7 +169,7 @@ class POCOR6822 extends AbstractMigration
         
         //class_profile_templates
         $this->table('class_profile_templates', [
-            'collation' => 'utf8mb4_unicode_ci',
+            'collation' => 'utf8_general_ci',
             'primary_key' => 'id',
             'id' => true //Auto increment id and primary key
         ])
