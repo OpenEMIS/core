@@ -397,6 +397,8 @@ class StudentsTable extends AppTable
         $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
         $childArea =[];
         $childAreaMain = [];
+        $childArea3 = [];
+        $childArea4 = [];
         foreach($AreaData as $kkk =>$AreaData11 ){
             $childArea[$kkk] = $AreaData11->id;
         }
@@ -404,13 +406,34 @@ class StudentsTable extends AppTable
         foreach($childArea as $kyy =>$AreaDatal2 ){
             $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
             foreach($AreaDatas as $ky =>$AreaDatal22 ){
-             $childAreaMain[$ky] = $AreaDatal22->id;
-         }
+                $childAreaMain[$ky] = $AreaDatal22->id;
+            }
         }
-        $mergeArr = array_merge($childAreaMain,$childArea);
+        //level-3
+        if(!empty($childAreaMain)){
+            foreach($childAreaMain as $kyy =>$AreaDatal3 ){
+                $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
+                foreach($AreaDatass as $ky =>$AreaDatal222 ){
+                    $childArea3[$ky] = $AreaDatal222->id;
+                }
+            }
+        }
+        
+        //level-4
+        if(!empty($childAreaMain)){
+            foreach($childArea3 as $kyy =>$AreaDatal4 ){
+                $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
+                foreach($AreaDatasss as $ky =>$AreaDatal44 ){
+                    $childArea4[$ky] = $AreaDatal44->id;
+                }
+            }
+        }
+        $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
         array_push($mergeArr,$areaId);
+        $mergeArr = array_unique($mergeArr);
         $finalIds = implode(',',$mergeArr);
         $finalIds = explode(',',$finalIds);
+        //echo "<pre>"; print_r($finalIds);die;
         //End:POCOR-6818 Modified this for POCOR-6859
 
 
