@@ -24,6 +24,7 @@ class POCOR6808 extends AbstractMigration
                 'type' => 'API Settings',
                 'label' => 'API Webhook Logging',
                 'value' => 1,
+                'value_selection' => '',
                 'default_value' => 0,
                 'field_type' => 'Dropdown',
                 'option_type'=> 'completeness',
