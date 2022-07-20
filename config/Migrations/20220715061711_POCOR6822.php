@@ -38,135 +38,6 @@ class POCOR6822 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ]); 
 
-        //class_report_card_processes
-        $this->table('class_report_card_processes', [
-            'id' => false,
-            'collation' => 'utf8_general_ci',
-            'primary_key' => ['report_card_id', 'institution_id'],
-        ])
-        ->addColumn('report_card_id', 'integer', [
-            'limit' => 11,
-            'null' => false,
-            'comment' => 'links to class_profile_templates.id'
-        ])
-        ->addColumn('status', 'integer', [
-            'limit' => 2,
-            'null' => false,
-            'comment' => '1 => New 2 => Running 3 => Completed -1 => Error'
-        ])
-        ->addColumn('institution_id', 'integer', [
-            'limit' => 11,
-            'null' => false,
-            'comment' => 'links to institutions.id'
-        ])
-        ->addColumn('academic_period_id', 'integer', [
-            'limit' => 11,
-            'null' => false,
-            'comment' => 'links to academic_periods.id'
-        ])
-        ->addColumn('created', 'datetime', [
-            'default' => null,
-            'null' => false
-        ])
-        ->addIndex('academic_period_id')
-        ->addIndex('institution_id')
-        ->addIndex('report_card_id')
-        ->save();
-
-        //class_report_cards
-        $this->table('class_report_cards', [
-            'id' => false,
-            'primary_key' => ['report_card_id', 'institution_id', 'academic_period_id'],
-            'collation' => 'utf8_general_ci'
-        ])
-        ->addColumn('id', 'char', [
-            'limit' => 64,
-            'null' => false,
-        ])
-        ->addColumn('status', 'integer', [
-            'limit' => 1,
-            'null' => false,
-            'comment' => '1 -> New, 2 -> In Progress, 3 -> Generated, 4 -> Published'
-        ])
-        ->addColumn('file_name', 'string', [
-            'limit' => 250,
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('file_content', 'blob', [
-            'limit' => '4294967295',
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('file_content_pdf', 'blob', [
-            'limit' => '4294967295',
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('started_on', 'datetime', [
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('completed_on', 'datetime', [
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('report_card_id', 'integer', [
-            'limit' => 11,
-            'null' => false,
-            'comment' => 'links to class_profile_templates.id'
-        ])
-        ->addColumn('institution_id', 'integer', [
-            'limit' => 11,
-            'null' => false,
-            'comment' => 'links to institutions.id'
-        ])
-        ->addColumn('academic_period_id', 'integer', [
-            'limit' => 11,
-            'null' => false,
-            'comment' => 'links to academic_periods.id'
-        ])
-        ->addColumn('modified_user_id', 'integer', [
-            'default' => null,
-            'limit' => 11,
-            'null' => true
-        ])
-        ->addColumn('modified', 'datetime', [
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('created_user_id', 'integer', [
-            'limit' => 11,
-            'null' => false
-        ])
-        ->addColumn('created', 'datetime', [
-            'default' => null,
-            'null' => false
-        ])
-        ->addIndex('report_card_id')
-        ->addIndex('institution_id')
-        ->addIndex('academic_period_id')
-        ->addIndex('modified_user_id')
-        ->addIndex('created_user_id')
-        ->save();
-
-        $this->execute('ALTER TABLE `class_report_cards` ADD `institution_class_id` INT(11) NOT NULL COMMENT "links to institution_classes.id" AFTER `academic_period_id`');
-        $this->execute('ALTER TABLE `class_report_cards` ADD INDEX(`institution_class_id`)');
-        $this->execute('ALTER TABLE `class_report_cards` DROP PRIMARY KEY, ADD PRIMARY KEY( `report_card_id`, `institution_id`, `academic_period_id`, `institution_class_id`)');
-
-        $this->execute('ALTER TABLE `class_report_card_processes` ADD `institution_class_id` INT(11) NOT NULL COMMENT "links to institution_classes.id" AFTER `academic_period_id`');
-        $this->execute('ALTER TABLE `class_report_card_processes` ADD INDEX(`institution_class_id`)');
-
-        $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8_general_ci NULL DEFAULT NULL');
-
-        $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_content` `file_content` LONGBLOB NULL DEFAULT NULL');
-
-        $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_content_pdf` `file_content_pdf` LONGBLOB NULL DEFAULT NULL');
-                
-        $this->execute('ALTER TABLE `class_report_cards` CHANGE `started_on` `started_on` DATETIME NULL DEFAULT NULL');
-
-        $this->execute('ALTER TABLE `class_report_cards` CHANGE `completed_on` `completed_on` DATETIME NULL DEFAULT NULL');
-        
         //class_profile_templates
         $this->table('class_profile_templates', [
             'collation' => 'utf8_general_ci',
@@ -228,7 +99,148 @@ class POCOR6822 extends AbstractMigration
         ->addIndex('academic_period_id')
         ->addIndex('modified_user_id')
         ->addIndex('created_user_id')
-        ->save();     
+        ->save(); 
+
+        //class_report_card_processes
+        $this->table('class_report_card_processes', [
+            'id' => false,
+            'collation' => 'utf8_general_ci',
+            'primary_key' => ['class_profile_template_id', 'institution_id'],
+        ])
+        ->addColumn('class_profile_template_id', 'integer', [
+            'limit' => 11,
+            'null' => false,
+            'comment' => 'links to class_profile_templates.id'
+        ])
+        ->addColumn('status', 'integer', [
+            'limit' => 2,
+            'null' => false,
+            'comment' => '1 => New 2 => Running 3 => Completed -1 => Error'
+        ])
+        ->addColumn('institution_id', 'integer', [
+            'limit' => 11,
+            'null' => false,
+            'comment' => 'links to institutions.id'
+        ])
+        ->addColumn('academic_period_id', 'integer', [
+            'limit' => 11,
+            'null' => false,
+            'comment' => 'links to academic_periods.id'
+        ])
+        ->addColumn('created', 'datetime', [
+            'default' => null,
+            'null' => false
+        ])
+        ->addIndex('academic_period_id')
+        ->addIndex('institution_id')
+        ->addIndex('class_profile_template_id')
+        ->save();
+
+        //class_report_cards
+        $this->table('class_report_cards', [
+            'id' => false,
+            'primary_key' => ['class_profile_template_id', 'institution_id', 'academic_period_id'],
+            'collation' => 'utf8_general_ci'
+        ])
+        ->addColumn('id', 'char', [
+            'limit' => 64,
+            'null' => false,
+        ])
+        ->addColumn('status', 'integer', [
+            'limit' => 1,
+            'null' => false,
+            'comment' => '1 -> New, 2 -> In Progress, 3 -> Generated, 4 -> Published'
+        ])
+        ->addColumn('file_name', 'string', [
+            'limit' => 250,
+            'default' => null,
+            'null' => true
+        ])
+        ->addColumn('file_content', 'blob', [
+            'limit' => '4294967295',
+            'default' => null,
+            'null' => true
+        ])
+        ->addColumn('file_content_pdf', 'blob', [
+            'limit' => '4294967295',
+            'default' => null,
+            'null' => true
+        ])
+        ->addColumn('started_on', 'datetime', [
+            'default' => null,
+            'null' => true
+        ])
+        ->addColumn('completed_on', 'datetime', [
+            'default' => null,
+            'null' => true
+        ])
+        ->addColumn('class_profile_template_id', 'integer', [
+            'limit' => 11,
+            'null' => false,
+            'comment' => 'links to class_profile_templates.id'
+        ])
+        ->addColumn('institution_id', 'integer', [
+            'limit' => 11,
+            'null' => false,
+            'comment' => 'links to institutions.id'
+        ])
+        ->addColumn('academic_period_id', 'integer', [
+            'limit' => 11,
+            'null' => false,
+            'comment' => 'links to academic_periods.id'
+        ])
+        ->addColumn('modified_user_id', 'integer', [
+            'default' => null,
+            'limit' => 11,
+            'null' => true
+        ])
+        ->addColumn('modified', 'datetime', [
+            'default' => null,
+            'null' => true
+        ])
+        ->addColumn('created_user_id', 'integer', [
+            'limit' => 11,
+            'null' => false
+        ])
+        ->addColumn('created', 'datetime', [
+            'default' => null,
+            'null' => false
+        ])
+        ->addIndex('class_profile_template_id')
+        ->addIndex('institution_id')
+        ->addIndex('academic_period_id')
+        ->addIndex('modified_user_id')
+        ->addIndex('created_user_id')
+        ->save();
+        //changes in class_report_cards
+        $this->execute('ALTER TABLE `class_report_cards` ADD `institution_class_id` INT(11) NOT NULL COMMENT "links to institution_classes.id" AFTER `academic_period_id`');
+        $this->execute('ALTER TABLE `class_report_cards` ADD INDEX(`institution_class_id`)');
+        $this->execute('ALTER TABLE `class_report_cards` DROP PRIMARY KEY, ADD PRIMARY KEY( `class_profile_template_id`, `institution_id`, `academic_period_id`, `institution_class_id`)');
+        $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8_general_ci NULL DEFAULT NULL');
+
+        $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_content` `file_content` LONGBLOB NULL DEFAULT NULL');
+
+        $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_content_pdf` `file_content_pdf` LONGBLOB NULL DEFAULT NULL');
+                
+        $this->execute('ALTER TABLE `class_report_cards` CHANGE `started_on` `started_on` DATETIME NULL DEFAULT NULL');
+
+        $this->execute('ALTER TABLE `class_report_cards` CHANGE `completed_on` `completed_on` DATETIME NULL DEFAULT NULL');
+        //add FOREIGN KEY's in class_report_cards table
+        $this->execute('ALTER TABLE `class_report_cards` ADD FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes`(`id`)');
+        $this->execute('ALTER TABLE `class_report_cards` ADD FOREIGN KEY (`class_profile_template_id`) REFERENCES `class_profile_templates`(`id`)');
+        $this->execute('ALTER TABLE `class_report_cards` ADD FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`)');
+        $this->execute('ALTER TABLE `class_report_cards` ADD FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods`(`id`)');
+
+        //changes in class_report_card_processes
+        $this->execute('ALTER TABLE `class_report_card_processes` ADD `institution_class_id` INT(11) NOT NULL COMMENT "links to institution_classes.id" AFTER `academic_period_id`');
+        $this->execute('ALTER TABLE `class_report_card_processes` ADD INDEX(`institution_class_id`)');
+        //add FOREIGN KEY's in class_report_card_processes table
+        $this->execute('ALTER TABLE `class_report_card_processes` ADD FOREIGN KEY (`class_profile_template_id`) REFERENCES `class_profile_templates`(`id`)');
+        $this->execute('ALTER TABLE `class_report_card_processes` ADD FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`)');
+        $this->execute('ALTER TABLE `class_report_card_processes` ADD FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods`(`id`)');
+        $this->execute('ALTER TABLE `class_report_card_processes` ADD FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes`(`id`)');
+
+            
     }
 
     // rollback

@@ -23,14 +23,14 @@
                 }
 
                 if (!empty($reportCardOptions)) {
-                    echo $this->Form->input('report_card_id', array(
+                    echo $this->Form->input('class_profile_template_id', array(
                         'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $reportCardOptions,
                         'default' => $selectedReportCard,
                         'url' => $baseUrl,
-                        'data-named-key' => 'report_card_id',
+                        'data-named-key' => 'class_profile_template_id',
                         'data-named-group' => 'academic_period_id'
                     ));
                 }
@@ -44,7 +44,7 @@
                         'default' => $selectedClass,
                         'url' => $baseUrl,
                         'data-named-key' => 'class_id',
-                        'data-named-group' => 'academic_period_id,report_card_id'
+                        'data-named-group' => 'academic_period_id,class_profile_template_id'
                     ));
                 }
 
@@ -57,7 +57,7 @@
                         'default' => $selectedAreaLevel,
                         'url' => $baseUrl,
                         'data-named-key' => 'area_level_id',
-                        'data-named-group' => 'academic_period_id,report_card_id'
+                        'data-named-group' => 'academic_period_id,class_profile_template_id'
                     ));
                 }
                 
@@ -70,7 +70,7 @@
                         'default' => $selectedArea,
                         'url' => $baseUrl,
                         'data-named-key' => 'area_id',
-                        'data-named-group' => 'academic_period_id,report_card_id, area_level_id'
+                        'data-named-group' => 'academic_period_id,class_profile_template_id, area_level_id'
                     ));
                 }
 
@@ -83,7 +83,7 @@
                         'default' => $selectedInstitution,
                         'url' => $baseUrl,
                         'data-named-key' => 'institution_id',
-                        'data-named-group' => 'academic_period_id,report_card_id,area_id, area_level_id'
+                        'data-named-group' => 'academic_period_id,class_profile_template_id,area_id, area_level_id'
                     ));
                 }
             ?>
