@@ -67,6 +67,10 @@ class TrainingNeedsTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $identity = $IdentityType->getDefaultEntity();
+        $settings['identity'] = $identity;
+
         $requestData = json_decode($settings['process']['params']);
         $selectedNeedType = $requestData->training_need_type;
 
@@ -197,22 +201,17 @@ class TrainingNeedsTable extends AppTable
             'label' => __('Gender')
         ];
         $newFields[] = [
-            'key' => 'identity_type',
-            'field' => 'identity_type',
+            'key' => 'Users.identity_number',
+            'field' => 'user_identities_default',
             'type' => 'string',
-            'label' => __('Identity Type')
+            'label' => __('Identity')
         ];
+
         $newFields[] = [
-            'key' => 'identity_number',
-            'field' => 'identity_number',
+            'key' => 'Users.identities',
+            'field' => 'user_identities',
             'type' => 'string',
-            'label' => __('Identity Number')
-        ];
-        $newFields[] = [
-            'key' => 'other_identity',
-            'field' => 'other_identity',
-            'type' => 'string',
-            'label' => __('Other Identites')
+            'label' => __('Other Identities')
         ];
 
         if ($selectedNeedType == 'NEED') {
@@ -392,4 +391,42 @@ class TrainingNeedsTable extends AppTable
 
         return $return;
     }
+
+    public function onExcelGetUserIdentitiesDefault(Event $event, Entity $entity)
+    {
+        $return = [];
+        if ($entity->has('user')) {
+            if ($entity->user->has('identities')) {
+                if (!empty($entity->user->identities)) {
+                    $identities = $entity->user->identities;
+                    foreach ($identities as $key => $value) {
+                        if ($value->identity_type->default == 1) {
+                            $return[] = $value->number;
+                        }
+                    }
+                }
+            }
+        }
+        return implode(', ', array_values($return));
+    }
+
+    public function onExcelGetUserIdentities(Event $event, Entity $entity)
+    {
+        $return = [];
+        if ($entity->has('user')) {
+            if ($entity->user->has('identities')) {
+                if (!empty($entity->user->identities)) {
+                    $identities = $entity->user->identities;
+                    foreach ($identities as $key => $value) {
+                        if ($value->identity_type->default == 0) {                            
+                            $return[] = '([' . $value->identity_type->name . ']' . ' - ' . $value->number . ')';
+                        }
+                    }
+                }
+            }
+        }
+
+        return implode(', ', array_values($return));
+    }
+
 }
