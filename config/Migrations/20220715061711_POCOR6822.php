@@ -47,7 +47,7 @@ class POCOR6822 extends AbstractMigration
         ->addColumn('report_card_id', 'integer', [
             'limit' => 11,
             'null' => false,
-            'comment' => 'links to report_cards.id'
+            'comment' => 'links to class_profile_templates.id'
         ])
         ->addColumn('status', 'integer', [
             'limit' => 2,
@@ -114,7 +114,7 @@ class POCOR6822 extends AbstractMigration
         ->addColumn('report_card_id', 'integer', [
             'limit' => 11,
             'null' => false,
-            'comment' => 'links to report_cards.id'
+            'comment' => 'links to class_profile_templates.id'
         ])
         ->addColumn('institution_id', 'integer', [
             'limit' => 11,
