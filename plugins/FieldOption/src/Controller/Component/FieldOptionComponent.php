@@ -178,6 +178,7 @@ class FieldOptionComponent extends Component
         'ScholarshipDisbursementCategories' => ['className' => 'Scholarship.DisbursementCategories', 'parent' => 'Scholarship'],
         'ScholarshipSemesters' => ['className' => 'Scholarship.Semesters', 'parent' => 'Scholarship'],
         'ScholarshipInstitutionChoices' => ['className' => 'Scholarship.InstitutionChoiceTypes', 'parent' => 'Scholarship'],
+        'ScholarshipFinancialAssistances' => ['className' => 'Scholarship.ScholarshipFinancialAssistances', 'parent' => 'Scholarship'], //POCOR-6839
 
     // Special Needs
         'SpecialNeedsTypes' => ['className' => 'SpecialNeeds.SpecialNeedsTypes', 'parent' => 'Special Needs'],
