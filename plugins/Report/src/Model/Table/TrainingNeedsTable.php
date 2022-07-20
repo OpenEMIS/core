@@ -22,6 +22,7 @@ class TrainingNeedsTable extends AppTable
         $this->belongsTo('TrainingNeedCompetencies', ['className' => 'Training.TrainingNeedCompetencies', 'foreignKey' => 'training_need_competency_id']);
         $this->belongsTo('TrainingNeedSubStandards', ['className' => 'Training.TrainingNeedSubStandards', 'foreignKey' => 'training_need_sub_standard_id']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
 
         $this->addBehavior('Excel', [
@@ -60,8 +61,30 @@ class TrainingNeedsTable extends AppTable
             'course_description' => 'TrainingCourses.description',
             'course_requirement' => 'TrainingRequirements.name',
             'training_standard' => 'TrainingNeedStandards.name'
-        ]);
+        ])//POCOR-6877
+        ->contain(['Users' => [
+                    'fields' => [
+                        'Users.id',
+                        'openemis_no' => 'Users.openemis_no',
+                        'first_name' => 'Users.first_name',
+                        'middle_name' => 'Users.middle_name',
+                        'third_name' => 'Users.third_name',
+                        'last_name' => 'Users.last_name',
+                        'number' => 'Users.identity_number',
+                    ]
+                ],
+                'Users.Identities.IdentityTypes' => [
+                    'fields' => [
+                        'Identities.number',
+                        'Identities.issue_date',
+                        'Identities.expiry_date',
+                        'Identities.issue_location',
+                        'IdentityTypes.name',
+                        'IdentityTypes.default'
+                    ]
+                ],
 
+            ]);
         $query->where([$this->aliasField('type') => $selectedNeedType]);
     }
 
@@ -264,7 +287,7 @@ class TrainingNeedsTable extends AppTable
         }
     }
 
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    /*public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
         $userIdentities = TableRegistry::get('user_identities');
         $userIdentitiesResult = $userIdentities->find()
@@ -300,7 +323,7 @@ class TrainingNeedsTable extends AppTable
     public function onExcelGetOtherIdentity(Event $event, Entity $entity)
     {
         return $entity->custom_identity_other_data;
-    }
+    }*/
 
     public function onExcelGetGender(Event $event, Entity $entity)
     {
@@ -391,7 +414,10 @@ class TrainingNeedsTable extends AppTable
 
         return $return;
     }
-
+    
+    /**
+     * POCOR-6877
+    */ 
     public function onExcelGetUserIdentitiesDefault(Event $event, Entity $entity)
     {
         $return = [];
@@ -410,6 +436,9 @@ class TrainingNeedsTable extends AppTable
         return implode(', ', array_values($return));
     }
 
+    /**
+     * POCOR-6877
+    */ 
     public function onExcelGetUserIdentities(Event $event, Entity $entity)
     {
         $return = [];
