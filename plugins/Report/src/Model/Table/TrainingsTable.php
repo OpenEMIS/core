@@ -81,10 +81,10 @@ class TrainingsTable extends AppTable
         // Starts POCOR-6592
         if ($this->request->data[$this->alias()]['feature'] ==  'Report.EmployeeTrainingCard') {
             $this->ControllerAction->field('guardian_id');
-            //$this->ControllerAction->field('format'); 
+            $this->ControllerAction->field('format'); 
         }else if ($feature != 'Report.TrainingResults'){
             $this->ControllerAction->field('status'); 
-           // $this->ControllerAction->field('format'); 
+            $this->ControllerAction->field('format'); 
             $this->ControllerAction->field('institution_status');
             $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         }
@@ -105,10 +105,9 @@ class TrainingsTable extends AppTable
             $this->ControllerAction->field('institution_status');
             $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
             $this->ControllerAction->field('area_id', ['type' => 'hidden']); // POCOR-6596
-		    //$this->ControllerAction->field('format');// POCOR-6596
+            $this->ControllerAction->field('format');// POCOR-6596
         }
-        $this->ControllerAction->field('format');
-		// End POCOR-6596 Changed position of format field
+        // End POCOR-6596 Changed position of format field
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
@@ -360,28 +359,23 @@ class TrainingsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             $trainingCourseId = $this->request->data[$this->alias()]['training_course_id'];
             $startDate = date("Y-m-d", strtotime($this->request->data[$this->alias()]['start_date'])); 
-            $endDate = date("Y-m-d", strtotime($this->request->data[$this->alias()]['end_date'])); 
+            $endDate = date("Y-m-d", strtotime($this->request->data[$this->alias()]['end_date']));
             if (in_array($feature, $includedFeature)) {
-                $training_trainer_object = TableRegistry::get('Report.TrainingTrainers');
-                $trainers = $training_trainer_object->getTrainers();
+                /*$training_trainer_object = TableRegistry::get('Report.TrainingTrainers');
+                $trainers = $training_trainer_object->getTrainers();*/
                 // POCOR-6827 start
                 $training_trainer = TableRegistry::get('Training.TrainingSessionTrainers');
-                $username = TableRegistry::get('User.Users');
+                $training_session_object = TableRegistry::get('Training.TrainingSessions');
+                $training_Session = TableRegistry::get('Training.TrainingSessionTrainers');
                 $session = TableRegistry::get('Training.TrainingSessions');
                 $getCourses = TableRegistry::get('Training.TrainingCourses');
-                $getTraininerName = $username->find('list', [
-                            'keyField' => 'id',
-                            'valueField' => 'name'
-                        ])
+                $trainer = $training_Session->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                         ->select([
-                            'id' => $username->aliasField('id'),
-                            'name' => $training_trainer->aliasField('name')
-                        ])
-                        ->leftJoin([$training_trainer->alias() => $training_trainer->table()], [
-                            $training_trainer->aliasField('trainer_id = ') . $username->aliasField('id')
+                            'id' => $training_Session->aliasField('id'),
+                            'name' => $training_Session->aliasField('name')
                         ])
                         ->leftJoin([$session->alias() => $session->table()], 
-                            [$session->aliasField('id = ') . $training_trainer->aliasField('training_session_id')
+                            [$session->aliasField('id = ') . $training_Session->aliasField('training_session_id')
                         ])
                         ->leftJoin([$getCourses->alias() => $getCourses->table()], 
                             [$getCourses->aliasField('id = ') . $session->aliasField('training_course_id')
@@ -393,8 +387,8 @@ class TrainingsTable extends AppTable
                         ])
                         ->group([$training_trainer->aliasField('trainer_id')])
                         ->hydrate(false)
-                        ->toArray();// POCOR-6827 end
-                $trainer_options = ['-1' => __('All Trainers')] + $getTraininerName;
+                        ->toArray();
+                $trainer_options = ['-1' => __('All Trainer')] + $trainer;
                 $attr['options'] = $trainer_options;
                 $attr['type']    = 'select';
                 $attr['select']  = false;
@@ -403,6 +397,7 @@ class TrainingsTable extends AppTable
             }
         }
     }
+
 
     /**
      * Add Start Date selection date picker
