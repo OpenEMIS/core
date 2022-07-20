@@ -1022,37 +1022,39 @@ class InstitutionsTable extends ControllerActionTable
 
             $bodys = array();
             $bodys = [
-                'institution_id' => $entity->id,
-                'institution_name' => $entity->name,
-                'institution_alternative_name' => $entity->alternative_name,
-                'institution_code' => $entity->code,
-                'institution_classification' => $clss,
-                'institution_sector' => !empty($sectorName) ? $sectorName : NULL,
-                'institution_type' =>  !empty($typeName) ? $typeName : NULL,
-                'institution_gender' => !empty($genderName) ? $genderName : NULL,
-                'institution_date_opened' => date("d-m-Y", strtotime($entity->date_opened)),
-                'institution_address' => $entity->address,
-                'institution_postal_code' => $entity->postal_code,
-                'institution_locality' => !empty($localitiesName) ? $localitiesName : NULL,
-                'institution_latitude' => $entity->latitude,
-                'institution_longitude' => $entity->longitude,
-                'institution_area_education_id' => !empty($areaEducationId) ? $areaEducationId : NULL,
-                'institution_area_education' =>  !empty($areaEducationName) ? $areaEducationName : NULL,
-                'institution_area_administrative_id' => !empty($areaAdministrativeId) ? $areaAdministrativeId : NULL,
-                'institution_area_administrative' => !empty($areaAdministrativeName) ? $areaAdministrativeName : NULL,
-                'institution_contact_person' => $entity->contact_person,
-                'institution_telephone' => $entity->telephone,
-                'institution_mobile' => $entity->fax,
-                'institution_email' => $entity->email,
-                'institution_website' => $entity->website,
+                "institution_id" => $entity->id,
+                "institution_name" => $entity->name,
+                "institution_alternative_name" => $entity->alternative_name,
+                "institution_code" => $entity->code,
+                "institution_classification" => $clss,
+                "institution_sector" => !empty($sectorName) ? $sectorName : NULL,
+                "institution_type" =>  !empty($typeName) ? $typeName : NULL,
+                "institution_gender" => !empty($genderName) ? $genderName : NULL,
+                "institution_date_opene" => date("d-m-Y", strtotime($entity->date_opened)),
+                "institution_address" => $entity->address,
+                "institution_postal_code" => $entity->postal_code,
+                "institution_locality" => !empty($localitiesName) ? $localitiesName : NULL,
+                "institution_latitude" => $entity->latitude,
+                "institution_longitude" => $entity->longitude,
+                "institution_area_education_id" => !empty($areaEducationId) ? $areaEducationId : NULL,
+                "institution_area_education" =>  !empty($areaEducationName) ? $areaEducationName : NULL,
+                "institution_area_administrative_id" => !empty($areaAdministrativeId) ? $areaAdministrativeId : NULL,
+                "institution_area_administrative" => !empty($areaAdministrativeName) ? $areaAdministrativeName : NULL,
+                "institution_contact_person" => $entity->contact_person,
+                "institution_telephone" => $entity->telephone,
+                "institution_mobile" => $entity->fax,
+                "institution_email" => $entity->email,
+                "institution_website" => $entity->website,
             ];
             $InstitutionCustomFields = TableRegistry::get('institution_custom_fields');
             $InstitutionCustomFieldValues = TableRegistry::get('institution_custom_field_values');
+            $institutionCustomFieldOptions = TableRegistry::get('institution_custom_field_options');
             $custom_fieldData = $InstitutionCustomFieldValues
                         ->find()
                         ->select([
                                 'id' => $InstitutionCustomFields->aliasField('id'),
                                 'name' => $InstitutionCustomFields->aliasField('name'),
+                                'field_type' => $InstitutionCustomFields->aliasField('field_type'),
                                 'text_value' => $InstitutionCustomFieldValues->aliasField('text_value'),
                                 'number_value' => $InstitutionCustomFieldValues->aliasField('number_value'),
                                 'decimal_value' => $InstitutionCustomFieldValues->aliasField('decimal_value'),
@@ -1073,14 +1075,31 @@ class InstitutionsTable extends ControllerActionTable
             $custom_field = array();
             $count = 0;
             foreach($custom_fieldData as $val){
-                $custom_field['custom_field'][$count]['id']= (!empty($val['id']) ? $val['id'] : '');
-                $custom_field['custom_field'][$count]['name']= (!empty($val['name']) ? $val['name'] : '');
-                $custom_field['custom_field'][$count]['text_value'] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                $custom_field['custom_field'][$count]['number_value'] = (!empty($val['number_value']) ? $val['number_value'] : '');
-                $custom_field['custom_field'][$count]['decimal_value'] =  (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
-                $custom_field['custom_field'][$count]['textarea_value'] =  (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
-                $custom_field['custom_field'][$count]['date_value'] =  (!empty($val['date_value']) ? $val['date_value'] : '');
-                $custom_field['custom_field'][$count]['time_value'] =  (!empty($val['time_value']) ? $val['time_value'] : '');
+                $custom_field['custom_field'][$count]["id"]= (!empty($val['id']) ? $val['id'] : '');
+                $custom_field['custom_field'][$count]["name"]= (!empty($val['name']) ? $val['name'] : '');
+                $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
+                $number_value =  $custom_field['custom_field'][$count]["number_value"];
+                $vale[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
+                $selectName = $vale[$count];
+                if($selectName =='CHECKBOX' || $selectName=='DROPDOWN'){
+
+                   $check_data = $institutionCustomFieldOptions
+                                        ->find()
+                                        ->select([
+                                                'name' => $institutionCustomFieldOptions->aliasField('name')
+                                            ])
+                                        ->where([$institutionCustomFieldOptions->aliasField('id IN') => $number_value])
+                                        ->hydrate(false)
+                                        ->toArray();
+                        $custom_field['custom_field'][$count]["dropdown_value"] = !empty($check_data[0]['name']) ? $check_data[0]['name'] : '';  
+                }
+                
+                $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                
+                $custom_field['custom_field'][$count]["decimal_value"] =  (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                $custom_field['custom_field'][$count]["textarea_value"] =  (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                $custom_field['custom_field'][$count]["date_value"] =  (!empty($val['date_value']) ? $val['date_value'] : '');
+                $custom_field['custom_field'][$count]["time_value"] =  (!empty($val['time_value']) ? $val['time_value'] : '');
                 $count++;
             }
             $body = array_merge($bodys, $custom_field);
