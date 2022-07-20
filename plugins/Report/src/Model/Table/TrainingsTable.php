@@ -81,10 +81,10 @@ class TrainingsTable extends AppTable
         // Starts POCOR-6592
         if ($this->request->data[$this->alias()]['feature'] ==  'Report.EmployeeTrainingCard') {
             $this->ControllerAction->field('guardian_id');
-            $this->ControllerAction->field('format'); 
+            //$this->ControllerAction->field('format'); 
         }else if ($feature != 'Report.TrainingResults'){
             $this->ControllerAction->field('status'); 
-            $this->ControllerAction->field('format'); 
+           // $this->ControllerAction->field('format'); 
             $this->ControllerAction->field('institution_status');
             $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         }
@@ -105,8 +105,9 @@ class TrainingsTable extends AppTable
             $this->ControllerAction->field('institution_status');
             $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
             $this->ControllerAction->field('area_id', ['type' => 'hidden']); // POCOR-6596
-            $this->ControllerAction->field('format');// POCOR-6596
+            //$this->ControllerAction->field('format');// POCOR-6596
         }
+        $this->ControllerAction->field('format');
         // End POCOR-6596 Changed position of format field
     }
 
