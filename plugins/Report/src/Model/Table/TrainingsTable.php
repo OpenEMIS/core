@@ -9,6 +9,7 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
+use Cake\I18n\Date;
 
 use App\Model\Traits\OptionsTrait;
 
@@ -87,10 +88,6 @@ class TrainingsTable extends AppTable
             $this->ControllerAction->field('institution_status');
             $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         }
-        // Ends POCOR-6592
-        if($feature == 'Report.TrainersSessions'){
-            $this->ControllerAction->field('trainer_name', ['type' => 'hidden']);  // POCOR-6569
-        }
         
         if ($feature == 'Report.TrainingResults') {
             $this->ControllerAction->field('status');// POCOR-6596
@@ -98,6 +95,10 @@ class TrainingsTable extends AppTable
         }    
         $this->ControllerAction->field('start_date', ['type' => 'hidden']);  // POCOR-6569
         $this->ControllerAction->field('end_date', ['type' => 'hidden']);  // POCOR-6569
+        // perivous (Ends POCOR-6592) latest ticket (POCOR-6827) only change the field order 
+        if($feature == 'Report.TrainersSessions'){
+            $this->ControllerAction->field('trainer_name', ['type' => 'hidden']);  // POCOR-6569
+        }
         
         // Start POCOR-6596 Changed position of format field 
         if ($feature == 'Report.TrainingResults') {
@@ -358,9 +359,11 @@ class TrainingsTable extends AppTable
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             $trainingCourseId = $this->request->data[$this->alias()]['training_course_id'];
+            $startDate = date("Y-m-d", strtotime($this->request->data[$this->alias()]['start_date'])); 
+            $endDate = date("Y-m-d", strtotime($this->request->data[$this->alias()]['end_date'])); 
             if (in_array($feature, $includedFeature)) {
-                /*$training_trainer_object = TableRegistry::get('Report.TrainingTrainers');
-                $trainers = $training_trainer_object->getTrainers();*/
+                $training_trainer_object = TableRegistry::get('Report.TrainingTrainers');
+                $trainers = $training_trainer_object->getTrainers();
                 // POCOR-6827 start
                 $training_trainer = TableRegistry::get('Training.TrainingSessionTrainers');
                 $username = TableRegistry::get('User.Users');
@@ -372,15 +375,7 @@ class TrainingsTable extends AppTable
                         ])
                         ->select([
                             'id' => $username->aliasField('id'),
-                            'name' => $this->find()->func()->concat([
-                                'first_name' => 'literal',
-                                " ",
-                                'middle_name' => 'literal',
-                                " ",
-                                'third_name' => 'literal',
-                                " ",
-                                'last_name' => 'literal',
-                            ]),
+                            'name' => $training_trainer->aliasField('name')
                         ])
                         ->leftJoin([$training_trainer->alias() => $training_trainer->table()], [
                             $training_trainer->aliasField('trainer_id = ') . $username->aliasField('id')
@@ -391,7 +386,11 @@ class TrainingsTable extends AppTable
                         ->leftJoin([$getCourses->alias() => $getCourses->table()], 
                             [$getCourses->aliasField('id = ') . $session->aliasField('training_course_id')
                         ])
-                        ->where([$session->aliasField('training_course_id')=>$trainingCourseId])
+                        ->where([
+                            $session->aliasField('training_course_id')=>$trainingCourseId,
+                            $session->aliasField('start_date') . ' >= ' => $startDate,
+                            $session->aliasField('end_date') . ' <= ' => $endDate,
+                        ])
                         ->group([$training_trainer->aliasField('trainer_id')])
                         ->hydrate(false)
                         ->toArray();// POCOR-6827 end
@@ -417,6 +416,7 @@ class TrainingsTable extends AppTable
         if (in_array($feature, $includedFeature)) {
             $entity = $attr['entity'];
             $attr['type'] = 'date';
+            $attr['onChangeReload'] = true;  // POCOR-6827
             // $attr['onChangeReload'] = true;
             return $attr;
         }
@@ -434,6 +434,7 @@ class TrainingsTable extends AppTable
         if (in_array($feature, $includedFeature)) {
             $entity = $attr['entity'];
             $attr['type'] = 'date';
+            $attr['onChangeReload'] = true;  // POCOR-6827
             return $attr;
         }
     }
