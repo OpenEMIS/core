@@ -222,8 +222,7 @@ class AssessmentsTable extends ControllerActionTable {
             $assessmentId = $entity['id'];
             if (array_key_exists($this->alias(), $requestData)) {
                 if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
-                    $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-                    $assessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+                    $assessmentItems = TableRegistry::get('assessment_items');
                     $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('assessment_id')=>$assessmentId])->toArray();
                     if(isset($checkdata) && (!empty($checkdata))){
                         foreach($checkdata as $val){
@@ -262,6 +261,24 @@ class AssessmentsTable extends ControllerActionTable {
                 $requestData['errorMessage'] = $errorMessage;
             }
         }
+    }
+
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        //patch data to handle fail save because of validation error.
+        if (array_key_exists($this->alias(), $requestData)) {
+            if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
+                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
+                    $subjectId = $item['education_subject_id'];
+                    $requestData[$this->alias()]['assessment_items'][$key]['education_subject'] = $EducationSubjects->get($subjectId);
+                }
+            } else { //logic to capture error if no subject inside the grade.
+                $errorMessage = $this->aliasField('noSubjects');
+                $requestData['errorMessage'] = $errorMessage;
+            }
+        }
+
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
