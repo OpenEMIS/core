@@ -29,7 +29,7 @@ class ClassReportCardsTable extends AppTable
 
         $this->addBehavior('CustomExcel.ClassExcelReport', [
             'templateTable' => 'ProfileTemplate.ClassTemplates',
-            'templateTableKey' => 'report_card_id',
+            'templateTableKey' => 'class_profile_template_id',
             'format' => $this->fileType,
             'download' => false,
             'wrapText' => true,
@@ -93,7 +93,7 @@ class ClassReportCardsTable extends AppTable
                 $ClassesReportCards->aliasField('academic_period_id'),
                 $ClassesReportCards->aliasField('institution_id'),
                 $ClassesReportCards->aliasField('institution_class_id'),
-                $ClassesReportCards->aliasField('report_card_id')
+                $ClassesReportCards->aliasField('class_profile_template_id')
             ])
             ->contain([
                 'AcademicPeriods' => [
@@ -122,7 +122,7 @@ class ClassReportCardsTable extends AppTable
             ->where([
                 $ClassesReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
                 $ClassesReportCards->aliasField('institution_id') => $params['institution_id'],
-                $ClassesReportCards->aliasField('report_card_id') => $params['report_card_id'],
+                $ClassesReportCards->aliasField('class_profile_template_id') => $params['class_profile_template_id'],
                 $ClassesReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
             ])
             ->first();
@@ -141,7 +141,7 @@ class ClassReportCardsTable extends AppTable
         // delete institution report card process
         $ClassReportCardProcesses = TableRegistry::Get('ReportCard.ClassReportCardProcesses');
         $ClassReportCardProcesses->deleteAll([
-            'report_card_id' => $params['report_card_id'],
+            'class_profile_template_id' => $params['class_profile_template_id'],
             'institution_id' => $params['institution_id'],
             'institution_class_id' => $params['institution_class_id']
         ]);
@@ -155,7 +155,7 @@ class ClassReportCardsTable extends AppTable
             'controller' => 'ProfileTemplates',
             'action' => 'ClassProfiles',
             'index',
-            'report_card_id' => $params['report_card_id'],
+            'class_profile_template_id' => $params['class_profile_template_id'],
             'academic_period_id' => $params['academic_period_id'],
             'institution_id' => $params['institution_id'],
             'institution_class_id' => $params['institution_class_id']
@@ -167,10 +167,10 @@ class ClassReportCardsTable extends AppTable
     
     public function onExcelTemplateInitialiseProfiles(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('report_card_id', $params)) {
+        if (array_key_exists('class_profile_template_id', $params)) {
             //$ProfileTemplates = TableRegistry::get('ProfileTemplate.ProfileTemplates');
             $ProfileTemplates = TableRegistry::get('ProfileTemplate.ClassTemplates');
-            $entity = $ProfileTemplates->get($params['report_card_id'], ['contain' => ['AcademicPeriods']]);
+            $entity = $ProfileTemplates->get($params['class_profile_template_id'], ['contain' => ['AcademicPeriods']]);
 
             $extra['report_card_start_date'] = $entity->start_date;
             $extra['report_card_end_date'] = $entity->end_date;

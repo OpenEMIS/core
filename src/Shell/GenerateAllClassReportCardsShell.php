@@ -32,7 +32,7 @@ class GenerateAllClassReportCardsShell extends Shell
 
             $recordToProcess = $this->ClassReportCardProcesses->find()
                 ->select([
-                    $this->ClassReportCardProcesses->aliasField('report_card_id'),
+                    $this->ClassReportCardProcesses->aliasField('class_profile_template_id'),
                     $this->ClassReportCardProcesses->aliasField('institution_id'),
                     $this->ClassReportCardProcesses->aliasField('institution_class_id'),
                     $this->ClassReportCardProcesses->aliasField('academic_period_id')
@@ -49,7 +49,7 @@ class GenerateAllClassReportCardsShell extends Shell
             if (!empty($recordToProcess)) {
                 $this->out('Generating report card for Class '.$recordToProcess['institution_class_id'].' of Institution '.$recordToProcess['institution_id'].' ('. Time::now() .')');
                 $this->ClassReportCardProcesses->updateAll(['status' => $this->ClassReportCardProcesses::RUNNING], [
-                    'report_card_id' => $recordToProcess['report_card_id'],
+                    'class_profile_template_id' => $recordToProcess['class_profile_template_id'],
                     'institution_id' => $recordToProcess['institution_id'],
                     'academic_period_id' => $recordToProcess['academic_period_id'],
                     'institution_class_id' => $recordToProcess['institution_class_id']
