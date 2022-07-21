@@ -65,12 +65,15 @@ class TrainingsTable extends AppTable
         $this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
         $this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
         $this->fields = [];
+        $feature = $this->request->data[$this->alias()]['feature'];
         $this->ControllerAction->field('feature', ['select' => false]);
+        if ($feature == 'Report.TrainingSessionParticipants'){//POCOR-6828 change position of field
+            $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        }
         $this->ControllerAction->field('training_course_id', ['type' => 'hidden']);
         $this->ControllerAction->field('training_session_id', ['type' => 'hidden']);
         $this->ControllerAction->field('training_need_type', ['type' => 'hidden']);
         // Starts POCOR-6593
-        $feature = $this->request->data[$this->alias()]['feature'];
         if ($feature == 'Report.TrainingSessions') {
             $this->ControllerAction->field('session_start_date',['type' => 'date']);
             $this->ControllerAction->field('session_end_date',['type' => 'date']);
@@ -89,6 +92,10 @@ class TrainingsTable extends AppTable
         if ($this->request->data[$this->alias()]['feature'] ==  'Report.EmployeeTrainingCard') {
             $this->ControllerAction->field('guardian_id');
             $this->ControllerAction->field('format'); 
+        }else if ($feature == 'Report.TrainingSessionParticipants'){//POCOR-6828 starts add condition for report TrainingSessionParticipants
+            $this->ControllerAction->field('status'); 
+            $this->ControllerAction->field('institution_status');
+            $this->ControllerAction->field('format'); //POCOR-6828 ends
         }else if ($feature != 'Report.TrainingResults'){
             $this->ControllerAction->field('status'); 
             $this->ControllerAction->field('format'); 
@@ -183,21 +190,19 @@ class TrainingsTable extends AppTable
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
-
                 if (in_array($feature, ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers'])) {
                     if (!empty($this->request->data[$this->alias()]['training_course_id'])) {
                         $courseId = $this->request->data[$this->alias()]['training_course_id'];
                         $options = $this->Training->getSessionList(['training_course_id' => $courseId]);
-
+                        //POCOR-6828 Starts
                         $attr['type'] = 'chosenSelect';
                         $attr['attr']['multiple'] = false;
                         $attr['select'] = true;
                         $attr['options'] = ['' => '-- ' . ('Select') . ' --', '-1' => ('All training sessions')] + $options;
-                        $attr['onChangeReload'] = true;
+                        $attr['onChangeReload'] = true;//POCOR-6828 Ends
                     } else {
                         $attr['type'] = 'hidden';
                     }
-                    
                 }
             }
             return $attr;
@@ -242,7 +247,6 @@ class TrainingsTable extends AppTable
                     $attr['options'] = $workflowStatuses;
                 }
                 // End POCOR-4072
-
                 return $attr;
             }
         }
@@ -294,7 +298,6 @@ class TrainingsTable extends AppTable
 
     public function implementedEvents()
     {
-
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxUserStaffAutocomplete'] = 'ajaxUserStaffAutocomplete';
         return $events;
@@ -334,10 +337,9 @@ class TrainingsTable extends AppTable
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
-        $includedFeature     = ['Report.ReportTrainingNeedStatistics','Report.TrainingTrainers'];
+        $includedFeature = ['Report.ReportTrainingNeedStatistics','Report.TrainingTrainers','Report.TrainingSessionParticipants'];//POCOR-6828 add 'Report.TrainingSessionParticipants'
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-
             if (in_array($feature, $includedFeature)) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
