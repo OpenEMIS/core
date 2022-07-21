@@ -183,7 +183,7 @@ class UserBehavior extends Behavior
                 if ($this->isCAv4()) {
                     $this->_table->field('email', ['type' => 'readonly', 'after' => 'identity_number']);
                 } else {
-                    $this->_table->ControllerAction->field('email', ['type' => 'readonly', 'after' => 'identity_number']);
+                    $this->_table->ControllerAction->field('email', ['type' => 'string', 'after' => 'identity_number']);  //POCOR-6833
                 }
             }
 
