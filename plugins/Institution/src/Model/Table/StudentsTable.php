@@ -1702,6 +1702,7 @@ class StudentsTable extends ControllerActionTable
 				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
                 'role_name' => ($role == 1) ? 'student' : NULL
 			];
+            //POCOR-6805 start
             $Guardians = TableRegistry::get('student_custom_field_values');
             $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
             $studentCustomFields = TableRegistry::get('student_custom_fields');
@@ -1764,7 +1765,7 @@ class StudentsTable extends ControllerActionTable
                         $count++;
                     }
                 }
-            $body = array_merge($bodys, $custom_field);    
+            $body = array_merge($bodys, $custom_field);    //POCOR-6805 end
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
 			if (!empty($entity->created_user_id)) {
 				$Webhooks->triggerShell('student_create', ['username' => ''], $body);

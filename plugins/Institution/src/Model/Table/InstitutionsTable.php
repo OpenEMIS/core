@@ -1046,6 +1046,7 @@ class InstitutionsTable extends ControllerActionTable
                 "institution_email" => $entity->email,
                 "institution_website" => $entity->website,
             ];
+            //POCOR-6805 start
             $InstitutionCustomFields = TableRegistry::get('institution_custom_fields');
             $InstitutionCustomFieldValues = TableRegistry::get('institution_custom_field_values');
             $institutionCustomFieldOptions = TableRegistry::get('institution_custom_field_options');
@@ -1061,6 +1062,7 @@ class InstitutionsTable extends ControllerActionTable
                                 'textarea_value' => $InstitutionCustomFieldValues->aliasField('textarea_value'),
                                 'date_value' => $InstitutionCustomFieldValues->aliasField('date_value'),
                                 'time_value' => $InstitutionCustomFieldValues->aliasField('time_value'),
+                                'checkbox_value_text'   => 'institutionCustomFieldOptions.name',
                             ])
                         ->leftJoin(
                             [$InstitutionCustomFields->alias() => $InstitutionCustomFields->table()],
@@ -1068,6 +1070,8 @@ class InstitutionsTable extends ControllerActionTable
                                 $InstitutionCustomFields->aliasField('id ='). $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
                             ]
                         )
+                        ->leftJoin(['institutionCustomFieldOptions' => 'institution_custom_field_options'],
+                                  ['institutionCustomFieldOptions.institution_custom_field_id = '.$InstitutionCustomFieldValues->aliasField('institution_custom_field_id')])
                         ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $entity->id])
                         ->group([$InstitutionCustomFields->aliasField('id')])
                         ->hydrate(false)
@@ -1077,32 +1081,28 @@ class InstitutionsTable extends ControllerActionTable
             foreach($custom_fieldData as $val){
                 $custom_field['custom_field'][$count]["id"]= (!empty($val['id']) ? $val['id'] : '');
                 $custom_field['custom_field'][$count]["name"]= (!empty($val['name']) ? $val['name'] : '');
-                $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
-                $number_value =  $custom_field['custom_field'][$count]["number_value"];
                 $vale[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
-                $selectName = $vale[$count];
-                if($selectName =='CHECKBOX' || $selectName=='DROPDOWN'){
-
-                   $check_data = $institutionCustomFieldOptions
-                                        ->find()
-                                        ->select([
-                                                'name' => $institutionCustomFieldOptions->aliasField('name')
-                                            ])
-                                        ->where([$institutionCustomFieldOptions->aliasField('id IN') => $number_value])
-                                        ->hydrate(false)
-                                        ->toArray();
-                        $custom_field['custom_field'][$count]["dropdown_value"] = !empty($check_data[0]['name']) ? $check_data[0]['name'] : '';  
+                $fieldType = $vale[$count];
+                if ($fieldType == 'TEXT') {
+                    $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                }else if ($fieldType == 'DECIMAL') {
+                    $custom_field['custom_field'][$count]["decimal_value"] =  (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                }else if ($fieldType == 'TEXTAREA') {
+                    $custom_field['custom_field'][$count]["textarea_value"] =  (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                }else if ($fieldType == 'DATE') {
+                    $custom_field['custom_field'][$count]["date_value"] =  (!empty($val['date_value']) ? $val['date_value'] : '');
+                }else if ($fieldType == 'TIME') {
+                    $custom_field['custom_field'][$count]["time_value"] =  date('h:i A', strtotime($val->time_value));
+                }else if ($fieldType == 'CHECKBOX') {
+                    $custom_field['custom_field'][$count]["checkbox_value"] =  (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
+                }else if ($fieldType == 'DROPDOWN') {
+                    $custom_field['custom_field'][$count]["dropdown_value"] =  (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
+                }else if ($fieldType == 'COORDINATES') {
+                    $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
                 }
-                
-                $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                
-                $custom_field['custom_field'][$count]["decimal_value"] =  (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
-                $custom_field['custom_field'][$count]["textarea_value"] =  (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
-                $custom_field['custom_field'][$count]["date_value"] =  (!empty($val['date_value']) ? $val['date_value'] : '');
-                $custom_field['custom_field'][$count]["time_value"] =  (!empty($val['time_value']) ? $val['time_value'] : '');
                 $count++;
             }
-            $body = array_merge($bodys, $custom_field);
+            $body = array_merge($bodys, $custom_field); //POCOR-6805 end
             if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
                 $Webhooks = TableRegistry::get('Webhook.Webhooks');
                 if ($this->Auth->user()) {
