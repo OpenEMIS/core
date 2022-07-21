@@ -77,6 +77,14 @@ class TrainingsTable extends AppTable
             $this->ControllerAction->field('area_education_id');
         }
         // Ends POCOR-6593
+        //Start:POCOR-6829 
+        if($feature == 'Report.TrainingTrainers'){
+            $this->ControllerAction->field('academic_period_id');
+            $this->ControllerAction->field('training_course_id');
+            $this->ControllerAction->field('training_session_id');
+		    $this->ControllerAction->field('format');
+        }
+        //End:POCOR-6829
         // Starts POCOR-6592
         if ($this->request->data[$this->alias()]['feature'] ==  'Report.EmployeeTrainingCard') {
             $this->ControllerAction->field('guardian_id');
@@ -180,19 +188,19 @@ class TrainingsTable extends AppTable
                     if (!empty($this->request->data[$this->alias()]['training_course_id'])) {
                         $courseId = $this->request->data[$this->alias()]['training_course_id'];
                         $options = $this->Training->getSessionList(['training_course_id' => $courseId]);
-                        if ($courseId == -1 ) {
-                            $options = ['-1' => _('All training sessions.')] + $options; //POCOR-6595
-                        }
-                    } else {
-                        $options = [];
-                    }
 
-                    $attr['options'] = $options;
-                    $attr['type'] = 'select';
-                    $attr['select'] = false;
-                    return $attr;
+                        $attr['type'] = 'chosenSelect';
+                        $attr['attr']['multiple'] = false;
+                        $attr['select'] = true;
+                        $attr['options'] = ['' => '-- ' . ('Select') . ' --', '-1' => ('All training sessions')] + $options;
+                        $attr['onChangeReload'] = true;
+                    } else {
+                        $attr['type'] = 'hidden';
+                    }
+                    
                 }
             }
+            return $attr;
         }
     }
 
@@ -326,7 +334,7 @@ class TrainingsTable extends AppTable
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
-        $includedFeature     = ['Report.ReportTrainingNeedStatistics'];
+        $includedFeature     = ['Report.ReportTrainingNeedStatistics','Report.TrainingTrainers'];
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 
