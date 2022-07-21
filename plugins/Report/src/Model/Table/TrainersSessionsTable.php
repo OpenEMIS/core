@@ -83,7 +83,7 @@ class TrainersSessionsTable extends AppTable
         $where       = [];
 
         if ($trainer_id > 0) {
-            $where['TrainingSessionTrainers.id'] = $trainer_id;
+            $where['TrainingSessionTrainers.trainer_id'] = $trainer_id;//POCOR-6827
         }
         if ($course_id > 0) {
             $where['TrainingCourses.id'] = $course_id;
@@ -94,9 +94,9 @@ class TrainersSessionsTable extends AppTable
         if (!empty($end_date)) {
             $where[$this->aliasField('end_date <=')] = date('Y-m-d', strtotime($end_date));
         }
-        if ($course_id > 0) {
+        /*if ($course_id > 0) { // POCOR-6827
             $where[$this->aliasField('id')] = $course_id;
-        }
+        }*/
 
         $selectable['area']                          = 'Areas.name';
         $selectable['gender']                        = 'Genders.name';
@@ -154,6 +154,7 @@ class TrainersSessionsTable extends AppTable
         $query->join($join);
         $query->select($selectable);
         $query->where($where);
+       // print_r($query->Sql());die('hj');
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
