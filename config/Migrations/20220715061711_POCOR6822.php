@@ -216,7 +216,7 @@ class POCOR6822 extends AbstractMigration
         $this->execute('ALTER TABLE `class_report_cards` ADD `institution_class_id` INT(11) NOT NULL COMMENT "links to institution_classes.id" AFTER `academic_period_id`');
         $this->execute('ALTER TABLE `class_report_cards` ADD INDEX(`institution_class_id`)');
         $this->execute('ALTER TABLE `class_report_cards` DROP PRIMARY KEY, ADD PRIMARY KEY( `class_profile_template_id`, `institution_id`, `academic_period_id`, `institution_class_id`)');
-        $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8_general_ci NULL DEFAULT NULL');
+        $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL');
 
         $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_content` `file_content` LONGBLOB NULL DEFAULT NULL');
 
