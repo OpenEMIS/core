@@ -736,7 +736,8 @@ class InstitutionsTable extends AppTable
                         [
                             'Report.InstitutionStudents',
                             'Report.InstitutionStudentEnrollments',
-                            'Report.InstitutionStaff'
+                            'Report.InstitutionStaff',
+                            'Report.InstitutionPositions'  // POCOR-6869
                         ])
                 ) {
 
@@ -762,6 +763,22 @@ class InstitutionsTable extends AppTable
                             $statusOptions[$key] = $value;
                         }
                         break;
+
+                    //Start POCOR-6869
+                    case 'Report.InstitutionPositions':
+                        $Workflows = TableRegistry::get('Workflow.Workflows');
+                        $Statuses = TableRegistry::get('Workflow.WorkflowSteps');
+                        $workflowData = $Workflows->find()->select(['id', 'name'])
+                                        ->where([$Workflows->aliasField('name LIKE') => 'Positions'])
+                                        ->first();
+                        $statusData = $Statuses->find()->select(['id', 'name'])
+                                      ->where([$Statuses->aliasField('workflow_id') => $workflowData->id])  
+                                      ->toArray();
+                        foreach ($statusData as $key => $value) {
+                            $statusOptions[$value->id] = $value->name;
+                        }
+                        break;
+                    //End POCOR-6869
 
                     default:
                         return [];
