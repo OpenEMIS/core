@@ -574,6 +574,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $params['report_card_id']
                 ]
             )
+            ->order(['report_card_id' => 'DESC'])
             ->autoFields(true);
     }
 
