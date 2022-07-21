@@ -206,6 +206,22 @@ class InstitutionClassStudentsTable extends AppTable
             'label' => '',
         ];
 
+        // Start:POCOR-6854
+        $fields[] = [
+            'key' => 'Institutions.code',
+            'field' => 'code',
+            'type' => 'string',
+            'label' => '',
+        ];
+
+        $fields[] = [
+            'key' => 'Institutions.name',
+            'field' => 'institution_id',
+            'type' => 'string',
+            'label' => '',
+        ];
+        // End:POCOR-6854
+
         $fields[] = [
             'key' => 'InstitutionClassStudents.student_id',
             'field' => 'student_id',
@@ -319,6 +335,15 @@ class InstitutionClassStudentsTable extends AppTable
         $assessmentId = $sheet['assessmentId'];
         $staffId = $sheet['staffId'];
         $StudentStatuses = $this->StudentStatuses;
+        // POCOR-6837 start
+        $where = [];
+        $getUrl = $settings['path'];
+        $url = substr(strrchr(rtrim($getUrl, '/'), '/'), 1);
+        $where[$this->aliasField('institution_id')] = $institutionId;
+        if($url =='export'){
+            $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED','WITHDRAWN'];
+        }
+       // POCOR-6837 end
         
         $query
             ->contain([
@@ -337,8 +362,7 @@ class InstitutionClassStudentsTable extends AppTable
                 'StudentStatuses.id = '.$this->aliasField('student_status_id')
             ])
             ->select(['code' => 'Institutions.code', 'institution_id' => 'Institutions.name', 'openemis_number' => 'Users.openemis_no', 'birth_place_area' => 'BirthplaceAreas.name', 'dob' => 'Users.date_of_birth', 'class_name' => 'InstitutionClasses.name'])
-            ->where([$this->aliasField('institution_id') => $institutionId/*,
-                $StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']*/])
+            ->where($where)
             ->order(['class_name']);
 
         if (isset($sheet['classId'])) {
