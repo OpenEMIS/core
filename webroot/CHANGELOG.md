@@ -1,6 +1,5 @@
 ### [3.75.17] - 2022-07-22
 - Implemented: C. Develop WebHook Token to establish linkage between OpenEMIS and MoE JoLearn (MoE Operational Plan Activity 1.1.4.b.1)
-- Implemented: E. Develop OpenEMIS APIS for JoLearn - Develop teacher subjects API (MoE EMIS Operational Plan Activity 1.1.4b3.2)
 - Implemented: E. Develop OpenEMIS APIS for JoLearn - Develop a feature for logging of all WebHook calls-not just error message (MoE EMIS Operational Plan Activity 1.1.4b3.3)
 - Implemented: E. Develop OpenEMIS APIS for JoLearn - Develop assessment grades API (MoE EMIS Operational Plan Activity 1.1.4b3.1)
 - Bug Fixed: Reports>Training: Changes to Session Participants
