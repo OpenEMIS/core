@@ -471,14 +471,14 @@ class InstitutionStaffTable extends AppTable
             'key' => 'Users.identity_number',
             'field' => 'user_identities_default',
             'type' => 'string',
-            'label' => __($identity->name)
+            'label' => __('Default Identity Number') //POCOR-6827
         ];
 
         $newFields[] = [
             'key' => 'Users.identities',
             'field' => 'user_identities',
             'type' => 'string',
-            'label' => __('Other Identities')
+            'label' =>  __('Other Identity Numbers') //POCOR-6827
         ];
 
         $newFields[] = [
