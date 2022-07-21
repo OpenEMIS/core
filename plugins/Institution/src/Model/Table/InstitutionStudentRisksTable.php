@@ -594,7 +594,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             $Guardians = TableRegistry::get('student_custom_field_values');
             $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
             $studentCustomFields = TableRegistry::get('student_custom_fields');
-
+            //POCOR-6805 start
             $guardianData = $Guardians->find()
             ->select([
                 'id'                             => $Guardians->aliasField('id'),
@@ -653,7 +653,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                         $count++;
                     }
                 }
-            $body = array_merge($bodys, $custom_field);
+            $body = array_merge($bodys, $custom_field); //POCOR-6805 end
 			if (!$afterSaveOrDeleteEntity->isNew()) {
 				$Webhooks = TableRegistry::get('Webhook.Webhooks');
 				if (!empty($afterSaveOrDeleteEntity->modified_user_id)) {
