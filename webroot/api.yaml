@@ -1828,6 +1828,46 @@ paths:
             $ref: ""
         "405":
           description: "Invalid Input"
+    # author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    # POCOR-6870 - modified 6806 ticket's api desciprtion in this ticket
+    get:
+      tags:
+      - "Assessments"
+      summary: "Get Assessment Item Results"
+      description: "Get Assessment Item Results"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "controllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - name: "_finder"
+        in: "query"
+        description: "eg: assessmentGradesOptions[academic_period_id:31;assessment_grading_option_id:6;education_grade_id:104;education_subject_id:60;student_id:11005]"
+        type: string
+        required: true
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
           
   /restful/v2/Institution-InstitutionClassStudents.json:
     get:
@@ -2084,50 +2124,7 @@ paths:
           description: "Invalid ID supplied"
         "404":
           description: "404 Not Found"
-  # author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
-  # POCOR-6806
-  /restful/v2/Assessment-AssessmentItemResults.json:
-    get:
-      tags:
-      - "Assessments"
-      summary: "Get Assessment Item Results"
-      description: "Get Assessment Item Results"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "Authorization"
-        in: "header"
-        description: "bearer token"
-        type: string
-        required: true
-      - name: "controllerAction"
-        in: "header"
-        description: "OpenEMIS_Classroom"
-        type: string
-        required: true
-      - name: "_finder"
-        in: "query"
-        description: "eg: assessmentGradesOptions[academic_period_id:31;assessment_grading_option_id:6;education_grade_id:104;education_subject_id:60;student_id:11005]"
-        type: string
-        required: true
-      - name: "_limit"
-        in: "query"
-        description: "eg: 0 (for all)"
-        type: string
-      responses:
-        "200":
-          description: "Successful Operation"
-          schema:
-            $ref: ""
-        "400":
-          description: "Invalid ID supplied"
-        "404":
-          description: "404 Not Found"
-          
   
-
 definitions:
   login:
     type: "object"
