@@ -49,12 +49,12 @@ class InstitutionStandardsTable extends AppTable
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
-        $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_class_id', ['type' => 'hidden']);
         $this->ControllerAction->field('assessment_id', ['type' => 'hidden']);
         $this->ControllerAction->field('assessment_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('format',['after' => 'month']);  // POCOR-6871
         
         $controllerName = $this->controller->name;
         $institutions_crumb = __('Institutions');
@@ -73,7 +73,8 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_class_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('month', ['type' => 'hidden']);
+        $this->ControllerAction->field('month', ['type' => 'hidden','after' => 'institution_class_id']);  // POCOR-6871
+
         $session = $this->request->session();
         $institution_id = $session->read('Institution.Institutions.id');
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institution_id]);
