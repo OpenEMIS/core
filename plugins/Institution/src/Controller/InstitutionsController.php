@@ -4367,17 +4367,19 @@ class InstitutionsController extends AppController
      */
     public function getInstitutionStatisticStandardReportFeature() : array
     {
+        // Start POCOR-6871
         $options = [
+            'Institution.InstitutionStandardMarksEntered'  => __('Marks Entered by Staff'),//POCOR-6630
+            'Institution.InstitutionStaffPositionProfile'  => __('Staff Absences'),//POCOR-6581 //POCOR-6715
+            'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
+            'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
+            'Institution.InstitutionStandardStudentAbsences'  => __('Student Absences'),//POCOR-6631
+            'Institution.InstitutionStandardStudentAbsenceType'  => __('Student Absence Type'),//POCOR-6632
+            'Institution.StudentHealths'  => __('Student Health'),
             'Institution.InstitutionStandards' => __('Students') . ' ' . __('Overview'),
             'Institution.StudentSpecialNeeds'  => __('Student Special Needs'),
-            'Institution.StudentHealths'  => __('Student Health'),
-            'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
-            'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
-            'Institution.InstitutionStaffPositionProfile'  => __('Staff Absences'),//POCOR-6581 //POCOR-6715
-            'Institution.InstitutionStandardStudentAbsenceType'  => __('Student Absence Type'),//POCOR-6632
-            'Institution.InstitutionStandardMarksEntered'  => __('Marks Entered by Staff'),//POCOR-6630
-            'Institution.InstitutionStandardStudentAbsences'  => __('Student Absences'),//POCOR-6631
         ];
+        // End POCOR-6871
         return $options;
     }
 }
