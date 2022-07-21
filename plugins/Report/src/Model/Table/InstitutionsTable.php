@@ -340,6 +340,7 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'position_filter';
                     $fieldsOrder[] = 'teaching_filter';//POCOR-6614
+                    $fieldsOrder[] = 'status'; //POCOR-6869
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'format';
                     break;
