@@ -227,7 +227,7 @@ class TrainingNeedsTable extends AppTable
             'key' => 'Users.identity_number',
             'field' => 'user_identities_default',
             'type' => 'string',
-            'label' => __('Identity')
+            'label' => __($identity->name)
         ];
 
         $newFields[] = [
