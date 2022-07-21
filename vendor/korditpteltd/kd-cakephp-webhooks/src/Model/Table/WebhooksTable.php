@@ -7,6 +7,7 @@ use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Exception;
+use Cake\Log\Log;//POCOR-6808
 
 class WebhooksTable extends Table
 {
@@ -67,7 +68,6 @@ class WebhooksTable extends Table
 
     public function triggerShell($eventKey, $params = [], $body = [])
     { 
-		
         $webhooks = $this->find()
             ->innerJoinWith('WebhookEvents')
             ->where([
@@ -86,12 +86,13 @@ class WebhooksTable extends Table
         }
         foreach ($webhooks as $webhook) {
             $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook ' . $webhook->url . ' ' . $webhook->method . ' ' . $body ;
-            $logs = ROOT . DS . 'logs' . DS . 'Webhook.log & echo $!';
+            $logs = ROOT . DS . 'logs' . DS . 'webhook-access.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
             try {
                 $pid = exec($shellCmd);
             } catch (Exception $ex) {
-                Log::write('error', __METHOD__ . ' exception when triggering : '. $ex);
+                //POCOR-6808 added custom log file intead of error log
+                Log::write('exception', __METHOD__ . ' exception when triggering : '. $ex);
             }
         }
     }

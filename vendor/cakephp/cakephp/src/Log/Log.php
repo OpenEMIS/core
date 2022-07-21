@@ -146,7 +146,8 @@ class Log
         'warning',
         'notice',
         'info',
-        'debug'
+        'debug',
+        'exception'//POCOR-6808
     ];
 
     /**
@@ -164,6 +165,7 @@ class Log
         'notice' => LOG_NOTICE,
         'info' => LOG_INFO,
         'debug' => LOG_DEBUG,
+        'exception' => LOG_USER,//POCOR-6808
     ];
 
     /**
@@ -525,4 +527,10 @@ class Log
     {
         return static::write('info', $message, $context);
     }
+    /** POCOR-6808 starts - registering custom log file*/
+    public static function exception($message, $context = [])
+    {
+        return static::write('webhook-error', $message, $context);
+    }
+    /** POCOR-6808 ends*/
 }
