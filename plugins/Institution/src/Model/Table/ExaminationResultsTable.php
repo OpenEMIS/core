@@ -278,10 +278,12 @@ class ExaminationResultsTable extends ControllerActionTable
                 $ExaminationItemResults->ExaminationGradingOptions->aliasField('name'),
                 $ExaminationItemResults->ExaminationGradingOptions->aliasField('examination_grading_type_id'),
             ])
+            ->contain('ExaminationGradingOptions') //POCOR-6879
+            ->contain('ExaminationGradingOptions.ExaminationGradingTypes') //POCOR-6879
             ->innerJoinWith('Examinations')
             ->innerJoinWith('ExaminationItems')
             ->leftJoinWith('EducationSubjects')
-            ->innerJoinWith('ExaminationGradingOptions')
+           // ->innerJoinWith('ExaminationGradingOptions')
             ->where([
                 $ExaminationItemResults->aliasField('academic_period_id') => $academicPeriodId,
                 $ExaminationItemResults->aliasField('examination_id') => $examinationId,
@@ -307,8 +309,10 @@ class ExaminationResultsTable extends ControllerActionTable
             $studentExaminationResults = $this->getStudentExaminationResults($academicPeriodId, $examinationId, $institutionId, $studentId);
 
             foreach ($studentExaminationResults as $key => $itemResultObj) {
+               
                 $examItemObj = $itemResultObj->_matchingData['ExaminationItems'];
-                $gradingOptionObj = $itemResultObj->_matchingData['ExaminationGradingOptions'];
+                //$gradingOptionObj = $itemResultObj->_matchingData['ExaminationGradingOptions'];
+                $gradingOptionObj = $itemResultObj['examination_grading_option'];
                 $gradingTypeId = $gradingOptionObj->examination_grading_type_id;
                 $fieldName = $this->getFieldNameByExamItem($examItemObj);
 
@@ -327,6 +331,10 @@ class ExaminationResultsTable extends ControllerActionTable
                             $itemResult = '<span style="color:#CC5C5C;">' . $itemResult . '</span>';
                         }
                         break;
+                    case 'MARK': //POCOR-6879
+                        $itemResult = number_format($itemResultObj->marks, 2);
+                        $itemResult = '<span style="color:#CC5C5;">' . $itemResult . '</span>';
+                    break;
                     case 'GRADES':
                         $itemResult = $gradingOptionObj->code_name;
                         break;
