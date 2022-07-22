@@ -1837,7 +1837,6 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE workflow_steps_params ADD FOREIGN KEY (`workflow_step_id`) REFERENCES workflow_steps(`id`)");
         $this->execute("ALTER TABLE workflow_steps_roles ADD FOREIGN KEY (`workflow_step_id`) REFERENCES workflow_steps(`id`)");
 
-        
         $this->execute('SET SESSION FOREIGN_KEY_CHECKS=1;');
     
     }
@@ -1845,6 +1844,7 @@ class POCOR6851 extends AbstractMigration
     // rollback
     public function down()
     {
+        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
         $this->execute('DROP TABLE IF EXISTS `academic_periods`');
         $this->execute('RENAME TABLE `zz_6851_academic_periods` TO `academic_periods`');
         $this->execute('DROP TABLE IF EXISTS `alerts_roles`');
