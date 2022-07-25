@@ -956,11 +956,40 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         scope.selectedUserData.birthplaceArea = {name: selectedData.birth_area_name};
     }
 
+    scope.setExternalUserData = function(selectedData) {
+        scope.selectedUserData.openemis_no = selectedData.openemis_no;
+        scope.selectedUserData.first_name = selectedData.first_name;
+        scope.selectedUserData.middle_name = selectedData.middle_name;
+        scope.selectedUserData.third_name = selectedData.third_name;
+        scope.selectedUserData.last_name = selectedData.last_name;
+        scope.selectedUserData.preferred_name = selectedData.preferred_name;
+        scope.selectedUserData.date_of_birth = selectedData.date_of_birth;
+        scope.selectedUserData.email = selectedData.email;
+        scope.selectedUserData.gender_id = selectedData.gender_id;
+        scope.selectedUserData.gender = {name: selectedData.gender.name};
+        scope.selectedUserData.nationality_id = selectedData.main_nationality.id;
+        scope.selectedUserData.nationality_name = selectedData.main_nationality.name;
+        scope.selectedUserData.identity_type_id = selectedData.main_identity_type.id;
+        scope.selectedUserData.identity_type_name = selectedData.main_identity_type.name;
+        scope.selectedUserData.identity_number = selectedData.identity_number;
+        scope.selectedUserData.username = selectedData.username;
+        scope.selectedUserData.password = selectedData.password;
+        scope.selectedUserData.address = selectedData.address;
+        scope.selectedUserData.postalCode = selectedData.postal_code;
+        scope.selectedUserData.address_area_id = selectedData.address_area_id;
+        scope.selectedUserData.birthplace_area_id = selectedData.birthplace_area_id;
+        scope.selectedUserData.addressArea = {name: selectedData.area_name};
+        scope.selectedUserData.birthplaceArea = {name: selectedData.birth_area_name};
+    }
+
     scope.getUserData = function() {
         var log = [];
         angular.forEach(scope.rowsThisPage , function(value) {
             if (value.id == scope.selectedUser) {
-                scope.setUserData(value);
+                if(scope.isInternalSearchSelected)
+                    scope.setUserData(value);
+                else
+                    scope.setExternalUserData(value);
             }
         }, log);
     }
