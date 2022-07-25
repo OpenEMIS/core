@@ -694,10 +694,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -737,10 +737,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -1218,10 +1218,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -1298,12 +1298,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
+                localeText: localeText,
                 enableColResize: false,
                 enableFilter: false,
                 enableServerSideFilter: true,
@@ -1312,7 +1313,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'infinite',
+                 rowModelType: 'infinite',
                 // Removed options - Issues in ag-Grid AG-828
                 // suppressCellSelection: true,
 
