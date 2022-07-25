@@ -1,8 +1,10 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Directory.angular/directoryaddguardian/directory.directoryaddguardian.svc', ['block' => true]); ?>
 <?= $this->Html->script('Directory.angular/directoryaddguardian/directory.directoryaddguardian.ctrl', ['block' => true]); ?>
+<?= $this->Html->css('ControllerAction.../plugins/datepicker/css/bootstrap-datepicker.min', ['block' => true]); ?>
+<?= $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepicker.min', ['block' => true]); ?>
+<?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min.js', ['block' => true]); ?>
 
-<script data-require="jquery@1.11.3" data-semver="1.11.3" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 <link data-require="bootstrap@3.3.2" data-semver="3.3.2" rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
 <script data-require="bootstrap@3.3.2" data-semver="3.3.2" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 <script data-require="angularjs@1.4.9" data-semver="1.4.9" src="https://code.angularjs.org/1.4.9/angular.min.js"></script>
@@ -64,7 +66,7 @@
                 ng-if="step!=='confirmation' && step!=='summary'" ng-click="goToNextStep()" style="font-size: 12px;">Next</button>
         </div>
         <div class="step-content">
-            <div class="step-pane sample-pane" ng-if="step === 'user_details'">
+            <div class="step-pane sample-pane" ng-show="step === 'user_details'">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                     <div class="input select required error">
                         <label>Relation Type</label>
@@ -128,9 +130,9 @@
                     </div>
                     <div class="input date required">
                         <label for="User_date_of_birth"><?= __('Date Of Birth') ?></label>
-                        <div class="input-group date" id="User_date_of_birth" style="" datepicker="" ng-model="selectedUserData.date_of_birth" ng-click="isDatepickerOpen = !isDatepickerOpen">
-                            <input type="text" class="form-control " ng-model="selectedUserData.date_of_birth" uib-datepicker-popup="yyyy/MM/dd" is-open="isDatepickerOpen" datepicker-options="datepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" />
-                            <span class="input-group-addon" style="background-color: #6699CC; color: #FFF;"><i class="glyphicon glyphicon-calendar"></i></span>
+                        <div class="input-group date " id="User_date_of_birth" style="">
+                            <input type="text" class="form-control " name="User[date_of_birth]" ng-model="selectedUserData.date_of_birth">
+                            <span class="input-group-addon" style="color: #FFFFFF;background-color: #6699CC;"><i class="glyphicon glyphicon-calendar"></i></span>
                         </div>
                         <div ng-if="error.date_of_birth" class="error-message">
                             <p>{{ error.date_of_birth }}</p>
@@ -456,6 +458,20 @@
         </div>
     </div>
 </div>
+
+<script>
+$(function () {
+var datepicker0 = $('#User_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
+$( document ).on('DOMMouseScroll mousewheel scroll', function(){
+    window.clearTimeout( t );
+    t = window.setTimeout( function(){
+        datepicker0.datepicker('place');
+    });
+});
+});
+
+//]]>
+</script>
 
 <style>
     .pd-10 {
