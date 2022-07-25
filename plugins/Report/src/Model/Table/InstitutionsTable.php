@@ -603,6 +603,7 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.WashReports'])) {
                 $options = [
+                    'All' => __('All'),   //POCOR-6732
                     'Water' => __('Water'),
                     'Sanitation' => __('Sanitation'),
                     'Hygiene' => __('Hygiene'),
