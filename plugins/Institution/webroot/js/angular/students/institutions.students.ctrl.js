@@ -102,7 +102,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.setStudentData = setStudentData;
     StudentController.changeTransferReason = changeTransferReason;
     StudentController.transferStudent = transferStudent;
-    
+    StudentController.setStudentDataFromExternalSearchData = setStudentDataFromExternalSearchData;
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
@@ -247,8 +247,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function generatePassword() {
-            UtilsSvc.isAppendLoader(true);
-            InstitutionsStudentsSvc.generatePassword()
+        UtilsSvc.isAppendLoader(true);
+        InstitutionsStudentsSvc.generatePassword()
         .then(function(response) {
             StudentController.selectedStudentData.password = response;
             StudentController.getAcademicPeriods();
@@ -808,6 +808,32 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.isDiffSchool = StudentController.studentData.is_diff_school > 0 ? true : false;
     }
 
+    function setStudentDataFromExternalSearchData() {
+        StudentController.selectedStudentData.addressArea = {};
+        StudentController.selectedStudentData.birthplaceArea = {};
+        StudentController.selectedStudentData.openemis_no = StudentController.studentData.openemis_no;
+        StudentController.selectedStudentData.first_name = StudentController.studentData.first_name;
+        StudentController.selectedStudentData.middle_name = StudentController.studentData.middle_name;
+        StudentController.selectedStudentData.third_name = StudentController.studentData.third_name;
+        StudentController.selectedStudentData.last_name = StudentController.studentData.last_name;
+        StudentController.selectedStudentData.preferred_name = StudentController.studentData.preferred_name;
+        StudentController.selectedStudentData.gender = {
+            name: StudentController.studentData.gender.name
+        };
+        StudentController.selectedStudentData.date_of_birth = StudentController.studentData.date_of_birth;
+        StudentController.selectedStudentData.email = StudentController.studentData.email;
+        StudentController.selectedStudentData.identity_type_name = StudentController.studentData.main_identity_type.name;
+        StudentController.selectedStudentData.identity_number = StudentController.studentData.identity_number;
+        StudentController.selectedStudentData.nationality_name = StudentController.studentData.main_nationality.name;
+        StudentController.selectedStudentData.address = StudentController.studentData.address;
+        StudentController.selectedStudentData.postalCode = StudentController.studentData.postal_code;
+        StudentController.selectedStudentData.addressArea.name = StudentController.studentData.area_name;
+        StudentController.selectedStudentData.birthplaceArea.name = StudentController.studentData.birth_area_name;
+        StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
+        var todayDate = new Date();
+        StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+    }
+
     function goToPrevStep(){
         if(StudentController.isInternalSearchSelected) {
             StudentController.step = 'internal_search';
@@ -864,6 +890,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         } else if(StudentController.isExternalSearchSelected) {
             StudentController.step = 'add_student';
             StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
+            StudentController.setStudentDataFromExternalSearchData();
             StudentController.generatePassword();
         } else {
             switch(StudentController.step){

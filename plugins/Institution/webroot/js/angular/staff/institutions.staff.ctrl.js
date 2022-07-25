@@ -86,6 +86,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.goToInternalSearch = goToInternalSearch;
     StaffController.goToExternalSearch = goToExternalSearch;
     StaffController.setstaffData = setstaffData;
+    StaffController.setStaffDataFromExternalSearchData = setStaffDataFromExternalSearchData;
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -844,6 +845,29 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.birthplaceArea.name = StaffController.staffData.birth_area_name;
     }
 
+    function setStaffDataFromExternalSearchData() {
+        StaffController.selectedStaffData.addressArea = {};
+        StaffController.selectedStaffData.birthplaceArea = {};
+        StaffController.selectedStaffData.openemis_no = StaffController.staffData.openemis_no;
+        StaffController.selectedStaffData.first_name = StaffController.staffData.first_name;
+        StaffController.selectedStaffData.middle_name = StaffController.staffData.middle_name;
+        StaffController.selectedStaffData.third_name = StaffController.staffData.third_name;
+        StaffController.selectedStaffData.last_name = StaffController.staffData.last_name;
+        StaffController.selectedStaffData.preferred_name = StaffController.staffData.preferred_name;
+        StaffController.selectedStaffData.gender = {
+            name: StaffController.staffData.gender.name
+        };
+        StaffController.selectedStaffData.date_of_birth = StaffController.staffData.date_of_birth;
+        StaffController.selectedStaffData.email = StaffController.staffData.email;
+        StaffController.selectedStaffData.identity_type_name = StaffController.staffData.main_identity_type.name;
+        StaffController.selectedStaffData.identity_number = StaffController.staffData.identity_number;
+        StaffController.selectedStaffData.nationality_name = StaffController.staffData.main_nationality.name;
+        StaffController.selectedStaffData.address = StaffController.staffData.address;
+        StaffController.selectedStaffData.postalCode = StaffController.staffData.postal_code;
+        StaffController.selectedStaffData.addressArea.name = StaffController.staffData.area_name;
+        StaffController.selectedStaffData.birthplaceArea.name = StaffController.staffData.birth_area_name;
+    }
+
     function goToNextStep() {
         if(StaffController.isInternalSearchSelected) {
             StaffController.step = 'add_staff';
@@ -851,7 +875,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.generatePassword();
         } else if(StaffController.isExternalSearchSelected) {
             StaffController.step = 'add_staff';
-            StaffController.setstaffData();
+            StaffController.setStaffDataFromExternalSearchData();
             StaffController.generatePassword();
         } else {
             switch(StaffController.step){
