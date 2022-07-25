@@ -361,6 +361,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function getPositions(){
+        if(!StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.fte_id)
+            return;
         UtilsSvc.isAppendLoader(true);
         var params = {
             institution_id: StaffController.institutionId,
