@@ -637,10 +637,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -652,7 +652,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                 rowModelType: 'infinite',
+                rowModelType: 'infinite',
                 // Removed options - Issues in ag-Grid AG-828
                 // suppressCellSelection: true,
 
@@ -680,10 +680,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -695,7 +695,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                 rowModelType: 'infinite',
+                rowModelType: 'infinite',
                 // Removed options - Issues in ag-Grid AG-828
                 // suppressCellSelection: true,
 
@@ -967,10 +967,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -1047,10 +1047,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 enableColResize: false,

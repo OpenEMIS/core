@@ -718,10 +718,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             scope.externalGridOptions = {
                 columnDefs: [
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -812,13 +812,14 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             scope.externalGridOptions = {
                 columnDefs: [
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
-                enableColResize: false,
+                localeText: localeText,
+                enableColResize: true,
                 enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
@@ -826,7 +827,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'infinite',
+                 rowModelType: 'infinite',
                 // Removed options - Issues in ag-Grid AG-828
                 // suppressCellSelection: true,
 
