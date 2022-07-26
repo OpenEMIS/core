@@ -52,8 +52,8 @@ class ArchivesController extends AppController
         }elseif($this->request->action == 'Transfer'){
             $headers = 'Data Management';    
             $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
-            $header = __('Data Management') . ' - ' . __('Transfer');
-            $this->Navigation->addCrumb('Transfer');
+            $header = __('Data Management') . ' - ' . __('Archive');
+            $this->Navigation->addCrumb('Archive');
         }elseif($this->request->action == 'Connection'){
             $headers = 'Data Management';    
             $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
