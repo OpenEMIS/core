@@ -13,7 +13,7 @@ class POCOR5186 extends AbstractMigration
      * @return void
      */
     public function up()
-    {   // add assignee id start
+    {   // add assignee_id column start
         $table = $this->table('student_behaviours');
         $table
             ->addColumn('assignee_id', 'integer', [
@@ -24,7 +24,7 @@ class POCOR5186 extends AbstractMigration
             ])
             ->addIndex('assignee_id')
             ->update();
-        // add assignee id start
+        // add assignee_id column start
         // add wrokflow behaviour    
         $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
         $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
@@ -38,9 +38,9 @@ class POCOR5186 extends AbstractMigration
             [
                 'id' => $workflow_models_id+1,
                 'name' => 'Institutions > Behaviour > Students',
-                'model' => 'Institution.Institutions',
+                'model' => 'Institution.StudentBehaviours',
                 'filter' => NULL,
-                'is_school_based' => '0',
+                'is_school_based' => '1',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
@@ -48,7 +48,7 @@ class POCOR5186 extends AbstractMigration
         $this->insert('workflow_models', $workflowModelData);
 
 
-        $get_workflow_models_last_inserted_id = $this->query("SELECT * FROM workflow_models WHERE `name` = 'Institutions > Behaviour > Students' AND `model` = 'Institution.Institutions'");
+        $get_workflow_models_last_inserted_id = $this->query("SELECT * FROM workflow_models WHERE `name` = 'Institutions > Behaviour > Students' AND `model` = 'Institution.StudentBehaviours'");
         $workflow_models_last_inserted_id = $get_workflow_models_last_inserted_id->fetchAll();
         $workflow_models_last_inserted_id_value = $workflow_models_last_inserted_id[0]['id'];
 
@@ -127,6 +127,7 @@ class POCOR5186 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
+
         $activeStatusId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $workflow_models_last_inserted_id_value,
@@ -135,15 +136,16 @@ class POCOR5186 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
-        $InactiveStatusId = $WorkflowStepsTable->find()
+          
+        /*$InactiveStatusId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $workflow_models_last_inserted_id_value,
-                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('category') => 4,
                 $WorkflowStepsTable->aliasField('name') => 'Inactive'
             ])
             ->extract('id')
-            ->first();
-
+            ->first();*/
+            
         //  workflow_actions
         $workflowActionData = [
             [
@@ -181,7 +183,7 @@ class POCOR5186 extends AbstractMigration
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
                 'workflow_step_id' => $pendingForApprovalStatusId,
-                'next_workflow_step_id' => $InactiveStatusId,
+                'next_workflow_step_id' => $activeStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],

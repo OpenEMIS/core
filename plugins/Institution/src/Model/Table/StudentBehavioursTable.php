@@ -23,13 +23,19 @@ class StudentBehavioursTable extends ControllerActionTable
     use OptionsTrait;
     use EncodingTrait;
     use MessagesTrait;
+    // Workflow Steps - category
+    const TO_DO = 1;
+    const IN_PROGRESS = 2;
+    const DONE = 3;
+
     public function initialize(array $config)
     {
         parent::initialize($config);
-
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'workflow_step_id']);
         $this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);//POCOR-5186
+        //$this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('InstitutionStudents', ['className' => 'InstitutionStudent.InstitutionStudents', 'foreignKey' => 'student_id']);
@@ -38,12 +44,14 @@ class StudentBehavioursTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-
+        $this->addBehavior('Workflow.Workflow'); //POCOR-5186
+        //$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['index', 'view', 'add', 'edit', 'delete']
         ]);
+        
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
@@ -85,6 +93,7 @@ class StudentBehavioursTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         return $validator
+        ->notEmpty('assignee_id')
             ->add('date_of_behaviour', [
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
@@ -128,7 +137,7 @@ class StudentBehavioursTable extends ControllerActionTable
         }
     }
 
-    /* public function beforeAction($event)
+    /*public function beforeAction($event)
     {
         $this->field('openemis_no');
         $this->field('student_id');
@@ -143,6 +152,8 @@ class StudentBehavioursTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['visible' => true]);
+        $this->field('student_id', ['visible' => true]);
+        $this->field('student_behaviour_category_id', ['visible' => true]);
         $this->field('description', ['visible' => false]);
         $this->field('action', ['visible' => false]);
         $this->field('time_of_behaviour', ['visible' => false]);
@@ -329,7 +340,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('class', ['entity' => $entity]);
         $this->field('date_of_behaviour', ['entity' => $entity]);
-     //   $this->field('assignee_id', ['entity' => $entity]);//POCOR-5186
+        $this->field('assignee_id', ['entity' => $entity]);//POCOR-5186
         $this->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour','assignee_id']);
         // POCOR 6154 
 
@@ -343,7 +354,7 @@ class StudentBehavioursTable extends ControllerActionTable
 
     public function editBeforeQuery(Event $event, Query $query)
     {
-        $query->contain(['AcademicPeriods','Students','StudentBehaviourCategories']);// POCOR 6154 
+        $query->contain(['AcademicPeriods','Students','StudentBehaviourCategories','Assignees']);// POCOR 6154 
     }
 
     public function editAfterAction(Event $event, Entity $entity)
@@ -874,10 +885,64 @@ class StudentBehavioursTable extends ControllerActionTable
     {
         if ($this->action == 'view') {
             return $entity->assignee->name;
-        } elseif ($this->action == 'add' || $this->action == 'edit') {
-            $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'assignee_id');
-            return isset($rowEntity->name) ? $rowEntity->name : '-';
+        } 
+    }
+
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+            $workflowModelEntity = $WorkflowStepsTable
+                    ->find()
+                    ->select('WorkflowModels.is_school_based')
+                    ->contain([
+                        'Workflows.WorkflowModels'
+                    ])
+                    ->where([
+                        'WorkflowModels.model' => 'Institution.StudentBehaviours'
+                    ])
+                    ->hydrate(false)
+                    ->first();
+
+                $isSchoolBased = $workflowModelEntity['WorkflowModels']['is_school_based'];
+                if (!$autoAssignAssignee) {
+                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                    $params = [
+                        'is_school_based' => $isSchoolBased,
+                        'workflow_step_id' => $nextStepId
+                    ];
+
+                    if ($isSchoolBased) {
+                        $session = $this->request->session();
+                        if ($session->check('Institution.Institutions.id')) {
+                            $institutionId = $session->read('Institution.Institutions.id');
+                            $params['institution_id'] = $institutionId;
+                        }
+                    }
+                    $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+                }
+                $attr['type'] = 'select';
+                $attr['options'] = $assigneeOptions;
         }
+    }
+
+    public function getWorkflowActionEntity(Entity $entity){
+        if ($entity->has('action')) {
+            $selectedAction = $entity->action;
+            $workflowActions = $entity->workflow_actions;
+
+            foreach($workflowActions as $key => $actionEntity){
+                if ($actionEntity->id == $selectedAction) {
+                    return $actionEntity;
+                }
+            }
+        }
+        return null;
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        
     }
 
 }
