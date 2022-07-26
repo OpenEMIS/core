@@ -6,36 +6,36 @@
 <?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min.js', ['block' => true]); ?>
 
 <style type="text/css">
-    .breadcrumb {
-      padding: 8px 15px !important;
-      margin-bottom: 0px !important;
-      list-style: none !important;
-      background-color: white !important;
-      border-radius: 4px !important;
-    }
-    .breadcrumb.panel-breadcrumb li {
-          direction: ltr !important;
-        }
+.breadcrumb {
+  padding: 8px 15px !important;
+  margin-bottom: 0px !important;
+  list-style: none !important;
+  background-color: white !important;
+  border-radius: 4px !important;
+}
+.breadcrumb.panel-breadcrumb li {
+  direction: ltr !important;
+}
 
-        .panel-breadcrumb {
+.panel-breadcrumb {
   background-color: #FFF!important;
   border-bottom: 1px solid #DDD!important;
   border-radius: 0!important;
   padding: 8px 0!important;
   margin: 0!important;
-    }
-    .page-header {
+}
+.page-header {
     padding-bottom: 9px!important;
     margin: 0px 0 20px!important;
     border-bottom: 1px solid #eee!important;
-    }
+}
 
-    .h2, h2 {
+.h2, h2 {
     font-size: 20px!important;
-        font-weight: 400!important;
-    }
+    font-weight: 400!important;
+}
 
-    .page-header h2 {
+.page-header h2 {
     display: inline-block!important;
     position: relative!important;
     padding: 8px 24px 8px 0!important;
@@ -44,30 +44,32 @@
     white-space: nowrap!important;
     overflow: hidden!important;
     text-overflow: ellipsis!important;
-    }
+}
 
 
-    .breadcrumb > li + li::before {
+.breadcrumb > li + li::before {
 
-        font-family: 'FontAwesome'!important;
-        content: "\f054"!important;
-        font-size: 0.6em!important;
-        color: #999!important;
-        font-weight: normal!important;
-        margin: 4px!important;
-        line-height: 12px!important;
-        display: inline!important;
-        float: left!important;
+    font-family: 'FontAwesome'!important;
+    content: "\f054"!important;
+    font-size: 0.6em!important;
+    color: #999!important;
+    font-weight: normal!important;
+    margin: 4px!important;
+    line-height: 12px!important;
+    display: inline!important;
+    float: left!important;
 
-    }
+}
 
-    .breadcrumb > li + li::before {
+.breadcrumb > li + li::before {
     padding: 0 5px!important;
     content: "/\00a0";
-    }
-    .content-wrapper {
-        height: 22% !important;
-    }
+}
+.content-wrapper {
+    float: none!important;
+    clear: both!important;
+    height: auto !important;
+}
 </style>
 
 <link data-require="bootstrap@3.3.2" data-semver="3.3.2" rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
@@ -90,6 +92,7 @@
         'index'
     ];
 ?>
+
 <div class="content-wrapper">
     <ul class="breadcrumb panel-breadcrumb">
     <li><a href="<?= $this->Url->build($homeUrl) ?>"><i class="fa fa-home"></i></a></li>
