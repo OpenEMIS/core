@@ -187,7 +187,7 @@ class InstitutionStaffDetailedTable extends AppTable
                         [$StaffCustomFields->aliasField('id  = ') . $custom_field->aliasField('staff_custom_field_id')])
             ->where($conditions)
             ->group(['staff_id']);
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($year) {
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($year) {
             return $results->map(function ($row) use ($year){
                 $row['academic_period'] = $year;
                 $Guardians = TableRegistry::get('staff_custom_field_values');

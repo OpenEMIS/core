@@ -603,9 +603,9 @@ class StaffUserTable extends ControllerActionTable
                     $shiftName =  $val->shift_option->name;
                 }
             }
-            $body = array();
+            $bodys = array();
 
-            $body = [
+            $bodys = [
                 'security_users_id' => !empty($user_id) ? $user_id : NULL,
                 'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
                 'security_users_first_name' =>  !empty($first_name) ? $first_name : NULL,
@@ -638,8 +638,74 @@ class StaffUserTable extends ControllerActionTable
                 'shift_options_name' => !empty($shiftName) ? $shiftName : NULL,
                 'role_name' => ($role == 1) ? 'staff' : NULL
             ];
-              $Webhooks = TableRegistry::get('Webhook.Webhooks');
-              $Webhooks->triggerShell('staff_update', ['username' => ''], $body);
+            //POCOR-6805 start
+            $Guardians = TableRegistry::get('staff_custom_field_values');
+            $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
+            $staffCustomFields = TableRegistry::get('staff_custom_fields');
+            $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
+            //POCOR-6805 start
+            $guardianData = $Guardians->find()
+            ->select([
+                'id'                             => $Guardians->aliasField('id'),
+                'staff_id'                     => $Guardians->aliasField('staff_id'),
+                'staff_custom_field_id'        => $Guardians->aliasField('staff_custom_field_id'),
+                'text_value'                     => $Guardians->aliasField('text_value'),
+                'number_value'                   => $Guardians->aliasField('number_value'),
+                'decimal_value'                  => $Guardians->aliasField('decimal_value'),
+                'textarea_value'                 => $Guardians->aliasField('textarea_value'),
+                'date_value'                     => $Guardians->aliasField('date_value'),
+                'time_value'                     => $Guardians->aliasField('time_value'),
+                'checkbox_value_text'            => 'staffCustomFieldOptions.name',
+                'name'                           => 'staffCustomField.name',
+                'staff_custom_id'                => 'staffCustomField.id',
+                'field_type'                     => 'staffCustomField.field_type',
+            ])->leftJoin(
+                ['staffCustomField' => 'staff_custom_fields'],
+                [
+                    'staffCustomField.id = '.$Guardians->aliasField('staff_custom_field_id')
+                ]
+            )->leftJoin(
+                ['staffCustomFieldOptions' => 'staff_custom_field_options'],
+                [
+                    'staffCustomFieldOptions.id = '.$Guardians->aliasField('number_value')
+                ]
+            )
+            ->where([
+                $Guardians->aliasField('staff_id') => $user_id,
+            ])->hydrate(false)->toArray();
+        $custom_field = array();
+        $count = 0;
+        if(!empty($guardianData)){
+            foreach ($guardianData as $val) {
+                $custom_field['custom_field'][$count]["id"] = (!empty($val['staff_custom_id']) ? $val['staff_custom_id'] : '');
+                $custom_field['custom_field'][$count]["name"]= (!empty($val['name']) ? $val['name'] : '');
+                $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
+                $fieldType = $fieldTypes[$count];
+                if($fieldType == 'TEXT'){
+                    $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                }else if ($fieldType == 'CHECKBOX') {
+                    $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
+                }else if ($fieldType == 'NUMBER') {
+                    $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
+                }else if ($fieldType == 'DECIMAL') {
+                    $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                }else if ($fieldType == 'TEXTAREA') {
+                    $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                }else if ($fieldType == 'DROPDOWN') {
+                    $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
+                }else if ($fieldType == 'DATE') {
+                    $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
+                }else if ($fieldType == 'TIME') {
+                    $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
+                }else if ($fieldType == 'COORDINATES') {
+                    $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                }
+                $count++;
+            }
+        }
+          $body = array_merge($bodys, $custom_field); //POCOR-6805 end
+          $Webhooks = TableRegistry::get('Webhook.Webhooks');
+          $Webhooks->triggerShell('staff_update', ['username' => ''], $body);
         }
     }
 
