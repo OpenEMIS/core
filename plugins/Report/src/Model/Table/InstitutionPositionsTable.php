@@ -58,6 +58,7 @@ class InstitutionPositionsTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
         $teachingFilter = $requestData->teaching_filter;
+        $statusFilter = $requestData->status;  //POCOR-6869
 
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
@@ -68,7 +69,7 @@ class InstitutionPositionsTable extends AppTable
         if ($teachingFilter != -1) {
             $where[$StaffPositionTitles->aliasField('type')] = $teachingFilter;
         }
-        $where[$this->aliasField('status_id')] = 29;//POCOR-6850
+        $where[$this->aliasField('status_id')] = $statusFilter; //POCOR-6869
         if ($areaId != -1) {
             $where['Institutions.area_id'] = $areaId;
         }
