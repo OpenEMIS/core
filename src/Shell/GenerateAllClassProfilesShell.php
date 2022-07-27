@@ -8,47 +8,47 @@ use Cake\ORM\Entity;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
 /**
- * Class is Shell used for Class report generation
+ * Class is Shell used for Class profile report generation
  * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
  * 
  */
-class GenerateAllClassReportCardsShell extends Shell
+class GenerateAllClassProfilesShell extends Shell
 {
     private $sleepTime = 5;
 
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('CustomExcel.ClassReportCards');
-        $this->loadModel('ReportCard.ClassReportCardProcesses');
+        $this->loadModel('CustomExcel.ClassProfiles');
+        $this->loadModel('ReportCard.ClassProfileProcesses');
         $this->loadModel('SystemProcesses');
     }
 
     public function main()
     {
         if (!empty($this->args[0]) && !empty($this->args[1])) {
-            $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllClassReportCards', getmypid(), $this->args[0], '', $this->args[1]);
+            $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllClassProfiles', getmypid(), $this->args[0], '', $this->args[1]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
 
-            $recordToProcess = $this->ClassReportCardProcesses->find()
+            $recordToProcess = $this->ClassProfileProcesses->find()
                 ->select([
-                    $this->ClassReportCardProcesses->aliasField('class_profile_template_id'),
-                    $this->ClassReportCardProcesses->aliasField('institution_id'),
-                    $this->ClassReportCardProcesses->aliasField('institution_class_id'),
-                    $this->ClassReportCardProcesses->aliasField('academic_period_id')
+                    $this->ClassProfileProcesses->aliasField('class_profile_template_id'),
+                    $this->ClassProfileProcesses->aliasField('institution_id'),
+                    $this->ClassProfileProcesses->aliasField('institution_class_id'),
+                    $this->ClassProfileProcesses->aliasField('academic_period_id')
                 ])
                 ->where([
-                    $this->ClassReportCardProcesses->aliasField('status') => $this->ClassReportCardProcesses::NEW_PROCESS
+                    $this->ClassProfileProcesses->aliasField('status') => $this->ClassProfileProcesses::NEW_PROCESS
                 ])
                 ->order([
-                    $this->ClassReportCardProcesses->aliasField('created'),
+                    $this->ClassProfileProcesses->aliasField('created'),
                 ])
                 ->hydrate(false)
                 ->first();
 
             if (!empty($recordToProcess)) {
                 $this->out('Generating report card for Class '.$recordToProcess['institution_class_id'].' of Institution '.$recordToProcess['institution_id'].' ('. Time::now() .')');
-                $this->ClassReportCardProcesses->updateAll(['status' => $this->ClassReportCardProcesses::RUNNING], [
+                $this->ClassProfileProcesses->updateAll(['status' => $this->ClassProfileProcesses::RUNNING], [
                     'class_profile_template_id' => $recordToProcess['class_profile_template_id'],
                     'institution_id' => $recordToProcess['institution_id'],
                     'academic_period_id' => $recordToProcess['academic_period_id'],
@@ -56,11 +56,11 @@ class GenerateAllClassReportCardsShell extends Shell
                 ]);
 
                 $excelParams = new ArrayObject([]);
-                $excelParams['className'] = 'CustomExcel.ClassReportCards';
+                $excelParams['className'] = 'CustomExcel.ClassProfiles';
                 $excelParams['requestQuery'] = $recordToProcess;
 				
                 try {
-                    $this->ClassReportCards->renderExcelTemplate($excelParams);
+                    $this->ClassProfiles->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {
                     $this->out('Error generating Report Card for Class '.$recordToProcess['institution_class_id'].' of Institution ' . $recordToProcess['institution_id']);
                     $this->out($e->getMessage());
@@ -78,8 +78,8 @@ class GenerateAllClassReportCardsShell extends Shell
 
     private function recursiveCallToMyself($args)
     {
-        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllClassReportCards '.$args[0] . " " . $args[1];
-        $logs = ROOT . DS . 'logs' . DS . 'GenerateAllClassReportCards.log & echo $!';
+        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllClassProfiles '.$args[0] . " " . $args[1];
+        $logs = ROOT . DS . 'logs' . DS . 'GenerateAllClassProfiles.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
         try {
             $pid = exec($shellCmd);

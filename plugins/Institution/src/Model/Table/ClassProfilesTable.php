@@ -9,11 +9,11 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 /**
- * initalize Class Report Cards class
+ * initalize Class Profile class
  * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
  * 
  */
-class ClassReportCardsTable extends ControllerActionTable
+class ClassProfilesTable extends ControllerActionTable
 {
      // for status
      CONST NEW_REPORT = 1;

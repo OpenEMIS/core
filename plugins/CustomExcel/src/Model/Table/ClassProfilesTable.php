@@ -17,7 +17,7 @@ use Cake\Datasource\ConnectionManager;
  * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
  * 
  */
-class ClassReportCardsTable extends AppTable
+class ClassProfilesTable extends AppTable
 {
     private $fileType = 'xlsx';
     //private $fileType = 'pdf';
@@ -68,17 +68,17 @@ class ClassReportCardsTable extends AppTable
 
     public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
     {
-        $ClassReportCards = TableRegistry::get('Institution.ClassReportCards');
-        if (!$ClassReportCards->exists($params)) {
+        $ClassProfiles = TableRegistry::get('Institution.ClassProfiles');
+        if (!$ClassProfiles->exists($params)) {
             // insert institution report card record if it does not exist
-            $params['status'] = $ClassReportCards::IN_PROGRESS;
+            $params['status'] = $ClassProfiles::IN_PROGRESS;
             $params['started_on'] = date('Y-m-d H:i:s');
-            $newEntity = $ClassReportCards->newEntity($params);
-            $ClassReportCards->save($newEntity);
+            $newEntity = $ClassProfiles->newEntity($params);
+            $ClassProfiles->save($newEntity);
         } else {
             // update status to in progress if record exists
-            $ClassReportCards->updateAll([
-                'status' => $ClassReportCards::IN_PROGRESS,
+            $ClassProfiles->updateAll([
+                'status' => $ClassProfiles::IN_PROGRESS,
                 'started_on' => date('Y-m-d H:i:s')
             ], $params);
         }
@@ -86,14 +86,14 @@ class ClassReportCardsTable extends AppTable
 
     public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
     {
-        $ClassesReportCards = TableRegistry::get('Institution.ClassReportCards');
-        $classReportCardData = $ClassesReportCards
+        $ClassesProfiles = TableRegistry::get('Institution.ClassProfiles');
+        $classProfileData = $ClassesProfiles
             ->find()
             ->select([
-                $ClassesReportCards->aliasField('academic_period_id'),
-                $ClassesReportCards->aliasField('institution_id'),
-                $ClassesReportCards->aliasField('institution_class_id'),
-                $ClassesReportCards->aliasField('class_profile_template_id')
+                $ClassesProfiles->aliasField('academic_period_id'),
+                $ClassesProfiles->aliasField('institution_id'),
+                $ClassesProfiles->aliasField('institution_class_id'),
+                $ClassesProfiles->aliasField('class_profile_template_id')
             ])
             ->contain([
                 'AcademicPeriods' => [
@@ -120,27 +120,27 @@ class ClassReportCardsTable extends AppTable
                 ]
             ])
             ->where([
-                $ClassesReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
-                $ClassesReportCards->aliasField('institution_id') => $params['institution_id'],
-                $ClassesReportCards->aliasField('class_profile_template_id') => $params['class_profile_template_id'],
-                $ClassesReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
+                $ClassesProfiles->aliasField('academic_period_id') => $params['academic_period_id'],
+                $ClassesProfiles->aliasField('institution_id') => $params['institution_id'],
+                $ClassesProfiles->aliasField('class_profile_template_id') => $params['class_profile_template_id'],
+                $ClassesProfiles->aliasField('institution_class_id') => $params['institution_class_id'],
             ])
             ->first();
         // set filename
-        $fileName = $classReportCardData->academic_period->name . '_' . $classReportCardData->class_template->code. '_' . $classReportCardData->institution->name. '_' . $classReportCardData->institution_class->name . '.' . $this->fileType;
+        $fileName = $classProfileData->academic_period->name . '_' . $classProfileData->class_template->code. '_' . $classProfileData->institution->name. '_' . $classProfileData->institution_class->name . '.' . $this->fileType;
         $filepath = $extra['file_path'];
         $fileContent = file_get_contents($filepath);
-        $status = $ClassesReportCards::GENERATED;
+        $status = $ClassesProfiles::GENERATED;
         // save file
-        $ClassesReportCards->updateAll([
+        $ClassesProfiles->updateAll([
             'status' => $status,
             'completed_on' => date('Y-m-d H:i:s'),
             'file_name' => $fileName,
             'file_content' => $fileContent
         ], $params);
         // delete institution report card process
-        $ClassReportCardProcesses = TableRegistry::Get('ReportCard.ClassReportCardProcesses');
-        $ClassReportCardProcesses->deleteAll([
+        $ClassProfileProcesses = TableRegistry::Get('ReportCard.ClassProfileProcesses');
+        $ClassProfileProcesses->deleteAll([
             'class_profile_template_id' => $params['class_profile_template_id'],
             'institution_id' => $params['institution_id'],
             'institution_class_id' => $params['institution_class_id']

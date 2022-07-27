@@ -20,7 +20,7 @@ use App\Model\Table\ControllerActionTable;
  * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
  * 
  */
-class ClassProfilesTable extends ControllerActionTable
+class ClassesProfilesTable extends ControllerActionTable
 {
     private $statusOptions = [];
     private $reportProcessList = [];
@@ -62,8 +62,8 @@ class ClassProfilesTable extends ControllerActionTable
         $this->toggle('remove', false);
 
         $this->ReportCards = TableRegistry::get('ProfileTemplate.ClassTemplates');
-        $this->ClassReportCards = TableRegistry::get('Institution.ClassReportCards');
-        $this->ClassReportCardProcesses = TableRegistry::get('ReportCard.ClassReportCardProcesses');
+        $this->ClassProfiles = TableRegistry::get('Institution.ClassProfiles');
+        $this->ClassProfileProcesses = TableRegistry::get('ReportCard.ClassProfileProcesses');
         
         $this->statusOptions = [
             self::NEW_REPORT => __('New'),
@@ -244,19 +244,19 @@ class ClassProfilesTable extends ControllerActionTable
 		$this->setFieldVisible(['index'], ['class_name', 'institution_name', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
 
         // SQL Query to get the current processing list for report_queue table
-        $this->reportProcessList = $this->ClassReportCardProcesses
+        $this->reportProcessList = $this->ClassProfileProcesses
             ->find()
             ->select([
-                $this->ClassReportCardProcesses->aliasField('class_profile_template_id'),
-                $this->ClassReportCardProcesses->aliasField('institution_id'),
-                $this->ClassReportCardProcesses->aliasField('academic_period_id'),
-                $this->ClassReportCardProcesses->aliasField('institution_class_id')
+                $this->ClassProfileProcesses->aliasField('class_profile_template_id'),
+                $this->ClassProfileProcesses->aliasField('institution_id'),
+                $this->ClassProfileProcesses->aliasField('academic_period_id'),
+                $this->ClassProfileProcesses->aliasField('institution_class_id')
             ])
             ->where([
-                $this->ClassReportCardProcesses->aliasField('status') => $this->ClassReportCardProcesses::NEW_PROCESS
+                $this->ClassProfileProcesses->aliasField('status') => $this->ClassProfileProcesses::NEW_PROCESS
             ])
             ->order([
-                $this->ClassReportCardProcesses->aliasField('created'),
+                $this->ClassProfileProcesses->aliasField('created'),
             ])
             ->hydrate(false)
             ->toArray();
@@ -349,7 +349,8 @@ class ClassProfilesTable extends ControllerActionTable
         }
         if(!empty($institutionOptionsKey)){
             $where[$this->aliasField('id IN ')] = $institutionOptionsKey;
-        }  
+        } 
+        
         //End
         $InstitutionClasses = TableRegistry::get('institution_classes');
         $query
@@ -357,10 +358,10 @@ class ClassProfilesTable extends ControllerActionTable
                 'institution_class_id' => $InstitutionClasses->aliasField('id'),
                 'class_name' => $InstitutionClasses->aliasField('name'),
                 'institution_name' => $this->aliasField('name'),
-                'class_profile_template_id' => $this->ClassReportCards->aliasField('class_profile_template_id'),
-                'report_card_status' => $this->ClassReportCards->aliasField('status'),
-                'report_card_started_on' => $this->ClassReportCards->aliasField('started_on'),
-                'report_card_completed_on' => $this->ClassReportCards->aliasField('completed_on'),
+                'class_profile_template_id' => $this->ClassProfiles->aliasField('class_profile_template_id'),
+                'report_card_status' => $this->ClassProfiles->aliasField('status'),
+                'report_card_started_on' => $this->ClassProfiles->aliasField('started_on'),
+                'report_card_completed_on' => $this->ClassProfiles->aliasField('completed_on'),
             ])
             ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()],
                 [
@@ -368,12 +369,12 @@ class ClassProfilesTable extends ControllerActionTable
                     $InstitutionClasses->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
                 ]
             )
-            ->leftJoin([$this->ClassReportCards->alias() => $this->ClassReportCards->table()],
+            ->leftJoin([$this->ClassProfiles->alias() => $this->ClassProfiles->table()],
                 [
-                    $this->ClassReportCards->aliasField('institution_id = ') . $this->aliasField('id'),
-                    $this->ClassReportCards->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
-                    $this->ClassReportCards->aliasField('institution_class_id = ') . $InstitutionClasses->aliasField('id'),
-                    $this->ClassReportCards->aliasField('class_profile_template_id = ') . $selectedReportCard
+                    $this->ClassProfiles->aliasField('institution_id = ') . $this->aliasField('id'),
+                    $this->ClassProfiles->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
+                    $this->ClassProfiles->aliasField('institution_class_id = ') . $InstitutionClasses->aliasField('id'),
+                    $this->ClassProfiles->aliasField('class_profile_template_id = ') . $selectedReportCard
                 ]
             )
             ->where($where)
@@ -522,10 +523,10 @@ class ClassProfilesTable extends ControllerActionTable
 					'institution_class_id' => $InstitutionClasses->aliasField('id'),
                     'class_name' => $InstitutionClasses->aliasField('name'),
                     'institution_name' => $this->aliasField('name'),
-					'class_profile_template_id' => $this->ClassReportCards->aliasField('class_profile_template_id'),
-					'report_card_status' => $this->ClassReportCards->aliasField('status'),
-					'report_card_started_on' => $this->ClassReportCards->aliasField('started_on'),
-					'report_card_completed_on' => $this->ClassReportCards->aliasField('completed_on'),
+					'class_profile_template_id' => $this->ClassProfiles->aliasField('class_profile_template_id'),
+					'report_card_status' => $this->ClassProfiles->aliasField('status'),
+					'report_card_started_on' => $this->ClassProfiles->aliasField('started_on'),
+					'report_card_completed_on' => $this->ClassProfiles->aliasField('completed_on'),
 				])
                 ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()],
                     [
@@ -533,11 +534,11 @@ class ClassProfilesTable extends ControllerActionTable
                         $InstitutionClasses->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
                     ]
                 )
-				->leftJoin([$this->ClassReportCards->alias() => $this->ClassReportCards->table()],
+				->leftJoin([$this->ClassProfiles->alias() => $this->ClassProfiles->table()],
 					[
-						$this->ClassReportCards->aliasField('institution_id = ') . $this->aliasField('id'),
-						$this->ClassReportCards->aliasField('academic_period_id = ') . $params['academic_period_id'],
-						$this->ClassReportCards->aliasField('class_profile_template_id = ') . $params['class_profile_template_id']
+						$this->ClassProfiles->aliasField('institution_id = ') . $this->aliasField('id'),
+						$this->ClassProfiles->aliasField('academic_period_id = ') . $params['academic_period_id'],
+						$this->ClassProfiles->aliasField('class_profile_template_id = ') . $params['class_profile_template_id']
 					]
 				)
 				->autoFields(true);
@@ -628,7 +629,7 @@ class ClassProfilesTable extends ControllerActionTable
 
 	public function downloadExcel(Event $event, ArrayObject $extra)
     {
-		$model = $this->ClassReportCards;
+		$model = $this->ClassProfiles;
         $ids = $this->getQueryString();
 		
         if ($model->exists($ids)) {
@@ -656,7 +657,7 @@ class ClassProfilesTable extends ControllerActionTable
 	
 	public function downloadPDF(Event $event, ArrayObject $extra)
     {
-		$model = $this->ClassReportCards;
+		$model = $this->ClassProfiles;
         $ids = $this->getQueryString();
 		
         if ($model->exists($ids)) {
@@ -692,7 +693,7 @@ class ClassProfilesTable extends ControllerActionTable
     */
     public function viewPDF(Event $event, ArrayObject $extra)
     {
-		$model = $this->ClassReportCards;
+		$model = $this->ClassProfiles;
         $ids = $this->getQueryString();
 		
         if ($model->exists($ids)) {
@@ -745,7 +746,7 @@ class ClassProfilesTable extends ControllerActionTable
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['class_profile_template_id']);
          
         if ($hasTemplate) {
-            $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.ClassReportCardProcesses');
+            $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.ClassProfileProcesses');
             $inProgress = $InstitutionReportCardProcesses->find()
                 ->where([
                     $InstitutionReportCardProcesses->aliasField('class_profile_template_id') => $params['class_profile_template_id'],
@@ -776,20 +777,20 @@ class ClassProfilesTable extends ControllerActionTable
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
-        $files = $this->ClassReportCards->find()
+        $files = $this->ClassProfiles->find()
             ->contain(['ClassTemplates'])
             ->where([
-                $this->ClassReportCards->aliasField('class_profile_template_id') => $params['class_profile_template_id'],
-                $this->ClassReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
-                $this->ClassReportCards->aliasField('status IN ') => $statusArray,
-                $this->ClassReportCards->aliasField('file_name IS NOT NULL'),
-                $this->ClassReportCards->aliasField('file_content IS NOT NULL')
+                $this->ClassProfiles->aliasField('class_profile_template_id') => $params['class_profile_template_id'],
+                $this->ClassProfiles->aliasField('academic_period_id') => $params['academic_period_id'],
+                $this->ClassProfiles->aliasField('status IN ') => $statusArray,
+                $this->ClassProfiles->aliasField('file_name IS NOT NULL'),
+                $this->ClassProfiles->aliasField('file_content IS NOT NULL')
             ])
             ->toArray();
             
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
-            $zipName = 'ClassReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+            $zipName = 'ClassProfiles' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
             $filepath = $path . $zipName;
            
             $zip = new ZipArchive;
@@ -830,20 +831,20 @@ class ClassProfilesTable extends ControllerActionTable
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
-        $files = $this->ClassReportCards->find()
+        $files = $this->ClassProfiles->find()
             ->contain(['ClassTemplates'])
             ->where([
-                $this->ClassReportCards->aliasField('class_profile_template_id') => $params['class_profile_template_id'],
-                $this->ClassReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
-                $this->ClassReportCards->aliasField('status IN ') => $statusArray,
-                $this->ClassReportCards->aliasField('file_name IS NOT NULL'),
-                $this->ClassReportCards->aliasField('file_content IS NOT NULL')
+                $this->ClassProfiles->aliasField('class_profile_template_id') => $params['class_profile_template_id'],
+                $this->ClassProfiles->aliasField('academic_period_id') => $params['academic_period_id'],
+                $this->ClassProfiles->aliasField('status IN ') => $statusArray,
+                $this->ClassProfiles->aliasField('file_name IS NOT NULL'),
+                $this->ClassProfiles->aliasField('file_content IS NOT NULL')
             ])
             ->toArray();
 
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
-            $zipName = 'ClassReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+            $zipName = 'ClassProfiles' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
             $filepath = $path . $zipName;
 
             $zip = new ZipArchive;
@@ -874,7 +875,7 @@ class ClassProfilesTable extends ControllerActionTable
     public function publish(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $result = $this->ClassReportCards->updateAll(['status' => self::PUBLISHED], $params);
+        $result = $this->ClassProfiles->updateAll(['status' => self::PUBLISHED], $params);
         $this->Alert->success('ReportCardStatuses.publish');
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
@@ -885,7 +886,7 @@ class ClassProfilesTable extends ControllerActionTable
         $params = $this->getQueryString();
 
         // only publish report cards with generated status to published status
-        $result = $this->ClassReportCards->updateAll(['status' => self::PUBLISHED], [
+        $result = $this->ClassProfiles->updateAll(['status' => self::PUBLISHED], [
             $params,
             'status' => self::GENERATED
         ]);
@@ -903,7 +904,7 @@ class ClassProfilesTable extends ControllerActionTable
     public function unpublish(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $result = $this->ClassReportCards->updateAll(['status' => self::NEW_REPORT], $params);
+        $result = $this->ClassProfiles->updateAll(['status' => self::NEW_REPORT], $params);
         $this->Alert->success('ReportCardStatuses.unpublish');
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
@@ -913,7 +914,7 @@ class ClassProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         // only unpublish report cards with published status to new status
-        $result = $this->ClassReportCards->updateAll(['status' => self::NEW_REPORT], [
+        $result = $this->ClassProfiles->updateAll(['status' => self::NEW_REPORT], [
             $params,
             'status' => self::PUBLISHED
         ]);
@@ -932,7 +933,7 @@ class ClassProfilesTable extends ControllerActionTable
     {
         Log::write('debug', 'Initialize Add All Class Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.Time::now().')');
 		
-        $ClassReportCardProcesses = TableRegistry::get('ReportCard.ClassReportCardProcesses');
+        $ClassProfileProcesses = TableRegistry::get('ReportCard.ClassProfileProcesses');
         $InstitutionTable = TableRegistry::get('institutions');
         $InstitutionClasses = TableRegistry::get('institution_classes');
         $where = [];
@@ -965,13 +966,13 @@ class ClassProfilesTable extends ControllerActionTable
             ];
 
             $data = [
-                'status' => $ClassReportCardProcesses::NEW_PROCESS,
+                'status' => $ClassProfileProcesses::NEW_PROCESS,
                 'academic_period_id' => $academicPeriodId,
                 'created' => date('Y-m-d H:i:s')
             ];
             $obj = array_merge($idKeys, $data);
-            $newEntity = $ClassReportCardProcesses->newEntity($obj);
-            $ClassReportCardProcesses->save($newEntity);
+            $newEntity = $ClassProfileProcesses->newEntity($obj);
+            $ClassProfileProcesses->save($newEntity);
             // end
 
             // class report card
@@ -982,13 +983,13 @@ class ClassProfilesTable extends ControllerActionTable
                 'institution_class_id' => $institution->institution_class_id,
             ];
 
-            if ($this->ClassReportCards->exists($recordIdKeys)) {
-                $classesReportCardEntity = $this->ClassReportCards->find()
+            if ($this->ClassProfiles->exists($recordIdKeys)) {
+                $classesReportCardEntity = $this->ClassProfiles->find()
                     ->where($recordIdKeys)
                     ->first();
 				
                 $newData = [
-                    'status' => $this->ClassReportCards::NEW_REPORT,
+                    'status' => $this->ClassProfiles::NEW_REPORT,
                     'started_on' => NULL,
                     'completed_on' => NULL,
                     'file_name' => NULL,
@@ -997,9 +998,9 @@ class ClassProfilesTable extends ControllerActionTable
                     'institution_class_id' => $institution->institution_class_id
                 ];
 				
-                $newEntity = $this->ClassReportCards->patchEntity($classesReportCardEntity, $newData);
+                $newEntity = $this->ClassProfiles->patchEntity($classesReportCardEntity, $newData);
 
-                if (!$this->ClassReportCards->save($newEntity)) {
+                if (!$this->ClassProfiles->save($newEntity)) {
                     Log::write('debug', 'Error Add All Class profile Report Cards '.$reportCardId.' for Class '.$institution->institution_class_id.' of Institution'.$institution->id.' to processes ('.Time::now().')');
                     Log::write('debug', $newEntity->errors());
                 }
@@ -1042,8 +1043,8 @@ class ClassProfilesTable extends ControllerActionTable
 
             $args = $processModel . " " . $params;
 
-            $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllClassReportCards '.$args;
-            $logs = ROOT . DS . 'logs' . DS . 'GenerateAllClassReportCards.log & echo $!';
+            $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllClassProfiles '.$args;
+            $logs = ROOT . DS . 'logs' . DS . 'GenerateAllClassProfiles.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
             try {
                 $pid = exec($shellCmd);
