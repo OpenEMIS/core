@@ -152,9 +152,9 @@ class ClassExcelReportBehavior extends Behavior
 			$pdfFilePath = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $this->config('filename') . '_' . $params['institution_id'].'.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
 			
-			$ClassReportCards = TableRegistry::get('Institution.ClassReportCards');
+			$ClassProfiles = TableRegistry::get('Institution.ClassProfiles');
 			// save Pdf file
-			$ClassReportCards->updateAll([
+			$ClassProfiles->updateAll([
 				'file_content_pdf' => $pdfFileContent
 			], $params);
 			

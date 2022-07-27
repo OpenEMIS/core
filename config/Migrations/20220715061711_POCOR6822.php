@@ -27,11 +27,11 @@ class POCOR6822 extends AbstractMigration
                 'module' => 'Administration',
                 'category' => 'Profiles',
                 'parent_id' => 5000,
-                '_view' => 'Classes.index|Classes.view|ClassProfiles.view|ClassProfiles.view',
+                '_view' => 'Classes.index|Classes.view|ClassesProfiles.view',
                 '_edit' => 'Classes.edit',
                 '_add' => 'Classes.add',
                 '_delete' => 'Classes.remove',
-                '_execute' => 'ClassProfiles.generate|ClassProfiles.downloadExcel|ClassProfiles.publish|ClassProfiles.unpublish|ClassProfiles.email|ClassProfiles.downloadAll|ClassProfiles.generateAll|ClassProfiles.publishAll|ClassProfiles.unpublishAll',
+                '_execute' => 'ClassesProfiles.generate|ClassesProfiles.downloadExcel|ClassesProfiles.publish|ClassesProfiles.unpublish|ClassesProfiles.email|ClassesProfiles.downloadAll|ClassesProfiles.generateAll|ClassesProfiles.publishAll|ClassesProfiles.unpublishAll',
                 'order' => $order,
                 'visible' => 1,
                 'created_user_id' => '1',
@@ -101,8 +101,8 @@ class POCOR6822 extends AbstractMigration
         ->addIndex('created_user_id')
         ->save(); 
 
-        //class_report_card_processes
-        $this->table('class_report_card_processes', [
+        //class_profile_processes
+        $this->table('class_profile_processes', [
             'id' => false,
             'collation' => 'utf8_general_ci',
             'primary_key' => ['class_profile_template_id', 'institution_id'],
@@ -136,8 +136,8 @@ class POCOR6822 extends AbstractMigration
         ->addIndex('class_profile_template_id')
         ->save();
 
-        //class_report_cards
-        $this->table('class_report_cards', [
+        //class_profiles
+        $this->table('class_profiles', [
             'id' => false,
             'primary_key' => ['class_profile_template_id', 'institution_id', 'academic_period_id'],
             'collation' => 'utf8_general_ci'
@@ -212,35 +212,33 @@ class POCOR6822 extends AbstractMigration
         ->addIndex('modified_user_id')
         ->addIndex('created_user_id')
         ->save();
-        //changes in class_report_cards
-        $this->execute('ALTER TABLE `class_report_cards` ADD `institution_class_id` INT(11) NOT NULL COMMENT "links to institution_classes.id" AFTER `academic_period_id`');
-        $this->execute('ALTER TABLE `class_report_cards` ADD INDEX(`institution_class_id`)');
-        $this->execute('ALTER TABLE `class_report_cards` DROP PRIMARY KEY, ADD PRIMARY KEY( `class_profile_template_id`, `institution_id`, `academic_period_id`, `institution_class_id`)');
-        $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL');
+        //changes in class_profiles
+        $this->execute('ALTER TABLE `class_profiles` ADD `institution_class_id` INT(11) NOT NULL COMMENT "links to institution_classes.id" AFTER `academic_period_id`');
+        $this->execute('ALTER TABLE `class_profiles` ADD INDEX(`institution_class_id`)');
+        $this->execute('ALTER TABLE `class_profiles` DROP PRIMARY KEY, ADD PRIMARY KEY( `class_profile_template_id`, `institution_id`, `academic_period_id`, `institution_class_id`)');
+        $this->execute('ALTER TABLE `class_profiles` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL');
 
-        $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_content` `file_content` LONGBLOB NULL DEFAULT NULL');
+        $this->execute('ALTER TABLE `class_profiles` CHANGE `file_content` `file_content` LONGBLOB NULL DEFAULT NULL');
 
-        $this->execute('ALTER TABLE `class_report_cards` CHANGE `file_content_pdf` `file_content_pdf` LONGBLOB NULL DEFAULT NULL');
+        $this->execute('ALTER TABLE `class_profiles` CHANGE `file_content_pdf` `file_content_pdf` LONGBLOB NULL DEFAULT NULL');
                 
-        $this->execute('ALTER TABLE `class_report_cards` CHANGE `started_on` `started_on` DATETIME NULL DEFAULT NULL');
+        $this->execute('ALTER TABLE `class_profiles` CHANGE `started_on` `started_on` DATETIME NULL DEFAULT NULL');
 
-        $this->execute('ALTER TABLE `class_report_cards` CHANGE `completed_on` `completed_on` DATETIME NULL DEFAULT NULL');
-        //add FOREIGN KEY's in class_report_cards table
-        $this->execute('ALTER TABLE `class_report_cards` ADD FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes`(`id`)');
-        $this->execute('ALTER TABLE `class_report_cards` ADD FOREIGN KEY (`class_profile_template_id`) REFERENCES `class_profile_templates`(`id`)');
-        $this->execute('ALTER TABLE `class_report_cards` ADD FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`)');
-        $this->execute('ALTER TABLE `class_report_cards` ADD FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods`(`id`)');
+        $this->execute('ALTER TABLE `class_profiles` CHANGE `completed_on` `completed_on` DATETIME NULL DEFAULT NULL');
+        //add FOREIGN KEY's in class_profiles table
+        $this->execute('ALTER TABLE `class_profiles` ADD FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes`(`id`)');
+        $this->execute('ALTER TABLE `class_profiles` ADD FOREIGN KEY (`class_profile_template_id`) REFERENCES `class_profile_templates`(`id`)');
+        $this->execute('ALTER TABLE `class_profiles` ADD FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`)');
+        $this->execute('ALTER TABLE `class_profiles` ADD FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods`(`id`)');
 
-        //changes in class_report_card_processes
-        $this->execute('ALTER TABLE `class_report_card_processes` ADD `institution_class_id` INT(11) NOT NULL COMMENT "links to institution_classes.id" AFTER `academic_period_id`');
-        $this->execute('ALTER TABLE `class_report_card_processes` ADD INDEX(`institution_class_id`)');
-        //add FOREIGN KEY's in class_report_card_processes table
-        $this->execute('ALTER TABLE `class_report_card_processes` ADD FOREIGN KEY (`class_profile_template_id`) REFERENCES `class_profile_templates`(`id`)');
-        $this->execute('ALTER TABLE `class_report_card_processes` ADD FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`)');
-        $this->execute('ALTER TABLE `class_report_card_processes` ADD FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods`(`id`)');
-        $this->execute('ALTER TABLE `class_report_card_processes` ADD FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes`(`id`)');
-
-            
+        //changes in class_profile_processes
+        $this->execute('ALTER TABLE `class_profile_processes` ADD `institution_class_id` INT(11) NOT NULL COMMENT "links to institution_classes.id" AFTER `academic_period_id`');
+        $this->execute('ALTER TABLE `class_profile_processes` ADD INDEX(`institution_class_id`)');
+        //add FOREIGN KEY's in class_profile_processes table
+        $this->execute('ALTER TABLE `class_profile_processes` ADD FOREIGN KEY (`class_profile_template_id`) REFERENCES `class_profile_templates`(`id`)');
+        $this->execute('ALTER TABLE `class_profile_processes` ADD FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`)');
+        $this->execute('ALTER TABLE `class_profile_processes` ADD FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods`(`id`)');
+        $this->execute('ALTER TABLE `class_profile_processes` ADD FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes`(`id`)');
     }
 
     // rollback
@@ -250,9 +248,9 @@ class POCOR6822 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
         $this->execute('RENAME TABLE `zz_6822_security_functions` TO `security_functions`');
         
-        //rollback of class_profile_templates,class_report_card_processes,class_report_cards
+        //rollback of class_profile_templates,class_profile_processes,class_profiles
         $this->execute('DROP TABLE IF EXISTS `class_profile_templates`');
-        $this->execute('DROP TABLE IF EXISTS `class_report_card_processes`');
-        $this->execute('DROP TABLE IF EXISTS `class_report_cards`');
+        $this->execute('DROP TABLE IF EXISTS `class_profile_processes`');
+        $this->execute('DROP TABLE IF EXISTS `class_profiles`');
     }
 }
