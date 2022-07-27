@@ -218,19 +218,22 @@ class AssessmentsTable extends ControllerActionTable {
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         if ($this->action == 'edit'){
+            //echo "<pre>";print_r($requestData[$this->alias()]);die;
             $currentTimeZone = date("Y-m-d H:i:s");
             $assessmentId = $entity['id'];
             if (array_key_exists($this->alias(), $requestData)) {
                 if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
-                    $assessmentItems = TableRegistry::get('assessment_items');
+                    /*$assessmentItems = TableRegistry::get('assessment_items');
                     $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('assessment_id')=>$assessmentId])->toArray();
                     if(isset($checkdata) && (!empty($checkdata))){
                         foreach($checkdata as $val){
                             $dlt = $assessmentItems->delete($val);
                         }
                        
-                    }
-                    foreach ($requestData[$this->alias()]['assessment_items'] as $item) {
+                    }*/
+                    $i = 1;
+                    foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
+                        if( $i++ == $key){
                         $subjectcheck = $item['education_subject_check'];
                         $subjectId = $item['education_subject_id'];
                         $weight = $item['weight'];
@@ -238,6 +241,20 @@ class AssessmentsTable extends ControllerActionTable {
                         $checkid = $item['id_check'];
                         $ids = Text::uuid();
                         if($subjectcheck == 1){
+                            $assessmentItems = TableRegistry::get('assessment_items');
+                            $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('assessment_id')=>$assessmentId,$assessmentItems->aliasField('education_subject_id')=>$subjectId])->toArray();
+                            if(isset($checkdata) && (!empty($checkdata)) && $checkid==null){
+
+                                $ids = $checkdata->id;
+                              $test =   $assessmentItems->updateAll(
+                                ['weight' => $weight,'classification'=>$classification],    //field
+                                [
+                                 'id' => $ids, 
+                                ] //condition
+                                );
+                              //print_r($test);die;
+                            }else{
+                               // die('kjkj');
                                 $data = [
                                     'id' => $ids ,
                                     'weight' => $weight,
@@ -250,11 +267,11 @@ class AssessmentsTable extends ControllerActionTable {
                                 $entity = $assessmentItems->newEntity($data);
 
                                $save =  $assessmentItems->save($entity);
-                               
+                        } 
                             
                         }
                     }
-                       
+                      } 
                     }
             } else { //logic to capture error if no subject inside the grade.
                 $errorMessage = $this->aliasField('noSubjects');
