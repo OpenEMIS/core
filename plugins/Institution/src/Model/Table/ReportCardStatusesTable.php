@@ -439,6 +439,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         $classOptions = ['-1' => '-- '.__('Select Class').' --'] + $classOptions;
         $this->controller->set(compact('classOptions', 'selectedClass'));
         $where[$this->aliasField('institution_class_id')] = $selectedClass;
+        $where[$this->aliasField('institution_id')] = $institutionId; //POCOR-6817
+        $where[$this->aliasField('student_status_id NOT IN')] = 3; //POCOR-6817
         //End
 
         $query
