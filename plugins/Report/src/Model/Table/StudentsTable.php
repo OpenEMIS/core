@@ -293,17 +293,49 @@ class StudentsTable extends AppTable
 
                     $institutionList = $institutionQuery->toArray();
                 } elseif (!$institutionTypeId && array_key_exists('area_education_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['area_education_id']) && $areaId != -1) {
-                    //Start:POCOR-6818
-                    $AreaT = TableRegistry::get('areas');
+                    //Start:POCOR-6818 Modified this for POCOR-6859
+                    $AreaT = TableRegistry::get('areas');                    
+                    //Level-1
                     $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
                     $childArea =[];
+                    $childAreaMain = [];
+                    $childArea3 = [];
+                    $childArea4 = [];
                     foreach($AreaData as $kkk =>$AreaData11 ){
                         $childArea[$kkk] = $AreaData11->id;
                     }
-                    array_push($childArea,$areaId);
-                    $finalIds = implode(',',$childArea);
+                    //level-2
+                    foreach($childArea as $kyy =>$AreaDatal2 ){
+                        $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
+                        foreach($AreaDatas as $ky =>$AreaDatal22 ){
+                            $childAreaMain[$ky] = $AreaDatal22->id;
+                        }
+                    }
+                    //level-3
+                    if(!empty($childAreaMain)){
+                        foreach($childAreaMain as $kyy =>$AreaDatal3 ){
+                            $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
+                            foreach($AreaDatass as $ky =>$AreaDatal222 ){
+                                $childArea3[$ky] = $AreaDatal222->id;
+                            }
+                        }
+                    }
+                    
+                    //level-4
+                    if(!empty($childAreaMain)){
+                        foreach($childArea3 as $kyy =>$AreaDatal4 ){
+                            $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
+                            foreach($AreaDatasss as $ky =>$AreaDatal44 ){
+                                $childArea4[$ky] = $AreaDatal44->id;
+                            }
+                        }
+                    }
+                    $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
+                    array_push($mergeArr,$areaId);
+                    $mergeArr = array_unique($mergeArr);
+                    $finalIds = implode(',',$mergeArr);
                     $finalIds = explode(',',$finalIds);
-                    //End:POCOR-6818
+                    //End:POCOR-6818 Modified this for POCOR-6859
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
@@ -391,17 +423,51 @@ class StudentsTable extends AppTable
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
 
-        //Start:POCOR-6818
-        $AreaT = TableRegistry::get('areas');
+        //Start:POCOR-6818 Modified this for POCOR-6859
+        $AreaT = TableRegistry::get('areas');                    
+        //Level-1
         $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
         $childArea =[];
+        $childAreaMain = [];
+        $childArea3 = [];
+        $childArea4 = [];
         foreach($AreaData as $kkk =>$AreaData11 ){
             $childArea[$kkk] = $AreaData11->id;
         }
-        array_push($childArea,$areaId);
-        $finalIds = implode(',',$childArea);
+        //level-2
+        foreach($childArea as $kyy =>$AreaDatal2 ){
+            $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
+            foreach($AreaDatas as $ky =>$AreaDatal22 ){
+                $childAreaMain[$ky] = $AreaDatal22->id;
+            }
+        }
+        //level-3
+        if(!empty($childAreaMain)){
+            foreach($childAreaMain as $kyy =>$AreaDatal3 ){
+                $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
+                foreach($AreaDatass as $ky =>$AreaDatal222 ){
+                    $childArea3[$ky] = $AreaDatal222->id;
+                }
+            }
+        }
+        
+        //level-4
+        if(!empty($childAreaMain)){
+            foreach($childArea3 as $kyy =>$AreaDatal4 ){
+                $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
+                foreach($AreaDatasss as $ky =>$AreaDatal44 ){
+                    $childArea4[$ky] = $AreaDatal44->id;
+                }
+            }
+        }
+        $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
+        array_push($mergeArr,$areaId);
+        $mergeArr = array_unique($mergeArr);
+        $finalIds = implode(',',$mergeArr);
         $finalIds = explode(',',$finalIds);
-        //End:POCOR-6818
+        //echo "<pre>"; print_r($finalIds);die;
+        //End:POCOR-6818 Modified this for POCOR-6859
+
 
         $conditions = [];
         if ($areaId != -1) {
