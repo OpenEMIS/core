@@ -26,7 +26,7 @@ class ProfileTemplatesController extends AppController
     //POCOR-6822 Starts
     public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.ClassTemplates']); }
 
-    public function ClassProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.ClassProfiles']); } //POCOR-6822 Ends
+    public function ClassesProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.ClassesProfiles']); } //POCOR-6822 Ends
 	
 	public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.StaffProfiles']); }
 	

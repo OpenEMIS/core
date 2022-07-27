@@ -1922,7 +1922,7 @@ class NavigationComponent extends Component
             'ProfileTemplates.Classes' => [
                 'title' => 'Classes',
                 'parent' => 'ProfileTemplates',
-                'selected' => ['ProfileTemplates.ClassProfiles', 'Class.view', 'Class.add', 'Class.edit', 'Class.delete']
+                'selected' => ['ProfileTemplates.ClassesProfiles', 'Class.view', 'Class.add', 'Class.edit', 'Class.delete']
             ],//POCOR-6822 Ends
             'ProfileTemplates.Staff' => [
                 'title' => 'Staff',

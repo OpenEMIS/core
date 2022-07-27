@@ -558,7 +558,7 @@ class InstitutionsController extends AppController
     }//POCOR-6822 Starts
     public function ClassReportCards()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ClassReportCards']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ClassProfiles']);
     }//POCOR-6822 Ends
     public function StaffTransferIn()
     {

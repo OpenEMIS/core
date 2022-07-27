@@ -260,7 +260,7 @@ class ClassTemplatesTable extends ControllerActionTable
             'Templates' => ['text' => __('Templates')]
         ];
 		
-        $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'ClassProfiles']);
+        $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'ClassesProfiles']);
         $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Classes']);
 
 		return $tabElements;
