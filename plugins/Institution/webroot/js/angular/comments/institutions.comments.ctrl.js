@@ -148,23 +148,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 vm.mySubjectTeacherCommentsRequired = 1;
                 $scope.checkEditAction = 1;
             }
-            roleflag = '';
-            // Modified POCOR-6814
-            if((userData.super_admin != 1) && (allCommentViewPermissionData.data.result == 0) && (vm.principalCommentsRequired == 0) && (vm.homeroomTeacherCommentsRequired == 0) && (vm.teacherCommentsRequired == 0)){
-                roleflag = '';
-            }else{
-                if(vm.principalCommentsRequired == 1){
-                    roleflag = 'Principal';
-                }else if(vm.homeroomTeacherCommentsRequired == 1){
-                    roleflag = 'HomeroomTeacher';
-                }else if(vm.teacherCommentsRequired == 1){
-                    roleflag = 'Teacher';
-                }
-            }
-            // Modified end POCOR-6814
-            console.log('roleflag================');
-            console.log(roleflag);
-            return InstitutionsCommentsSvc.getAllSubjectTeacherViewPermissions(userData, $scope.institutionId, roleflag);
+            return InstitutionsCommentsSvc.getAllSubjectTeacherViewPermissions(userData, $scope.institutionId);
         }, function(error)
         {
             // No getMySubjectTeacherViewPermissions
