@@ -1141,12 +1141,12 @@ class InstitutionPositionsTable extends ControllerActionTable
             ->where([
                 $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
                 $Staff->aliasField('institution_position_id') => $position_id,
-                $IdentityTypes->aliasField('default') => 1, //POCOR-6884
                 'OR' => [
                     $Staff->aliasField('end_date').' IS NULL',
                     'AND' => [
                         $Staff->aliasField('end_date').' IS NOT NULL',
-                        $Staff->aliasField('end_date').' >= DATE(NOW())'
+                        $Staff->aliasField('end_date').' >= DATE(NOW())',
+                        $IdentityTypes->aliasField('default') => 1 //POCOR-6884
                     ]
                 ]
             ])
@@ -1180,7 +1180,8 @@ class InstitutionPositionsTable extends ControllerActionTable
                                             [$UserIdentities->alias() => $UserIdentities->table()],
                                             [
                                                 $UserIdentities->aliasField('security_user_id = ') . $Staff->aliasField('staff_id'),
-                                            ])
+                                            ]
+                                            )
                         ->leftJoin(
                                     [$IdentityTypes->alias() => $IdentityTypes->table()],
                                     [
@@ -1190,8 +1191,12 @@ class InstitutionPositionsTable extends ControllerActionTable
                         ->where([
                             $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
                             $Staff->aliasField('institution_position_id') => $position_id,
-                            $IdentityTypes->aliasField('default') => 1,//POCOR-6884
-                        ])->first();
+                            'AND' => [
+                                $IdentityTypes->aliasField('default') => 1, //POCOR-6884
+                            ]
+                        ])
+                        ->group($UserIdentities->aliasField('security_user_id')) //POCOR-6884
+                        ->order([$UserIdentities->aliasField('id')=>'DESC'])->first();
                 if(!empty($currentStaff)){
                     $entity->fte = $currentStaff->fte;
                     $entity->openemis_no = $currentStaff->openemis_no;
