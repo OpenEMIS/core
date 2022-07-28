@@ -35,6 +35,10 @@ class POCOR6839 extends AbstractMigration
 
         $this->execute('ALTER TABLE `scholarships` ADD `scholarship_financial_assistance_id` INT(11) NULL AFTER `scholarship_financial_assistance_type_id`');
 
+        $this->execute('DELETE FROM scholarship_financial_assistance_types WHERE code = "FULLSCHOLARSHIP"');
+        $this->execute('DELETE FROM scholarship_financial_assistance_types WHERE code = "PARTIALSCHOLARSHIP"');
+        $this->execute('DELETE FROM scholarship_financial_assistance_types WHERE code = "DISTANCELEARNING"');
+
     }
 
     public function down()
