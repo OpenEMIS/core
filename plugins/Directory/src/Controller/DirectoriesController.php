@@ -1281,7 +1281,7 @@ class DirectoriesController extends AppController
             ])
             ->InnerJoin([$userIdentities->alias() => $userIdentities->table()],[
                 $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
-                $userIdentities->aliasField('number LIKE ') . $identityNumber. '%'
+                $userIdentities->aliasField('number') ." LIKE '" . $identityNumber . "%'" 
             ])
             ->LeftJoin([$genders->alias() => $genders->table()], [
                 $genders->aliasField('id =') . $security_users->aliasField('gender_id')
