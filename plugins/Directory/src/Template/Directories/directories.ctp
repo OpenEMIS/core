@@ -26,7 +26,7 @@
 }
 .page-header {
     padding-bottom: 9px!important;
-    margin: 0px 0 20px!important;
+    margin: 0 !important;
     border-bottom: 1px solid #eee!important;
 }
 
@@ -46,9 +46,7 @@
     text-overflow: ellipsis!important;
 }
 
-
 .breadcrumb > li + li::before {
-
     font-family: 'FontAwesome'!important;
     content: "\f054"!important;
     font-size: 0.6em!important;
@@ -58,7 +56,6 @@
     line-height: 12px!important;
     display: inline!important;
     float: left!important;
-
 }
 
 .breadcrumb > li + li::before {
