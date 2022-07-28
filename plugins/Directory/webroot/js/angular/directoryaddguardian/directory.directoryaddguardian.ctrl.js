@@ -172,6 +172,14 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData = [];
+                    gridData.forEach((data) => {
+                        data.gender = data['gender.name'];
+                        data.nationality = data['main_nationality.name'];
+                        data.identity_type = data['main_identity_type.name'];
+                        data.gender_id = data['gender.id'];
+                        data.nationality_id = data['main_nationality.id'];
+                        data.identity_type_id = data['main_identity_type.id'];
+                    });
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
@@ -367,8 +375,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
@@ -419,11 +427,13 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                    {headerName: scope.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
-                enableColResize: false,
+                localeText: localeText,
+                enableColResize: true,
                 enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
@@ -474,8 +484,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -524,11 +534,12 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
-                enableColResize: false,
+                localeText: localeText,
+                enableColResize: true,
                 enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
@@ -536,7 +547,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'infinite',
+                 rowModelType: 'infinite',
                 // Removed options - Issues in ag-Grid AG-828
                 // suppressCellSelection: true,
 
@@ -563,7 +574,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                         })
                     }
                 },
-            };setTimeout(function(){
+            };
+            setTimeout(function(){
                 scope.getExternalSearchData();
             }, 1500);
         });
@@ -672,8 +684,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
@@ -718,10 +730,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             scope.externalGridOptions = {
                 columnDefs: [
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -768,11 +780,13 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                    {headerName: scope.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
-                enableColResize: false,
+                localeText: localeText,
+                enableColResize: true,
                 enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
@@ -812,10 +826,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             scope.externalGridOptions = {
                 columnDefs: [
                     {headerName: scope.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
-                    {headerName: scope.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: scope.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: scope.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -898,7 +912,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
         scope.selectedUserData.identity_type_name = selectedData.identity_type;
         scope.selectedUserData.identity_number = selectedData.identity_number;
-        scope.selectedUserData.username = selectedData.username;
+        scope.selectedUserData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
         scope.selectedUserData.password = selectedData.password;
         scope.selectedUserData.address = selectedData.address;
         scope.selectedUserData.postalCode = selectedData.postal_code;
@@ -918,20 +932,16 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         scope.selectedUserData.date_of_birth = selectedData.date_of_birth;
         scope.selectedUserData.email = selectedData.email;
         scope.selectedUserData.gender_id = selectedData.gender_id;
-        scope.selectedUserData.gender = {name: selectedData.gender.name};
-        scope.selectedUserData.nationality_id = selectedData.main_nationality.id;
-        scope.selectedUserData.nationality_name = selectedData.main_nationality.name;
-        scope.selectedUserData.identity_type_id = selectedData.main_identity_type.id;
-        scope.selectedUserData.identity_type_name = selectedData.main_identity_type.name;
+        scope.selectedUserData.gender = {name: selectedData.gender};
+        scope.selectedUserData.nationality_id = selectedData.nationality_id;
+        scope.selectedUserData.nationality_name = selectedData.nationality;
+        scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
+        scope.selectedUserData.identity_type_name = selectedData.identity_type;
         scope.selectedUserData.identity_number = selectedData.identity_number;
-        scope.selectedUserData.username = selectedData.username;
+        scope.selectedUserData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
         scope.selectedUserData.password = selectedData.password;
         scope.selectedUserData.address = selectedData.address;
         scope.selectedUserData.postalCode = selectedData.postal_code;
-        scope.selectedUserData.address_area_id = selectedData.address_area_id;
-        scope.selectedUserData.birthplace_area_id = selectedData.birthplace_area_id;
-        scope.selectedUserData.addressArea = {name: selectedData.area_name};
-        scope.selectedUserData.birthplaceArea = {name: selectedData.birth_area_name};
     }
 
     scope.saveGuardianDetails = function() {
