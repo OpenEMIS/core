@@ -1128,17 +1128,15 @@ class InstitutionPositionsTable extends ControllerActionTable
             ])
             ->contain(['Users'])
             ->leftJoin(
-                                    [$UserIdentities->alias() => $UserIdentities->table()],
-                                    [
-                                        $UserIdentities->aliasField('security_user_id = ') . $Staff->aliasField('staff_id'),
-                                    ]
-                                )
-                        ->leftJoin(
-                            [$IdentityTypes->alias() => $IdentityTypes->table()],
-                            [
-                                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
-                            ]
-                        )
+                        [$UserIdentities->alias() => $UserIdentities->table()],
+                        [
+                            $UserIdentities->aliasField('security_user_id = ') . $Staff->aliasField('staff_id'),
+                        ])
+            ->leftJoin(
+                        [$IdentityTypes->alias() => $IdentityTypes->table()],
+                        [
+                            $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
+                        ])
             ->leftJoinWith('StaffStatuses')
             ->where([
                 $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
@@ -1179,23 +1177,21 @@ class InstitutionPositionsTable extends ControllerActionTable
                                 ])
                                 ->contain(['Users'])
                                 ->leftJoin(
-                                    [$UserIdentities->alias() => $UserIdentities->table()],
-                                    [
-                                        $UserIdentities->aliasField('security_user_id = ') . $Staff->aliasField('staff_id'),
-                                    ]
-                                )
+                                            [$UserIdentities->alias() => $UserIdentities->table()],
+                                            [
+                                                $UserIdentities->aliasField('security_user_id = ') . $Staff->aliasField('staff_id'),
+                                            ])
                         ->leftJoin(
-                            [$IdentityTypes->alias() => $IdentityTypes->table()],
-                            [
-                                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
-                            ]
-                        )
-                                ->leftJoinWith('StaffStatuses')
-                                ->where([
-                                    $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
-                                    $Staff->aliasField('institution_position_id') => $position_id,
-                                    $IdentityTypes->aliasField('default') => 1,//POCOR-6884
-                                ])->first();
+                                    [$IdentityTypes->alias() => $IdentityTypes->table()],
+                                    [
+                                        $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
+                                    ])
+                        ->leftJoinWith('StaffStatuses')
+                        ->where([
+                            $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                            $Staff->aliasField('institution_position_id') => $position_id,
+                            $IdentityTypes->aliasField('default') => 1,//POCOR-6884
+                        ])->first();
                 if(!empty($currentStaff)){
                     $entity->fte = $currentStaff->fte;
                     $entity->openemis_no = $currentStaff->openemis_no;
