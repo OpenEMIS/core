@@ -26,8 +26,8 @@
 }
 .page-header {
     padding-bottom: 9px!important;
-    margin: 0px 0 20px!important;
-    border-bottom: 1px solid #eee!important;
+    margin: 0px !important;
+    border-bottom: 1px solid #DDD !important;
 }
 
 .h2, h2 {
@@ -639,7 +639,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
 
 <style>
     .pd-10 {
-        padding: 10px;
+        padding: 20px 25px
     }
     .close-btn {
         border: 1px solid #000;

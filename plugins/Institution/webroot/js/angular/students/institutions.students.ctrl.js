@@ -1163,7 +1163,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.postalCode = selectedData.postal_code;
         StudentController.selectedStudentData.addressArea.name = selectedData.area_name;
         StudentController.selectedStudentData.birthplaceArea.name = selectedData.birth_area_name;
-        StudentController.selectedStudentData.username = selectedData.openemis_no;
+        StudentController.selectedStudentData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
         StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
         var todayDate = new Date();
         StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
@@ -1191,6 +1191,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.nationality_name = selectedData.nationality;
         StudentController.selectedStudentData.address = selectedData.address;
         StudentController.selectedStudentData.postalCode = selectedData.postal_code;
+        StudentController.selectedStudentData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
         StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
         var todayDate = new Date();
         StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');

@@ -912,7 +912,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
         scope.selectedUserData.identity_type_name = selectedData.identity_type;
         scope.selectedUserData.identity_number = selectedData.identity_number;
-        scope.selectedUserData.username = selectedData.username;
+        scope.selectedUserData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
         scope.selectedUserData.password = selectedData.password;
         scope.selectedUserData.address = selectedData.address;
         scope.selectedUserData.postalCode = selectedData.postal_code;
@@ -938,7 +938,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
         scope.selectedUserData.identity_type_name = selectedData.identity_type;
         scope.selectedUserData.identity_number = selectedData.identity_number;
-        scope.selectedUserData.username = selectedData.username;
+        scope.selectedUserData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
         scope.selectedUserData.password = selectedData.password;
         scope.selectedUserData.address = selectedData.address;
         scope.selectedUserData.postalCode = selectedData.postal_code;
