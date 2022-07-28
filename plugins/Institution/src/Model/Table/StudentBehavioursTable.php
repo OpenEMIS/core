@@ -35,7 +35,8 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);//POCOR-5186
-        //$this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
+        
+        
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('InstitutionStudents', ['className' => 'InstitutionStudent.InstitutionStudents', 'foreignKey' => 'student_id']);
@@ -45,13 +46,14 @@ class StudentBehavioursTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
         $this->addBehavior('Workflow.Workflow'); //POCOR-5186
-        //$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
+        $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['index', 'view', 'add', 'edit', 'delete']
         ]);
-        
+        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+        $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
@@ -160,6 +162,8 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('category_id', ['visible' => false]);//POCOR-5186
         $this->field('status', ['visible' => true]);//POCOR-5186
+        $this->field('assignee_id', ['visible' => false]);//POCOR-5186
+        $this->field('workflow_step_id', ['visible' => false]);//POCOR-5186
 
         $this->fields['student_id']['sort'] = ['field' => 'Students.first_name']; // POCOR-2547 adding sort
 
@@ -430,6 +434,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('student_id',['after' => 'openemis_no','visible' => ['view' => true,'edit' => true]]);
         $this->field('student_behaviour_category_id',['after' => 'student_id','visible' => ['view' => true,'edit' => true]]);
          $this->field('assignee_id',['after' => 'action','visible' => ['view' => true,'edit' => true]]);//POCOR-5186
+         $this->field('workflow_step_id',['after' => 'action','visible' => ['view' => false,'edit' => false]]);//POCOR-5186
 
         // $this->setFieldOrder(['student_id','time_of_behaviour','date_of_behaviour','title', 'student_behaviour_category_id', 'description', 'action']);
     }
@@ -940,10 +945,10 @@ class StudentBehavioursTable extends ControllerActionTable
         return null;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
+    public function findWorkbench(Query $query, array $options)
     {
-        
     }
+
 
 }
 
