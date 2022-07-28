@@ -1143,6 +1143,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             ->where([
                 $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
                 $Staff->aliasField('institution_position_id') => $position_id,
+                $IdentityTypes->aliasField('default') => 1, //POCOR-6884
                 'OR' => [
                     $Staff->aliasField('end_date').' IS NULL',
                     'AND' => [
@@ -1193,6 +1194,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                                 ->where([
                                     $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
                                     $Staff->aliasField('institution_position_id') => $position_id,
+                                    $IdentityTypes->aliasField('default') => 1,//POCOR-6884
                                 ])->first();
                 if(!empty($currentStaff)){
                     $entity->fte = $currentStaff->fte;
