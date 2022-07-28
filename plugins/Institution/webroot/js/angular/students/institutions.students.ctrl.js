@@ -223,6 +223,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData = [];
+                    gridData.forEach((data) => {
+                        data.gender = data['gender.name'];
+                        data.nationality = data['main_nationality.name'];
+                        data.identity_type = data['main_identity_type.name'];
+                        data.gender_id = data['gender.id'];
+                        data.nationality_id = data['main_nationality.id'];
+                        data.identity_type_id = data['main_identity_type.id'];
+                    });
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
             }, function(error) {
@@ -694,10 +702,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -737,10 +745,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -777,61 +785,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.getExternalSearchData();
             }, 1500);
         });
-    }
-
-    function setStudentData() {
-        UtilsSvc.isAppendLoader(true);
-        StudentController.selectedStudentData.addressArea = {};
-        StudentController.selectedStudentData.birthplaceArea = {};
-        StudentController.selectedStudentData.openemis_no = StudentController.studentData.openemis_no;
-        StudentController.selectedStudentData.first_name = StudentController.studentData.first_name;
-        StudentController.selectedStudentData.middle_name = StudentController.studentData.middle_name;
-        StudentController.selectedStudentData.third_name = StudentController.studentData.third_name;
-        StudentController.selectedStudentData.last_name = StudentController.studentData.last_name;
-        StudentController.selectedStudentData.preferred_name = StudentController.studentData.preferred_name;
-        StudentController.selectedStudentData.gender = {
-            name: StudentController.studentData.gender
-        };
-        StudentController.selectedStudentData.date_of_birth = StudentController.studentData.date_of_birth;
-        StudentController.selectedStudentData.email = StudentController.studentData.email;
-        StudentController.selectedStudentData.identity_type_name = StudentController.studentData.identity_type;
-        StudentController.selectedStudentData.identity_number = StudentController.studentData.identity_number;
-        StudentController.selectedStudentData.nationality_name = StudentController.studentData.nationality;
-        StudentController.selectedStudentData.address = StudentController.studentData.address;
-        StudentController.selectedStudentData.postalCode = StudentController.studentData.postal_code;
-        StudentController.selectedStudentData.addressArea.name = StudentController.studentData.area_name;
-        StudentController.selectedStudentData.birthplaceArea.name = StudentController.studentData.birth_area_name;
-        StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
-        var todayDate = new Date();
-        StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
-        StudentController.isSameSchool = StudentController.studentData.is_same_school > 0 ? true : false;
-        StudentController.isDiffSchool = StudentController.studentData.is_diff_school > 0 ? true : false;
-    }
-
-    function setStudentDataFromExternalSearchData() {
-        StudentController.selectedStudentData.addressArea = {};
-        StudentController.selectedStudentData.birthplaceArea = {};
-        StudentController.selectedStudentData.openemis_no = StudentController.studentData.openemis_no;
-        StudentController.selectedStudentData.first_name = StudentController.studentData.first_name;
-        StudentController.selectedStudentData.middle_name = StudentController.studentData.middle_name;
-        StudentController.selectedStudentData.third_name = StudentController.studentData.third_name;
-        StudentController.selectedStudentData.last_name = StudentController.studentData.last_name;
-        StudentController.selectedStudentData.preferred_name = StudentController.studentData.preferred_name;
-        StudentController.selectedStudentData.gender = {
-            name: StudentController.studentData.gender.name
-        };
-        StudentController.selectedStudentData.date_of_birth = StudentController.studentData.date_of_birth;
-        StudentController.selectedStudentData.email = StudentController.studentData.email;
-        StudentController.selectedStudentData.identity_type_name = StudentController.studentData.main_identity_type.name;
-        StudentController.selectedStudentData.identity_number = StudentController.studentData.identity_number;
-        StudentController.selectedStudentData.nationality_name = StudentController.studentData.main_nationality.name;
-        StudentController.selectedStudentData.address = StudentController.studentData.address;
-        StudentController.selectedStudentData.postalCode = StudentController.studentData.postal_code;
-        StudentController.selectedStudentData.addressArea.name = StudentController.studentData.area_name;
-        StudentController.selectedStudentData.birthplaceArea.name = StudentController.studentData.birth_area_name;
-        StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
-        var todayDate = new Date();
-        StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
     }
 
     function goToPrevStep(){
@@ -872,14 +825,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.step = 'summary';
                 StudentController.messageClass = 'alert-warning';
                 StudentController.message = 'This student is already allocated to the current institution';
-                StudentController.setStudentData();
                 StudentController.getRedirectToGuardian();
                 StudentController.isInternalSearchSelected = false;
         } else if(StudentController.studentData && StudentController.studentData.is_diff_school) {
                 StudentController.messageClass = 'alert-warning';
                 StudentController.message = `This student is already allocated to ${StudentController.studentData.current_enrol_institution_code} - ${StudentController.studentData.current_enrol_institution_name}`;
                 StudentController.step = 'summary';
-                StudentController.setStudentData();
                 StudentController.getStudentTransferReason();
                 StudentController.isInternalSearchSelected = false;
         } else {
@@ -890,7 +841,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         } else if(StudentController.isExternalSearchSelected) {
             StudentController.step = 'add_student';
             StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
-            StudentController.setStudentDataFromExternalSearchData();
             StudentController.generatePassword();
         } else {
             switch(StudentController.step){
@@ -1140,6 +1090,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function getRedirectToGuardian() {
+        UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getRedirectToGuardian().then(function(resp){
             StudentController.redirectToGuardian = resp.data[0].redirecttoguardian_status;
             UtilsSvc.isAppendLoader(false);
@@ -1178,15 +1129,76 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var log = [];
         angular.forEach(StudentController.rowsThisPage , function(value) {
             if (value.id == StudentController.selectedStudent) {
-                StudentController.studentData = value;
-                StudentController.studentData.currentlyAllocatedTo = value.current_enrol_institution_code + ' - ' + value.current_enrol_institution_name;
-                StudentController.selectedStudentData = value;
-                StudentController.selectedStudentData.username = value.openemis_no;
+                    StudentController.studentData = value;
+                    if(StudentController.isInternalSearchSelected) {
+                    StudentController.studentData.currentlyAllocatedTo = value.current_enrol_institution_code + ' - ' + value.current_enrol_institution_name;
+                    StudentController.setStudentData(value);
+                }
+                if(StudentController.isExternalSearchSelected) {
+                    StudentController.setStudentDataFromExternalSearchData(value);
+                }
             }
         }, log);
     }
 
+    function setStudentData(selectedData) {
+        StudentController.selectedStudentData.addressArea = {};
+        StudentController.selectedStudentData.birthplaceArea = {};
+        StudentController.selectedStudentData.openemis_no = selectedData.openemis_no;
+        StudentController.selectedStudentData.first_name = selectedData.first_name;
+        StudentController.selectedStudentData.middle_name = selectedData.middle_name;
+        StudentController.selectedStudentData.third_name = selectedData.third_name;
+        StudentController.selectedStudentData.last_name = selectedData.last_name;
+        StudentController.selectedStudentData.preferred_name = selectedData.preferred_name;
+        StudentController.selectedStudentData.gender_id = selectedData.gender_id;
+        StudentController.selectedStudentData.gender = {
+            name: selectedData.gender
+        };
+        StudentController.selectedStudentData.date_of_birth = selectedData.date_of_birth;
+        StudentController.selectedStudentData.email = selectedData.email;
+        StudentController.selectedStudentData.identity_type_name = selectedData.identity_type;
+        StudentController.selectedStudentData.identity_number = selectedData.identity_number;
+        StudentController.selectedStudentData.nationality_name = selectedData.nationality;
+        StudentController.selectedStudentData.address = selectedData.address;
+        StudentController.selectedStudentData.postalCode = selectedData.postal_code;
+        StudentController.selectedStudentData.addressArea.name = selectedData.area_name;
+        StudentController.selectedStudentData.birthplaceArea.name = selectedData.birth_area_name;
+        StudentController.selectedStudentData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
+        StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
+        var todayDate = new Date();
+        StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+        StudentController.isSameSchool = selectedData.is_same_school > 0 ? true : false;
+        StudentController.isDiffSchool = selectedData.is_diff_school > 0 ? true : false;
+        StudentController.selectedStudentData.currentlyAllocatedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.current_enrol_institution_name;
+    }
+
+    function setStudentDataFromExternalSearchData(selectedData) {
+        StudentController.selectedStudentData.openemis_no = selectedData.openemis_no;
+        StudentController.selectedStudentData.first_name = selectedData.first_name;
+        StudentController.selectedStudentData.middle_name = selectedData.middle_name;
+        StudentController.selectedStudentData.third_name = selectedData.third_name;
+        StudentController.selectedStudentData.last_name = selectedData.last_name;
+        StudentController.selectedStudentData.preferred_name = selectedData.preferred_name;
+        StudentController.selectedStudentData.gender_id = selectedData.gender_id;
+        StudentController.selectedStudentData.gender = {
+            name: selectedData.gender
+        };
+        StudentController.selectedStudentData.date_of_birth = selectedData.date_of_birth;
+        StudentController.selectedStudentData.email = selectedData.email;
+        StudentController.selectedStudentData.identity_type_name = selectedData.identity_type;
+        StudentController.selectedStudentData.identity_type_id = selectedData.identity_type_id;
+        StudentController.selectedStudentData.identity_number = selectedData.identity_number;
+        StudentController.selectedStudentData.nationality_name = selectedData.nationality;
+        StudentController.selectedStudentData.address = selectedData.address;
+        StudentController.selectedStudentData.postalCode = selectedData.postal_code;
+        StudentController.selectedStudentData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
+        StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
+        var todayDate = new Date();
+        StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+    }
+
     StudentController.getStudentTransferReason = function() {
+        UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getStudentTransferReason().then(function(resp){
             StudentController.transferReasonsOptions = resp.data;
             UtilsSvc.isAppendLoader(false);
@@ -1245,10 +1257,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -1325,10 +1337,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,

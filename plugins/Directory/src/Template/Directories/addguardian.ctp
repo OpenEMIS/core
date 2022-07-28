@@ -384,7 +384,7 @@
                                     <div class="row section-header">Identities / Nationalities</div>
                                     <div class="row row-content">
                                         <div class="col-xs-6 col-md-3 form-label">Details</div>
-                                        <div class="form-input" ng-if="selectedUserData.identity_type_name && selectedUserData.identity_number && selectedUserData.nationality_name">
+                                        <div class="form-input" ng-if="selectedUserData.identity_type_name || selectedUserData.identity_number || selectedUserData.nationality_name">
                                             <div class="form-input table-full-width">
                                                 <div class="table-wrapper">
                                                     <div class="table-in-view">
