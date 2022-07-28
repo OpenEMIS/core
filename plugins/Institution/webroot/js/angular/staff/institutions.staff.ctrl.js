@@ -273,6 +273,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData = [];
+                    gridData.forEach((data) => {
+                        data.gender = data['gender.name'];
+                        data.nationality = data['main_nationality.name'];
+                        data.identity_type = data['main_identity_type.name'];
+                        data.gender_id = data['gender.id'];
+                        data.nationality_id = data['main_nationality.id'];
+                        data.identity_type_id = data['main_identity_type.id'];
+                    });
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StaffController.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
@@ -640,10 +648,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -683,10 +691,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -822,60 +830,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
     }
 
-    function setstaffData() {
-        StaffController.selectedStaffData.addressArea = {};
-        StaffController.selectedStaffData.birthplaceArea = {};
-        StaffController.selectedStaffData.openemis_no = StaffController.staffData.openemis_no;
-        StaffController.selectedStaffData.first_name = StaffController.staffData.first_name;
-        StaffController.selectedStaffData.middle_name = StaffController.staffData.middle_name;
-        StaffController.selectedStaffData.third_name = StaffController.staffData.third_name;
-        StaffController.selectedStaffData.last_name = StaffController.staffData.last_name;
-        StaffController.selectedStaffData.preferred_name = StaffController.staffData.preferred_name;
-        StaffController.selectedStaffData.gender = {
-            name: StaffController.staffData.gender
-        };
-        StaffController.selectedStaffData.date_of_birth = StaffController.staffData.date_of_birth;
-        StaffController.selectedStaffData.email = StaffController.staffData.email;
-        StaffController.selectedStaffData.identity_type_name = StaffController.staffData.identity_type;
-        StaffController.selectedStaffData.identity_number = StaffController.staffData.identity_number;
-        StaffController.selectedStaffData.nationality_name = StaffController.staffData.nationality;
-        StaffController.selectedStaffData.address = StaffController.staffData.address;
-        StaffController.selectedStaffData.postalCode = StaffController.staffData.postal_code;
-        StaffController.selectedStaffData.addressArea.name = StaffController.staffData.area_name;
-        StaffController.selectedStaffData.birthplaceArea.name = StaffController.staffData.birth_area_name;
-    }
-
-    function setStaffDataFromExternalSearchData() {
-        StaffController.selectedStaffData.addressArea = {};
-        StaffController.selectedStaffData.birthplaceArea = {};
-        StaffController.selectedStaffData.openemis_no = StaffController.staffData.openemis_no;
-        StaffController.selectedStaffData.first_name = StaffController.staffData.first_name;
-        StaffController.selectedStaffData.middle_name = StaffController.staffData.middle_name;
-        StaffController.selectedStaffData.third_name = StaffController.staffData.third_name;
-        StaffController.selectedStaffData.last_name = StaffController.staffData.last_name;
-        StaffController.selectedStaffData.preferred_name = StaffController.staffData.preferred_name;
-        StaffController.selectedStaffData.gender = {
-            name: StaffController.staffData.gender.name
-        };
-        StaffController.selectedStaffData.date_of_birth = StaffController.staffData.date_of_birth;
-        StaffController.selectedStaffData.email = StaffController.staffData.email;
-        StaffController.selectedStaffData.identity_type_name = StaffController.staffData.main_identity_type.name;
-        StaffController.selectedStaffData.identity_number = StaffController.staffData.identity_number;
-        StaffController.selectedStaffData.nationality_name = StaffController.staffData.main_nationality.name;
-        StaffController.selectedStaffData.address = StaffController.staffData.address;
-        StaffController.selectedStaffData.postalCode = StaffController.staffData.postal_code;
-        StaffController.selectedStaffData.addressArea.name = StaffController.staffData.area_name;
-        StaffController.selectedStaffData.birthplaceArea.name = StaffController.staffData.birth_area_name;
-    }
-
     function goToNextStep() {
         if(StaffController.isInternalSearchSelected) {
             StaffController.step = 'add_staff';
-            StaffController.setstaffData();
             StaffController.generatePassword();
         } else if(StaffController.isExternalSearchSelected) {
             StaffController.step = 'add_staff';
-            StaffController.setStaffDataFromExternalSearchData();
             StaffController.generatePassword();
         } else {
             switch(StaffController.step){
@@ -933,16 +893,69 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         
         angular.forEach(StaffController.rowsThisPage , function(value) {
             if (value.id == StaffController.selectedUser) {
-                StaffController.selectedStaffData = value;
                 StaffController.staffData = value;
                 if(StaffController.isInternalSearchSelected) {
                     StaffController.staffStatus = 'Assigned';
+                    StaffController.staffData.currentlyAssignedTo = value.current_enrol_institution_code + ' - ' + value.institution_name;
+                    StaffController.staffData.requestedBy = value.institution_code + ' - ' + value.current_enrol_institution_name;
+                    StaffController.setstaffData(value);
                 }
-                StaffController.staffData.currentlyAssignedTo = value.current_enrol_institution_code + ' - ' + value.institution_name;
-                StaffController.staffData.requestedBy = value.institution_code + ' - ' + value.current_enrol_institution_name;
-                StaffController.selectedStaffData.username = value.openemis_no;
+                if(StaffController.isExternalSearchSelected) {
+                    StaffController.setStaffDataFromExternalSearchData(value);
+                }
             }
         }, log);
+    }
+
+    function setstaffData(selectedData) {
+        StaffController.selectedStaffData.addressArea = {};
+        StaffController.selectedStaffData.birthplaceArea = {};
+        StaffController.selectedStaffData.openemis_no = selectedData.openemis_no;
+        StaffController.selectedStaffData.first_name = selectedData.first_name;
+        StaffController.selectedStaffData.middle_name = selectedData.middle_name;
+        StaffController.selectedStaffData.third_name = selectedData.third_name;
+        StaffController.selectedStaffData.last_name = selectedData.last_name;
+        StaffController.selectedStaffData.preferred_name = selectedData.preferred_name;
+        StaffController.selectedStaffData.gender = {
+            name: selectedData.gender
+        };
+        StaffController.selectedStaffData.date_of_birth = selectedData.date_of_birth;
+        StaffController.selectedStaffData.email = selectedData.email;
+        StaffController.selectedStaffData.identity_type_name = selectedData.identity_type;
+        StaffController.selectedStaffData.identity_number = selectedData.identity_number;
+        StaffController.selectedStaffData.nationality_name = selectedData.nationality;
+        StaffController.selectedStaffData.address = selectedData.address;
+        StaffController.selectedStaffData.postalCode = selectedData.postal_code;
+        StaffController.selectedStaffData.addressArea.name = selectedData.area_name;
+        StaffController.selectedStaffData.birthplaceArea.name = selectedData.birth_area_name;
+        StaffController.selectedStaffData.currentlyAssignedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.institution_name;
+        StaffController.selectedStaffData.requestedBy = selectedData.institution_code + ' - ' + selectedData.current_enrol_institution_name;
+        StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
+    }
+
+    function setStaffDataFromExternalSearchData(selectedData) {
+        StaffController.selectedStaffData.addressArea = {};
+        StaffController.selectedStaffData.birthplaceArea = {};
+        StaffController.selectedStaffData.openemis_no = selectedData.openemis_no;
+        StaffController.selectedStaffData.first_name = selectedData.first_name;
+        StaffController.selectedStaffData.middle_name = selectedData.middle_name;
+        StaffController.selectedStaffData.third_name = selectedData.third_name;
+        StaffController.selectedStaffData.last_name = selectedData.last_name;
+        StaffController.selectedStaffData.preferred_name = selectedData.preferred_name;
+        StaffController.selectedStaffData.gender_id = selectedData.gender_id;
+        StaffController.selectedStaffData.gender = {
+            name: selectedData.gender
+        };
+        StaffController.selectedStaffData.date_of_birth = selectedData.date_of_birth;
+        StaffController.selectedStaffData.email = selectedData.email;
+        StaffController.selectedStaffData.identity_type_id = selectedData.identity_type_id;
+        StaffController.selectedStaffData.identity_type_name = selectedData.identity_type;
+        StaffController.selectedStaffData.identity_number = selectedData.identity_number;
+        StaffController.selectedStaffData.nationality_id = selectedData.nationality_id;
+        StaffController.selectedStaffData.nationality_name = selectedData.nationality;
+        StaffController.selectedStaffData.address = selectedData.address;
+        StaffController.selectedStaffData.postalCode = selectedData.postal_code;
+        StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
     }
 
     function initGrid() {
@@ -993,10 +1006,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
@@ -1008,7 +1021,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                 rowModelType: 'infinite',
+                rowModelType: 'infinite',
                 // Removed options - Issues in ag-Grid AG-828
                 // suppressCellSelection: true,
 
@@ -1073,12 +1086,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.externalGridOptions = {
                 columnDefs: [
                     {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "main_nationality.name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "main_identity_type.name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
+                localeText: localeText,
                 enableColResize: false,
                 enableFilter: false,
                 enableServerSideFilter: true,
