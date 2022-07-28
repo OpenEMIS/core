@@ -1129,6 +1129,7 @@ class DirectoriesController extends AppController
 
         $conditions = [];
         $security_users = TableRegistry::get('security_users');
+        $userIdentities = TableRegistry::get('user_identities');
         $genders = TableRegistry::get('genders');
         $mainIdentityTypes = TableRegistry::get('identity_types');
         $mainNationalities = TableRegistry::get('nationalities');
@@ -1206,15 +1207,16 @@ class DirectoriesController extends AppController
                 'area_code'=> $areaAdministratives->aliasField('code'),
                 'birth_area_name'=> $birthAreaAdministratives->aliasField('name'),
                 'birth_area_code'=> $birthAreaAdministratives->aliasField('code'),
+                'MainIdentityTypes_number'=> $userIdentities->aliasField('number'),
             ])
-            ->LeftJoin(['Identities' => 'user_identities'],[
-                'Identities.security_user_id'=> $security_users->aliasField('id'),
+            ->LeftJoin([$userIdentities->alias() => $userIdentities->table()],[
+                $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id')
             ])
             ->LeftJoin([$genders->alias() => $genders->table()], [
                 $genders->aliasField('id =') . $security_users->aliasField('gender_id')
             ])
             ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
-                $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
+                $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
             ])
             ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
                 $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
@@ -1275,16 +1277,17 @@ class DirectoriesController extends AppController
                 'area_code'=> $areaAdministratives->aliasField('code'),
                 'birth_area_name'=> $birthAreaAdministratives->aliasField('name'),
                 'birth_area_code'=> $birthAreaAdministratives->aliasField('code'),
+                'MainIdentityTypes_number'=> $userIdentities->aliasField('number'),
             ])
-            ->InnerJoin(['Identities' => 'user_identities'],[
-                'Identities.security_user_id'=> $security_users->aliasField('id'),
-                'Identities.number LIKE'=> $identityNumber. '%',
+            ->InnerJoin([$userIdentities->alias() => $userIdentities->table()],[
+                $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
+                $userIdentities->aliasField('number LIKE ') . $identityNumber. '%'
             ])
             ->LeftJoin([$genders->alias() => $genders->table()], [
                 $genders->aliasField('id =') . $security_users->aliasField('gender_id')
             ])
             ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
-                $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
+                $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
             ])
             ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
                 $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
@@ -1324,7 +1327,7 @@ class DirectoriesController extends AppController
             $MainNationalities_name = !empty($result['MainNationalities_name']) ? $result['MainNationalities_name'] : '';
             $MainIdentityTypes_id = !empty($result['MainIdentityTypes_id']) ? $result['MainIdentityTypes_id'] : '';
             $MainIdentityTypes_name = !empty($result['MainIdentityTypes_name']) ? $result['MainIdentityTypes_name'] : '';
-            $identity_number = !empty($result['identity_number']) ? $result['identity_number'] : '';
+            $identity_number = !empty($result['MainIdentityTypes_number']) ? $result['MainIdentityTypes_number'] : '';
 
             $UserNeeds = TableRegistry::get('user_special_needs_assessments');
             $SpecialNeeds = $UserNeeds->find()
