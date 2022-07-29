@@ -103,4 +103,3 @@ class POCOR6822 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `class_profiles`');
     }
 }
-
