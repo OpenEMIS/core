@@ -19,228 +19,77 @@ class POCOR6822 extends AbstractMigration
         // security_functions
         $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `name` = "Staff" AND `controller` = "ProfileTemplates" AND `module` = "Administration"');
         $order = $row['order'];
-
         $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= ' . $order);
-        $this->insert('security_functions', [
-                'name' => 'Classes',
-                'controller' => 'ProfileTemplates',
-                'module' => 'Administration',
-                'category' => 'Profiles',
-                'parent_id' => 5000,
-                '_view' => 'Classes.index|Classes.view|ClassesProfiles.view',
-                '_edit' => 'Classes.edit',
-                '_add' => 'Classes.add',
-                '_delete' => 'Classes.remove',
-                '_execute' => 'ClassesProfiles.generate|ClassesProfiles.downloadExcel|ClassesProfiles.publish|ClassesProfiles.unpublish|ClassesProfiles.email|ClassesProfiles.downloadAll|ClassesProfiles.generateAll|ClassesProfiles.publishAll|ClassesProfiles.unpublishAll',
-                'order' => $order,
-                'visible' => 1,
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
-            ]); 
+        $this->execute('INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created` ) VALUES (`Classes`, `ProfileTemplates`, `Administration`, `Profiles`, 5000, `Classes.index|Classes.view|ClassesProfiles.view`, `Classes.edit`, `Classes.add`, `Classes.remove`, `ClassesProfiles.generate|ClassesProfiles.downloadExcel|ClassesProfiles.publish|ClassesProfiles.unpublish|ClassesProfiles.email|ClassesProfiles.downloadAll|ClassesProfiles.generateAll|ClassesProfiles.publishAll|ClassesProfiles.unpublishAll`, ' . $order . ', 1, `1`, date(`Y-m-d H:i:s`))');
 
-        //class_profile_templates
-        $this->table('class_profile_templates', [
-            'collation' => 'utf8_general_ci',
-            'primary_key' => 'id',
-            'id' => true //Auto increment id and primary key
-        ])
-        ->addColumn('code', 'string', [
-            'limit' => 50,
-            'null' => false
-        ])
-        ->addColumn('name', 'string', [
-            'limit' => 150,
-            'null' => false
-        ])
-        ->addColumn('description', 'text', [
-            'default' => null,
-            'null' => false
-        ])
-        ->addColumn('generate_start_date', 'datetime', [
-            'default' => null,
-            'null' => false
-        ])
-        ->addColumn('generate_end_date', 'datetime', [
-            'default' => null,
-            'null' => false
-        ])
-        ->addColumn('excel_template_name', 'string', [
-            'limit' => 250,
-            'default' => null,
-            'null' => false
-        ])
-        ->addColumn('excel_template', 'blob', [
-            'limit' => '4294967295',
-            'default' => null,
-            'null' => false
-        ])
-        ->addColumn('academic_period_id', 'integer', [
-            'limit' => 11,
-            'null' => false,
-            'comment' => 'links to academic_periods.id'
-        ])
-        ->addColumn('modified_user_id', 'integer', [
-            'default' => null,
-            'limit' => 11,
-            'null' => true
-        ])
-        ->addColumn('modified', 'datetime', [
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('created_user_id', 'integer', [
-            'limit' => 11,
-            'null' => false
-        ])
-        ->addColumn('created', 'datetime', [
-            'default' => null,
-            'null' => false
-        ])
-        ->addIndex('academic_period_id')
-        ->addIndex('modified_user_id')
-        ->addIndex('created_user_id')
-        ->save(); 
+        // class_profile_templates
+        $this->execute(
+          'CREATE TABLE IF NOT EXISTS `class_profile_templates` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `code` varchar(50) NOT NULL,
+            `name` varchar(150) NOT NULL,
+            `description` text DEFAULT NULL,
+            `generate_start_date` datetime DEFAULT NULL,
+            `generate_end_date` datetime DEFAULT NULL,
+            `excel_template_name` varchar(250) DEFAULT NULL,
+            `excel_template` blob DEFAULT NULL,
+            `academic_period_id` int(11) DEFAULT NULL COMMENT "links to academic_periods.id",
+            `modified_user_id` int(11) DEFAULT NULL,
+            `modified` datetime DEFAULT NULL,
+            `created_user_id` int(11) NOT NULL,
+            `created` datetime NOT NULL,
+             PRIMARY KEY (`id`),
+             FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods` (`id`)
+          )  ENGINE=InnoDB DEFAULT CHARSET=utf8'
+     );
 
-        //class_profile_processes
-        $this->table('class_profile_processes', [
-            'id' => false,
-            'collation' => 'utf8_general_ci',
-            'primary_key' => ['class_profile_template_id', 'institution_id'],
-        ])
-        ->addColumn('class_profile_template_id', 'integer', [
-            'limit' => 11,
-            'null' => false,
-            'comment' => 'links to class_profile_templates.id'
-        ])
-        ->addColumn('status', 'integer', [
-            'limit' => 2,
-            'null' => false,
-            'comment' => '1 => New 2 => Running 3 => Completed -1 => Error'
-        ])
-        ->addColumn('institution_id', 'integer', [
-            'limit' => 11,
-            'null' => false,
-            'comment' => 'links to institutions.id'
-        ])
-        ->addColumn('academic_period_id', 'integer', [
-            'limit' => 11,
-            'null' => false,
-            'comment' => 'links to academic_periods.id'
-        ])
-        ->addColumn('created', 'datetime', [
-            'default' => null,
-            'null' => false
-        ])
-        ->addIndex('academic_period_id')
-        ->addIndex('institution_id')
-        ->addIndex('class_profile_template_id')
-        ->save();
+        // class_profile_processes
+        $this->execute(
+          'CREATE TABLE IF NOT EXISTS `class_profile_processes` (
+            `class_profile_template_id` int(11) NOT NULL COMMENT "links to class_profile_templates.id",
+            `status` int(11) NOT NULL COMMENT "1 => New 2 => Running 3 => Completed -1 => Error",
+            `institution_class_id` int(11) NOT NULL COMMENT "links to institution_classes.id",
+            `institution_id` int(11) NOT NULL COMMENT "links to institutions.id",
+            `academic_period_id` int(11) NOT NULL COMMENT "links to academic_periods.id",
+            `modified_user_id` int(11) DEFAULT NULL,
+            `modified` datetime DEFAULT NULL,
+            `created_user_id` int(11) NOT NULL,
+            `created` datetime NOT NULL,
+             PRIMARY KEY (`class_profile_template_id`, `institution_id`),
+             FOREIGN KEY (`class_profile_template_id`) REFERENCES `class_profile_templates` (`id`),
+             FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes` (`id`),
+             FOREIGN KEY (`institution_id`) REFERENCES `institutions` (`id`),
+             FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods` (`id`)
+          )  ENGINE=InnoDB DEFAULT CHARSET=utf8'
+     );
 
-        //class_profiles
-        $this->table('class_profiles', [
-            'id' => false,
-            'primary_key' => ['class_profile_template_id', 'institution_id', 'academic_period_id'],
-            'collation' => 'utf8_general_ci'
-        ])
-        ->addColumn('id', 'char', [
-            'limit' => 64,
-            'null' => false,
-        ])
-        ->addColumn('status', 'integer', [
-            'limit' => 1,
-            'null' => false,
-            'comment' => '1 -> New, 2 -> In Progress, 3 -> Generated, 4 -> Published'
-        ])
-        ->addColumn('file_name', 'string', [
-            'limit' => 250,
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('file_content', 'blob', [
-            'limit' => '4294967295',
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('file_content_pdf', 'blob', [
-            'limit' => '4294967295',
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('started_on', 'datetime', [
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('completed_on', 'datetime', [
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('class_profile_template_id', 'integer', [
-            'limit' => 11,
-            'null' => false,
-            'comment' => 'links to class_profile_templates.id'
-        ])
-        ->addColumn('institution_id', 'integer', [
-            'limit' => 11,
-            'null' => false,
-            'comment' => 'links to institutions.id'
-        ])
-        ->addColumn('academic_period_id', 'integer', [
-            'limit' => 11,
-            'null' => false,
-            'comment' => 'links to academic_periods.id'
-        ])
-        ->addColumn('modified_user_id', 'integer', [
-            'default' => null,
-            'limit' => 11,
-            'null' => true
-        ])
-        ->addColumn('modified', 'datetime', [
-            'default' => null,
-            'null' => true
-        ])
-        ->addColumn('created_user_id', 'integer', [
-            'limit' => 11,
-            'null' => false
-        ])
-        ->addColumn('created', 'datetime', [
-            'default' => null,
-            'null' => false
-        ])
-        ->addIndex('class_profile_template_id')
-        ->addIndex('institution_id')
-        ->addIndex('academic_period_id')
-        ->addIndex('modified_user_id')
-        ->addIndex('created_user_id')
-        ->save();
-        //changes in class_profiles
-        $this->execute('ALTER TABLE `class_profiles` ADD `institution_class_id` INT(11) NOT NULL COMMENT "links to institution_classes.id" AFTER `academic_period_id`');
-        $this->execute('ALTER TABLE `class_profiles` ADD INDEX(`institution_class_id`)');
-        $this->execute('ALTER TABLE `class_profiles` DROP PRIMARY KEY, ADD PRIMARY KEY( `class_profile_template_id`, `institution_id`, `academic_period_id`, `institution_class_id`)');
-        $this->execute('ALTER TABLE `class_profiles` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL');
-
-        $this->execute('ALTER TABLE `class_profiles` CHANGE `file_content` `file_content` LONGBLOB NULL DEFAULT NULL');
-
-        $this->execute('ALTER TABLE `class_profiles` CHANGE `file_content_pdf` `file_content_pdf` LONGBLOB NULL DEFAULT NULL');
-                
-        $this->execute('ALTER TABLE `class_profiles` CHANGE `started_on` `started_on` DATETIME NULL DEFAULT NULL');
-
-        $this->execute('ALTER TABLE `class_profiles` CHANGE `completed_on` `completed_on` DATETIME NULL DEFAULT NULL');
-        //add FOREIGN KEY's in class_profiles table
-        $this->execute('ALTER TABLE `class_profiles` ADD FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes`(`id`)');
-        $this->execute('ALTER TABLE `class_profiles` ADD FOREIGN KEY (`class_profile_template_id`) REFERENCES `class_profile_templates`(`id`)');
-        $this->execute('ALTER TABLE `class_profiles` ADD FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`)');
-        $this->execute('ALTER TABLE `class_profiles` ADD FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods`(`id`)');
-
-        //changes in class_profile_processes
-        $this->execute('ALTER TABLE `class_profile_processes` ADD `institution_class_id` INT(11) NOT NULL COMMENT "links to institution_classes.id" AFTER `academic_period_id`');
-        $this->execute('ALTER TABLE `class_profile_processes` ADD INDEX(`institution_class_id`)');
-        //add FOREIGN KEY's in class_profile_processes table
-        $this->execute('ALTER TABLE `class_profile_processes` ADD FOREIGN KEY (`class_profile_template_id`) REFERENCES `class_profile_templates`(`id`)');
-        $this->execute('ALTER TABLE `class_profile_processes` ADD FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`)');
-        $this->execute('ALTER TABLE `class_profile_processes` ADD FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods`(`id`)');
-        $this->execute('ALTER TABLE `class_profile_processes` ADD FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes`(`id`)');
-    }
-
+        // class_profiles
+        $this->execute(
+          'CREATE TABLE IF NOT EXISTS `class_profiles` (
+            `id` varchar(50) NOT NULL,
+            `status` int(11) NOT NULL COMMENT "1 => New 2 => Running 3 => Completed -1 => Error",
+            `file_name` varchar(250) DEFAULT NULL,
+            `file_content` longblob DEFAULT NULL,
+            `file_content_pdf` longblob DEFAULT NULL,
+            `started_on` datetime DEFAULT NULL,
+            `completed_on` datetime DEFAULT NULL,
+            `class_profile_template_id` int(11) NOT NULL COMMENT "links to class_profile_templates.id",
+            `institution_class_id` int(11) NOT NULL COMMENT "links to institution_classes.id",
+            `institution_id` int(11) NOT NULL COMMENT "links to institutions.id",
+            `academic_period_id` int(11) NOT NULL COMMENT "links to academic_periods.id",
+            `modified_user_id` int(11) DEFAULT NULL,
+            `modified` datetime DEFAULT NULL,
+            `created_user_id` int(11) NOT NULL,
+            `created` datetime NOT NULL,
+             PRIMARY KEY (`class_profile_template_id`, `institution_id`, `academic_period_id`, `institution_class_id`),
+             FOREIGN KEY (`class_profile_template_id`) REFERENCES `class_profile_templates` (`id`),
+             FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes` (`id`),
+             FOREIGN KEY (`institution_id`) REFERENCES `institutions` (`id`),
+             FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods` (`id`),
+             INDEX `id` (`id`)
+          )  ENGINE=InnoDB DEFAULT CHARSET=utf8'
+     );
+     
     // rollback
     public function down()
     {
