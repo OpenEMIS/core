@@ -29,7 +29,7 @@ class AssessmentsTable extends ControllerActionTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => false]);
 
         $this->belongsToMany('GradingTypes', [
             'className' => 'Assessment.AssessmentGradingTypes',
@@ -223,17 +223,7 @@ class AssessmentsTable extends ControllerActionTable {
             $assessmentId = $entity['id'];
             if (array_key_exists($this->alias(), $requestData)) {
                 if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
-                    /*$assessmentItems = TableRegistry::get('assessment_items');
-                    $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('assessment_id')=>$assessmentId])->toArray();
-                    if(isset($checkdata) && (!empty($checkdata))){
-                        foreach($checkdata as $val){
-                            $dlt = $assessmentItems->delete($val);
-                        }
-                       
-                    }*/
-                    $i = 1;
                     foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
-                        if( $i++ == $key){
                         $subjectcheck = $item['education_subject_check'];
                         $subjectId = $item['education_subject_id'];
                         $weight = $item['weight'];
@@ -243,18 +233,18 @@ class AssessmentsTable extends ControllerActionTable {
                         if($subjectcheck == 1){
                             $assessmentItems = TableRegistry::get('assessment_items');
                             $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('assessment_id')=>$assessmentId,$assessmentItems->aliasField('education_subject_id')=>$subjectId])->toArray();
+                            
                             if(isset($checkdata) && (!empty($checkdata)) && $checkid==null){
 
-                                $ids = $checkdata->id;
+                                $ids = $checkdata[0]['id'];
+
                               $test =   $assessmentItems->updateAll(
                                 ['weight' => $weight,'classification'=>$classification],    //field
                                 [
                                  'id' => $ids, 
                                 ] //condition
                                 );
-                              //print_r($test);die;
                             }else{
-                               // die('kjkj');
                                 $data = [
                                     'id' => $ids ,
                                     'weight' => $weight,
@@ -270,7 +260,7 @@ class AssessmentsTable extends ControllerActionTable {
                         } 
                             
                         }
-                    }
+                  
                       } 
                     }
             } else { //logic to capture error if no subject inside the grade.
@@ -305,7 +295,7 @@ class AssessmentsTable extends ControllerActionTable {
             if (isset($requestData['errorMessage']) && !empty($requestData['errorMessage'])) {
                 $this->Alert->error($requestData['errorMessage'], ['reset'=>true]);
             }
-        }
+        }  
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -554,5 +544,12 @@ class AssessmentsTable extends ControllerActionTable {
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($filepath));
         echo file_get_contents($filepath);
-    }    
+    }  
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {  
+        if(isset($entity['assessment_items']) && $this->action == 'edit'){
+                $entity['assessment_items'] = array();
+        }
+    }  
 }
