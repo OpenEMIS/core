@@ -15,6 +15,10 @@ class POCOR6839 extends AbstractMigration
         /** backup */
         $this->execute('CREATE TABLE `zz_6839_scholarships` LIKE `scholarships`');
         $this->execute('INSERT INTO `zz_6839_scholarships` SELECT * FROM `scholarships`');
+
+        $this->execute('CREATE TABLE `zz_6839_scholarship_financial_assistance_types` LIKE `scholarship_financial_assistance_types`');
+        $this->execute('INSERT INTO `zz_6839_scholarship_financial_assistance_types` SELECT * FROM `scholarship_financial_assistance_types`');
+
         /** updating existing record */
         
         $this->execute("CREATE TABLE IF NOT EXISTS `scholarship_financial_assistances` (
@@ -46,8 +50,7 @@ class POCOR6839 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `scholarships`');
         $this->execute('RENAME TABLE `zz_6839_scholarships` TO `scholarships`');
 
-
-        $this->execute('DROP TABLE IF EXISTS `scholarship_financial_assistances`');
-        $this->execute('RENAME TABLE `zz_6839_scholarship_financial_assistances` TO `scholarship_financial_assistances`');
+        $this->execute('DROP TABLE IF EXISTS `scholarship_financial_assistance_types`');
+        $this->execute('RENAME TABLE `zz_6839_scholarship_financial_assistance_types` TO `scholarship_financial_assistance_types`');
     }
 }
