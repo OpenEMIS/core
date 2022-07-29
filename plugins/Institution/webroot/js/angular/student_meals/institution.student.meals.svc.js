@@ -268,9 +268,14 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
     function getDayListOptions(academicPeriodId, weekId, institutionId, current_week_number_selected, current_day_number) {
         var success = function(response, deferred) {
             var dayList = response.data.data;
+            console.log('response.data.data');
+            console.log(response.data.data)
             var log = [];
             var checkIsCurrent = 0;
-            if(response.data.data[1]['current_week_number_selected'] != 1){
+            if(response.data.data[1]['day'] == 'Sunday'){
+                log = dayList.length;
+            }
+            else if(response.data.data[1]['current_week_number_selected'] != 1){
                 angular.forEach(dayList, function(value, key) {
                     if(value['day_number'] !== false){
                         checkIsCurrent = 1;
