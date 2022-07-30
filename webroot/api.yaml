@@ -2124,7 +2124,54 @@ paths:
           description: "Invalid ID supplied"
         "404":
           description: "404 Not Found"
+<<<<<<< HEAD
+
+=======
   
+>>>>>>> origin/POCOR-6807
+  # API for fetching staff's subjects details on the bases of institution
+  # author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+  # POCOR-6807
+  /restful/v2/Institution-InstitutionSubjectStaff.json:
+    get:
+      tags:
+      - "Institution"
+      summary: "Get Staff's Subjects detail"
+      description: "Get staff's subjects details on the bases of institution"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "controllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - name: "_finder"
+        in: "query"
+        description: "eg: staffInstitutionSubjects[staff_id:578;institution_id:6]"
+        type: string
+        required: true
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
 definitions:
   login:
     type: "object"
