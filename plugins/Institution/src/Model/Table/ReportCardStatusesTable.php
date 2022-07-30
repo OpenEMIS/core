@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 use Cake\I18n\Time;
+use Cake\I18n\Date;//POCOR-6841
 use Cake\Log\Log;
 use Cake\Datasource\ConnectionManager; //POCOR-6785
 
@@ -326,15 +327,24 @@ class ReportCardStatusesTable extends ControllerActionTable
             $now = new DateTime();
             $c_timestap = $now->getTimestamp();
             $modifiedDate = $entity->modified;
-            $m_timestap =$modifiedDate->getTimestamp();
-            $diff_mins = abs($c_timestap - $m_timestap) / 60;
-            if($diff_mins > 5 && $diff_mins < 30){
-                $entity->status = 1;
-                $ReportCardProcessesTable->save($entity);
-            }elseif($diff_mins > 30){
-                $entity->status = -1;
-                $ReportCardProcessesTable->save($entity);
-            }
+            //POCOR-6841 starts
+            if($entity->status == 2){
+                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $timeZone= $ConfigItems->value("time_zone");
+                date_default_timezone_set($timeZone);
+                $currentTimeZone = new DateTime();
+                $modifiedDate = ($modifiedDate === null) ? $currentTimeZone : $modifiedDate;
+                $m_timestap =$modifiedDate->getTimestamp();
+                $diff_mins = abs($c_timestap - $m_timestap) / 60;
+                if($diff_mins > 5 && $diff_mins < 30){
+                    $entity->status = 1;
+                    $ReportCardProcessesTable->save($entity);
+                }elseif($diff_mins > 30){
+                    $entity->status = -1;
+                    $entity->modified = $currentTimeZone;//POCOR-6841
+                    $ReportCardProcessesTable->save($entity);
+                }
+            }//POCOR-6841 ends
         }
         $stmtNew = $conn->query("UPDATE institution_students_report_cards INNER JOIN report_card_processes ON institution_students_report_cards.report_card_id = report_card_processes.report_card_id AND institution_students_report_cards.student_id = report_card_processes.student_id AND institution_students_report_cards.institution_id = report_card_processes.institution_id AND institution_students_report_cards.academic_period_id = report_card_processes.academic_period_id AND institution_students_report_cards.education_grade_id = report_card_processes.education_grade_id AND institution_students_report_cards.institution_class_id = report_card_processes.institution_class_id SET institution_students_report_cards.status = report_card_processes.status");
         $successQQ =$stmtNew->execute();
@@ -429,6 +439,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         $classOptions = ['-1' => '-- '.__('Select Class').' --'] + $classOptions;
         $this->controller->set(compact('classOptions', 'selectedClass'));
         $where[$this->aliasField('institution_class_id')] = $selectedClass;
+        $where[$this->aliasField('institution_id')] = $institutionId; //POCOR-6817
+        $where[$this->aliasField('student_status_id NOT IN')] = 3; //POCOR-6817
         //End
 
         $query
