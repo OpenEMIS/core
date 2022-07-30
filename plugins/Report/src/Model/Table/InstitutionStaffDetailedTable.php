@@ -187,7 +187,7 @@ class InstitutionStaffDetailedTable extends AppTable
                         [$StaffCustomFields->aliasField('id  = ') . $custom_field->aliasField('staff_custom_field_id')])
             ->where($conditions)
             ->group(['staff_id']);
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($year) {
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($year) {
             return $results->map(function ($row) use ($year){
                 $row['academic_period'] = $year;
                 $Guardians = TableRegistry::get('staff_custom_field_values');
@@ -387,14 +387,14 @@ class InstitutionStaffDetailedTable extends AppTable
             'key' => 'Users.identity_number',
             'field' => 'user_identities_default',
             'type' => 'string',
-            'label' => __($identity->name)
+            'label' => __('Default Identity Number') //POCOR-6827
         ];
 
         $newFields[] = [
             'key' => 'Users.identities',
             'field' => 'user_identities',
             'type' => 'string',
-            'label' => __('Other Identities')
+            'label' => __('Other Identity Numbers') //POCOR-6827
         ];
 
         $newFields[] = [

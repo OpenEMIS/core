@@ -1020,32 +1020,89 @@ class InstitutionsTable extends ControllerActionTable
                 $clss = 'Non-academic institution';
             }
 
-            $body = array();
-            $body = [
-                'institution_id' => $entity->id,
-                'institution_name' => $entity->name,
-                'institution_alternative_name' => $entity->alternative_name,
-                'institution_code' => $entity->code,
-                'institution_classification' => $clss,
-                'institution_sector' => !empty($sectorName) ? $sectorName : NULL,
-                'institution_type' =>  !empty($typeName) ? $typeName : NULL,
-                'institution_gender' => !empty($genderName) ? $genderName : NULL,
-                'institution_date_opened' => date("d-m-Y", strtotime($entity->date_opened)),
-                'institution_address' => $entity->address,
-                'institution_postal_code' => $entity->postal_code,
-                'institution_locality' => !empty($localitiesName) ? $localitiesName : NULL,
-                'institution_latitude' => $entity->latitude,
-                'institution_longitude' => $entity->longitude,
-                'institution_area_education_id' => !empty($areaEducationId) ? $areaEducationId : NULL,
-                'institution_area_education' =>  !empty($areaEducationName) ? $areaEducationName : NULL,
-                'institution_area_administrative_id' => !empty($areaAdministrativeId) ? $areaAdministrativeId : NULL,
-                'institution_area_administrative' => !empty($areaAdministrativeName) ? $areaAdministrativeName : NULL,
-                'institution_contact_person' => $entity->contact_person,
-                'institution_telephone' => $entity->telephone,
-                'institution_mobile' => $entity->fax,
-                'institution_email' => $entity->email,
-                'institution_website' => $entity->website,
+            $bodys = array();
+            $bodys = [
+                "institution_id" => $entity->id,
+                "institution_name" => $entity->name,
+                "institution_alternative_name" => $entity->alternative_name,
+                "institution_code" => $entity->code,
+                "institution_classification" => $clss,
+                "institution_sector" => !empty($sectorName) ? $sectorName : NULL,
+                "institution_type" =>  !empty($typeName) ? $typeName : NULL,
+                "institution_gender" => !empty($genderName) ? $genderName : NULL,
+                "institution_date_opene" => date("d-m-Y", strtotime($entity->date_opened)),
+                "institution_address" => $entity->address,
+                "institution_postal_code" => $entity->postal_code,
+                "institution_locality" => !empty($localitiesName) ? $localitiesName : NULL,
+                "institution_latitude" => $entity->latitude,
+                "institution_longitude" => $entity->longitude,
+                "institution_area_education_id" => !empty($areaEducationId) ? $areaEducationId : NULL,
+                "institution_area_education" =>  !empty($areaEducationName) ? $areaEducationName : NULL,
+                "institution_area_administrative_id" => !empty($areaAdministrativeId) ? $areaAdministrativeId : NULL,
+                "institution_area_administrative" => !empty($areaAdministrativeName) ? $areaAdministrativeName : NULL,
+                "institution_contact_person" => $entity->contact_person,
+                "institution_telephone" => $entity->telephone,
+                "institution_mobile" => $entity->fax,
+                "institution_email" => $entity->email,
+                "institution_website" => $entity->website,
             ];
+            //POCOR-6805 start
+            $InstitutionCustomFields = TableRegistry::get('institution_custom_fields');
+            $InstitutionCustomFieldValues = TableRegistry::get('institution_custom_field_values');
+            $institutionCustomFieldOptions = TableRegistry::get('institution_custom_field_options');
+            $custom_fieldData = $InstitutionCustomFieldValues
+                        ->find()
+                        ->select([
+                                'id' => $InstitutionCustomFields->aliasField('id'),
+                                'name' => $InstitutionCustomFields->aliasField('name'),
+                                'field_type' => $InstitutionCustomFields->aliasField('field_type'),
+                                'text_value' => $InstitutionCustomFieldValues->aliasField('text_value'),
+                                'number_value' => $InstitutionCustomFieldValues->aliasField('number_value'),
+                                'decimal_value' => $InstitutionCustomFieldValues->aliasField('decimal_value'),
+                                'textarea_value' => $InstitutionCustomFieldValues->aliasField('textarea_value'),
+                                'date_value' => $InstitutionCustomFieldValues->aliasField('date_value'),
+                                'time_value' => $InstitutionCustomFieldValues->aliasField('time_value'),
+                                'checkbox_value_text'   => 'institutionCustomFieldOptions.name',
+                            ])
+                        ->leftJoin(
+                            [$InstitutionCustomFields->alias() => $InstitutionCustomFields->table()],
+                            [
+                                $InstitutionCustomFields->aliasField('id ='). $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
+                            ]
+                        )
+                        ->leftJoin(['institutionCustomFieldOptions' => 'institution_custom_field_options'],
+                                  ['institutionCustomFieldOptions.institution_custom_field_id = '.$InstitutionCustomFieldValues->aliasField('institution_custom_field_id')])
+                        ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $entity->id])
+                        ->group([$InstitutionCustomFields->aliasField('id')])
+                        ->hydrate(false)
+                        ->toArray();
+            $custom_field = array();
+            $count = 0;
+            foreach($custom_fieldData as $val){
+                $custom_field['custom_field'][$count]["id"]= (!empty($val['id']) ? $val['id'] : '');
+                $custom_field['custom_field'][$count]["name"]= (!empty($val['name']) ? $val['name'] : '');
+                $vale[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
+                $fieldType = $vale[$count];
+                if ($fieldType == 'TEXT') {
+                    $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                }else if ($fieldType == 'DECIMAL') {
+                    $custom_field['custom_field'][$count]["decimal_value"] =  (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                }else if ($fieldType == 'TEXTAREA') {
+                    $custom_field['custom_field'][$count]["textarea_value"] =  (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                }else if ($fieldType == 'DATE') {
+                    $custom_field['custom_field'][$count]["date_value"] =  (!empty($val['date_value']) ? $val['date_value'] : '');
+                }else if ($fieldType == 'TIME') {
+                    $custom_field['custom_field'][$count]["time_value"] =  date('h:i A', strtotime($val->time_value));
+                }else if ($fieldType == 'CHECKBOX') {
+                    $custom_field['custom_field'][$count]["checkbox_value"] =  (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
+                }else if ($fieldType == 'DROPDOWN') {
+                    $custom_field['custom_field'][$count]["dropdown_value"] =  (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
+                }else if ($fieldType == 'COORDINATES') {
+                    $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                }
+                $count++;
+            }
+            $body = array_merge($bodys, $custom_field); //POCOR-6805 end
             if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
                 $Webhooks = TableRegistry::get('Webhook.Webhooks');
                 if ($this->Auth->user()) {

@@ -22,6 +22,7 @@ class TrainingNeedsTable extends AppTable
         $this->belongsTo('TrainingNeedCompetencies', ['className' => 'Training.TrainingNeedCompetencies', 'foreignKey' => 'training_need_competency_id']);
         $this->belongsTo('TrainingNeedSubStandards', ['className' => 'Training.TrainingNeedSubStandards', 'foreignKey' => 'training_need_sub_standard_id']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
 
         $this->addBehavior('Excel', [
@@ -60,13 +61,39 @@ class TrainingNeedsTable extends AppTable
             'course_description' => 'TrainingCourses.description',
             'course_requirement' => 'TrainingRequirements.name',
             'training_standard' => 'TrainingNeedStandards.name'
-        ]);
+        ])//POCOR-6877
+        ->contain(['Users' => [
+                    'fields' => [
+                        'Users.id',
+                        'openemis_no' => 'Users.openemis_no',
+                        'first_name' => 'Users.first_name',
+                        'middle_name' => 'Users.middle_name',
+                        'third_name' => 'Users.third_name',
+                        'last_name' => 'Users.last_name',
+                        'number' => 'Users.identity_number',
+                    ]
+                ],
+                'Users.Identities.IdentityTypes' => [
+                    'fields' => [
+                        'Identities.number',
+                        'Identities.issue_date',
+                        'Identities.expiry_date',
+                        'Identities.issue_location',
+                        'IdentityTypes.name',
+                        'IdentityTypes.default'
+                    ]
+                ],
 
+            ]);
         $query->where([$this->aliasField('type') => $selectedNeedType]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $identity = $IdentityType->getDefaultEntity();
+        $settings['identity'] = $identity;
+
         $requestData = json_decode($settings['process']['params']);
         $selectedNeedType = $requestData->training_need_type;
 
@@ -197,22 +224,17 @@ class TrainingNeedsTable extends AppTable
             'label' => __('Gender')
         ];
         $newFields[] = [
-            'key' => 'identity_type',
-            'field' => 'identity_type',
+            'key' => 'Users.identity_number',
+            'field' => 'user_identities_default',
             'type' => 'string',
-            'label' => __('Identity Type')
+            'label' => __($identity->name)
         ];
+
         $newFields[] = [
-            'key' => 'identity_number',
-            'field' => 'identity_number',
+            'key' => 'Users.identities',
+            'field' => 'user_identities',
             'type' => 'string',
-            'label' => __('Identity Number')
-        ];
-        $newFields[] = [
-            'key' => 'other_identity',
-            'field' => 'other_identity',
-            'type' => 'string',
-            'label' => __('Other Identites')
+            'label' => __('Other Identities')
         ];
 
         if ($selectedNeedType == 'NEED') {
@@ -265,7 +287,7 @@ class TrainingNeedsTable extends AppTable
         }
     }
 
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    /*public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
         $userIdentities = TableRegistry::get('user_identities');
         $userIdentitiesResult = $userIdentities->find()
@@ -301,7 +323,7 @@ class TrainingNeedsTable extends AppTable
     public function onExcelGetOtherIdentity(Event $event, Entity $entity)
     {
         return $entity->custom_identity_other_data;
-    }
+    }*/
 
     public function onExcelGetGender(Event $event, Entity $entity)
     {
@@ -392,4 +414,48 @@ class TrainingNeedsTable extends AppTable
 
         return $return;
     }
+    
+    /**
+     * POCOR-6877
+    */ 
+    public function onExcelGetUserIdentitiesDefault(Event $event, Entity $entity)
+    {
+        $return = [];
+        if ($entity->has('user')) {
+            if ($entity->user->has('identities')) {
+                if (!empty($entity->user->identities)) {
+                    $identities = $entity->user->identities;
+                    foreach ($identities as $key => $value) {
+                        if ($value->identity_type->default == 1) {
+                            $return[] = $value->number;
+                        }
+                    }
+                }
+            }
+        }
+        return implode(', ', array_values($return));
+    }
+
+    /**
+     * POCOR-6877
+    */ 
+    public function onExcelGetUserIdentities(Event $event, Entity $entity)
+    {
+        $return = [];
+        if ($entity->has('user')) {
+            if ($entity->user->has('identities')) {
+                if (!empty($entity->user->identities)) {
+                    $identities = $entity->user->identities;
+                    foreach ($identities as $key => $value) {
+                        if ($value->identity_type->default == 0) {                            
+                            $return[] = '([' . $value->identity_type->name . ']' . ' - ' . $value->number . ')';
+                        }
+                    }
+                }
+            }
+        }
+
+        return implode(', ', array_values($return));
+    }
+
 }
