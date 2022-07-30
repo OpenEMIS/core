@@ -1,3 +1,15 @@
+### [3.75.18] - 2022-07-30
+- Implemented: D. Update existing WebHooks in OpenEMIS to add all Custom Fields for integration with JoLearn (MoE Operational Plan Activity 1.1.4.b.2)
+- Implemented: E. Develop OpenEMIS APIS for JoLearn - Develop teacher subjects API (MoE EMIS Operational Plan Activity 1.1.4b3.2)
+- Bug Fixed: Institutions>Performance>Report Card: Student that is transferred should not appear in the list
+- Bug Fixed: Reports>Training: Trainers Session Report is not displaying
+- Bug Fixed: Institution>Performance>Report Cards: Error status is showing the wrong modified date and time
+- Bug Fixed: Update summary table to include temporary tables and current academic periods
+- Bug Fixed: Reports>Students>Students: No options when selecting Area Education
+- Bug Fixed: Report>Institution>Positions: Add a new Status filter
+- Bug Fixed: Report>Training>Needs: National Number should be the identity number which is the default identity
+- Bug Fixed: Institutions > Examinations > Results: Results are not showing
+
 ### [3.75.17] - 2022-07-22
 - Implemented: C. Develop WebHook Token to establish linkage between OpenEMIS and MoE JoLearn (MoE Operational Plan Activity 1.1.4.b.1)
 - Implemented: E. Develop OpenEMIS APIS for JoLearn - Develop a feature for logging of all WebHook calls-not just error message (MoE EMIS Operational Plan Activity 1.1.4b3.3)
