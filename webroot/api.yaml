@@ -2124,14 +2124,7 @@ paths:
           description: "Invalid ID supplied"
         "404":
           description: "404 Not Found"
-<<<<<<< HEAD
-
-=======
-  
->>>>>>> origin/POCOR-6807
-  # API for fetching staff's subjects details on the bases of institution
-  # author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
-  # POCOR-6807
+          
   /restful/v2/Institution-InstitutionSubjectStaff.json:
     get:
       tags:
