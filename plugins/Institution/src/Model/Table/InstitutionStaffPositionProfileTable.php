@@ -165,6 +165,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 'Institutions' => [
                     'fields' => [
                         'Institutions_name' => 'Institutions.name',
+                        'Institutions_code' => 'Institutions.code',//POCOR-6886 selecting Institutions code
                     ]
                 ],
                 'Users' => [
@@ -289,6 +290,14 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'type'  => 'string',
             'label' => __('Grade'),
         ];
+        /**POCOR-6886 starts - added Institutions code colunm to report*/ 
+        $newFields[] = [
+            'key' => 'Institutions.code',
+            'field' => 'Institutions_code',
+            'type' => 'string',
+            'label' =>__('Institution Code'),
+        ];
+        /**POCOR-6886 ends*/ 
         $newFields[] = [
             'key' => 'Institutions.name',
             'field' => 'Institutions_name',
