@@ -1716,6 +1716,9 @@ class InstitutionsController extends AppController
         if($this->request->params['action'] == 'studentCustomFields'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'studentCustomFields';
         }
+        if($this->request->params['action'] == 'staffCustomFields'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'staffCustomFields';
+        }
         if($this->request->params['action'] == 'saveStudentData'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveStudentData';
         }
@@ -4538,10 +4541,15 @@ class InstitutionsController extends AppController
 
     public function studentCustomFields()
     {
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        $studentId = (array_key_exists('student_id', $requestData))? $requestData['student_id']: '';
         $studentCustomForms =  TableRegistry::get('student_custom_forms');
         $studentCustomFormsFields =  TableRegistry::get('student_custom_forms_fields');
         $studentCustomFields =  TableRegistry::get('student_custom_fields');
         $studentCustomFieldOptions =  TableRegistry::get('student_custom_field_options');
+        $studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
 
         $SectionData = $studentCustomForms->find()
                             ->select([
@@ -4617,6 +4625,201 @@ class InstitutionsController extends AppController
                         $OptionDataArr[$opkey]['option_order'] = $opval->option_order;
                     }
                     $fieldsArr[$i]['option'] = $OptionDataArr;
+                }
+                //get student custom field values
+                if($studentId != ''){
+                    $studentCustomFieldValuesData = $studentCustomFieldValues->find()
+                            ->select([
+                                'text_value'=>$studentCustomFieldValues->aliasField('text_value'),
+                                'number_value'=>$studentCustomFieldValues->aliasField('number_value'),
+                                'decimal_value'=>$studentCustomFieldValues->aliasField('decimal_value'),
+                                'textarea_value'=>$studentCustomFieldValues->aliasField('textarea_value'),
+                                'date_value'=>$studentCustomFieldValues->aliasField('date_value'),
+                                'time_value'=>$studentCustomFieldValues->aliasField('time_value'),
+                                'student_custom_field_id'=>$studentCustomFieldValues->aliasField('student_custom_field_id'),
+                                'student_id'=>$studentCustomFieldValues->aliasField('student_id')
+                            ])
+                            ->where([
+                                $studentCustomFieldValues->aliasField('student_custom_field_id') => $cval->student_custom_field_id,
+                                $studentCustomFieldValues->aliasField('student_id') => $studentId
+                            ])->toArray();
+                    if(!empty($studentCustomFieldValuesData)){
+                        if($cval->field_type == 'TEXT'){
+                            $fieldsArr[$i]['values'] = $studentCustomFieldValuesData[0]->text_value;
+                        } else if($cval->field_type == 'DECIMAL'){
+                            $fieldsArr[$i]['values'] = $studentCustomFieldValuesData[0]->decimal_value;
+                        } else if($cval->field_type == 'NUMBER'){
+                            $fieldsArr[$i]['values'] = $studentCustomFieldValuesData[0]->number_value;
+                        } else if($cval->field_type == 'TEXTAREA'){
+                            $fieldsArr[$i]['values'] = $studentCustomFieldValuesData[0]->textarea_value;
+                        } else if($cval->field_type == 'DATE'){
+                            $fieldsArr[$i]['values'] = date('Y-m-d', strtotime($studentCustomFieldValuesData[0]->date_value));
+                        } else if($cval->field_type == 'TIME'){
+                            $fieldsArr[$i]['values'] = date('H:i:s', strtotime($studentCustomFieldValuesData[0]->time_value));
+                        } else if($cval->field_type == 'DROPDOWN'){
+                            $DropdownValDataArr =[];
+                            foreach ($studentCustomFieldValuesData as $SV_key => $SV_value) {
+                                $DropdownValDataArr[$SV_key]['dropdown_val'] = $SV_value->number_value;
+                            }
+                            $fieldsArr[$i]['values'] = $DropdownValDataArr;
+                        }  else if($cval->field_type == 'CHECKBOX'){
+                            $CheckboxValDataArr =[];
+                            foreach ($studentCustomFieldValuesData as $SV_key => $SV_value) {
+                                $CheckboxValDataArr[$SV_key]['checkbox_val'] = $SV_value->number_value;
+                            }
+                            $fieldsArr[$i]['values'] = $CheckboxValDataArr;
+                        }
+                    }else{
+                        $fieldsArr[$i]['values'] = '';    
+                    }
+                }else{
+                    $fieldsArr[$i]['values'] = '';  
+                }
+                $i++;
+            }
+            //$SectionArr[$skey][$sval->section] = $fieldsArr;
+            $SectionArr = $fieldsArr;
+        }
+        echo json_encode($SectionArr);die;
+    }
+
+    public function staffCustomFields()
+    {
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        $staffId = (array_key_exists('staff_id', $requestData))? $requestData['staff_id']: '';
+        $staffCustomForms =  TableRegistry::get('staff_custom_forms');
+        $staffCustomFormsFields =  TableRegistry::get('staff_custom_forms_fields');
+        $staffCustomFields =  TableRegistry::get('staff_custom_fields');
+        $staffCustomFieldOptions =  TableRegistry::get('staff_custom_field_options');
+        $staffCustomFieldValues =  TableRegistry::get('staff_custom_field_values');
+
+        $SectionData = $staffCustomForms->find()
+                            ->select([
+                                'staff_custom_form_id'=>$staffCustomFormsFields->aliasField('staff_custom_form_id'),
+                                'staff_custom_field_id'=>$staffCustomFormsFields->aliasField('staff_custom_field_id'),
+                                'section'=>$staffCustomFormsFields->aliasField('section'),
+                            ])
+                            ->LeftJoin([$staffCustomFormsFields->alias() => $staffCustomFormsFields->table()], [
+                                $staffCustomFormsFields->aliasField('staff_custom_form_id =') . $staffCustomForms->aliasField('id'),
+                            ])
+                            ->where([
+                                $staffCustomForms->aliasField('name') => 'ID'
+                            ])
+                            ->group([$staffCustomFormsFields->aliasField('section')])
+                            ->toArray();
+
+                           
+        $remove_field_type = ['FILE','COORDINATES','TABLE'];  
+        $i= 0;    
+        $fieldsArr = [];              
+        foreach ($SectionData as $skey => $sval) {
+            //$SectionArr[$skey][$sval->section] = $sval->section;
+            $CustomFieldsData = $staffCustomFormsFields->find()
+                            ->select([
+                                'staff_custom_form_id'=>$staffCustomFormsFields->aliasField('staff_custom_form_id'),
+                                'staff_custom_field_id'=>$staffCustomFormsFields->aliasField('staff_custom_field_id'),
+                                'section'=>$staffCustomFormsFields->aliasField('section'),
+                                'name'=>$staffCustomFormsFields->aliasField('name'),
+                                'order'=>$staffCustomFormsFields->aliasField('order'),
+                                'description'=>$staffCustomFields->aliasField('description'),
+                                'field_type'=>$staffCustomFields->aliasField('field_type'),
+                                'is_mandatory'=>$staffCustomFields->aliasField('is_mandatory'),
+                                'is_unique'=>$staffCustomFields->aliasField('is_unique'),
+                                'params'=>$staffCustomFields->aliasField('params'),
+                            ])
+                            ->LeftJoin([$staffCustomFields->alias() => $staffCustomFields->table()], [
+                                $staffCustomFields->aliasField('id =') . $staffCustomFormsFields->aliasField('staff_custom_field_id'),
+                            ])
+                            ->where([
+                                $staffCustomFormsFields->aliasField('section') => $sval->section,
+                                $staffCustomFields->aliasField('field_type NOT IN') => $remove_field_type
+                            ])->toArray();
+            
+            foreach ($CustomFieldsData as $ckey => $cval) {
+                $fieldsArr[$i]['staff_custom_form_id'] = $cval->staff_custom_form_id;
+                $fieldsArr[$i]['staff_custom_field_id'] = $cval->staff_custom_field_id;
+                $fieldsArr[$i]['section'] = $cval->section;
+                $fieldsArr[$i]['name'] = $cval->name;
+                $fieldsArr[$i]['order'] = $cval->order;
+                $fieldsArr[$i]['description'] = $cval->description;
+                $fieldsArr[$i]['field_type'] = $cval->field_type;
+                $fieldsArr[$i]['is_mandatory'] = $cval->is_mandatory;
+                $fieldsArr[$i]['is_unique'] = $cval->is_unique;
+                $fieldsArr[$i]['params'] = $cval->params;
+
+                if($cval->field_type == 'DROPDOWN' || $cval->field_type == 'CHECKBOX'){
+                    $OptionData = $staffCustomFieldOptions->find()
+                                    ->select([
+                                        'option_id'=>$staffCustomFieldOptions->aliasField('id'),
+                                        'option_name'=>$staffCustomFieldOptions->aliasField('name'),
+                                        'is_default'=>$staffCustomFieldOptions->aliasField('is_default'),
+                                        'visible'=>$staffCustomFieldOptions->aliasField('visible'),
+                                        'option_order'=>$staffCustomFieldOptions->aliasField('order')
+                                    ])
+                                    ->where([
+                                        $staffCustomFieldOptions->aliasField('staff_custom_field_id') => $cval->staff_custom_field_id
+                                    ])->toArray();
+                    $OptionDataArr =[];
+                    foreach ($OptionData as $opkey => $opval) {
+                        $OptionDataArr[$opkey]['option_id'] = $opval->option_id;
+                        $OptionDataArr[$opkey]['option_name'] = $opval->option_name;
+                        $OptionDataArr[$opkey]['is_default'] = $opval->is_default;
+                        $OptionDataArr[$opkey]['visible'] = $opval->visible;
+                        $OptionDataArr[$opkey]['option_order'] = $opval->option_order;
+                    }
+                    $fieldsArr[$i]['option'] = $OptionDataArr;
+                }
+
+                //get staff custom field values
+                if($staffId != ''){
+                    $staffCustomFieldValuesData = $staffCustomFieldValues->find()
+                            ->select([
+                                'text_value'=>$staffCustomFieldValues->aliasField('text_value'),
+                                'number_value'=>$staffCustomFieldValues->aliasField('number_value'),
+                                'decimal_value'=>$staffCustomFieldValues->aliasField('decimal_value'),
+                                'textarea_value'=>$staffCustomFieldValues->aliasField('textarea_value'),
+                                'date_value'=>$staffCustomFieldValues->aliasField('date_value'),
+                                'time_value'=>$staffCustomFieldValues->aliasField('time_value'),
+                                'staff_custom_field_id'=>$staffCustomFieldValues->aliasField('staff_custom_field_id'),
+                                'staff_id'=>$staffCustomFieldValues->aliasField('staff_id')
+                            ])
+                            ->where([
+                                $staffCustomFieldValues->aliasField('staff_custom_field_id') => $cval->student_custom_field_id,
+                                $staffCustomFieldValues->aliasField('staff_id') => $staffId
+                            ])->toArray();
+                    if(!empty($staffCustomFieldValuesData)){
+                        if($cval->field_type == 'TEXT'){
+                            $fieldsArr[$i]['values'] = $staffCustomFieldValuesData[0]->text_value;
+                        } else if($cval->field_type == 'DECIMAL'){
+                            $fieldsArr[$i]['values'] = $staffCustomFieldValuesData[0]->decimal_value;
+                        } else if($cval->field_type == 'NUMBER'){
+                            $fieldsArr[$i]['values'] = $staffCustomFieldValuesData[0]->number_value;
+                        } else if($cval->field_type == 'TEXTAREA'){
+                            $fieldsArr[$i]['values'] = $staffCustomFieldValuesData[0]->textarea_value;
+                        } else if($cval->field_type == 'DATE'){
+                            $fieldsArr[$i]['values'] = date('Y-m-d', strtotime($staffCustomFieldValuesData[0]->date_value));
+                        } else if($cval->field_type == 'TIME'){
+                            $fieldsArr[$i]['values'] = date('H:i:s', strtotime($staffCustomFieldValuesData[0]->time_value));
+                        } else if($cval->field_type == 'DROPDOWN'){
+                            $DropdownValDataArr =[];
+                            foreach ($staffCustomFieldValuesData as $SV_key => $SV_value) {
+                                $DropdownValDataArr[$SV_key]['dropdown_val'] = $SV_value->number_value;
+                            }
+                            $fieldsArr[$i]['values'] = $DropdownValDataArr;
+                        }  else if($cval->field_type == 'CHECKBOX'){
+                            $CheckboxValDataArr =[];
+                            foreach ($staffCustomFieldValuesData as $SV_key => $SV_value) {
+                                $CheckboxValDataArr[$SV_key]['checkbox_val'] = $SV_value->number_value;
+                            }
+                            $fieldsArr[$i]['values'] = $CheckboxValDataArr;
+                        }
+                    }else{
+                        $fieldsArr[$i]['values'] = '';    
+                    }
+                }else{
+                    $fieldsArr[$i]['values'] = '';  
                 }
                 $i++;
             }
