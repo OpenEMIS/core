@@ -62,32 +62,11 @@ class SecurityRolesTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
-    {      
+    {
+      
         // webhook create role starts
          if($entity->isNew()) {
           
-          /*POCOR-6844 starts*/
-            if ($entity->security_group_id > 0) {
-                $roles = $this->find('all')->select('order')->where(['security_group_id' => $entity->security_group_id])->max('order')->toArray();
-                 $order = $roles['order'] + 1;
-                if ($entity->has('id') && $entity->submit == 'save') {
-                    $this->updateAll(
-                        ['order' => $order],
-                        ['id' => $entity->id]
-                    );
-                }
-            }
-            else{
-                $roles = $this->find('all')->select('order')->max('order')->toArray();
-                $order = $roles['order'] + 1;
-                if ($entity->has('id') && $entity->submit == 'save') {
-                    $this->updateAll(
-                        ['order' => $order],
-                        ['id' => $entity->id]
-                    );
-                }
-            }
-            /*POCOR-6844 End*/
             $body = array();
             $createRole = [
                 'role_id' =>$entity->id,
@@ -785,25 +764,14 @@ class SecurityRolesTable extends ControllerActionTable
         return (!empty($teacherData))? $teacherData->id: null;
     }//POCOR-6734 ends
 
-    /*
-    * Function to get logged in user's role list
-    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
-    * return @array
-    * @ticket POCOR-6800
+    /**
+     * POCOR-6878,add defult order value
     */
-    public function getLoggedInUserRoles($userId = null)
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
     {
-        $roles = [];
-        $usersGroup = TableRegistry::get('Security.SecurityGroupUsers');
-        $userRoles = $usersGroup
-                    ->find()
-                    ->where([$usersGroup->aliasField('security_user_id') => $userId ])
-                    ->toArray();
-        if (!empty($userRoles)) {
-            foreach ($userRoles as $role) {
-                $roles[] = $role->security_role_id;
-            }
+        if ($entity->isNew()) {
+            $entity->order = 0;
         }
-        return (!empty($roles))? $roles: null;
     }
+
 }
