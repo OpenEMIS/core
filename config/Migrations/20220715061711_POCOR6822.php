@@ -41,7 +41,7 @@ class POCOR6822 extends AbstractMigration
              PRIMARY KEY (`id`),
              FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods` (`id`)
           )  ENGINE=InnoDB DEFAULT CHARSET=utf8'
-     );
+     	);
 
         // class_profile_processes
         $this->execute(
@@ -61,7 +61,7 @@ class POCOR6822 extends AbstractMigration
              FOREIGN KEY (`institution_id`) REFERENCES `institutions` (`id`),
              FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods` (`id`)
           )  ENGINE=InnoDB DEFAULT CHARSET=utf8'
-     );
+     	);
 
         // class_profiles
         $this->execute(
@@ -88,7 +88,8 @@ class POCOR6822 extends AbstractMigration
              FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods` (`id`),
              INDEX `id` (`id`)
           )  ENGINE=InnoDB DEFAULT CHARSET=utf8'
-     );
+     	);
+    }
      
     // rollback
     public function down()
