@@ -144,7 +144,7 @@ class ReportListBehavior extends Behavior {
 			$query = $this->ReportProgress->find('all')
 			//START:POCOR-6629
 			// ->where(['JSON_EXTRACT(params, "$.current_institution_id")=' . "'".$institutionId."'",'module'=>'InstitutionStandards'])
-			//->where(['JSON_EXTRACT(params, "$.current_institution_id")=' . $institutionId,'module'=>'InstitutionStandards'])
+			->where(['JSON_EXTRACT(params, "$.current_institution_id")=' . $institutionId,'module'=>'InstitutionStandards'])
 			//END:POCOR-6629
 			->order([
 				$this->ReportProgress->aliasField('created') => 'DESC',
