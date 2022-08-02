@@ -37,6 +37,55 @@ class POCOR6839 extends AbstractMigration
              PRIMARY KEY (`id`)
           )  ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
+        $data = [
+            [
+                'name'  => 'Full Financial Assistance Award(FFAA)',
+                'order'  => '1',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => 'FFAA',
+                'national_code' => 'FFAA',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Partial Financial Assistance Award (PFAA)',
+                'order'  => '2',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => 'PFAA',
+                'national_code' => 'PFAA',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'One-Off Financial Assistance Award (OFAA)',
+                'order'  => '3',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => 'OFAA',
+                'national_code' => 'OFAA',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Distance Learning Financial Assistance (DLFA)',
+                'order'  => '4',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => 'DLFA',
+                'national_code' => 'DLFA',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+
+        $this->table('scholarship_financial_assistances')->insert($data)->save(); 
+
         $this->execute('ALTER TABLE `scholarships` ADD `scholarship_financial_assistance_id` INT(11) NULL AFTER `scholarship_financial_assistance_type_id`');
 
         $this->execute('DELETE FROM scholarship_financial_assistance_types WHERE code = "FULLSCHOLARSHIP"');
