@@ -4709,7 +4709,6 @@ class InstitutionsController extends AppController
                             ])
                             ->group([$staffCustomFormsFields->aliasField('section')])
                             ->toArray();
-
                            
         $remove_field_type = ['FILE','COORDINATES','TABLE'];  
         $i= 0;    
@@ -4771,7 +4770,6 @@ class InstitutionsController extends AppController
                     }
                     $fieldsArr[$i]['option'] = $OptionDataArr;
                 }
-
                 //get staff custom field values
                 if($staffId != ''){
                     $staffCustomFieldValuesData = $staffCustomFieldValues->find()
@@ -5167,7 +5165,16 @@ class InstitutionsController extends AppController
                     }
                     
                     if(!empty($custom)){
+                        //if student custom field values already exist in student_custom_field_values table the delete the old values and insert the new ones.
                         $studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
+                        $StudentCustomFieldValuesCount = $studentCustomFieldValues
+                                                            ->find()
+                                                            ->where([$studentCustomFieldValues->aliasField('student_id') => $user_record_id])
+                                                            ->count();
+                        if($StudentCustomFieldValuesCount > 0){
+                            $studentCustomFieldValues->deleteAll(['student_id' => $user_record_id]);
+                        }
+                        
                         foreach ($custom as $skey => $sval) {
                             $entityCustomData = [
                                 'id' => Text::uuid(),
@@ -5564,7 +5571,16 @@ class InstitutionsController extends AppController
                         }
                     }
                     if(!empty($custom)){
+                        //if staff custom field values already exist in `staff_custom_field_values` table the delete the old values and insert the new ones.
                         $staffCustomFieldValues =  TableRegistry::get('staff_custom_field_values');
+                        $StaffCustomFieldValuesCount = $staffCustomFieldValues
+                                                            ->find()
+                                                            ->where([$staffCustomFieldValues->aliasField('staff_id') => $user_record_id])
+                                                            ->count();
+                        if($StaffCustomFieldValuesCount > 0){
+                            $staffCustomFieldValues->deleteAll(['staff_id' => $user_record_id]);
+                        }
+
                         foreach ($custom as $skey => $sval) {
                             $entityCustomData = [
                                 'id' => Text::uuid(),
