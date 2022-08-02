@@ -106,7 +106,7 @@
                                 <tr>
                                     <td>
                                         <?php
-                                        echo $this->Form->checkbox("$fieldPrefix.education_subject_check", ['checked' => $data['assessment_items'][$key]['education_subject_id'],'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);?>
+                                        echo $this->Form->checkbox("$fieldPrefix.education_subject_check", ['checked' => $data['assessment_items'][$key]['education_subject_id'],'onclick'=>'return false','class' => 'no-selection-label', 'kd-checkbox-radio' => '']);?>
                                         </td>
                                         <td> <?php echo $itemName; ?></td>
                                         <?php
