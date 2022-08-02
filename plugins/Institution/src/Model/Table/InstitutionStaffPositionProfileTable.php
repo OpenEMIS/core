@@ -302,7 +302,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'key' => 'Institutions.name',
             'field' => 'Institutions_name',
             'type' => 'string',
-            'label' =>__('Institution'),
+            'label' =>__('Institution Name'),//POCOR-6886 - added Name into label
         ];
         $newFields[] = [
             'key'   => 'assignee_user_full_name',
