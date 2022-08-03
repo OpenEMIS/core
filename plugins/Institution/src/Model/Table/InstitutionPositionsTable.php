@@ -1111,98 +1111,50 @@ class InstitutionPositionsTable extends ControllerActionTable
         $entity->status_name = '';
         $entity->identity_number = '';
         $entity->identity_type = '';
+        
         $currentStaff = $Staff
-            ->find()
-            ->select([
-                'fte'=>$Staff->aliasField('FTE'),
-                'date'=>  $Staff->aliasField('start_date'),
-                'id'=>'Users.id',
-                'openemis_no'=> 'Users.openemis_no',
-                'first_name'=> 'Users.first_name',
-                'middle_name'=> 'Users.middle_name',
-                'third_name'=>'Users.third_name',
-                'last_name'=>'Users.last_name',
-                'status_name'=>'StaffStatuses.name',
-                'identity_type'=>'IdentityTypes.name',
-                'identity_number'=>'Identities.number',
-            ])
-            ->contain(['Users'])
-            ->leftJoin(
-                                    [$UserIdentities->alias() => $UserIdentities->table()],
-                                    [
-                                        $UserIdentities->aliasField('security_user_id = ') . $Staff->aliasField('staff_id'),
-                                    ]
-                                )
-                        ->leftJoin(
-                            [$IdentityTypes->alias() => $IdentityTypes->table()],
-                            [
-                                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
-                            ]
-                        )
-            ->leftJoinWith('StaffStatuses')
-            ->where([
-                $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
-                $Staff->aliasField('institution_position_id') => $position_id,
-                'OR' => [
-                    $Staff->aliasField('end_date').' IS NULL',
-                    'AND' => [
-                        $Staff->aliasField('end_date').' IS NOT NULL',
-                        $Staff->aliasField('end_date').' >= DATE(NOW())'
-                    ]
-                ]
-            ])
-            ->order([$Staff->aliasField('start_date')])
-            ->first();
-            if(!empty($currentStaff)){
-                $entity->fte = $currentStaff->fte;
-                $entity->openemis_no = $currentStaff->openemis_no;
-                $entity->staff_name = $currentStaff->first_name.' '.$currentStaff->middle_name.' '.$currentStaff->third_name.' '.$currentStaff->last_name ;
-                $entity->status_name =  $currentStaff->status_name;
-                $entity->identity_type =  $currentStaff->identity_type;
-                $entity->identity_number =  $currentStaff->identity_number;
-            }else{
-                $currentStaff = $Staff
-                                ->find()
-                                ->select([
-                                    'fte'=>$Staff->aliasField('FTE'),
-                                    'date'=>  $Staff->aliasField('start_date'),
-                                    'id'=>'Users.id',
-                                    'openemis_no'=> 'Users.openemis_no',
-                                    'first_name'=> 'Users.first_name',
-                                    'middle_name'=> 'Users.middle_name',
-                                    'third_name'=>'Users.third_name',
-                                    'last_name'=>'Users.last_name',
-                                    'status_name'=>'StaffStatuses.name',
-                                    'identity_type'=>'IdentityTypes.name',
-                                    'identity_number'=>'Identities.number',
-                                ])
-                                ->contain(['Users'])
-                                ->leftJoin(
-                                    [$UserIdentities->alias() => $UserIdentities->table()],
-                                    [
-                                        $UserIdentities->aliasField('security_user_id = ') . $Staff->aliasField('staff_id'),
-                                    ]
-                                )
-                        ->leftJoin(
-                            [$IdentityTypes->alias() => $IdentityTypes->table()],
-                            [
-                                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
-                            ]
-                        )
-                                ->leftJoinWith('StaffStatuses')
-                                ->where([
-                                    $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
-                                    $Staff->aliasField('institution_position_id') => $position_id,
-                                ])->first();
+                        ->find()
+                        ->select([
+                            'fte'=>$Staff->aliasField('FTE'),
+                            'date'=>  $Staff->aliasField('start_date'),
+                            'staff_id'=>  $Staff->aliasField('staff_id'),
+                            'id'=>'Users.id',
+                            'openemis_no'=> 'Users.openemis_no',
+                            'first_name'=> 'Users.first_name',
+                            'middle_name'=> 'Users.middle_name',
+                            'third_name'=>'Users.third_name',
+                            'last_name'=>'Users.last_name',
+                            'status_name'=>'StaffStatuses.name',
+                        ])
+                        ->contain(['Users'])
+                        ->leftJoinWith('StaffStatuses')
+                        ->where([
+                            $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                            $Staff->aliasField('institution_position_id') => $position_id,
+                        ])->first();
                 if(!empty($currentStaff)){
                     $entity->fte = $currentStaff->fte;
+                    $StaffId = $currentStaff->staff_id;
                     $entity->openemis_no = $currentStaff->openemis_no;
+                    $IdentityTypeId = $currentStaff->identity_type_id;
                     $entity->staff_name = $currentStaff->first_name.' '.$currentStaff->middle_name.' '.$currentStaff->third_name.' '.$currentStaff->last_name ;
                     $entity->status_name =  $currentStaff->status_name;
-                    $entity->identity_type =  $currentStaff->identity_type;
-                    $entity->identity_number =  $currentStaff->identity_number;
+                    
+                    $UserIdentitiesIds = $UserIdentities->find()->select(['number'=>'Identities.number','                 name'=>'IdentityTypes.name'])
+                                        ->leftJoin(
+                                    [$IdentityTypes->alias() => $IdentityTypes->table()],
+                                    [
+                                        $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
+                                    ])
+                                    ->where([$UserIdentities->aliasField('security_user_id')=>$StaffId,
+                                        $IdentityTypes->aliasField('default')=>1 ])->first();
+                    if(!empty($UserIdentitiesIds)){
+                        $entity->identity_type =  $UserIdentitiesIds->name;
+                        $entity->identity_number =  $UserIdentitiesIds->number;
+                    }
+
                 }
-        }
+        
         return $entity->openemis_no;
     }
 
