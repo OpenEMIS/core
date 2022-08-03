@@ -34,7 +34,9 @@ class POCOR6839 extends AbstractMigration
             `modified` datetime DEFAULT NULL,
             `created_user_id` int(11) NOT NULL,
             `created` datetime NOT NULL,
-             PRIMARY KEY (`id`)
+             PRIMARY KEY (`id`),
+             FOREIGN KEY (`modified_user_id`) REFERENCES `security_users`(`id`),
+             FOREIGN KEY (created_user_id) REFERENCES `security_users`(`id`)
           )  ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
         $data = [
@@ -86,7 +88,7 @@ class POCOR6839 extends AbstractMigration
 
         $this->table('scholarship_financial_assistances')->insert($data)->save(); 
 
-        $this->execute('ALTER TABLE `scholarships` ADD `scholarship_financial_assistance_id` INT(11) NULL AFTER `scholarship_financial_assistance_type_id`');
+        $this->execute('ALTER TABLE `scholarships` ADD `scholarship_financial_assistance_id` INT(11) NULL AFTER `scholarship_financial_assistance_type_id`, ADD FOREIGN KEY (`scholarship_financial_assistance_id`) REFERENCES `scholarship_financial_assistances`(`id`)');
 
         $this->execute('DELETE FROM scholarship_financial_assistance_types WHERE code = "FULLSCHOLARSHIP"');
         $this->execute('DELETE FROM scholarship_financial_assistance_types WHERE code = "PARTIALSCHOLARSHIP"');
