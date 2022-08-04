@@ -49,6 +49,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.isInternalSearchSelected = false;
     StaffController.isExternalSearchSelected = false;
     StaffController.staffStatus = 'Pending';
+    StaffController.customFields = [];
+    StaffController.customFieldsArray = [];
 
 
     //controller function
@@ -87,6 +89,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.goToExternalSearch = goToExternalSearch;
     StaffController.setstaffData = setstaffData;
     StaffController.setStaffDataFromExternalSearchData = setStaffDataFromExternalSearchData;
+    StaffController.getStaffCustomFields = getStaffCustomFields;
+    StaffController.createCustomFieldsArray = createCustomFieldsArray;
+    StaffController.onDecimalNumberChange = onDecimalNumberChange;
+    StaffController.changeOption = changeOption;
+    StaffController.selectOption = selectOption;
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -413,11 +420,118 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function getShifts(){
         InstitutionsStaffSvc.getShifts().then(function(resp){
             StaffController.shiftsOptions = resp.data;
+            StaffController.getStaffCustomFields();
+        }, function(error){
+            console.log(error);
+            StaffController.getStaffCustomFields();
+        });
+    }
+
+    function getStaffCustomFields() {
+        let staffId = StaffController.staffData && StaffController.staffData.id ? StaffController.staffData.id : null;
+        InstitutionsStudentsSvc.getStaffCustomFields(staffId).then(function(resp){
+            StaffController.customFields = resp.data;
+            StaffController.customFieldsArray = [];
+            StaffController.createCustomFieldsArray();
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
             UtilsSvc.isAppendLoader(false);
         });
+    }
+
+    function createCustomFieldsArray() {
+        var selectedCustomField = StaffController.customFields;
+        var filteredSections = Array.from(new Set(StaffController.customFields.map((item)=> mapBySection(item))));
+        filteredSections.forEach((section)=>{
+            let filteredArray = selectedCustomField.filter((item) => StaffController.filterBySection(item, section));
+            StaffController.customFieldsArray.push({sectionName: section , data: filteredArray});
+        });
+        StaffController.customFieldsArray.forEach((customField) => {
+            customField.data.forEach((fieldData) => {
+                fieldData.answer = fieldData.values;
+                fieldData.errorMessage = '';
+                if(fieldData.field_type === 'DROPDOWN') {
+                    fieldData.selectedOptionId = fieldData.values;
+                }
+                if(fieldData.field_type === 'DATE') {
+                    fieldData.selectedOptionId = new Date(fieldData.values);
+                    fieldData.isDatepickerOpen = false;
+                    let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
+                    fieldData.params = params;
+                    fieldData.datePickerOptions = {
+                        minDate: fieldData.params && fieldData.params.start_date ? new Date(fieldData.params.start_date): new Date(),
+                        maxDate: new Date('01/01/2100'),
+                        showWeeks: false
+                    };
+                }
+                if(fieldData.field_type === 'TIME') {
+                    fieldData.hourStep = 1;
+                    fieldData.minuteStep = 5;
+                    fieldData.isMeridian = true;
+                    let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
+                    fieldData.params = params;
+                    if(fieldData.params && fieldData.params.start_time) {
+                        var startTimeArray = fieldData.params.start_time.split(" ");
+                        var startTimes = startTimeArray[0].split(":");
+                        if(startTimes[0] === 12) {
+                            var startTimeHour = startTimeArray[1] === 'PM' ? Number(startTimes[0]) : Number(startTimes[0]) - 12;
+                        } else {
+                            var startTimeHour = startTimeArray[1] === 'AM' ? Number(startTimes[0]) : Number(startTimes[0]) + 12;
+                        } 
+                    }
+                    if(fieldData.params && fieldData.params.end_time) {
+                        var endTimeArray = fieldData.params.end_time.split(" ");
+                        var endTimes = endTimeArray[0].split(":");
+                        if(startTimes[0] === 12) {
+                            var endTimeHour = endTimeArray[1] === 'PM' ? Number(endTimes[0]) : Number(endTimes[0]) - 12;
+                        } else {
+                            var endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
+                        }
+                    }
+                    fieldData.answer = fieldData.params && fieldData.params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
+                    fieldData.min = params && params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
+                    fieldData.max = fieldData.params && fieldData.params.end_time ? new Date(new Date(new Date().setHours(endTimeHour)).setMinutes(endTimes[1])): new Date();
+                }
+                if(fieldData.field_type === 'CHECKBOX') {
+                    fieldData.answer = [];
+                    fieldData.option.forEach((option) => {
+                        option.selected = false;
+                    })
+                }
+                if(fieldData.field_type === 'DECIMAL') {
+                    let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
+                    fieldData.params = params;
+                }
+            });
+        });
+    }
+    
+    function onDecimalNumberChange(field) {
+        let timer;
+        if(timer) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(()=>{
+            field.answer = parseFloat(field.answer.toFixed(field.params.precision));
+        }, 3000);
+    }
+
+    function changeOption(field, optionId){
+        field.option.forEach((option) => {
+            if(option.option_id === optionId){
+                field.selectedOption = option.option_name;
+            }
+        })
+    }
+
+    function selectOption (field) {
+        field.answer = [];
+        field.option.forEach((option) => {
+            if(option.selected) {
+                field.answer.push(option.option_id);
+            }
+        })
     }
 
     function setStaffName() {
