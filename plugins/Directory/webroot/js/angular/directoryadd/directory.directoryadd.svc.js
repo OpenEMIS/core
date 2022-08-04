@@ -161,10 +161,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
         return deferred.promise;
     };
 
-    function getStudentCustomFields(){
+    function getStudentCustomFields(userId){
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/studentCustomFields';
-        $http.get(url)
+        $http.post(url, {student_id: userId})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
