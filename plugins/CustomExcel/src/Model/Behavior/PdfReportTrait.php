@@ -330,6 +330,11 @@ trait PdfReportTrait
         for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
             $mpdf = new \Mpdf\Mpdf();
             $filepath = $basePath.'_'.$sheetIndex;
+            //POCOR-6888 start
+            $prefixName = 'AssessmentResults';
+            $date =  date("Ymd:HHmmss");
+            $namePdf = $prefixName.'_'.$date;
+            //POCOR-6888 end
             $writer->setSheetIndex($sheetIndex);
             $writer->save($filepath);
 
@@ -344,8 +349,9 @@ trait PdfReportTrait
 
             $mpdf->WriteHTML($processedHtml);
             $filepath = $filepath.'.pdf';
-
-            $mpdf->Output($filepath,'F');
+            $filepathname = $namePdf.'.pdf'; //POCOR-6888
+            //$mpdf->Output($filepath,'F');
+            $mpdf->Output($filepathname,'D'); //POCOR-6888
             $filePaths[] = $filepath;
             unset($mdpf);
         }
