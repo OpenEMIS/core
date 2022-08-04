@@ -1,3 +1,14 @@
+### [3.75.19] - 2022-08-04
+- Implemented: Allow shift times to overlap
+- Bug Fixed: Institutions>Performance>Report Cards: Report is stuck in progress
+- Bug Fixed: Administration>Performance>Assessment: User should be able to add education subjects when editing
+- Bug Fixed: Administration > Performance > Report Cards: Principal comments set to no but can see Principal tab
+- Bug Fixed: Institutions>Performance>Report Cards: Report card is not showing correctly
+- Bug Fixed: Institutions > Appointment> Positions: Identity type should show default identity type
+- Bug Fixed: Report>Statistics>Student Health: Report generated in Test tab is showing students that are transferred
+- Bug Fixed: Institutions>Performance>Assessments: Unable to load PDF
+- Bug Fixed: Report>Institution/Staff/Student: Report are stuck in progress
+
 ### [3.75.18] - 2022-07-30
 - Implemented: D. Update existing WebHooks in OpenEMIS to add all Custom Fields for integration with JoLearn (MoE Operational Plan Activity 1.1.4.b.2)
 - Implemented: E. Develop OpenEMIS APIS for JoLearn - Develop teacher subjects API (MoE EMIS Operational Plan Activity 1.1.4b3.2)
