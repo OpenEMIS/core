@@ -140,9 +140,12 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
     }
 
     function getStaffCustomFields(staffId){
+        var params = {
+            staff_id: staffId,
+        };
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/staffCustomFields';
-        $http.post(url, {staff_id: staffId})
+        $http.post(url, {params: params})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
