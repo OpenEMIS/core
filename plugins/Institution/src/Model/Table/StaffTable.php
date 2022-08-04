@@ -2563,55 +2563,78 @@ class StaffTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
         $staffId = $options['staff_id'];
         $superAdmin = $options['super_admin'];
-        $role = $options['role'];
-
-        $permissionModule = ['All Subjects','Comments'];
-        $categories = ['Academic','Report Cards'];
-        $SecurityFunctionsTbl = TableRegistry::get('security_functions');
-        $SecurityFunctions = $SecurityFunctionsTbl->find()
-                                ->select([$SecurityFunctionsTbl->aliasField('id')])
-                                ->where([
-                                    $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
-                                    $SecurityFunctionsTbl->aliasField('category IN') => $categories,
-                                ])->hydrate(false)->toArray();
-        $funArr = [];
-        if(!empty($SecurityFunctions)){
-            foreach ($SecurityFunctions as $funkey => $funval) {
-                $funArr[$funkey] = $funval['id'];
-            }
-        }
-
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-        if($role == 'Principal'){
-            $RoleId = $SecurityRoles->getPrincipalRoleId();
-        }else if($role == 'HomeroomTeacher'){
-            $RoleId = $SecurityRoles->getHomeroomRoleId();
-        }else if($role == 'Teacher'){
-            $RoleId = $SecurityRoles->getTeacherRoleId();
-        }
-        
-        $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
-        $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
-                                ->where([
-                                    $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $funArr,
-                                    $SecurityRoleFunctionsTbl->aliasField('security_role_id') => $RoleId,
-                                    $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
-                                ])->hydrate(false)->toArray();
-        
-        if(!empty($SecurityRoleFunctions)){
-            foreach ($SecurityRoleFunctions as $rkey => $rvalue) {
-                if($rvalue['_view'] == 1){
-                    $count++;
-                } 
-            }
-        }
-
-        if($count >= 2){
+        if ($superAdmin) {
             $data = array('result' => 1);
             echo json_encode($data, true); die;
         }else{
-            $data = array('result' => 0);
-            echo json_encode($data, true); die;
+            $permissionModule = ['All Subjects','Comments'];
+            $categories = ['Academic','Report Cards'];
+            $SecurityFunctionsTbl = TableRegistry::get('security_functions');
+            $SecurityFunctions = $SecurityFunctionsTbl->find()
+                                    ->select([$SecurityFunctionsTbl->aliasField('id')])
+                                    ->where([
+                                        $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
+                                        $SecurityFunctionsTbl->aliasField('category IN') => $categories,
+                                    ])->hydrate(false)->toArray();
+            $funArr = [];
+            if(!empty($SecurityFunctions)){
+                foreach ($SecurityFunctions as $funkey => $funval) {
+                    $funArr[$funkey] = $funval['id'];
+                }
+            }
+            //get staff id roles POCOR-6814 Starts
+            $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');
+            $SecurityGroupTbl = TableRegistry::get('security_groups');
+            $SecurityGroupUserTbl = TableRegistry::get('security_group_users');
+            $SecurityGroup = $SecurityGroupTbl->find()
+                                    ->select([
+                                        $SecurityGroupUserTbl->aliasField('security_group_id'),
+                                        $SecurityGroupUserTbl->aliasField('security_user_id'),
+                                        $SecurityGroupUserTbl->aliasField('security_role_id'),
+                                    ])
+                                    ->leftJoin(
+                                        [$SecurityGroupInstitutions->alias() => $SecurityGroupInstitutions->table()],
+                                        [
+                                            $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
+                                        ]
+                                    )
+                                    ->leftJoin(
+                                        [$SecurityGroupUserTbl->alias() => $SecurityGroupUserTbl->table()],
+                                        [
+                                            $SecurityGroupUserTbl->aliasField('security_group_id = ') . $SecurityGroupInstitutions->aliasField('security_group_id')
+                                        ]
+                                    )
+                                    ->where([
+                                        $SecurityGroupTbl->aliasField('id') => $institutionId,
+                                        $SecurityGroupUserTbl->aliasField('security_user_id') => $staffId,
+                                    ])->hydrate(false)->toArray();
+            $RoleArr = [];
+            if(!empty($SecurityGroup)){
+                foreach ($SecurityGroup as $SecurityGroup_k => $SecurityGroup_v) {
+                    $RoleArr[] = $SecurityGroup_v['security_group_users']['security_role_id'];
+                }
+            }//POCOR-6814 Ends
+            $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
+            $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
+                                    ->where([
+                                        $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $funArr,
+                                        $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $RoleArr,
+                                        $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
+                                    ])->hydrate(false)->toArray();
+            if(!empty($SecurityRoleFunctions)){
+                foreach ($SecurityRoleFunctions as $rkey => $rvalue) {
+                    if($rvalue['_view'] == 1){
+                        $count++;
+                    } 
+                }
+            }
+            if($count >= 2){
+                $data = array('result' => 1);
+                echo json_encode($data, true); die;
+            }else{
+                $data = array('result' => 0);
+                echo json_encode($data, true); die;
+            }
         }
     }
     //POCOR-6734 ends 
