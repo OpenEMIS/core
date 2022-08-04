@@ -1,12 +1,22 @@
 <?php
 namespace Assessment\Model\Table;
 
+use ArrayObject;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Validation\Validator;
-use Cake\ORM\Query;
-use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
+use Cake\Network\Request;
+use Cake\Collection\Collection;
+use Cake\Validation\Validator;
+use Cake\View\Helper\UrlHelper;
+use Cake\Routing\Router;
+use App\Model\Traits\OptionsTrait;
+use App\Model\Traits\HtmlTrait;
+use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\MessagesTrait;
+use Cake\Utility\Text;
+use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\AppTable;
 
@@ -336,4 +346,14 @@ class AssessmentItemsTable extends AppTable
     {
         // delete all AssessmentItemsGradingTypes by education_subject_id and assessment_id
     }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+       $entity['assessment_items'] = array();
+    }
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+       $entity['assessment_items'] = array();
+    }
+    
 }
