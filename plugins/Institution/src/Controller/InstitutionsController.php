@@ -5182,6 +5182,7 @@ class InstitutionsController extends AppController
                                 'number_value' => $sval['number_value'],
                                 'decimal_value' => $sval['decimal_value'],
                                 'textarea_value' => $sval['textarea_value'],
+                                'date_value' => $sval['date_value'],
                                 'time_value' => $sval['time_value'],
                                 'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
                                 'student_custom_field_id' => $sval['student_custom_field_id'],
@@ -5588,6 +5589,7 @@ class InstitutionsController extends AppController
                                 'number_value' => $sval['number_value'],
                                 'decimal_value' => $sval['decimal_value'],
                                 'textarea_value' => $sval['textarea_value'],
+                                'date_value' => $sval['date_value'],
                                 'time_value' => $sval['time_value'],
                                 'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
                                 'staff_custom_field_id' => $sval['staff_custom_field_id'],
@@ -5917,9 +5919,25 @@ class InstitutionsController extends AppController
 
                 if(!empty($custom)){
                     if($userType == 1){ //for student
+                        //if student custom field values already exist in student_custom_field_values table the delete the old values and insert the new ones.
                         $studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
+                        $StudentCustomFieldValuesCount = $studentCustomFieldValues
+                                                            ->find()
+                                                            ->where([$studentCustomFieldValues->aliasField('student_id') => $user_record_id])
+                                                            ->count();
+                        if($StudentCustomFieldValuesCount > 0){
+                            $studentCustomFieldValues->deleteAll(['student_id' => $user_record_id]);
+                        }
                     }else if($userType == 2){ //for staff
+                        //if staff custom field values already exist in `staff_custom_field_values` table the delete the old values and insert the new ones.
                         $staffCustomFieldValues =  TableRegistry::get('staff_custom_field_values');
+                        $StaffCustomFieldValuesCount = $staffCustomFieldValues
+                                                            ->find()
+                                                            ->where([$staffCustomFieldValues->aliasField('staff_id') => $user_record_id])
+                                                            ->count();
+                        if($StaffCustomFieldValuesCount > 0){
+                            $staffCustomFieldValues->deleteAll(['staff_id' => $user_record_id]);
+                        }
                     }
                     
                     foreach ($custom as $skey => $sval) {
@@ -5930,6 +5948,7 @@ class InstitutionsController extends AppController
                                 'number_value' => $sval['number_value'],
                                 'decimal_value' => $sval['decimal_value'],
                                 'textarea_value' => $sval['textarea_value'],
+                                'date_value' => $sval['date_value'],
                                 'time_value' => $sval['time_value'],
                                 'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
                                 'student_custom_field_id' => $sval['custom_field_id'],
@@ -5947,6 +5966,7 @@ class InstitutionsController extends AppController
                                 'number_value' => $sval['number_value'],
                                 'decimal_value' => $sval['decimal_value'],
                                 'textarea_value' => $sval['textarea_value'],
+                                'date_value' => $sval['date_value'],
                                 'time_value' => $sval['time_value'],
                                 'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
                                 'staff_custom_field_id' => $sval['custom_field_id'],
