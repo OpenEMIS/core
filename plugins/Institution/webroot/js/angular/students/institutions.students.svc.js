@@ -205,10 +205,10 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         return deferred.promise;
     };
 
-    function getStudentCustomFields(){
+    function getStudentCustomFields(studentId){
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/studentCustomFields';
-        $http.get(url)
+        $http.post(url, {student_id: studentId})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
