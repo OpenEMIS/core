@@ -68,6 +68,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         getBirthplaceAreaId: getBirthplaceAreaId,
         getAddressArea: getAddressArea,
         getBirthplaceArea: getBirthplaceArea,
+        getStaffCustomFields: getStaffCustomFields,
     };
 
     var models = {
@@ -136,6 +137,18 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
     function getBirthplaceArea () {
         selectedBirthplcaeArea = $window.localStorage.getItem('birthplace_area');
         return JSON.parse(selectedBirthplcaeArea);
+    }
+
+    function getStaffCustomFields(staffId){
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/staffCustomFields';
+        $http.post(url, {staff_id: staffId})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
     }
 
     function translate(data) {
