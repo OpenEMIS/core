@@ -964,6 +964,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         scope.selectedUserData.birthplace_area_id = selectedData.birthplace_area_id;
         scope.selectedUserData.addressArea = {name: selectedData.area_name};
         scope.selectedUserData.birthplaceArea = {name: selectedData.birth_area_name};
+        scope.selectedUserData.userId = selectedData.id;
     }
 
     scope.setExternalUserData = function(selectedData) {
@@ -1009,7 +1010,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
     
     scope.getStudentCustomFields = function() {
-        DirectoryaddSvc.getStudentCustomFields().then(function(resp){
+        let userId = scope.selectedUserData.userId ? scope.selectedUserData.userId : null;
+        DirectoryaddSvc.getStudentCustomFields(userId).then(function(resp){
             scope.customFields = resp.data;
             scope.customFieldsArray = [];
             scope.createCustomFieldsArray();
