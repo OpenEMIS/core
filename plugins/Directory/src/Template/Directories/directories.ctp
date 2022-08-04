@@ -549,7 +549,7 @@
                                             <div class="form-input table-full-width">
                                                 <div class="table-wrapper">
                                                     <div class="table-in-view">
-                                                        <table class="table">
+                                                        <table class="table" style="margin-bottom: 0px !important;">
                                                             <thead>
                                                                 <tr>
                                                                     <th>Identity Type</th>

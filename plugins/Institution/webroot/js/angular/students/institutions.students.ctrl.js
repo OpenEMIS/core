@@ -362,7 +362,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function getStudentCustomFields() {
-        InstitutionsStudentsSvc.getStudentCustomFields().then(function(resp){
+        let studentId = StudentController.studentData && StudentController.studentData.id ? StudentController.studentData.id : null;
+        InstitutionsStudentsSvc.getStudentCustomFields(studentId).then(function(resp){
             StudentController.customFields = resp.data;
             StudentController.customFieldsArray = [];
             StudentController.createCustomFieldsArray();
@@ -382,14 +383,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         });
         StudentController.customFieldsArray.forEach((customField) => {
             customField.data.forEach((fieldData) => {
-                fieldData.answer = '';
+                fieldData.answer = fieldData.values;
                 fieldData.errorMessage = '';
                 if(fieldData.field_type === 'DROPDOWN') {
-                    fieldData.selectedOptionId = '';
+                    fieldData.selectedOptionId = fieldData.values;
                 }
                 if(fieldData.field_type === 'DATE') {
+                    fieldData.selectedOptionId = new Date(fieldData.values);
                     fieldData.isDatepickerOpen = false;
-                    let params = JSON.parse(fieldData.params);
+                    let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                     fieldData.params = params;
                     fieldData.datePickerOptions = {
                         minDate: fieldData.params && fieldData.params.start_date ? new Date(fieldData.params.start_date): new Date(),
@@ -401,7 +403,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     fieldData.hourStep = 1;
                     fieldData.minuteStep = 5;
                     fieldData.isMeridian = true;
-                    let params = JSON.parse(fieldData.params);
+                    let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                     fieldData.params = params;
                     if(fieldData.params && fieldData.params.start_time) {
                         var startTimeArray = fieldData.params.start_time.split(" ");
@@ -432,7 +434,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     })
                 }
                 if(fieldData.field_type === 'DECIMAL') {
-                    let params = JSON.parse(fieldData.params);
+                    let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                     fieldData.params = params;
                 }
             });
@@ -1004,7 +1006,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         fieldData.time_value = `${timeArray[0]}:${timeArray[1]}`;
                     }
                     if(field.field_type === 'DATE') {
-                        fieldData.date_value = $filter('date')(field.anser, 'yyyy-MM-dd');
+                        fieldData.date_value = $filter('date')(field.answer, 'yyyy-MM-dd');
                     }
                     params.custom.push(fieldData);
                 } else {
