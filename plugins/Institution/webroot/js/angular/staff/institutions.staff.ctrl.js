@@ -449,13 +449,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         });
         StaffController.customFieldsArray.forEach((customField) => {
             customField.data.forEach((fieldData) => {
-                fieldData.answer = fieldData.values;
+                fieldData.answer = '';
                 fieldData.errorMessage = '';
                 if(fieldData.field_type === 'DROPDOWN') {
-                    fieldData.selectedOptionId = fieldData.values;
+                    fieldData.selectedOptionId = '';
                 }
                 if(fieldData.field_type === 'DATE') {
-                    fieldData.selectedOptionId = new Date(fieldData.values);
                     fieldData.isDatepickerOpen = false;
                     let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                     fieldData.params = params;
