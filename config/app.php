@@ -306,16 +306,7 @@ return [
             'file' => 'error',
             'levels' => ['warning', 'error', 'critical', 'alert', 'emergency'],
             'url' => env('LOG_ERROR_URL', null),
-        ],
-        /** POCOR-6808 starts - added custom log file*/
-        'exception' => [
-            'className' => 'Cake\Log\Engine\FileLog',
-            'path' => LOGS,
-            'file' => 'webhook-error',
-            'levels' => ['exception'],
-            'url' => env('LOG_USER_URL', null),
-        ],
-        /** POCOR-6808 ends*/  
+        ],  
     ],
 
     /**

@@ -15,6 +15,7 @@ use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
+use Cake\Utility\Text;
 
 class AssessmentsTable extends ControllerActionTable {
     use MessagesTrait;
@@ -28,7 +29,7 @@ class AssessmentsTable extends ControllerActionTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => false]);
 
         $this->belongsToMany('GradingTypes', [
             'className' => 'Assessment.AssessmentGradingTypes',
@@ -173,20 +174,103 @@ class AssessmentsTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        
         if ($this->action == 'edit')
-        {
+        {   $subejctitems = [];
+           $subejctid = [];
             $assessmentItems = $entity->assessment_items;
-
+            $gradeIds =  $entity['education_grade_id'];
             //this is to sort array based on certain value on subarray, in this case based on education order value
             usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} );
 
             $entity->assessment_items = $assessmentItems;
+            $entity->assessment_ids = $entity->id;
+           
+           $subejctids = [];
+           foreach($assessmentItems as $value) {
+                $subejctids[]= $value['education_subject_id'];
+            }
+            $EducationSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+            $subjectname = $EducationSubjects->find()
+                        ->select(['id'=>'EducationSubjects.id',
+                            'name'=>'EducationSubjects.name',
+                            'code'=>'EducationSubjects.code'])
+                        ->contain(['EducationSubjects'])
+                        ->where([$EducationSubjects->aliasField('education_grade_id')=> $gradeIds])
+                        ->toArray();
+            
+            foreach($subjectname as $value) {
+                $subejctid[]= $value['id'];
+                $subejctitems[] = $value['code'].'-'.$value['name'];
+            }
+            $results =  array_combine($subejctid, $subejctitems);
+            $entity->assessment_subject = $results;
+            $entity->assessment_subject = $results;
         }
 
         $this->setupFields($entity);
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    /**
+    * POCOR-6780
+    * add edit education subject based on assessment item
+    */
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        if ($this->action == 'edit'){
+            //echo "<pre>";print_r($requestData[$this->alias()]);die;
+            $currentTimeZone = date("Y-m-d H:i:s");
+            $assessmentId = $entity['id'];
+            if (array_key_exists($this->alias(), $requestData)) {
+                if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
+                    foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
+                        $subjectcheck = $item['education_subject_check'];
+                        $subjectId = $item['education_subject_id'];
+                        $weight = $item['weight'];
+                        $classification = $item['classification'];
+                        $checkid = $item['id_check'];
+                        $ids = Text::uuid();
+                        if($subjectcheck == 1){
+                            $assessmentItems = TableRegistry::get('assessment_items');
+                            $checkdata = $assessmentItems->find()->where([$assessmentItems->aliasField('assessment_id')=>$assessmentId,$assessmentItems->aliasField('education_subject_id')=>$subjectId])->toArray();
+                            
+                            if(isset($checkdata) && (!empty($checkdata)) && $checkid==null){
+
+                                $ids = $checkdata[0]['id'];
+
+                              $test =   $assessmentItems->updateAll(
+                                ['weight' => $weight,'classification'=>$classification],    //field
+                                [
+                                 'id' => $ids, 
+                                ] //condition
+                                );
+                            }else{
+                                $data = [
+                                    'id' => $ids ,
+                                    'weight' => $weight,
+                                    'classification' => $classification,
+                                    'assessment_id' => $assessmentId,
+                                    'education_subject_id' => $subjectId,
+                                    'created_user_id' => 1,
+                                    'created' => $currentTimeZone,
+                                ];
+                                $entity = $assessmentItems->newEntity($data);
+
+                               $save =  $assessmentItems->save($entity);
+                        } 
+                            
+                        }
+                  
+                      } 
+                    }
+            } else { //logic to capture error if no subject inside the grade.
+                $errorMessage = $this->aliasField('noSubjects');
+                $requestData['errorMessage'] = $errorMessage;
+            }
+        }
+    }
+
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         //patch data to handle fail save because of validation error.
         if (array_key_exists($this->alias(), $requestData)) {
@@ -211,7 +295,7 @@ class AssessmentsTable extends ControllerActionTable {
             if (isset($requestData['errorMessage']) && !empty($requestData['errorMessage'])) {
                 $this->Alert->error($requestData['errorMessage'], ['reset'=>true]);
             }
-        }
+        }  
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -460,5 +544,12 @@ class AssessmentsTable extends ControllerActionTable {
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($filepath));
         echo file_get_contents($filepath);
-    }    
+    }  
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {  
+        if(isset($entity['assessment_items']) && $this->action == 'edit'){
+                $entity['assessment_items'] = array();
+        }
+    }  
 }
