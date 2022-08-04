@@ -165,6 +165,12 @@ class StudentHealthsTable extends AppTable
                 'table' => 'education_grades',
                 'conditions' => ['EducationGrades.id = InstitutionStudent.education_grade_id']
             ],// End:POCOR-6819
+            /**POCOR-6885 starts - added join to fetch student's status based records only*/
+            'StudentStatuses' => [
+                'type' => 'inner',
+                'table' => 'student_statuses',
+                'conditions' => ['StudentStatuses.id = InstitutionStudent.student_status_id']
+            ],/**POCOR-6885 ends*/
             
         ];
 
@@ -375,7 +381,7 @@ class StudentHealthsTable extends AppTable
         $query->where([
             'InstitutionStudent.academic_period_id' => $academicPeriodId,
             'InstitutionStudent.institution_id'     => $institutionId,
-            ('InstitutionStudent.student_status_id IS NOT')     => 4,//POCOR-6709
+            'StudentStatuses.code'         => 'CURRENT',//POCOR-6885 added standard status code where condition, previously it was hard coded in ticket POCOR-6709
             $this->aliasField('is_student')         => 1,
         ]);
         
