@@ -103,5 +103,8 @@ class POCOR6839 extends AbstractMigration
 
         $this->execute('DROP TABLE IF EXISTS `scholarship_financial_assistance_types`');
         $this->execute('RENAME TABLE `zz_6839_scholarship_financial_assistance_types` TO `scholarship_financial_assistance_types`');
+
+        $this->execute('DROP TABLE IF EXISTS `scholarship_financial_assistances`');
+
     }
 }
