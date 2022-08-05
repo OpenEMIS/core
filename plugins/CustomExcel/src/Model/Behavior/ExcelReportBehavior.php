@@ -87,13 +87,13 @@ class ExcelReportBehavior extends Behavior
 
         $vars = $this->getVars($params, $extra);
         $results = Hash::flatten($vars);
-        pr($results);
-        die;
+       // pr($results);
+        //die;
     }
 
     public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
     {
-        ini_set('max_execution_time', 180);
+        ini_set('max_execution_time', 360);
         $this->renderExcelTemplate($extra);
     }
 
@@ -101,12 +101,17 @@ class ExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
         $format = $this->config('format');
-
+        $paramVald = 'fd';
+        $paramValdl = 'fd0';
         if (array_key_exists('requestQuery', $extra)) {
             $params = $extra['requestQuery'];
+            Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: '.$paramVald);
         } else {
+            Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: '.$paramValdl);
             $params = $model->getQueryString();
+            $paramVal = $params['assessment_id']; //POCOR-6908
         }
+
 
         $extra['params'] = $params;
         $extra['vars'] = $this->getVars($params, $extra);
@@ -123,9 +128,13 @@ class ExcelReportBehavior extends Behavior
         $this->generateExcel($objSpreadsheet, $extra);
 
         Log::write('debug', 'ExcelReportBehavior >>> renderExcelTemplate');
-
-
-        $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id']);
+        if(isset($paramVal)){ // POCOR-6906
+            Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: '.$paramVal);
+            $this->saveFileAssessment($objSpreadsheet, $temppath, $format, $params['student_id'],$paramVal);
+        }else{
+            Log::write('debug', 'ExcelReportBehavior1 >>> filepath2: ');
+            $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id']);
+        }
 		
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
@@ -385,6 +394,32 @@ class ExcelReportBehavior extends Behavior
 			if(!empty($student_id)) {
 				$this->savePDF($objSpreadsheet, $filepath, $student_id);
 			}
+            // xlsx
+            $objWriter->save($filepath);
+        }
+
+        $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+        $objWriter->save($filepath);
+        $objSpreadsheet->disconnectWorksheets();
+        unset($objWriter, $objSpreadsheet);
+        gc_collect_cycles();
+
+    }
+    /**
+    * POCOR-6908 
+    */
+    public function saveFileAssessment($objSpreadsheet, $filepath, $format, $student_id,$paramVal)
+    {
+        Log::write('debug', 'ExcelReportBehavior >>> saveFile: '.$format);
+        $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
+
+        if ($format == 'pdf') {
+            $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id,$paramVal);
+        } else {
+            // pdf
+            if(!empty($student_id)) {
+                $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id);
+            }
             // xlsx
             $objWriter->save($filepath);
         }
