@@ -217,27 +217,128 @@ use Cake\Utility\Security;
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
+        if($entity->features == "Student Attendance"){
+            // /*flag the academic period table
+            // academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
+        
+            // $session = $this->Session;
+            // $superAdmin = $session->read('Auth.User.super_admin');
+            // $is_connection_is_online = $session->read('is_connection_stablished');
+            // if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+            //     // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            //     // $AcademicPeriods->updateAll(
+            //     //     ['editable' => 0, 'visible' => 0],    //field
+            //     //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
+            //     // );
 
-        /*flag the academic period table
+            //     $this->log('=======>Before triggerStudentAttendanceShell', 'debug');
+            //     $this->triggerStudentAttendanceShell('StudentAttendance',$entity->academic_period_id);
+            //     $this->log(' <<<<<<<<<<======== After triggerStudentAttendanceShell', 'debug');
+            // }
+            // else{
+            //     $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+            // }
+        }else if($entity->features == "Staff Attendances"){
+            /*flag the academic period table
             academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
         
-        $session = $this->Session;
-        $superAdmin = $session->read('Auth.User.super_admin');
-        $is_connection_is_online = $session->read('is_connection_stablished');
-        if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $AcademicPeriods->updateAll(
-                ['editable' => 0, 'visible' => 0],    //field
-                ['id' => $entity->academic_period_id, 'current'=> 0] //condition
-            );
+            // $session = $this->Session;
+            // $superAdmin = $session->read('Auth.User.super_admin');
+            // $is_connection_is_online = $session->read('is_connection_stablished');
+            // if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+            //     // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            //     // $AcademicPeriods->updateAll(
+            //     //     ['editable' => 0, 'visible' => 0],    //field
+            //     //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
+            //     // );
 
-            $this->log('=======>Before triggerDatabaseTransferShell', 'debug');
-            $this->triggerDatabaseTransferShell('DatabaseTransfer',$entity->academic_period_id);
-            $this->log(' <<<<<<<<<<======== After triggerDatabaseTransferShell', 'debug');
+            //     $this->log('=======>Before triggerStaffAttendancesShell', 'debug');
+            //     $this->triggerStaffAttendancesShell('StaffAttendances',$entity->academic_period_id);
+            //     $this->log(' <<<<<<<<<<======== After triggerStaffAttendancesShell', 'debug');
+            // }
+            // else{
+            //     $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+            // }
+        }else if($entity->features == "Student Assessments"){
+            // /*flag the academic period table
+            // academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
+        
+            $session = $this->Session;
+            $superAdmin = $session->read('Auth.User.super_admin');
+            $is_connection_is_online = $session->read('is_connection_stablished');
+            if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                // $AcademicPeriods->updateAll(
+                //     ['editable' => 0, 'visible' => 0],    //field
+                //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
+                // );
+
+                $this->log('=======>Before triggerStudentAssessmentsShell', 'debug');
+                $this->triggerStudentAssessmentsShell('StudentAssessments',$entity->academic_period_id);
+                $this->log(' <<<<<<<<<<======== After triggerStudentAssessmentsShell', 'debug');
+            }
+            else{
+                $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+            }
         }
-        else{
-            $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
-        }
+    }
+
+
+    /*
+    * Function to take backup from current database and put in archive database
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-6816
+    */
+
+    public function triggerStudentAttendanceShell($shellName,$academicPeriodId = null)
+    {
+        $args = '';
+        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+    }
+
+    /*
+    * Function to take backup from current database and put in archive database
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-6816
+    */
+
+    public function triggerStaffAttendancesShell($shellName,$academicPeriodId = null)
+    {
+        $args = '';
+        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+    }
+
+    /*
+    * Function to take backup from current database and put in archive database
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-6816
+    */
+
+    public function triggerStudentAssessmentsShell($shellName,$academicPeriodId = null)
+    {
+        $args = '';
+        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
     }
 
     public function triggerDatabaseTransferShell($shellName,$academicPeriodId = null)
