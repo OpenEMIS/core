@@ -165,6 +165,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 'Institutions' => [
                     'fields' => [
                         'Institutions_name' => 'Institutions.name',
+                        'Institutions_code' => 'Institutions.code',//POCOR-6886 selecting Institutions code
                     ]
                 ],
                 'Users' => [
@@ -289,11 +290,19 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'type'  => 'string',
             'label' => __('Grade'),
         ];
+        /**POCOR-6886 starts - added Institutions code colunm to report*/ 
+        $newFields[] = [
+            'key' => 'Institutions.code',
+            'field' => 'Institutions_code',
+            'type' => 'string',
+            'label' =>__('Institution Code'),
+        ];
+        /**POCOR-6886 ends*/ 
         $newFields[] = [
             'key' => 'Institutions.name',
             'field' => 'Institutions_name',
             'type' => 'string',
-            'label' =>__('Institution'),
+            'label' =>__('Institution Name'),//POCOR-6886 - added Name into label
         ];
         $newFields[] = [
             'key'   => 'assignee_user_full_name',
@@ -435,44 +444,32 @@ class InstitutionStaffPositionProfileTable extends AppTable
 
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
-        $userIdentities = TableRegistry::get('user_identities');
-        $userIdentitiesResult = $userIdentities->find()
-            ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
-            ->select([
-                'identity_number' => $userIdentities->aliasField('number'),
-                'identity_type_name' => 'IdentityTypes.name',
-                'default_name' => 'IdentityTypes.default',
-            ])
-            ->where([$userIdentities->aliasField('security_user_id') => $entity->staff_id])
-            ->order([$userIdentities->aliasField('id DESC')])
-            ->hydrate(false)->toArray();
-            $userIdentitiesdata = $userIdentities->find()
-            ->where([$userIdentities->aliasField('security_user_id') => $entity->staff_id])
-            ->order([$userIdentities->aliasField('id DESC')])
-            ->hydrate(false)->toArray();
-            
-            $entity->custom_identity_number = '';
-            $other_identity_array = [];
-            if (!empty($userIdentitiesResult)) {
-                foreach ($userIdentitiesResult as $user_identities_data ) {
-                    if ($user_identities_data['default_name']==1 && count($userIdentitiesdata)>1) {
-                        $entity->custom_identity_number = $user_identities_data['identity_number'];
-                        $entity->custom_identity_name   = $user_identities_data['identity_type_name'];
-                    }elseif($user_identities_data['default_name']!=1 && count($userIdentitiesdata)>1){
-                        $entity->custom_identity_name = '';
-                        $entity->custom_identity_number='';
-                    }elseif($user_identities_data['identity_type_name']=='Passport') {
-                        $entity->custom_identity_name = '';
-                        $entity->custom_identity_number='';
-                    }elseif($user_identities_data['identity_type_name']=='Birth Certificate') {
-                        $entity->custom_identity_number = $user_identities_data['identity_number'];
-                        $entity->custom_identity_name   = $user_identities_data['identity_type_name'];
-                    }
-            }
-        $entity->custom_identity_other_data = implode(',', $other_identity_array);
+        /**POCOR-6886 starts - modified query to fetch only default identity of staff*/ 
+        $userIdentities = TableRegistry::get('User.Identities');
+        $identityTypes  = TableRegistry::get('FieldOption.IdentityTypes');
+        $entity->custom_identity_number = '';
+        $getDefaultIdentity = $userIdentities->find()
+                            ->select([
+                                'identity_name' => $identityTypes->aliasField('name'),
+                                'identity_number' => $userIdentities->aliasField('number')
+                            ])
+                            ->innerJoin([$identityTypes->alias() => $identityTypes->table()], [
+                                $identityTypes->aliasField('id = ') . $userIdentities->aliasField('identity_type_id')
+                            ])
+                            ->where([
+                                $identityTypes->aliasField('default') => 1,
+                                $userIdentities->aliasField('security_user_id') => $entity->staff_id
+                            ])
+                            ->hydrate(false)->first();
+        if (!empty($getDefaultIdentity)) {
+            $entity->custom_identity_number = $getDefaultIdentity['identity_number'];
+            $entity->custom_identity_name   = $getDefaultIdentity['identity_name'];
+        }
+
         return $entity->custom_identity_name;
+        /**POCOR-6886 ends*/
     }
-}
+    
     public function onExcelGetIdentityNumber(Event $event, Entity $entity)
     {
         return $entity->custom_identity_number;
