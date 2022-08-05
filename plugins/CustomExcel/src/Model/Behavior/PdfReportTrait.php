@@ -330,11 +330,6 @@ trait PdfReportTrait
         for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
             $mpdf = new \Mpdf\Mpdf();
             $filepath = $basePath.'_'.$sheetIndex;
-            //POCOR-6888 start
-            $prefixName = 'AssessmentResults';
-            $date =  date("Ymd:HHmmss");
-            $namePdf = $prefixName.'_'.$date;
-            //POCOR-6888 end
             $writer->setSheetIndex($sheetIndex);
             $writer->save($filepath);
 
@@ -349,9 +344,8 @@ trait PdfReportTrait
 
             $mpdf->WriteHTML($processedHtml);
             $filepath = $filepath.'.pdf';
-            $filepathname = $namePdf.'.pdf'; //POCOR-6888
-            //$mpdf->Output($filepath,'F');
-            $mpdf->Output($filepathname,'D'); //POCOR-6888
+
+            $mpdf->Output($filepath,'F');
             $filePaths[] = $filepath;
             unset($mdpf);
         }
@@ -361,6 +355,64 @@ trait PdfReportTrait
 		} else {
 			$fileName = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His');
 		}
+       
+        Log::write('debug', '----------------------fileName---------------------: ');
+        Log::write('debug', $fileName);
+
+        $this->mergePDFFiles($filePaths, $fileName, $fileName);
+        // // Remove the temp file that is converted from excel object and its successfully converted to pdf
+        if ($this->config('purge')) {
+            foreach ($filePaths as $filepath) {
+                // delete excel file after successfully converted to pdf
+                $this->deleteFile($filepath);
+            }
+        }
+    }
+
+    /**
+    * POCOR-6908 
+    */
+    private function savePDFAssessment($objSpreadsheet, $filepath, $student_id,$paramVal)
+    {
+
+        Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
+        // Convert spreadsheet object into html
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
+
+        // This is to store to final processedHtml
+        $processedHtml = '';
+        $filePaths = [];
+        $basePath = $filepath;
+        for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
+            $mpdf = new \Mpdf\Mpdf();
+            $filepath = $basePath.'_'.$sheetIndex;
+            $prefixName = 'AssessmentResults';
+            $date =  date("Ymd:HHmmss");
+            $namePdf = $prefixName.'_'.$date;
+            $writer->setSheetIndex($sheetIndex);
+            $writer->save($filepath);
+
+            // Read the html file and convert them into a variable
+            $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
+
+            // Remove all the redundant rows and columns
+            $processedHtml = $this->processHtml($file, $sheetIndex);
+
+            // Save the processed html into a temp pdf
+            $mpdf->AddPage('L');
+
+            $mpdf->WriteHTML($processedHtml);
+            $filepathname = $namePdf.'.pdf'; 
+            $mpdf->Output($filepathname,'D');
+            $filePaths[] = $filepath;
+            unset($mdpf);// POCOR-6908 end
+        }
+        // Merge all the pdf that belongs to one report
+        if(!empty($student_id)) {
+            $fileName = $this->config('filename') . '_' . $student_id;
+        } else {
+            $fileName = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His');
+        }
        
         Log::write('debug', '----------------------fileName---------------------: ');
         Log::write('debug', $fileName);
