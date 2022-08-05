@@ -13,7 +13,7 @@ use Cake\I18n\Time;
 use Cake\I18n\Date;//POCOR-6841
 use Cake\Log\Log;
 use Cake\Datasource\ConnectionManager; //POCOR-6785
-
+use DateTimeZone;
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardStatusesTable extends ControllerActionTable
@@ -332,6 +332,13 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
                 $timeZone= $ConfigItems->value("time_zone");
                 date_default_timezone_set($timeZone);
+                //POCOR-6895: START
+                if($timeZone == 'Asia/Kuwait'){
+                    $date = new DateTime("now", new DateTimeZone('Asia/Kuwait') );
+                    $data = $date->format('Y-m-d H:i:s');
+                    $c_timestap = strtotime("$data+6");
+                }
+                //POCOR-6895: END
                 $currentTimeZone = new DateTime();
                 $modifiedDate = ($modifiedDate === null) ? $currentTimeZone : $modifiedDate;
                 $m_timestap =$modifiedDate->getTimestamp();
