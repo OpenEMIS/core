@@ -1060,7 +1060,9 @@ class StaffUserTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
         $startDate = $options['start_date'];
         //POCOR-6704 add code_name, id
-        $query->select(['code_name'=>'InstitutionStaff.Institution.code','id'=>'InstitutionStaff.Institution.id'])->contain([
+       // $query->select(['code_name'=>'InstitutionStaff.Institution.code','id'=>'InstitutionStaff.Institution.id'])->contain([
+        //POCOR-6901 remove the select
+        $query->contain([
             'InstitutionStaff' => function ($q) use ($institutionId, $startDate) {
                 return $q->where([
                     'InstitutionStaff.institution_id <>' => $institutionId,
