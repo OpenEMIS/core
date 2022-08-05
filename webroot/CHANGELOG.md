@@ -1,3 +1,10 @@
+### [3.75.20] - 2022-08-06
+- Bug Fixed: Report>Statistics>Staff Absences: Changes to Report
+- Bug Fixed: Institutions>Performance>Report Cards: Report status is showing error
+- Bug Fixed: Institutions>Staff>Transfer: Currently assigned to is not showing the current institution
+- Bug Fixed: Institution>Infrastructure>Overview: Editing new record is getting 404 error
+- Bug Fixed: Institutions>Performance>Report Cards: Report is stuck in progress
+
 ### [3.75.19] - 2022-08-04
 - Implemented: Allow shift times to overlap
 - Bug Fixed: Institutions>Performance>Report Cards: Report is stuck in progress
