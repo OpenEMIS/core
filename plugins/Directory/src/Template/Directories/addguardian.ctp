@@ -328,7 +328,7 @@
                 </form>
             </div>
             <div class="step-pane sample-pane active" ng-if="step === 'summary'">
-                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
+                <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" style="margin: 0;">
                     <div class="wrapper">
                         <div class="wrapper-child">
                             <div class="panel">

@@ -24,6 +24,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
         getContactTypes: getContactTypes,
         getRedirectToGuardian: getRedirectToGuardian,
         getStudentCustomFields: getStudentCustomFields,
+        getStaffCustomFields: getStaffCustomFields,
         getAddressAreaId: getAddressAreaId,
         getAddressArea: getAddressArea,
         getBirthplaceAreaId: getBirthplaceAreaId,
@@ -167,6 +168,21 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
         };
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/studentCustomFields';
+        $http.post(url, {params: params})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
+    function getStaffCustomFields(staffId){
+        var params = {
+            staff_id: staffId,
+        };
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/staffCustomFields';
         $http.post(url, {params: params})
         .then(function(response){
             deferred.resolve(response);

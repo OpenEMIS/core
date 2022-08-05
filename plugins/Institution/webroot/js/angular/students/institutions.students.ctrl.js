@@ -383,13 +383,21 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         });
         StudentController.customFieldsArray.forEach((customField) => {
             customField.data.forEach((fieldData) => {
-                fieldData.answer = fieldData.values;
+                fieldData.answer = '';
                 fieldData.errorMessage = '';
+                if(fieldData.field_type === 'TEXT' || fieldData.field_type === 'TEXTAREA' || fieldData.field_type === 'NOTE') {
+                    fieldData.answer = fieldData.values ? fieldData.values : '';
+                }
                 if(fieldData.field_type === 'DROPDOWN') {
-                    fieldData.selectedOptionId = fieldData.values;
+                    fieldData.selectedOptionId = '';
+                    fieldData.answer = fieldData.values && fieldData.values.length > 0 ? fieldData.values[0].dropdown_val.toString() : '';
+                    fieldData.option.forEach((option) => {
+                        if(option.option_id === fieldData.answer) {
+                            fieldData.selectedOption = option.option_name;
+                        }
+                    })
                 }
                 if(fieldData.field_type === 'DATE') {
-                    fieldData.selectedOptionId = new Date(fieldData.values);
                     fieldData.isDatepickerOpen = false;
                     let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                     fieldData.params = params;
@@ -398,6 +406,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         maxDate: new Date('01/01/2100'),
                         showWeeks: false
                     };
+                    fieldData.answer = new Date(fieldData.values);
                 }
                 if(fieldData.field_type === 'TIME') {
                     fieldData.hourStep = 1;
@@ -423,19 +432,33 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                             var endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
                         }
                     }
-                    fieldData.answer = fieldData.params && fieldData.params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
-                    fieldData.min = params && params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
-                    fieldData.max = fieldData.params && fieldData.params.end_time ? new Date(new Date(new Date().setHours(endTimeHour)).setMinutes(endTimes[1])): new Date();
+                    if(fieldData.values !== '') {
+                        let timeValuesArray = fieldData.values.split(':');
+                        fieldData.answer = new Date(new Date(new Date().setHours(timeValuesArray[0])).setMinutes(timeValuesArray[1]));
+                    } else {
+                        fieldData.answer = new Date();
+                    }
                 }
                 if(fieldData.field_type === 'CHECKBOX') {
                     fieldData.answer = [];
                     fieldData.option.forEach((option) => {
                         option.selected = false;
-                    })
+                    });
+                    if(fieldData.values && fieldData.values.length > 0) {
+                        fieldData.values.forEach((value) => {
+                            fieldData.answer.push(value.checkbox_val.toString());
+                            fieldData.option.forEach((option)=> {
+                                if(option.option_id === value.checkbox_val.toString()) {
+                                    option.selected = true;
+                                }
+                            })
+                        });
+                    }
                 }
-                if(fieldData.field_type === 'DECIMAL') {
+                if(fieldData.field_type === 'DECIMAL' || fieldData.field_type === 'NUMBER') {
                     let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                     fieldData.params = params;
+                    fieldData.answer = Number(fieldData.values);
                 }
             });
         });
