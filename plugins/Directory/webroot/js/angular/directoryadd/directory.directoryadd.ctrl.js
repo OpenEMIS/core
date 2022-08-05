@@ -1202,7 +1202,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             photo_content: scope.selectedUserData.photo_base_64,
             custom: [],
         };
-        if(scope.selectedUserData.userType.name === 'Students' || scope.selectedUserData.userType.name === 'Staff') {
+        if(scope.selectedUserData.userType.name === 'Students') {
             scope.customFieldsArray.forEach((customField)=> {
                 customField.data.forEach((field)=> {
                     if(field.field_type !== 'CHECKBOX') {
@@ -1241,6 +1241,59 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                         field.answer.forEach((id )=> {
                             let fieldData = {
                                 custom_field_id: field.student_custom_field_id,
+                                text_value:"",
+                                number_value: Number(id),
+                                decimal_value:"",
+                                textarea_value:"",
+                                time_value:"",
+                                date_value:"",
+                                file:"",
+                            };
+                            param.custom.push(fieldData);
+                        });
+                    }
+                })
+            });
+        }
+        if(scope.selectedUserData.userType.name === 'Staff') {
+            scope.customFieldsArray.forEach((customField)=> {
+                customField.data.forEach((field)=> {
+                    if(field.field_type !== 'CHECKBOX') {
+                        let fieldData = {
+                            custom_field_id: field.staff_custom_field_id,
+                            text_value:"",
+                            number_value:null,
+                            decimal_value:"",
+                            textarea_value:"",
+                            time_value:"",
+                            date_value:"",
+                            file:"",
+                        };
+                        if(field.field_type === 'TEXT' || field.field_type === 'NOTE' || field.field_type === 'TEXTAREA') {
+                            fieldData.text_value = field.answer;
+                        }
+                        if(field.field_type === 'NUMBER') {
+                            fieldData.number_value = field.answer;
+                        }
+                        if(field.field_type === 'DECIMAL') {
+                            fieldData.decimal_value = String(field.answer);
+                        }
+                        if(field.field_type === 'DROPDOWN') {
+                            fieldData.number_value = Number(field.answer);
+                        }
+                        if(field.field_type === 'TIME') {
+                            let time = field.answer.toLocaleTimeString();
+                            let timeArray = time.split(':');
+                            fieldData.time_value = `${timeArray[0]}:${timeArray[1]}`;
+                        }
+                        if(field.field_type === 'DATE') {
+                            fieldData.date_value = $filter('date')(field.answer, 'yyyy-MM-dd');
+                        }
+                        param.custom.push(fieldData);
+                    } else {
+                        field.answer.forEach((id )=> {
+                            let fieldData = {
+                                custom_field_id: field.staff_custom_field_id,
                                 text_value:"",
                                 number_value: Number(id),
                                 decimal_value:"",

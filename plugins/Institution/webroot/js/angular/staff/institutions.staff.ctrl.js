@@ -179,7 +179,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             customField.data.forEach((field)=> {
                 if(field.field_type !== 'CHECKBOX') {
                     let fieldData = {
-                        student_custom_field_id: field.student_custom_field_id,
+                        student_custom_field_id: field.staff_custom_field_id,
                         text_value:"",
                         number_value:null,
                         decimal_value:"",
@@ -213,7 +213,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 } else {
                     field.answer.forEach((id )=> {
                         let fieldData = {
-                            student_custom_field_id: field.student_custom_field_id,
+                            student_custom_field_id: field.staff_custom_field_id,
                             text_value:"",
                             number_value: Number(id),
                             decimal_value:"",
