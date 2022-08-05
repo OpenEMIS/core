@@ -810,7 +810,7 @@ class MealProgrammesTable extends ControllerActionTable
                                     ->find('list')
                                     ->toArray();
                     for($i = 0; $i<=count($AreaLevelsTableResult) ; $i++){
-                        if($areaId[0] == $i){
+                        if($areaId[0] == 1){
                             $Areas = TableRegistry::get('Area.Areas');
                             $AreasResult = $Areas
                                         ->find('list')
@@ -820,6 +820,32 @@ class MealProgrammesTable extends ControllerActionTable
                                 $newarr[] = $k;
                             }
                             $areaId = $newarr;
+                        }else{
+                            if(isset($areaId)){
+                                if(count($areaId) == 1){
+                                    if($areaId[0] == $i){
+                                        $Areas = TableRegistry::get('Area.Areas');
+                                        $AreasResult = $Areas
+                                                    ->find('list')
+                                                    ->where(['parent_id' => $areaId[0]])
+                                                    ->toArray();
+                                        foreach($AreasResult as $k => $v){
+                                            $newarr[] = $k;
+                                        }
+                                        $areaId = $newarr;
+                                    }
+                                }else{
+                                        $Areas = TableRegistry::get('Area.Areas');
+                                        $AreasResult = $Areas
+                                                    ->find('list')
+                                                    ->where(['parent_id IN' => $areaId])
+                                                    ->toArray();
+                                        foreach($AreasResult as $k => $v){
+                                            $newarr[] = $k;
+                                        }
+                                        $areaId = $newarr;
+                                }
+                            }
                         }
                     }
                     //POCOR-6903: End
@@ -834,7 +860,7 @@ class MealProgrammesTable extends ControllerActionTable
                                 ->find('list')
                                 ->toArray();
                 for($i = 0; $i<=count($AreaLevelsTableResult) ; $i++){
-                    if($areaId[0] == $i){
+                    if($areaId[0] == 1){
                         $Areas = TableRegistry::get('Area.Areas');
                         $AreasResult = $Areas
                                     ->find('list')
@@ -844,6 +870,32 @@ class MealProgrammesTable extends ControllerActionTable
                             $newarr[] = $k;
                         }
                         $areaId = $newarr;
+                    }else{
+                        if(isset($areaId)){
+                            if(count($areaId) == 1){
+                                if($areaId[0] == $i){
+                                    $Areas = TableRegistry::get('Area.Areas');
+                                    $AreasResult = $Areas
+                                                ->find('list')
+                                                ->where(['parent_id' => $areaId[0]])
+                                                ->toArray();
+                                    foreach($AreasResult as $k => $v){
+                                        $newarr[] = $k;
+                                    }
+                                    $areaId = $newarr;
+                                }
+                            }else{
+                                    $Areas = TableRegistry::get('Area.Areas');
+                                    $AreasResult = $Areas
+                                                ->find('list')
+                                                ->where(['parent_id IN' => $areaId])
+                                                ->toArray();
+                                    foreach($AreasResult as $k => $v){
+                                        $newarr[] = $k;
+                                    }
+                                    $areaId = $newarr;
+                            }
+                        }
                     }
                 }
                 //POCOR-6903: End
