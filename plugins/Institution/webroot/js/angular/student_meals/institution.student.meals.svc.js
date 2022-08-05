@@ -272,7 +272,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             console.log(response.data.data)
             var log = [];
             var checkIsCurrent = 0;
-            if(response.data.data[1]['day'] == 'Sunday' && response.data.data[1]['selected'] == 'true' &&  response.data.data[1]['current_week_number_selected'] != 1){
+            if((response.data.data[1]['day'] == 'Sunday'  || response.data.data[1]['day'] == 'Saturday') && response.data.data[1]['selected'] == 'true' &&  response.data.data[1]['current_week_number_selected'] != 1){
                 log = dayList.length;
             }
             else if(response.data.data[1]['current_week_number_selected'] != 1){
