@@ -611,10 +611,17 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $attr['date_options']['endDate'] = $endDate;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-
+            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/ 
+            $sDate = '';
+            if (!empty($entity->start_date)) {
+                $sDate = $entity->start_date;
+            } else {
+                $sDate = $this->currentAcademicPeriod->start_date;
+            } 
             $attr['type'] = 'readonly';
-            $attr['value'] = $entity->start_date->format('Y-m-d');
-            $attr['attr']['value'] = $this->formatDate($entity->start_date);
+            $attr['value'] = $sDate->format('Y-m-d');
+            $attr['attr']['value'] = $this->formatDate($sDate);
+            /**POCOR-6904 ends*/
         }
 
         return $attr;
