@@ -40,6 +40,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
     scope.redirectToGuardian = false;
     scope.isInternalSearchSelected = false;
+    scope.datepickerOptions = {
+        minDate: new Date('01/01/1900'),
+        maxDate: new Date(),
+        showWeeks: false
+    };
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -87,11 +92,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     });
 
     scope.getUniqueOpenEmisId = function() {
+        UtilsSvc.isAppendLoader(true);
         if(scope.selectedUserData.openemis_no){
             scope.generatePassword();
             return;
         }
-        UtilsSvc.isAppendLoader(true);
         DirectoryaddSvc.getUniqueOpenEmisId()
             .then(function(response) {
             var username = scope.selectedUserData.username;
@@ -277,6 +282,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             scope.contactTypeOptions = response.data;
             if(scope.selectedUserData.userType.name === 'Students') {
                 scope.getStudentCustomFields();
+            } else if(scope.selectedUserData.userType.name === 'Staff') {
+                scope.getStaffCustomFields();
             } else {
                 UtilsSvc.isAppendLoader(false);
             }
@@ -1022,6 +1029,19 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         });
     }
 
+    scope.getStaffCustomFields = function() {
+        let userId = scope.selectedUserData.userId ? scope.selectedUserData.userId : null;
+        DirectoryaddSvc.getStaffCustomFields(userId).then(function(resp){
+            scope.customFields = resp.data;
+            scope.customFieldsArray = [];
+            scope.createCustomFieldsArray();
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
     scope.createCustomFieldsArray = function() {
         if(scope.customFields && scope.customFields.length > 0) {
             var selectedCustomField = scope.customFields;
@@ -1034,24 +1054,34 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 customField.data.forEach((fieldData) => {
                     fieldData.answer = '';
                     fieldData.errorMessage = '';
+                    if(fieldData.field_type === 'TEXT' || fieldData.field_type === 'TEXTAREA' || fieldData.field_type === 'NOTE') {
+                        fieldData.answer = fieldData.values ? fieldData.values : '';
+                    }
                     if(fieldData.field_type === 'DROPDOWN') {
                         fieldData.selectedOptionId = '';
+                        fieldData.answer = fieldData.values && fieldData.values.length > 0 ? fieldData.values[0].dropdown_val.toString() : '';
+                        fieldData.option.forEach((option) => {
+                            if(option.option_id === fieldData.answer) {
+                                fieldData.selectedOption = option.option_name;
+                            }
+                        })
                     }
                     if(fieldData.field_type === 'DATE') {
                         fieldData.isDatepickerOpen = false;
-                        let params = JSON.parse(fieldData.params);
+                        let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                         fieldData.params = params;
                         fieldData.datePickerOptions = {
                             minDate: fieldData.params && fieldData.params.start_date ? new Date(fieldData.params.start_date): new Date(),
                             maxDate: new Date('01/01/2100'),
                             showWeeks: false
                         };
+                        fieldData.answer = new Date(fieldData.values);
                     }
                     if(fieldData.field_type === 'TIME') {
                         fieldData.hourStep = 1;
                         fieldData.minuteStep = 5;
                         fieldData.isMeridian = true;
-                        let params = JSON.parse(fieldData.params);
+                        let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                         fieldData.params = params;
                         if(fieldData.params && fieldData.params.start_time) {
                             var startTimeArray = fieldData.params.start_time.split(" ");
@@ -1071,19 +1101,33 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                                 var endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
                             }
                         }
-                        fieldData.answer = fieldData.params && fieldData.params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
-                        fieldData.min = params && params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
-                        fieldData.max = fieldData.params && fieldData.params.end_time ? new Date(new Date(new Date().setHours(endTimeHour)).setMinutes(endTimes[1])): new Date();
+                        if(fieldData.values !== '') {
+                            let timeValuesArray = fieldData.values.split(':');
+                            fieldData.answer = new Date(new Date(new Date().setHours(timeValuesArray[0])).setMinutes(timeValuesArray[1]));
+                        } else {
+                            fieldData.answer = new Date();
+                        }
                     }
                     if(fieldData.field_type === 'CHECKBOX') {
                         fieldData.answer = [];
                         fieldData.option.forEach((option) => {
                             option.selected = false;
-                        })
+                        });
+                        if(fieldData.values && fieldData.values.length > 0) {
+                            fieldData.values.forEach((value) => {
+                                fieldData.answer.push(value.checkbox_val.toString());
+                                fieldData.option.forEach((option)=> {
+                                    if(option.option_id === value.checkbox_val.toString()) {
+                                        option.selected = true;
+                                    }
+                                })
+                            });
+                        }
                     }
-                    if(fieldData.field_type === 'DECIMAL') {
-                        let params = JSON.parse(fieldData.params);
+                    if(fieldData.field_type === 'DECIMAL' || fieldData.field_type === 'NUMBER') {
+                        let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                         fieldData.params = params;
+                        fieldData.answer = Number(fieldData.values);
                     }
                 });
             });
@@ -1158,7 +1202,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             photo_content: scope.selectedUserData.photo_base_64,
             custom: [],
         };
-        if(scope.selectedUserData.userType.name === 'Students') {
+        if(scope.selectedUserData.userType.name === 'Students' || scope.selectedUserData.userType.name === 'Staff') {
             scope.customFieldsArray.forEach((customField)=> {
                 customField.data.forEach((field)=> {
                     if(field.field_type !== 'CHECKBOX') {
@@ -1190,7 +1234,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                             fieldData.time_value = `${timeArray[0]}:${timeArray[1]}`;
                         }
                         if(field.field_type === 'DATE') {
-                            fieldData.date_value = $filter('date')(field.anser, 'yyyy-MM-dd');
+                            fieldData.date_value = $filter('date')(field.answer, 'yyyy-MM-dd');
                         }
                         param.custom.push(fieldData);
                     } else {

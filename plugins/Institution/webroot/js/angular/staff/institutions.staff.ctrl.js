@@ -173,7 +173,61 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             staff_id: StaffController.staffData && StaffController.staffData.id ? StaffController.staffData.id : null,
             previous_institution_id: StaffController.staffData && StaffController.staffData.current_enrol_institution_id ? StaffController.staffData.current_enrol_institution_id : null,
             comment: StaffController.selectedStaffData.comment,
+            custom: [],
         };
+        StaffController.customFieldsArray.forEach((customField)=> {
+            customField.data.forEach((field)=> {
+                if(field.field_type !== 'CHECKBOX') {
+                    let fieldData = {
+                        student_custom_field_id: field.student_custom_field_id,
+                        text_value:"",
+                        number_value:null,
+                        decimal_value:"",
+                        textarea_value:"",
+                        time_value:"",
+                        date_value:"",
+                        file:"",
+                        institution_id: StaffController.institutionId,
+                    };
+                    if(field.field_type === 'TEXT' || field.field_type === 'NOTE' || field.field_type === 'TEXTAREA') {
+                        fieldData.text_value = field.answer;
+                    }
+                    if(field.field_type === 'NUMBER') {
+                        fieldData.number_value = field.answer;
+                    }
+                    if(field.field_type === 'DECIMAL') {
+                        fieldData.decimal_value = String(field.answer);
+                    }
+                    if(field.field_type === 'DROPDOWN') {
+                        fieldData.number_value = Number(field.answer);
+                    }
+                    if(field.field_type === 'TIME') {
+                        let time = field.answer.toLocaleTimeString();
+                        let timeArray = time.split(':');
+                        fieldData.time_value = `${timeArray[0]}:${timeArray[1]}`;
+                    }
+                    if(field.field_type === 'DATE') {
+                        fieldData.date_value = $filter('date')(field.answer, 'yyyy-MM-dd');
+                    }
+                    params.custom.push(fieldData);
+                } else {
+                    field.answer.forEach((id )=> {
+                        let fieldData = {
+                            student_custom_field_id: field.student_custom_field_id,
+                            text_value:"",
+                            number_value: Number(id),
+                            decimal_value:"",
+                            textarea_value:"",
+                            time_value:"",
+                            date_value:"",
+                            file:"",
+                            institution_id: StaffController.institutionId,
+                        };
+                        params.custom.push(fieldData);
+                    });
+                }
+            })
+        });
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.saveStaffDetails(params).then(function(resp){
             UtilsSvc.isAppendLoader(false);
@@ -451,8 +505,17 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             customField.data.forEach((fieldData) => {
                 fieldData.answer = '';
                 fieldData.errorMessage = '';
+                if(fieldData.field_type === 'TEXT' || fieldData.field_type === 'TEXTAREA' || fieldData.field_type === 'NOTE') {
+                    fieldData.answer = fieldData.values ? fieldData.values : '';
+                }
                 if(fieldData.field_type === 'DROPDOWN') {
                     fieldData.selectedOptionId = '';
+                    fieldData.answer = fieldData.values && fieldData.values.length > 0 ? fieldData.values[0].dropdown_val.toString() : '';
+                    fieldData.option.forEach((option) => {
+                        if(option.option_id === fieldData.answer) {
+                            fieldData.selectedOption = option.option_name;
+                        }
+                    })
                 }
                 if(fieldData.field_type === 'DATE') {
                     fieldData.isDatepickerOpen = false;
@@ -463,6 +526,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                         maxDate: new Date('01/01/2100'),
                         showWeeks: false
                     };
+                    fieldData.answer = new Date(fieldData.values);
                 }
                 if(fieldData.field_type === 'TIME') {
                     fieldData.hourStep = 1;
@@ -488,19 +552,33 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                             var endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
                         }
                     }
-                    fieldData.answer = fieldData.params && fieldData.params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
-                    fieldData.min = params && params.start_time ? new Date(new Date(new Date().setHours(startTimeHour)).setMinutes(startTimes[1])): new Date();
-                    fieldData.max = fieldData.params && fieldData.params.end_time ? new Date(new Date(new Date().setHours(endTimeHour)).setMinutes(endTimes[1])): new Date();
+                    if(fieldData.values !== '') {
+                        let timeValuesArray = fieldData.values.split(':');
+                        fieldData.answer = new Date(new Date(new Date().setHours(timeValuesArray[0])).setMinutes(timeValuesArray[1]));
+                    } else {
+                        fieldData.answer = new Date();
+                    }
                 }
                 if(fieldData.field_type === 'CHECKBOX') {
                     fieldData.answer = [];
                     fieldData.option.forEach((option) => {
                         option.selected = false;
-                    })
+                    });
+                    if(fieldData.values && fieldData.values.length > 0) {
+                        fieldData.values.forEach((value) => {
+                            fieldData.answer.push(value.checkbox_val.toString());
+                            fieldData.option.forEach((option)=> {
+                                if(option.option_id === value.checkbox_val.toString()) {
+                                    option.selected = true;
+                                }
+                            })
+                        });
+                    }
                 }
-                if(fieldData.field_type === 'DECIMAL') {
+                if(fieldData.field_type === 'DECIMAL' || fieldData.field_type === 'NUMBER') {
                     let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                     fieldData.params = params;
+                    fieldData.answer = Number(fieldData.values);
                 }
             });
         });
@@ -905,6 +983,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
         if(StaffController.step === 'add_staff') {
             let shouldPositionRequired = false;
+            let isCustomFieldNotValidated = false;
             if(!StaffController.selectedStaffData.startDate) {
             StaffController.error.start_date = 'This field cannot be left empty';
             } else {
@@ -930,7 +1009,24 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if(shouldPositionRequired && !StaffController.institutionPositionOptions.selectedOption) {
                 StaffController.error.position_id = 'This field cannot be left empty';
             }
-            if(!StaffController.selectedStaffData.startDate || !StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.staff_type_id || !StaffController.staffShiftsId.length === 0 || StaffController.error.fte_id || StaffController.error.position_id){
+            StaffController.customFieldsArray.forEach((customField) => {
+                customField.data.forEach((field) => {
+                    if(field.is_mandatory === 1) {
+                        if(field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'DROPDOWN' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL' || field.field_type === 'DATE' || field.field_type === 'TIME') {
+                            if(!field.answer) {
+                                field.errorMessage = 'This field is required.';
+                                isCustomFieldNotValidated = true;
+                            }
+                        } else if(field.field_type === 'CHECKBOX') {
+                            if(field.answer.length === 0) {
+                                field.errorMessage = 'This field is required.';
+                                isCustomFieldNotValidated = true;
+                            }
+                        }
+                    }
+                })
+            });
+            if(!StaffController.selectedStaffData.startDate || !StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.staff_type_id || !StaffController.staffShiftsId.length === 0 || StaffController.error.fte_id || StaffController.error.position_id || isCustomFieldNotValidated){
                 return;
             }
             if(StaffController.staffData && StaffController.staffData.is_diff_school > 0) {
