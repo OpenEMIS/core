@@ -4370,7 +4370,7 @@ class InstitutionsController extends AppController
         // Start POCOR-6871
         $options = [
             'Institution.InstitutionStandardMarksEntered'  => __('Marks Entered by Staff'),//POCOR-6630
-            'Institution.InstitutionStaffPositionProfile'  => __('Staff Absences'),//POCOR-6581 //POCOR-6715
+            'Institution.InstitutionStaffPositionProfile'  => __('Staff Career'),//POCOR-6581 //POCOR-6715 //POCOR-6886(changed report name from Staff Absences to Staff Career as per client suggestion)
             'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
             'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
             'Institution.InstitutionStandardStudentAbsences'  => __('Student Absences'),//POCOR-6631
