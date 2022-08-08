@@ -1847,12 +1847,12 @@ paths:
         required: true
       - name: "controllerAction"
         in: "header"
-        description: "OpenEMIS_Classroom"
+        description: "OpenEMIS_Classroom OR Results" # POCOR-6912:modified controllerAction description 
         type: string
         required: true
       - name: "_finder"
         in: "query"
-        description: "eg: assessmentGradesOptions[academic_period_id:31;assessment_grading_option_id:6;education_grade_id:104;education_subject_id:60;student_id:11005]"
+        description: "eg: assessmentGradesOptions[academic_period_id:31;education_grade_id:104;education_subject_id:60;student_id:11005]" # POCOR-6912:removed assessment_grading_option_id from mandatory field as suggested by client
         type: string
         required: true
       - name: "_limit"
