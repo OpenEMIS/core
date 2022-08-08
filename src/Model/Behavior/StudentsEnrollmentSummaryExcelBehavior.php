@@ -266,7 +266,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                     'Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId,
                                     $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id,
                                     //POCOR-6620[START]
-                                    $StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus
+                                    //$StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus  //POCOR-6712
                                     //POCOR-6620[END]
                                 ]);
                                 // if ($institutionId > 0) {
