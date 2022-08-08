@@ -101,13 +101,12 @@ class ExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
         $format = $this->config('format');
-        $paramVald = 'fd';
-        $paramValdl = 'fd0';
+        $paramVal = '';
         if (array_key_exists('requestQuery', $extra)) {
             $params = $extra['requestQuery'];
-            Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: '.$paramVald);
+            Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: '.$paramVal);
         } else {
-            Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: '.$paramValdl);
+            Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: ');
             $params = $model->getQueryString();
             $paramVal = $params['assessment_id']; //POCOR-6908
         }
@@ -128,13 +127,13 @@ class ExcelReportBehavior extends Behavior
         $this->generateExcel($objSpreadsheet, $extra);
 
         Log::write('debug', 'ExcelReportBehavior >>> renderExcelTemplate');
-        /*if(isset($paramVal)){ // POCOR-6906
-            Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: '.$paramVal);
+        if(!empty($paramVal)){ // POCOR-6908
+            Log::write('debug', 'ExcelReportBehavior2 >>> filepath1: '.$paramVal);
             $this->saveFileAssessment($objSpreadsheet, $temppath, $format, $params['student_id'],$paramVal);
-        }else{*/
+        }else{
             Log::write('debug', 'ExcelReportBehavior1 >>> filepath2: ');
             $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id']);
-        //}
+        }
 		
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
