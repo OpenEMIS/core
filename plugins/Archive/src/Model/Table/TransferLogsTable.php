@@ -221,44 +221,44 @@ use Cake\Utility\Security;
             // /*flag the academic period table
             // academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
         
-            // $session = $this->Session;
-            // $superAdmin = $session->read('Auth.User.super_admin');
-            // $is_connection_is_online = $session->read('is_connection_stablished');
-            // if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
-            //     // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            //     // $AcademicPeriods->updateAll(
-            //     //     ['editable' => 0, 'visible' => 0],    //field
-            //     //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
-            //     // );
+            $session = $this->Session;
+            $superAdmin = $session->read('Auth.User.super_admin');
+            $is_connection_is_online = $session->read('is_connection_stablished');
+            if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+                // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                // $AcademicPeriods->updateAll(
+                //     ['editable' => 0, 'visible' => 0],    //field
+                //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
+                // );
 
-            //     $this->log('=======>Before triggerStudentAttendanceShell', 'debug');
-            //     $this->triggerStudentAttendanceShell('StudentAttendance',$entity->academic_period_id);
-            //     $this->log(' <<<<<<<<<<======== After triggerStudentAttendanceShell', 'debug');
-            // }
-            // else{
-            //     $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
-            // }
+                $this->log('=======>Before triggerStudentAttendanceShell', 'debug');
+                $this->triggerStudentAttendanceShell('StudentAttendance',$entity->academic_period_id);
+                $this->log(' <<<<<<<<<<======== After triggerStudentAttendanceShell', 'debug');
+            }
+            else{
+                $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+            }
         }else if($entity->features == "Staff Attendances"){
             /*flag the academic period table
             academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
         
-            // $session = $this->Session;
-            // $superAdmin = $session->read('Auth.User.super_admin');
-            // $is_connection_is_online = $session->read('is_connection_stablished');
-            // if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
-            //     // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            //     // $AcademicPeriods->updateAll(
-            //     //     ['editable' => 0, 'visible' => 0],    //field
-            //     //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
-            //     // );
+            $session = $this->Session;
+            $superAdmin = $session->read('Auth.User.super_admin');
+            $is_connection_is_online = $session->read('is_connection_stablished');
+            if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+                // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                // $AcademicPeriods->updateAll(
+                //     ['editable' => 0, 'visible' => 0],    //field
+                //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
+                // );
 
-            //     $this->log('=======>Before triggerStaffAttendancesShell', 'debug');
-            //     $this->triggerStaffAttendancesShell('StaffAttendances',$entity->academic_period_id);
-            //     $this->log(' <<<<<<<<<<======== After triggerStaffAttendancesShell', 'debug');
-            // }
-            // else{
-            //     $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
-            // }
+                $this->log('=======>Before triggerStaffAttendancesShell', 'debug');
+                $this->triggerStaffAttendancesShell('StaffAttendances',$entity->academic_period_id);
+                $this->log(' <<<<<<<<<<======== After triggerStaffAttendancesShell', 'debug');
+            }
+            else{
+                $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+            }
         }else if($entity->features == "Student Assessments"){
             // /*flag the academic period table
             // academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
