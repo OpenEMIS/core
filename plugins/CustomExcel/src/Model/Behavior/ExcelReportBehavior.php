@@ -128,13 +128,13 @@ class ExcelReportBehavior extends Behavior
         $this->generateExcel($objSpreadsheet, $extra);
 
         Log::write('debug', 'ExcelReportBehavior >>> renderExcelTemplate');
-        if(isset($paramVal)){ // POCOR-6906
+        /*if(isset($paramVal)){ // POCOR-6906
             Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: '.$paramVal);
             $this->saveFileAssessment($objSpreadsheet, $temppath, $format, $params['student_id'],$paramVal);
-        }else{
+        }else{*/
             Log::write('debug', 'ExcelReportBehavior1 >>> filepath2: ');
             $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id']);
-        }
+        //}
 		
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
