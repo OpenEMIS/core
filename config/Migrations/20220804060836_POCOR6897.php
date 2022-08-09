@@ -17,6 +17,7 @@ class POCOR6897 extends AbstractMigration
         $this->execute('INSERT INTO `zz_6897_security_functions` SELECT * FROM `security_functions`');
         /** updating existing record */
         $this->execute("UPDATE `security_functions` SET `_edit` = 'Distributions.edit' WHERE `category`='Meals' AND `module`='Institutions' AND `controller`='Institutions' AND `name` = 'Meals Distribution' ");
+        $this->execute("UPDATE `security_functions` SET `_edit` = 'StudentMeals.edit' WHERE  `category`='Meals' AND `module`='Institutions' AND `controller`='Institutions' AND `name` = 'Meals Student' ");
     }
 
     /** rollback */ 
