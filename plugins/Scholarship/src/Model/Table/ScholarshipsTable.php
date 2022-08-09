@@ -32,6 +32,8 @@ class ScholarshipsTable extends ControllerActionTable
         $this->table('scholarships');
         parent::initialize($config);
 
+        $this->belongsTo('ScholarshipFinancialAssistances', ['className' => 'Scholarship.ScholarshipFinancialAssistances', 'foreignKey' => 'scholarship_financial_assistance_id']); //POCOR-6839
+
         $this->belongsTo('FinancialAssistanceTypes', ['className' => 'Scholarship.FinancialAssistanceTypes', 'foreignKey' => 'scholarship_financial_assistance_type_id']);
         $this->belongsTo('FundingSources', ['className' => 'Scholarship.FundingSources', 'foreignKey' => 'scholarship_funding_source_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -405,6 +407,9 @@ class ScholarshipsTable extends ControllerActionTable
                 // No implementation
                 break;
             case 'LOAN':
+                $this->field('scholarship_financial_assistance_id', [
+                    'type' => 'hidden'
+                ]);
                 $this->field('interest_rate', [
                     'attr' => ['label' => __('Interest Rate').' (%)'],
                     'after' => 'bond'
@@ -432,7 +437,8 @@ class ScholarshipsTable extends ControllerActionTable
                 'FinancialAssistanceTypes',
                 'FieldOfStudies',
                 'AttachmentTypes',
-                'Loans.PaymentFrequencies'
+                'Loans.PaymentFrequencies',
+                'ScholarshipFinancialAssistances'
             ]);
     }
 
@@ -537,6 +543,21 @@ class ScholarshipsTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['onChangeReload'] = 'changeScholarshipFinancialAssistanceId';
+        }
+        $code = $attr['entity']->scholarship_financial_assistance_type_id;
+        switch ($code) {
+            case '3':
+                // No implementation
+                break;
+            case '4':
+                $this->field('scholarship_financial_assistance_id', [
+                    'type' => 'hidden'
+                ]);
+            case '':
+                $this->field('scholarship_financial_assistance_id', [
+                    'type' => 'hidden'
+                ]);   
+                break;
         }
         return $attr;
     }
