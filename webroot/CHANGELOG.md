@@ -1,4 +1,4 @@
-### [3.75.21] - 2022-0-09
+### [3.75.21] - 2022-08-09
 - Developed: Create a migration script to insert a row in the report_queries table to truncate the system_errors table every week
 - Bug Fixed: Institutions > Staff > Edit > End of Assignment : End date should be mandatory when user wants to end the assignment
 - Bug Fixed: Assessment API fixes : Set assessment_grading_option_id to not mandatory, API to return all results and Update API documentation
