@@ -952,8 +952,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             status_id: 0,
             assignee_id: -1,
             new_institution_id: StaffController.institutionId,
-            //previous_institution_id: StaffController.selectedStaffData.institution_staff[0]['institution']['id'],
-            previous_institution_id: StaffController.selectedStaffData['id'],//POCOR-6704
+            previous_institution_id: StaffController.selectedStaffData.institution_staff[0]['institution']['id'], //POCOR-6909
+            // previous_institution_id: StaffController.selectedStaffData['id'],//POCOR-6704
             comment: StaffController.comment
         };
 
