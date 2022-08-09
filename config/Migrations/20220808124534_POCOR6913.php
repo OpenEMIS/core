@@ -16,7 +16,7 @@ class POCOR6913 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_6913_institution_staff_position_profiles` LIKE `institution_staff_position_profiles`');
         $this->execute('INSERT INTO `zz_6913_institution_staff_position_profiles` SELECT * FROM `institution_staff_position_profiles`');
         // End
-        $this->execute('UPDATE institution_staff_position_profiles SET end_date = DATE(institution_staff_position_profiles.created) WHERE end_date IS NULL OR end_date = "0000-00-00"');
+        $this->execute('UPDATE institution_staff_position_profiles SET end_date = DATE(institution_staff_position_profiles.created) WHERE end_date IS NULL');
         $this->execute('ALTER TABLE `institution_staff_position_profiles` CHANGE `end_date` `end_date` DATE NOT NULL');
     }
 
