@@ -117,6 +117,25 @@ use Cake\Utility\Security;
 
     public function addOnInitialize(Event $event, Entity $entity)
     {
+        //POCOR-6816
+        $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"];
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+        foreach($academicPeriodOptions AS $key => $val){
+            $transferLogdata = $this->find('all')
+                                    ->where(['academic_period_id' => $key])->toArray();
+            $getFeatureOptionsCount = count($this->getFeatureOptions());
+            if($getFeatureOptionsCount == count($transferLogdata)){
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $AcademicPeriods->updateAll(
+                    ['editable' => 0, 'visible' => 0],    //field
+                    ['id' => $key, 'current'=> 0] //condition
+                );
+            }
+        }
+        //POCOR-6816
+
+
+
         $this->Alert->info('Archive.backupReminder');
         try {
 
