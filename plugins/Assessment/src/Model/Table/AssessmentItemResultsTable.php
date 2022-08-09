@@ -447,10 +447,17 @@ class AssessmentItemResultsTable extends AppTable
         $assessmentPeriodId = $options['assessment_period_id'];
         $institutionId = $options['institution_id'];
         $optionalCondition = [];
-        if ($assessmentId || $assessmentPeriodId || $institutionId) {
-            $optionalCondition[$this->aliasField('assessment_id')] = $assessmentId;
-            $optionalCondition[$this->aliasField('assessment_period_id')] = $assessmentPeriodId;
+        if(!empty($assessmentId)){
+            $optionalCondition[$this->aliasField('assessment_period_id')] = $assessmentId;
+        }
+        if(!empty($institutionId)){
             $optionalCondition[$this->aliasField('institution_id')] = $institutionId;
+        }
+        if(!empty($assessmentPeriodId)){
+            $optionalCondition[$this->aliasField('assessment_period_id')] = $assessmentPeriodId;
+        }
+        if(!empty($assessmentGradingOptionId)){
+            $optionalCondition[$this->aliasField('assessment_grading_option_id')] = $assessmentGradingOptionId;
         }
         
         $getRecord = $this->find()
@@ -467,18 +474,45 @@ class AssessmentItemResultsTable extends AppTable
                     ])
                     ->where([
                         $this->aliasField('academic_period_id') => $academicPeriodId,
-                        $this->aliasField('assessment_grading_option_id') => $assessmentGradingOptionId,
                         $this->aliasField('education_grade_id') => $educationGradeId,
                         $this->aliasField('education_subject_id') => $educationSubjectId,
                         $this->aliasField('student_id') => $studentId,
+                        $optionalCondition
                     ])
-                    ->orWhere([$optionalCondition])
+                    //->orWhere([$optionalCondition])
                     ->hydrate(false)
-                    ->first();
+                    ->toArray();
         $response['result'] = $getRecord;
         $response['message'] = 'Successful Operation';
         $dataArr = array("data" => $response);
         echo json_encode($dataArr);exit;
     }
     /** POCOR-6806 ends */ 
+
+    /**
+    * Custom validation
+    * This function will validate whether the mandatory fields has exist or not
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * @return json
+    * @ticket - POCOR-6912 
+    */
+    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    {
+        $url = $_SERVER['REQUEST_URI'];
+        $url_components = parse_url($url);
+        parse_str($url_components['query'], $params);
+        $action = array_key_exists('_finder', $params);
+        if ($primary && $action) {
+            $param = preg_match_all('/\\[(.*?)\\]/', $params['_finder'], $matches);
+            $paramsString = $matches[1];
+            $paramsArray = explode(';', $paramsString[0]);
+            if (empty($paramsArray[0]) || empty($paramsArray[1]) || empty($paramsArray[2]) || empty($paramsArray[3])) {
+                $response['result'] = [];
+                $response['message'] = "Mandatory field can't empty";
+                $dataArr = array("data" => $response);
+                echo json_encode($dataArr);exit;
+            }
+        }   
+    }
+    /**POCOR-6912 ends*/ 
 }

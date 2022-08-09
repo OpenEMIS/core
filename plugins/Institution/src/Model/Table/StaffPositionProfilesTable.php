@@ -68,85 +68,154 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         $validator = $this->buildStaffValidation();
-        return $validator
-            ->allowEmpty('end_date')
-            ->remove('start_date')
-            ->requirePresence('FTE')
-            ->requirePresence('staff_change_type_id')
-            ->requirePresence('staff_type_id')
-            ->add('start_date', 'customCompare', [
-                'rule' => function ($value, $context) {
-                    $staffChangeTypes = $this->staffChangeTypesList;
-                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
-                        $contextData = $context['data'];
-
-                        if (!empty($contextData['end_date'])) {
-                            $newStartDate = new Date($value);
-                            $endDate = new Date($contextData['end_date']);
-
-                            if ($newStartDate > $endDate) {
-                                return vsprintf(__('Start Date cannot be later than %s'),[$endDate->format('d-m-Y')]);
-                            } else {
-                                return true;
-                            }
-                        } else {
-                            return true;
-                        }
-                    } else {
-                        return true;
-                    }
-                },
-                'last' => true
-            ])
-            ->add('start_date', 'customFTE', [
-                'rule' => function ($value, $context) {
-                    $staffChangeTypes = $this->staffChangeTypesList;
-                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
-                        $contextData = $context['data'];
-                        $institutionId = $contextData['institution_id'];
-                        $institutionStaffId = $contextData['institution_staff_id'];
-                        $institutionPositionId = $contextData['institution_position_id'];
-                        $FTE = $contextData['FTE'];
-
-                        $newStartDate = new Date($value); // new start_date
-
-                        $InstitutionStaff = TableRegistry::get('Institution.Staff');
-                        $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date);
-
-                        // get the records that have same institution_id, same position_id, other than the records itself
-                        // with the start_date before the record_original_start_date and end_date is after the new_start_date
-                        $records = $InstitutionStaff->find()
-                            ->where([
-                                $InstitutionStaff->aliasField('institution_id') => $institutionId,
-                                $InstitutionStaff->aliasField('id <>') => $institutionStaffId,
-                                $InstitutionStaff->aliasField('institution_position_id') => $institutionPositionId,
-                                $InstitutionStaff->aliasField('start_date <= ') => $originalStartDate,
-                                'OR' => [
-                                    $InstitutionStaff->aliasField('end_date >= ') => $newStartDate,
-                                    $InstitutionStaff->aliasField('end_date IS NULL '),
-                                ]
-                            ])
-                            ->toArray();
-
-                        if (!empty($records)) {
-                            foreach ($records as $record) {
-                                $FTE = $record->FTE + $FTE;
-                            }
-                        }
-
-                        if ($FTE <= 1) {
-                            return true;
-                        }
-
-                        return false;
-                    } else {
-                        return true;
-                    }
-                },
-                'message' => __('FTE is more than 100%'),
-                'last' => true
-            ])
-            ;
+        //Start:POCOR-6913
+        if($this->request->data['StaffPositionProfiles']['staff_change_type_id'] == 1){	
+            return $validator	
+            ->notEmpty('end_date')		
+            ->remove('start_date')	
+            ->requirePresence('FTE')	
+            ->requirePresence('staff_change_type_id')	
+            ->requirePresence('staff_type_id')	
+            	
+            ->add('start_date', 'customCompare', [	
+                'rule' => function ($value, $context) {	
+                    $staffChangeTypes = $this->staffChangeTypesList;	
+                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {	
+                        $contextData = $context['data'];	
+                        if (!empty($contextData['end_date'])) {	
+                            $newStartDate = new Date($value);	
+                            $endDate = new Date($contextData['end_date']);	
+                            if ($newStartDate > $endDate) {	
+                                return vsprintf(__('Start Date cannot be later than %s'),[$endDate->format('d-m-Y')]);	
+                            } else {	
+                                return true;	
+                            }	
+                        } else {	
+                            return true;	
+                        }	
+                    } else {	
+                        return true;	
+                    }	
+                },	
+                'last' => true	
+            ])	
+            ->add('start_date', 'customFTE', [	
+                'rule' => function ($value, $context) {	
+                    $staffChangeTypes = $this->staffChangeTypesList;	
+                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {	
+                        $contextData = $context['data'];	
+                        $institutionId = $contextData['institution_id'];	
+                        $institutionStaffId = $contextData['institution_staff_id'];	
+                        $institutionPositionId = $contextData['institution_position_id'];	
+                        $FTE = $contextData['FTE'];	
+                        $newStartDate = new Date($value); // new start_date	
+                        $InstitutionStaff = TableRegistry::get('Institution.Staff');	
+                        $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date);	
+                        // get the records that have same institution_id, same position_id, other than the records itself	
+                        // with the start_date before the record_original_start_date and end_date is after the new_start_date	
+                        $records = $InstitutionStaff->find()	
+                            ->where([	
+                                $InstitutionStaff->aliasField('institution_id') => $institutionId,	
+                                $InstitutionStaff->aliasField('id <>') => $institutionStaffId,	
+                                $InstitutionStaff->aliasField('institution_position_id') => $institutionPositionId,	
+                                $InstitutionStaff->aliasField('start_date <= ') => $originalStartDate,	
+                                'OR' => [	
+                                    $InstitutionStaff->aliasField('end_date >= ') => $newStartDate,	
+                                    $InstitutionStaff->aliasField('end_date IS NULL '),	
+                                ]	
+                            ])	
+                            ->toArray();	
+                        if (!empty($records)) {	
+                            foreach ($records as $record) {	
+                                $FTE = $record->FTE + $FTE;	
+                            }	
+                        }	
+                        if ($FTE <= 1) {	
+                            return true;	
+                        }	
+                        return false;	
+                    } else {	
+                        return true;	
+                    }	
+                },	
+                'message' => __('FTE is more than 100%'),	
+                'last' => true	
+            ])	
+            ;	
+        }else{	
+            return $validator	
+            ->allowEmpty('end_date')		
+            ->remove('start_date')	
+            ->requirePresence('FTE')	
+            ->requirePresence('staff_change_type_id')	
+            ->requirePresence('staff_type_id')	
+            	
+            ->add('start_date', 'customCompare', [	
+                'rule' => function ($value, $context) {	
+                    $staffChangeTypes = $this->staffChangeTypesList;	
+                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {	
+                        $contextData = $context['data'];	
+                        if (!empty($contextData['end_date'])) {	
+                            $newStartDate = new Date($value);	
+                            $endDate = new Date($contextData['end_date']);	
+                            if ($newStartDate > $endDate) {	
+                                return vsprintf(__('Start Date cannot be later than %s'),[$endDate->format('d-m-Y')]);	
+                            } else {	
+                                return true;	
+                            }	
+                        } else {	
+                            return true;	
+                        }	
+                    } else {	
+                        return true;	
+                    }	
+                },	
+                'last' => true	
+            ])	
+            ->add('start_date', 'customFTE', [	
+                'rule' => function ($value, $context) {	
+                    $staffChangeTypes = $this->staffChangeTypesList;	
+                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {	
+                        $contextData = $context['data'];	
+                        $institutionId = $contextData['institution_id'];	
+                        $institutionStaffId = $contextData['institution_staff_id'];	
+                        $institutionPositionId = $contextData['institution_position_id'];	
+                        $FTE = $contextData['FTE'];	
+                        $newStartDate = new Date($value); // new start_date	
+                        $InstitutionStaff = TableRegistry::get('Institution.Staff');	
+                        $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date);	
+                        // get the records that have same institution_id, same position_id, other than the records itself	
+                        // with the start_date before the record_original_start_date and end_date is after the new_start_date	
+                        $records = $InstitutionStaff->find()	
+                            ->where([	
+                                $InstitutionStaff->aliasField('institution_id') => $institutionId,	
+                                $InstitutionStaff->aliasField('id <>') => $institutionStaffId,	
+                                $InstitutionStaff->aliasField('institution_position_id') => $institutionPositionId,	
+                                $InstitutionStaff->aliasField('start_date <= ') => $originalStartDate,	
+                                'OR' => [	
+                                    $InstitutionStaff->aliasField('end_date >= ') => $newStartDate,	
+                                    $InstitutionStaff->aliasField('end_date IS NULL '),	
+                                ]	
+                            ])	
+                            ->toArray();	
+                        if (!empty($records)) {	
+                            foreach ($records as $record) {	
+                                $FTE = $record->FTE + $FTE;	
+                            }	
+                        }	
+                        if ($FTE <= 1) {	
+                            return true;	
+                        }	
+                        return false;	
+                    } else {	
+                        return true;	
+                    }	
+                },	
+                'message' => __('FTE is more than 100%'),	
+                'last' => true	
+            ]);	
+        }
+        //END:POCOR-6913
     }
 
     public function validationIncludeEffectiveDate(Validator $validator)

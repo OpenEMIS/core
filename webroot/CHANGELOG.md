@@ -1,3 +1,13 @@
+### [3.75.21] - 2022-08-09
+- Developed: Create a migration script to insert a row in the report_queries table to truncate the system_errors table every week
+- Bug Fixed: Institutions > Staff > Edit > End of Assignment : End date should be mandatory when user wants to end the assignment
+- Bug Fixed: Assessment API fixes : Set assessment_grading_option_id to not mandatory, API to return all results and Update API documentation
+- Bug Fixed: Institutions>Staff>Transfer: Staff is not showing under Pending transfer in after approving
+- Bug Fixed: Institutions>Performance>Assessments: Unable to load PDF
+- Bug Fixed: Administration>Meals: Area level should filter the area education which filters the institution
+- Bug Fixed: Institution>Meals>Distribution/Students: No edit permission in permission page
+- Bug Fixed: Institutions>Meals>Students: Date should show current and past dates
+
 ### [3.75.20] - 2022-08-06
 - Bug Fixed: Report>Statistics>Staff Absences: Changes to Report
 - Bug Fixed: Institutions>Performance>Report Cards: Report status is showing error
