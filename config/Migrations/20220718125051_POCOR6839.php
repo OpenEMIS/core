@@ -41,7 +41,7 @@ class POCOR6839 extends AbstractMigration
 
         $data = [
             [
-                'name'  => 'Full Financial Assistance Award(FFAA)',
+                'name'  => 'Full Financial Assistance Award (FFAA)',
                 'order'  => '1',
                 'visible'  => '1',
                 'editable'  => '1',
