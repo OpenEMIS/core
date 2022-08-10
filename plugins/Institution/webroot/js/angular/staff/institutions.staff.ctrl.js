@@ -94,6 +94,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.onDecimalNumberChange = onDecimalNumberChange;
     StaffController.changeOption = changeOption;
     StaffController.selectOption = selectOption;
+    StaffController.filterBySection= filterBySection;
+    StaffController.mapBySection= mapBySection;
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -483,7 +485,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function getStaffCustomFields() {
         let staffId = StaffController.staffData && StaffController.staffData.id ? StaffController.staffData.id : null;
-        InstitutionsStudentsSvc.getStaffCustomFields(staffId).then(function(resp){
+        InstitutionsStaffSvc.getStaffCustomFields(staffId).then(function(resp){
             StaffController.customFields = resp.data;
             StaffController.customFieldsArray = [];
             StaffController.createCustomFieldsArray();
@@ -492,6 +494,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             console.log(error);
             UtilsSvc.isAppendLoader(false);
         });
+    }
+
+    function mapBySection(item) {
+        return item.section;
+    }
+
+    function filterBySection(item, section) {
+        return section === item.section;
     }
 
     function createCustomFieldsArray() {
