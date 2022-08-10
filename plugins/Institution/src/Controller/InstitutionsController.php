@@ -4840,9 +4840,10 @@ class InstitutionsController extends AppController
             $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
             $preferredName = (array_key_exists('preferred_name', $requestData))? $requestData['preferred_name']: null;
             $genderId = (array_key_exists('gender_id', $requestData))? $requestData['gender_id']: null;
-            $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('y-m-d', strtotime($requestData['date_of_birth'])): null;
+            $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
             $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
             $nationalityId = (array_key_exists('nationality_id', $requestData))? $requestData['nationality_id']: null;
+            $nationalityName = (array_key_exists('nationality_name', $requestData))? $requestData['nationality_name']: null;
             $username = (array_key_exists('username', $requestData))? $requestData['username']: null;
             $password = (array_key_exists('password', $requestData))? password_hash($requestData['password'],  PASSWORD_DEFAULT) : null;
             $address  = (array_key_exists('address', $requestData))? $requestData['address'] : null;
@@ -4850,6 +4851,7 @@ class InstitutionsController extends AppController
             $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData))? $requestData['birthplace_area_id'] : null;
             $addressAreaId = (array_key_exists('address_area_id', $requestData))? $requestData['address_area_id'] : null;
             $identityTypeId = (array_key_exists('identity_type_id', $requestData))? $requestData['identity_type_id'] : null;
+            $identityTypeName = (array_key_exists('identity_type_name', $requestData))? $requestData['identity_type_name'] : null;
             
             $institutionClassId = (array_key_exists('institution_class_id', $requestData))? $requestData['institution_class_id'] : null;
             $educationGradeId = (array_key_exists('education_grade_id', $requestData))? $requestData['education_grade_id'] : null;
@@ -4897,7 +4899,16 @@ class InstitutionsController extends AppController
             //get Student Status List        
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
-
+            //get nationality data
+            $nationalities = '';
+            if(!empty($nationalityName)){
+                $nationalitiesTbl = TableRegistry::get('nationalities');
+                $nationalities = $nationalitiesTbl->find()
+                    ->where([
+                        $nationalitiesTbl->aliasField('name') => $nationalityName,
+                    ])
+                    ->first();
+            }
             //transfer student in other institution
             if($isDiffSchool == 1){
                 $workflows = TableRegistry::get('workflows');
@@ -4957,7 +4968,7 @@ class InstitutionsController extends AppController
                     'preferred_name' => $preferredName,
                     'gender_id' => $genderId,
                     'date_of_birth' => $dateOfBirth,
-                    'nationality_id' => $nationalityId,
+                    'nationality_id' => !empty($nationalities) ? $nationalities->id : '',
                     'preferred_language' => $pref_lang->value,
                     'username' => $username,
                     'password' => $password,
@@ -4981,45 +4992,55 @@ class InstitutionsController extends AppController
                 }     
                 if($SecurityUserResult){
                     $user_record_id=$SecurityUserResult->id;
-                    if(!empty($nationalityId)){
-                        $UserNationalities = TableRegistry::get('user_nationalities');
-                        $primaryKey = $UserNationalities->primaryKey();
-                        $hashString = [];
-                        foreach ($primaryKey as $key) {
-                            if($key == 'nationality_id'){
-                                $hashString[] = $nationalityId;
+                    if(!empty($nationalityId) && !empty($nationalityName)){
+                        if(!empty($nationalities)){
+                            $UserNationalities = TableRegistry::get('user_nationalities');
+                            $primaryKey = $UserNationalities->primaryKey();
+                            $hashString = [];
+                            foreach ($primaryKey as $key) {
+                                if($key == 'nationality_id'){
+                                    $hashString[] = $nationalities->id;
+                                }
+                                if($key == 'security_user_id'){
+                                    $hashString[] = $user_record_id;
+                                }
                             }
-                            if($key == 'security_user_id'){
-                                $hashString[] = $user_record_id;
-                            }
+                 
+                            $entityNationalData = [
+                                'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                                'preferred' => 1,
+                                'nationality_id' => $nationalities->id,
+                                'security_user_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in user_nationalities table
+                            $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                            $UserNationalitiesResult = $UserNationalities->save($entityNationalData);    
                         }
-             
-                        $entityNationalData = [
-                            'id' => Security::hash(implode(',', $hashString), 'sha256'),
-                            'preferred' => 1,
-                            'nationality_id' => $nationalityId,
-                            'security_user_id' => $user_record_id,
-                            'created_user_id' => $userId,
-                            'created' => date('Y-m-d H:i:s')
-                        ];
-                        //save in user_nationalities table
-                        $entityNationalData = $UserNationalities->newEntity($entityNationalData);
-                        $UserNationalitiesResult = $UserNationalities->save($entityNationalData);
                     }
 
-                    if(!empty($nationalityId) && !empty($identityTypeId) && !empty($identityNumber)){
-                        $UserIdentities = TableRegistry::get('user_identities');
-                        $entityIdentitiesData = [
-                            'identity_type_id' => $identityTypeId,
-                            'number' => $identityNumber,
-                            'nationality_id' => $nationalityId,
-                            'security_user_id' => $user_record_id,
-                            'created_user_id' => $userId,
-                            'created' => date('Y-m-d H:i:s')
-                        ];
-                        //save in user_identities table
-                        $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
-                        $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                    if(!empty($nationalities) && !empty($identityTypeId) && !empty($identityNumber)){
+                        $identityTypesTbl = TableRegistry::get('identity_types');
+                        $identityTypes = $identityTypesTbl->find()
+                            ->where([
+                                $identityTypesTbl->aliasField('name') => $identityTypeName,
+                            ])
+                            ->first();
+                        if(!empty($identityTypes)){
+                            $UserIdentities = TableRegistry::get('user_identities');
+                            $entityIdentitiesData = [
+                                'identity_type_id' => $identityTypes->id,
+                                'number' => $identityNumber,
+                                'nationality_id' => $nationalities->id,
+                                'security_user_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in user_identities table
+                            $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                            $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                        }
                     }
 
                     if(!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId)){
@@ -5218,9 +5239,10 @@ class InstitutionsController extends AppController
             $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
             $preferredName = (array_key_exists('preferred_name', $requestData))? $requestData['preferred_name']: null;
             $genderId = (array_key_exists('gender_id', $requestData))? $requestData['gender_id']: null;
-            $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('y-m-d', strtotime($requestData['date_of_birth'])): null;
+            $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
             $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
             $nationalityId = (array_key_exists('nationality_id', $requestData))? $requestData['nationality_id']: null;
+            $nationalityName = (array_key_exists('nationality_name', $requestData))? $requestData['nationality_name']: null;
             $username = (array_key_exists('username', $requestData))? $requestData['username']: null;
             $password = (array_key_exists('password', $requestData))? password_hash($requestData['password'],  PASSWORD_DEFAULT) : null;
             $address  = (array_key_exists('address', $requestData))? $requestData['address'] : null;
@@ -5228,6 +5250,7 @@ class InstitutionsController extends AppController
             $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData))? $requestData['birthplace_area_id'] : null;
             $addressAreaId = (array_key_exists('address_area_id', $requestData))? $requestData['address_area_id'] : null;
             $identityTypeId = (array_key_exists('identity_type_id', $requestData))? $requestData['identity_type_id'] : null;
+            $identityTypeName = (array_key_exists('identity_type_name', $requestData))? $requestData['identity_type_name'] : null;
             
             $institutionPositionId = (array_key_exists('institution_position_id', $requestData))? $requestData['institution_position_id'] : null;
             $fte = (array_key_exists('fte', $requestData))? $requestData['fte'] : null;
@@ -5276,7 +5299,16 @@ class InstitutionsController extends AppController
             //get Student Status List        
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
             $statuses = $StaffStatuses->findCodeList();
-
+            //get nationality data
+            $nationalities = '';
+            if(!empty($nationalityName)){
+                $nationalitiesTbl = TableRegistry::get('nationalities');
+                $nationalities = $nationalitiesTbl->find()
+                    ->where([
+                        $nationalitiesTbl->aliasField('name') => $nationalityName,
+                    ])
+                    ->first();
+            }
             if($isSameSchool == 1){
                 if(!empty($institutionId)){
                     //get id from `institution_positions` table
@@ -5425,7 +5457,7 @@ class InstitutionsController extends AppController
                     'preferred_name' => $preferredName,
                     'gender_id' => $genderId,
                     'date_of_birth' => $dateOfBirth,
-                    'nationality_id' => $nationalityId,
+                    'nationality_id' => !empty($nationalities) ? $nationalities->id : '',
                     'preferred_language' => $pref_lang->value,
                     'username' => $username,
                     'password' => $password,
@@ -5449,47 +5481,57 @@ class InstitutionsController extends AppController
                 }
                 if($SecurityUserResult){
                     $user_record_id=$SecurityUserResult->id;
-                    if(!empty($nationalityId)){
-                        $UserNationalities = TableRegistry::get('user_nationalities');
-                        $primaryKey = $UserNationalities->primaryKey();
-                        $hashString = [];
-                        foreach ($primaryKey as $key) {
-                            if($key == 'nationality_id'){
-                                $hashString[] = $nationalityId;
+                    if(!empty($nationalityId) && !empty($nationalityName)){
+                        if(!empty($nationalities)){
+                            $UserNationalities = TableRegistry::get('user_nationalities');
+                            $primaryKey = $UserNationalities->primaryKey();
+                            $hashString = [];
+                            foreach ($primaryKey as $key) {
+                                if($key == 'nationality_id'){
+                                    $hashString[] = $nationalities->id;
+                                }
+                                if($key == 'security_user_id'){
+                                    $hashString[] = $user_record_id;
+                                }
                             }
-                            if($key == 'security_user_id'){
-                                $hashString[] = $user_record_id;
-                            }
+                 
+                            $entityNationalData = [
+                                'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                                'preferred' => 1,
+                                'nationality_id' => $nationalities->id,
+                                'security_user_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in user_nationalities table
+                            $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                            $UserNationalitiesResult = $UserNationalities->save($entityNationalData);    
                         }
-             
-                        $entityNationalData = [
-                            'id' => Security::hash(implode(',', $hashString), 'sha256'),
-                            'preferred' => 1,
-                            'nationality_id' => $nationalityId,
-                            'security_user_id' => $user_record_id,
-                            'created_user_id' => $userId,
-                            'created' => date('y-m-d H:i:s')
-                        ];
-                        //save in user_nationalities table
-                        $entityNationalData = $UserNationalities->newEntity($entityNationalData);
-                        $UserNationalitiesResult = $UserNationalities->save($entityNationalData);
                     }
 
-                    if(!empty($nationalityId) && !empty($identityTypeId) && !empty($identityNumber)){
-                        $UserIdentities = TableRegistry::get('user_identities');
-                        $entityIdentitiesData = [
-                            'identity_type_id' => $identityTypeId,
-                            'number' => $identityNumber,
-                            'nationality_id' => $nationalityId,
-                            'security_user_id' => $user_record_id,
-                            'created_user_id' => $userId,
-                            'created' => date('y-m-d H:i:s')
-                        ];
-                        //save in user_identities table
-                        $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
-                        $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                    if(!empty($nationalities) && !empty($identityTypeId) && !empty($identityNumber)){
+                        $identityTypesTbl = TableRegistry::get('identity_types');
+                        $identityTypes = $identityTypesTbl->find()
+                            ->where([
+                                $identityTypesTbl->aliasField('name') => $identityTypeName,
+                            ])
+                            ->first();
+                        if(!empty($identityTypes)){
+                            $UserIdentities = TableRegistry::get('user_identities');
+                            $entityIdentitiesData = [
+                                'identity_type_id' => $identityTypes->id,
+                                'number' => $identityNumber,
+                                'nationality_id' => $nationalities->id,
+                                'security_user_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in user_identities table
+                            $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                            $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                        }
                     }
-                    
+
                     if(!empty($institutionId)){
                         //get id from `institution_positions` table
                         $InstitutionPositions = TableRegistry::get('institution_positions');
@@ -5627,9 +5669,10 @@ class InstitutionsController extends AppController
             $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
             $preferredName = (array_key_exists('preferred_name', $requestData))? $requestData['preferred_name']: null;
             $genderId = (array_key_exists('gender_id', $requestData))? $requestData['gender_id']: null;
-            $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('y-m-d', strtotime($requestData['date_of_birth'])): null;
+            $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
             $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
             $nationalityId = (array_key_exists('nationality_id', $requestData))? $requestData['nationality_id']: null;
+            $nationalityName = (array_key_exists('nationality_name', $requestData))? $requestData['nationality_name']: null;
             $username = (array_key_exists('username', $requestData))? $requestData['username']: null;
             $password = (array_key_exists('password', $requestData))? password_hash($requestData['password'],  PASSWORD_DEFAULT) : null;
             $address  = (array_key_exists('address', $requestData))? $requestData['address '] : null;
@@ -5637,6 +5680,7 @@ class InstitutionsController extends AppController
             $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData))? $requestData['birthplace_area_id'] : null;
             $addressAreaId = (array_key_exists('address_area_id', $requestData))? $requestData['address_area_id'] : null;
             $identityTypeId = (array_key_exists('identity_type_id', $requestData))? $requestData['identity_type_id'] : null;
+            $identityTypeName = (array_key_exists('identity_type_name', $requestData))? $requestData['identity_type_name'] : null;
             
             $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData))? $requestData['guardian_relation_id'] : null;
             $studentId = (array_key_exists('student_id', $requestData))? $requestData['student_id'] : null;
@@ -5655,6 +5699,15 @@ class InstitutionsController extends AppController
                         $ConfigItems->aliasField('type') => 'System'
                     ])
                     ->first();
+            //get nationality data
+            $nationalities = '';
+            if(!empty($nationalityName)){
+                $nationalitiesTbl = TableRegistry::get('nationalities');
+                $nationalities = $nationalitiesTbl->find()
+                    ->where([
+                        $nationalitiesTbl->aliasField('name') => $nationalityName,
+                    ])->first();
+            }
             
             $SecurityUsers = TableRegistry::get('security_users');
             $entityData = [
@@ -5666,7 +5719,7 @@ class InstitutionsController extends AppController
                 'preferred_name' => $preferredName,
                 'gender_id' => $genderId,
                 'date_of_birth' => $dateOfBirth,
-                'nationality_id' => $nationalityId,
+                'nationality_id' => !empty($nationalities) ? $nationalities->id : '',
                 'preferred_language' => $pref_lang->value,
                 'username' => $username,
                 'password' => $password,
@@ -5690,46 +5743,57 @@ class InstitutionsController extends AppController
             }
             if($SecurityUserResult){
                 $user_record_id=$SecurityUserResult->id;
-                if(!empty($nationalityId)){
-                    $UserNationalities = TableRegistry::get('user_nationalities');
-                    $primaryKey = $UserNationalities->primaryKey();
-                    $hashString = [];
-                    foreach ($primaryKey as $key) {
-                        if($key == 'nationality_id'){
-                            $hashString[] = $nationalityId;
+                if(!empty($nationalityId) && !empty($nationalityName)){
+                    if(!empty($nationalities)){
+                        $UserNationalities = TableRegistry::get('user_nationalities');
+                        $primaryKey = $UserNationalities->primaryKey();
+                        $hashString = [];
+                        foreach ($primaryKey as $key) {
+                            if($key == 'nationality_id'){
+                                $hashString[] = $nationalities->id;
+                            }
+                            if($key == 'security_user_id'){
+                                $hashString[] = $user_record_id;
+                            }
                         }
-                        if($key == 'security_user_id'){
-                            $hashString[] = $user_record_id;
-                        }
+             
+                        $entityNationalData = [
+                            'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                            'preferred' => 1,
+                            'nationality_id' => $nationalities->id,
+                            'security_user_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in user_nationalities table
+                        $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                        $UserNationalitiesResult = $UserNationalities->save($entityNationalData);    
                     }
-         
-                    $entityNationalData = [
-                        'id' => Security::hash(implode(',', $hashString), 'sha256'),
-                        'preferred' => 1,
-                        'nationality_id' => $nationalityId,
-                        'security_user_id' => $user_record_id,
-                        'created_user_id' => $userId,
-                        'created' => date('y-m-d H:i:s')
-                    ];
-                    //save in user_nationalities table
-                    $entityNationalData = $UserNationalities->newEntity($entityNationalData);
-                    $UserNationalitiesResult = $UserNationalities->save($entityNationalData);
                 }
 
-                if(!empty($nationalityId) && !empty($identityTypeId) && !empty($identityNumber)){
-                    $UserIdentities = TableRegistry::get('user_identities');
-                    $entityIdentitiesData = [
-                        'identity_type_id' => $identityTypeId,
-                        'number' => $identityNumber,
-                        'nationality_id' => $nationalityId,
-                        'security_user_id' => $user_record_id,
-                        'created_user_id' => $userId,
-                        'created' => date('y-m-d H:i:s')
-                    ];
-                    //save in user_identities table
-                    $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
-                    $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
-                }
+                if(!empty($nationalities) && !empty($identityTypeId) && !empty($identityNumber)){
+                    $identityTypesTbl = TableRegistry::get('identity_types');
+                    $identityTypes = $identityTypesTbl->find()
+                        ->where([
+                            $identityTypesTbl->aliasField('name') => $identityTypeName,
+                        ])
+                        ->first();
+                    if(!empty($identityTypes)){
+                        $UserIdentities = TableRegistry::get('user_identities');
+                        $entityIdentitiesData = [
+                            'identity_type_id' => $identityTypes->id,
+                            'number' => $identityNumber,
+                            'nationality_id' => $nationalities->id,
+                            'security_user_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in user_identities table
+                        $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                        $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                    }
+                }                
+
                 if(!empty($contactType) && !empty($contactValue)){
                     $UserContacts = TableRegistry::get('user_contacts');
                     $entityContactData = [
@@ -5787,10 +5851,12 @@ class InstitutionsController extends AppController
             $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
             $preferredName = (array_key_exists('preferred_name', $requestData))? $requestData['preferred_name']: null;
             $genderId = (array_key_exists('gender_id', $requestData))? $requestData['gender_id']: null;
-            $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('y-m-d', strtotime($requestData['date_of_birth'])): null;
+            $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
             $identityTypeId = (array_key_exists('identity_type_id', $requestData))? $requestData['identity_type_id'] : null;
             $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
+            $identityTypeName = (array_key_exists('identity_type_name', $requestData))? $requestData['identity_type_name'] : null;
             $nationalityId = (array_key_exists('nationality_id', $requestData))? $requestData['nationality_id']: null;
+            $nationalityName = (array_key_exists('nationality_name', $requestData))? $requestData['nationality_name']: null;
             $username = (array_key_exists('username', $requestData))? $requestData['username']: null;
             $password = (array_key_exists('password', $requestData))? password_hash($requestData['password'],  PASSWORD_DEFAULT) : null;
             $address  = (array_key_exists('address', $requestData))? $requestData['address '] : null;
@@ -5813,6 +5879,17 @@ class InstitutionsController extends AppController
                         $ConfigItems->aliasField('type') => 'System'
                     ])
                     ->first();
+            //get nationality data
+            $nationalities = '';
+            if(!empty($nationalityName)){
+                $nationalitiesTbl = TableRegistry::get('nationalities');
+                $nationalities = $nationalitiesTbl->find()
+                    ->where([
+                        $nationalitiesTbl->aliasField('name') => $nationalityName,
+                    ])
+                    ->first();
+            }
+        
             $StudVal = $StaffVal= $GaurdianVal = 0;        
             if($userType == 1){ 
                 $StudVal = 1; 
@@ -5821,7 +5898,6 @@ class InstitutionsController extends AppController
             }else if($userType == 3){ 
                 $GaurdianVal = 1;
             }      
-
 
             $SecurityUsers = TableRegistry::get('security_users');
             $entityData = [
@@ -5833,7 +5909,7 @@ class InstitutionsController extends AppController
                 'preferred_name' => $preferredName,
                 'gender_id' => $genderId,
                 'date_of_birth' => $dateOfBirth,
-                'nationality_id' => $nationalityId,
+                'nationality_id' => !empty($nationalities) ? $nationalities->id : '',
                 'preferred_language' => $pref_lang->value,
                 'username' => $username,
                 'password' => $password,
@@ -5860,45 +5936,55 @@ class InstitutionsController extends AppController
 
             if($SecurityUserResult){
                 $user_record_id=$SecurityUserResult->id;
-                if(!empty($nationalityId)){
-                    $UserNationalities = TableRegistry::get('user_nationalities');
-                    $primaryKey = $UserNationalities->primaryKey();
-                    $hashString = [];
-                    foreach ($primaryKey as $key) {
-                        if($key == 'nationality_id'){
-                            $hashString[] = $nationalityId;
+                if(!empty($nationalityId) && !empty($nationalityName)){
+                    if(!empty($nationalities)){
+                        $UserNationalities = TableRegistry::get('user_nationalities');
+                        $primaryKey = $UserNationalities->primaryKey();
+                        $hashString = [];
+                        foreach ($primaryKey as $key) {
+                            if($key == 'nationality_id'){
+                                $hashString[] = $nationalities->id;
+                            }
+                            if($key == 'security_user_id'){
+                                $hashString[] = $user_record_id;
+                            }
                         }
-                        if($key == 'security_user_id'){
-                            $hashString[] = $user_record_id;
-                        }
+             
+                        $entityNationalData = [
+                            'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                            'preferred' => 1,
+                            'nationality_id' => $nationalities->id,
+                            'security_user_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in user_nationalities table
+                        $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                        $UserNationalitiesResult = $UserNationalities->save($entityNationalData);    
                     }
-         
-                    $entityNationalData = [
-                        'id' => Security::hash(implode(',', $hashString), 'sha256'),
-                        'preferred' => 1,
-                        'nationality_id' => $nationalityId,
-                        'security_user_id' => $user_record_id,
-                        'created_user_id' => $userId,
-                        'created' => date('Y-m-d H:i:s')
-                    ];
-                    //save in user_nationalities table
-                    $entityNationalData = $UserNationalities->newEntity($entityNationalData);
-                    $UserNationalitiesResult = $UserNationalities->save($entityNationalData);
                 }
 
-                if(!empty($nationalityId) && !empty($identityTypeId) && !empty($identityNumber)){
-                    $UserIdentities = TableRegistry::get('user_identities');
-                    $entityIdentitiesData = [
-                        'identity_type_id' => $identityTypeId,
-                        'number' => $identityNumber,
-                        'nationality_id' => $nationalityId,
-                        'security_user_id' => $user_record_id,
-                        'created_user_id' => $userId,
-                        'created' => date('Y-m-d H:i:s')
-                    ];
-                    //save in user_identities table
-                    $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
-                    $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                if(!empty($nationalities) && !empty($identityTypeId) && !empty($identityNumber)){
+                    $identityTypesTbl = TableRegistry::get('identity_types');
+                    $identityTypes = $identityTypesTbl->find()
+                        ->where([
+                            $identityTypesTbl->aliasField('name') => $identityTypeName,
+                        ])
+                        ->first();
+                    if(!empty($identityTypes)){
+                        $UserIdentities = TableRegistry::get('user_identities');
+                        $entityIdentitiesData = [
+                            'identity_type_id' => $identityTypes->id,
+                            'number' => $identityNumber,
+                            'nationality_id' => $nationalities->id,
+                            'security_user_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in user_identities table
+                        $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                        $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                    }
                 }
 
                 if(!empty($contactType) && !empty($contactValue)){
