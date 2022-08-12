@@ -31,7 +31,7 @@ class StudentBehavioursTable extends ControllerActionTable
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'workflow_step_id']);
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'workflow_step_id']); //POCOR-5186
         $this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);//POCOR-5186
@@ -948,30 +948,7 @@ class StudentBehavioursTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
     }
-    public function onUpdateFieldAction(Event $event, array $attr, $action, Request $request)
-    {
-        switch ($this->action) {
-            case 'edit':
-                $workflowActions = $attr['entity']->workflow_actions;
-                $options = Hash::combine($workflowActions, '{n}.id', '{n}.name');
-                $attr['type'] = 'select';
-                $attr['options'] = $options;
-                $attr['onChangeReload'] = 'changeAction';
-            break;
-
-            case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
-                $workflowActionEntity = $this->getWorkflowActionEntity($this->_currentData);
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $workflowActionEntity['name'];
-            break;
-
-            default:
-                break;
-        }
-        return $attr;
-    }
-
+   
 
 }
 
