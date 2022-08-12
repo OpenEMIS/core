@@ -74,7 +74,7 @@ class BodyMassesTable extends AppTable
         return $identityTypeName;
     }
 
-    public function onExcelGetBmi(Event $event, Entity $entity)
+    public function onExcelGetBmiCategory(Event $event, Entity $entity)
     {
         $bodyMassIndex = '';
         
@@ -381,8 +381,8 @@ class BodyMassesTable extends AppTable
         ];
         
         $extraFields[] = [
-            'key' => 'body_mass_index',
-            'field' => 'bmi',
+            'key' => 'bmi_category',//POCOR-6918
+            'field' => 'bmi_category',
             'type' => 'string',
             'label' => __('BMI Category')
         ];
