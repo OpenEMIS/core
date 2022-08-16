@@ -52,9 +52,15 @@ class InstitutionPositionsTable extends AppTable
 		$UserIdentitiesTable   = TableRegistry::get('User.Identities');
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
         //Start POCOR-6605  JO UAT environment is not working blank birthCertificateId
-		$birthCertificateId = $IdentityTypesTable->getIdByName('Birth Certificate');
-        $birth_certificate_code_id = !empty($birthCertificateId) ? $birthCertificateId : 0;
+		//$birthCertificateId = $IdentityTypesTable->getIdByName('Birth Certificate');
+        //$birth_certificate_code_id = !empty($birthCertificateId) ? $birthCertificateId : 0;
         //End POCOR-6605
+        //Start POCOR-6887
+        $birth_certificate_code_id = $IdentityTypesTable->find('all')
+                                     ->select('id')   
+                                     ->where(['visible' => 1,'editable' => 1,'default' => 1])
+                                     ->first();
+        //End POCOR-6887
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
         $teachingFilter = $requestData->teaching_filter;
@@ -84,6 +90,7 @@ class InstitutionPositionsTable extends AppTable
                 'area_administratives_name' => 'AreaAdministratives.name',
                 'assignee_id' => 'Assignees.id',
                 'is_homeroom' => $this->aliasField('is_homeroom'),
+                'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
 				'assignee_openemis_no' => 'SecurityUsersStaff.openemis_no',
 				'staff_firstname' => 'SecurityUsersStaff.first_name',
@@ -157,9 +164,16 @@ class InstitutionPositionsTable extends AppTable
         $query->join($join)
 		->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
                 $UserIdentitiesTable->aliasField('security_user_id = ') . ' SecurityUsersStaff.id',
-                $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id",
-            ])
-            ->where([$where]) 
+                $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id->id",  //POCOR-6887
+            ])   // Start POCOR-6887
+            ->where([$where,
+                'AND' => [
+                    'OR' => [
+                        ['InstitutionStaffs.end_date'.' IS NULL'],
+                        ['InstitutionStaffs.end_date'.' > DATE(NOW())']
+                    ]
+                ]
+            ]) //End POCOR-6887
             ->order(['institution_name', 'position_no']);
        
         if ($positionFilter == self::POSITION_WITH_STAFF) {
@@ -211,9 +225,19 @@ class InstitutionPositionsTable extends AppTable
             'label' => __('Grade')
         ];
 
+        //Start POCOR-6887
         $newFields[] = [
             'key' => 'Institutions.id',
-            'field' => 'institution_id',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution Code')
+        ];
+
+        //End POCOR-6887
+
+        $newFields[] = [
+            'key' => 'Institutions.id',
+            'field' => 'institution_name',  //POCOR-6887
             'type' => 'string',
             'label' => __('Institution')
         ];
