@@ -74,18 +74,21 @@ class BodyMassesTable extends AppTable
         return $identityTypeName;
     }
 
-    public function onExcelGetBmiCategory(Event $event, Entity $entity)
+    public function onExcelGetBmi(Event $event, Entity $entity)
     {
+        
         $bodyMassIndex = '';
         
         if (!empty($entity->bmi) ) {
-            if($entity->bmi <= 18.5){
+            if($entity->bmi <= 18.59){
                 $bodyMassIndex = "Underweight";
-            }elseif($entity->bmi > 18.5 && $entity->bmi <= 24.9){
+            }elseif($entity->bmi > 18.59 && $entity->bmi <= 24.99){
                 $bodyMassIndex = "Normal";
-            }elseif($entity->bmi > 25 && $entity->bmi <= 29.9){
+            }elseif($entity->bmi == 25.00){ //POCOR-6918
+                $bodyMassIndex = "Normal";
+            }elseif($entity->bmi > 25.00 && $entity->bmi <= 29.99){
                 $bodyMassIndex = "Overweight";
-            }elseif($entity->bmi > 29.9){
+            }elseif($entity->bmi > 29.99){
                 $bodyMassIndex = "Obesity";
             }            
         }
@@ -381,8 +384,8 @@ class BodyMassesTable extends AppTable
         ];
         
         $extraFields[] = [
-            'key' => 'bmi_category',//POCOR-6918
-            'field' => 'bmi_category',
+            'key' => 'body_mass_index',
+            'field' => 'bmi',
             'type' => 'string',
             'label' => __('BMI Category')
         ];
