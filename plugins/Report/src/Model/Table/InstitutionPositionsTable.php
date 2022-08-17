@@ -47,7 +47,7 @@ class InstitutionPositionsTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     { 
 	    /*POCOR-6534 starts*/
-		$IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
+		$identity_types = TableRegistry::get('identity_types'); //POCOR-6887
         $IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
 		$UserIdentitiesTable   = TableRegistry::get('User.Identities');
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
@@ -96,6 +96,7 @@ class InstitutionPositionsTable extends AppTable
 				'staff_firstname' => 'SecurityUsersStaff.first_name',
 				'staff_lastname' => 'SecurityUsersStaff.last_name',
 				'birth_certificate' => 'Identities.number',
+                'identity_types_name' => 'identity_types.name', //POCOR-6887
             ])
             ->contain([
                 'Statuses' => [
@@ -161,11 +162,19 @@ class InstitutionPositionsTable extends AppTable
                 ],
             ];
             
-        $query->join($join)
-		->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
-                $UserIdentitiesTable->aliasField('security_user_id = ') . ' SecurityUsersStaff.id',
-                $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id->id",  //POCOR-6887
-            ])   // Start POCOR-6887
+            $query->join($join)
+    		->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
+                    $UserIdentitiesTable->aliasField('security_user_id = ') . ' SecurityUsersStaff.id',
+                    $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id->id",  //POCOR-6887
+                ])
+            ->leftJoin(
+                [$identity_types->alias() => $identity_types->table()],
+                [
+                    $identity_types->aliasField('id') . ' = '. $UserIdentitiesTable->aliasField('identity_type_id')
+                ]
+            )
+
+               // Start POCOR-6887
             ->where([$where,
                 'AND' => [
                     'OR' => [
@@ -179,6 +188,7 @@ class InstitutionPositionsTable extends AppTable
         if ($positionFilter == self::POSITION_WITH_STAFF) {
             $query = $this->onExcelBeforePositionWithStaffQuery($query);
         }
+
 		$query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
         {
             return $results->map(function ($row)
@@ -296,12 +306,22 @@ class InstitutionPositionsTable extends AppTable
             'type' => 'string',
             'label' => __('Staff Name')
         ];
+        //Start POCOR-6887
 		$newFields[] = [
+            'key' => 'identity_types_name',
+            'field' => 'identity_types_name',
+            'type' => 'string',
+            'label' => __('Default identity type')
+        ];
+
+        $newFields[] = [
             'key' => 'birth_certificate',
             'field' => 'birth_certificate',
             'type' => 'string',
-            'label' => __('Birth Certificate')
+            'label' => __('Default identity Number')
         ];
+
+        //End POCOR-6887
 	
 		/*POCOR-6534 ends*/
         if ($positionFilter == self::POSITION_WITH_STAFF) {
