@@ -16,7 +16,7 @@ class POCOR6894 extends AbstractMigration
         $this->execute('CREATE TABLE `z_6894_transfer_connections` LIKE `transfer_connections`');
         $this->execute('INSERT INTO `z_6894_transfer_connections` SELECT * FROM `transfer_connections`');
 
-        $this->execute('ALTER TABLE `transfer_connections` CHANGE `password` `password` LONGTEXT CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL');
+        $this->execute('ALTER TABLE `transfer_connections` CHANGE `password` `password` LONGTEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL');
     }
 
     // rollback
