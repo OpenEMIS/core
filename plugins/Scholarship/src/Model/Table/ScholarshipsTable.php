@@ -32,6 +32,8 @@ class ScholarshipsTable extends ControllerActionTable
         $this->table('scholarships');
         parent::initialize($config);
 
+        $this->belongsTo('ScholarshipFinancialAssistances', ['className' => 'Scholarship.ScholarshipFinancialAssistances', 'foreignKey' => 'scholarship_financial_assistance_id']); //POCOR-6839
+
         $this->belongsTo('FinancialAssistanceTypes', ['className' => 'Scholarship.FinancialAssistanceTypes', 'foreignKey' => 'scholarship_financial_assistance_type_id']);
         $this->belongsTo('FundingSources', ['className' => 'Scholarship.FundingSources', 'foreignKey' => 'scholarship_funding_source_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -368,6 +370,7 @@ class ScholarshipsTable extends ControllerActionTable
         $this->field('total_amount', ['visible' => false]);
         $this->field('requirements', ['visible' => false]);
         $this->field('instructions', ['visible' => false]);
+        $this->field('scholarship_financial_assistance_id', ['visible' => false]);//POCOR-6839
     }
 
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -404,6 +407,9 @@ class ScholarshipsTable extends ControllerActionTable
                 // No implementation
                 break;
             case 'LOAN':
+                $this->field('scholarship_financial_assistance_id', [
+                    'type' => 'hidden'
+                ]);
                 $this->field('interest_rate', [
                     'attr' => ['label' => __('Interest Rate').' (%)'],
                     'after' => 'bond'
@@ -431,7 +437,8 @@ class ScholarshipsTable extends ControllerActionTable
                 'FinancialAssistanceTypes',
                 'FieldOfStudies',
                 'AttachmentTypes',
-                'Loans.PaymentFrequencies'
+                'Loans.PaymentFrequencies',
+                'ScholarshipFinancialAssistances'
             ]);
     }
 
@@ -473,7 +480,12 @@ class ScholarshipsTable extends ControllerActionTable
             return (!empty($list))? implode(', ', $list) : ' ';
         }
     }
-
+    //Start:POCOR-6839
+    public function onGetScholarshipFinancialAssistanceId(Event $event, Entity $entity)
+    {
+        $isSelectAll = $this->checkIsSelectAll($entity);
+    }
+    //End:POCOR-6839
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'maximum_award_amount') {
@@ -526,7 +538,30 @@ class ScholarshipsTable extends ControllerActionTable
         }
         return $attr;
     }
-
+    //Start:POCOR-6839
+    public function onUpdateFieldScholarshipFinancialAssistanceTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $attr['onChangeReload'] = 'changeScholarshipFinancialAssistanceId';
+        }
+        $code = $attr['entity']->scholarship_financial_assistance_type_id;
+        switch ($code) {
+            case '3':
+                // No implementation
+                break;
+            case '4':
+                $this->field('scholarship_financial_assistance_id', [
+                    'type' => 'hidden'
+                ]);
+            case '':
+                $this->field('scholarship_financial_assistance_id', [
+                    'type' => 'hidden'
+                ]);   
+                break;
+        }
+        return $attr;
+    }
+    //END:POCOR-6839
     public function onUpdateFieldFieldOfStudies(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -542,75 +577,6 @@ class ScholarshipsTable extends ControllerActionTable
                 $attr['options'] = $fieldOfStudyOptions;
                
             }
-        }
-        return $attr;
-    }
-
-    public function onUpdateFieldScholarshipFinancialAssistanceTypeId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $entity = $attr['entity'];
-            $financialAssistanceTypeId = $entity->scholarship_financial_assistance_type_id;
-
-            if (!$entity->isNew()) { // edit not allow to change field type
-                $attr['type'] = 'readonly';
-                $attr['value'] = $financialAssistanceTypeId;
-                $attr['attr']['value'] = $entity->financial_assistance_type->name;
-            }
-
-            if (!empty($financialAssistanceTypeId)) {
-                $financialAssistanceTypeOptions = $this->FinancialAssistanceTypes
-                    ->find('list', [
-                        'keyField' => 'id',
-                        'valueField' => 'code'
-                    ])
-                    ->order([$this->FinancialAssistanceTypes->aliasField('id')])
-                    ->toArray();
-
-                switch ($financialAssistanceTypeOptions[$financialAssistanceTypeId]) {
-                    case 'SCHOLARSHIP':
-                        // No implementation
-                        break;
-                    case 'LOAN':
-                        $PaymentFrequencies = TableRegistry::get('Scholarship.PaymentFrequencies');
-
-                        // fields for loan type
-                        $this->field('loan.interest_rate', [
-                            'type' => 'integer',
-                            'attr' => ['label' => __('Interest Rate'). ' (%)'],
-                            'after' => 'bond'
-                        ]);
-                        $this->field('loan.interest_rate_type', [
-                            'type' => 'select',
-                            'attr' => [
-                                'label' => __('Interest Rate Type'),
-                                'select' => true,
-                                'options' => $this->interestRateOptions
-                            ],
-                            'after' => 'loan.interest_rate'
-                        ]);
-                        $this->field('loan.scholarship_payment_frequency_id', [
-                            'type' => 'select',
-                            'attr' => [
-                                'label' => __('Payment Frequency'),
-                                'select' => true,
-                                'options' => $PaymentFrequencies->getList()->toArray()
-                            ],
-                            'after' => 'loan.interest_rate_type'
-                        ]);
-                        $this->field('loan.loan_term', [
-                            'type' => 'select',
-                            'attr' => [
-                                'label' => __('Loan Term (Year)'),
-                                'select' => true,
-                                'options' => $this->getLoanTermOptions(self::MAX_YEARS)
-                            ],
-                            'after' => 'loan.scholarship_payment_frequency_id'
-                        ]);
-                        break;
-                }
-            }
-            $attr['onChangeReload'] = 'changeFinancialAssistanceType';
         }
         return $attr;
     }
@@ -769,27 +735,59 @@ class ScholarshipsTable extends ControllerActionTable
             'attr' => ['label' => __('Scholarship Name')],
             'after' => 'code',
         ]);
+        //START-MODIFY:POCOR-6839
         $this->field('scholarship_financial_assistance_type_id', [
             'type' => 'select',
-            'attr' => ['label' => __('Financial Assistance Type')],
+            'attr' => ['label' => __('Scholarship Type')],
             'after' => 'description',
             'entity' => $entity
         ]);
-        $this->field('scholarship_funding_source_id', [
-            'type' => 'select',
-            'attr' => ['label' => __('Funding Source')],
-            'after' => 'scholarship_financial_assistance_type_id'
-        ]);
-        $this->field('academic_period_id', [
-            'type' => 'select',
-            'options' => $this->AcademicPeriods->getYearList(['isEditable' => true]),
-            'after' => 'scholarship_funding_source_id'
-        ]);
-        $this->field('field_of_study_selection', [
-            'type' => 'select',
-            'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true],
-            'after' => 'academic_period_id'
-        ]);
+		
+		 $tableSFA = TableRegistry::get('scholarship_financial_assistance_types');
+         $tableSFAFirst = $tableSFA->find('all',['conditions'=>['name' => 'Grant' ]])->first();
+        if($entity->scholarship_financial_assistance_type_id == $tableSFAFirst->id){
+            $tavle = TableRegistry::get('scholarship_financial_assistances');
+            $dataSelections = $tavle->find('list',['keyField' => 'id', 'valueField' => 'name'])->toArray();
+            $this->field('scholarship_financial_assistance_id', [
+                'type' => 'select',
+                'attr' => ['label' => __('Financial Assistance Type')],
+                //'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => false],
+                'after' => 'scholarship_financial_assistance_type_id',
+                'options' => $dataSelections
+            ]);
+            $this->field('scholarship_funding_source_id', [
+                'type' => 'select',
+                'attr' => ['label' => __('Funding Source')],
+                'after' => 'scholarship_financial_assistance_id'
+            ]);
+            $this->field('academic_period_id', [
+                'type' => 'select',
+                'options' => $this->AcademicPeriods->getYearList(['isEditable' => true]),
+                'after' => 'scholarship_funding_source_id'
+            ]);
+            $this->field('field_of_study_selection', [
+                'type' => 'select',
+                'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true],
+                'after' => 'academic_period_id'
+            ]);
+        }else{
+            $this->field('scholarship_funding_source_id', [
+                'type' => 'select',
+                'attr' => ['label' => __('Funding Source')],
+                'after' => 'scholarship_financial_assistance_type_id'
+            ]);
+            $this->field('academic_period_id', [
+                'type' => 'select',
+                'options' => $this->AcademicPeriods->getYearList(['isEditable' => true]),
+                'after' => 'scholarship_funding_source_id'
+            ]);
+            $this->field('field_of_study_selection', [
+                'type' => 'select',
+                'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true],
+                'after' => 'academic_period_id'
+            ]);
+        }
+        //END-MODIFY:POCOR-6839
         $this->field('field_of_studies', [
             'type' => 'chosenSelect',
             'placeholder' => __('Select Field Of Studies'),
