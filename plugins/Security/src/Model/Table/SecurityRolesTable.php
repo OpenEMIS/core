@@ -770,7 +770,7 @@ class SecurityRolesTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
     {
         if ($entity->isNew()) {
-            $entity->order = 0;
+            $entity->order = 1;
         }
     }
 
