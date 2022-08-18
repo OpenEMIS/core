@@ -4410,7 +4410,7 @@ class InstitutionsController extends AppController
     {
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
-        $academic_period = $requestData['academic_periods'];
+        $academic_period = $requestData['academic_period'];
         $grade_id = $requestData['grade_id'];
         $institution_id = $this->request->session()->read('Institution.Institutions.id');
 
@@ -4425,14 +4425,13 @@ class InstitutionsController extends AppController
                 'InstitutionClassGrades.institution_class_id = '. $institution_classes->aliasField('id'),
                 'InstitutionClassGrades.education_grade_id = '. $grade_id,
             ])
-            
             ->where([
                 $institution_classes->aliasField('academic_period_id') => $academic_period,
                 $institution_classes->aliasField('institution_id') => $institution_id
             ])
             ->group([$institution_classes->aliasField('id')])
             ->toArray();
-    
+        
         foreach($institution_classes_result AS $result){
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);
         }
@@ -4784,7 +4783,7 @@ class InstitutionsController extends AppController
                                 'staff_id'=>$staffCustomFieldValues->aliasField('staff_id')
                             ])
                             ->where([
-                                $staffCustomFieldValues->aliasField('staff_custom_field_id') => $cval->student_custom_field_id,
+                                $staffCustomFieldValues->aliasField('staff_custom_field_id') => $cval->staff_custom_field_id,
                                 $staffCustomFieldValues->aliasField('staff_id') => $staffId
                             ])->toArray();
                     if(!empty($staffCustomFieldValuesData)){
