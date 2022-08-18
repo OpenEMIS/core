@@ -205,6 +205,11 @@ class InstitutionPositionsTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
 
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $identity = $IdentityType->getDefaultEntity();
+
+        $settings['identity'] = $identity;
+
         $newFields = [];
 
         $newFields[] = [
@@ -249,7 +254,7 @@ class InstitutionPositionsTable extends AppTable
             'key' => 'Institutions.id',
             'field' => 'institution_name',  //POCOR-6887
             'type' => 'string',
-            'label' => __('Institution')
+            'label' => __('Institution Name')
         ];
 
         $newFields[] = [
@@ -311,14 +316,14 @@ class InstitutionPositionsTable extends AppTable
             'key' => 'identity_types_name',
             'field' => 'identity_types_name',
             'type' => 'string',
-            'label' => __('Default identity type')
+            'label' =>  __($identity->name)
         ];
 
         $newFields[] = [
             'key' => 'birth_certificate',
             'field' => 'birth_certificate',
             'type' => 'string',
-            'label' => __('Default identity Number')
+            'label' => __('Identity Number')
         ];
 
         //End POCOR-6887
