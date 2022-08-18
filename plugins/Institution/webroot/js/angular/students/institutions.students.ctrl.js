@@ -602,7 +602,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var educationGrade = StudentController.selectedStudentData.education_grade_id;
         var educationGradeOptions = StudentController.educationGradeOptions;
         for (var i = 0; i < educationGradeOptions.length; i++) {
-            if (educationGradeOptions[i].id == educationGrade) {
+            if (educationGradeOptions[i].education_grade_id == educationGrade) {
                 StudentController.selectedStudentData.education_grade_name = educationGradeOptions[i].name;
                 break;
             }
