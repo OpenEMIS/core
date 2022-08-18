@@ -621,7 +621,7 @@ class InstitutionsTable extends ControllerActionTable
         $instituteType = $sheetData['institute_tabs_type'];
         $academicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        if($instituteType!='Contact People' && $instituteType!='Shifts'){
+        if($instituteType!='Contact People' && $instituteType!='Shifts' && $instituteType!='Overview'){ //POCOR-6880
         $query
         ->select(['area_code' => 'Areas.code','shift_name' => 'ShiftOptions.name','Owner' => 'Institutions.name','Occupier' => 'Institutions.name','shift_start_time' => 'InstitutionShifts.start_time','shift_end_time' => 'InstitutionShifts.end_time'])
         ->LeftJoin([$this->Areas->alias() => $this->Areas->table()],[
@@ -655,6 +655,12 @@ class InstitutionsTable extends ControllerActionTable
         ]);
        
       }
+      //Start:POCOR-6880
+      if($instituteType=='Overview'){
+
+      }
+      //END:POCOR-6880
+
         if($instituteType=='Contact People'){
 
              $institutionContactPersons = TableRegistry::get('institution_contact_persons');
