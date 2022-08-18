@@ -5675,7 +5675,7 @@ class InstitutionsController extends AppController
             $nationalityName = (array_key_exists('nationality_name', $requestData))? $requestData['nationality_name']: null;
             $username = (array_key_exists('username', $requestData))? $requestData['username']: null;
             $password = (array_key_exists('password', $requestData))? password_hash($requestData['password'],  PASSWORD_DEFAULT) : null;
-            $address  = (array_key_exists('address', $requestData))? $requestData['address '] : null;
+            $address  = (array_key_exists('address', $requestData))? $requestData['address'] : null;
             $postalCode = (array_key_exists('postal_code', $requestData))? $requestData['postal_code'] : null;
             $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData))? $requestData['birthplace_area_id'] : null;
             $addressAreaId = (array_key_exists('address_area_id', $requestData))? $requestData['address_area_id'] : null;
@@ -5859,7 +5859,7 @@ class InstitutionsController extends AppController
             $nationalityName = (array_key_exists('nationality_name', $requestData))? $requestData['nationality_name']: null;
             $username = (array_key_exists('username', $requestData))? $requestData['username']: null;
             $password = (array_key_exists('password', $requestData))? password_hash($requestData['password'],  PASSWORD_DEFAULT) : null;
-            $address  = (array_key_exists('address', $requestData))? $requestData['address '] : null;
+            $address  = (array_key_exists('address', $requestData))? $requestData['address'] : null;
             $postalCode = (array_key_exists('postal_code', $requestData))? $requestData['postal_code'] : null;
             $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData))? $requestData['birthplace_area_id'] : null;
             $addressAreaId = (array_key_exists('address_area_id', $requestData))? $requestData['address_area_id'] : null;
