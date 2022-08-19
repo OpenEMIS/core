@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use Cake\Network\Response;
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionContactPersonsTable extends ControllerActionTable {
@@ -14,9 +15,9 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
     public function initialize(array $config)
     {
         parent::initialize($config);
-
+	
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->addBehavior('Excel', [
+        $this->addBehavior('ContactExcel', [ //POCOR-6889
             'pages' => ['index']
         ]);
     }
@@ -95,4 +96,15 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
             );
         }
     }
+    //START:POCOR-6889
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+    	$institutionId = $this->Session->read('Institution.Institutions.id');
+    	$query
+    	->where([
+            'institution_id' =>  $institutionId
+        ]);
+    }
+    //END:POCOR-6889
+    
 }

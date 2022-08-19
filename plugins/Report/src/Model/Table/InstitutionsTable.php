@@ -1309,19 +1309,33 @@ class InstitutionsTable extends AppTable
                         $institutionList = $institutionQuery->toArray();
                     }
                 } elseif (!$institutionTypeId && array_key_exists('area_education_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['area_education_id']) && $areaId != -1) {
+                    /**POCOR-6896 starts - updated condition to fetch Institutions query on that bases of selected area level and area education*/
+                    $areaIds = [];
+                    $lft = $this->Areas->get($areaId)->lft;
+				    $rgt = $this->Areas->get($areaId)->rght;
+                    $areaFilter = $this->Areas->find('all')
+                                ->select(['area_id' => $this->Areas->aliasField('id')])
+                                ->where([
+                                    $this->Areas->aliasField('lft >= ') => $lft,
+								    $this->Areas->aliasField('rght <=') => $rgt,
+                                ])->toArray();
+                    if (!empty($areaFilter)) {
+                        foreach ($areaFilter as $area) {
+                            $areaIds[] = $area->area_id;
+                        }
+                    }
+                    $condition[$this->aliasField('area_id IN')] = $areaIds;
+                    /**POCOR-6896 ends*/  
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
                             'valueField' => 'code_name'
                         ])
-                        ->where([
-                            $InstitutionsTable->aliasField('area_id') => $areaId
-                        ])
+                        ->where([$condition])
                         ->order([
                             $InstitutionsTable->aliasField('code') => 'ASC',
                             $InstitutionsTable->aliasField('name') => 'ASC'
                         ]);
-
                     $superAdmin = $this->Auth->user('super_admin');
                     if (!$superAdmin) { // if user is not super admin, the list will be filtered
                         $userId = $this->Auth->user('id');
