@@ -435,7 +435,21 @@ class InstitutionPositionsTable extends AppTable
                 'staff_end_date' => 'InstitutionStaff.end_date',
                 'staff_fte' => 'InstitutionStaff.FTE',
                 'staff_status' => 'StaffStatuses.name'
-            ])
+            ])//Start POCOR-6887
+            ->leftJoinWith('InstitutionStaff', function ($q) {
+                return $q->select([
+                    'InstitutionStaff.id',
+                    'InstitutionStaff.start_date',
+                    'InstitutionStaff.end_date',
+                    'InstitutionStaff.FTE'
+                ])->where([
+                    'AND' => [
+                            ['InstitutionStaff.end_date'.' IS NOT NULL'],
+                            ['InstitutionStaff.end_date'.' < DATE(NOW())']
+                        
+                    ]
+                ]);
+            })//End POCOR-6887
             ->leftJoinWith('InstitutionStaff', function ($q) use ($mainTable) {
                 return $q->select([
                     'InstitutionStaff.id',
