@@ -1,3 +1,13 @@
+### [3.75.22] - 2022-08-20
+- Bug Fixed: Administration>Scholarships>Details: Changes to Scholarship
+- Bug Fixed: Institutions > General > Overview: Excel export is empty
+- Bug Fixed: Institutions>General>Contact>People: Unable to export
+- Bug Fixed: Administration>Data Management>Copy: User is unable to copy
+- Bug Fixed: Administration>Archive>Connection: Getting 404 error when click test
+- Bug Fixed: Report>Institution: Area education is not filtering
+- Bug Fixed: Report>Institution>Student Body Masses: Data is not showing correctly
+- Bug Fixed: Institutions>Statistics>Standard: Staff career does not tally with the staff leaves on the system
+
 ### [3.75.21] - 2022-08-09
 - Developed: Create a migration script to insert a row in the report_queries table to truncate the system_errors table every week
 - Bug Fixed: Institutions > Staff > Edit > End of Assignment : End date should be mandatory when user wants to end the assignment
