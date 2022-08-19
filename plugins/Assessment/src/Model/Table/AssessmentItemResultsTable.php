@@ -498,11 +498,13 @@ class AssessmentItemResultsTable extends AppTable
     */
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
     {
+        
         $url = $_SERVER['REQUEST_URI'];
         $url_components = parse_url($url);
         parse_str($url_components['query'], $params);
         $action = array_key_exists('_finder', $params);
-        if ($primary && $action) {
+        $actionName = strtok($params['_finder'], '[');//POCOR-6921- updated exact action name condition
+        if ($primary && $actionName == 'AssessmentGradesOptions') {
             $param = preg_match_all('/\\[(.*?)\\]/', $params['_finder'], $matches);
             $paramsString = $matches[1];
             $paramsArray = explode(';', $paramsString[0]);
@@ -512,7 +514,7 @@ class AssessmentItemResultsTable extends AppTable
                 $dataArr = array("data" => $response);
                 echo json_encode($dataArr);exit;
             }
-        }   
+        }
     }
     /**POCOR-6912 ends*/ 
 }
