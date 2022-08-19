@@ -129,6 +129,7 @@ class DataManagementCopyTable extends ControllerActionTable
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
+        ini_set('memory_limit', '2G'); //POCOR-6893
         if($entity->from_academic_period == $entity->to_academic_period){
             $this->Alert->error('CopyData.genralerror', ['reset' => true]);
             return false;
@@ -192,7 +193,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
         //This code is for update the corret academic period in institution_grade table [Start]
-
+        ini_set('memory_limit', '2G'); //POCOR-6893
         $connection = ConnectionManager::get('default');
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $EducationLevels = TableRegistry::get('Education.EducationLevels');

@@ -154,7 +154,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 $this->aliasField('staff_id'),  
                 $this->aliasField('staff_type_id'),
                 $this->aliasField('staff_status_id'),
-                $this->aliasField('institution_id'),
+                'institutionId' => $this->aliasField('institution_id'),
                 'position_id'=> $this->aliasField('institution_position_id'),
                 'subject_name' => 'InstitutionSubjects.name',
                 'academic_period' => 'AcademicPeriods.name',
@@ -388,6 +388,8 @@ class InstitutionStaffPositionProfileTable extends AppTable
     public function onExcelGetStaffAbsenceDay(Event $event, Entity $entity)
     {
         $userid =  $entity->staff_id;
+        $academicPeriodId =  $entity->academic_id;//POCOR-6924
+        $institution_id = $entity->institutionId; //POCOR-6924
         $Institutionstaff = TableRegistry::get('Institution.InstitutionStaff');
         $staffleave = TableRegistry::get('Institution.InstitutionStaffLeave');
         $absenceDay = $staffleave->find()
@@ -397,16 +399,19 @@ class InstitutionStaffPositionProfileTable extends AppTable
 
             ])
            // ->group(['InstitutionStaffLeave.staff_id'])
-            ->where([$staffleave->aliasField('staff_id') => $userid]);
+            ->where([$staffleave->aliasField('staff_id') => $userid,
+                    $staffleave->aliasField('academic_period_id') => $academicPeriodId,
+                $Institutionstaff->aliasField('institution_id') => $institution_id]); //POCOR-6924
+            $entity->staff_absence_day ='';
             if($absenceDay!=null){
                 $data = $absenceDay->toArray();
                 $entity->staff_absence_day = '';
                 foreach($data as $key=>$val){
                     $entity->staff_absence_day = $val['days'];
                 }
-                 return $entity->staff_absence_day;
+                 
             }
-            return '';
+            return $entity->staff_absence_day;
     }
 
     public function onExcelGetInstitutionClasses(Event $event, Entity $entity)
