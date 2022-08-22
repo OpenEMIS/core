@@ -380,19 +380,23 @@ class InstitutionPositionsTable extends AppTable
     {
         $newFields = [];
 
-        $newFields[] = [
-            'key' => 'InstitutionStaff.openemis_no',
-            'field' => 'staff_openemis_no',
-            'type' => 'string',
-            'label' => __('OpenEMIS ID')
-        ];
+        //Start POCOR-6887
 
-        $newFields[] = [
-            'key' => 'InstitutionStaff.name',
-            'field' => 'staff_name',
-            'type' => 'string',
-            'label' => __('Staff Name')
-        ];
+        // $newFields[] = [
+        //     'key' => 'InstitutionStaff.openemis_no',
+        //     'field' => 'staff_openemis_no',
+        //     'type' => 'string',
+        //     'label' => __('OpenEMIS ID')
+        // ];
+
+        // $newFields[] = [
+        //     'key' => 'InstitutionStaff.name',
+        //     'field' => 'staff_name',
+        //     'type' => 'string',
+        //     'label' => __('Staff Name')
+        // ];
+
+        //End POCOR-6887
 
         $newFields[] = [
             'key' => 'InstitutionStaff.start_date',
