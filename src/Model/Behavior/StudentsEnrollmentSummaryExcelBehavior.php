@@ -123,7 +123,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
 
         $generate($_settings);
 
-        $labelArray = array("Name","Code","Academic Period","Education Grade","Gender","Number of Students");
+        $labelArray = array("Name","Code","Academic Period","Education Grade","Gender","Number of Students","Student Status");  //POCOR-6712
         
         foreach($labelArray as $label) {
             $headerRow[] = $this->getFields($this->_table, $settings, $label);
@@ -288,6 +288,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                     !empty($value['academic_period_name']) ? $value['academic_period_name'] : ' 0',
                                     !empty($value['education_grade_name']) ? $value['education_grade_name'] : ' 0',
                                     !empty($value['gender_name'])          ? $value['gender_name']          : ' 0',
+                                    !empty($value['status_name'])          ? $value['status_name']          : ' 0',    //POCOR-6712
                                 ];
                                 $check_data_consitency[$value['academic_period_name']][$value['institution_name']][$value['openemis_no']] = $value['end_date']->format('Y-m-d');
                             }
@@ -299,6 +300,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 !empty($value['academic_period_name']) ? $value['academic_period_name'] : ' 0',
                                 !empty($value['education_grade_name']) ? $value['education_grade_name'] : ' 0',
                                 !empty($value['gender_name'])          ? $value['gender_name']          : ' 0',
+                                !empty($value['status_name'])          ? $value['status_name']          : ' 0',    //POCOR-6712
 
                             ];
                         }
@@ -307,13 +309,15 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                 }                
             }
         }
+
         $prepare_result_array = [];
         foreach ( $prepare_logical_result as $users ) {
             foreach ( $users as $user ) {
-                $prepare_result_array[$user[1]][$user[3]][$user[4]] = [
-                    'count' => $prepare_result_array[$user[1]][$user[3]][$user[4]]['count'] + 1,
+                $prepare_result_array[$user[1]][$user[3]][$user[4]][$user[5]] = [
+                    'count' => $prepare_result_array[$user[1]][$user[3]][$user[4]][$user[5]]['count'] + 1,   //POCOR-6712
                     'institution_name' => $user[0],
-                    'year' => $user[2]
+                    'year' => $user[2],
+                    'status_name' => $user[5],   //POCOR-6712
                 ];
             }
         }
@@ -321,14 +325,17 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         foreach ( $prepare_result_array as $institution_code => $institution_code_data) {
             foreach ( $institution_code_data as $grade => $grade_data ) {
                 foreach ( $grade_data as $gender => $user_data ) {
-                    $final_result[] = [
-                        $user_data['institution_name'],
-                        $institution_code,
-                        $user_data['year'],
-                        $grade,
-                        $gender,
-                        $user_data['count'],
-                    ];
+                     foreach ( $user_data as $status => $status_data ) {  //POCOR-6712
+                        $final_result[] = [
+                            $status_data['institution_name'],
+                            $institution_code,
+                            $status_data['year'],
+                            $grade,
+                            $gender,
+                            $status_data['count'],
+                            $status_data['status_name'],   //POCOR-6712
+                        ];
+                     }
                 }
             }
         }
