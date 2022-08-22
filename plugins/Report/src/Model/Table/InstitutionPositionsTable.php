@@ -48,6 +48,7 @@ class InstitutionPositionsTable extends AppTable
     { 
 	    /*POCOR-6534 starts*/
 		$identity_types = TableRegistry::get('identity_types'); //POCOR-6887
+        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
 		$UserIdentitiesTable   = TableRegistry::get('User.Identities');
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
@@ -97,6 +98,10 @@ class InstitutionPositionsTable extends AppTable
 				'staff_lastname' => 'SecurityUsersStaff.last_name',
 				'birth_certificate' => 'Identities.number',
                 'identity_types_name' => 'identity_types.name', //POCOR-6887
+                'StaffStatuses_name' => 'StaffStatuses.name', //POCOR-6887
+                'InstitutionStaffs_start_date' => 'InstitutionStaffs.start_date ', //POCOR-6887
+                'InstitutionStaffs_end_date' => 'InstitutionStaffs.end_date', //POCOR-6887
+                'InstitutionStaffs_FTE' => 'InstitutionStaffs.FTE', //POCOR-6887
             ])
             ->contain([
                 'Statuses' => [
@@ -154,6 +159,14 @@ class InstitutionPositionsTable extends AppTable
                     'InstitutionStaffs.institution_position_id = ' . $this->aliasField('id'),
                 ],
             ];
+            $join['StaffStatuses'] = [
+                'type' => 'left',
+                'table' => 'staff_statuses',
+                'conditions' => [
+                    'StaffStatuses.id = InstitutionStaffs.staff_status_id',
+                ],
+            ];
+            // Start POCOR-6887
             $join['SecurityUsersStaff'] = [
                 'type' => 'left',
                 'table' => 'security_users',
@@ -161,7 +174,7 @@ class InstitutionPositionsTable extends AppTable
                     'SecurityUsersStaff.id = InstitutionStaffs.staff_id',
                 ],
             ];
-            
+            // End POCOR-6887
             $query->join($join)
     		->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
                     $UserIdentitiesTable->aliasField('security_user_id = ') . ' SecurityUsersStaff.id',
@@ -173,8 +186,8 @@ class InstitutionPositionsTable extends AppTable
                     $identity_types->aliasField('id') . ' = '. $UserIdentitiesTable->aliasField('identity_type_id')
                 ]
             )
-
-               // Start POCOR-6887
+            
+            // Start POCOR-6887
             ->where([$where,
                 'AND' => [
                     'OR' => [
@@ -191,6 +204,7 @@ class InstitutionPositionsTable extends AppTable
 
 		$query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
         {
+        // echo "<pre>"; print_r($results); die();
             return $results->map(function ($row)
             {
                 $row['staff_user_full_name'] = $row['staff_firstname'] . ' ' .  $row['staff_lastname'];
@@ -399,29 +413,29 @@ class InstitutionPositionsTable extends AppTable
         //End POCOR-6887
 
         $newFields[] = [
-            'key' => 'InstitutionStaff.start_date',
-            'field' => 'staff_start_date',
+            'key' => 'InstitutionStaffs_start_date',
+            'field' => 'InstitutionStaffs_start_date',
             'type' => 'string',
             'label' => __('Start Date')
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionStaff.end_date',
-            'field' => 'staff_end_date',
+            'key' => 'InstitutionStaffs_end_date',
+            'field' => 'InstitutionStaffs_end_date',
             'type' => 'string',
             'label' => __('End Date')
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionStaff.FTE',
-            'field' => 'staff_fte',
+            'key' => 'InstitutionStaffs_FTE',
+            'field' => 'InstitutionStaffs_FTE',
             'type' => 'string',
             'label' => __('FTE')
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionStaff.StaffPositionStatus',
-            'field' => 'staff_status',
+            'key' => 'StaffStatuses_name',
+            'field' => 'StaffStatuses_name',
             'type' => 'string',
             'label' => __('Status')
         ];
@@ -438,7 +452,7 @@ class InstitutionPositionsTable extends AppTable
                 'staff_start_date' => 'InstitutionStaff.start_date',
                 'staff_end_date' => 'InstitutionStaff.end_date',
                 'staff_fte' => 'InstitutionStaff.FTE',
-                'staff_status' => 'StaffStatuses.name'
+               // 'staff_status' => 'StaffStatuses.name'
             ])//Start POCOR-6887
             ->leftJoinWith('InstitutionStaff', function ($q) {
                 return $q->select([
@@ -472,12 +486,12 @@ class InstitutionPositionsTable extends AppTable
                     'Users.last_name',
                     'Users.preferred_name'
                 ]);
-            })
-            ->leftJoinWith('InstitutionStaff.StaffStatuses', function ($q) {
-                return $q->select([
-                    'StaffStatuses.name'
-                ]);
             });
+            // ->leftJoinWith('InstitutionStaff.StaffStatuses', function ($q) {
+            //     return $q->select([
+            //         //'StaffStatuses.name'
+            //     ]);
+            // });
 
         return $query;
     }
