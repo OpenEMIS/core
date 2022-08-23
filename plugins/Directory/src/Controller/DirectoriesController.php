@@ -413,7 +413,7 @@ class DirectoriesController extends AppController
     private function attachAngularModulesForDirectory()
     {
         $action = $this->request->pass[0];
-        if($action == ''){
+        if($action == '' || $this->request->params['action'] != 'Directories'){
             $action = $this->request->params['action'];
         }
         switch ($action) {
