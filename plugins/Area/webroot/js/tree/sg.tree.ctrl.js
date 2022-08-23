@@ -112,6 +112,16 @@ function SgTreeController($scope, $window, SgTreeSvc) {
                     }
                 }, 1);
             }
+        } else if($window.localStorage.getItem('birthplace_area_id')) {
+            Controller.outputValue = $window.localStorage.getItem('birthplace_area_id');
+            if (Controller.triggerOnChange) {
+                setTimeout(function() {
+                    if (oldValue.length != 0 && Controller.outputValue != null && Controller.outputValue != oldValue[0].id) {
+                        $('#reload').val('changeAreaEducation').click();
+                        return false;
+                    }
+                }, 1);
+            }
         }
     });
 }

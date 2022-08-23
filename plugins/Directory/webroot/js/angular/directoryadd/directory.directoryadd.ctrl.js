@@ -45,6 +45,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         maxDate: new Date(),
         showWeeks: false
     };
+    scope.addressAreaId = null;
+    scope.birthplaceAreaId = null;
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -972,6 +974,24 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         scope.selectedUserData.addressArea = {name: selectedData.area_name};
         scope.selectedUserData.birthplaceArea = {name: selectedData.birth_area_name};
         scope.selectedUserData.userId = selectedData.id;
+        if($window.localStorage.getItem('birthplace_area_id')) {
+            $window.localStorage.removeItem('birthplace_area_id')
+        }
+        if($window.localStorage.getItem('address_area_id')) {
+            $window.localStorage.removeItem('address_area_id')
+        }
+        $window.localStorage.setItem('birthplace_area_id', selectedData.birthplace_area_id);
+        $window.localStorage.setItem('address_area_id', selectedData.address_area_id);
+        if($window.localStorage.getItem('birthplace_area')) {
+            $window.localStorage.removeItem('birthplace_area')
+        }
+        if($window.localStorage.getItem('address_area')) {
+            $window.localStorage.removeItem('address_area')
+        }
+        $window.localStorage.setItem('birthplace_area', JSON.stringify({id: selectedData.birthplace_area_id, name: selectedData.birth_area_name}));
+        $window.localStorage.setItem('address_area', JSON.stringify({id: selectedData.address_area_id, name: selectedData.area_name}));
+        scope.addressAreaId = selectedData.address_area_id;
+        scope.birthplaceAreaId = selectedData.birthplace_area_id;
     }
 
     scope.setExternalUserData = function(selectedData) {
