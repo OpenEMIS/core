@@ -316,4 +316,10 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    public function onGetDate(Event $event, Entity $entity)
+    {
+        $date = $entity->date;
+        return date_format($date, 'M-d-Y'); //POCOR-6938
+    }
 }
