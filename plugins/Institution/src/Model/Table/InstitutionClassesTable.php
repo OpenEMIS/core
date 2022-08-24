@@ -453,7 +453,14 @@ class InstitutionClassesTable extends ControllerActionTable
                     }
                 }
             }
-
+            /**POCOR-6940 starts - modified condition when bulk student unassigned*/ 
+            else {
+                $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+                $SubjectStudents->deleteAll([
+                    $SubjectStudents->aliasField('institution_class_id') => $entity->id
+                ]);
+            }
+            /**POCOR-6940 ends*/ 
             // POCOR-5436 ->Webhook Feature class (update) -- start
             $bodyData = $this->find('all',
                         [ 'contain' => [
