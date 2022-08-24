@@ -102,11 +102,8 @@ class MealProgrammesTable extends ControllerActionTable
         $result=$this->find('all',['fields'=>'id'])->last();
 
         //START : POCOR-6608
-        //$areaIdsData = $entity['area_id']['_ids'];
-        $areaIdsData = $entity['area_id'];//POCOR-6882
-        if($areaIdsData == 1){
-            $areaIdsData = '-'.$areaIdsData;
-        }
+        $areaIdsData = $entity['area_id']['_ids'];
+        $areaIdsData = $areaIdsData[0];//POCOR-6882
         $record_id=$result->id;
         $institutionIds = $entity->institution_id;
         $institutionIdsData = $institutionIds['_ids'];
@@ -431,11 +428,8 @@ class MealProgrammesTable extends ControllerActionTable
         $MealInstitutionProgrammes->deleteAll($conditions1);
 
 
-       // $areaIdsData = $entity['area_id']['_ids'];
-        $areaIdsData = $entity['area_id'];//POCOR-6882
-        if($areaIdsData == 1){
-            $areaIdsData = '-'.$areaIdsData;
-        }
+        $areaIdsData = $entity['area_id']['_ids'];
+        $areaIdsData = $areaIdsData[0];//POCOR-6882
         $institutionIds = $entity->institution_id;
         $institutionIdsData = $institutionIds['_ids'];
         $institutionData = $InstitutionTable->find()
