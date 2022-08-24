@@ -134,6 +134,10 @@ class StudentsTable extends ControllerActionTable
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'InstitutionStudents' => ['add']
+        ]);
     }
 
     public function implementedEvents()
@@ -906,6 +910,46 @@ class StudentsTable extends ControllerActionTable
 
         return $query;
     }
+
+    		
+    //Start:POCOR-6931	
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)	
+    { 	
+        if ($entity->isNew()) {	
+            $studentCurrentV1 = $this->find('all',['conditions'=>['student_status_id' => $entity->student_status_id, 'student_id'=> $entity->student_id]])->first();	
+            
+            $dobYear =  date('Y', strtotime($entity->date_of_birth));
+            $currentYear =  date('Y', strtotime(date('Y-m-d')));
+
+            $yearDiff = $currentYear - $dobYear;
+            $ConfigItemTable = TableRegistry::get('config_items');	
+            $ConfigItemAgePlus =   $ConfigItemTable->find('all',['conditions' =>['code' => 'admission_age_plus']])->first();	
+            $ConfigItemAgeMinus =   $ConfigItemTable->find('all',['conditions' =>['code' => 'admission_age_minus']])->first();	
+            $EducationGradesTable = TableRegistry::get('education_grades');	
+            $EducationGrades =   $EducationGradesTable->find('all',['conditions' =>['id' => $entity->education_grade_id]])->first();	
+            $maxAge = $EducationGrades->admission_age + $ConfigItemAgePlus->value;	
+            if($EducationGrades->admission_age > $ConfigItemAgeMinus->value){	
+                $minAge = $EducationGrades->admission_age - $ConfigItemAgeMinus->value;	
+            }else{	
+                $minAge = $ConfigItemAgeMinus->value - $EducationGrades->admission_age;	
+            }	
+             	
+            $studentCurrent = $this->find('all',['conditions'=>['student_id'=> $entity->student_id, 'education_grade_id'=> $entity->education_grade_id ]])->first();	
+            if(!empty($studentCurrentV1)){	
+                $response["student_status"][] ="Student is already enrolled.";	
+                $entity->errors($response);	
+                return false;	
+            }elseif( $yearDiff >= $minAge && $yearDiff <= $maxAge ){	
+                $response["student_status"][] ="Student age is out of age range for this education grade.";	
+                $entity->errors($response);	
+                return false;	
+            }else{	
+                return true;	
+            }	
+           	
+        }	
+    }	
+    //End:POCOR-6931
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
