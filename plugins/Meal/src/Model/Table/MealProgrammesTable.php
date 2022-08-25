@@ -47,6 +47,7 @@ class MealProgrammesTable extends ControllerActionTable
         // $this->addBehavior('Area.Areapicker');
         // $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->Institutions = TableRegistry::get('Institution.Institutions');
+        $this->AreaLevels = TableRegistry::get('Area.AreaLevels'); //POCOR-6920
 
     }
 
@@ -70,6 +71,7 @@ class MealProgrammesTable extends ControllerActionTable
 
         $this->field('academic_period_id',['visible' => false]);
         $this->field('area_id',['visible' => false]);
+        $this->field('area_level_id',['visible' => false]); //POCOR-6920
         $this->field('institution_id',['visible' => false]);
         $this->field('code');
         $this->field('name');
@@ -198,6 +200,7 @@ class MealProgrammesTable extends ControllerActionTable
     {
         $typeOptions = $this->MealNutritions->find('list')->toArray();
         $institutionsOptions = $this->Institutions->find('list')->toArray();
+        $AreaLevelsOptions = $this->AreaLevels->find('list')->toArray(); //POCOR-6920
         $this->field('academic_period_id',['select' => false]);
         $this->field('code');
         $this->field('name');
@@ -206,6 +209,15 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('start_date');
         $this->field('end_date');
         $this->field('amount');
+        //POCOR-6920[START]
+        $this->field('area_level_id', [
+            'type' => 'chosenSelect',
+            'attr' => [
+                'label' => __('Area Level')
+            ],
+            'options' => $AreaLevelsOptions
+        ]);
+        //POCOR-6920[END]
         $this->field('meal_nutritions', [
             'type' => 'chosenSelect',
             'attr' => [
@@ -520,6 +532,16 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('start_date');
         $this->field('end_date');
         $this->field('amount');
+        //POCOR-6920[START]
+        $this->field('area_level_id' , [
+            'type' => 'chosenSelect',
+            'source_model' => 'Area.Areas',
+            'attr' => [
+                'label' => __('Area Level')
+            ],
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+        ]);
+        //POCOR-6920[END]
         $this->field('area_administrative_id', [	
             'attr' => [	
                 'label' => __('Area Education')	
@@ -633,7 +655,7 @@ class MealProgrammesTable extends ControllerActionTable
             $this->aliasField('institution_id') => $institutionId])
         ->orWhere([ 
             $this->aliasField('institution_id') => 0 ]);
-    }
+    } 
 
      public function onGetAreaId(Event $event, Entity $entity)
     {
@@ -665,7 +687,7 @@ class MealProgrammesTable extends ControllerActionTable
         }
         return $areaName;
         // return $entity->area_id;;
-    } 
+    }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
@@ -741,10 +763,26 @@ class MealProgrammesTable extends ControllerActionTable
         // END: POCOR-6608
     } 
 
+    /*
+    * Function is get area_level_id
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return $attr
+    * @ticket POCOR-6920
+    */
+
+    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['onChangeReload'] = true;
+        $areaLevelId = isset($request->data) ? $request->data['MealProgrammes']['area_level_id']['_ids'] : 0; 
+        return $attr;
+    }
+
     public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
     {
         // START: POCOR-6608
         $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id']['_ids'] : 0;
+        $areaLevelId = isset($request->data) ? $request->data['MealProgrammes']['area_level_id']['_ids'] : 0; //POCOR-6920
+        
         $flag = 1;
         if(!isset($areaId[1])){
             $flag = 0;
@@ -755,11 +793,25 @@ class MealProgrammesTable extends ControllerActionTable
             $flag = 0;
         }
         $Areas = TableRegistry::get('Area.Areas');
+        //POCOR-6920[START]
+        if(!empty($areaLevelId)){
+            if(count($areaLevelId > 1)){
+                $whereCondition = [
+                    $Areas->aliasField('area_level_id IN') => $areaLevelId
+                ];
+            }else{
+                $whereCondition = [
+                    $Areas->aliasField('area_level_id') => $areaLevelId[0]
+                ];
+            }
+        }
+        //POCOR-6920[END]
         $entity = $attr['entity'];
 
         if ($action == 'add' || $action == 'edit') {
             $areaOptions = $Areas
                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                ->where($whereCondition) // POCOR-6920
                 ->order([$Areas->aliasField('order')]);
 
             $attr['type'] = 'chosenSelect';
