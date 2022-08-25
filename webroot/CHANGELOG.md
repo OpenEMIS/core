@@ -1,3 +1,13 @@
+### [3.75.23] - 2022-08-25
+- Bug Fixed: Report>Students>Enrolment Summary: Changes to Enrolment Summary Report
+- Bug Fixed: Institutions > Performances > Assessments > Class > Reports : Timeout Gateway error
+- Bug Fixed: Report>Institution>Student: Data does not match
+- Bug Fixed: Institutions>Students>Student1: Assessment tab keeps loading
+- Bug Fixed: Report>Institution/Student/Staff: Report is stuck in progress(PHP 7.4)
+- Bug Fixed: Institution>Performance>Report Card: Report card is stuck in progress(PHP 7.4)
+- Bug Fixed: Administration>Profile: Report is stuck in progress(PHP 7.4)
+- Bug Fixed: Institutions>Academic>Classes: Student is unassigned to class but he or she is still assigned to the class subjects
+
 ### [3.75.22] - 2022-08-20
 - Bug Fixed: Administration>Scholarships>Details: Changes to Scholarship
 - Bug Fixed: Institutions > General > Overview: Excel export is empty
