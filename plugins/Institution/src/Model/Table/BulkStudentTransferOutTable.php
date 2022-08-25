@@ -101,7 +101,8 @@ class BulkStudentTransferOutTable extends ControllerActionTable
             'StudentTransferIn'=> function ($q) use ($superAdmin, $userId, $institutionId) {
                 $q->where(['StudentTransferIn.previous_institution_id' => $institutionId])
                     ->contain(['Users', 'Assignees', 'AcademicPeriods', 'EducationGrades', 'InstitutionClasses', 'Statuses','PreviousInstitutions']);
-                if ($superAdmin) {
+                /**POCOR-6946 - "if" condition has been updated to fetch list of students*/ 
+                if ($this->AccessControl->check(['Institutions', 'StudentTransferOut', 'edit'])) {
                     return $q;
                 } else {
                     return $q->where(['StudentTransferIn.assignee_id'=> $userId]);
