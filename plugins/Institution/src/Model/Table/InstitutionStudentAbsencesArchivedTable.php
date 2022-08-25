@@ -316,10 +316,16 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-
+    
+    // POCOR-6938
     public function onGetDate(Event $event, Entity $entity)
     {
-        $date = $entity->date;
-        return date_format($date, 'M-d-Y'); //POCOR-6938
+        $student_id = $entity->student_id;
+
+        $studentAbsenceDays = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        $result = $studentAbsenceDays->find()->select(['selectdate'=>$studentAbsenceDays->aliasField('date')])
+        ->where([$studentAbsenceDays->aliasField('student_id')=>$student_id])->first();
+        $getdate = $result->selectdate;
+        return $getdate;
     }
 }
