@@ -4907,6 +4907,32 @@ class InstitutionsController extends AppController
                         $nationalitiesTbl->aliasField('name') => $nationalityName,
                     ])
                     ->first();
+                
+                if(empty($nationalities)){
+                    $orderNationalities = $nationalitiesTbl->find()
+                        ->order([$nationalitiesTbl->aliasField('order DESC')])
+                        ->first();
+                    
+                    $entityNationality = [
+                        'name' => $nationalityName,
+                        'order' => !empty($orderNationalities->order) ? $orderNationalities->order + 1 : 0,
+                        'visible' => 1,
+                        'editable' => 1,
+                        'identity_type_id' => null,
+                        'default' => 0,
+                        'international_code' => '',
+                        'national_code' => '',
+                        'external_validation' => 0,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in nationalities table if doesn't exist in table
+                    $entityNationalityData = $nationalitiesTbl->newEntity($entityNationality);
+                    $NationalitiesResult = $nationalitiesTbl->save($entityNationalityData);
+                    if($NationalitiesResult){
+                        $nationalities->id = $NationalitiesResult->id;
+                    } 
+                }
             }
             //transfer student in other institution
             if($isDiffSchool == 1){
@@ -4967,7 +4993,7 @@ class InstitutionsController extends AppController
                     'preferred_name' => $preferredName,
                     'gender_id' => $genderId,
                     'date_of_birth' => $dateOfBirth,
-                    'nationality_id' => !empty($nationalities) ? $nationalities->id : '',
+                    'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
                     'preferred_language' => $pref_lang->value,
                     'username' => $username,
                     'password' => $password,
@@ -4991,8 +5017,8 @@ class InstitutionsController extends AppController
                 }     
                 if($SecurityUserResult){
                     $user_record_id=$SecurityUserResult->id;
-                    if(!empty($nationalityId) && !empty($nationalityName)){
-                        if(!empty($nationalities)){
+                    if(!empty($nationalityId) || !empty($nationalityName)){
+                        if(!empty($nationalities->id)){
                             $UserNationalities = TableRegistry::get('user_nationalities');
                             $primaryKey = $UserNationalities->primaryKey();
                             $hashString = [];
@@ -5015,11 +5041,11 @@ class InstitutionsController extends AppController
                             ];
                             //save in user_nationalities table
                             $entityNationalData = $UserNationalities->newEntity($entityNationalData);
-                            $UserNationalitiesResult = $UserNationalities->save($entityNationalData);    
+                            $UserNationalitiesResult = $UserNationalities->save($entityNationalData); 
                         }
                     }
 
-                    if(!empty($nationalities) && !empty($identityTypeId) && !empty($identityNumber)){
+                    if(!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)){
                         $identityTypesTbl = TableRegistry::get('identity_types');
                         $identityTypes = $identityTypesTbl->find()
                             ->where([
@@ -5307,6 +5333,31 @@ class InstitutionsController extends AppController
                         $nationalitiesTbl->aliasField('name') => $nationalityName,
                     ])
                     ->first();
+                if(empty($nationalities)){
+                    $orderNationalities = $nationalitiesTbl->find()
+                        ->order([$nationalitiesTbl->aliasField('order DESC')])
+                        ->first();
+                    
+                    $entityNationality = [
+                        'name' => $nationalityName,
+                        'order' => !empty($orderNationalities->order) ? $orderNationalities->order + 1 : 0,
+                        'visible' => 1,
+                        'editable' => 1,
+                        'identity_type_id' => null,
+                        'default' => 0,
+                        'international_code' => '',
+                        'national_code' => '',
+                        'external_validation' => 0,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in nationalities table if doesn't exist in table
+                    $entityNationalityData = $nationalitiesTbl->newEntity($entityNationality);
+                    $NationalitiesResult = $nationalitiesTbl->save($entityNationalityData);
+                    if($NationalitiesResult){
+                        $nationalities->id = $NationalitiesResult->id;
+                    } 
+                }
             }
             if($isSameSchool == 1){
                 if(!empty($institutionId)){
@@ -5456,7 +5507,7 @@ class InstitutionsController extends AppController
                     'preferred_name' => $preferredName,
                     'gender_id' => $genderId,
                     'date_of_birth' => $dateOfBirth,
-                    'nationality_id' => !empty($nationalities) ? $nationalities->id : '',
+                    'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
                     'preferred_language' => $pref_lang->value,
                     'username' => $username,
                     'password' => $password,
@@ -5480,8 +5531,8 @@ class InstitutionsController extends AppController
                 }
                 if($SecurityUserResult){
                     $user_record_id=$SecurityUserResult->id;
-                    if(!empty($nationalityId) && !empty($nationalityName)){
-                        if(!empty($nationalities)){
+                    if(!empty($nationalityId) || !empty($nationalityName)){
+                        if(!empty($nationalities->id)){
                             $UserNationalities = TableRegistry::get('user_nationalities');
                             $primaryKey = $UserNationalities->primaryKey();
                             $hashString = [];
@@ -5508,7 +5559,7 @@ class InstitutionsController extends AppController
                         }
                     }
 
-                    if(!empty($nationalities) && !empty($identityTypeId) && !empty($identityNumber)){
+                    if(!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)){
                         $identityTypesTbl = TableRegistry::get('identity_types');
                         $identityTypes = $identityTypesTbl->find()
                             ->where([
@@ -5706,6 +5757,31 @@ class InstitutionsController extends AppController
                     ->where([
                         $nationalitiesTbl->aliasField('name') => $nationalityName,
                     ])->first();
+                if(empty($nationalities)){
+                    $orderNationalities = $nationalitiesTbl->find()
+                        ->order([$nationalitiesTbl->aliasField('order DESC')])
+                        ->first();
+                    
+                    $entityNationality = [
+                        'name' => $nationalityName,
+                        'order' => !empty($orderNationalities->order) ? $orderNationalities->order + 1 : 0,
+                        'visible' => 1,
+                        'editable' => 1,
+                        'identity_type_id' => null,
+                        'default' => 0,
+                        'international_code' => '',
+                        'national_code' => '',
+                        'external_validation' => 0,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in nationalities table if doesn't exist in table
+                    $entityNationalityData = $nationalitiesTbl->newEntity($entityNationality);
+                    $NationalitiesResult = $nationalitiesTbl->save($entityNationalityData);
+                    if($NationalitiesResult){
+                        $nationalities->id = $NationalitiesResult->id;
+                    } 
+                }
             }
             
             $SecurityUsers = TableRegistry::get('security_users');
@@ -5718,7 +5794,7 @@ class InstitutionsController extends AppController
                 'preferred_name' => $preferredName,
                 'gender_id' => $genderId,
                 'date_of_birth' => $dateOfBirth,
-                'nationality_id' => !empty($nationalities) ? $nationalities->id : '',
+                'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
                 'preferred_language' => $pref_lang->value,
                 'username' => $username,
                 'password' => $password,
@@ -5742,8 +5818,8 @@ class InstitutionsController extends AppController
             }
             if($SecurityUserResult){
                 $user_record_id=$SecurityUserResult->id;
-                if(!empty($nationalityId) && !empty($nationalityName)){
-                    if(!empty($nationalities)){
+                if(!empty($nationalityId) || !empty($nationalityName)){
+                    if(!empty($nationalities->id)){
                         $UserNationalities = TableRegistry::get('user_nationalities');
                         $primaryKey = $UserNationalities->primaryKey();
                         $hashString = [];
@@ -5770,7 +5846,7 @@ class InstitutionsController extends AppController
                     }
                 }
 
-                if(!empty($nationalities) && !empty($identityTypeId) && !empty($identityNumber)){
+                if(!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)){
                     $identityTypesTbl = TableRegistry::get('identity_types');
                     $identityTypes = $identityTypesTbl->find()
                         ->where([
@@ -5887,6 +5963,31 @@ class InstitutionsController extends AppController
                         $nationalitiesTbl->aliasField('name') => $nationalityName,
                     ])
                     ->first();
+                if(empty($nationalities)){
+                    $orderNationalities = $nationalitiesTbl->find()
+                        ->order([$nationalitiesTbl->aliasField('order DESC')])
+                        ->first();
+                    
+                    $entityNationality = [
+                        'name' => $nationalityName,
+                        'order' => !empty($orderNationalities->order) ? $orderNationalities->order + 1 : 0,
+                        'visible' => 1,
+                        'editable' => 1,
+                        'identity_type_id' => null,
+                        'default' => 0,
+                        'international_code' => '',
+                        'national_code' => '',
+                        'external_validation' => 0,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in nationalities table if doesn't exist in table
+                    $entityNationalityData = $nationalitiesTbl->newEntity($entityNationality);
+                    $NationalitiesResult = $nationalitiesTbl->save($entityNationalityData);
+                    if($NationalitiesResult){
+                        $nationalities->id = $NationalitiesResult->id;
+                    } 
+                }
             }
         
             $StudVal = $StaffVal= $GaurdianVal = 0;        
@@ -5908,7 +6009,7 @@ class InstitutionsController extends AppController
                 'preferred_name' => $preferredName,
                 'gender_id' => $genderId,
                 'date_of_birth' => $dateOfBirth,
-                'nationality_id' => !empty($nationalities) ? $nationalities->id : '',
+                'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
                 'preferred_language' => $pref_lang->value,
                 'username' => $username,
                 'password' => $password,
@@ -5935,8 +6036,8 @@ class InstitutionsController extends AppController
 
             if($SecurityUserResult){
                 $user_record_id=$SecurityUserResult->id;
-                if(!empty($nationalityId) && !empty($nationalityName)){
-                    if(!empty($nationalities)){
+                if(!empty($nationalityId) || !empty($nationalityName)){
+                    if(!empty($nationalities->id)){
                         $UserNationalities = TableRegistry::get('user_nationalities');
                         $primaryKey = $UserNationalities->primaryKey();
                         $hashString = [];
@@ -5963,7 +6064,7 @@ class InstitutionsController extends AppController
                     }
                 }
 
-                if(!empty($nationalities) && !empty($identityTypeId) && !empty($identityNumber)){
+                if(!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)){
                     $identityTypesTbl = TableRegistry::get('identity_types');
                     $identityTypes = $identityTypesTbl->find()
                         ->where([
