@@ -77,6 +77,7 @@ class InstitutionMapsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($extra['toolbarButtons']['back']['url']['action'] == 'InstitutionMaps') {
+            $extra['toolbarButtons']['back']['type'] = 'hidden'; //POCOR-6943
             //hiding all unwanted data
             $this->field('security_group_id', ['visible' => false]);
             $this->field('name', ['visible' => false]);
