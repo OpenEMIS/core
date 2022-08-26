@@ -1239,15 +1239,18 @@ class DirectoriesTable extends ControllerActionTable
         $studentInstitutions = [];
         if ($isStudent) {
             $InstitutionStudentTable = TableRegistry::get('Institution.Students');
+            /**POCOR-6902 starts - modified query to fetch correct institution name*/ 
             $studentInstitutions = $InstitutionStudentTable->find()
-                ->matching('StudentStatuses')
+                ->matching('StudentStatuses', function ($q) {
+                    return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                })
                 ->matching('Institutions')
                 ->where([
-                    $InstitutionStudentTable->aliasField('student_id') => $userId,
+                    $InstitutionStudentTable->aliasField('student_id') => $userId
                 ])
                 ->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name', 'student_status_name' => 'StudentStatuses.name'])
-                ->order([$InstitutionStudentTable->aliasField('start_date') => 'DESC'])
                 ->first();
+            /**POCOR-6902 ends*/
 
             $value = '';
             $name = '';
