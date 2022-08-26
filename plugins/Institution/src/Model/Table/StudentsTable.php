@@ -927,7 +927,7 @@ class StudentsTable extends ControllerActionTable
             $ConfigItemAgeMinus =   $ConfigItemTable->find('all',['conditions' =>['code' => 'admission_age_minus']])->first();	
             $EducationGradesTable = TableRegistry::get('education_grades');	
             $EducationGrades =   $EducationGradesTable->find('all',['conditions' =>['id' => $entity->education_grade_id]])->first();	
-            $maxAge = $EducationGrades->admission_age + $ConfigItemAgePlus->value;	
+            $maxAge = ($EducationGrades->admission_age + $ConfigItemAgePlus->value);	
             if($EducationGrades->admission_age > $ConfigItemAgeMinus->value){	
                 $minAge = $EducationGrades->admission_age - $ConfigItemAgeMinus->value;	
             }else{	
@@ -936,15 +936,17 @@ class StudentsTable extends ControllerActionTable
              	
             $studentCurrent = $this->find('all',['conditions'=>['student_id'=> $entity->student_id, 'education_grade_id'=> $entity->education_grade_id ]])->first();	
             if(!empty($studentCurrentV1)){	
-                $response["student_status"][] ="Student is already enrolled.";	
-                $entity->errors($response);	
-                return false;	
-            }elseif( $yearDiff >= $minAge && $yearDiff <= $maxAge ){	
-                $response["student_status"][] ="Student age is out of age range for this education grade.";	
+                if($entity->student_status_id == 1){
+                    $response["message"][] ="Student is already enrolled.";	
+                    $entity->errors($response);	
+                    return false;	
+                }
+            }elseif($yearDiff > $maxAge || $yearDiff < $minAge ){	
+                $response["message"][] ="Student age is out of age range for this education grade.";	
                 $entity->errors($response);	
                 return false;	
             }else{	
-                return true;	
+                
             }	
            	
         }	
