@@ -121,7 +121,7 @@ class BodyMassesTable extends AppTable
         if ($institutionId != 0) {
             $conditions['Institutions.id'] = $institutionId;
         }
-        if ($areaId != -1) {
+        if ($areaId != -1 && $areaId != '') { //POCOR-6944
             $conditions['Institutions.area_id'] = $areaId;
         }
         
