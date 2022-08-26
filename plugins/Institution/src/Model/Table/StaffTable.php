@@ -73,7 +73,7 @@ class StaffTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('User.MoodleCreateUser');
 
-        $this->addBehavior('Excel', [
+        $this->addBehavior('ContactExcel', [  //POCOR-6898 change Excel to ContactExcel Behaviour
             'excludes' => ['start_year', 'end_year', 'security_group_user_id'],
             'pages' => ['index'],
             'autoFields' => false
