@@ -271,8 +271,7 @@ class ClassesProfilesTable extends ControllerActionTable
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         //End
-		
-        $ProfileTemplates = TableRegistry::get('class_profile_templates');
+		$ProfileTemplates = TableRegistry::get('class_profile_templates');
         // Report Cards filter
         $reportCardOptions = [];
 		$reportCardOptions = $ProfileTemplates->find('list')
@@ -285,8 +284,7 @@ class ClassesProfilesTable extends ControllerActionTable
         $selectedReportCard = !is_null($this->request->query('class_profile_template_id')) ? $this->request->query('class_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//End
-	
-        // Area Level filter
+	    // Area Level filter
         $AreaLevel = TableRegistry::get('Area.AreaLevels');
         $areaLevelOptions = [];
         $areaLevelOptions = $AreaLevel->find('list')->toArray();
@@ -294,7 +292,6 @@ class ClassesProfilesTable extends ControllerActionTable
         $selectedAreaLevel = !is_null($this->request->query('area_level_id')) ? $this->request->query('area_level_id') : -1;
         $this->controller->set(compact('areaLevelOptions', 'selectedAreaLevel'));
         //End
-        
         // Area filter
         $Areas = TableRegistry::get('Area.Areas');
         $areaOptions = [];
@@ -315,7 +312,6 @@ class ClassesProfilesTable extends ControllerActionTable
         foreach($areaOptions AS $key => $areaOptionsData){
             $areaKey[$key] = $key;
         }
-        
         // Institution filter
         $Institutions = TableRegistry::get('Institutions');
         $institutionOptions = [];
@@ -323,23 +319,30 @@ class ClassesProfilesTable extends ControllerActionTable
             $institutionOptions = $Institutions->find('list')
                                 ->where([
                                     $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
-                                ])
-                                ->toArray();
-        }
-        else{
+                                ])->toArray();
+        }else{
+            //POCOR-6822 Anubhav's code starts
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }//POCOR-6822 Anubhav's code ends
+
             $institutionOptions = $Institutions->find('list')
-                                ->where([
-                                    $Institutions->aliasField('area_id') => $selectedArea,
+                                ->where([ $Institutions->aliasField('area_id IN') => $allselectedAreas,
                                     $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
-                                ])
-                                ->toArray();
+                                ])->toArray();
         }
+
         if(!empty($institutionOptions)){
             foreach($institutionOptions AS $institutionOptionsDataKey => $institutionOptionsData){
                 $institutionOptionsKey[$institutionOptionsDataKey] = $institutionOptionsDataKey;
             }
         }
-       
+        
         $institutionOptions = ['-1' => '-- '.__('All Institution').' --'] + $institutionOptions;
         $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
@@ -350,7 +353,6 @@ class ClassesProfilesTable extends ControllerActionTable
         if(!empty($institutionOptionsKey)){
             $where[$this->aliasField('id IN ')] = $institutionOptionsKey;
         } 
-        
         //End
         $InstitutionClasses = TableRegistry::get('institution_classes');
         $query
@@ -392,6 +394,20 @@ class ClassesProfilesTable extends ControllerActionTable
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
+    }
+
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                            ->where([
+                                $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+        foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
