@@ -273,7 +273,8 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                             $params['institution_id'] = $institutionId;
                         }
                     }
-                    $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+                    // $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params); //POCOR-6923
+                    $assigneeOptions = ['-1' => __('Auto Assign')];
                 }
                 $attr['type'] = 'select';
                 $attr['options'] = $assigneeOptions;
