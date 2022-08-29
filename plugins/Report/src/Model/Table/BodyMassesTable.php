@@ -121,8 +121,44 @@ class BodyMassesTable extends AppTable
         if ($institutionId != 0) {
             $conditions['Institutions.id'] = $institutionId;
         }
-        if ($areaId != -1 && $areaId != '') { //POCOR-6944
-            $conditions['Institutions.area_id'] = $areaId;
+        if ($areaId != -1 && $areaId != '') {
+            $areas = TableRegistry::get('Area.Areas');
+            $parentIdF = $areas->find()->select(['id'=>$areas->aliasField('id')])
+                ->where([$areas->aliasField('id')=>$areaId]);
+            $flevelO =[];
+            if($parentIdF!=null ){
+                foreach($parentIdF as $val){
+                    $flevelO[] = $val['id'];
+                }
+            }   
+
+            $parentIdS = $areas->find()->select(['id'=>$areas->aliasField('id')])
+                ->where([$areas->aliasField('parent_id IN')=>$flevelO]);
+            $flevelT =[];
+            if($parentIdS!=null ){
+                foreach($parentIdS as $val){
+                    $flevelT[] = $val['id'];
+                }
+            }
+            $parentIdT = $areas->find()->select(['id'=>$areas->aliasField('id')])
+                ->where([$areas->aliasField('parent_id IN')=>$flevelT]);
+            $flevelTT=[];
+            if($parentIdT!=null ){
+                foreach($parentIdT as $val){
+                    $flevelTT[] = $val['id'];
+                }
+            }
+            $parentIdF = $areas->find()->select(['id'=>$areas->aliasField('id')])
+                ->where([$areas->aliasField('parent_id IN')=>$flevelTT]);
+            $flevelF=[];
+            if($parentIdF!=null ){
+                foreach($parentIdF as $val){
+                    $flevelF[] = $val['id'];
+                }
+            }
+            $areaId =  array_merge($flevelO, $flevelT,$flevelTT,$flevelF);
+            //$conditions['Institutions.area_id'] = $areaId;
+            $conditions['Institutions.area_id IN'] = $areaId;
         }
         
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;  
@@ -412,4 +448,5 @@ class BodyMassesTable extends AppTable
 
         return implode(' ', $studentName);
     }
+
 }
