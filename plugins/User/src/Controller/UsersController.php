@@ -438,18 +438,24 @@ class UsersController extends AppController
 
     public function logout($username = null)
     {
-        if ($this->request->is('get')) {
+        //if ($this->request->is('get')) {
             $username = empty($username) ? $this->Auth->user()['username'] : $username;
+            //POCOR-6953 start
+            $body = array(); 
+            $body = [
+                "username" => $username,
+            ];
+            //POCOR-6953 end
             $SecurityUserSessions = TableRegistry::get('SSO.SecurityUserSessions');
             $SecurityUserSessions->deleteEntries($username);
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
-                $Webhooks->triggerShell('logout', ['username' => $username]);
+                $Webhooks->triggerShell('logout', ['username' => $username], $body);
             }
             return $this->redirect($this->Auth->logout());
-        } else {
+        /*} else {
             throw new ForbiddenException();
-        }
+        }*/
     }
 
     public function implementedEvents()
