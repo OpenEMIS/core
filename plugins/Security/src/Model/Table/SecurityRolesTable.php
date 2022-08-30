@@ -55,7 +55,7 @@ class SecurityRolesTable extends ControllerActionTable
                 'filter' => 'security_group_id'
             ]);
         }
-
+        $this->SecurityRolesTable = TableRegistry::get('Security.SecurityRolesTable');//POCOR-6878
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Permissions' => ['view', 'edit']
         ]);
@@ -75,9 +75,9 @@ class SecurityRolesTable extends ControllerActionTable
             ];
           
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
+            //if ($this->Auth->user()) { // creating issue while adding new permission //POCOR-6878
                 $Webhooks->triggerShell('role_create', [], $createRole);
-            }
+            //}
         }
 
         // webhook create role ends
