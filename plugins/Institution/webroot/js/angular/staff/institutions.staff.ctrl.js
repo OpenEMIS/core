@@ -259,7 +259,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         InstitutionsStaffSvc.getUniqueOpenEmisId()
             .then(function(response) {
                 StaffController.selectedStaffData.openemis_no = response;
-                StaffController.selectedStaffData.username = response;
+                StaffController.selectedStaffData.username = angular.copy(StaffController.selectedStaffData.openemis_no);
                 UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -1151,7 +1151,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.birthplaceArea.name = selectedData.birth_area_name;
         StaffController.selectedStaffData.currentlyAssignedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.institution_name;
         StaffController.selectedStaffData.requestedBy = selectedData.institution_code + ' - ' + selectedData.current_enrol_institution_name;
-        StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
+        StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
     }
 
     function setStaffDataFromExternalSearchData(selectedData) {
@@ -1176,7 +1176,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.nationality_name = selectedData.nationality;
         StaffController.selectedStaffData.address = selectedData.address;
         StaffController.selectedStaffData.postalCode = selectedData.postal_code;
-        StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
+        StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
     }
 
     function initGrid() {
