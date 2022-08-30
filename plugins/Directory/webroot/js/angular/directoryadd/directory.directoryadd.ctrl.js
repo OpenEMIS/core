@@ -103,11 +103,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             .then(function(response) {
             var username = scope.selectedUserData.username;
             if(username != scope.selectedUserData.openemis_no && (username == '' || typeof username == 'undefined')){
-                scope.selectedUserData.username = scope.selectedUserData.openemis_no;
+                scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
                 scope.selectedUserData.openemis_no = scope.selectedUserData.openemis_no;
             } else{
                 if(username == scope.selectedUserData.openemis_no){
-                    scope.selectedUserData.username = response;
+                    scope.selectedUserData.username = angular.copy(response);
                 }
                 scope.selectedUserData.openemis_no = response;
             }
@@ -965,7 +965,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
         scope.selectedUserData.identity_type_name = selectedData.identity_type;
         scope.selectedUserData.identity_number = selectedData.identity_number;
-        scope.selectedUserData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
+        scope.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
         scope.selectedUserData.password = selectedData.password;
         scope.selectedUserData.address = selectedData.address;
         scope.selectedUserData.postalCode = selectedData.postal_code;
@@ -1010,7 +1010,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
         scope.selectedUserData.identity_type_name = selectedData.identity_type;
         scope.selectedUserData.identity_number = selectedData.identity_number;
-        scope.selectedUserData.username = selectedData.username ? selectedData.username : selectedData.openemis_no;
+        scope.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
         scope.selectedUserData.password = selectedData.password;
         scope.selectedUserData.address = selectedData.address;
         scope.selectedUserData.postalCode = selectedData.postal_code;
