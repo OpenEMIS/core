@@ -1,3 +1,10 @@
+### [3.75.24] - 2022-08-30
+- Bug Fixed: Implement database foreign keys for OpenEMIS Core-Issues raised 2
+- Bug Fixed: Directory>Student: Student is showing the wrong institution
+- Bug Fixed: Institutions>Students>Transfer: Assignee option is not accurate
+- Bug Fixed: Institution > General > Map: Back button should be removed
+- Bug Fixed: Institutions>Students>Bulk Transfer: Students are not showing
+
 ### [3.75.23] - 2022-08-25
 - Bug Fixed: Report>Students>Enrolment Summary: Changes to Enrolment Summary Report
 - Bug Fixed: Institutions > Performances > Assessments > Class > Reports : Timeout Gateway error
