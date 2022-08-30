@@ -103,15 +103,16 @@ class MealProgrammesTable extends ControllerActionTable
 
         //START : POCOR-6608
         $areaIdsData = $entity['area_id']['_ids'];
+        $areaIdsData = $areaIdsData[0];//POCOR-6882
         $record_id=$result->id;
         $institutionIds = $entity->institution_id;
         $institutionIdsData = $institutionIds['_ids'];
         $institutionData = $InstitutionTable->find()
-			->select([
-				$InstitutionTable->aliasField('id'),
-			])
-			->where($where)
-			->toArray();
+            ->select([
+                $InstitutionTable->aliasField('id'),
+            ])
+            ->where($where)
+            ->toArray();
 
         if($institutionIdsData[0] == 0){
             foreach ($institutionData as $institution) {
@@ -119,6 +120,7 @@ class MealProgrammesTable extends ControllerActionTable
                     $data = $MealInstitutionProgrammes->newEntity([
                         'meal_programme_id' => $record_id,
                         'institution_id' => $institution->id,
+                        'area_id'=> $areaIdsData,
                         'created_user_id' => 2
                     ]);
         
@@ -427,20 +429,22 @@ class MealProgrammesTable extends ControllerActionTable
 
 
         $areaIdsData = $entity['area_id']['_ids'];
+        $areaIdsData = $areaIdsData[0];//POCOR-6882
         $institutionIds = $entity->institution_id;
         $institutionIdsData = $institutionIds['_ids'];
         $institutionData = $InstitutionTable->find()
-			->select([
-				$InstitutionTable->aliasField('id'),
-			])
-			->where($where)
-			->toArray();
+            ->select([
+                $InstitutionTable->aliasField('id'),
+            ])
+            ->where($where)
+            ->toArray();
         if($institutionIdsData[0] == 0){
             foreach ($institutionData as $institution) {
                 try{
                     $data = $MealInstitutionProgrammes->newEntity([
                         'meal_programme_id' => $extra['MealProgrammes']['id'],
                         'institution_id' => $institution->id,
+                        'area_id' => $areaIdsData,
                         'created_user_id' => 2
                     ]);
         
@@ -520,11 +524,11 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('start_date');
         $this->field('end_date');
         $this->field('amount');
-        $this->field('area_administrative_id', [	
-            'attr' => [	
-                'label' => __('Area Education')	
-            ],	
-            'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]	
+        $this->field('area_administrative_id', [    
+            'attr' => [ 
+                'label' => __('Area Education') 
+            ],  
+            'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true] 
         ]);
         $this->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
         $this->field('institution_id', [
