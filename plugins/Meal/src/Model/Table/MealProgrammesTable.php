@@ -47,7 +47,7 @@ class MealProgrammesTable extends ControllerActionTable
         // $this->addBehavior('Area.Areapicker');
         // $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->Institutions = TableRegistry::get('Institution.Institutions');
-        $this->AreaLevels = TableRegistry::get('Area.AreaLevels'); //POCOR-6920
+        // $this->AreaLevels = TableRegistry::get('Area.AreaLevels'); //POCOR-6920
 
     }
 
@@ -71,7 +71,7 @@ class MealProgrammesTable extends ControllerActionTable
 
         $this->field('academic_period_id',['visible' => false]);
         $this->field('area_id',['visible' => false]);
-        $this->field('area_level_id',['visible' => false]); //POCOR-6920
+        // $this->field('area_level_id',['visible' => false]); //POCOR-6920
         $this->field('institution_id',['visible' => false]);
         $this->field('code');
         $this->field('name');
@@ -200,7 +200,7 @@ class MealProgrammesTable extends ControllerActionTable
     {
         $typeOptions = $this->MealNutritions->find('list')->toArray();
         $institutionsOptions = $this->Institutions->find('list')->toArray();
-        $AreaLevelsOptions = $this->AreaLevels->find('list')->toArray(); //POCOR-6920
+        // $AreaLevelsOptions = $this->AreaLevels->find('list')->toArray(); //POCOR-6920
         $this->field('academic_period_id',['select' => false]);
         $this->field('code');
         $this->field('name');
@@ -210,13 +210,13 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('end_date');
         $this->field('amount');
         //POCOR-6920[START]
-        $this->field('area_level_id', [
-            'type' => 'chosenSelect',
-            'attr' => [
-                'label' => __('Area Level')
-            ],
-            'options' => $AreaLevelsOptions
-        ]);
+        // $this->field('area_level_id', [
+        //     'type' => 'chosenSelect',
+        //     'attr' => [
+        //         'label' => __('Area Level')
+        //     ],
+        //     'options' => $AreaLevelsOptions
+        // ]);
         //POCOR-6920[END]
         $this->field('meal_nutritions', [
             'type' => 'chosenSelect',
@@ -533,14 +533,14 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('end_date');
         $this->field('amount');
         //POCOR-6920[START]
-        $this->field('area_level_id' , [
-            'type' => 'chosenSelect',
-            'source_model' => 'Area.Areas',
-            'attr' => [
-                'label' => __('Area Level')
-            ],
-            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
-        ]);
+        // $this->field('area_level_id' , [
+        //     'type' => 'chosenSelect',
+        //     'source_model' => 'Area.Areas',
+        //     'attr' => [
+        //         'label' => __('Area Level')
+        //     ],
+        //     'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+        // ]);
         //POCOR-6920[END]
         $this->field('area_administrative_id', [	
             'attr' => [	
@@ -770,18 +770,18 @@ class MealProgrammesTable extends ControllerActionTable
     * @ticket POCOR-6920
     */
 
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
-    {
-        $attr['onChangeReload'] = true;
-        $areaLevelId = isset($request->data) ? $request->data['MealProgrammes']['area_level_id']['_ids'] : 0; 
-        return $attr;
-    }
+    // public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
+    // {
+    //     $attr['onChangeReload'] = true;
+    //     $areaLevelId = isset($request->data) ? $request->data['MealProgrammes']['area_level_id']['_ids'] : 0; 
+    //     return $attr;
+    // }
 
     public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
     {
         // START: POCOR-6608
         $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id']['_ids'] : 0;
-        $areaLevelId = isset($request->data) ? $request->data['MealProgrammes']['area_level_id']['_ids'] : 0; //POCOR-6920
+        // $areaLevelId = isset($request->data) ? $request->data['MealProgrammes']['area_level_id']['_ids'] : 0; //POCOR-6920
         
         $flag = 1;
         if(!isset($areaId[1])){
@@ -794,24 +794,24 @@ class MealProgrammesTable extends ControllerActionTable
         }
         $Areas = TableRegistry::get('Area.Areas');
         //POCOR-6920[START]
-        if(!empty($areaLevelId)){
-            if(count($areaLevelId > 1)){
-                $whereCondition = [
-                    $Areas->aliasField('area_level_id IN') => $areaLevelId
-                ];
-            }else{
-                $whereCondition = [
-                    $Areas->aliasField('area_level_id') => $areaLevelId[0]
-                ];
-            }
-        }
+        // if(!empty($areaLevelId)){
+        //     if(count($areaLevelId > 1)){
+        //         $whereCondition = [
+        //             $Areas->aliasField('area_level_id IN') => $areaLevelId
+        //         ];
+        //     }else{
+        //         $whereCondition = [
+        //             $Areas->aliasField('area_level_id') => $areaLevelId[0]
+        //         ];
+        //     }
+        // }
         //POCOR-6920[END]
         $entity = $attr['entity'];
 
         if ($action == 'add' || $action == 'edit') {
             $areaOptions = $Areas
                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-                ->where($whereCondition) // POCOR-6920
+                // ->where($whereCondition) // POCOR-6920
                 ->order([$Areas->aliasField('order')]);
 
             $attr['type'] = 'chosenSelect';
@@ -904,7 +904,53 @@ class MealProgrammesTable extends ControllerActionTable
                 }else{
                     $areaId = array_unique($AreaDataArr);
                 }
-            }else{
+            }elseif($action == 'add'){
+                $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id']['_ids'] : 0;
+                $string_version = implode(',', $areaId);
+                $AreaT = TableRegistry::get('areas');                    
+                //Level-1
+                $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
+                $childArea =[];
+                $childAreaMain = [];
+                $childArea3 = [];
+                $childArea4 = [];
+                foreach($AreaData as $kkk =>$AreaData11 ){
+                    $childArea[$kkk] = $AreaData11->id;
+                }
+                //level-2
+                foreach($childArea as $kyy =>$AreaDatal2 ){ 
+                    $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
+                    foreach($AreaDatas as $ky =>$AreaDatal22 ){
+                        $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
+                    }
+                }
+                //level-3
+                if(!empty($childAreaMain)){
+                    foreach($childAreaMain as $kyy =>$AreaDatal3 ){ 
+                        $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
+                        foreach($AreaDatass as $ky =>$AreaDatal222 ){
+                            $childArea3[$kyy.$ky] = $AreaDatal222->id;
+                        }
+                    }
+                }
+                
+                //level-4
+                if(!empty($childAreaMain)){
+                    foreach($childArea3 as $kyy =>$AreaDatal4 ){
+                        $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
+                        foreach($AreaDatasss as $ky =>$AreaDatal44 ){
+                            $childArea4[$kyy.$ky] = $AreaDatal44->id;
+                        }
+                    }
+                }
+                
+                $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
+                array_push($mergeArr,$string_version);
+                $mergeArr = array_unique($mergeArr);
+                $finalIds = implode(',',$mergeArr);
+                $areaId = explode(',',$finalIds);
+          
+            }else  { 
                 $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id']['_ids'] : 0;
                 //POCOR-6903: Start
                 $AreaLevelsTable = TableRegistry::get('Area.AreaLevels');
@@ -950,6 +996,10 @@ class MealProgrammesTable extends ControllerActionTable
                         }
                     }
                 }
+
+
+
+                
                 //POCOR-6903: End
 
                 // if($areaId[0] == 1){
