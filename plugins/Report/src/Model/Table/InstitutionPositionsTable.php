@@ -198,9 +198,9 @@ class InstitutionPositionsTable extends AppTable
             ]) //End POCOR-6887
             ->order(['institution_name', 'position_no']);
        
-        if ($positionFilter == self::POSITION_WITH_STAFF) {
-            $query = $this->onExcelBeforePositionWithStaffQuery($query);
-        }
+        // if ($positionFilter == self::POSITION_WITH_STAFF) {
+        //     $query = $this->onExcelBeforePositionWithStaffQuery($query);
+        // }
 
 		$query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
         {
