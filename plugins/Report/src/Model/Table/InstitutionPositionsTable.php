@@ -151,14 +151,20 @@ class InstitutionPositionsTable extends AppTable
 						'Assignees.openemis_no',
                     ]
                 ]
-            ]);
+            ]);// Start POCOR-6887
 			$join['InstitutionStaffs'] = [
                 'type' => 'left',
                 'table' => 'institution_staff',
                 'conditions' => [
                     'InstitutionStaffs.institution_position_id = ' . $this->aliasField('id'),
+                    'AND' => [
+                        'OR' => [
+                            ['InstitutionStaffs.end_date'.' IS NULL'],
+                            ['InstitutionStaffs.end_date'.' > DATE(NOW())']
+                        ]
+                    ]
                 ],
-            ];
+            ];// End POCOR-6887
             $join['StaffStatuses'] = [
                 'type' => 'left',
                 'table' => 'staff_statuses',
@@ -187,15 +193,7 @@ class InstitutionPositionsTable extends AppTable
                 ]
             )
             
-            // Start POCOR-6887
-            ->where([$where,
-                'AND' => [
-                    'OR' => [
-                        ['InstitutionStaffs.end_date'.' IS NULL'],
-                        ['InstitutionStaffs.end_date'.' > DATE(NOW())']
-                    ]
-                ]
-            ]) //End POCOR-6887
+            ->where([$where])
             ->order(['institution_name', 'position_no']);
        
         // if ($positionFilter == self::POSITION_WITH_STAFF) {
@@ -204,7 +202,6 @@ class InstitutionPositionsTable extends AppTable
 
 		$query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
         {
-        // echo "<pre>"; print_r($results); die();
             return $results->map(function ($row)
             {
                 $row['staff_user_full_name'] = $row['staff_firstname'] . ' ' .  $row['staff_lastname'];
