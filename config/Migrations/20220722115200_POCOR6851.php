@@ -102,7 +102,7 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE institution_trips ADD CONSTRAINT `insti_trips_fk_ins_id` FOREIGN KEY (`institution_id`) REFERENCES institutions(`id`)");
         $this->execute("ALTER TABLE institution_visit_requests ADD CONSTRAINT `insti_visit_reque_fk_ins_id` FOREIGN KEY (`institution_id`) REFERENCES institutions(`id`)");
         $this->execute("ALTER TABLE meal_institution_programmes ADD CONSTRAINT `meal_insti_progr_fk_ins_id` FOREIGN KEY (`institution_id`) REFERENCES institutions(`id`)");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry ADD CONSTRAINT `summa_stude_asses_mark_entry_fk_ins_id` FOREIGN KEY (`institution_id`) REFERENCES institutions(`id`)");
+        $this->execute("ALTER TABLE summary_assessment_item_results ADD CONSTRAINT `summa_asses_item_results_fk_ins_id` FOREIGN KEY (`institution_id`) REFERENCES institutions(`id`)");
         $this->execute("ALTER TABLE report_card_email_processes ADD CONSTRAINT `repor_card_email_proce_fk_ins_id` FOREIGN KEY (`institution_id`) REFERENCES institutions(`id`)");
         $this->execute("ALTER TABLE report_card_processes ADD CONSTRAINT `repor_card_proce_fk_ins_id` FOREIGN KEY (`institution_id`) REFERENCES institutions(`id`)");
         $this->execute("ALTER TABLE security_group_institutions ADD CONSTRAINT `secur_group_insti_fk_ins_id` FOREIGN KEY (`institution_id`) REFERENCES institutions(`id`)");
@@ -209,7 +209,7 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE outcome_periods ADD CONSTRAINT `outco_perio_fk_aca_per_id` FOREIGN KEY (`academic_period_id`) REFERENCES academic_periods(`id`)");
         $this->execute("ALTER TABLE outcome_templates ADD CONSTRAINT `outco_templ_fk_aca_per_id` FOREIGN KEY (`academic_period_id`) REFERENCES academic_periods(`id`)");
         $this->execute("ALTER TABLE profile_templates ADD CONSTRAINT `profi_templ_fk_aca_per_id` FOREIGN KEY (`academic_period_id`) REFERENCES academic_periods(`id`)");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry ADD CONSTRAINT `summa_stude_asses_mark_entry_fk_aca_per_id` FOREIGN KEY (`academic_period_id`) REFERENCES academic_periods(`id`)");
+        $this->execute("ALTER TABLE summary_assessment_item_results ADD CONSTRAINT `summa_asses_item_results_fk_aca_per_id` FOREIGN KEY (`academic_period_id`) REFERENCES academic_periods(`id`)");
         $this->execute("ALTER TABLE report_card_email_processes ADD CONSTRAINT `repor_card_email_proce_fk_aca_per_id` FOREIGN KEY (`academic_period_id`) REFERENCES academic_periods(`id`)");
         $this->execute("ALTER TABLE report_card_processes ADD CONSTRAINT `repor_card_proce_fk_aca_per_id` FOREIGN KEY (`academic_period_id`) REFERENCES academic_periods(`id`)");
         $this->execute("ALTER TABLE report_cards ADD CONSTRAINT `repor_cards_fk_aca_per_id` FOREIGN KEY (`academic_period_id`) REFERENCES academic_periods(`id`)");
@@ -282,7 +282,7 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE examination_centres ADD CONSTRAINT `exami_centr_fk_are_id` FOREIGN KEY (`area_id`) REFERENCES areas(`id`)");
         $this->execute("ALTER TABLE institutions ADD CONSTRAINT `insti_fk_are_id` FOREIGN KEY (`area_id`) REFERENCES areas(`id`)");
         $this->execute("ALTER TABLE meal_institution_programmes ADD CONSTRAINT `meal_insti_progr_fk_are_id` FOREIGN KEY (`area_id`) REFERENCES areas(`id`)");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry ADD CONSTRAINT `summa_stude_asses_mark_entry_fk_are_id` FOREIGN KEY (`area_id`) REFERENCES areas(`id`)");
+        $this->execute("ALTER TABLE summary_assessment_item_results ADD CONSTRAINT `summa_asses_item_results_fk_are_id` FOREIGN KEY (`area_id`) REFERENCES areas(`id`)");
         $this->execute("ALTER TABLE security_group_areas ADD CONSTRAINT `secur_group_areas_fk_are_id` FOREIGN KEY (`area_id`) REFERENCES areas(`id`)");
         $this->execute("ALTER TABLE training_sessions ADD CONSTRAINT `train_sessi_fk_are_id` FOREIGN KEY (`area_id`) REFERENCES areas(`id`)");
         $this->execute("ALTER TABLE areas ADD CONSTRAINT `areas_fk_are_lev_id` FOREIGN KEY (`area_level_id`) REFERENCES area_levels(`id`)");
@@ -291,9 +291,9 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE assessment_items ADD CONSTRAINT `asses_items_fk_ass_id` FOREIGN KEY (`assessment_id`) REFERENCES assessments(`id`)");
         $this->execute("ALTER TABLE assessment_items_grading_types ADD CONSTRAINT `asses_items_gradi_types_fk_ass_id` FOREIGN KEY (`assessment_id`) REFERENCES assessments(`id`)");
         $this->execute("ALTER TABLE assessment_periods ADD CONSTRAINT `asses_perio_fk_ass_id` FOREIGN KEY (`assessment_id`) REFERENCES assessments(`id`)");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry ADD CONSTRAINT `summa_stude_asses_mark_entry_fk_ass_id` FOREIGN KEY (`assessment_id`) REFERENCES assessments(`id`)");
+        $this->execute("ALTER TABLE summary_assessment_item_results ADD CONSTRAINT `summa_asses_item_results_fk_ass_id` FOREIGN KEY (`assessment_id`) REFERENCES assessments(`id`)");
         $this->execute("ALTER TABLE assessment_items_grading_types ADD CONSTRAINT `asses_items_gradi_types_fk_ass_per_id` FOREIGN KEY (`assessment_period_id`) REFERENCES assessment_periods(`id`)");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry ADD CONSTRAINT `summa_stude_asses_mark_entry_fk_ass_per_id` FOREIGN KEY (`assessment_period_id`) REFERENCES assessment_periods(`id`)");
+        $this->execute("ALTER TABLE summary_assessment_item_results ADD CONSTRAINT `summa_asses_item_results_fk_ass_per_id` FOREIGN KEY (`assessment_period_id`) REFERENCES assessment_periods(`id`)");
         $this->execute("ALTER TABLE institution_assets ADD CONSTRAINT `insti_asset_fk_ass_con_id` FOREIGN KEY (`asset_condition_id`) REFERENCES asset_conditions(`id`)");
         $this->execute("ALTER TABLE institution_assets ADD CONSTRAINT `insti_asset_fk_ass_sta_id` FOREIGN KEY (`asset_status_id`) REFERENCES asset_statuses(`id`)");
         $this->execute("ALTER TABLE institution_assets ADD CONSTRAINT `insti_asset_fk_ass_typ_id` FOREIGN KEY (`asset_type_id`) REFERENCES asset_types(`id`)");
@@ -417,7 +417,7 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE institution_trip_passengers ADD CONSTRAINT `insti_trip_passe_fk_edu_gra_id` FOREIGN KEY (`education_grade_id`) REFERENCES education_grades(`id`)");
         $this->execute("ALTER TABLE outcome_criterias ADD CONSTRAINT `outco_crite_fk_edu_gra_id` FOREIGN KEY (`education_grade_id`) REFERENCES education_grades(`id`)");
         $this->execute("ALTER TABLE outcome_templates ADD CONSTRAINT `outco_templ_fk_edu_gra_id` FOREIGN KEY (`education_grade_id`) REFERENCES education_grades(`id`)");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry ADD CONSTRAINT `summa_stude_asses_mark_entry_fk_edu_gra_id` FOREIGN KEY (`education_grade_id`) REFERENCES education_grades(`id`)");
+        $this->execute("ALTER TABLE summary_assessment_item_results ADD CONSTRAINT `summa_asses_item_results_fk_edu_gra_id` FOREIGN KEY (`education_grade_id`) REFERENCES education_grades(`id`)");
         $this->execute("ALTER TABLE report_card_email_processes ADD CONSTRAINT `repor_card_email_proce_fk_edu_gra_id` FOREIGN KEY (`education_grade_id`) REFERENCES education_grades(`id`)");
         $this->execute("ALTER TABLE report_card_processes ADD CONSTRAINT `repor_card_proce_fk_edu_gra_id` FOREIGN KEY (`education_grade_id`) REFERENCES education_grades(`id`)");
         $this->execute("ALTER TABLE report_card_subjects ADD CONSTRAINT `repor_card_subje_fk_edu_gra_id` FOREIGN KEY (`education_grade_id`) REFERENCES education_grades(`id`)");
@@ -606,7 +606,7 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE institution_staff ADD CONSTRAINT `insti_staff_fk_insti_posit_id` FOREIGN KEY (`institution_position_id`) REFERENCES institution_positions(`id`)");
         $this->execute("ALTER TABLE institution_staff_position_profiles ADD CONSTRAINT `insti_staff_posit_profi_fk_insti_posit_id` FOREIGN KEY (`institution_position_id`) REFERENCES institution_positions(`id`)");
         $this->execute("ALTER TABLE institutions ADD CONSTRAINT `insti_fk_insti_provi_id` FOREIGN KEY (`institution_provider_id`) REFERENCES institution_providers(`id`)");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry ADD CONSTRAINT `summa_stude_asses_mark_entry_fk_insti_provi_id` FOREIGN KEY (`institution_provider_id`) REFERENCES institution_providers(`id`)");
+        $this->execute("ALTER TABLE summary_assessment_item_results ADD CONSTRAINT `summa_asses_item_results_fk_insti_provi_id` FOREIGN KEY (`institution_provider_id`) REFERENCES institution_providers(`id`)");
         $this->execute("ALTER TABLE institution_quality_rubric_answers ADD CONSTRAINT `insti_quali_rubri_answe_fk_insti_quali_rubri_id` FOREIGN KEY (`institution_quality_rubric_id`) REFERENCES institution_quality_rubrics(`id`)");
         $this->execute("ALTER TABLE institution_repeater_survey_answers ADD CONSTRAINT `insti_repea_surve_answe_fk_insti_repea_surve_id` FOREIGN KEY (`institution_repeater_survey_id`) REFERENCES institution_repeater_surveys(`id`)");
         $this->execute("ALTER TABLE institution_repeater_survey_table_cells ADD CONSTRAINT `insti_repea_surve_table_cells_fk_insti_repea_surve_id` FOREIGN KEY (`institution_repeater_survey_id`) REFERENCES institution_repeater_surveys(`id`)");
@@ -1173,7 +1173,7 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE institution_trips DROP FOREIGN KEY `insti_trips_fk_ins_id`");
         $this->execute("ALTER TABLE institution_visit_requests DROP FOREIGN KEY `insti_visit_reque_fk_ins_id`");
         $this->execute("ALTER TABLE meal_institution_programmes DROP FOREIGN KEY `meal_insti_progr_fk_ins_id`");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry DROP FOREIGN KEY `summa_stude_asses_mark_entry_fk_ins_id`");
+        $this->execute("ALTER TABLE summary_assessment_item_results DROP FOREIGN KEY `summa_asses_item_results_fk_ins_id`");
         $this->execute("ALTER TABLE report_card_email_processes DROP FOREIGN KEY `repor_card_email_proce_fk_ins_id`");
         $this->execute("ALTER TABLE report_card_processes DROP FOREIGN KEY `repor_card_proce_fk_ins_id`");
         $this->execute("ALTER TABLE security_group_institutions DROP FOREIGN KEY `secur_group_insti_fk_ins_id`");
@@ -1280,7 +1280,7 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE outcome_periods DROP FOREIGN KEY `outco_perio_fk_aca_per_id`");
         $this->execute("ALTER TABLE outcome_templates DROP FOREIGN KEY `outco_templ_fk_aca_per_id`");
         $this->execute("ALTER TABLE profile_templates DROP FOREIGN KEY `profi_templ_fk_aca_per_id`");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry DROP FOREIGN KEY `summa_stude_asses_mark_entry_fk_aca_per_id`");
+        $this->execute("ALTER TABLE summary_assessment_item_results DROP FOREIGN KEY `summa_asses_item_results_fk_aca_per_id`");
         $this->execute("ALTER TABLE report_card_email_processes DROP FOREIGN KEY `repor_card_email_proce_fk_aca_per_id`");
         $this->execute("ALTER TABLE report_card_processes DROP FOREIGN KEY `repor_card_proce_fk_aca_per_id`");
         $this->execute("ALTER TABLE report_cards DROP FOREIGN KEY `repor_cards_fk_aca_per_id`");
@@ -1353,7 +1353,7 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE examination_centres DROP FOREIGN KEY `exami_centr_fk_are_id`");
         $this->execute("ALTER TABLE institutions DROP FOREIGN KEY `insti_fk_are_id`");
         $this->execute("ALTER TABLE meal_institution_programmes DROP FOREIGN KEY `meal_insti_progr_fk_are_id`");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry DROP FOREIGN KEY `summa_stude_asses_mark_entry_fk_are_id`");
+        $this->execute("ALTER TABLE summary_assessment_item_results DROP FOREIGN KEY `summa_asses_item_results_fk_are_id`");
         $this->execute("ALTER TABLE security_group_areas DROP FOREIGN KEY `secur_group_areas_fk_are_id`");
         $this->execute("ALTER TABLE training_sessions DROP FOREIGN KEY `train_sessi_fk_are_id`");
         $this->execute("ALTER TABLE areas DROP FOREIGN KEY `areas_fk_are_lev_id`");
@@ -1362,9 +1362,9 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE assessment_items DROP FOREIGN KEY `asses_items_fk_ass_id`");
         $this->execute("ALTER TABLE assessment_items_grading_types DROP FOREIGN KEY `asses_items_gradi_types_fk_ass_id`");
         $this->execute("ALTER TABLE assessment_periods DROP FOREIGN KEY `asses_perio_fk_ass_id`");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry DROP FOREIGN KEY `summa_stude_asses_mark_entry_fk_ass_id`");
+        $this->execute("ALTER TABLE summary_assessment_item_results DROP FOREIGN KEY `summa_asses_item_results_fk_ass_id`");
         $this->execute("ALTER TABLE assessment_items_grading_types DROP FOREIGN KEY `asses_items_gradi_types_fk_ass_per_id`");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry DROP FOREIGN KEY `summa_stude_asses_mark_entry_fk_ass_per_id`");
+        $this->execute("ALTER TABLE summary_assessment_item_results DROP FOREIGN KEY `summa_asses_item_results_fk_ass_per_id`");
         $this->execute("ALTER TABLE institution_assets DROP FOREIGN KEY `insti_asset_fk_ass_con_id`");
         $this->execute("ALTER TABLE institution_assets DROP FOREIGN KEY `insti_asset_fk_ass_sta_id`");
         $this->execute("ALTER TABLE institution_assets DROP FOREIGN KEY `insti_asset_fk_ass_typ_id`");
@@ -1488,7 +1488,7 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE institution_trip_passengers DROP FOREIGN KEY `insti_trip_passe_fk_edu_gra_id`");
         $this->execute("ALTER TABLE outcome_criterias DROP FOREIGN KEY `outco_crite_fk_edu_gra_id`");
         $this->execute("ALTER TABLE outcome_templates DROP FOREIGN KEY `outco_templ_fk_edu_gra_id`");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry DROP FOREIGN KEY `summa_stude_asses_mark_entry_fk_edu_gra_id`");
+        $this->execute("ALTER TABLE summary_assessment_item_results DROP FOREIGN KEY `summa_asses_item_results_fk_edu_gra_id`");
         $this->execute("ALTER TABLE report_card_email_processes DROP FOREIGN KEY `repor_card_email_proce_fk_edu_gra_id`");
         $this->execute("ALTER TABLE report_card_processes DROP FOREIGN KEY `repor_card_proce_fk_edu_gra_id`");
         $this->execute("ALTER TABLE report_card_subjects DROP FOREIGN KEY `repor_card_subje_fk_edu_gra_id`");
@@ -1677,7 +1677,7 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE institution_staff DROP FOREIGN KEY `insti_staff_fk_insti_posit_id`");
         $this->execute("ALTER TABLE institution_staff_position_profiles DROP FOREIGN KEY `insti_staff_posit_profi_fk_insti_posit_id`");
         $this->execute("ALTER TABLE institutions DROP FOREIGN KEY `insti_fk_insti_provi_id`");
-        $this->execute("ALTER TABLE summary_student_assessment_mark_entry DROP FOREIGN KEY `summa_stude_asses_mark_entry_fk_insti_provi_id`");
+        $this->execute("ALTER TABLE summary_assessment_item_results DROP FOREIGN KEY `summa_asses_item_results_fk_insti_provi_id`");
         $this->execute("ALTER TABLE institution_quality_rubric_answers DROP FOREIGN KEY `insti_quali_rubri_answe_fk_insti_quali_rubri_id`");
         $this->execute("ALTER TABLE institution_repeater_survey_answers DROP FOREIGN KEY `insti_repea_surve_answe_fk_insti_repea_surve_id`");
         $this->execute("ALTER TABLE institution_repeater_survey_table_cells DROP FOREIGN KEY `insti_repea_surve_table_cells_fk_insti_repea_surve_id`");
