@@ -113,6 +113,7 @@ class BodyMassesTable extends AppTable
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
+        $selectedArea = $requestData->area_education_id;
 
         $conditions = [];
         if (!empty($academicPeriodId)) {
