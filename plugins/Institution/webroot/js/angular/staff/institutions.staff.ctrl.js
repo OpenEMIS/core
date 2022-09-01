@@ -253,8 +253,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function getUniqueOpenEmisId() {
-        if(StaffController.selectedStaffData.openemis_no)
+        if(StaffController.selectedStaffData.openemis_no && !isNaN(Number(StaffController.selectedStaffData.openemis_no.toString()))) {
+            StaffController.selectedStaffData.username = angular.copy(StaffController.selectedStaffData.openemis_no);
             return;
+        }
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.getUniqueOpenEmisId()
             .then(function(response) {

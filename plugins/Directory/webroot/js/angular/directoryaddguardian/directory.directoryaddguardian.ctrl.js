@@ -84,7 +84,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.getUniqueOpenEmisId = function() {
-        if(scope.selectedUserData.openemis_no){
+        if(scope.selectedUserData.openemis_no && !isNaN(Number(scope.selectedUserData.openemis_no.toString()))){
             scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
             scope.generatePassword();
             return;
