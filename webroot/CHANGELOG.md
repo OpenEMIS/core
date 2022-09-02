@@ -1,3 +1,11 @@
+### [3.75.25] - 2022-09-02
+- Bug Fixed: Institutions>Performance>Assessments>Reports:Getting 404 error when generating
+- Bug Fixed: Report>Institution>Positions: Changes to Positions Report
+- Bug Fixed: Institution>Academic>Programmes/Shift: Getting network error when downloading
+- Bug Fixed: Institutions>Attendance>Students-Data shown under the date column is showing the academic year instead of the date.
+- Bug Fixed: Institution > Student > Academic: Assessments are not showing fully
+- Bug Fixed: Administration>System Setup>Configurations: Logout webhook is not working
+
 ### [3.75.24] - 2022-08-30
 - Bug Fixed: Implement database foreign keys for OpenEMIS Core-Issues raised 2
 - Bug Fixed: Directory>Student: Student is showing the wrong institution
