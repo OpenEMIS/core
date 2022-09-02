@@ -2,6 +2,7 @@
 namespace Training\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
+use Cake\Log\Log;
 
 class TrainingResultTypesTable extends ControllerActionTable
 {
@@ -15,4 +16,5 @@ class TrainingResultTypesTable extends ControllerActionTable
 
         $this->addBehavior('FieldOption.FieldOption');
     }
+
 }
