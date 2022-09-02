@@ -840,6 +840,7 @@ class SubjectExcelBehavior extends Behavior
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($path));
         echo file_get_contents($path);
+        die;//POCOR-6898
     }
 
     private function purge($path)
