@@ -285,7 +285,8 @@ class WorkflowBehavior extends Behavior
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN) {
+        /** POCOR-6928 - added staff_change_type_id condition to skip Change-of-shift from workflow steps*/
+        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN && $entity->staff_change_type_id != 5) {
             $this->setStatusAsOpen($entity);
         }
 
