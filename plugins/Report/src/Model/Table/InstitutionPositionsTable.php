@@ -47,14 +47,21 @@ class InstitutionPositionsTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     { 
 	    /*POCOR-6534 starts*/
-		$IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
+		$identity_types = TableRegistry::get('identity_types'); //POCOR-6887
+        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
 		$UserIdentitiesTable   = TableRegistry::get('User.Identities');
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
         //Start POCOR-6605  JO UAT environment is not working blank birthCertificateId
-		$birthCertificateId = $IdentityTypesTable->getIdByName('Birth Certificate');
-        $birth_certificate_code_id = !empty($birthCertificateId) ? $birthCertificateId : 0;
+		//$birthCertificateId = $IdentityTypesTable->getIdByName('Birth Certificate');
+        //$birth_certificate_code_id = !empty($birthCertificateId) ? $birthCertificateId : 0;
         //End POCOR-6605
+        //Start POCOR-6887
+        $birth_certificate_code_id = $IdentityTypesTable->find('all')
+                                     ->select('id')   
+                                     ->where(['visible' => 1,'editable' => 1,'default' => 1])
+                                     ->first();
+        //End POCOR-6887
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
         $teachingFilter = $requestData->teaching_filter;
@@ -84,11 +91,17 @@ class InstitutionPositionsTable extends AppTable
                 'area_administratives_name' => 'AreaAdministratives.name',
                 'assignee_id' => 'Assignees.id',
                 'is_homeroom' => $this->aliasField('is_homeroom'),
+                'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
 				'assignee_openemis_no' => 'SecurityUsersStaff.openemis_no',
 				'staff_firstname' => 'SecurityUsersStaff.first_name',
 				'staff_lastname' => 'SecurityUsersStaff.last_name',
 				'birth_certificate' => 'Identities.number',
+                'identity_types_name' => 'identity_types.name', //POCOR-6887
+                'StaffStatuses_name' => 'StaffStatuses.name', //POCOR-6887
+                'InstitutionStaffs_start_date' => 'InstitutionStaffs.start_date ', //POCOR-6887
+                'InstitutionStaffs_end_date' => 'InstitutionStaffs.end_date', //POCOR-6887
+                'InstitutionStaffs_FTE' => 'InstitutionStaffs.FTE', //POCOR-6887
             ])
             ->contain([
                 'Statuses' => [
@@ -138,14 +151,28 @@ class InstitutionPositionsTable extends AppTable
 						'Assignees.openemis_no',
                     ]
                 ]
-            ]);
+            ]);// Start POCOR-6887
 			$join['InstitutionStaffs'] = [
                 'type' => 'left',
                 'table' => 'institution_staff',
                 'conditions' => [
                     'InstitutionStaffs.institution_position_id = ' . $this->aliasField('id'),
+                    'AND' => [
+                        'OR' => [
+                            ['InstitutionStaffs.end_date'.' IS NULL'],
+                            ['InstitutionStaffs.end_date'.' > DATE(NOW())']
+                        ]
+                    ]
+                ],
+            ];// End POCOR-6887
+            $join['StaffStatuses'] = [
+                'type' => 'left',
+                'table' => 'staff_statuses',
+                'conditions' => [
+                    'StaffStatuses.id = InstitutionStaffs.staff_status_id',
                 ],
             ];
+            // Start POCOR-6887
             $join['SecurityUsersStaff'] = [
                 'type' => 'left',
                 'table' => 'security_users',
@@ -153,18 +180,26 @@ class InstitutionPositionsTable extends AppTable
                     'SecurityUsersStaff.id = InstitutionStaffs.staff_id',
                 ],
             ];
+            // End POCOR-6887
+            $query->join($join)
+    		->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
+                    $UserIdentitiesTable->aliasField('security_user_id = ') . ' SecurityUsersStaff.id',
+                    $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id->id",  //POCOR-6887
+                ])
+            ->leftJoin(
+                [$identity_types->alias() => $identity_types->table()],
+                [
+                    $identity_types->aliasField('id') . ' = '. $UserIdentitiesTable->aliasField('identity_type_id')
+                ]
+            )
             
-        $query->join($join)
-		->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
-                $UserIdentitiesTable->aliasField('security_user_id = ') . ' SecurityUsersStaff.id',
-                $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id",
-            ])
-            ->where([$where]) 
+            ->where([$where])
             ->order(['institution_name', 'position_no']);
        
-        if ($positionFilter == self::POSITION_WITH_STAFF) {
-            $query = $this->onExcelBeforePositionWithStaffQuery($query);
-        }
+        // if ($positionFilter == self::POSITION_WITH_STAFF) {
+        //     $query = $this->onExcelBeforePositionWithStaffQuery($query);
+        // }
+
 		$query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
         {
             return $results->map(function ($row)
@@ -180,6 +215,11 @@ class InstitutionPositionsTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
+
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $identity = $IdentityType->getDefaultEntity();
+
+        $settings['identity'] = $identity;
 
         $newFields = [];
 
@@ -211,11 +251,21 @@ class InstitutionPositionsTable extends AppTable
             'label' => __('Grade')
         ];
 
+        //Start POCOR-6887
         $newFields[] = [
             'key' => 'Institutions.id',
-            'field' => 'institution_id',
+            'field' => 'institution_code',
             'type' => 'string',
-            'label' => __('Institution')
+            'label' => __('Institution Code')
+        ];
+
+        //End POCOR-6887
+
+        $newFields[] = [
+            'key' => 'Institutions.id',
+            'field' => 'institution_name',  //POCOR-6887
+            'type' => 'string',
+            'label' => __('Institution Name')
         ];
 
         $newFields[] = [
@@ -272,12 +322,22 @@ class InstitutionPositionsTable extends AppTable
             'type' => 'string',
             'label' => __('Staff Name')
         ];
+        //Start POCOR-6887
 		$newFields[] = [
+            'key' => 'identity_types_name',
+            'field' => 'identity_types_name',
+            'type' => 'string',
+            'label' =>  __($identity->name)
+        ];
+
+        $newFields[] = [
             'key' => 'birth_certificate',
             'field' => 'birth_certificate',
             'type' => 'string',
-            'label' => __('Birth Certificate')
+            'label' => __('Identity Number')
         ];
+
+        //End POCOR-6887
 	
 		/*POCOR-6534 ends*/
         if ($positionFilter == self::POSITION_WITH_STAFF) {
@@ -331,44 +391,48 @@ class InstitutionPositionsTable extends AppTable
     {
         $newFields = [];
 
-        $newFields[] = [
-            'key' => 'InstitutionStaff.openemis_no',
-            'field' => 'staff_openemis_no',
-            'type' => 'string',
-            'label' => __('OpenEMIS ID')
-        ];
+        //Start POCOR-6887
+
+        // $newFields[] = [
+        //     'key' => 'InstitutionStaff.openemis_no',
+        //     'field' => 'staff_openemis_no',
+        //     'type' => 'string',
+        //     'label' => __('OpenEMIS ID')
+        // ];
+
+        // $newFields[] = [
+        //     'key' => 'InstitutionStaff.name',
+        //     'field' => 'staff_name',
+        //     'type' => 'string',
+        //     'label' => __('Staff Name')
+        // ];
+
+        //End POCOR-6887
 
         $newFields[] = [
-            'key' => 'InstitutionStaff.name',
-            'field' => 'staff_name',
-            'type' => 'string',
-            'label' => __('Staff Name')
-        ];
-
-        $newFields[] = [
-            'key' => 'InstitutionStaff.start_date',
-            'field' => 'staff_start_date',
+            'key' => 'InstitutionStaffs_start_date',
+            'field' => 'InstitutionStaffs_start_date',
             'type' => 'string',
             'label' => __('Start Date')
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionStaff.end_date',
-            'field' => 'staff_end_date',
+            'key' => 'InstitutionStaffs_end_date',
+            'field' => 'InstitutionStaffs_end_date',
             'type' => 'string',
             'label' => __('End Date')
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionStaff.FTE',
-            'field' => 'staff_fte',
+            'key' => 'InstitutionStaffs_FTE',
+            'field' => 'InstitutionStaffs_FTE',
             'type' => 'string',
             'label' => __('FTE')
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionStaff.StaffPositionStatus',
-            'field' => 'staff_status',
+            'key' => 'StaffStatuses_name',
+            'field' => 'StaffStatuses_name',
             'type' => 'string',
             'label' => __('Status')
         ];
@@ -385,8 +449,22 @@ class InstitutionPositionsTable extends AppTable
                 'staff_start_date' => 'InstitutionStaff.start_date',
                 'staff_end_date' => 'InstitutionStaff.end_date',
                 'staff_fte' => 'InstitutionStaff.FTE',
-                'staff_status' => 'StaffStatuses.name'
-            ])
+               // 'staff_status' => 'StaffStatuses.name'
+            ])//Start POCOR-6887
+            ->leftJoinWith('InstitutionStaff', function ($q) {
+                return $q->select([
+                    'InstitutionStaff.id',
+                    'InstitutionStaff.start_date',
+                    'InstitutionStaff.end_date',
+                    'InstitutionStaff.FTE'
+                ])->where([
+                    'AND' => [
+                            ['InstitutionStaff.end_date'.' IS NOT NULL'],
+                            ['InstitutionStaff.end_date'.' < DATE(NOW())']
+                        
+                    ]
+                ]);
+            })//End POCOR-6887
             ->leftJoinWith('InstitutionStaff', function ($q) use ($mainTable) {
                 return $q->select([
                     'InstitutionStaff.id',
@@ -405,12 +483,12 @@ class InstitutionPositionsTable extends AppTable
                     'Users.last_name',
                     'Users.preferred_name'
                 ]);
-            })
-            ->leftJoinWith('InstitutionStaff.StaffStatuses', function ($q) {
-                return $q->select([
-                    'StaffStatuses.name'
-                ]);
             });
+            // ->leftJoinWith('InstitutionStaff.StaffStatuses', function ($q) {
+            //     return $q->select([
+            //         //'StaffStatuses.name'
+            //     ]);
+            // });
 
         return $query;
     }
