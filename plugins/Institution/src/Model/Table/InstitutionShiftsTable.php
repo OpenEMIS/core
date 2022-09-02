@@ -45,7 +45,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         ]);
         $this->setDeleteStrategy('restrict');
 
-        $this->addBehavior('Excel', ['excludes' => ['start_time','end_time','academic_period_id','previous_shift_id'], 'pages' => ['index']]);;
+        $this->addBehavior('ContactExcel', ['excludes' => ['start_time','end_time','academic_period_id','previous_shift_id'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
 
     }
 
