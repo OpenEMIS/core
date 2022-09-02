@@ -164,7 +164,7 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('created') => 'DESC', //POCOR-6823
                 $this->aliasField('modified') => 'DESC', //POCOR-6823
                 $this->Assessments->aliasField('code'), $this->Assessments->aliasField('name')
-            ])->first();
+            ])->all(); //->first(); //POCOR-6948 Comment Reason: taking one record of assessment instead of all records for student. 
     }
 
     /**
