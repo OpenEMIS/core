@@ -95,23 +95,16 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.getUniqueOpenEmisId = function() {
         UtilsSvc.isAppendLoader(true);
-        if(scope.selectedUserData.openemis_no){
+        if(scope.selectedUserData.openemis_no && !isNaN(Number(scope.selectedUserData.openemis_no.toString()))){
+            scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
             scope.generatePassword();
             return;
         }
         DirectoryaddSvc.getUniqueOpenEmisId()
             .then(function(response) {
-            var username = scope.selectedUserData.username;
-            if(username != scope.selectedUserData.openemis_no && (username == '' || typeof username == 'undefined')){
-                scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
-                scope.selectedUserData.openemis_no = scope.selectedUserData.openemis_no;
-            } else{
-                if(username == scope.selectedUserData.openemis_no){
-                    scope.selectedUserData.username = angular.copy(response);
-                }
                 scope.selectedUserData.openemis_no = response;
-            }
-            scope.generatePassword();
+                scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
+                scope.generatePassword();
         }, function(error) {
             console.log(error);
             UtilsSvc.isAppendLoader(false);
