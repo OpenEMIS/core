@@ -22,6 +22,7 @@ use PHPExcel_IOFactory;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Security; //POCOR-5672
 use Cake\Utility\Text;//POCOR-5672
+use Cake\Datasource\ConnectionManager;
 
 class InstitutionsController extends AppController
 {
@@ -5709,7 +5710,6 @@ class InstitutionsController extends AppController
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
         /*$requestData = json_decode('{"guardian_relation_id":"1","student_id":"1161","login_user_id":"1","openemis_no":"152227434344","first_name":"GuardianPita","middle_name":"","third_name":"","last_name":"GuardianPita","preferred_name":"","gender_id":"1","date_of_birth":"1989-01-01","identity_number":"555555","nationality_id":"2","username":"pita123","password":"pita123","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160",}', true);*/
-        
         if(!empty($requestData)){
             $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData))? $requestData['student_openemis_no']: null;
             $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
@@ -5783,31 +5783,65 @@ class InstitutionsController extends AppController
                     } 
                 }
             }
-            
+
             $SecurityUsers = TableRegistry::get('security_users');
-            $entityData = [
-                'openemis_no' => $openemisNo,
-                'first_name' => $firstName,
-                'middle_name' => $middleName,
-                'third_name' => $thirdName,
-                'last_name' => $lastName,
-                'preferred_name' => $preferredName,
-                'gender_id' => $genderId,
-                'date_of_birth' => $dateOfBirth,
-                'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
-                'preferred_language' => $pref_lang->value,
-                'username' => $username,
-                'password' => $password,
-                'address' => $address,
-                'address_area_id' => $addressAreaId,
-                'birthplace_area_id' => $birthplaceAreaId,
-                'postal_code' => $postalCode,
-                'photo_name' => $photoName,
-                'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
-                'is_guardian' => 1,
-                'created_user_id' => $userId,
-                'created' => date('y-m-d H:i:s'),
-            ];
+            $CheckGaurdianExist = $SecurityUsers->find()
+                            ->where([
+                                $SecurityUsers->aliasField('openemis_no') => $openemisNo
+                            ])->first();
+
+            $SecurityUsers = TableRegistry::get('security_users');
+            if(!empty($CheckGaurdianExist)){
+                $existGaurdianId = $CheckGaurdianExist->id;
+                $entityData = [
+                    'id' => !empty($existGaurdianId) ? $existGaurdianId : '',
+                    'openemis_no' => $openemisNo,
+                    'first_name' => $firstName,
+                    'middle_name' => $middleName,
+                    'third_name' => $thirdName,
+                    'last_name' => $lastName,
+                    'preferred_name' => $preferredName,
+                    'gender_id' => $genderId,
+                    'date_of_birth' => $dateOfBirth,
+                    'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                    'preferred_language' => $pref_lang->value,
+                    'username' => $username,
+                    'password' => $password,
+                    'address' => $address,
+                    'address_area_id' => $addressAreaId,
+                    'birthplace_area_id' => $birthplaceAreaId,
+                    'postal_code' => $postalCode,
+                    'photo_name' => $photoName,
+                    'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                    'is_guardian' => 1,
+                    'created_user_id' => $userId,
+                    'created' => date('y-m-d H:i:s'),
+                ];
+            }else{
+                $entityData = [
+                    'openemis_no' => $openemisNo,
+                    'first_name' => $firstName,
+                    'middle_name' => $middleName,
+                    'third_name' => $thirdName,
+                    'last_name' => $lastName,
+                    'preferred_name' => $preferredName,
+                    'gender_id' => $genderId,
+                    'date_of_birth' => $dateOfBirth,
+                    'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                    'preferred_language' => $pref_lang->value,
+                    'username' => $username,
+                    'password' => $password,
+                    'address' => $address,
+                    'address_area_id' => $addressAreaId,
+                    'birthplace_area_id' => $birthplaceAreaId,
+                    'postal_code' => $postalCode,
+                    'photo_name' => $photoName,
+                    'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                    'is_guardian' => 1,
+                    'created_user_id' => $userId,
+                    'created' => date('y-m-d H:i:s'),
+                ];
+            }
             //save in security_users table
             $entity = $SecurityUsers->newEntity($entityData);
             try{
@@ -5900,11 +5934,14 @@ class InstitutionsController extends AppController
                         'created_user_id' => $userId,
                         'created' => date('y-m-d H:i:s')
                     ];
-                    //save in student_guardians table
-                    $entityGuardiansData = $StudentGuardians->newEntity($entityGuardiansData);
-                    $StudentGuardiansResult = $StudentGuardians->save($entityGuardiansData);
-                }
 
+                    $entityGuardiansData = $StudentGuardians->newEntity($entityGuardiansData);
+                    //$StudentGuardiansResult = $StudentGuardians->save($entityGuardiansData);
+                    if ($StudentGuardians->save($entityGuardiansData)) {
+                        $id = $StudentGuardians->id;
+                        unset($id);
+                    }
+                }
             }else{
                 return false;
             }
