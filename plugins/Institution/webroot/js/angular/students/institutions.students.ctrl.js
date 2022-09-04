@@ -138,8 +138,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     });
 
     function getUniqueOpenEmisId() {
-        if(StudentController.selectedStudentData.openemis_no)
+        if(StudentController.selectedStudentData.openemis_no && !isNaN(Number(StudentController.selectedStudentData.openemis_no.toString()))) {
+            StudentController.selectedStudentData.username = angular.copy(StudentController.selectedStudentData.openemis_no);
             return;
+        }
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getUniqueOpenEmisId()
         .then(function(response) {
