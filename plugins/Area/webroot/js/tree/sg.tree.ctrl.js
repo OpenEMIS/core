@@ -90,16 +90,6 @@ function SgTreeController($scope, $window, SgTreeSvc) {
                     }
                 }, 1);
             }
-        } else if($window.localStorage.getItem('address_area_id')) {
-            Controller.outputValue = $window.localStorage.getItem('address_area_id');
-            if (Controller.triggerOnChange) {
-                setTimeout(function() {
-                    if (oldValue.length != 0 && Controller.outputValue != null && Controller.outputValue != oldValue[0].id) {
-                        $('#reload').val('changeAreaEducation').click();
-                        return false;
-                    }
-                }, 1);
-            }
         }
     });
 
@@ -114,16 +104,6 @@ function SgTreeController($scope, $window, SgTreeSvc) {
             }
             $window.localStorage.setItem('birthplace_area_id', Controller.outputValue);
             $window.localStorage.setItem('birthplace_area', JSON.stringify(newValue[0]));
-            if (Controller.triggerOnChange) {
-                setTimeout(function() {
-                    if (oldValue.length != 0 && Controller.outputValue != null && Controller.outputValue != oldValue[0].id) {
-                        $('#reload').val('changeAreaEducation').click();
-                        return false;
-                    }
-                }, 1);
-            }
-        } else if($window.localStorage.getItem('birthplace_area_id')) {
-            Controller.outputValue = $window.localStorage.getItem('birthplace_area_id');
             if (Controller.triggerOnChange) {
                 setTimeout(function() {
                     if (oldValue.length != 0 && Controller.outputValue != null && Controller.outputValue != oldValue[0].id) {
