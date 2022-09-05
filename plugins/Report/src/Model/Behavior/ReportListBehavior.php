@@ -242,7 +242,8 @@ class ReportListBehavior extends Behavior {
 
 	public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {
 		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-		$timeZone= $ConfigItems->value("time_zone");
+		$setTime= $ConfigItems->value("time_zone");
+		$timeZone= !empty($setTime) ? $setTime : 'UTC', //POCOR-6732
 		date_default_timezone_set($timeZone);
 		$currentTimeZone = date("Y-m-d H:i:s");
 		$process = $settings['process'];
