@@ -5938,8 +5938,15 @@ class InstitutionsController extends AppController
                     $entityGuardiansData = $StudentGuardians->newEntity($entityGuardiansData);
                     //$StudentGuardiansResult = $StudentGuardians->save($entityGuardiansData);
                     if ($StudentGuardians->save($entityGuardiansData)) {
-                        $id = $StudentGuardians->id;
-                        unset($id);
+                        try{
+                            return false;
+                            $StudentGuardians->deleteAll(['id' => $entityGuardiansData['id']]);
+                            /*$id = $StudentGuardians->id;
+                            unset($id);*/
+                        }catch(Exception $e){
+                            return null;
+                        }
+                        
                     }
                 }
             }else{
