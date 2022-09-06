@@ -112,7 +112,7 @@ class ClassesProfilesTable extends ControllerActionTable
             ];
 		
             // Download button, status must be generated or published
-            if ($this->AccessControl->check(['ProfileTemplates', 'ClassProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+            if ($this->AccessControl->check(['Profiles', 'ClassesProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 //START:POCOR-6667
                 $viewPdfUrl = $this->setQueryString($this->url('viewPDF'), $params);
                 $buttons['viewPdf'] = [
@@ -135,7 +135,7 @@ class ClassesProfilesTable extends ControllerActionTable
                 ];
             }
             // Generate button, all statuses
-            if ($this->AccessControl->check(['ProfileTemplates', 'ClassProfiles', 'generate'])) {
+            if ($this->AccessControl->check(['ProfileTemplates', 'ClassesProfiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->ReportCards
@@ -160,7 +160,7 @@ class ClassesProfilesTable extends ControllerActionTable
                             'url' => $generateUrl
                             ];
                 } else {   
-                    $indexAttr['title'] = $this->getMessage('ClassProfiles.date_closed');
+                    $indexAttr['title'] = $this->getMessage('ClassesProfiles.date_closed');
                     $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
                             'attr' => $indexAttr,
@@ -169,7 +169,7 @@ class ClassesProfilesTable extends ControllerActionTable
                 } 
             }
             // Publish button, status must be generated
-            if ($this->AccessControl->check(['ProfileTemplates', 'ClassProfiles', 'publish']) && $entity->has('report_card_status') 
+            if ($this->AccessControl->check(['ProfileTemplates', 'ClassesProfiles', 'publish']) && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::GENERATED 
                          || $entity->report_card_status == '12' 
                        )
@@ -183,7 +183,7 @@ class ClassesProfilesTable extends ControllerActionTable
             }
 
             // Unpublish button, status must be published
-            if ($this->AccessControl->check(['ProfileTemplates', 'ClassProfiles', 'unpublish']) 
+            if ($this->AccessControl->check(['ProfileTemplates', 'ClassesProfiles', 'unpublish']) 
                     && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::PUBLISHED 
                           || $entity->report_card_status == '16'
