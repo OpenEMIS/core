@@ -1205,8 +1205,8 @@ class DirectoriesController extends AppController
                 'MainNationalities_name'=> $mainNationalities->aliasField('name'),
                 'area_name'=> $areaAdministratives->aliasField('name'),
                 'area_code'=> $areaAdministratives->aliasField('code'),
-                'birth_area_name'=> $birthAreaAdministratives->aliasField('name'),
-                'birth_area_code'=> $birthAreaAdministratives->aliasField('code'),
+                'birth_area_name'=> 'birthAreaAdministratives.name',
+                'birth_area_code'=> 'birthAreaAdministratives.code',
                 'MainIdentityTypes_number'=> $userIdentities->aliasField('number'),
             ])
             ->LeftJoin([$userIdentities->alias() => $userIdentities->table()],[
@@ -1224,8 +1224,8 @@ class DirectoriesController extends AppController
             ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
                 $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
             ])
-            ->LeftJoin([$birthAreaAdministratives->alias() => $birthAreaAdministratives->table()], [
-                $birthAreaAdministratives->aliasField('id =') . $security_users->aliasField('birthplace_area_id')
+            ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
+                'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
             ])
             ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
             ->group([$security_users->aliasField('id')])
@@ -1275,8 +1275,8 @@ class DirectoriesController extends AppController
                 'MainNationalities_name'=> $mainNationalities->aliasField('name'),
                 'area_name'=> $areaAdministratives->aliasField('name'),
                 'area_code'=> $areaAdministratives->aliasField('code'),
-                'birth_area_name'=> $birthAreaAdministratives->aliasField('name'),
-                'birth_area_code'=> $birthAreaAdministratives->aliasField('code'),
+                'birth_area_name'=> 'birthAreaAdministratives.name',
+                'birth_area_code'=> 'birthAreaAdministratives.code',
                 'MainIdentityTypes_number'=> $userIdentities->aliasField('number'),
             ])
             ->InnerJoin([$userIdentities->alias() => $userIdentities->table()],[
@@ -1295,8 +1295,8 @@ class DirectoriesController extends AppController
             ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
                 $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
             ])
-            ->LeftJoin([$birthAreaAdministratives->alias() => $birthAreaAdministratives->table()], [
-                $birthAreaAdministratives->aliasField('id =') . $security_users->aliasField('birthplace_area_id')
+            ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
+                'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
             ])
             ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
             ->group([$security_users->aliasField('id')])
@@ -1306,7 +1306,6 @@ class DirectoriesController extends AppController
 
             $totalCount = $this->getCountInernalSearch($conditions, $identityNumber);
         }
-
         $institutions = TableRegistry::get('institutions');
         $institutionsTbl = $institutions
                                     ->find()
