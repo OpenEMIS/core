@@ -15,7 +15,7 @@ tmp/sessions/*
 tmp/tests/*
 logs/*.log*
 webroot/export/*
-!webroot/export/customexcel/default_templates/*
+!webroot/export/customexcel/default_templates/
 webroot/import/*
 webroot/img/themes/*
 webroot/img/product_list_logo/*
