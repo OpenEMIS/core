@@ -902,7 +902,13 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             .then(
                 function(response) {
                     clearError(data, dataKey);
-                    if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
+                    if (response.data == 0) {
+                        AlertSvc.error(scope, 'No meals configured for this date.');
+                        // AlertSvc.error(scope, 'The number of available meals exceeded');
+                    }else if(response.data == 1){
+                        AlertSvc.error(scope, 'The number of available meals exceeded.');
+                        return false;
+                    }else if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
                         data.save_error[dataKey] = true;
                         angular.forEach(oldParams, function(value, key) {
                             data.institution_student_meal[key] = value;
@@ -977,7 +983,9 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             .then(
                 function(response) {
                     clearError(data, dataKey);
-                    if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
+                    if (response.data == 0) {
+                        AlertSvc.error(scope, 'The number of available meals exceeded');
+                    }else if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
                         data.save_error[dataKey] = true;
                         data.institution_student_meal[dataKey] = oldValue;
                         AlertSvc.error(scope, 'There was an error when saving the record');
@@ -1052,7 +1060,9 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             saveMealBenifiet(data, context).then(
                 function(response) {
                     clearError(data, dataKey);
-                    if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
+                    if (response.data == 0) {
+                        AlertSvc.error(scope, 'The number of available meals exceeded');
+                    }else if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
                         data.save_error[dataKey] = true;
                         data.institution_student_meal[dataKey] = oldValue;
                         AlertSvc.error(scope, 'There was an error when saving the record');
