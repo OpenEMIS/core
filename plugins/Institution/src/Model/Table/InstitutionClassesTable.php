@@ -20,7 +20,6 @@ use Cake\Routing\Router;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Network\Session;
 
 class InstitutionClassesTable extends ControllerActionTable
 {
@@ -915,10 +914,6 @@ class InstitutionClassesTable extends ControllerActionTable
         if (!empty($decodedClass)) {
             $classId = $decodedClass['id'];
         }
-
-        $session = $this->request->session();//POCOR-6958
-        $institutionId = $session->read('Institution.Institutions.id'); //POCOR-6958
-        //print_r($institutionId);die;
         /*POCOR-6566 starts*/
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $grades = [];
@@ -986,17 +981,10 @@ class InstitutionClassesTable extends ControllerActionTable
                     //END: POCOR-6623
                     'Users.SpecialNeeds',
                     'EducationGrades',
-                    //START: POCOR-6958
-                    'StudentStatuses' => function ($q) {
-                        return $q
-                            ->where([
-                                ['StudentStatuses.id' => 1],                                
-                            ]);
-                    },
-                    //end: POCOR-6958
+                    'StudentStatuses',
                     'sort' => [$sortConditions]
                 ],
-            ])->where([$this->aliasField('institution_id')=>$institutionId]);//POCOR-6958
+            ]);
         } else {
             $query->contain([
                 'AcademicPeriods',
@@ -1018,15 +1006,9 @@ class InstitutionClassesTable extends ControllerActionTable
                             ]);
                     },
                     /*POCOR-6566 ends*/
-                    //POCOR-6958 start
-                    'StudentStatuses' => function ($q) {
-                        return $q
-                            ->where([
-                                ['StudentStatuses.id' => 1],                                
-                            ]);
-                    }, //POCOR-6958 end
+                    'StudentStatuses'
                 ],
-            ])->where([$this->aliasField('institution_id')=>$institutionId]); //POCOR-6958
+            ]);
         }
     }
 
