@@ -351,7 +351,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         // get associated data
         $associatedData = $this->getAssociatedData($entity);
-
+        
         // if there is an associated data, redirect to add page and show alert message
         // in the next version will redirect to associated page and show the associated data
         if (!empty($associatedData)) {
@@ -359,7 +359,50 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($this->url('add'));
+        } else { /**POCOR-6928- added else condition when staff_change_type_id is CHANGE_OF_SHIFT*/
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+            $InstitutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
+            $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+            $periodId = $AcademicPeriods->getCurrent();
+            $shiftime = $ShiftOptions->find()
+                        ->where([$ShiftOptions->aliasField('id IN') => $entity->new_shift['_ids']])
+                        ->toArray();
+            //remove all shifts data of selected staff
+            $InstitutionStaffShifts->deleteAll([
+                    $InstitutionStaffShifts->aliasField('staff_id') => $entity->staff_id
+                ]);
+            foreach ($shiftime as $value) {
+                $startTime = date("H:i:s",strtotime($value->start_time));
+                $endTime = date("H:i:s",strtotime($value->end_time));
+                
+                //insert record in institution_shifts table
+                $institutionShiftData['start_time'] = $startTime;
+                $institutionShiftData['end_time'] =  $endTime;
+                $institutionShiftData['academic_period_id'] =  $periodId;
+                $institutionShiftData['institution_id'] = $entity->institution_id;
+                $institutionShiftData['location_institution_id'] = $entity->institution_id;
+                $institutionShiftData['shift_option_id'] = $value->id;
+                $institutionShiftData['created_user_id'] = 1;
+                $institutionShiftData['created'] = date('Y-m-d H:i:s');
+                $data = $InstitutionShifts->newEntity($institutionShiftData);
+                $insertRecord = $InstitutionShifts->save($data);
+                //echo "<pre>";print_r($insertRecord);die;
+                if ($insertRecord) {
+                    $staffShiftData['staff_id'] = $entity->staff_id;
+                    $staffShiftData['shift_id'] =  $insertRecord->id;
+                    $record = $InstitutionStaffShifts->newEntity($staffShiftData);
+                    $InstitutionStaffShifts->save($record);
+                }
+                
+            } 
+            $event->stopPropagation();
+            $url = $this->url('view');
+            $url['action'] = 'Staff';
+            $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
+            return $this->controller->redirect($url);
         }
+        /**POCOR-6928 ends*/ 
     }
 
     private function getAssociatedData($entity)
@@ -748,6 +791,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->field('current_FTE', ['before' => 'FTE', 'type' => 'disabled', 'options' => $fteOptions]);
         $this->field('effective_date');
         $this->field('end_date');
+        $this->field('current_shift');//POCOR-6928
+        $this->field('new_shift');//POCOR-6928
     }
 
     public function onUpdateFieldStaffChangeTypeId(Event $event, array $attr, $action, Request $request)
@@ -1169,4 +1214,81 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
         return $query;
     }
+
+    /** 
+    * function will get current shifts data of selected staff
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * @return string
+    * @ticket POCOR-6928 starts 
+    */
+    public function onUpdateFieldCurrentShift(Event $event, array $attr, $action, Request $request)
+    {
+        $InstitutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
+        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+        $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+        $shifts = [];
+        if ($action == 'add' || $action == 'edit') {
+            $staffChangeTypes = $this->staffChangeTypesList;
+            if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+                $attr['visible'] = false;
+            }else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_SHIFT'] || $request->data[$this->alias()]['staff_change_type_id'] == 5) {
+                $attr['visible'] = true;
+                $attr['type'] = 'disabled';
+                if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
+                    $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
+                    $staffShifts  = $InstitutionStaffShifts
+                            ->find()
+                            ->select(['shift_name' =>  $ShiftOptions->aliasField('name')])
+                            ->leftJoin([$InstitutionShifts->alias() => $InstitutionShifts->table()],[
+                                    $InstitutionShifts->aliasField('id = ') . $InstitutionStaffShifts->aliasField('shift_id')
+                            ])
+                            ->leftJoin([$ShiftOptions->alias() => $ShiftOptions->table()],[
+                                $ShiftOptions->aliasField('id = ') . $InstitutionShifts->aliasField('shift_option_id')
+                            ])
+                            ->where([$InstitutionStaffShifts->aliasField('staff_id') => $entity->staff_id])
+                            ->toArray();
+                    if (!empty($staffShifts)) {
+                        foreach ($staffShifts as $shift) {
+                            $shifts[] = $shift->shift_name;
+                        }
+                    }
+                    $allShift = implode(",",$shifts);
+                    $attr['attr']['value'] = $allShift;
+                }
+            } else {
+                $attr['visible'] = false;
+            }
+        }
+        return $attr;
+    }
+
+    /** 
+    * function will get list of all shifts data
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * @return string
+    * @ticket POCOR-6928 starts 
+    */
+    public function onUpdateFieldNewShift(Event $event, array $attr, $action, Request $request)
+    {
+        $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+        if ($action == 'add' || $action == 'edit') {
+            $staffChangeTypes = $this->staffChangeTypesList;
+            if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+                $attr['visible'] = false;
+            }else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_SHIFT'] || $request->data[$this->alias()]['staff_change_type_id'] == 5) {
+                $attr['type'] = 'chosenSelect';
+                $attr['attr']['multiple'] = true;
+                $options = $ShiftOptions->getList()->toArray();
+                $attr['options'] = $options;
+            } else {
+                $attr['type'] = 'hidden';
+                if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
+                    $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
+                    $attr['value'] = $entity->staff_type_id;
+                }
+            }
+        }
+        return $attr;
+    }
+    /** POCOR-6928 ends*/
 }
