@@ -242,9 +242,10 @@ class BulkStudentTransferOutTable extends ControllerActionTable
     {
         switch ($this->action) {
             case 'edit':
-                $entity = $attr['entity'];
-                $workflowActionEntity = $this->getWorkflowActionEntity($entity);
-                $nextStepId = isset($workflowActionEntity->next_workflow_step) ? $workflowActionEntity->next_workflow_step->id : null;
+               $entity = $attr['entity'];
+               //echo "<pre>";print_r($entity['workflow_actions'][0]['next_workflow_step']['name']=='Pending Approval');die('fsdf');
+               $workflowActionEntity = $this->getWorkflowActionEntity($entity);
+               $nextStepId = isset($workflowActionEntity->next_workflow_step) ? $workflowActionEntity->next_workflow_step->id : null;
                 $autoAssignAssignee = 0;
                 $workflowModelEntity = $this
                     ->find()
@@ -274,7 +275,12 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                         }
                     }
                     // $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params); //POCOR-6923
-                    $assigneeOptions = ['-1' => __('Auto Assign')];
+                    if($entity['name']=='Open' && $entity['workflow_actions'][0]['next_workflow_step']['name']=='Pending Approval'){ //POCOR-6961
+                        $assigneeOptions =  $this->getAssigneeId($request); //POCOR-6961
+                    }else{
+                        $assigneeOptions = ['-1' => __('Auto Assign')];
+                    }
+                    
                 }
                 $attr['type'] = 'select';
                 $attr['options'] = $assigneeOptions;
@@ -528,5 +534,99 @@ class BulkStudentTransferOutTable extends ControllerActionTable
         $this->field('assignee_id', ['entity' => $entity]);
         $this->field('comment', ['type' => 'text']);
         $this->field('bulk_student_transfer_out', ['entity' => $entity]);
+    }
+
+    //POCOR-6961
+    public function getAssigneeId($request)
+    {
+        $workflowModel = 'Institutions > Student Transfer > Sending';
+        $workflowModelsTable = TableRegistry::get('workflow_models');
+        $workflowStepsTable = TableRegistry::get('workflow_steps');
+        $workflowStepsOptions = $workflowStepsTable
+                        ->find()
+                        ->select([
+                            'stepId'=>$workflowStepsTable->aliasField('id'),
+                            'workflow_id'=>$workflowStepsTable->aliasField('workflow_id'),
+                            'is_school_based'=>$workflowModelsTable->aliasField('is_school_based'),
+                        ])
+                        ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            [
+                                $workflowModelsTable->aliasField('id') . ' = '. $workflowStepsTable->aliasField('workflow_id')
+                            ])
+                        ->where([$workflowModelsTable->aliasField('name') => $workflowModel]);
+        foreach($workflowStepsOptions as $val){
+            $stepId = $val['stepId'];
+            $isSchoolBased = $val['is_school_based'];
+        }
+        $session = $request->session();
+
+        if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        $institutionId = $institutionId;
+        Log::write('debug', 'Workflow Step Id: ' . $stepId);
+
+        $assigneeOptions = [];
+        if (!is_null($stepId)) {
+            $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+            $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
+            Log::write('debug', 'Roles By Step:');
+            Log::write('debug', $stepRoles);
+
+            if (!empty($stepRoles)) {
+                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                $Areas = TableRegistry::get('Area.Areas');
+                $Institutions = TableRegistry::get('Institution.Institutions');
+
+                if ($isSchoolBased) {
+                    if (is_null($institutionId)) {                        
+                        Log::write('debug', 'Institution Id not found.');
+                    } else {
+                        $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
+                        $securityGroupId = $institutionObj->security_group_id;
+                        $areaObj = $institutionObj->area;
+
+                       
+
+                        // School based assignee
+                        $where = [
+                            'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
+                                    ['Institutions.id' => $institutionId]],
+                            $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
+                        ];
+                        $schoolBasedAssigneeQuery = $SecurityGroupUsers
+                                ->find('userList', ['where' => $where])
+                                ->leftJoinWith('SecurityGroups.Institutions');
+
+                       
+
+                        $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
+                        
+                        // Region based assignee
+                        $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                        $regionBasedAssigneeQuery = $SecurityGroupUsers
+                                    ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+                        
+
+                        $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
+                        
+                        // End
+
+                        $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
+                    }
+                } else {
+                    $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                    $assigneeQuery = $SecurityGroupUsers
+                            ->find('userList', ['where' => $where])
+                            ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                    
+                    
+
+                    $assigneeOptions = $assigneeQuery->toArray();
+                }
+            }
+        }
+        return $assigneeOptions;
+        
     }
 }
