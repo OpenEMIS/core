@@ -922,11 +922,10 @@ class StudentsTable extends ControllerActionTable
     {
         $studentStatuses = $this->StudentStatuses->findCodeList();
         // if user tries to delete record that is not enrolled
-        // if ($entity->student_status_id != $studentStatuses['CURRENT']  && $entity->student_status_id != $studentStatuses['TRANSFERRED']) { 
-        //     $event->stopPropagation();
-        //     return false;
-        // }
-        //POCOR-6964--comment upper condition for all the status of student !!Student should be delete
+        if ($entity->student_status_id != $studentStatuses['CURRENT']) { 
+            $event->stopPropagation();
+            return false;
+        }
         $body = array();
 
         $body = [
