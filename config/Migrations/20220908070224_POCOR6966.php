@@ -10,7 +10,7 @@ class POCOR6966 extends AbstractMigration
      * http://docs.phinx.org/en/latest/migrations.html#the-change-method
      * @return void
      */
-    public function change()
+    public function up()
     {
         $this->execute('CREATE TABLE `zz_6966_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `zz_6966_security_functions` SELECT * FROM `security_functions`');
