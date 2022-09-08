@@ -46,15 +46,14 @@ class InstitutionMealStudentsTable extends ControllerActionTable
         $paid = $entity->paid;
         $mealReceived = $entity->meal_received_id;
         //POCOR-6959
-        $InstitutionMealStudentsData = $this->find('all')
-                                            ->where([
-                                                $this->aliasField('academic_period_id') => $entity->academic_period_id,
-                                                $this->aliasField('institution_id') => $institutionId,
-                                                $this->aliasField('meal_programmes_id') => $mealProgrammesId,
-                                                $this->aliasField('date') => $date,
-                                                $this->aliasField('meal_received_id') => $mealReceived
-                                                ])->toArray();
-        if(!empty($InstitutionMealStudentsData)){
+        $institution_meal_programmes_data = $institution_meal_programmes->find()
+                                ->where([
+                                    $institution_meal_programmes->aliasField('academic_period_id') => $entity->academic_period_id,
+                                    $institution_meal_programmes->aliasField('institution_id') => $institutionId,
+                                    $institution_meal_programmes->aliasField('meal_programmes_id') => $mealProgrammesId,
+                                    $institution_meal_programmes->aliasField('date_received') => $date
+                                    ])->first();
+        if(!empty($institution_meal_programmes_data)){
             $InstitutionMealStudentsData = $this->find('all')
                                                 ->where([
                                                     $this->aliasField('academic_period_id') => $entity->academic_period_id,
