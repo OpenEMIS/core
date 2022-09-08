@@ -640,7 +640,17 @@ class UsersTable extends AppTable
             $resultOpenemisTemps = $openemisTemps->find('all')
                 ->where(['openemis_no' => $newOpenemisNo])
                 ->first();
-       
+            //POCOR-6960 START
+            $expire = strtotime('+1 days');
+            $path = '/';
+            setcookie('openemis_no', $newOpenemisNo, $expire, $path);
+            if ((isset($_COOKIE['openemis_no']))) {
+                $newOpenemisNo = $_COOKIE['openemis_no']+1;
+                setcookie('openemis_no',  $newOpenemisNo, $expire, $path);
+            } else {
+                $newOpenemisNo = $newOpenemisNo;
+            }
+            //POCOR-6960 [END]
         if(empty($resultOpenemisTemps->openemis_no)){   
             $openemisTemp = $openemisTemps->newEntity();
             $openemisTemp->openemis_no = $newOpenemisNo;
