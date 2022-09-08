@@ -214,30 +214,7 @@ class ClassesProfilesTable extends ControllerActionTable
         $this->fields['student_status_id']['visible'] = false;
     }
 	
-	/*private function setupTabElements() {
-		$options['type'] = 'StaffTemplates';
-		$tabElements = $this->getStaffTabElements($options);
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Profiles');
-	}
-
-	public function getStaffTabElements($options = [])
-    {
-        $tabElements = [];
-        $tabUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
-        $templateUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
-        $tabElements = [
-            'Profiles' => ['text' => __('Profile')],
-            'Templates' => ['text' => __('Templates')]
-        ];
-		
-        $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'ClassProfiles']);
-        $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Classes']);
-
-		return $tabElements;
-    }*/
-
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('report_queue');
         $this->setFieldOrder(['class_name', 'institution_name', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
@@ -260,8 +237,7 @@ class ClassesProfilesTable extends ControllerActionTable
             ])
             ->hydrate(false)
             ->toArray();
-		//$this->setupTabElements();	
-    }
+	}
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {		
