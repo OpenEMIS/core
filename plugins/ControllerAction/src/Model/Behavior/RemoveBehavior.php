@@ -212,7 +212,7 @@ class RemoveBehavior extends Behavior
                     $totalCount += $row['count'];
                 }
                 //if ($totalCount > 0) {
-                if ($extra['associatedRecords'][1]['count'] > 0) { //POCOR-6964
+                if ($extra['associatedRecordsss'][0]['count'] > 0) { //POCOR-6964
                     $model->Alert->error('general.delete.restrictDeleteBecauseAssociation');
                     $this->recordHasAssociatedRecords = true;
                 } else {
