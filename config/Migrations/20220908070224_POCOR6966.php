@@ -23,7 +23,7 @@ class POCOR6966 extends AbstractMigration
         $data = $this->fetchRow("SELECT  * FROM `security_functions` WHERE `name` = 'Download Students Profile' AND `controller` = 'Institutions' AND `module` = 'Institutions' AND `category` = 'Profiles'");
         
         //inserting record
-        $data = [
+        $newdata = [
             [   
                 'name' => 'Generate Classes Profile',
                 'controller' => 'Institutions',
@@ -50,7 +50,7 @@ class POCOR6966 extends AbstractMigration
                 '_edit' => NULL,
                 '_add' => NULL,
                 '_delete' => NULL,
-                '_execute' => 'ClassesProfiles.view|ClassesProfiles.index', NULL, NULL, NULL, 'ClassesProfiles.downloadExcel|ClassesProfiles.publish|ClassesProfiles.unpublish|ClassesProfiles.email|ClassesProfiles.downloadAll|ClassesProfiles.publishAll|ClassesProfiles.unpublishAll|ClassesProfiles.index|ClassesProfiles.view',
+                '_execute' => 'ClassesProfiles.view|ClassesProfiles.index|ClassesProfiles.downloadExcel|ClassesProfiles.publish|ClassesProfiles.unpublish|ClassesProfiles.email|ClassesProfiles.downloadAll|ClassesProfiles.publishAll|ClassesProfiles.unpublishAll|ClassesProfiles.index|ClassesProfiles.view',
                 'order' => $data['order'] + 2,
                 'visible' => 1,
                 'description' => NULL,
@@ -59,7 +59,7 @@ class POCOR6966 extends AbstractMigration
             ]
         ];
         
-        $this->insert('security_functions', $data);
+        $this->insert('security_functions', $newdata);
     }
 
     // Rollback
