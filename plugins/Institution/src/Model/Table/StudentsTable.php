@@ -2408,10 +2408,11 @@ class StudentsTable extends ControllerActionTable
 				'institution_student_absence_details.student_id' => $record->student_id,
             ])
 			->toArray();
-
+            
 			$StudentAttendances[$record->education_grade_id][] = array('attendance'=>$StudentAttendancesData, 'education_grade_id'=> $record->education_grade_id, 'education_grade'=>$record->education_grade);
+            
 		}
-
+        
         $attendanceData = [];
 
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
@@ -2419,11 +2420,11 @@ class StudentsTable extends ControllerActionTable
         $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
 
         foreach ($StudentAttendances as $key => $attendances) {
-
+           
             // START: POCOR-6382
 			// $total_present = $total_absent = $total_late = 0;
             $total_absent = $total_late = 0;
-            $total_present = -1;
+            $total_present = 0; //POCOR-6900 changed value from -1 to 0 as due to -1 it was not displaying grades bases attendance
             // END: POCOR-6382
 
 			foreach ($attendances as $key => $attendance) {
@@ -2439,7 +2440,6 @@ class StudentsTable extends ControllerActionTable
 				} else {
 					$total_present = $total_present + 1;
 				}
-
 				foreach ($dataSet as $dkey => $dvalue) {
 					if (!array_key_exists($attendance['education_grade_id'], $dataSet[$dkey]['data'])) {
 						$dataSet[$dkey]['data'][$attendance['education_grade_id']] = 0;
@@ -2451,7 +2451,6 @@ class StudentsTable extends ControllerActionTable
 				$dataSet['Late']['data'][$attendance['education_grade_id']] = $total_late;
 			}
 		}
-
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => __('For Today'));
         $params['options']['xAxis']['categories'] = array_values($attendanceData);
