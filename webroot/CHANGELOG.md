@@ -1,3 +1,15 @@
+### [3.75.26] - 2022-09-10
+- Implemented: Develop a class profile feature
+- Bug Fixed: Administration>Security>Roles: 404 error when creating new security user
+- Bug Fixed: Administration>Meals: Area education is not filtering the institutions properly
+- Bug Fixed: Institutions>Staff>Career>Positions: User should be able to edit staff shift and filter staff attendance by shift 
+- Bug Fixed: Institution>Meals: Correction to Meals
+- Bug Fixed: Report>Institution>Student Body Masses: Filter for Governorate is not working
+- Bug Fixed: Institutions>Staff>Staff1>Transfer: Getting 404 error when clicking transfer button
+- Bug Fixed: Institution > Academic > Classes: Student status does not show correctly
+- Bug Fixed: Institutions>Meals>Distribution/Students: Distributed meals should be linked to the number of students who received the meal
+- Bug Fixed: Institutions>Academic>Programmes: Allow users to delete because there is no more student enrolled in the grade
+
 ### [3.75.25] - 2022-09-02
 - Bug Fixed: Institutions>Performance>Assessments>Reports:Getting 404 error when generating
 - Bug Fixed: Report>Institution>Positions: Changes to Positions Report
