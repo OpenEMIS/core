@@ -482,7 +482,23 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 vm.absenceCount = absenceCount;
                 vm.lateCount = lateCount;
             } else {
-                vm.presentCount = '-';
+                //START: POCOR-6936
+                var presentCount =0;
+                if (vm.totalStudents > 0) { 
+                    angular.forEach(vm.classStudentList, function(obj, key) { 
+                    console.log(obj);
+                      if (angular.isDefined(obj['institution_student_meal']) && angular.isDefined(obj['institution_student_meal']['meal_received'])) {
+                           var code = obj['institution_student_meal']['meal_received'];
+                            console.log(code);
+                            if(code == 'Received'){
+                               ++presentCount;
+                            }
+                           
+                       } 
+                   });
+               }
+               //END: POCOR-6936
+                vm.presentCount = presentCount;
                 vm.absenceCount = '-';
                 vm.lateCount = '-';  
             }
