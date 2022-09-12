@@ -4985,29 +4985,63 @@ class InstitutionsController extends AppController
                 }
             }else{
                 $SecurityUsers = TableRegistry::get('security_users');
-                $entityData = [
-                    'openemis_no' => $openemisNo,
-                    'first_name' => $firstName,
-                    'middle_name' => $middleName,
-                    'third_name' => $thirdName,
-                    'last_name' => $lastName,
-                    'preferred_name' => $preferredName,
-                    'gender_id' => $genderId,
-                    'date_of_birth' => $dateOfBirth,
-                    'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
-                    'preferred_language' => $pref_lang->value,
-                    'username' => $username,
-                    'password' => $password,
-                    'address' => $address,
-                    'address_area_id' => $addressAreaId,
-                    'birthplace_area_id' => $birthplaceAreaId,
-                    'postal_code' => $postalCode,
-                    'photo_name' => $photoName,
-                    'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
-                    'is_student' => 1,
-                    'created_user_id' => $userId,
-                    'created' => date('Y-m-d H:i:s')
-                ];
+                $CheckStudentExist = $SecurityUsers->find()
+                                ->where([
+                                    $SecurityUsers->aliasField('openemis_no') => $openemisNo
+                                ])->first();
+
+                $SecurityUsers = TableRegistry::get('security_users');
+                if(!empty($CheckStudentExist)){
+                    $existStudentId = $CheckStudentExist->id;
+                    $entityData = [
+                        'id'=> $existStudentId,
+                        'openemis_no' => $openemisNo,
+                        'first_name' => $firstName,
+                        'middle_name' => $middleName,
+                        'third_name' => $thirdName,
+                        'last_name' => $lastName,
+                        'preferred_name' => $preferredName,
+                        'gender_id' => $genderId,
+                        'date_of_birth' => $dateOfBirth,
+                        'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                        'preferred_language' => $pref_lang->value,
+                        'username' => $username,
+                        'password' => $password,
+                        'address' => $address,
+                        'address_area_id' => $addressAreaId,
+                        'birthplace_area_id' => $birthplaceAreaId,
+                        'postal_code' => $postalCode,
+                        'photo_name' => $photoName,
+                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                        'is_student' => 1,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                }else{
+                    $entityData = [
+                        'openemis_no' => $openemisNo,
+                        'first_name' => $firstName,
+                        'middle_name' => $middleName,
+                        'third_name' => $thirdName,
+                        'last_name' => $lastName,
+                        'preferred_name' => $preferredName,
+                        'gender_id' => $genderId,
+                        'date_of_birth' => $dateOfBirth,
+                        'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                        'preferred_language' => $pref_lang->value,
+                        'username' => $username,
+                        'password' => $password,
+                        'address' => $address,
+                        'address_area_id' => $addressAreaId,
+                        'birthplace_area_id' => $birthplaceAreaId,
+                        'postal_code' => $postalCode,
+                        'photo_name' => $photoName,
+                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                        'is_student' => 1,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                }
                 //save in security_users table
                 $entity = $SecurityUsers->newEntity($entityData);
                 try{
@@ -5015,7 +5049,8 @@ class InstitutionsController extends AppController
                     unset($entity);
                 }catch (Exception $e) {
                     return null;
-                }     
+                }
+                     
                 if($SecurityUserResult){
                     $user_record_id=$SecurityUserResult->id;
                     if(!empty($nationalityId) || !empty($nationalityName)){
@@ -5243,6 +5278,12 @@ class InstitutionsController extends AppController
                             unset($studentCustomFieldsResult);
                             unset($entityCustomData);
                         }
+                    }
+
+                    try{
+                        die('success');        
+                    }catch(Exception $e){
+                        return $e;
                     }
                 }else{
                     return false;
@@ -5499,29 +5540,63 @@ class InstitutionsController extends AppController
                 }
             }else{
                 $SecurityUsers = TableRegistry::get('security_users');
-                $entityData = [
-                    'openemis_no' => $openemisNo,
-                    'first_name' => $firstName,
-                    'middle_name' => $middleName,
-                    'third_name' => $thirdName,
-                    'last_name' => $lastName,
-                    'preferred_name' => $preferredName,
-                    'gender_id' => $genderId,
-                    'date_of_birth' => $dateOfBirth,
-                    'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
-                    'preferred_language' => $pref_lang->value,
-                    'username' => $username,
-                    'password' => $password,
-                    'address' => $address,
-                    'address_area_id' => $addressAreaId,
-                    'birthplace_area_id' => $birthplaceAreaId,
-                    'postal_code' => $postalCode,
-                    'photo_name' => $photoName,
-                    'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
-                    'is_staff' => 1,
-                    'created_user_id' => $userId,
-                    'created' => date('y-m-d H:i:s'),
-                ];
+                $CheckStaffExist = $SecurityUsers->find()
+                                ->where([
+                                    $SecurityUsers->aliasField('openemis_no') => $openemisNo
+                                ])->first();
+
+                $SecurityUsers = TableRegistry::get('security_users');
+                if(!empty($CheckStaffExist)){
+                    $existStaffId = $CheckStaffExist->id;
+                    $entityData = [
+                        'id'=> $existStaffId,
+                        'openemis_no' => $openemisNo,
+                        'first_name' => $firstName,
+                        'middle_name' => $middleName,
+                        'third_name' => $thirdName,
+                        'last_name' => $lastName,
+                        'preferred_name' => $preferredName,
+                        'gender_id' => $genderId,
+                        'date_of_birth' => $dateOfBirth,
+                        'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                        'preferred_language' => $pref_lang->value,
+                        'username' => $username,
+                        'password' => $password,
+                        'address' => $address,
+                        'address_area_id' => $addressAreaId,
+                        'birthplace_area_id' => $birthplaceAreaId,
+                        'postal_code' => $postalCode,
+                        'photo_name' => $photoName,
+                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                        'is_staff' => 1,
+                        'created_user_id' => $userId,
+                        'created' => date('y-m-d H:i:s'),
+                    ];
+                }else{
+                    $entityData = [
+                        'openemis_no' => $openemisNo,
+                        'first_name' => $firstName,
+                        'middle_name' => $middleName,
+                        'third_name' => $thirdName,
+                        'last_name' => $lastName,
+                        'preferred_name' => $preferredName,
+                        'gender_id' => $genderId,
+                        'date_of_birth' => $dateOfBirth,
+                        'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                        'preferred_language' => $pref_lang->value,
+                        'username' => $username,
+                        'password' => $password,
+                        'address' => $address,
+                        'address_area_id' => $addressAreaId,
+                        'birthplace_area_id' => $birthplaceAreaId,
+                        'postal_code' => $postalCode,
+                        'photo_name' => $photoName,
+                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                        'is_staff' => 1,
+                        'created_user_id' => $userId,
+                        'created' => date('y-m-d H:i:s'),
+                    ];
+                }
                 //save in security_users table
                 $entity = $SecurityUsers->newEntity($entityData);
                 try{
@@ -5696,6 +5771,11 @@ class InstitutionsController extends AppController
                             unset($staffCustomFieldsResult);
                             unset($entityCustomData);
                         }
+                    }
+                    try{
+                        die('success');        
+                    }catch(Exception $e){
+                        return $e;
                     }
                 }else{
                     return false;
