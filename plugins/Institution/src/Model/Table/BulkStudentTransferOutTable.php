@@ -244,7 +244,6 @@ class BulkStudentTransferOutTable extends ControllerActionTable
         switch ($this->action) {
             case 'edit':
                $entity = $attr['entity'];
-               //echo "<pre>";print_r($entity['workflow_actions'][0]['next_workflow_step']['name']=='Pending Approval');die('fsdf');
                $workflowActionEntity = $this->getWorkflowActionEntity($entity);
                $nextStepId = isset($workflowActionEntity->next_workflow_step) ? $workflowActionEntity->next_workflow_step->id : null;
                 $autoAssignAssignee = 0;
@@ -294,10 +293,15 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                     ->find()
                     ->where([$SecurityUsers->aliasField('id') => $this->_currentData->assignee_id])
                     ->first();
-                //echo "<pre>"; print_r($this->_currentData); die;
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $value->name;
-                break;
+                if($this->_currentData->assignee_id==-1){
+                        $attr['type'] = 'readonly';
+                        $attr['attr']['value'] = 'Auto Assign';
+                        break;
+                    }else{
+                        $attr['type'] = 'readonly';
+                        $attr['attr']['value'] = $value->name;
+                        break;
+                    }
 
             default:
                 break;
