@@ -862,12 +862,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.isInternalSearchSelected = false;
         } else {
                 StudentController.step = 'add_student';
-                StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
+                StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
                 StudentController.generatePassword();
             }
         } else if(StudentController.isExternalSearchSelected) {
             StudentController.step = 'add_student';
-            StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
+            StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
             StudentController.generatePassword();
         } else {
             switch(StudentController.step){
@@ -887,7 +887,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     break;
                 case 'confirmation': 
                     StudentController.step = 'add_student';
-                    StudentController.selectedStudentData.endDate = StudentController.currentYear + '-12-31';
+                    StudentController.selectedStudentData.endDate = '31-12-' + StudentController.currentYear;
                     StudentController.generatePassword();
                     break;
             }
@@ -1193,7 +1193,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.addressArea.name = selectedData.area_name;
         StudentController.selectedStudentData.birthplaceArea.name = selectedData.birth_area_name;
         StudentController.selectedStudentData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-        StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
+        StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
         var todayDate = new Date();
         StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
         StudentController.isSameSchool = selectedData.is_same_school > 0 ? true : false;
@@ -1221,7 +1221,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.address = selectedData.address;
         StudentController.selectedStudentData.postalCode = selectedData.postal_code;
         StudentController.selectedStudentData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-        StudentController.selectedStudentData.endDate = new Date().getFullYear() + '-12-31';
+        StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
         var todayDate = new Date();
         StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
     }
