@@ -644,12 +644,22 @@ class UsersTable extends AppTable
             $expire = strtotime('+1 days');
             $path = '/';
             setcookie('openemis_no', $newOpenemisNo, $expire, $path);
-            if ((isset($_COOKIE['openemis_no']))) {
-                $newOpenemisNo = $_COOKIE['openemis_no']+1;
-                setcookie('openemis_no',  $newOpenemisNo, $expire, $path);
-            } else {
+            setcookie('openemis_no_ip', $_SERVER['REMOTE_ADDR'], $expire, $path);
+            // if ((isset($_COOKIE['openemis_no']))) {
+            if ((isset($_COOKIE['openemis_no_ip']))) 
+            {
+                if($_COOKIE['openemis_no_ip'] == $_SERVER['REMOTE_ADDR']){
+                    $newOpenemisNo = $_COOKIE['openemis_no']+1;
+                    setcookie('openemis_no',  $newOpenemisNo, $expire, $path);
+                    setcookie('openemis_no_ip',  $newOpenemisNo, $expire, $path);
+                }
+            }else{
                 $newOpenemisNo = $newOpenemisNo;
             }
+                
+            // } else {
+            //     $newOpenemisNo = $newOpenemisNo;
+            // }
             //POCOR-6960 [END]
         if(empty($resultOpenemisTemps->openemis_no)){   
             $openemisTemp = $openemisTemps->newEntity();
