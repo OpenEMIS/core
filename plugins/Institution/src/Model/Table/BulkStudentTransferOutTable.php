@@ -293,16 +293,12 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                     ->find()
                     ->where([$SecurityUsers->aliasField('id') => $this->_currentData->assignee_id])
                     ->first();
-                if($this->_currentData->assignee_id==-1){
-                        $attr['type'] = 'readonly';
-                        $attr['attr']['value'] = 'Auto Assign';
-                        break;
-                    }else{
-                        $attr['type'] = 'readonly';
-                        $attr['attr']['value'] = $value->name;
-                        break;
-                    }
 
+                $assigneeOptions = 'Auto Assign'; //POCOR-6961 
+                $attr['type'] = 'readonly';
+                $attr['value'] = '-1';
+                $attr['attr']['value'] = $assigneeOptions; //POCOR-6961 
+                break;
             default:
                 break;
         }
