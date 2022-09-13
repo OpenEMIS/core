@@ -685,41 +685,40 @@ class TrainingNeedsAppTable extends ControllerActionTable
             $workflowModel = 'Staff > Training > Needs';
             $workflowModelsTable = TableRegistry::get('workflow_models');
             $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workModelId = $Workflows
+                            ->find()
+                            ->select(['id'=>$workflowModelsTable->aliasField('id'),
+                            'workflow_id'=>$Workflows->aliasField('id'),
+                            'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
+                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                                [
+                                    $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
+                                ])
+                            ->where([$workflowModelsTable->aliasField('name')=>$workflowModel])->first();
+            $workflowId = $workModelId->workflow_id;
+            $isSchoolBased = $workModelId->is_school_based;
             $workflowStepsOptions = $workflowStepsTable
                             ->find()
                             ->select([
                                 'stepId'=>$workflowStepsTable->aliasField('id'),
-                                'workflow_id'=>$workflowStepsTable->aliasField('workflow_id'),
-                                'is_school_based'=>$workflowModelsTable->aliasField('is_school_based'),
                             ])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
-                                [
-                                    $workflowModelsTable->aliasField('id') . ' = '. $workflowStepsTable->aliasField('workflow_id')
-                                ])
-                            ->where([$workflowModelsTable->aliasField('name') => $workflowModel]);
-            foreach($workflowStepsOptions as $val){
-                $stepId = $val['stepId'];
-                $isSchoolBased = $val['is_school_based'];
-            }
+                            ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
+                            ->first();
+            $stepId = $workflowStepsOptions->stepId;
             $session = $request->session();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
             $institutionId = $institutionId;
-            Log::write('debug', 'Workflow Step Id: ' . $stepId);
-
             $assigneeOptions = [];
             if (!is_null($stepId)) {
                 $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
-                Log::write('debug', 'Roles By Step:');
-                Log::write('debug', $stepRoles);
-
                 if (!empty($stepRoles)) {
                     $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
-
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {                        
                             Log::write('debug', 'Institution Id not found.');
@@ -727,9 +726,6 @@ class TrainingNeedsAppTable extends ControllerActionTable
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
                             $securityGroupId = $institutionObj->security_group_id;
                             $areaObj = $institutionObj->area;
-
-                           
-
                             // School based assignee
                             $where = [
                                 'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
@@ -739,9 +735,6 @@ class TrainingNeedsAppTable extends ControllerActionTable
                             $schoolBasedAssigneeQuery = $SecurityGroupUsers
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
-
-                           
-
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
                             
                             // Region based assignee
@@ -749,11 +742,8 @@ class TrainingNeedsAppTable extends ControllerActionTable
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
                             
-
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
-                            
                             // End
-
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
                         }
                     } else {
@@ -761,9 +751,6 @@ class TrainingNeedsAppTable extends ControllerActionTable
                         $assigneeQuery = $SecurityGroupUsers
                                 ->find('userList', ['where' => $where])
                                 ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
-                        
-                        
-
                         $assigneeOptions = $assigneeQuery->toArray();
                     }
                 }

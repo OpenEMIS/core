@@ -28,7 +28,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
             ]);
         }
 
-        $this->toggle('add', false);
+        $this->toggle('add', true);//POCOR-6925
     }
 
     public function validationDefault(Validator $validator)
