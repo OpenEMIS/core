@@ -124,10 +124,14 @@ class InstitutionClassStudentsTable extends AppTable
                 ])->first();
 
                 //POCOR-6500 starts 
-                if(!empty($results)){
-                   $results->student_status_id = 1;
+                if(!empty($results) && $student->student_status_id==4){ //POCOR-6958
+                   $results->student_status_id = 4;
                    $this->save($results);     
-                }//POCOR-6500 ends
+                }elseif(!empty($results)){
+                   $results->student_status_id = 1;
+                   $this->save($results);
+                }
+                //POCOR-6500 ends
             }
         }
     }
