@@ -1287,6 +1287,9 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         $educationGradeId = $entity->education_grade_id;
         $entity->name = $EducationGrades->get($educationGradeId)->name;
         $institutionId = $entity->institution_id;
+        // echo "<pre>";print_r($entity);die;
+        // $EducationGrades->find('all',['conditions'])->first();
+
 
         $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $associatedStudentRecordsCount = $InstitutionStudents->find()
@@ -1296,7 +1299,17 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         ])
         ->count();
         $extra['associatedRecords'][] = ['model' => 'InstitutionStudents', 'count' => $associatedStudentRecordsCount];
-
+        //Start:POCOR-6964
+        //enrolledStudents
+        $enrolledStudentsRecordsCount = $InstitutionStudents->find()
+        ->where([
+            $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
+            $InstitutionStudents->aliasField('institution_id') => $institutionId,
+            $InstitutionStudents->aliasField('student_status_id') => 1
+        ])
+        ->count();
+        $extra['associatedRecordsss'][] = ['model' => 'InstitutionEnrolledStudents', 'count' => $enrolledStudentsRecordsCount];
+        //End:POCOR-6964
         // to get the institution_class_id related to the education_grade_id
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $associatedClassObj = $InstitutionClassGrades->find()
