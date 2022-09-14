@@ -630,7 +630,7 @@ class UsersTable extends AppTable
         $openemisTemps = TableRegistry::get('User.OpenemisTemps');        
         $SecurityUser = TableRegistry::get('security_users');
         
-           $resultOpenemisTemp = $SecurityUser->find('all')                
+           $resultOpenemisTemp = $openemisTemps->find('all')                
                 ->order(['id' => 'DESC'])
                 ->first();
 
