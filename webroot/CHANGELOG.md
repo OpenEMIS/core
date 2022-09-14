@@ -1,3 +1,7 @@
+### [3.75.27] - 2022-09-14
+- Bug Fixed: Report>Institution>Wash Report: Changes to the Wash Report
+- Bug Fixed: Institution > Students: User is able to create students with the same OpenEMIS ID at the same time as another user
+
 ### [3.75.26] - 2022-09-10
 - Implemented: Develop a class profile feature
 - Bug Fixed: Administration>Security>Roles: 404 error when creating new security user
