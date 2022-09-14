@@ -275,8 +275,10 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                         }
                     }
                     // $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params); //POCOR-6923
-                    // print_r($assigneeOptions);die;
+                    //echo "<pre>"; print_r($entity['student_transfer_in'][0]);die;
                     if($entity['name']=='Open' && $entity['workflow_actions'][0]['next_workflow_step']['name']=='Pending Approval'){ //POCOR-6961
+                        $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params); //POCOR-6961
+                    }elseif($entity['student_transfer_in'][0]['status']['name']=='Pending Student Transfer'){
                         $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params); //POCOR-6961
                     }else{
                         $assigneeOptions = ['-1' => __('Auto Assign')];
@@ -293,13 +295,19 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                     ->find()
                     ->where([$SecurityUsers->aliasField('id') => $this->_currentData->assignee_id])
                     ->first();
-
-                $assigneeOptions = 'Auto Assign'; //POCOR-6961 
-                $attr['type'] = 'readonly';
-                $attr['value'] = '-1';
-                $attr['attr']['value'] = $assigneeOptions; //POCOR-6961 
-                break;
-            default:
+                if($this->_currentData->assignee_id==-1){
+                    $assigneeOptions = 'Auto Assign'; //POCOR-6961
+                    $attr['type'] = 'readonly';
+                    $attr['value'] = '-1';
+                    $attr['attr']['value'] = $assigneeOptions; //POCOR-6961 
+                    break; 
+                }else{
+                    $assigneeOptions = $assigneeOptions;
+                    $attr['type'] = 'readonly';
+                    $attr['attr']['value'] = $value->name;
+                    break;
+                }
+                default:
                 break;
         }
         return $attr;
