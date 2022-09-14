@@ -48,7 +48,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                     return array_key_exists('new_end_date', $context['data']) && !empty($context['data']['new_end_date']);
                 }
             ])
-            ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date', 'workflow_assignee_id']);
+            ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date', 'workflow_assignee_id','assignee_id']);
     }
 
     public function implementedEvents()
@@ -407,11 +407,10 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
         return $query;
     }
-    
     //POCOR-6925
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if (in_array($action, ['edit', 'approve','add'])) {
             $workflowModel = 'Institutions > Staff Transfer > Receiving';
             $workflowModelsTable = TableRegistry::get('workflow_models');
             $workflowStepsTable = TableRegistry::get('workflow_steps');
@@ -493,4 +492,6 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
             return $attr;
         }
     }
+    
+    
 }
