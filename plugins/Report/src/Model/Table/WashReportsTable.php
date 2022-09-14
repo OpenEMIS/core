@@ -18,7 +18,8 @@ class WashReportsTable extends AppTable
     const MIXED = 3;
     const FUNCTIONAL = 1;
     const NONFUNCTIONAL = 0;
-    
+
+    private $infrastructureTabsData = [0 => "Water", 1 => "Sanitation", 2 => "Hygiene", 3 => "Waste", 4 => "Sewage"];
     public function initialize(array $config)
     {
         $this->table('institutions');
@@ -79,17 +80,1037 @@ class WashReportsTable extends AppTable
     {
         return 'Sewage';
     }
-    
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $sheetData = $settings['sheet']['sheetData'];
+        $infrastructureType = $sheetData['infrastructure_tabs_type'];
+        $cloneFields = $fields->getArrayCopy();
+        $requestData = json_decode($settings['process']['params']);
+        $washType = $requestData->wash_type;
+
+        $newFields = [];
+
+        $extraFields[] = [
+            'key' => 'code',
+            'field' => 'code',
+            'type' => 'string',
+            'label' => __('Code')
+        ];
+        
+        $extraFields[] = [
+            'key' => 'name',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => __('Name')
+        ];
+
+        //add columns  POCOR-5865 starts
+        $extraFields[] = [
+            'key' => 'region_code',
+            'field' => 'region_code',
+            'type' => 'string',
+            'label' => __('Region Code')
+        ];
+
+        //start POCOR-6732
+        
+        $AreaLevelTbl = TableRegistry::get('area_levels');
+        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->hydrate(false)->toArray();
+
+        $extraFields[] = [
+            'key' => 'region_name',
+            'field' => 'region_name',
+            'type' => 'string',
+            'label' => __($AreaLevelArr[1]['name'])
+        ];
+
+        $extraFields[] = [
+            'key' => 'area_name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __($AreaLevelArr[0]['name'])
+        ];
+
+        //End POCOR-6732
+
+        //add columns  POCOR-5865 ends
+        //update label  POCOR-5865 starts
+        $extraFields[] = [
+            'key' => 'area_level',
+            'field' => 'area_level',
+            'type' => 'string',
+            'label' => __('District Code')
+        ];
+        
+        //update label POCOR-5865 ends
+        $extraFields[] = [
+            'key' => 'AcademicPeriods.name',
+            'field' => 'academic_period',
+            'type' => 'string',
+            'label' => __('Academic Period')
+        ];
+
+        if(in_array($washType, ['Water', 'Waste', 'Sewage','Sanitation', 'Hygiene'])){
+
+        $extraFields[] = [
+                'key' => 'wash'.$washType,
+                'field' => 'wash'.$washType,
+                'type' => 'string',
+                'label' => __('Wash')
+            ]; 
+        }           
+
+        $extraFields[] = [
+            'key' => 'InfrastructureWashWaterTypes.name',
+            'field' => 'infrastructure_wash_type',
+            'type' => 'string',
+            'label' => __('Type')
+        ];
+
+        if($washType == 'All'){
+
+            if ($infrastructureType == 'Water')
+            {
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashWaterProximities.name',
+                    'field' => 'infrastructure_wash_proximity',
+                    'type' => 'string',
+                    'label' => __('Proximity')
+                ];
+
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashWaterQuantities.name',
+                    'field' => 'infrastructure_wash_quantity',
+                    'type' => 'string',
+                    'label' => __('Quantity')
+                ];
+
+                 $extraFields[] = [
+                'key' => 'InfrastructureWashWaterQualities.name',
+                'field' => 'infrastructure_wash_quality',
+                'type' => 'string',
+                'label' => __('Quality')
+                ];
+
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashWaterAccessibilities.name',
+                    'field' => 'infrastructure_wash_accessibility',
+                    'type' => 'string',
+                    'label' => __('Accessibility')
+                ];
+            }
+            if ($infrastructureType == 'Sanitation')
+            {
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashSanitationUses.name',
+                    'field' => 'infrastructure_wash_uses',
+                    'type' => 'string',
+                    'label' => __('Use')
+                ];
+
+                $extraFields[] = [
+                'key' => 'maleSanitationFunctional',
+                'field' => 'maleSanitationFunctional',
+                'type' => 'string',
+                'label' => __('Male (Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'maleSanitationNonFunctional',
+                    'field' => 'maleSanitationNonFunctional',
+                    'type' => 'string',
+                    'label' => __('Male (Non-Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'femaleSanitationFunctional',
+                    'field' => 'femaleSanitationFunctional',
+                    'type' => 'string',
+                    'label' => __('Female (Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'femaleSanitationNonFunctional',
+                    'field' => 'femaleSanitationNonFunctional',
+                    'type' => 'string',
+                    'label' => __('Female (Non-Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'mixedSanitationFunctional',
+                    'field' => 'mixedSanitationFunctional',
+                    'type' => 'string',
+                    'label' => __('Mixed (Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'mixedSanitationNonFunctional',
+                    'field' => 'mixedSanitationNonFunctional',
+                    'type' => 'string',
+                    'label' => __('Mixed (Non-Functional)')
+                ];
+
+                $extraFields[] = [
+                'key' => 'InfrastructureWashWaterQualities.name',
+                'field' => 'infrastructure_wash_quality',
+                'type' => 'string',
+                'label' => __('Quality')
+                ];
+
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashWaterAccessibilities.name',
+                    'field' => 'infrastructure_wash_accessibility',
+                    'type' => 'string',
+                    'label' => __('Accessibility')
+                ]; 
+            }
+            if ($infrastructureType == 'Hygiene')
+            {
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashHygieneSoapashAccessibilities.name',
+                    'field' => 'infrastructure_wash_accessibility',
+                    'type' => 'string',
+                    'label' => __('Soap/Ash Availability')
+                ]; 
+               
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashHygieneEducations.name',
+                    'field' => 'infrastructure_wash_hygiene_education',
+                    'type' => 'string',
+                    'label' => __('Hygiene Education')
+                ];
+
+                $extraFields[] = [
+                'key' => 'maleHygieneFunctional',
+                'field' => 'maleHygieneFunctional',
+                'type' => 'string',
+                'label' => __('Male (Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'maleHygieneNonFunctional',
+                    'field' => 'maleHygieneNonFunctional',
+                    'type' => 'string',
+                    'label' => __('Male (Non-Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'femaleHygieneFunctional',
+                    'field' => 'femaleHygieneFunctional',
+                    'type' => 'string',
+                    'label' => __('Female (Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'femaleHygieneNonFunctional',
+                    'field' => 'femaleHygieneNonFunctional',
+                    'type' => 'string',
+                    'label' => __('Female (Non-Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'mixedHygieneFunctional',
+                    'field' => 'mixedHygieneFunctional',
+                    'type' => 'string',
+                    'label' => __('Mixed (Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'mixedHygieneNonFunctional',
+                    'field' => 'mixedHygieneNonFunctional',
+                    'type' => 'string',
+                    'label' => __('Mixed (Non-Functional)')
+                ]; 
+
+            }
+            if ($infrastructureType == 'Waste')
+            {
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashWasteFunctionalities.name',
+                    'field' => 'infrastructure_wash_functionality',
+                    'type' => 'string',
+                    'label' => __('Functionallity')
+                ];
+            }
+            if ($infrastructureType == 'Sewage')
+            {
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashSewageFunctionalities.name',
+                    'field' => 'infrastructure_wash_functionality',
+                    'type' => 'string',
+                    'label' => __('Functionallity')
+                ];
+            }
+        }
+
+        else if ($washType == 'Water'){
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashWaterProximities.name',
+                    'field' => 'infrastructure_wash_proximity',
+                    'type' => 'string',
+                    'label' => __('Proximity')
+                ];
+
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashWaterQuantities.name',
+                    'field' => 'infrastructure_wash_quantity',
+                    'type' => 'string',
+                    'label' => __('Quantity')
+                ];
+
+                 $extraFields[] = [
+                'key' => 'InfrastructureWashWaterQualities.name',
+                'field' => 'infrastructure_wash_quality',
+                'type' => 'string',
+                'label' => __('Quality')
+                ];
+
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashWaterAccessibilities.name',
+                    'field' => 'infrastructure_wash_accessibility',
+                    'type' => 'string',
+                    'label' => __('Accessibility')
+                ];
+            }
+            else if ($washType == 'Hygiene'){
+                
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashHygieneSoapashAccessibilities.name',
+                    'field' => 'infrastructure_wash_accessibility',
+                    'type' => 'string',
+                    'label' => __('Soap/Ash Availability')
+                ]; 
+               
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashHygieneEducations.name',
+                    'field' => 'infrastructure_wash_hygiene_education',
+                    'type' => 'string',
+                    'label' => __('Hygiene Education')
+                ];
+
+                $extraFields[] = [
+                'key' => 'maleHygieneFunctional',
+                'field' => 'maleHygieneFunctional',
+                'type' => 'string',
+                'label' => __('Male (Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'maleHygieneNonFunctional',
+                    'field' => 'maleHygieneNonFunctional',
+                    'type' => 'string',
+                    'label' => __('Male (Non-Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'femaleHygieneFunctional',
+                    'field' => 'femaleHygieneFunctional',
+                    'type' => 'string',
+                    'label' => __('Female (Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'femaleHygieneNonFunctional',
+                    'field' => 'femaleHygieneNonFunctional',
+                    'type' => 'string',
+                    'label' => __('Female (Non-Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'mixedHygieneFunctional',
+                    'field' => 'mixedHygieneFunctional',
+                    'type' => 'string',
+                    'label' => __('Mixed (Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'mixedHygieneNonFunctional',
+                    'field' => 'mixedHygieneNonFunctional',
+                    'type' => 'string',
+                    'label' => __('Mixed (Non-Functional)')
+                ]; 
+            }
+
+            else if ($washType == 'Sanitation'){
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashSanitationUses.name',
+                    'field' => 'infrastructure_wash_uses',
+                    'type' => 'string',
+                    'label' => __('Use')
+                ];
+
+                $extraFields[] = [
+                'key' => 'maleSanitationFunctional',
+                'field' => 'maleSanitationFunctional',
+                'type' => 'string',
+                'label' => __('Male (Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'maleSanitationNonFunctional',
+                    'field' => 'maleSanitationNonFunctional',
+                    'type' => 'string',
+                    'label' => __('Male (Non-Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'femaleSanitationFunctional',
+                    'field' => 'femaleSanitationFunctional',
+                    'type' => 'string',
+                    'label' => __('Female (Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'femaleSanitationNonFunctional',
+                    'field' => 'femaleSanitationNonFunctional',
+                    'type' => 'string',
+                    'label' => __('Female (Non-Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'mixedSanitationFunctional',
+                    'field' => 'mixedSanitationFunctional',
+                    'type' => 'string',
+                    'label' => __('Mixed (Functional)')
+                ];
+                
+                $extraFields[] = [
+                    'key' => 'mixedSanitationNonFunctional',
+                    'field' => 'mixedSanitationNonFunctional',
+                    'type' => 'string',
+                    'label' => __('Mixed (Non-Functional)')
+                ];
+
+                $extraFields[] = [
+                'key' => 'InfrastructureWashWaterQualities.name',
+                'field' => 'infrastructure_wash_quality',
+                'type' => 'string',
+                'label' => __('Quality')
+                ];
+
+                $extraFields[] = [
+                    'key' => 'InfrastructureWashWaterAccessibilities.name',
+                    'field' => 'infrastructure_wash_accessibility',
+                    'type' => 'string',
+                    'label' => __('Accessibility')
+                ];
+            }
+
+        
+        $fields->exchangeArray($extraFields);
+    }
+
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
+        unset($sheets[0]);
+        $infrastructureTabsData = $this->infrastructureTabsData;
+        $InstitutionStudents = TableRegistry::get('User.InstitutionStudents');
+        $institutionStudentId = $settings['id'];
+        $requestData = json_decode($settings['process']['params']);
+        $washType = $requestData->wash_type;
+
+         if($washType == 'All'){
+
+            foreach ($infrastructureTabsData as $key => $val)
+            {
+                $tabsName = $val;
+                $sheets[] = ['sheetData' => ['infrastructure_tabs_type' => $val], 'name' => $tabsName, 'table' => $this, 'query' => $this->find()
+                /* ->leftJoin([$InstitutionStudents->alias() => $InstitutionStudents->table()],[
+                            $this->aliasField('id = ').$InstitutionStudents->aliasField('student_id')
+                        ])
+                        ->where([
+                            $InstitutionStudents->aliasField('student_id = ').$institutionStudentId,
+                        ]) */
+                , 'orientation' => 'landscape'];
+            }
+        }
+
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+
+        $requestData = json_decode($settings['process']['params']);
+        
+        $academicPeriodId = $requestData->academic_period_id;
+        $institutionId = $requestData->institution_id;
+        $washType = $requestData->wash_type;
+        $areaId = $requestData->area_education_id;
+        $conditions = [];
+        $SanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
+        if (!empty($academicPeriodId)) {
+            $conditions['AcademicPeriods.id'] = $academicPeriodId;
+        }
+        if (!empty($institutionId) && $institutionId > 0) {
+            $conditions[$this->aliasField('id')] = $institutionId;
+        }
+        if (!empty($areaId) && $areaId > 0) {
+            $conditions[$this->aliasField('area_id')] = $areaId;
+        }
+
+        $sheetData = $settings['sheet']['sheetData'];
+        $infrastructureType = $sheetData['infrastructure_tabs_type'];
+
+        
+        if ($infrastructureType == 'Water')
+        {
+            $query
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('code'),
+                    $this->aliasField('name'),
+                    'area_code' => 'Areas.code',
+                    'area_name' => 'Areas.name',
+                    'academic_period' => 'AcademicPeriods.name',
+                    'infrastructure_wash_type' => 'InfrastructureWashWaterTypes.name',
+                    'infrastructure_wash_functionality' => 'InfrastructureWashWaterFunctionalities.name',
+                    'infrastructure_wash_accessibility' => 'InfrastructureWashWaterAccessibilities.name',
+                    'infrastructure_wash_quantity' => 'InfrastructureWashWaterQuantities.name',
+                    'infrastructure_wash_quality' => 'InfrastructureWashWaterQualities.name',
+                    'infrastructure_wash_proximity' => 'InfrastructureWashWaterProximities.name'
+                ])
+                ->contain(['Areas', 'AreaAdministratives'])
+                ->leftJoin(
+                    ['InfrastructureWashWaters' => 'infrastructure_wash_waters'],
+                    [
+                        'InfrastructureWashWaters.institution_id = ' . $this->aliasField('id'),
+                        'InfrastructureWashWaters.academic_period_id = ' . $academicPeriodId
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashWaterTypes' => 'infrastructure_wash_water_types'],
+                    [
+                        'InfrastructureWashWaterTypes.id = InfrastructureWashWaters.infrastructure_wash_water_type_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashWaterFunctionalities' => 'infrastructure_wash_water_functionalities'],
+                    [
+                        'InfrastructureWashWaterFunctionalities.id = InfrastructureWashWaters.infrastructure_wash_water_functionality_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashWaterAccessibilities' => 'infrastructure_wash_water_accessibilities'],
+                    [
+                        'InfrastructureWashWaterAccessibilities.id = InfrastructureWashWaters.infrastructure_wash_water_accessibility_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashWaterQuantities' => 'infrastructure_wash_water_quantities'],
+                    [
+                        'InfrastructureWashWaterQuantities.id = InfrastructureWashWaters.infrastructure_wash_water_quantity_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashWaterQualities' => 'infrastructure_wash_water_qualities'],
+                    [
+                        'InfrastructureWashWaterQualities.id = InfrastructureWashWaters.infrastructure_wash_water_quality_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashWaterProximities' => 'infrastructure_wash_water_proximities'],
+                    [
+                        'InfrastructureWashWaterProximities.id = InfrastructureWashWaters.infrastructure_wash_water_proximity_id'
+                    ]
+                )->leftJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = ' . $academicPeriodId
+                    ]
+                )
+                ->where($conditions);
+
+        }
+        if ($infrastructureType == 'Sanitation')
+        {
+            $query
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('code'),
+                    $this->aliasField('name'),
+                    'area_code' => 'Areas.code',
+                    'area_name' => 'Areas.name',
+                    'academic_period' => 'AcademicPeriods.name',
+                    'infrastructure_wash_type' => 'InfrastructureWashSanitationTypes.name',
+                    'infrastructure_wash_uses' => 'InfrastructureWashSanitationUses.name',
+                    'infrastructure_wash_accessibility' => 'InfrastructureWashSanitationAccessibilities.name',                    
+                    'infrastructure_wash_quality' => 'InfrastructureWashSanitationQualities.name',
+                    'infrastructure_wash_id_sanitation' => 'InfrastructureWashSanitations.id'
+                ])
+                ->contain(['Areas', 'AreaAdministratives'])
+                ->leftJoin(
+                    ['InfrastructureWashSanitations' => 'infrastructure_wash_sanitations'],
+                    [
+                        'InfrastructureWashSanitations.institution_id = ' . $this->aliasField('id'),
+                        'InfrastructureWashSanitations.academic_period_id = ' . $academicPeriodId
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashSanitationTypes' => 'infrastructure_wash_sanitation_types'],
+                    [
+                        'InfrastructureWashSanitationTypes.id = InfrastructureWashSanitations.infrastructure_wash_sanitation_type_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashSanitationUses' => 'infrastructure_wash_sanitation_uses'],
+                    [
+                        'InfrastructureWashSanitationUses.id = InfrastructureWashSanitations.infrastructure_wash_sanitation_use_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashSanitationAccessibilities' => 'infrastructure_wash_sanitation_accessibilities'],
+                    [
+                        'InfrastructureWashSanitationAccessibilities.id = InfrastructureWashSanitations.infrastructure_wash_sanitation_accessibility_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashSanitationQualities' => 'infrastructure_wash_sanitation_qualities'],
+                    [
+                        'InfrastructureWashSanitationQualities.id = InfrastructureWashSanitations.infrastructure_wash_sanitation_quality_id'
+                    ]
+                )->leftJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = ' . $academicPeriodId
+                    ]
+                )
+                ->where($conditions);
+        }
+        if ($infrastructureType == 'Hygiene')
+        {
+            $query
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('code'),
+                    $this->aliasField('name'),
+                    'area_code' => 'Areas.code',
+                    'area_name' => 'Areas.name',
+                    'academic_period' => 'AcademicPeriods.name',
+                    'infrastructure_wash_type' => 'InfrastructureWashHygieneTypes.name',
+                    'infrastructure_wash_hygiene_education' => 'InfrastructureWashHygieneEducations.name',
+                    'infrastructure_wash_accessibility' => 'InfrastructureWashHygieneSoapashAccessibilities.name',                    
+                    'infrastructure_wash_id' => 'InfrastructureWashHygienes.id'
+                ])
+                ->contain(['Areas', 'AreaAdministratives'])
+                ->leftJoin(
+                    ['InfrastructureWashHygienes' => 'infrastructure_wash_hygienes'],
+                    [
+                        'InfrastructureWashHygienes.institution_id = ' . $this->aliasField('id'),
+                        'InfrastructureWashHygienes.academic_period_id = ' . $academicPeriodId
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashHygieneTypes' => 'infrastructure_wash_hygiene_types'],
+                    [
+                        'InfrastructureWashHygieneTypes.id = InfrastructureWashHygienes.infrastructure_wash_hygiene_type_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashHygieneEducations' => 'infrastructure_wash_hygiene_educations'],
+                    [
+                        'InfrastructureWashHygieneEducations.id = InfrastructureWashHygienes.infrastructure_wash_hygiene_education_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashHygieneSoapashAccessibilities' => 'infrastructure_wash_hygiene_soapash_availabilities'],
+                    [
+                        'InfrastructureWashHygieneSoapashAccessibilities.id = InfrastructureWashHygienes.infrastructure_wash_hygiene_soapash_availability_id'
+                    ]
+                )->leftJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = ' . $academicPeriodId
+                    ]
+                )
+                ->where($conditions);
+        }
+        if ($infrastructureType == 'Waste')
+        {
+            $washType = 'Waste';
+            $query
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('code'),
+                    $this->aliasField('name'),
+                    'area_code' => 'Areas.code',
+                    'area_name' => 'Areas.name',
+                    'academic_period' => 'AcademicPeriods.name',
+                    'infrastructure_wash_type' => 'InfrastructureWash'.$washType.'Types.name',
+                    'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'                    
+                ])
+                ->contain(['Areas', 'AreaAdministratives'])
+                ->leftJoin(
+                    ['InfrastructureWash'.$washType.'s' => 'infrastructure_wash_'.strtolower($washType).'s'],
+                    [
+                        'InfrastructureWash'.$washType.'s.institution_id = ' . $this->aliasField('id'),
+                        'InfrastructureWash'.$washType.'s.academic_period_id = ' . $academicPeriodId
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWash'.$washType.'Types' => 'infrastructure_wash_'.strtolower($washType).'_types'],
+                    [
+                        'InfrastructureWash'.$washType.'Types.id = InfrastructureWash'.$washType.'s.infrastructure_wash_'.strtolower($washType).'_type_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWash'.$washType.'Functionalities' => 'infrastructure_wash_'.strtolower($washType).'_functionalities'],
+                    [
+                        'InfrastructureWash'.$washType.'Functionalities.id = InfrastructureWash'.$washType.'s.infrastructure_wash_'.strtolower($washType).'_functionality_id'
+                    ]
+                )->leftJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = ' . $academicPeriodId
+                    ]
+                )
+                ->where($conditions);
+        }
+        if ($infrastructureType == 'Sewage')
+        {
+            $washType = 'Sewage';
+            $query
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('code'),
+                    $this->aliasField('name'),
+                    'area_code' => 'Areas.code',
+                    'area_name' => 'Areas.name',
+                    'academic_period' => 'AcademicPeriods.name',
+                    'infrastructure_wash_type' => 'InfrastructureWash'.$washType.'Types.name',
+                    'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'                    
+                ])
+                ->contain(['Areas', 'AreaAdministratives'])
+                ->leftJoin(
+                    ['InfrastructureWash'.$washType.'s' => 'infrastructure_wash_'.strtolower($washType).'s'],
+                    [
+                        'InfrastructureWash'.$washType.'s.institution_id = ' . $this->aliasField('id'),
+                        'InfrastructureWash'.$washType.'s.academic_period_id = ' . $academicPeriodId
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWash'.$washType.'Types' => 'infrastructure_wash_'.strtolower($washType).'_types'],
+                    [
+                        'InfrastructureWash'.$washType.'Types.id = InfrastructureWash'.$washType.'s.infrastructure_wash_'.strtolower($washType).'_type_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWash'.$washType.'Functionalities' => 'infrastructure_wash_'.strtolower($washType).'_functionalities'],
+                    [
+                        'InfrastructureWash'.$washType.'Functionalities.id = InfrastructureWash'.$washType.'s.infrastructure_wash_'.strtolower($washType).'_functionality_id'
+                    ]
+                )->leftJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = ' . $academicPeriodId
+                    ]
+                )
+                ->where($conditions);
+        }
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                //POCOR-5865 starts
+                /*$areaLevel = '';
+                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $areaLevelId = $ConfigItems->value('institution_area_level_id');
+                
+                $AreaTable = TableRegistry::get('Area.AreaLevels');
+                $value = $AreaTable->find()
+                            ->where([$AreaTable->aliasField('level') => $areaLevelId])
+                            ->first();
+            
+                if (!empty($value->name)) {
+                    $areaLevel = $value->name;
+                }*/
+
+                $row['area_level'] = $row->area_code;
+                //POCOR-5865 ends
+                return $row;
+            });
+        });
+        //POCOR-5865 starts
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                
+                $areas1 = TableRegistry::get('areas');
+                $areasData = $areas1
+                            ->find()
+                            ->where([$areas1->alias('code')=>$row->area_code])
+                            ->first();
+                $row['region_code'] = '';            
+                $row['region_name'] = '';
+                if(!empty($areasData)){
+                    $areas = TableRegistry::get('areas');
+                    $areaLevels = TableRegistry::get('area_levels');
+                    $institutions = TableRegistry::get('institutions');
+                    $val = $areas
+                                ->find()
+                                ->select([
+                                    $areas->aliasField('code'),
+                                    $areas->aliasField('name'),
+                                    ])
+                                ->leftJoin(
+                                    [$areaLevels->alias() => $areaLevels->table()],
+                                    [
+                                        $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
+                                    ]
+                                )
+                                ->leftJoin(
+                                    [$institutions->alias() => $institutions->table()],
+                                    [
+                                        $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
+                                    ]
+                                )    
+                                ->where([
+                                    $areaLevels->aliasField('level !=') => 1,
+                                    $areas->aliasField('id') => $areasData->parent_id
+                                ])->first();
+                    
+                    if (!empty($val->name) && !empty($val->code)) {
+                        $row['region_code'] = $val->code;
+                        $row['region_name'] = $val->name;
+                    }
+                }            
+                
+                return $row;
+            });
+        });
+        //POCOR-5865 ends
+
+        if($washType == 'Water'){
+            $query
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('code'),
+                    $this->aliasField('name'),
+                    'area_code' => 'Areas.code',
+                    'area_name' => 'Areas.name',
+                    'academic_period' => 'AcademicPeriods.name',
+                    'infrastructure_wash_type' => 'InfrastructureWashWaterTypes.name',
+                    'infrastructure_wash_functionality' => 'InfrastructureWashWaterFunctionalities.name',
+                    'infrastructure_wash_accessibility' => 'InfrastructureWashWaterAccessibilities.name',
+                    'infrastructure_wash_quantity' => 'InfrastructureWashWaterQuantities.name',
+                    'infrastructure_wash_quality' => 'InfrastructureWashWaterQualities.name',
+                    'infrastructure_wash_proximity' => 'InfrastructureWashWaterProximities.name'
+                ])
+                ->contain(['Areas', 'AreaAdministratives'])
+                ->leftJoin(
+                    ['InfrastructureWashWaters' => 'infrastructure_wash_waters'],
+                    [
+                        'InfrastructureWashWaters.institution_id = ' . $this->aliasField('id'),
+                        'InfrastructureWashWaters.academic_period_id = ' . $academicPeriodId
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashWaterTypes' => 'infrastructure_wash_water_types'],
+                    [
+                        'InfrastructureWashWaterTypes.id = InfrastructureWashWaters.infrastructure_wash_water_type_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashWaterFunctionalities' => 'infrastructure_wash_water_functionalities'],
+                    [
+                        'InfrastructureWashWaterFunctionalities.id = InfrastructureWashWaters.infrastructure_wash_water_functionality_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashWaterAccessibilities' => 'infrastructure_wash_water_accessibilities'],
+                    [
+                        'InfrastructureWashWaterAccessibilities.id = InfrastructureWashWaters.infrastructure_wash_water_accessibility_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashWaterQuantities' => 'infrastructure_wash_water_quantities'],
+                    [
+                        'InfrastructureWashWaterQuantities.id = InfrastructureWashWaters.infrastructure_wash_water_quantity_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashWaterQualities' => 'infrastructure_wash_water_qualities'],
+                    [
+                        'InfrastructureWashWaterQualities.id = InfrastructureWashWaters.infrastructure_wash_water_quality_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashWaterProximities' => 'infrastructure_wash_water_proximities'],
+                    [
+                        'InfrastructureWashWaterProximities.id = InfrastructureWashWaters.infrastructure_wash_water_proximity_id'
+                    ]
+                )->leftJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = ' . $academicPeriodId
+                    ]
+                )
+                ->where($conditions);
+           
+        }
+
+        if($washType == 'Hygiene'){
+            $query
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('code'),
+                    $this->aliasField('name'),
+                    'area_code' => 'Areas.code',
+                    'area_name' => 'Areas.name',
+                    'academic_period' => 'AcademicPeriods.name',
+                    'infrastructure_wash_type' => 'InfrastructureWashHygieneTypes.name',
+                    'infrastructure_wash_hygiene_education' => 'InfrastructureWashHygieneEducations.name',
+                    'infrastructure_wash_accessibility' => 'InfrastructureWashHygieneSoapashAccessibilities.name',                    
+                    'infrastructure_wash_id' => 'InfrastructureWashHygienes.id'
+                ])
+                ->contain(['Areas', 'AreaAdministratives'])
+                ->leftJoin(
+                    ['InfrastructureWashHygienes' => 'infrastructure_wash_hygienes'],
+                    [
+                        'InfrastructureWashHygienes.institution_id = ' . $this->aliasField('id'),
+                        'InfrastructureWashHygienes.academic_period_id = ' . $academicPeriodId
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashHygieneTypes' => 'infrastructure_wash_hygiene_types'],
+                    [
+                        'InfrastructureWashHygieneTypes.id = InfrastructureWashHygienes.infrastructure_wash_hygiene_type_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashHygieneEducations' => 'infrastructure_wash_hygiene_educations'],
+                    [
+                        'InfrastructureWashHygieneEducations.id = InfrastructureWashHygienes.infrastructure_wash_hygiene_education_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashHygieneSoapashAccessibilities' => 'infrastructure_wash_hygiene_soapash_availabilities'],
+                    [
+                        'InfrastructureWashHygieneSoapashAccessibilities.id = InfrastructureWashHygienes.infrastructure_wash_hygiene_soapash_availability_id'
+                    ]
+                )->leftJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = ' . $academicPeriodId
+                    ]
+                )
+                ->where($conditions);
+        }
+
+        if($washType == 'Hygiene'){
+            $query
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('code'),
+                    $this->aliasField('name'),
+                    'area_code' => 'Areas.code',
+                    'area_name' => 'Areas.name',
+                    'academic_period' => 'AcademicPeriods.name',
+                    'infrastructure_wash_type' => 'InfrastructureWashSanitationTypes.name',
+                    'infrastructure_wash_uses' => 'InfrastructureWashSanitationUses.name',
+                    'infrastructure_wash_accessibility' => 'InfrastructureWashSanitationAccessibilities.name',                    
+                    'infrastructure_wash_quality' => 'InfrastructureWashSanitationQualities.name',
+                    'infrastructure_wash_id_sanitation' => 'InfrastructureWashSanitations.id'
+                ])
+                ->contain(['Areas', 'AreaAdministratives'])
+                ->leftJoin(
+                    ['InfrastructureWashSanitations' => 'infrastructure_wash_sanitations'],
+                    [
+                        'InfrastructureWashSanitations.institution_id = ' . $this->aliasField('id'),
+                        'InfrastructureWashSanitations.academic_period_id = ' . $academicPeriodId
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashSanitationTypes' => 'infrastructure_wash_sanitation_types'],
+                    [
+                        'InfrastructureWashSanitationTypes.id = InfrastructureWashSanitations.infrastructure_wash_sanitation_type_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashSanitationUses' => 'infrastructure_wash_sanitation_uses'],
+                    [
+                        'InfrastructureWashSanitationUses.id = InfrastructureWashSanitations.infrastructure_wash_sanitation_use_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashSanitationAccessibilities' => 'infrastructure_wash_sanitation_accessibilities'],
+                    [
+                        'InfrastructureWashSanitationAccessibilities.id = InfrastructureWashSanitations.infrastructure_wash_sanitation_accessibility_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWashSanitationQualities' => 'infrastructure_wash_sanitation_qualities'],
+                    [
+                        'InfrastructureWashSanitationQualities.id = InfrastructureWashSanitations.infrastructure_wash_sanitation_quality_id'
+                    ]
+                )->leftJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = ' . $academicPeriodId
+                    ]
+                )
+                ->where($conditions);
+        }
+
+        if ($washType == 'Waste')
+        {
+            $washType = 'Waste';
+            $query
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('code'),
+                    $this->aliasField('name'),
+                    'area_code' => 'Areas.code',
+                    'area_name' => 'Areas.name',
+                    'academic_period' => 'AcademicPeriods.name',
+                    'infrastructure_wash_type' => 'InfrastructureWash'.$washType.'Types.name',
+                    'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'                    
+                ])
+                ->contain(['Areas', 'AreaAdministratives'])
+                ->leftJoin(
+                    ['InfrastructureWash'.$washType.'s' => 'infrastructure_wash_'.strtolower($washType).'s'],
+                    [
+                        'InfrastructureWash'.$washType.'s.institution_id = ' . $this->aliasField('id'),
+                        'InfrastructureWash'.$washType.'s.academic_period_id = ' . $academicPeriodId
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWash'.$washType.'Types' => 'infrastructure_wash_'.strtolower($washType).'_types'],
+                    [
+                        'InfrastructureWash'.$washType.'Types.id = InfrastructureWash'.$washType.'s.infrastructure_wash_'.strtolower($washType).'_type_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWash'.$washType.'Functionalities' => 'infrastructure_wash_'.strtolower($washType).'_functionalities'],
+                    [
+                        'InfrastructureWash'.$washType.'Functionalities.id = InfrastructureWash'.$washType.'s.infrastructure_wash_'.strtolower($washType).'_functionality_id'
+                    ]
+                )->leftJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = ' . $academicPeriodId
+                    ]
+                )
+                ->where($conditions);
+        }
+
+        if ($washType == 'Sewage')
+        {
+            $washType = 'Sewage';
+            $query
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('code'),
+                    $this->aliasField('name'),
+                    'area_code' => 'Areas.code',
+                    'area_name' => 'Areas.name',
+                    'academic_period' => 'AcademicPeriods.name',
+                    'infrastructure_wash_type' => 'InfrastructureWash'.$washType.'Types.name',
+                    'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'                    
+                ])
+                ->contain(['Areas', 'AreaAdministratives'])
+                ->leftJoin(
+                    ['InfrastructureWash'.$washType.'s' => 'infrastructure_wash_'.strtolower($washType).'s'],
+                    [
+                        'InfrastructureWash'.$washType.'s.institution_id = ' . $this->aliasField('id'),
+                        'InfrastructureWash'.$washType.'s.academic_period_id = ' . $academicPeriodId
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWash'.$washType.'Types' => 'infrastructure_wash_'.strtolower($washType).'_types'],
+                    [
+                        'InfrastructureWash'.$washType.'Types.id = InfrastructureWash'.$washType.'s.infrastructure_wash_'.strtolower($washType).'_type_id'
+                    ]
+                )->leftJoin(
+                    ['InfrastructureWash'.$washType.'Functionalities' => 'infrastructure_wash_'.strtolower($washType).'_functionalities'],
+                    [
+                        'InfrastructureWash'.$washType.'Functionalities.id = InfrastructureWash'.$washType.'s.infrastructure_wash_'.strtolower($washType).'_functionality_id'
+                    ]
+                )->leftJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = ' . $academicPeriodId
+                    ]
+                )
+                ->where($conditions);
+        }
+    }
+
     public function onExcelGetMaleSanitationFunctional(Event $event, Entity $entity)
     {
         $maleSanitationFunctional = '';
         
-        if(!empty($entity->infrastructure_wash_id)){
+        if(!empty($entity->infrastructure_wash_id_sanitation)){  //POCOR-6732
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
                     ->where(['gender_id' => self::MALE, 'functional' => self::FUNCTIONAL, 
-                        'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id])
-                    ->first();
+                        'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id_sanitation])
+                    ->first();     //POCOR-6732
             $maleSanitationFunctional = $sanitationQuantitiesResult->value;
         }
             
@@ -100,12 +1121,12 @@ class WashReportsTable extends AppTable
     {
         $maleSanitationNonFunctional = '';
         
-        if(!empty($entity->infrastructure_wash_id)){
+        if(!empty($entity->infrastructure_wash_id_sanitation)){     //POCOR-6732
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
                     ->where(['gender_id' => self::MALE, 'functional' => self::NONFUNCTIONAL, 
-                        'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id])
-                    ->first();
+                        'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id_sanitation])
+                    ->first();     //POCOR-6732
             $maleSanitationNonFunctional = $sanitationQuantitiesResult->value;
         }
             
@@ -116,12 +1137,12 @@ class WashReportsTable extends AppTable
     {
         $femaleSanitationFunctional = '';
         
-        if(!empty($entity->infrastructure_wash_id)){
+        if(!empty($entity->infrastructure_wash_id_sanitation)){      //POCOR-6732
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
                     ->where(['gender_id' => self::FEMALE, 'functional' => self::FUNCTIONAL, 
-                        'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id])
-                    ->first();
+                        'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id_sanitation])
+                    ->first();      //POCOR-6732
             $femaleSanitationFunctional = $sanitationQuantitiesResult->value;
         }
             
@@ -132,12 +1153,12 @@ class WashReportsTable extends AppTable
     {
         $femaleSanitationNonFunctional = '';
         
-        if(!empty($entity->infrastructure_wash_id)){
+        if(!empty($entity->infrastructure_wash_id_sanitation)){      //POCOR-6732
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
                     ->where(['gender_id' => self::FEMALE, 'functional' => self::NONFUNCTIONAL, 
-                        'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id])
-                    ->first();
+                        'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id_sanitation])
+                    ->first();    //POCOR-6732
             $femaleSanitationNonFunctional = $sanitationQuantitiesResult->value;
         }
             
@@ -148,12 +1169,12 @@ class WashReportsTable extends AppTable
     {
         $mixedSanitationFunctional = '';
         
-        if(!empty($entity->infrastructure_wash_id)){
+        if(!empty($entity->infrastructure_wash_id_sanitation)){       //POCOR-6732
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
                     ->where(['gender_id' => self::MIXED, 'functional' => self::FUNCTIONAL, 
-                        'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id])
-                    ->first();
+                        'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id_sanitation])
+                    ->first();     //POCOR-6732
             $mixedSanitationFunctional = $sanitationQuantitiesResult->value;
         }
             
@@ -164,12 +1185,12 @@ class WashReportsTable extends AppTable
     {
         $mixedSanitationNonFunctional = '';
         
-        if(!empty($entity->infrastructure_wash_id)){
+        if(!empty($entity->infrastructure_wash_id_sanitation)){      //POCOR-6732
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
                     ->where(['gender_id' => self::MIXED, 'functional' => self::NONFUNCTIONAL, 
-                        'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id])
-                    ->first();
+                        'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id_sanitation])
+                    ->first();        //POCOR-6732
             $mixedSanitationNonFunctional = $sanitationQuantitiesResult->value;
         }
             
@@ -272,479 +1293,5 @@ class WashReportsTable extends AppTable
         return $mixedHygieneNonFunctional;
     }
     
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    {
-        $requestData = json_decode($settings['process']['params']);
-        
-        $academicPeriodId = $requestData->academic_period_id;
-        $institutionId = $requestData->institution_id;
-        $washType = $requestData->wash_type;
-        $areaId = $requestData->area_education_id;
-        $conditions = [];
-        $SanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
-        if (!empty($academicPeriodId)) {
-            $conditions['AcademicPeriods.id'] = $academicPeriodId;
-        }
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions[$this->aliasField('id')] = $institutionId;
-        }
-        if (!empty($areaId) && $areaId > 0) {
-            $conditions[$this->aliasField('area_id')] = $areaId;
-        }
-        
-        if($washType == 'Water'){
-            $query
-                ->select([
-                    $this->aliasField('id'),
-                    $this->aliasField('code'),
-                    $this->aliasField('name'),
-                    'area_code' => 'Areas.code',
-                    'area_name' => 'Areas.name',
-                    'academic_period' => 'AcademicPeriods.name',
-                    'infrastructure_wash_type' => 'InfrastructureWashWaterTypes.name',
-                    'infrastructure_wash_functionality' => 'InfrastructureWashWaterFunctionalities.name',
-                    'infrastructure_wash_accessibility' => 'InfrastructureWashWaterAccessibilities.name',
-                    'infrastructure_wash_quantity' => 'InfrastructureWashWaterQuantities.name',
-                    'infrastructure_wash_quality' => 'InfrastructureWashWaterQualities.name',
-                    'infrastructure_wash_proximity' => 'InfrastructureWashWaterProximities.name'
-                ])
-                ->contain(['Areas', 'AreaAdministratives'])
-                ->leftJoin(
-                    ['InfrastructureWashWaters' => 'infrastructure_wash_waters'],
-                    [
-                        'InfrastructureWashWaters.institution_id = ' . $this->aliasField('id'),
-                        'InfrastructureWashWaters.academic_period_id = ' . $academicPeriodId
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWashWaterTypes' => 'infrastructure_wash_water_types'],
-                    [
-                        'InfrastructureWashWaterTypes.id = InfrastructureWashWaters.infrastructure_wash_water_type_id'
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWashWaterFunctionalities' => 'infrastructure_wash_water_functionalities'],
-                    [
-                        'InfrastructureWashWaterFunctionalities.id = InfrastructureWashWaters.infrastructure_wash_water_functionality_id'
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWashWaterAccessibilities' => 'infrastructure_wash_water_accessibilities'],
-                    [
-                        'InfrastructureWashWaterAccessibilities.id = InfrastructureWashWaters.infrastructure_wash_water_accessibility_id'
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWashWaterQuantities' => 'infrastructure_wash_water_quantities'],
-                    [
-                        'InfrastructureWashWaterQuantities.id = InfrastructureWashWaters.infrastructure_wash_water_quantity_id'
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWashWaterQualities' => 'infrastructure_wash_water_qualities'],
-                    [
-                        'InfrastructureWashWaterQualities.id = InfrastructureWashWaters.infrastructure_wash_water_quality_id'
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWashWaterProximities' => 'infrastructure_wash_water_proximities'],
-                    [
-                        'InfrastructureWashWaterProximities.id = InfrastructureWashWaters.infrastructure_wash_water_proximity_id'
-                    ]
-                )->leftJoin(
-                    ['AcademicPeriods' => 'academic_periods'],
-                    [
-                        'AcademicPeriods.id = ' . $academicPeriodId
-                    ]
-                )
-                ->where($conditions);
-           
-        }
-        
-        if($washType == 'Waste' || $washType == 'Sewage'){
-            $query
-                ->select([
-                    $this->aliasField('id'),
-                    $this->aliasField('code'),
-                    $this->aliasField('name'),
-                    'area_code' => 'Areas.code',
-                    'area_name' => 'Areas.name',
-                    'academic_period' => 'AcademicPeriods.name',
-                    'infrastructure_wash_type' => 'InfrastructureWash'.$washType.'Types.name',
-                    'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'                    
-                ])
-                ->contain(['Areas', 'AreaAdministratives'])
-                ->leftJoin(
-                    ['InfrastructureWash'.$washType.'s' => 'infrastructure_wash_'.strtolower($washType).'s'],
-                    [
-                        'InfrastructureWash'.$washType.'s.institution_id = ' . $this->aliasField('id'),
-                        'InfrastructureWash'.$washType.'s.academic_period_id = ' . $academicPeriodId
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWash'.$washType.'Types' => 'infrastructure_wash_'.strtolower($washType).'_types'],
-                    [
-                        'InfrastructureWash'.$washType.'Types.id = InfrastructureWash'.$washType.'s.infrastructure_wash_'.strtolower($washType).'_type_id'
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWash'.$washType.'Functionalities' => 'infrastructure_wash_'.strtolower($washType).'_functionalities'],
-                    [
-                        'InfrastructureWash'.$washType.'Functionalities.id = InfrastructureWash'.$washType.'s.infrastructure_wash_'.strtolower($washType).'_functionality_id'
-                    ]
-                )->leftJoin(
-                    ['AcademicPeriods' => 'academic_periods'],
-                    [
-                        'AcademicPeriods.id = ' . $academicPeriodId
-                    ]
-                )
-                ->where($conditions);
-        }
-        
-        if($washType == 'Sanitation'){
-            $query
-                ->select([
-                    $this->aliasField('id'),
-                    $this->aliasField('code'),
-                    $this->aliasField('name'),
-                    'area_code' => 'Areas.code',
-                    'area_name' => 'Areas.name',
-                    'academic_period' => 'AcademicPeriods.name',
-                    'infrastructure_wash_type' => 'InfrastructureWashSanitationTypes.name',
-                    'infrastructure_wash_uses' => 'InfrastructureWashSanitationUses.name',
-                    'infrastructure_wash_accessibility' => 'InfrastructureWashSanitationAccessibilities.name',                    
-                    'infrastructure_wash_quality' => 'InfrastructureWashSanitationQualities.name',
-                    'infrastructure_wash_id' => 'InfrastructureWashSanitations.id'
-                ])
-                ->contain(['Areas', 'AreaAdministratives'])
-                ->leftJoin(
-                    ['InfrastructureWashSanitations' => 'infrastructure_wash_sanitations'],
-                    [
-                        'InfrastructureWashSanitations.institution_id = ' . $this->aliasField('id'),
-                        'InfrastructureWashSanitations.academic_period_id = ' . $academicPeriodId
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWashSanitationTypes' => 'infrastructure_wash_sanitation_types'],
-                    [
-                        'InfrastructureWashSanitationTypes.id = InfrastructureWashSanitations.infrastructure_wash_sanitation_type_id'
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWashSanitationUses' => 'infrastructure_wash_sanitation_uses'],
-                    [
-                        'InfrastructureWashSanitationUses.id = InfrastructureWashSanitations.infrastructure_wash_sanitation_use_id'
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWashSanitationAccessibilities' => 'infrastructure_wash_sanitation_accessibilities'],
-                    [
-                        'InfrastructureWashSanitationAccessibilities.id = InfrastructureWashSanitations.infrastructure_wash_sanitation_accessibility_id'
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWashSanitationQualities' => 'infrastructure_wash_sanitation_qualities'],
-                    [
-                        'InfrastructureWashSanitationQualities.id = InfrastructureWashSanitations.infrastructure_wash_sanitation_quality_id'
-                    ]
-                )->leftJoin(
-                    ['AcademicPeriods' => 'academic_periods'],
-                    [
-                        'AcademicPeriods.id = ' . $academicPeriodId
-                    ]
-                )
-                ->where($conditions);
-        }
-        
-        if($washType == 'Hygiene'){
-            $query
-                ->select([
-                    $this->aliasField('id'),
-                    $this->aliasField('code'),
-                    $this->aliasField('name'),
-                    'area_code' => 'Areas.code',
-                    'area_name' => 'Areas.name',
-                    'academic_period' => 'AcademicPeriods.name',
-                    'infrastructure_wash_type' => 'InfrastructureWashHygieneTypes.name',
-                    'infrastructure_wash_hygiene_education' => 'InfrastructureWashHygieneEducations.name',
-                    'infrastructure_wash_accessibility' => 'InfrastructureWashHygieneSoapashAccessibilities.name',                    
-                    'infrastructure_wash_id' => 'InfrastructureWashHygienes.id'
-                ])
-                ->contain(['Areas', 'AreaAdministratives'])
-                ->leftJoin(
-                    ['InfrastructureWashHygienes' => 'infrastructure_wash_hygienes'],
-                    [
-                        'InfrastructureWashHygienes.institution_id = ' . $this->aliasField('id'),
-                        'InfrastructureWashHygienes.academic_period_id = ' . $academicPeriodId
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWashHygieneTypes' => 'infrastructure_wash_hygiene_types'],
-                    [
-                        'InfrastructureWashHygieneTypes.id = InfrastructureWashHygienes.infrastructure_wash_hygiene_type_id'
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWashHygieneEducations' => 'infrastructure_wash_hygiene_educations'],
-                    [
-                        'InfrastructureWashHygieneEducations.id = InfrastructureWashHygienes.infrastructure_wash_hygiene_education_id'
-                    ]
-                )->leftJoin(
-                    ['InfrastructureWashHygieneSoapashAccessibilities' => 'infrastructure_wash_hygiene_soapash_availabilities'],
-                    [
-                        'InfrastructureWashHygieneSoapashAccessibilities.id = InfrastructureWashHygienes.infrastructure_wash_hygiene_soapash_availability_id'
-                    ]
-                )->leftJoin(
-                    ['AcademicPeriods' => 'academic_periods'],
-                    [
-                        'AcademicPeriods.id = ' . $academicPeriodId
-                    ]
-                )
-                ->where($conditions);
-        }
-        
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
-                //POCOR-5865 starts
-                /*$areaLevel = '';
-                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-                $areaLevelId = $ConfigItems->value('institution_area_level_id');
-                
-                $AreaTable = TableRegistry::get('Area.AreaLevels');
-                $value = $AreaTable->find()
-                            ->where([$AreaTable->aliasField('level') => $areaLevelId])
-                            ->first();
-            
-                if (!empty($value->name)) {
-                    $areaLevel = $value->name;
-                }*/
-
-                $row['area_level'] = $row->area_code;
-                //POCOR-5865 ends
-                return $row;
-            });
-        });
-        //POCOR-5865 starts
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
-                
-                $areas1 = TableRegistry::get('areas');
-                $areasData = $areas1
-                            ->find()
-                            ->where([$areas1->alias('code')=>$row->area_code])
-                            ->first();
-                $row['region_code'] = '';            
-                $row['region_name'] = '';
-                if(!empty($areasData)){
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
-                    $val = $areas
-                                ->find()
-                                ->select([
-                                    $areas->aliasField('code'),
-                                    $areas->aliasField('name'),
-                                    ])
-                                ->leftJoin(
-                                    [$areaLevels->alias() => $areaLevels->table()],
-                                    [
-                                        $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
-                                    ]
-                                )
-                                ->leftJoin(
-                                    [$institutions->alias() => $institutions->table()],
-                                    [
-                                        $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
-                                    ]
-                                )    
-                                ->where([
-                                    $areaLevels->aliasField('level !=') => 1,
-                                    $areas->aliasField('id') => $areasData->parent_id
-                                ])->first();
-                    
-                    if (!empty($val->name) && !empty($val->code)) {
-                        $row['region_code'] = $val->code;
-                        $row['region_name'] = $val->name;
-                    }
-                }            
-                
-                return $row;
-            });
-        });
-        //POCOR-5865 ends
-    }
-
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
-    {
-        $cloneFields = $fields->getArrayCopy();
-        $requestData = json_decode($settings['process']['params']);
-        $washType = $requestData->wash_type;
-
-        $extraFields = [];
-                
-        $extraFields[] = [
-            'key' => 'code',
-            'field' => 'code',
-            'type' => 'string',
-            'label' => __('Code')
-        ];
-        
-        $extraFields[] = [
-            'key' => 'name',
-            'field' => 'name',
-            'type' => 'string',
-            'label' => __('Name')
-        ];
-
-        //add columns  POCOR-5865 starts
-        $extraFields[] = [
-            'key' => 'region_code',
-            'field' => 'region_code',
-            'type' => 'string',
-            'label' => __('Region Code')
-        ];
-        
-        $extraFields[] = [
-            'key' => 'region_name',
-            'field' => 'region_name',
-            'type' => 'string',
-            'label' => __('Region Name')
-        ];
-        //add columns  POCOR-5865 ends
-        //update label  POCOR-5865 starts
-        $extraFields[] = [
-            'key' => 'area_level',
-            'field' => 'area_level',
-            'type' => 'string',
-            'label' => __('District Code')
-        ];
-        
-        $extraFields[] = [
-            'key' => 'area_name',
-            'field' => 'area_name',
-            'type' => 'string',
-            'label' => __('District Name')
-        ];
-        //update label POCOR-5865 ends
-        $extraFields[] = [
-            'key' => 'AcademicPeriods.name',
-            'field' => 'academic_period',
-            'type' => 'string',
-            'label' => __('Academic Period')
-        ];
-        
-        
-        $extraFields[] = [
-            'key' => 'wash'.$washType,
-            'field' => 'wash'.$washType,
-            'type' => 'string',
-            'label' => __('Wash')
-        ];
-        
-        $extraFields[] = [
-            'key' => 'InfrastructureWashWaterTypes.name',
-            'field' => 'infrastructure_wash_type',
-            'type' => 'string',
-            'label' => __('Type')
-        ];
-        
-        if(!array($washType, ['Water', 'Waste', 'Sewage'])){
-            $extraFields[] = [
-                'key' => 'InfrastructureWash'.$washType.'Functionalities.name',
-                'field' => 'infrastructure_wash_functionality',
-                'type' => 'string',
-                'label' => __('Functionallity')
-            ];
-        }
-        
-        if($washType == 'Sanitation'){
-           $extraFields[] = [
-                'key' => 'InfrastructureWashSanitationUses.name',
-                'field' => 'infrastructure_wash_uses',
-                'type' => 'string',
-                'label' => __('Use')
-            ]; 
-        }
-        
-        if($washType == 'Hygiene'){
-           $extraFields[] = [
-                'key' => 'InfrastructureWashHygieneSoapashAccessibilities.name',
-                'field' => 'infrastructure_wash_accessibility',
-                'type' => 'string',
-                'label' => __('Soap/Ash Availability')
-            ]; 
-           
-           $extraFields[] = [
-                'key' => 'InfrastructureWashHygieneEducations.name',
-                'field' => 'infrastructure_wash_hygiene_education',
-                'type' => 'string',
-                'label' => __('Hygiene Education')
-            ]; 
-        }
-        
-        if($washType == 'Water'){
-            $extraFields[] = [
-                'key' => 'InfrastructureWashWaterProximities.name',
-                'field' => 'infrastructure_wash_proximity',
-                'type' => 'string',
-                'label' => __('Proximity')
-            ];
-
-            $extraFields[] = [
-                'key' => 'InfrastructureWashWaterQuantities.name',
-                'field' => 'infrastructure_wash_quantity',
-                'type' => 'string',
-                'label' => __('Quantity')
-            ];
-        }
-        
-        if(in_array($washType, ['Sanitation', 'Hygiene'])){
-            $extraFields[] = [
-                'key' => 'male'.$washType.'Functional',
-                'field' => 'male'.$washType.'Functional',
-                'type' => 'string',
-                'label' => __('Male (Functional)')
-            ];
-            
-            $extraFields[] = [
-                'key' => 'male'.$washType.'NonFunctional',
-                'field' => 'male'.$washType.'NonFunctional',
-                'type' => 'string',
-                'label' => __('Male (Non-Functional)')
-            ];
-            
-            $extraFields[] = [
-                'key' => 'female'.$washType.'Functional',
-                'field' => 'female'.$washType.'Functional',
-                'type' => 'string',
-                'label' => __('Female (Functional)')
-            ];
-            
-            $extraFields[] = [
-                'key' => 'female'.$washType.'NonFunctional',
-                'field' => 'female'.$washType.'NonFunctional',
-                'type' => 'string',
-                'label' => __('Female (Non-Functional)')
-            ];
-            
-            $extraFields[] = [
-                'key' => 'mixed'.$washType.'Functional',
-                'field' => 'mixed'.$washType.'Functional',
-                'type' => 'string',
-                'label' => __('Mixed (Functional)')
-            ];
-            
-            $extraFields[] = [
-                'key' => 'mixed'.$washType.'NonFunctional',
-                'field' => 'mixed'.$washType.'NonFunctional',
-                'type' => 'string',
-                'label' => __('Mixed (Non-Functional)')
-            ];
-        }
-        
-        if(in_array($washType, ['Water', 'Sanitation'])){
-            $extraFields[] = [
-                'key' => 'InfrastructureWashWaterQualities.name',
-                'field' => 'infrastructure_wash_quality',
-                'type' => 'string',
-                'label' => __('Quality')
-            ];
-
-            $extraFields[] = [
-                'key' => 'InfrastructureWashWaterAccessibilities.name',
-                'field' => 'infrastructure_wash_accessibility',
-                'type' => 'string',
-                'label' => __('Accessibility')
-            ];
-        }
-        
-        $newFields = array_merge($extraFields);
-        $fields->exchangeArray($newFields);
-    }
+    
 }
