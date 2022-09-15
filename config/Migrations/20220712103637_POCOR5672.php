@@ -13,8 +13,8 @@ class POCOR5672 extends AbstractMigration
     public function up()
     {
 
-        // $this->execute('CREATE TABLE `zz_5672_config_items` LIKE `config_items`');
-        // $this->execute('INSERT INTO `zz_5672_config_items` SELECT * FROM `config_items`');
+        $this->execute('CREATE TABLE `zz_5672_config_items` LIKE `config_items`');
+        $this->execute('INSERT INTO `zz_5672_config_items` SELECT * FROM `config_items`');
 
         $table = $this->table('config_items');
         $data = [
