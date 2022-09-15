@@ -1942,7 +1942,7 @@ class StaffTable extends ControllerActionTable
                             $StaffLeave->aliasField('staff_id') => $staffId,
                             $StaffLeave->aliasField('institution_id') => $conditions['institution_id'],
                             $StaffLeave->aliasField('date_from <=') => $currentDate,
-                            $StaffLeave->aliasField('date_to >') => $currentDate
+                            $StaffLeave->aliasField('date_to >=') => $currentDate
                         ]);
                     if ($staffLeaveObj->count() > 0) {
                         $row->absent = 1;
