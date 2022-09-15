@@ -1,3 +1,9 @@
+### [3.75.28] - 2022-09-15
+- Bug Fixed: Institution > Students > Transfer: Education Grade is Empty Even Though There are Students in that specific year
+- Bug Fixed: Implement database foreign keys for OpenEMIS Core-Issues raised
+- Bug Fixed: API: User with OpenEMIS ID 2488140537 has no academic history records, but he has marks in 7 different grades.
+- Bug Fixed: Institutions>Student>Bulk Transfer: Assignee is assigned wrongly
+
 ### [3.75.27] - 2022-09-14
 - Bug Fixed: Report>Institution>Wash Report: Changes to the Wash Report
 - Bug Fixed: Institution > Students: User is able to create students with the same OpenEMIS ID at the same time as another user
