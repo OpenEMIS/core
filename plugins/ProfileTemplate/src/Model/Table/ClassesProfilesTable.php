@@ -54,6 +54,7 @@ class ClassesProfilesTable extends ControllerActionTable
 
     public function initialize(array $config)
     { 
+        ini_set('memory_limit', '2G');
         $this->table('institutions');
         parent::initialize($config);
 
