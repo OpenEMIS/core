@@ -994,6 +994,7 @@ class StudentsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['academic_period_id'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+            $institutionId = $this->request->data[$this->alias()]['institution_id'];  //POCOR-5740
             if (in_array($feature,
                         [
                             'Report.ClassAttendanceNotMarkedRecords',
@@ -1001,26 +1002,36 @@ class StudentsTable extends AppTable
                         ])
                 ) {
 
-                $EducationGrades = TableRegistry::get('Education.EducationGrades');
-                $gradeOptions = $EducationGrades
+                //POCOR-6727 starts
+
+                $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+                $conditions = [];
+                if ($institutionId != 0) {
+                    $conditions[$InstitutionGrades->aliasField('institution_id')] = $institutionId;
+                }
+                $gradeOptions = $InstitutionGrades
                     ->find('list', [
                         'keyField' => 'id',
                         'valueField' => 'name'
                     ])
                     ->select([
-                        'id' => $EducationGrades->aliasField('id'),
-                        'name' => $EducationGrades->aliasField('name'),
+                        'id' => 'EducationGrades.id',
+                        'name' => 'EducationGrades.name',
                         'education_programme_name' => 'EducationProgrammes.name'
                     ])
-                    ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                    //->contain(['EducationProgrammes'])
+                    ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
                     ->where([
+                        $conditions,
                         'EducationSystems.academic_period_id' => $academicPeriodId,
                     ])
                     ->order([
                         'EducationProgrammes.order' => 'ASC',
-                        $EducationGrades->aliasField('name') => 'ASC'
+                        'EducationGrades.name' => 'ASC'
                     ])
                     ->toArray();
+                //POCOR-6727 End
+
                 //POCOR-5740 starts
                 if (in_array($feature, ['Report.SubjectsBookLists'])) {
                     $attr['onChangeReload'] = true;
