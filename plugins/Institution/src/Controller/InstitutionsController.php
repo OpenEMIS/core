@@ -4856,8 +4856,8 @@ class InstitutionsController extends AppController
             $institutionClassId = (array_key_exists('institution_class_id', $requestData))? $requestData['institution_class_id'] : null;
             $educationGradeId = (array_key_exists('education_grade_id', $requestData))? $requestData['education_grade_id'] : null;
             $academicPeriodId = (array_key_exists('academic_period_id', $requestData))? $requestData['academic_period_id'] : null;
-            $startDate = (array_key_exists('start_date', $requestData))? date('y-m-d', strtotime($requestData['start_date'])) : null;
-            $endDate = (array_key_exists('end_date', $requestData))? date('y-m-d', strtotime($requestData['end_date'])) : null;
+            $startDate = (array_key_exists('start_date', $requestData))? date('Y-m-d', strtotime($requestData['start_date'])) : null;
+            $endDate = (array_key_exists('end_date', $requestData))? date('Y-m-d', strtotime($requestData['end_date'])) : null;
             
             //$institutionId = $this->request->session()->read('Institution.Institutions.id');
             $institutionId = (array_key_exists('institution_id', $requestData))? $requestData['institution_id'] : null;
@@ -4887,7 +4887,6 @@ class InstitutionsController extends AppController
                 $startYear = $periods->start_year;
                 $endYear = $periods->end_year;
             }
-
             //get prefered language
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
             $pref_lang = $ConfigItems->find()
@@ -4949,7 +4948,6 @@ class InstitutionsController extends AppController
                                 $workflows->aliasField('name') => 'Student Transfer - Receiving'
                             ])
                             ->first();
-
                 $InstitutionStudentTransfers = TableRegistry::get('institution_student_transfers');
                 $entityTransferData = [
                     'start_date' => $startDate,
@@ -4973,7 +4971,6 @@ class InstitutionsController extends AppController
                     'created_user_id' => $userId,
                     'created' => date('Y-m-d H:i:s')
                 ];
-                
                 $entity1 = $InstitutionStudentTransfers->newEntity($entityTransferData);
                 try{
                     $InstitutionStudentTransferResult = $InstitutionStudentTransfers->save($entity1);
@@ -5321,8 +5318,8 @@ class InstitutionsController extends AppController
             
             $institutionPositionId = (array_key_exists('institution_position_id', $requestData))? $requestData['institution_position_id'] : null;
             $fte = (array_key_exists('fte', $requestData))? $requestData['fte'] : null;
-            $startDate = (array_key_exists('start_date', $requestData))? date('y-m-d', strtotime($requestData['start_date'])) : NULL;
-            $endDate = (array_key_exists('end_date', $requestData) && !empty($requestData['end_date']))? date('y-m-d', strtotime($requestData['end_date'])) : '';
+            $startDate = (array_key_exists('start_date', $requestData))? date('Y-m-d', strtotime($requestData['start_date'])) : NULL;
+            $endDate = (array_key_exists('end_date', $requestData) && !empty($requestData['end_date']))? date('Y-m-d', strtotime($requestData['end_date'])) : '';
             
             //$institutionId = $this->request->session()->read('Institution.Institutions.id');
             $institutionId = (array_key_exists('institution_id', $requestData))? $requestData['institution_id'] : null;
@@ -5463,7 +5460,7 @@ class InstitutionsController extends AppController
                         'institution_position_id' => $institutionPositionId,
                         'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $SecurityGroupUsersTbl->id : null,
                         'created_user_id' => $userId,
-                        'created' => date('y-m-d H:i:s')
+                        'created' => date('Y-m-d H:i:s')
                     ];
                     //save in institution_staff table
                     $entityStaffsData = $InstitutionStaffs->newEntity($entityStaffsData);
@@ -5527,7 +5524,7 @@ class InstitutionsController extends AppController
                     'modified_user_id' => '',
                     'modified' => '',
                     'created_user_id' => $userId,
-                    'created' => date('y-m-d H:i:s'),
+                    'created' => date('Y-m-d H:i:s'),
                 ];
                 //save in `institution_staff_transfers` table
                 $entity = $institutionStaffTransfers->newEntity($entityTransferData);
@@ -5570,7 +5567,7 @@ class InstitutionsController extends AppController
                         'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
                         'is_staff' => 1,
                         'created_user_id' => $userId,
-                        'created' => date('y-m-d H:i:s'),
+                        'created' => date('Y-m-d H:i:s'),
                     ];
                 }else{
                     $entityData = [
@@ -5594,7 +5591,7 @@ class InstitutionsController extends AppController
                         'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
                         'is_staff' => 1,
                         'created_user_id' => $userId,
-                        'created' => date('y-m-d H:i:s'),
+                        'created' => date('Y-m-d H:i:s'),
                     ];
                 }
                 //save in security_users table
@@ -5718,7 +5715,7 @@ class InstitutionsController extends AppController
                             'institution_position_id' => $institutionPositionId,
                             'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $SecurityGroupUsersTbl->id : null,
                             'created_user_id' => $userId,
-                            'created' => date('y-m-d H:i:s')
+                            'created' => date('Y-m-d H:i:s')
                         ];
                         //save in institution_staff table
                         $entityStaffsData = $InstitutionStaffs->newEntity($entityStaffsData);
@@ -5895,7 +5892,7 @@ class InstitutionsController extends AppController
                     'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
                     'is_guardian' => 1,
                     'created_user_id' => $userId,
-                    'created' => date('y-m-d H:i:s'),
+                    'created' => date('Y-m-d H:i:s'),
                 ];
             }else{
                 $entityData = [
@@ -5919,7 +5916,7 @@ class InstitutionsController extends AppController
                     'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
                     'is_guardian' => 1,
                     'created_user_id' => $userId,
-                    'created' => date('y-m-d H:i:s'),
+                    'created' => date('Y-m-d H:i:s'),
                 ];
             }
             //save in security_users table
@@ -6012,7 +6009,7 @@ class InstitutionsController extends AppController
                         'guardian_id' => $user_record_id,
                         'guardian_relation_id' => $guardianRelationId,
                         'created_user_id' => $userId,
-                        'created' => date('y-m-d H:i:s')
+                        'created' => date('Y-m-d H:i:s')
                     ];
 
                     $entityGuardiansData = $StudentGuardians->newEntity($entityGuardiansData);
@@ -6373,7 +6370,7 @@ class InstitutionsController extends AppController
                     'student_custom_field_id' => $sval->student_custom_field_id,
                     'student_id' => $user_record_id,
                     'created_user_id' => $userId,
-                    'created' => date('y-m-d H:i:s')
+                    'created' => date('Y-m-d H:i:s')
                 ];
                 //save in student_custom_field_values table
                 $entityCustomData = $studentCustomFieldValues->newEntity($entitySubjectsData);

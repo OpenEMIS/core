@@ -996,8 +996,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             student_id: StudentController.studentData && StudentController.studentData.id ? StudentController.studentData.id : null,
             previous_institution_id: StudentController.studentData && StudentController.studentData.current_enrol_institution_id ? StudentController.studentData.current_enrol_institution_id : null,
             previous_academic_period_id: StudentController.studentData && StudentController.studentData.current_enrol_academic_period_id ? StudentController.studentData.current_enrol_academic_period_id : null,
-            previous_education_grade_id: StudentController.studentData && StudentController.studentData.education_grade_id ? StudentController.studentData.education_grade_id : null,
-            student_transfer_reason_id: StudentController.studentData && StudentController.studentData.current_enrol_institution_id ? StudentController.studentData.current_enrol_institution_id : null,
+            previous_education_grade_id: StudentController.studentData && StudentController.studentData.current_enrol_education_grade_id ? StudentController.studentData.current_enrol_education_grade_id : null,
+            student_transfer_reason_id: StudentController.selectedStudentData.transfer_reason_id ? StudentController.selectedStudentData.transfer_reason_id : null,
             comment: StudentController.selectedStudentData.transferComment,
             custom: [],
         };
