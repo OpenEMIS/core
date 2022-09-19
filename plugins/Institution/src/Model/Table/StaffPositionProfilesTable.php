@@ -360,6 +360,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect($this->url('add'));
         } else { /**POCOR-6928- added else condition when staff_change_type_id is CHANGE_OF_SHIFT*/
+            $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
             $InstitutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
@@ -396,7 +397,12 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 }
                 
             } 
-            $event->stopPropagation();
+            $StaffChangeTypesData = $StaffChangeTypes->find()
+                        ->where([$StaffChangeTypes->aliasField('id') => $this->request->data['StaffPositionProfiles']['staff_change_type_id']])
+                        ->first();
+            if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
+                $event->stopPropagation();
+            }
             $url = $this->url('view');
             $url['action'] = 'Staff';
             $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
