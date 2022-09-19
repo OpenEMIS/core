@@ -397,12 +397,14 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 }
                 
             } 
+            //POCOR-6979[START]
             $StaffChangeTypesData = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $this->request->data['StaffPositionProfiles']['staff_change_type_id']])
                         ->first();
             if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
                 $event->stopPropagation();
             }
+            //POCOR-6979[END]
             $url = $this->url('view');
             $url['action'] = 'Staff';
             $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
