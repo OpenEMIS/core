@@ -24,14 +24,14 @@ class POCOR5186 extends AbstractMigration
                 'after' => 'student_behaviour_category_id'
             ])
             ->addIndex('assignee_id')
-            ->addColumn('workflow_step_id', 'integer', [
+            ->addColumn('status_id', 'integer', [
                 'comment' => 'links to workflow_steps.id',
                 'default' => null,
                 'limit' => 11,
                 'null' => true,
                 'after' => 'institution_id'
             ])
-            ->addIndex('workflow_step_id')
+            ->addIndex('status_id')
             ->update();
 
         // add wrokflow behaviour    
@@ -60,9 +60,6 @@ class POCOR5186 extends AbstractMigration
         $get_workflow_models_last_inserted_id = $this->query("SELECT * FROM workflow_models WHERE `name` = 'Institutions > Behaviour > Students' AND `model` = 'Institution.StudentBehaviours'");
         $workflow_models_last_inserted_id = $get_workflow_models_last_inserted_id->fetchAll();
         $workflow_models_last_inserted_id_value = $workflow_models_last_inserted_id[0]['id'];
-
-
-
         // workflows
         $workflowData = [ 
             [
@@ -145,15 +142,6 @@ class POCOR5186 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
-          
-        /*$InactiveStatusId = $WorkflowStepsTable->find()
-            ->where([
-                $WorkflowStepsTable->aliasField('workflow_id') => $workflow_models_last_inserted_id_value,
-                $WorkflowStepsTable->aliasField('category') => 4,
-                $WorkflowStepsTable->aliasField('name') => 'Inactive'
-            ])
-            ->extract('id')
-            ->first();*/
             
         //  workflow_actions
         $workflowActionData = [
@@ -206,6 +194,8 @@ class POCOR5186 extends AbstractMigration
     {
         $table = $this->table('student_behaviours');
         $table->removeColumn('assignee_id')
+              ->save();
+        $table->removeColumn('status_id')
               ->save();
     }
 }

@@ -31,7 +31,7 @@ class StudentBehavioursTable extends ControllerActionTable
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'workflow_step_id']); //POCOR-5186
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']); //POCOR-5186
         $this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);//POCOR-5186
@@ -161,9 +161,9 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('time_of_behaviour', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('category_id', ['visible' => false]);//POCOR-5186
-        $this->field('status', ['visible' => true]);//POCOR-5186
+       // $this->field('status', ['visible' => false]);//POCOR-5186
         $this->field('assignee_id', ['visible' => false]);//POCOR-5186
-        $this->field('workflow_step_id', ['visible' => false]);//POCOR-5186
+        $this->field('status_id', ['visible' => true]);//POCOR-5186
 
         $this->fields['student_id']['sort'] = ['field' => 'Students.first_name']; // POCOR-2547 adding sort
 
@@ -434,7 +434,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('student_id',['after' => 'openemis_no','visible' => ['view' => true,'edit' => true]]);
         $this->field('student_behaviour_category_id',['after' => 'student_id','visible' => ['view' => true,'edit' => true]]);
          $this->field('assignee_id',['after' => 'action','visible' => ['view' => true,'edit' => true]]);//POCOR-5186
-         $this->field('workflow_step_id',['after' => 'action','visible' => ['view' => false,'edit' => false]]);//POCOR-5186
+         $this->field('status_id',['after' => 'action','visible' => ['view' => false,'edit' => false]]);//POCOR-5186
 
         // $this->setFieldOrder(['student_id','time_of_behaviour','date_of_behaviour','title', 'student_behaviour_category_id', 'description', 'action']);
     }
@@ -893,41 +893,92 @@ class StudentBehavioursTable extends ControllerActionTable
         } 
     }
 
+    /**
+     * POCOR-5186 Assignee id
+     *add assignee dropdown in edit and view page
+    */
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-            $workflowModelEntity = $WorkflowStepsTable
-                    ->find()
-                    ->select('WorkflowModels.is_school_based')
-                    ->contain([
-                        'Workflows.WorkflowModels'
-                    ])
-                    ->where([
-                        'WorkflowModels.model' => 'Institution.StudentBehaviours'
-                    ])
-                    ->hydrate(false)
-                    ->first();
-
-                $isSchoolBased = $workflowModelEntity['WorkflowModels']['is_school_based'];
-                if (!$autoAssignAssignee) {
+            $workflowModel = 'Institutions > Behaviour > Students';
+            $workflowModelsTable = TableRegistry::get('workflow_models');
+            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workModelId = $Workflows
+                            ->find()
+                            ->select(['id'=>$workflowModelsTable->aliasField('id'),
+                            'workflow_id'=>$Workflows->aliasField('id'),
+                            'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
+                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                                [
+                                    $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
+                                ])
+                            ->where([$workflowModelsTable->aliasField('name')=>$workflowModel])->first();
+            $workflowId = $workModelId->workflow_id;
+            $isSchoolBased = $workModelId->is_school_based;
+            $workflowStepsOptions = $workflowStepsTable
+                            ->find()
+                            ->select([
+                                'stepId'=>$workflowStepsTable->aliasField('id'),
+                            ])
+                            ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
+                            ->first();
+            $stepId = $workflowStepsOptions->stepId;
+            $session = $request->session();
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+            $institutionId = $institutionId;
+            $assigneeOptions = [];
+            if (!is_null($stepId)) {
+                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
+                if (!empty($stepRoles)) {
                     $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $params = [
-                        'is_school_based' => $isSchoolBased,
-                        'workflow_step_id' => $nextStepId
-                    ];
-
+                    $Areas = TableRegistry::get('Area.Areas');
+                    $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        $session = $this->request->session();
-                        if ($session->check('Institution.Institutions.id')) {
-                            $institutionId = $session->read('Institution.Institutions.id');
-                            $params['institution_id'] = $institutionId;
+                        if (is_null($institutionId)) {                        
+                            Log::write('debug', 'Institution Id not found.');
+                        } else {
+                            $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
+                            $securityGroupId = $institutionObj->security_group_id;
+                            $areaObj = $institutionObj->area;
+                            // School based assignee
+                            $where = [
+                                'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
+                                        ['Institutions.id' => $institutionId]],
+                                $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
+                            ];
+                            $schoolBasedAssigneeQuery = $SecurityGroupUsers
+                                    ->find('userList', ['where' => $where])
+                                    ->leftJoinWith('SecurityGroups.Institutions');
+                            $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
+                            
+                            // Region based assignee
+                            $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                            $regionBasedAssigneeQuery = $SecurityGroupUsers
+                                        ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+                            
+                            $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
+                            // End
+                            $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
                         }
+                    } else {
+                        $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                        $assigneeQuery = $SecurityGroupUsers
+                                ->find('userList', ['where' => $where])
+                                ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                        $assigneeOptions = $assigneeQuery->toArray();
                     }
-                    $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
                 }
-                $attr['type'] = 'select';
-                $attr['options'] = $assigneeOptions;
+            }
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
+            $attr['onChangeReload'] = 'changeStatus';
+            return $attr;
         }
     }
 
