@@ -177,4 +177,7 @@ class FieldOptionsController extends AppController
     public function StaffAttachmentTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function StudentAttachmentTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     //END:POCOR-5067
+
+    public function StaffPositionCategories() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
+    //POCOR-6949
 }
