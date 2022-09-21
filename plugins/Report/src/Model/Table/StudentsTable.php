@@ -260,6 +260,7 @@ class StudentsTable extends AppTable
             if (in_array($feature, ['Report.BodyMassStatusReports',
                                     'Report.HealthReports',
                                     'Report.StudentsRiskAssessment',
+                                    'Report.InstitutionStudentReports', //POCOR-6970
                                     'Report.SubjectsBookLists',
                                     'Report.StudentNotAssignedClass',
                                     'Report.SpecialNeeds',
@@ -388,6 +389,7 @@ class StudentsTable extends AppTable
                         'Report.StudentsRiskAssessment',
                         'Report.SubjectsBookLists',
                         'Report.StudentNotAssignedClass',
+                        'Report.InstitutionStudentReports', //POCOR-6970
                         'Report.SpecialNeeds',
                         'Report.StudentGuardians',
                         'Report.Students',
@@ -864,6 +866,7 @@ class StudentsTable extends AppTable
             if ((in_array($feature, ['Report.BodyMassStatusReports',
                                       'Report.HealthReports',
                                       'Report.StudentsRiskAssessment',
+                                      'Report.InstitutionStudentReports', //POCOR-6970
                                       'Report.SubjectsBookLists',
                                       'Report.StudentNotAssignedClass',
                                       'Report.StudentsEnrollmentSummary',
@@ -911,6 +914,7 @@ class StudentsTable extends AppTable
             if ((in_array($feature, ['Report.StudentsPhoto',
                 'Report.Students',
                 'Report.StudentIdentities',
+                'Report.InstitutionStudentReports', //POCOR-6970
                 'Report.StudentContacts',
                 'Report.HealthReports',
                 'Report.BodyMassStatusReports',
@@ -950,6 +954,7 @@ class StudentsTable extends AppTable
                 'Report.StudentsPhoto',
                 'Report.Students',
                 'Report.StudentIdentities',
+                'Report.InstitutionStudentReports', //POCOR-6970
                 'Report.StudentContacts',
                 'Report.HealthReports',
                 'Report.BodyMassStatusReports',
