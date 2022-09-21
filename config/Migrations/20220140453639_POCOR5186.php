@@ -15,18 +15,22 @@ class POCOR5186 extends AbstractMigration
     public function up()
     {   
         // Backup student_behaviours table
+        $this->execute('DROP TABLE IF EXISTS `zz_5186_student_behaviours`');
         $this->execute('CREATE TABLE `zz_5186_student_behaviours` LIKE `student_behaviours`');
         $this->execute('INSERT INTO `zz_5186_student_behaviours` SELECT * FROM `student_behaviours`');
 
         // Backup workflows table
+        $this->execute('DROP TABLE IF EXISTS `zz_5186_workflows`');
         $this->execute('CREATE TABLE `zz_5186_workflows` LIKE `workflows`');
         $this->execute('INSERT INTO `zz_5186_workflows` SELECT * FROM `workflows`');
 
         // Backup workflow_steps table
+        $this->execute('DROP TABLE IF EXISTS `zz_5186_workflow_steps`');
         $this->execute('CREATE TABLE `zz_5186_workflow_steps` LIKE `workflow_steps`');
         $this->execute('INSERT INTO `zz_5186_workflow_steps` SELECT * FROM `workflow_steps`');
 
         // Backup workflow_actions table
+        $this->execute('DROP TABLE IF EXISTS `zz_5186_workflow_actions`');
         $this->execute('CREATE TABLE `zz_5186_workflow_actions` LIKE `workflow_actions`');
         $this->execute('INSERT INTO `zz_5186_workflow_actions` SELECT * FROM `workflow_actions`');
 
