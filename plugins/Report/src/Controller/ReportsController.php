@@ -105,7 +105,8 @@ class ReportsController extends AppController
             ];
         } elseif ($module == 'Students') {
             $options = [
-                'Report.Students' => __('Students'),
+                //'Report.Students' => __('Students'),
+                'Report.InstitutionStudentReports' => __('Students'), //POCOR-6970
                 'Report.StudentsPhoto' => __('Students Photo'),
                 'Report.StudentIdentities' => __('Identities'),
                 'Report.StudentContacts' => __('Contacts'),
