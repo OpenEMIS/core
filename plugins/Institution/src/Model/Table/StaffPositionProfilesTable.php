@@ -349,6 +349,12 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        if(!empty($entity->end_date)){
+            $entity->end_date = $entity->end_date;
+        }else{
+            $entity->end_date = date('Y-m-d');
+        }
+        
         // get associated data
         $associatedData = $this->getAssociatedData($entity);
         
