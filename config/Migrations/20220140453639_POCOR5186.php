@@ -13,7 +13,24 @@ class POCOR5186 extends AbstractMigration
      * @return void
      */
     public function up()
-    {   // add column 
+    {   
+        // Backup student_behaviours table
+        $this->execute('CREATE TABLE `zz_5186_student_behaviours` LIKE `student_behaviours`');
+        $this->execute('INSERT INTO `zz_5186_student_behaviours` SELECT * FROM `student_behaviours`');
+
+        // Backup workflows table
+        $this->execute('CREATE TABLE `zz_5186_workflows` LIKE `workflows`');
+        $this->execute('INSERT INTO `zz_5186_workflows` SELECT * FROM `workflows`');
+
+        // Backup workflow_steps table
+        $this->execute('CREATE TABLE `zz_5186_workflow_steps` LIKE `workflow_steps`');
+        $this->execute('INSERT INTO `zz_5186_workflow_steps` SELECT * FROM `workflow_steps`');
+
+        // Backup workflow_actions table
+        $this->execute('CREATE TABLE `zz_5186_workflow_actions` LIKE `workflow_actions`');
+        $this->execute('INSERT INTO `zz_5186_workflow_actions` SELECT * FROM `workflow_actions`');
+
+        // add column 
         $table = $this->table('student_behaviours');
         $table
             ->addColumn('assignee_id', 'integer', [
@@ -190,12 +207,19 @@ class POCOR5186 extends AbstractMigration
 
     }
 
+    //rollback
     public function down()
     {
-        $table = $this->table('student_behaviours');
-        $table->removeColumn('assignee_id')
-              ->save();
-        $table->removeColumn('status_id')
-              ->save();
+        $this->execute('DROP TABLE IF EXISTS `student_behaviours`');
+        $this->execute('RENAME TABLE `zz_5186_student_behaviours` TO `student_behaviours`');
+
+        $this->execute('DROP TABLE IF EXISTS `workflows`');
+        $this->execute('RENAME TABLE `zz_5186_workflows` TO `workflows`');
+
+        $this->execute('DROP TABLE IF EXISTS `workflow_steps`');
+        $this->execute('RENAME TABLE `zz_5186_workflow_steps` TO `workflow_steps`');
+
+        $this->execute('DROP TABLE IF EXISTS `workflow_actions`');
+        $this->execute('RENAME TABLE `zz_5186_workflow_actions` TO `workflow_actions`');  
     }
 }
