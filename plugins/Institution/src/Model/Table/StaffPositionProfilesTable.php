@@ -349,12 +349,37 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if(!empty($entity->end_date)){
-            $entity->end_date = $entity->end_date;
-        }else{
+        //POCOR-6979
+        $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
+        $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
+                        ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
+                        ->first();
+        // echo "<pre>";print_r($entity);die;
+        if($StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
             $entity->end_date = date('Y-m-d');
         }
-        
+        else if($StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_FTE'){
+            $entity->end_date = $entity->effective_date;
+            if(empty($entity->end_date)){
+                $staffPositionProfilesRecord = $this->find()
+                ->where([
+                    $this->aliasField('institution_staff_id') => $entity->institution_staff_id,
+                    $this->aliasField('staff_id') => $entity->staff_id,
+                ])
+                ->first();
+                $entity->end_date = $staffPositionProfilesRecord->end_date->format('Y-m-d');
+                // echo "<pre>";print_r($staffPositionProfilesRecord->end_date->format('Y-m-d'));die;
+            }
+            $entity->end_date =  date("Y-m-d", strtotime($entity->end_date) );
+        }
+        else if($StaffChangeTypesDataForShift['code'] == 'END_OF_ASSIGNMENT'){
+            $entity->end_date = $entity->end_date;
+        }
+        else if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE'){
+            $entity->end_date = date('Y-m-d');
+        }else{
+            $entity->end_date = $entity->start_date;
+        }
         // get associated data
         $associatedData = $this->getAssociatedData($entity);
         
@@ -680,20 +705,41 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function onGetEndDate(Event $event, Entity $entity)
     {
+        //POCOR-6979
+        $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
+        $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
+                        ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
+                        ->first();
         if ($this->action == 'view') {
             $oldValue = $entity->institution_staff->end_date;
             $newValue = $entity->end_date;
             if ($newValue != $oldValue) {
                 if (!empty($oldValue) && !empty($newValue)) {
-                    return $this->getStyling($this->formatDate($oldValue), $this->formatDate($newValue));
+                    if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
+                        return $this->getStyling(__('Not Specified'), __('Not Specified'));
+                    }else{
+                        return $this->getStyling($this->formatDate($oldValue), $this->formatDate($newValue));
+                    }
                 } else if (!empty($newValue)) {
-                    return $this->getStyling(__('Not Specified'), $this->formatDate($newValue));
+                    if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
+                        return $this->getStyling(__('Not Specified'), __('Not Specified'));
+                    }else{
+                        return $this->getStyling(__('Not Specified'), $this->formatDate($newValue));
+                    }
                 } else if (!empty($oldValue)) {
-                    return $this->getStyling($this->formatDate($oldValue), __('Not Specified'));
+                    if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
+                        return $this->getStyling(__('Not Specified'), __('Not Specified'));
+                    }else{
+                        return $this->getStyling($this->formatDate($oldValue), __('Not Specified'));
+                    }
                 }
             } else {
                 if (!empty($newValue)) {
-                    return $newValue;
+                    if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
+                        return $this->getStyling(__('Not Specified'), __('Not Specified'));
+                    }else{
+                        return $newValue;
+                    }
                 } else {
                     return __('Not Specified');
                 }
