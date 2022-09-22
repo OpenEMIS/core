@@ -418,61 +418,209 @@ class InstitutionSurveysTable extends ControllerActionTable
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        // Do not show expired records
-        $extra['auto_contain'] = false;
-		$todayDate = date("Y-m-d");
-		
-        $query
-            ->contain([
-                'Statuses' => [
-                    'fields' => [
-                        'id',
-                        'name'
+    { 
+        //POCOR-6976 start
+        $url = $_SERVER['QUERY_STRING'];
+        $data = explode('=', $url);
+        $filterOne = $data[1];
+        $filterTwo = $data[2];
+        $firstVal = preg_replace('/\D/', '', $filterOne);
+        $getdata = ['',$firstVal];
+        $SurveyFormsFilters = TableRegistry::get('survey_forms_filters');
+        $session = $this->controller->request->session();
+        if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
+        $type  = [0,$institutionTypeId];
+        //POCOR-6976 end
+        // change in filter condition POCOR-6976 start
+        if(!empty($firstVal) && $firstVal!=1){
+            // Do not show expired records
+            $extra['auto_contain'] = false;
+            $todayDate = date("Y-m-d");
+            $query
+                ->contain([
+                    'Statuses' => [
+                        'fields' => [
+                            'id',
+                            'name'
+                        ]
+                    ],
+                    'AcademicPeriods' => [
+                        'fields' => [
+                            'name'
+                        ]
+                    ],
+                    'Institutions' => [
+                        'fields' => [
+                            'institution_status_id'
+                        ]
+                    ],
+                    'SurveyForms' => [
+                        'fields' => [
+                            'name', 'description'
+                        ]
+                    ],
+                    'Assignees' => [
+                        'fields' => [
+                            'first_name', 'middle_name', 'third_name', 'last_name'
+                        ]
                     ]
-                ],
-                'AcademicPeriods' => [
-                    'fields' => [
-                        'name'
+                ])
+                ->innerJoin(
+                    ['SurveyForms' => 'survey_forms'],
+                    [
+                        'SurveyForms.id = '.$this->aliasField('survey_form_id')
                     ]
-                ],
-                'Institutions' => [
-                    'fields' => [
-                        'institution_status_id'
+                )
+                ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+                        'SurveyFormsFilters.survey_form_id = SurveyForms.id'
+                    ])
+                ->innerJoin(
+                    ['surveyStatuses' => 'survey_statuses'],
+                    [
+                        'surveyStatuses.survey_form_id = SurveyForms.id'
                     ]
-                ],
-                'SurveyForms' => [
-                    'fields' => [
-                        'name', 'description'
+                )
+                ->where([
+                $this->aliasField('status_id <> ') => self::EXPIRED,
+                //POCOR-5666 Condition[START]
+                //Survey should only show for the active institution
+                $this->aliasField('Institutions.institution_status_id = ') => 1,
+                $this->aliasField('SurveyFormsFilters.survey_form_id IN') => $getdata,
+                //POCOR-5666 Condition[END]
+                'surveyStatuses.date_enabled <=' => $todayDate,
+                'surveyStatuses.date_disabled >=' => $todayDate,
+                'OR' => [
+                            $this->aliasField('SurveyFormsFilters.survey_filter_id IN')=>$type,
+                        ]
+            ]);
+            }elseif($filterVal==1){
+                //die('ddf');
+                // Do not show expired records
+            $extra['auto_contain'] = false;
+            $todayDate = date("Y-m-d");
+            $query
+                ->contain([
+                    'Statuses' => [
+                        'fields' => [
+                            'id',
+                            'name'
+                        ]
+                    ],
+                    'AcademicPeriods' => [
+                        'fields' => [
+                            'name'
+                        ]
+                    ],
+                    'Institutions' => [
+                        'fields' => [
+                            'institution_status_id'
+                        ]
+                    ],
+                    'SurveyForms' => [
+                        'fields' => [
+                            'name', 'description'
+                        ]
+                    ],
+                    'Assignees' => [
+                        'fields' => [
+                            'first_name', 'middle_name', 'third_name', 'last_name'
+                        ]
                     ]
-                ],
-                'Assignees' => [
-                    'fields' => [
-                        'first_name', 'middle_name', 'third_name', 'last_name'
+                ])
+                ->innerJoin(
+                    ['SurveyForms' => 'survey_forms'],
+                    [
+                        'SurveyForms.id = '.$this->aliasField('survey_form_id')
                     ]
-                ]
-            ])
-			->innerJoin(
-                ['SurveyForms' => 'survey_forms'],
-                [
-                    'SurveyForms.id = '.$this->aliasField('survey_form_id')
-                ]
-            )
-			->innerJoin(
-                ['surveyStatuses' => 'survey_statuses'],
-                [
-                    'surveyStatuses.survey_form_id = SurveyForms.id'
-                ]
-            )
-            ->where([
-            $this->aliasField('status_id <> ') => self::EXPIRED,
-            //POCOR-5666 Condition[START]
-            //Survey should only show for the active institution
-            $this->aliasField('Institutions.institution_status_id = ') => 1,
-            //POCOR-5666 Condition[END]
-            'surveyStatuses.date_enabled <=' => $todayDate,
-            'surveyStatuses.date_disabled >=' => $todayDate
-        ]);
+                )
+                ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+                        'SurveyFormsFilters.survey_form_id = SurveyForms.id'
+                    ])
+                ->innerJoin(
+                    ['surveyStatuses' => 'survey_statuses'],
+                    [
+                        'surveyStatuses.survey_form_id = SurveyForms.id'
+                    ]
+                )
+                ->where([
+                $this->aliasField('status_id <> ') => self::EXPIRED,
+                //POCOR-5666 Condition[START]
+                //Survey should only show for the active institution
+                $this->aliasField('Institutions.institution_status_id = ') => 1,
+                //POCOR-5666 Condition[END]
+                'surveyStatuses.date_enabled <=' => $todayDate,
+                'surveyStatuses.date_disabled >=' => $todayDate,
+                'OR' => [
+                            $this->aliasField('SurveyFormsFilters.survey_filter_id IN')=>$type,
+                        ]
+            ]);
+                
+            }else{
+                //die('ddf');
+                // Do not show expired records
+            $extra['auto_contain'] = false;
+            $todayDate = date("Y-m-d");
+            $query
+                ->contain([
+                    'Statuses' => [
+                        'fields' => [
+                            'id',
+                            'name'
+                        ]
+                    ],
+                    'AcademicPeriods' => [
+                        'fields' => [
+                            'name'
+                        ]
+                    ],
+                    'Institutions' => [
+                        'fields' => [
+                            'institution_status_id'
+                        ]
+                    ],
+                    'SurveyForms' => [
+                        'fields' => [
+                            'name', 'description'
+                        ]
+                    ],
+                    'Assignees' => [
+                        'fields' => [
+                            'first_name', 'middle_name', 'third_name', 'last_name'
+                        ]
+                    ]
+                ])
+                ->innerJoin(
+                    ['SurveyForms' => 'survey_forms'],
+                    [
+                        'SurveyForms.id = '.$this->aliasField('survey_form_id')
+                    ]
+                )
+                ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+                        'SurveyFormsFilters.survey_form_id = SurveyForms.id'
+                    ])
+                ->innerJoin(
+                    ['surveyStatuses' => 'survey_statuses'],
+                    [
+                        'surveyStatuses.survey_form_id = SurveyForms.id'
+                    ]
+                )
+                ->where([
+                $this->aliasField('status_id <> ') => self::EXPIRED,
+                //POCOR-5666 Condition[START]
+                //Survey should only show for the active institution
+                $this->aliasField('Institutions.institution_status_id = ') => 1,
+                //POCOR-5666 Condition[END]
+                'surveyStatuses.date_enabled <=' => $todayDate,
+                'surveyStatuses.date_disabled >=' => $todayDate,
+                'OR' => [
+                            $this->aliasField('SurveyFormsFilters.survey_filter_id IN')=>$type,
+                        ]
+            ]);
+            }
+            // change in filter condition POCOR-6976 end
         // POCOR-4027 fixed search function (search assignee and survey form)
         $search = $this->getSearchKey();
         if (!empty($search)) {
