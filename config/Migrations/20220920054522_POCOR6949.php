@@ -83,6 +83,5 @@ class POCOR6949 extends AbstractMigration
     public function down()
     {
         $this->execute('DROP TABLE IF EXISTS `staff_position_categories`');
-        $this->execute('RENAME TABLE `zz_6949_staff_position_categories` TO `staff_position_categories`');
     }
 }
