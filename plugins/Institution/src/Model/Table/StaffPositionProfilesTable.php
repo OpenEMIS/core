@@ -349,6 +349,37 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        //POCOR-6979
+        $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
+        $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
+                        ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
+                        ->first();
+        // echo "<pre>";print_r($entity);die;
+        if($StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
+            $entity->end_date = date('Y-m-d');
+        }
+        else if($StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_FTE'){
+            $entity->end_date = $entity->effective_date;
+            if(empty($entity->end_date)){
+                $staffPositionProfilesRecord = $this->find()
+                ->where([
+                    $this->aliasField('institution_staff_id') => $entity->institution_staff_id,
+                    $this->aliasField('staff_id') => $entity->staff_id,
+                ])
+                ->first();
+                $entity->end_date = $staffPositionProfilesRecord->end_date->format('Y-m-d');
+                // echo "<pre>";print_r($staffPositionProfilesRecord->end_date->format('Y-m-d'));die;
+            }
+            $entity->end_date =  date("Y-m-d", strtotime($entity->end_date) );
+        }
+        else if($StaffChangeTypesDataForShift['code'] == 'END_OF_ASSIGNMENT'){
+            $entity->end_date = $entity->end_date;
+        }
+        else if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE'){
+            $entity->end_date = date('Y-m-d');
+        }else{
+            $entity->end_date = $entity->start_date;
+        }
         // get associated data
         $associatedData = $this->getAssociatedData($entity);
         
@@ -360,47 +391,63 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect($this->url('add'));
         } else { /**POCOR-6928- added else condition when staff_change_type_id is CHANGE_OF_SHIFT*/
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
-            $InstitutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
-            $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
-            $periodId = $AcademicPeriods->getCurrent();
-            $shiftime = $ShiftOptions->find()
-                        ->where([$ShiftOptions->aliasField('id IN') => $entity->new_shift['_ids']])
-                        ->toArray();
-            //remove all shifts data of selected staff
-            $InstitutionStaffShifts->deleteAll([
-                    $InstitutionStaffShifts->aliasField('staff_id') => $entity->staff_id
-                ]);
-            foreach ($shiftime as $value) {
-                $startTime = date("H:i:s",strtotime($value->start_time));
-                $endTime = date("H:i:s",strtotime($value->end_time));
-                
-                //insert record in institution_shifts table
-                $institutionShiftData['start_time'] = $startTime;
-                $institutionShiftData['end_time'] =  $endTime;
-                $institutionShiftData['academic_period_id'] =  $periodId;
-                $institutionShiftData['institution_id'] = $entity->institution_id;
-                $institutionShiftData['location_institution_id'] = $entity->institution_id;
-                $institutionShiftData['shift_option_id'] = $value->id;
-                $institutionShiftData['created_user_id'] = 1;
-                $institutionShiftData['created'] = date('Y-m-d H:i:s');
-                $data = $InstitutionShifts->newEntity($institutionShiftData);
-                $insertRecord = $InstitutionShifts->save($data);
-                //echo "<pre>";print_r($insertRecord);die;
-                if ($insertRecord) {
-                    $staffShiftData['staff_id'] = $entity->staff_id;
-                    $staffShiftData['shift_id'] =  $insertRecord->id;
-                    $record = $InstitutionStaffShifts->newEntity($staffShiftData);
-                    $InstitutionStaffShifts->save($record);
+            $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
+            $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
+                        ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
+                        ->first();
+            if($StaffChangeTypesData['code'] == 'CHANGE_OF_SHIFT'){
+                $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+                $InstitutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
+                $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+                $periodId = $AcademicPeriods->getCurrent();
+                if(!empty( $entity->new_shift['_ids'])){
+                    $shiftime = $ShiftOptions->find()
+                    ->where([$ShiftOptions->aliasField('id IN') => $entity->new_shift['_ids']])
+                    ->toArray();
+                    //remove all shifts data of selected staff
+                    $InstitutionStaffShifts->deleteAll([
+                            $InstitutionStaffShifts->aliasField('staff_id') => $entity->staff_id
+                        ]);
+                    foreach ($shiftime as $value) {
+                        $startTime = date("H:i:s",strtotime($value->start_time));
+                        $endTime = date("H:i:s",strtotime($value->end_time));
+                        
+                        //insert record in institution_shifts table
+                        $institutionShiftData['start_time'] = $startTime;
+                        $institutionShiftData['end_time'] =  $endTime;
+                        $institutionShiftData['academic_period_id'] =  $periodId;
+                        $institutionShiftData['institution_id'] = $entity->institution_id;
+                        $institutionShiftData['location_institution_id'] = $entity->institution_id;
+                        $institutionShiftData['shift_option_id'] = $value->id;
+                        $institutionShiftData['created_user_id'] = 1;
+                        $institutionShiftData['created'] = date('Y-m-d H:i:s');
+                        $data = $InstitutionShifts->newEntity($institutionShiftData);
+                        $insertRecord = $InstitutionShifts->save($data);
+                        //echo "<pre>";print_r($insertRecord);die;
+                        if ($insertRecord) {
+                            $staffShiftData['staff_id'] = $entity->staff_id;
+                            $staffShiftData['shift_id'] =  $insertRecord->id;
+                            $record = $InstitutionStaffShifts->newEntity($staffShiftData);
+                            $InstitutionStaffShifts->save($record);
+                        }
+                        
+                    } 
+                    $StaffChangeTypesData = $StaffChangeTypes->find()
+                        ->where([$StaffChangeTypes->aliasField('id') => $this->request->data['StaffPositionProfiles']['staff_change_type_id']])
+                        ->first();
+                if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
+                    $event->stopPropagation();
                 }
-                
-            } 
-            $event->stopPropagation();
-            $url = $this->url('view');
-            $url['action'] = 'Staff';
-            $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
-            return $this->controller->redirect($url);
+                //POCOR-6979[END]
+                $url = $this->url('view');
+                $url['action'] = 'Staff';
+                $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
+                return $this->controller->redirect($url);   
+            }
+                //POCOR-6979[START]   
+            }
         }
         /**POCOR-6928 ends*/ 
     }
@@ -658,20 +705,41 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function onGetEndDate(Event $event, Entity $entity)
     {
+        //POCOR-6979
+        $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
+        $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
+                        ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
+                        ->first();
         if ($this->action == 'view') {
             $oldValue = $entity->institution_staff->end_date;
             $newValue = $entity->end_date;
             if ($newValue != $oldValue) {
                 if (!empty($oldValue) && !empty($newValue)) {
-                    return $this->getStyling($this->formatDate($oldValue), $this->formatDate($newValue));
+                    if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
+                        return $this->getStyling(__('Not Specified'), __('Not Specified'));
+                    }else{
+                        return $this->getStyling($this->formatDate($oldValue), $this->formatDate($newValue));
+                    }
                 } else if (!empty($newValue)) {
-                    return $this->getStyling(__('Not Specified'), $this->formatDate($newValue));
+                    if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
+                        return $this->getStyling(__('Not Specified'), __('Not Specified'));
+                    }else{
+                        return $this->getStyling(__('Not Specified'), $this->formatDate($newValue));
+                    }
                 } else if (!empty($oldValue)) {
-                    return $this->getStyling($this->formatDate($oldValue), __('Not Specified'));
+                    if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
+                        return $this->getStyling(__('Not Specified'), __('Not Specified'));
+                    }else{
+                        return $this->getStyling($this->formatDate($oldValue), __('Not Specified'));
+                    }
                 }
             } else {
                 if (!empty($newValue)) {
-                    return $newValue;
+                    if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
+                        return $this->getStyling(__('Not Specified'), __('Not Specified'));
+                    }else{
+                        return $newValue;
+                    }
                 } else {
                     return __('Not Specified');
                 }

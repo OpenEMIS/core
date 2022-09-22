@@ -755,7 +755,9 @@ class ReportCardsTable extends AppTable
                 $entity[] = [
                     'education_subject_id' => $subject['education_subject_id'],
                     'id' => $id,
-                    'name' => $subject['institution_subject']['name']
+                    'name' => $subject['institution_subject']['name'],
+                    'subjectName'=> $subject['education_subject']['name'] //POCOR-6983
+
                 ];
                 $i++;
                }
