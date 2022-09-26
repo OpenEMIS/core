@@ -134,7 +134,7 @@ class StudentTransferTable extends ControllerActionTable
     public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, Request $request)
     {
         $Status = $this->StudentStatuses->findCodeList();
-        $statusNames = $this->StudentStatuses->find('list')->where([$this->StudentStatuses->aliasField('id IN ') => [$Status['CURRENT']/*,$Status['GRADUATED']*/,$Status['PROMOTED']]])->toArray();//comment graduated status because we will work on it in next ticket in future as per umairah says
+        $statusNames = $this->StudentStatuses->find('list')->where([$this->StudentStatuses->aliasField('id IN ') => [$Status['CURRENT'],$Status['PROMOTED'],$Status['GRADUATED']]])->toArray();//comment graduated status because we will work on it in next ticket in future as per umairah says
         $attr['options'] = $statusNames;
         $attr['onChangeReload'] = true;
         return $attr;
