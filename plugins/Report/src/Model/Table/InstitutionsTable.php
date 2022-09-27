@@ -327,6 +327,9 @@ class InstitutionsTable extends AppTable
                 case 'Report.StaffTransfers':
                 case 'Report.SpecialNeedsFacilities':
                 case 'Report.InstitutionCommittees':
+                case 'Report.Uis':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'format';
                 case 'Report.InfrastructureNeeds':
                     $fieldsOrder[] = 'academic_period_id';
                     $fieldsOrder[] = 'area_level_id';
@@ -831,7 +834,8 @@ class InstitutionsTable extends AppTable
                              'Report.StaffTransfers',
                              'Report.Guardians',
                              'Report.SpecialNeedsFacilities',
-                             'Report.InfrastructureNeeds'
+                             'Report.InfrastructureNeeds',
+                             'Report.Uis'
 
 
                          ]
