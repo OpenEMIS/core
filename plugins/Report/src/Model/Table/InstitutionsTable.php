@@ -258,7 +258,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('report_start_date', ['type' => 'hidden']);
         $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
         $this->ControllerAction->field('attendance_type', ['type' => 'hidden', 'label' => 'Type']);
-        $this->ControllerAction->field('periods', ['type' => 'hidden']);
+        // $this->ControllerAction->field('periods', ['type' => 'hidden']);
         $this->ControllerAction->field('subjects', ['type' => 'hidden']);
         $this->ControllerAction->field('wash_type', ['type' => 'hidden']);
         $this->ControllerAction->field('education_subject_id', ['type' => 'hidden']);
@@ -450,7 +450,7 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'education_grade_id';
                     $fieldsOrder[] = 'report_start_date';
                     $fieldsOrder[] = 'report_end_date';
-                    $fieldsOrder[] = 'periods';
+                    // $fieldsOrder[] = 'periods';
                     $fieldsOrder[] = 'format';
                     break;
 
@@ -1682,7 +1682,6 @@ class InstitutionsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-
         $requestData = json_decode($settings['process']['params']);
         $filter = $requestData->institution_filter;
         $areaId = $requestData->area_education_id;
