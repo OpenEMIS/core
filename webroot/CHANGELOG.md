@@ -1,3 +1,11 @@
+### [3.75.30] - 2022-09-27
+- Bug Fixed: System Performance for queries-Assessment page that is generating thousands of database queries per click
+- Bug Fixed: Ensure that Assignee field is added to all Add page that has workflows
+- Bug Fixed: Develop a class profile feature for Institution>Profile
+- Bug Fixed: Administration>Profile>Classes: 404 error when trying to generate this profile for previous academic period
+- Bug Fixed: Institutions>Student>Transfer: Unable to add Institution Positions
+- Bug Fixed: Institutions>Students>Bulk Transfer: Issues in Bulk transfer page
+
 ### [3.75.29] - 2022-09-22
 - Bug Fixed: Report>Students>Subject and Book List: Education grade is not filtering by Institution
 - Bug Fixed: Institution > Student > Academic: Assessments should show all past and current Assessment records
