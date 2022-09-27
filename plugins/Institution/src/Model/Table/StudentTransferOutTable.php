@@ -28,6 +28,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 'institution_key' => 'previous_institution_id'
             ]);
         }
+
+        //$this->toggle('add', true);//POCOR-6925
     }
 
     public function validationDefault(Validator $validator)
@@ -225,9 +227,9 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        if (isset($extra['toolbarButtons']['add'])) {
+        /*if (isset($extra['toolbarButtons']['add'])) {
             unset($extra['toolbarButtons']['add']);
-        }
+        }*/
 
         $this->field('start_date', ['type' => 'hidden']);
         $this->field('end_date', ['type' => 'hidden']);
