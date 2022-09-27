@@ -47,7 +47,7 @@ class POCOR6949 extends AbstractMigration
             ],
             [
                 'id' => 2,
-                'name' => 'supervisor',
+                'name' => 'Supervisor',
                 'order' => 1,
                 'visible' => 1,
                 'editable' => 1,
@@ -61,7 +61,7 @@ class POCOR6949 extends AbstractMigration
             ],
             [
                 'id' => 3,
-                'name' => 'leadership',
+                'name' => 'Leadership',
                 'order' => 1,
                 'visible' => 1,
                 'editable' => 1,
