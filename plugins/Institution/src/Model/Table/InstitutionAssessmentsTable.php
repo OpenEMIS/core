@@ -303,7 +303,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 ->find('list')
                 ->where([$Assessments->aliasField('academic_period_id') => $selectedPeriod])
                 ->toArray();
-            $assessmentOptions = ['-1' => __('All Assessments')] + $assessmentOptions;
+            $assessmentOptions = /*['-1' => __('All Assessments')] +*/ $assessmentOptions; //comment `All Assessments` option POCOR-6906 
             $selectedAssessment = $this->queryString('assessment_id', $assessmentOptions);
             $this->advancedSelectOptions($assessmentOptions, $selectedAssessment, [
                 'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
