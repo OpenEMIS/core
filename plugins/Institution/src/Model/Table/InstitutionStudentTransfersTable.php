@@ -13,6 +13,7 @@ use Cake\I18n\Date;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
 use Cake\Network\Session;
+use Cake\Log\Log;
 
 // This file serves as an abstract class for StudentTransferIn and StudentTransferOut
 class InstitutionStudentTransfersTable extends ControllerActionTable
@@ -516,5 +517,5 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             $query->where(['Statuses.category <> ' => self::DONE]);
         }
         return $query;
-    }
+    } 
 }
