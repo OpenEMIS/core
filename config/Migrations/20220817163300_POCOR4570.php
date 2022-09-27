@@ -17,7 +17,7 @@ class POCOR4570 extends AbstractMigration
         $this->execute('INSERT INTO `zz_4570_report_queries` SELECT * FROM `report_queries`');
 
         // Increase the size of name column
-        $this->execute('ALTER TABLE report_queries MODIFY report_queries.name VARCHAR(250)');
+        $this->execute('ALTER TABLE `report_queries` MODIFY COLUMN `name` varchar(250)');
 
         // CREATE summary tables and INSERT new rows into report_queries table
         $this->execute('CREATE TABLE IF NOT EXISTS `summary_programme_sector_genders`( `academic_period_id` int(11) NOT NULL, `academic_period_name` varchar(50) COLLATE utf8_general_ci NOT NULL, `institution_sector_id` int(11) NOT NULL, `institution_sector_name` varchar(50) COLLATE utf8_general_ci NOT NULL, `education_system_id` int(11) NOT NULL, `education_system_name` varchar(50) COLLATE utf8_general_ci NOT NULL, `education_level_isced_id` int(11) NOT NULL, `education_level_isced_name` varchar(50) COLLATE utf8_general_ci NOT NULL, `education_level_isced_level` int(11) NOT NULL, `education_level_id` int(11) NOT NULL, `education_level_name` varchar(50) COLLATE utf8_general_ci NOT NULL, `education_cycle_id` int(11) NOT NULL, `education_cycle_name` varchar(50) COLLATE utf8_general_ci NOT NULL, `education_programme_id` int(11) NOT NULL, `education_programme_code` varchar(50) COLLATE utf8_general_ci NOT NULL, `education_programme_name` varchar(50) COLLATE utf8_general_ci NOT NULL, `gender_id` int(11) NOT NULL, `gender_name` varchar(50) COLLATE utf8_general_ci NOT NULL, `total_students` int(11) NOT NULL, `total_staff_teaching` int(11) NOT NULL, `total_staff_teaching_newly_recruited` int(11) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;');
