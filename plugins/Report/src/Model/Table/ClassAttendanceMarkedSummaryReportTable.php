@@ -421,6 +421,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         // end POCOR-6967
           
     }
+    
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
