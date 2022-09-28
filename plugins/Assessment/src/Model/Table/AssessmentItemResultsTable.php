@@ -64,11 +64,27 @@ class AssessmentItemResultsTable extends AppTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew()) {
-            $entity->id = Text::uuid();
-        }
+        //POCOR-6947
+        $institutionStudents = TableRegistry::get('institution_students');
+        $institutionStudentsData = $institutionStudents
+                                            ->find()
+                                            ->where([
+                                                $institutionStudents->aliasField('student_id') => $entity->student_id,
+                                                $institutionStudents->aliasField('education_grade_id') => $entity->education_grade_id,
+                                                $institutionStudents->aliasField('institution_id') => $entity->institution_id,
+                                                $institutionStudents->aliasField('academic_period_id') => $entity->academic_period_id
+                                            ])->toArray();
+        if(empty($institutionStudentsData)){
+            $response[] ="No academic records for this student";
+            $entity->errors($response);
+            return false;
+        }else{
+            if ($entity->isNew()) {
+                $entity->id = Text::uuid();
+            }
 
-        $this->getAssessmentGrading($entity);
+            $this->getAssessmentGrading($entity);
+        }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
