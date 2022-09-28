@@ -598,6 +598,7 @@ class ExcelBehavior extends Behavior
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($path));
         echo file_get_contents($path);
+        exit(); //POCOR-6881
     }
 
     private function purge($path)

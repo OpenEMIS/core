@@ -69,6 +69,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        $events['UpdateAssignee.onSetSchoolBasedConditions'] = 'onSetSchoolBasedConditions';
         $events['ControllerAction.Model.reconfirm'] = 'reconfirm';
         return $events;
     }
@@ -242,9 +243,9 @@ class BulkStudentTransferOutTable extends ControllerActionTable
     {
         switch ($this->action) {
             case 'edit':
-                $entity = $attr['entity'];
-                $workflowActionEntity = $this->getWorkflowActionEntity($entity);
-                $nextStepId = isset($workflowActionEntity->next_workflow_step) ? $workflowActionEntity->next_workflow_step->id : null;
+               $entity = $attr['entity'];
+               $workflowActionEntity = $this->getWorkflowActionEntity($entity);
+               $nextStepId = isset($workflowActionEntity->next_workflow_step) ? $workflowActionEntity->next_workflow_step->id : null;
                 $autoAssignAssignee = 0;
                 $workflowModelEntity = $this
                     ->find()
@@ -274,7 +275,15 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                         }
                     }
                     // $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params); //POCOR-6923
-                    $assigneeOptions = ['-1' => __('Auto Assign')];
+                    //echo "<pre>"; print_r($entity['student_transfer_in'][0]);die;
+                    if($entity['name']=='Open' && $entity['workflow_actions'][0]['next_workflow_step']['name']=='Pending Approval'){ //POCOR-6961
+                        $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params); //POCOR-6961
+                    }elseif($entity['student_transfer_in'][0]['status']['name']=='Pending Student Transfer'){
+                        $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params); //POCOR-6961
+                    }else{
+                        $assigneeOptions = ['-1' => __('Auto Assign')];
+                    }
+                    
                 }
                 $attr['type'] = 'select';
                 $attr['options'] = $assigneeOptions;
@@ -286,12 +295,19 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                     ->find()
                     ->where([$SecurityUsers->aliasField('id') => $this->_currentData->assignee_id])
                     ->first();
-                //echo "<pre>"; print_r($this->_currentData); die;
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $value->name;
-                break;
-
-            default:
+                if($this->_currentData->assignee_id==-1){
+                    $assigneeOptions = 'Auto Assign'; //POCOR-6961
+                    $attr['type'] = 'readonly';
+                    $attr['value'] = '-1';
+                    $attr['attr']['value'] = $assigneeOptions; //POCOR-6961 
+                    break; 
+                }else{
+                    $assigneeOptions = $assigneeOptions;
+                    $attr['type'] = 'readonly';
+                    $attr['attr']['value'] = $value->name;
+                    break;
+                }
+                default:
                 break;
         }
         return $attr;
@@ -529,4 +545,5 @@ class BulkStudentTransferOutTable extends ControllerActionTable
         $this->field('comment', ['type' => 'text']);
         $this->field('bulk_student_transfer_out', ['entity' => $entity]);
     }
+
 }

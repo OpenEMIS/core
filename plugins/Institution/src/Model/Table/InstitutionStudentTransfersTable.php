@@ -12,6 +12,8 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
+use Cake\Network\Session;
+use Cake\Log\Log;
 
 // This file serves as an abstract class for StudentTransferIn and StudentTransferOut
 class InstitutionStudentTransfersTable extends ControllerActionTable
@@ -99,7 +101,6 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $Students = TableRegistry::get('Institution.Students');
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
-
         // find previous student record (could be enrolled/promoted/graduated status)
         $previousStudentRecord = $Students->find()
             ->where([
@@ -110,8 +111,25 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                 $Students->aliasField('student_status_id IN ') => [$statuses['CURRENT'], $statuses['PROMOTED'], $statuses['GRADUATED']]
             ])
             ->first();
-
         if (!empty($previousStudentRecord)) {
+            //POCOR-6230 Starts
+            $session = new Session();
+            $userId = $session->read('Auth.User.id');
+            //first check the student has already enrolled in same/other institution in any academic period
+            $enrolledStudentRecord = $Students->find()
+                ->where([
+                    $Students->aliasField('student_id') => $entity->student_id,
+                    $Students->aliasField('student_status_id') => $statuses['CURRENT']
+                ])
+                ->first();
+            if(!empty($enrolledStudentRecord)){
+                //change existing record enrolled student status into transfered
+                $Students->updateAll(
+                    ['student_status_id' => $statuses['TRANSFERRED'], 'modified_user_id'=> $userId, 'modified'=> Time::now()],
+                    ['id' => $enrolledStudentRecord->id]
+                );
+            } //POCOR-6230 Ends
+            
             //POCOR-6362 starts
             if($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']){
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -155,7 +173,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                     $Students->save($previousStudentRecord);
                 } /*POCOR-6542 ends*/
             }
-        }
+        } 
     }
 
     public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
@@ -499,5 +517,5 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             $query->where(['Statuses.category <> ' => self::DONE]);
         }
         return $query;
-    }
+    } 
 }
