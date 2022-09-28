@@ -17,6 +17,7 @@ class POCOR6949 extends AbstractMigration
        $this->execute('CREATE TABLE `staff_position_categories` (
                       `id` int(11) NOT NULL,
                       `name` varchar(100) NOT NULL,
+                      `type` int(1) NOT NULL DEFAULT 0,
                       `order` int(3) DEFAULT NULL,
                       `visible` int(1) DEFAULT NULL,
                       `editable` int(1) NOT NULL DEFAULT 1,
@@ -34,6 +35,7 @@ class POCOR6949 extends AbstractMigration
             [
                 'id' => 1,
                 'name' => 'None',
+                'type' => 1,
                 'order' => 1,
                 'visible' => 1,
                 'editable' => 1,
@@ -48,6 +50,7 @@ class POCOR6949 extends AbstractMigration
             [
                 'id' => 2,
                 'name' => 'Supervisor',
+                'type' => 1,
                 'order' => 1,
                 'visible' => 1,
                 'editable' => 1,
@@ -62,6 +65,7 @@ class POCOR6949 extends AbstractMigration
             [
                 'id' => 3,
                 'name' => 'Leadership',
+                'type' => 1,
                 'order' => 1,
                 'visible' => 1,
                 'editable' => 1,
