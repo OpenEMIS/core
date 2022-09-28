@@ -3441,6 +3441,8 @@ definitions:
         example: "69"
       student_id: 
         example: 11025
+      institution_classes_id: 
+        example: 550
         
   Institution-StudentBehaviours:
     type: "object"

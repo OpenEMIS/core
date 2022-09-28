@@ -607,6 +607,13 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.InstitutionProfiles'],
                 'params' => ['plugin' => 'Institution'],
             ],
+            /*POCOR-6966 starts*/
+            'Institutions.ClassesProfiles' => [
+                'title' => 'Classes',
+                'parent' => 'Profile',
+                'selected' => ['Institutions.ClassesProfiles'],
+                'params' => ['plugin' => 'Institution'],
+            ],/*POCOR-6966 ends*/
 		    //POCOR-6654 modified staff menu
             'Institutions.StaffProfiles' => [
                 'title' => 'Staff',
