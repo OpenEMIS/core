@@ -1904,7 +1904,7 @@ class StaffTable extends ControllerActionTable
                         if (!empty($staffShiftObj)) {
                             //POCOR-6900
                             foreach ($staffShiftObj as $key => $value) {
-                                $data[$key] =  $InstitutionShifts->find()
+                                $data[$key] =  $InstitutionShifts->find('all')
                                     ->select(['start_time' => 'MIN(InstitutionShifts.start_time)'])
                                     ->where([$InstitutionShifts->aliasField('id') => $value->shift_id])
                                     ->first();
