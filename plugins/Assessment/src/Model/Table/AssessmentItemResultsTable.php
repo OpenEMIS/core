@@ -514,21 +514,22 @@ class AssessmentItemResultsTable extends AppTable
     */
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
     {
-        
-        $url = $_SERVER['REQUEST_URI'];
-        $url_components = parse_url($url);
-        parse_str($url_components['query'], $params);
-        $action = array_key_exists('_finder', $params);
-        $actionName = strtok($params['_finder'], '[');//POCOR-6921- updated exact action name condition
-        if ($primary && $actionName == 'AssessmentGradesOptions') {
-            $param = preg_match_all('/\\[(.*?)\\]/', $params['_finder'], $matches);
-            $paramsString = $matches[1];
-            $paramsArray = explode(';', $paramsString[0]);
-            if (empty($paramsArray[0]) || empty($paramsArray[1]) || empty($paramsArray[2]) || empty($paramsArray[3])) {
-                $response['result'] = [];
-                $response['message'] = "Mandatory field can't empty";
-                $dataArr = array("data" => $response);
-                echo json_encode($dataArr);exit;
+        if(isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['REQUEST_URI'])){//POCOR-5227 only `if` condition use for this issue, not affected poonam's work on POCOR-6912
+            $url = $_SERVER['REQUEST_URI'];
+            $url_components = parse_url($url);
+            parse_str($url_components['query'], $params);
+            $action = array_key_exists('_finder', $params);
+            $actionName = strtok($params['_finder'], '[');//POCOR-6921- updated exact action name condition
+            if ($primary && $actionName == 'AssessmentGradesOptions') {
+                $param = preg_match_all('/\\[(.*?)\\]/', $params['_finder'], $matches);
+                $paramsString = $matches[1];
+                $paramsArray = explode(';', $paramsString[0]);
+                if (empty($paramsArray[0]) || empty($paramsArray[1]) || empty($paramsArray[2]) || empty($paramsArray[3])) {
+                    $response['result'] = [];
+                    $response['message'] = "Mandatory field can't empty";
+                    $dataArr = array("data" => $response);
+                    echo json_encode($dataArr);exit;
+                }
             }
         }
     }
