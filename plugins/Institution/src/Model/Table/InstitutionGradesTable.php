@@ -1295,7 +1295,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
             $InstitutionStudents->aliasField('institution_id') => $institutionId
         ])
         ->count();
-        $extra['associatedRecords'][] = ['model' => 'InstitutionStudents', 'count' => $associatedStudentRecordsCount];
+        //$extra['associatedRecords'][] = ['model' => 'InstitutionStudents', 'count' => $associatedStudentRecordsCount];
         //Start:POCOR-6964
         //enrolledStudents
         $enrolledStudentsRecordsCount = $InstitutionStudents->find()
@@ -1305,6 +1305,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
             $InstitutionStudents->aliasField('student_status_id') => 1
         ])
         ->count();
+        $extra['associatedRecords'][] = ['model' => 'InstitutionStudents', 'count' => $enrolledStudentsRecordsCount]; //POCOR-6991
         $extra['associatedRecordsss'][] = ['model' => 'InstitutionEnrolledStudents', 'count' => $enrolledStudentsRecordsCount];
         //End:POCOR-6964
         // to get the institution_class_id related to the education_grade_id
