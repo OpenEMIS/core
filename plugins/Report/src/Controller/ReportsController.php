@@ -84,7 +84,8 @@ class ReportsController extends AppController
                 'Report.StudentWithdrawalReport' => __('Student Withdrawal Report'),
                 'Report.InstitutionSummaryReport' => __('Institution Summary Report'),
                 'Report.BodyMasses' => __('Student Body Masses'),
-                // 'Report.StaffAbsences' => __('Staff Absence'),
+                'Report.InstitutionPositionsSummaries' => __('Institution Positions Summaries'),
+                // 'Report.StaffAbsences' => __('Staff Absence'), Institution Positions Summaries
                 'Report.StaffAttendances' => __('Staff Attendance'),
                 'Report.StaffLeave' => __('Staff Leave'),
                 'Report.StaffTransfers' => __('Staff Transfer'),
@@ -105,8 +106,7 @@ class ReportsController extends AppController
             ];
         } elseif ($module == 'Students') {
             $options = [
-                //'Report.Students' => __('Students'),
-                'Report.InstitutionStudentReports' => __('Students'), //POCOR-6970
+                'Report.Students' => __('Students'),
                 'Report.StudentsPhoto' => __('Students Photo'),
                 'Report.StudentIdentities' => __('Identities'),
                 'Report.StudentContacts' => __('Contacts'),
