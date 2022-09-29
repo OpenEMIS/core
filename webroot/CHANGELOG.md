@@ -1,3 +1,7 @@
+### [3.75.31] - 2022-09-29
+- Bug Fixed: Reports > Institution > Class Attendance Marked Summary Report: Report is empty
+- Bug Fixed: Institutions > Academic > Programmes > Delete Grades: When the system restricts the delete, the system counts Institution Students that are holding Enrolled status only
+
 ### [3.75.30] - 2022-09-27
 - Bug Fixed: System Performance for queries-Assessment page that is generating thousands of database queries per click
 - Bug Fixed: Ensure that Assignee field is added to all Add page that has workflows
