@@ -141,6 +141,26 @@ class InstitutionInfrastructuresTable extends AppTable
 				'label' => __($level.' Area')
 			];
 		}
+
+        //Start POCOR-6731
+        // if($infrastructureLevel == 3 || $infrastructureLevel == 4) { 
+        //     $newFields[] = [
+        //         'key' => 'institution_buildings_name',
+        //         'field' => 'institution_buildings_name',
+        //         'type' => 'string',
+        //         'label' => __('Buildings Name')
+        //     ];
+        // }
+        // if($infrastructureLevel == 4) { 
+        //     $newFields[] = [
+        //         'key' => 'institution_floor_name',
+        //         'field' => 'institution_floor_name',
+        //         'type' => 'string',
+        //         'label' => __('Floors Name')
+        //     ];
+        // }
+
+        //End POCOR-6731
 		
 		if($infrastructureLevel == 1 || $infrastructureLevel == 2) {
 			$newFields[] = [
@@ -378,6 +398,7 @@ class InstitutionInfrastructuresTable extends AppTable
 						])
 					->where($conditions);
 		} else if ($infrastructureLevel == 3) {
+            $InstitutionBuildings = 'buildings';
 			$query
 					->select(['land_infrastructure_code'=>'Institution'.$level.'.'.'code',
 						'land_infrastructure_name'=>'Institution'.$level.'.'.'name',
@@ -396,6 +417,7 @@ class InstitutionInfrastructuresTable extends AppTable
 						//POCOR-5698 ends here
 						'land_infrastructure_ownership'=>$infrastructureOwnerships->aliasField('name'),
 						'land_infrastructure_accessibility' => 'Institution'.$level.'.'.'accessibility',
+                        'institution_buildings_name' => 'Institution'.$InstitutionBuildings.'.'.'name', //POCOR-6731
 						])
 						->LeftJoin([ 'Institution'.$level => 'institution_'.lcfirst($level) ], [
 							'Institution'.$level.'.'.'institution_id = ' . $this->aliasField('id'),
@@ -403,6 +425,9 @@ class InstitutionInfrastructuresTable extends AppTable
 						->LeftJoin(['InfrastructureTypes' => $type.'_types'], [
 							'InfrastructureTypes.id = ' . $type.'_type_id',
 						])
+                        ->LeftJoin([ 'Institution'.$InstitutionBuildings => 'institution_'.lcfirst($InstitutionBuildings) ], [
+                            'Institution'.$InstitutionBuildings.'.'.'institution_id = ' . $this->aliasField('id'),
+                        ])//POCOR-6731
 						->LeftJoin([$infrastructureCondition->alias() => $infrastructureCondition->table()], ['Institution'.$level.'.'.'infrastructure_condition_id = ' . $infrastructureCondition->aliasField('id'),
 						])
 						->LeftJoin([$infrastructureStatus->alias() => $infrastructureStatus->table()], [
@@ -433,6 +458,8 @@ class InstitutionInfrastructuresTable extends AppTable
 						])
 					->where($conditions);
 		} else {
+            $InstitutionBuildings = 'buildings';
+            $InstitutionFloors = 'floors';
 			$query
 					->select(['land_infrastructure_code'=>'Institution'.$level.'.'.'code',
 						'land_infrastructure_name'=>'Institution'.$level.'.'.'name',
@@ -450,6 +477,10 @@ class InstitutionInfrastructuresTable extends AppTable
 						//POCOR-5698 ends here
 						'land_infrastructure_ownership'=>$infrastructureOwnerships->aliasField('name'),
 						'land_infrastructure_accessibility' => 'Institution'.$level.'.'.'accessibility',
+                        //Start POCOR-6731
+                        'institution_buildings_name' => 'Institution'.$InstitutionBuildings.'.'.'name',
+                        'institution_floor_name' => 'Institution'.$InstitutionFloors.'.'.'name',
+                        //End POCOR-6731
 						])
 						->LeftJoin([ 'Institution'.$level => 'institution_'.lcfirst($level) ], [
 							'Institution'.$level.'.'.'institution_id = ' . $this->aliasField('id'),
@@ -457,6 +488,14 @@ class InstitutionInfrastructuresTable extends AppTable
 						->LeftJoin(['InfrastructureTypes' => $type.'_types'], [
 							'InfrastructureTypes.id = ' . $type.'_type_id',
 						])
+                        //Start POCOR-6731
+                        ->LeftJoin([ 'Institution'.$InstitutionBuildings => 'institution_'.lcfirst($InstitutionBuildings) ], [
+                            'Institution'.$InstitutionBuildings.'.'.'institution_id = ' . $this->aliasField('id'),
+                        ])
+                        ->LeftJoin([ 'Institution'.$InstitutionFloors => 'institution_'.lcfirst($InstitutionFloors) ], [
+                            'Institution'.$InstitutionFloors.'.'.'institution_id = ' . $this->aliasField('id'),
+                        ])
+                        //End POCOR-6731
 						->LeftJoin([$infrastructureCondition->alias() => $infrastructureCondition->table()], ['Institution'.$level.'.'.'infrastructure_condition_id = ' . $infrastructureCondition->aliasField('id'),
 						])
 						->LeftJoin([$infrastructureStatus->alias() => $infrastructureStatus->table()], [
