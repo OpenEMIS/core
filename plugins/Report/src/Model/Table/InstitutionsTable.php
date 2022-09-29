@@ -1257,7 +1257,6 @@ class InstitutionsTable extends AppTable
                 'Report.InstitutionCases',
                 'Report.ClassAttendanceNotMarkedRecords',
                 'Report.ClassAttendanceMarkedSummaryReport'
-
             ];
 
 
