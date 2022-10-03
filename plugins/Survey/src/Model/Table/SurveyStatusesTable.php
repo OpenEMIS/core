@@ -156,10 +156,17 @@ class SurveyStatusesTable extends ControllerActionTable
                 $institutionTypeIds[] = $value->survey_filter_id;
             }
         }
-        $getInstitutionObj = $Institutions->find()
+        if($institutionTypeIds[0]!=0) //POCOR-6976
+        {
+            $getInstitutionObj = $Institutions->find()
                             ->select([$Institutions->aliasField('id')])
                             ->where([$Institutions->aliasField('institution_type_id IN') => $institutionTypeIds])
                             ->toArray();
+        }else{ // if institution type is 0 means its for all custom filter.//POCOR-6976
+            $getInstitutionObj = $Institutions->find()
+                            ->select([$Institutions->aliasField('id')])
+                            ->toArray();
+        }
         $institutionIds = [];
         if (!empty($getInstitutionObj)) {
             foreach ($getInstitutionObj as $val) {

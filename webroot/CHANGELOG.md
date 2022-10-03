@@ -1,3 +1,27 @@
+### [3.75.30] - 2022-09-27
+- Bug Fixed: System Performance for queries-Assessment page that is generating thousands of database queries per click
+- Bug Fixed: Ensure that Assignee field is added to all Add page that has workflows
+- Bug Fixed: Develop a class profile feature for Institution>Profile
+- Bug Fixed: Administration>Profile>Classes: 404 error when trying to generate this profile for previous academic period
+- Bug Fixed: Institutions>Student>Transfer: Unable to add Institution Positions
+- Bug Fixed: Institutions>Students>Bulk Transfer: Issues in Bulk transfer page
+
+### [3.75.29] - 2022-09-22
+- Bug Fixed: Report>Students>Subject and Book List: Education grade is not filtering by Institution
+- Bug Fixed: Institution > Student > Academic: Assessments should show all past and current Assessment records
+- Bug Fixed: Reports>Students>Students: Students are not reflecting correctly
+- Bug Fixed: Institution > Academic > Programmes: Able to delete programmes when classes for the programmes still exist
+- Bug Fixed: Institution>Survey:Surveys are not appearing
+- Bug Fixed: Institutions > Staff List page > Edit : System does not trigger any workflow for editing staff
+- Bug Fixed: Institutions>Students>Add: When trying to add a new student from the Institution tab, the system assigns a small integer that does not follow the OpenEMIS id logic
+- Bug Fixed: Institutions>Performance>Report Cards: Create placeholders for both education subjects and institution subjects
+
+### [3.75.28] - 2022-09-15
+- Bug Fixed: Institution > Students > Transfer: Education Grade is Empty Even Though There are Students in that specific year
+- Bug Fixed: Implement database foreign keys for OpenEMIS Core-Issues raised
+- Bug Fixed: API: User with OpenEMIS ID 2488140537 has no academic history records, but he has marks in 7 different grades.
+- Bug Fixed: Institutions>Student>Bulk Transfer: Assignee is assigned wrongly
+
 ### [3.75.27] - 2022-09-14
 - Bug Fixed: Report>Institution>Wash Report: Changes to the Wash Report
 - Bug Fixed: Institution > Students: User is able to create students with the same OpenEMIS ID at the same time as another user
