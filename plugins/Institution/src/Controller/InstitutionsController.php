@@ -4259,8 +4259,9 @@ class InstitutionsController extends AppController
     public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffProfiles']); }
     public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentProfiles']); }
     /*POCOR-6286 ends*/
-
-
+    /*POCOR-6966 starts*/ 
+    public function ClassesProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ClassesProfiles']); }
+    /*POCOR-6966 ends*/ 
     /*POCOR-6264 starts*/
     public function Lands()
     {
