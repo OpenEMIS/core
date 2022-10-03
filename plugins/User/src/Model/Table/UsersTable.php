@@ -633,7 +633,14 @@ class UsersTable extends AppTable
            $resultOpenemisTemp = $openemisTemps->find('all')                
                 ->order(['id' => 'DESC'])
                 ->first();
-
+            //POCOR-6980[START]
+            if(strlen($resultOpenemisTemp->openemis_no) < 5){
+                $resultOpenemisTemp = $SecurityUser->find('all')                
+                    ->order(['id' => 'DESC'])
+                    ->first();
+            }
+            //POCOR-6980[END]
+            
            $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
             $newOpenemisNo = $resultOpenemisNoTemp+1;
             $newOpenemisNo=$prefix.$newOpenemisNo;

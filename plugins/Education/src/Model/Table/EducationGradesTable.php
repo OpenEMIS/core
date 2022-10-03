@@ -981,7 +981,7 @@ class EducationGradesTable extends ControllerActionTable
     /*POCOR-6257 ends*/
 
     /*POCOR-6498 starts*/
-    public function getNextEducationGrades($gradeId, $periodId, $getNextProgrammeGrades = false, $firstGradeOnly = false) {
+    public function getNextEducationGrades($gradeId, $periodId, $getNextProgrammeGrades = false, $firstGradeOnly = false, $nexteducationgradeforenrolledStatus = false) {
         if (!empty($gradeId)) {
             $gradeObj = $this->get($gradeId);
             $programmeId = $gradeObj->education_programme_id;
@@ -999,7 +999,23 @@ class EducationGradesTable extends ControllerActionTable
                                 ])
                                 ->first()->id;
             $order = $gradeObj->order;
-            $gradeOptions = $this->find('list', [
+            //POCOR-6982 Starts
+            if($nexteducationgradeforenrolledStatus == true){
+                $gradeOptions = $this->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'programme_grade_name'
+                    ])
+                    ->find('visible')
+                    ->find('order')
+                    ->where([
+                        $this->aliasField('education_programme_id') => $programmeId,
+                        $this->aliasField('order') => $order
+                    ])
+                    ->order([$this->aliasField('order')])
+                    ->limit(1)
+                    ->toArray();//POCOR-6982 Ends
+            }else{
+                $gradeOptions = $this->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'programme_grade_name'
                 ])
@@ -1011,7 +1027,7 @@ class EducationGradesTable extends ControllerActionTable
                 ])
                 ->order([$this->aliasField('order')])
                 ->toArray();
-            
+            }
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
                 if ($firstGradeOnly) {
@@ -1019,7 +1035,12 @@ class EducationGradesTable extends ControllerActionTable
                 } else {
                     $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
                 }
-                $results = $gradeOptions + $nextProgrammesGradesOptions;
+                //POCOR-6982 Starts
+                if($nexteducationgradeforenrolledStatus == true){
+                    $results = $gradeOptions;
+                }else{
+                    $results = $gradeOptions + $nextProgrammesGradesOptions;
+                }//POCOR-6982 Ends
             } else {
                 $results = $gradeOptions;
             }
@@ -1031,7 +1052,7 @@ class EducationGradesTable extends ControllerActionTable
     /*POCOR-6498 ends*/
 
     /*POCOR-6498 Starts*/
-    public function getNextEducationGradesForTransfer($gradeId, $academicPeriodId, $getNextProgrammeGrades = true, $firstGradeOnly = false) {
+    public function getNextEducationGradesForTransfer($gradeId, $academicPeriodId, $getNextProgrammeGrades = true, $firstGradeOnly = false, $nexteducationgradeforenrolledStatus = false) {//add $nexteducationgradeforenrolledStatus POCOR-6230
         $gradeObj = $this->get($gradeId);
         $programmeId = $gradeObj->education_programme_id;
         $programmeObj = $this->EducationProgrammes->get($programmeId);
@@ -1048,7 +1069,23 @@ class EducationGradesTable extends ControllerActionTable
                                 ])
                                 ->first()->id;
         $order = $gradeObj->order;
-        $gradeOptions = $this->find('list', [
+        //POCOR-6230 Starts
+        if($nexteducationgradeforenrolledStatus == true){
+            $gradeOptions = $this->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'programme_grade_name'
+                ])
+                ->find('visible')
+                ->find('order')
+                ->where([
+                    $this->aliasField('education_programme_id') => $nextProgrammeId,
+                    $this->aliasField('order') => $order
+                ])
+                ->order([$this->aliasField('order')])
+                ->limit(1)
+                ->toArray();//POCOR-6230 Ends
+        }else{
+            $gradeOptions = $this->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'programme_grade_name'
                 ])
@@ -1061,7 +1098,7 @@ class EducationGradesTable extends ControllerActionTable
                 ->order([$this->aliasField('order')])
                 ->limit(1)
                 ->toArray();
-
+        }
         return $gradeOptions;
     }
     /*POCOR-6498 ends*/

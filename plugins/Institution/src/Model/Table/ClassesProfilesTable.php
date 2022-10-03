@@ -1,5 +1,5 @@
 <?php
-namespace ProfileTemplate\Model\Table;
+namespace Institution\Model\Table;
 
 use ArrayObject;
 use ZipArchive;
@@ -54,7 +54,6 @@ class ClassesProfilesTable extends ControllerActionTable
 
     public function initialize(array $config)
     { 
-        ini_set('memory_limit', '2G');
         $this->table('institutions');
         parent::initialize($config);
 
@@ -113,7 +112,7 @@ class ClassesProfilesTable extends ControllerActionTable
             ];
 		
             // Download button, status must be generated or published
-            if ($this->AccessControl->check(['Profiles', 'ClassesProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+            if ($this->AccessControl->check(['Institutions', 'ClassesProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 //START:POCOR-6667
                 $viewPdfUrl = $this->setQueryString($this->url('viewPDF'), $params);
                 $buttons['viewPdf'] = [
@@ -136,7 +135,7 @@ class ClassesProfilesTable extends ControllerActionTable
                 ];
             }
             // Generate button, all statuses
-            if ($this->AccessControl->check(['ProfileTemplates', 'ClassesProfiles', 'generate'])) {
+            if ($this->AccessControl->check(['Institutions', 'ClassesProfiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->ReportCards
@@ -170,7 +169,7 @@ class ClassesProfilesTable extends ControllerActionTable
                 } 
             }
             // Publish button, status must be generated
-            if ($this->AccessControl->check(['ProfileTemplates', 'ClassesProfiles', 'publish']) && $entity->has('report_card_status') 
+            if ($this->AccessControl->check(['Institutions', 'ClassesProfiles', 'publish']) && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::GENERATED 
                          || $entity->report_card_status == '12' 
                        )
@@ -184,7 +183,7 @@ class ClassesProfilesTable extends ControllerActionTable
             }
 
             // Unpublish button, status must be published
-            if ($this->AccessControl->check(['ProfileTemplates', 'ClassesProfiles', 'unpublish']) 
+            if ($this->AccessControl->check(['Institutions', 'ClassesProfiles', 'unpublish']) 
                     && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::PUBLISHED 
                           || $entity->report_card_status == '16'
@@ -215,30 +214,7 @@ class ClassesProfilesTable extends ControllerActionTable
         $this->fields['student_status_id']['visible'] = false;
     }
 	
-	private function setupTabElements() {
-		$options['type'] = 'StaffTemplates';
-		$tabElements = $this->getStaffTabElements($options);
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Profiles');
-	}
-
-	public function getStaffTabElements($options = [])
-    {
-        $tabElements = [];
-        $tabUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
-        $templateUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
-        $tabElements = [
-            'Profiles' => ['text' => __('Profile')],
-            'Templates' => ['text' => __('Templates')]
-        ];
-		
-        $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'ClassProfiles']);
-        $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Classes']);
-
-		return $tabElements;
-    }
-
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('report_queue');
         $this->setFieldOrder(['class_name', 'institution_name', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
@@ -261,12 +237,13 @@ class ClassesProfilesTable extends ControllerActionTable
             ])
             ->hydrate(false)
             ->toArray();
-		$this->setupTabElements();	
-    }
+	}
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {		
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
@@ -285,75 +262,8 @@ class ClassesProfilesTable extends ControllerActionTable
         $selectedReportCard = !is_null($this->request->query('class_profile_template_id')) ? $this->request->query('class_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//End
-	    // Area Level filter
-        $AreaLevel = TableRegistry::get('Area.AreaLevels');
-        $areaLevelOptions = [];
-        $areaLevelOptions = $AreaLevel->find('list')->toArray();
-        $areaLevelOptions = ['-1' => '-- '.__('Select Area Level').' --'] + $areaLevelOptions;
-        $selectedAreaLevel = !is_null($this->request->query('area_level_id')) ? $this->request->query('area_level_id') : -1;
-        $this->controller->set(compact('areaLevelOptions', 'selectedAreaLevel'));
-        //End
-        // Area filter
-        $Areas = TableRegistry::get('Area.Areas');
-        $areaOptions = [];
-        if($selectedAreaLevel != -1){
-            $areaOptions = $Areas->find('list')
-                            ->where([
-                                $Areas->aliasField('area_level_id') => $selectedAreaLevel
-                            ]) 
-                             ->toArray();  
-        } else{
-            $areaOptions = $Areas->find('list')
-             ->toArray();  
-        }                
-        $areaOptions = ['-1' => __('--Select Area--')] + $areaOptions;
-        $selectedArea = !is_null($this->request->query('area_id')) ? $this->request->query('area_id') : -1;
-        $this->controller->set(compact('areaOptions', 'selectedArea'));
-        //End                    
-        foreach($areaOptions AS $key => $areaOptionsData){
-            $areaKey[$key] = $key;
-        }
-        // Institution filter
-        $Institutions = TableRegistry::get('Institutions');
-        $institutionOptions = [];
-        if($selectedArea == -1){
-            $institutionOptions = $Institutions->find('list')
-                                ->where([
-                                    $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
-                                ])->toArray();
-        }else{
-            //POCOR-6822 Anubhav's code starts
-            $areaIds = [];
-            $allgetArea = $this->getChildren($selectedArea, $areaIds);
-            $selectedArea1[]= $selectedArea;
-            if(!empty($allgetArea)){
-                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
-            }else{
-                $allselectedAreas = $selectedArea1;
-            }//POCOR-6822 Anubhav's code ends
-
-            $institutionOptions = $Institutions->find('list')
-                                ->where([ $Institutions->aliasField('area_id IN') => $allselectedAreas,
-                                    $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
-                                ])->toArray();
-        }
-
-        if(!empty($institutionOptions)){
-            foreach($institutionOptions AS $institutionOptionsDataKey => $institutionOptionsData){
-                $institutionOptionsKey[$institutionOptionsDataKey] = $institutionOptionsDataKey;
-            }
-        }
-        
-        $institutionOptions = ['-1' => '-- '.__('All Institution').' --'] + $institutionOptions;
-        $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
-        $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
-
-        if($selectedInstitution != -1){
-            $where[$this->aliasField('id')] = $selectedInstitution;
-        }
-        if(!empty($institutionOptionsKey)){
-            $where[$this->aliasField('id IN ')] = $institutionOptionsKey;
-        } 
+	    
+        $where[$this->aliasField('id')] = $institutionId;
         //End
         $InstitutionClasses = TableRegistry::get('institution_classes');
         $query
@@ -395,20 +305,6 @@ class ClassesProfilesTable extends ControllerActionTable
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
-    }
-
-    public function getChildren($id, $idArray) {
-        $Areas = TableRegistry::get('Area.Areas');
-        $result = $Areas->find()
-                            ->where([
-                                $Areas->aliasField('parent_id') => $id
-                            ]) 
-                             ->toArray();
-        foreach ($result as $key => $value) {
-            $idArray[] = $value['id'];
-           $idArray = $this->getChildren($value['id'], $idArray);
-        }
-        return $idArray;
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
