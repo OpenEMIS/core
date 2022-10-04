@@ -1885,6 +1885,7 @@ class StaffTable extends ControllerActionTable
                     $currentDate = date('Y-m-d');
                     /**Getting staff present and late data*/
                     $StaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
+                    //echo "<pre>"; print_r($StaffAttendances);die;
                     $StaffAttendancesObj = $StaffAttendances->find()
                         ->select(['time_in' => $StaffAttendances->aliasField('time_in')])
                         ->where([
@@ -1894,6 +1895,7 @@ class StaffTable extends ControllerActionTable
                             $StaffAttendances->aliasField('time_in IS NOT NULL'),
                             $StaffAttendances->aliasField('time_out IS NOT NULL')
                         ])->first();
+
                     if (!empty($StaffAttendancesObj)) {
                         $time = date("H:i:s", strtotime($StaffAttendancesObj->time_in));
                         $StaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
@@ -1909,9 +1911,9 @@ class StaffTable extends ControllerActionTable
                                     ->where([$InstitutionShifts->aliasField('id') => $value->shift_id])
                                     ->first();
                             } 
-                            //end of POCOR-6900                         
-                            $staffShiftTime = date("H:i:s", strtotime($data->start_time));
-                            if ($time >= $staffShiftTime) {
+                                                    
+                            $staffShiftTime = date("H:i:s", strtotime($data[$key]->start_time));
+                            if ($time > $staffShiftTime) {
                                 $row->late = 1;
                             } else {
                                 $row->late = 0;
@@ -1925,11 +1927,12 @@ class StaffTable extends ControllerActionTable
                                 ])
                                 ->first();
                             $InstitutionShiftTime = date("H:i:s", strtotime($InstitutionShiftsObj->start_time));
-                            if ($time >= $InstitutionShiftTime) {
+                            if ($time > $InstitutionShiftTime) {
                                 $row->late = 1;
                             } else {
                                 $row->late = 0;
                             }
+                            //end of POCOR-6900 
                         }
                     }
                     if (isset($StaffAttendancesObj)) {
