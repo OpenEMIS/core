@@ -915,7 +915,7 @@ class StudentsTable extends ControllerActionTable
     //Start:POCOR-6931	
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)	
     { 	
-        if($_SERVER['REQUEST_URI'] == "/restful/v2/Institution-Students.json"){
+        if(strpos($_SERVER['REQUEST_URI'], "/restful/v2/Institution-Students.json") !== false){
             if ($entity->isNew()) {	
                 $studentCurrentV1 = $this->find('all',['conditions'=>['student_status_id' => $entity->student_status_id, 'student_id'=> $entity->student_id]])->first();	
                 
