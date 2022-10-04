@@ -444,7 +444,7 @@ class StudentTransferTable extends ControllerActionTable
             /*POCOR-6498 starts*/
             $isLastGrade = $this->EducationGrades->isLastGradeInEducationProgrammes($selectedGrade);
             if ($isLastGrade) {
-                $nextGradeOptions = $this->EducationGrades->getNextEducationGrades($selectedGrade, $nextPeriodId, true, true);
+                $nextGradeOptions = $this->EducationGrades->getNextEducationGrades($selectedGrade, $nextPeriodId, true, true, $nexteducationgradeforenrolledStatus);//POCOR-6998 starts
             } else {
                 $nextGradeOptions = $this->EducationGrades->getNextEducationGradesForTransfer($selectedGrade,$nextPeriodId,true,true,$nexteducationgradeforenrolledStatus);//POCOR-6230
             }
