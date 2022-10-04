@@ -19,7 +19,7 @@ class POCOR6998 extends AbstractMigration
         //backup the table
         $this->execute('CREATE TABLE IF NOT EXISTS `z_6998_education_programmes_next_programmes` LIKE `education_programmes_next_programmes`');
         $this->execute('INSERT INTO `z_6998_education_programmes_next_programmes` SELECT * FROM `education_programmes_next_programmes`');
-        
+
         $this->execute('TRUNCATE TABLE `education_programmes_next_programmes`');
 
         $education_systems = TableRegistry::get('education_systems');
@@ -32,7 +32,7 @@ class POCOR6998 extends AbstractMigration
         $EducationSystemData = $education_systems
                                 ->find()
                                 ->select(['id', 'name', 'order'])
-                                //->where([$education_systems->aliasField('id') => 2])  //using for single education system testing purpose
+                                //->where([$education_systems->aliasField('id') => 4])  //using for single education system testing purpose
                                 ->order([$education_systems->aliasField('order ASC')])
                                 ->hydrate(false)
                                 ->toArray();
@@ -49,6 +49,7 @@ class POCOR6998 extends AbstractMigration
                                             'education_system_id'
                                         ])
                                         ->where([$education_levels->aliasField('education_system_id') => $education_system_id])
+                                        ->order([$education_levels->aliasField('order ASC')])
                                         ->hydrate(false)
                                         ->toArray();
                 
@@ -63,9 +64,13 @@ class POCOR6998 extends AbstractMigration
                                 ->select([
                                     'cycle_id' => $education_cycles->aliasField('id'), 
                                     'cycle_name' => $education_cycles->aliasField('name'),
+                                    'order' => $education_levels->aliasField('order'),
                                     'education_level_id'])
+                                ->InnerJoin([$education_levels->alias() => $education_levels->table()], [
+                                    $education_levels->aliasField('id = ') . $education_cycles->aliasField('education_level_id')
+                                ])
                                 ->where([$education_cycles->aliasField('education_level_id IN') => $EducationLevelArray])
-                                ->order([$education_cycles->aliasField('id ASC')])
+                                ->order([$education_levels->aliasField('order ASC')])
                                 ->hydrate(false)
                                 ->toArray();
 
@@ -74,23 +79,32 @@ class POCOR6998 extends AbstractMigration
                         foreach ($EducationCycleData as $cycle_key => $cycle_value) {
                             $EducationCycleArray[] = $cycle_value['cycle_id'];
                         } 
+
                         //for education program
                         $EducationProgramData = $education_programmes
                                         ->find()
                                         ->select([
                                             'program_id' => $education_programmes->aliasField('id'), 
                                             'program_name' => $education_programmes->aliasField('name'),
+                                            'order' => $education_levels->aliasField('order'),
                                             'education_cycle_id'])
+                                        ->InnerJoin([$education_cycles->alias() => $education_cycles->table()], [
+                                            $education_cycles->aliasField('id = ') . $education_programmes->aliasField('education_cycle_id')
+                                        ])
+                                        ->InnerJoin([$education_levels->alias() => $education_levels->table()], [
+                                            $education_levels->aliasField('id = ') . $education_cycles->aliasField('education_level_id')
+                                        ])
                                         ->where([$education_programmes->aliasField('education_cycle_id IN') => $EducationCycleArray])
+                                        ->order([$education_levels->aliasField('order ASC'), $education_programmes->aliasField('id ASC')])
                                         ->hydrate(false)
                                         ->toArray();
-
+                                       
                         if(!empty($EducationProgramData)){
                             $EducationProgramArray = [];
                             foreach ($EducationProgramData as $program_key => $program_value) {
                                 $EducationProgramArray[] = $program_value['program_id'];
                             }
-
+                            
                             if(!empty($EducationProgramArray)){
                                 //for education next program array
                                 $EducationNextProgramArray = [];
