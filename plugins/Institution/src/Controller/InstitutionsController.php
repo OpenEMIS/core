@@ -4524,6 +4524,32 @@ class InstitutionsController extends AppController
         echo $result; die;
     }
 
+    public function checkStudentAdmissionAgeValidation()
+    {
+        $requestData = $this->request->input('json_decode', true);
+        $dateOfBirth = $requestData['params']['date_of_birth'];
+        $educationGradeId = $requestData['params']['education_grade_id'];
+        
+        $dobYear =  date('Y', strtotime($dateOfBirth));
+        $currentYear =  date('Y', strtotime(date('Y-m-d')));
+        $yearDiff = $currentYear - $dobYear;
+
+        $ConfigItemTable = TableRegistry::get('config_items');
+        $ConfigItemAgePlus = $ConfigItemTable->find('all',['conditions' =>['code' => 'admission_age_plus']])->first();
+        $ConfigItemAgeMinus = $ConfigItemTable->find('all',['conditions' =>['code' => 'admission_age_minus']])->first();  
+        $EducationGradesTable = TableRegistry::get('education_grades'); 
+        $EducationGrades = $EducationGradesTable->find('all',['conditions' =>['id' => $educationGradeId]])->first();    
+        $maxAge = ($EducationGrades->admission_age + $ConfigItemAgePlus->value);    
+        $minAge = $EducationGrades->admission_age - $ConfigItemAgeMinus->value; 
+        
+        if($yearDiff > $maxAge || $yearDiff < $minAge ){   
+            $result_array[] = array("max_age" => $maxAge, "min_age" => $minAge, "validation_error" => 1);
+        }else{
+            $result_array[] = array("max_age" => $maxAge, "min_age" => $minAge, "validation_error" => 0);
+        }
+        echo json_encode($result_array);die;
+    }
+
     public function getStudentTransferReason()
     {
         $student_transfer_reasons = TableRegistry::get('student_transfer_reasons');
