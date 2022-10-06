@@ -1734,7 +1734,14 @@ class InstitutionsController extends AppController
         }
         if($this->request->params['action'] == 'getStudentTransferReason'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStudentTransferReason';
-        }//for api purpose POCOR-5672 ends
+        }
+        if($this->request->params['action'] == 'checkStudentAdmissionAgeValidation'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkStudentAdmissionAgeValidation';
+        }
+        if($this->request->params['action'] == 'getStartDateFromAcademicPeriod'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStartDateFromAcademicPeriod';
+        }
+        //for api purpose POCOR-5672 ends
         return $events;
     }
     //POCOR-5672 starts
@@ -4549,6 +4556,22 @@ class InstitutionsController extends AppController
         }
         echo json_encode($result_array);die;
     }
+
+    public function getStartDateFromAcademicPeriod()
+    {
+        $requestData = $this->request->input('json_decode', true);
+        $academicPeriodId = $requestData['params']['academic_period_id'];
+
+        $AcademicPeriodsTable = TableRegistry::get('academic_periods');
+        $academic_periods_result = $AcademicPeriodsTable
+            ->find()
+            ->where(['id' => $academicPeriodId])
+            ->toArray();
+        foreach($academic_periods_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name" => $result['name'], "start_date" => date('Y-m-d',strtotime($result['start_date'])), "start_year" => $result['start_year'], "end_date" => date('Y-m-d',strtotime($result['end_date'])), "end_year" => $result['end_year']);
+        }
+        echo json_encode($result_array);die;
+   }
 
     public function getStudentTransferReason()
     {
