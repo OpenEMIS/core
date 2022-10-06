@@ -600,7 +600,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
-    function changeEducationGrade() {
+    async function changeEducationGrade() {
         var educationGrade = StudentController.selectedStudentData.education_grade_id;
         var educationGradeOptions = StudentController.educationGradeOptions;
         for (var i = 0; i < educationGradeOptions.length; i++) {
@@ -613,11 +613,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.getClasses();
 
         // POCOR-5672
-        const response = InstitutionsStudentsSvc.getDateOfBirthValidation({ date_of_birth: StudentController.selectedStudentData.date_of_birth, education_grade_id: educationGrade })
-        console.log('Date of birth Validation response', response)
-        if (response.validation_error === 1)
+        const dateOfBirthValidationResponse =await InstitutionsStudentsSvc.getDateOfBirthValidation({ date_of_birth: StudentController.selectedStudentData.date_of_birth, education_grade_id: educationGrade })
+        const { validation_error,min_age,max_age } = dateOfBirthValidationResponse.data[0];
+        if (validation_error === 1)
         {
-            StudentController.error.date_of_birth = `The student should be between ${response.min_age} to ${response.max_age} years old`;
+            StudentController.error.date_of_birth = `The student should be between ${min_age<=0?0:min_age} to ${max_age} years old`;
         }
     }
 
