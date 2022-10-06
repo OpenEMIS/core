@@ -71,6 +71,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         getAddressArea: getAddressArea,
         getBirthplaceArea: getBirthplaceArea,
         getStudentTransferReason: getStudentTransferReason,
+        getDateOfBirthValidation: getDateOfBirthValidation,
     };
 
     var models = {
@@ -992,4 +993,25 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             .select()
             .ajax({defer: true});
     }
+
+
+    // Validation for Check Student Admission Age [POCOR-5672]
+    // Request Params: date_of_birth(In 'Y-m-d' format), education_grade_id
+    // Response:
+    // [{ "max_age": 22, "min_age": -3, "validation_error": 1 }]
+
+    function getDateOfBirthValidation(params)
+    {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/checkStudentAdmissionAge';
+        $http.post(url, { params })
+            .then(function (response)
+            {
+                deferred.resolve(response);
+            }, function (error)
+            {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    };
 };
