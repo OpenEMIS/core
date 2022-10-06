@@ -1003,7 +1003,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
     function getDateOfBirthValidation(params)
     {
         var deferred = $q.defer();
-        let url = angular.baseUrl + '/Institutions/checkStudentAdmissionAge';
+        let url = angular.baseUrl + '/Institutions/checkStudentAdmissionAgeValidation';
         $http.post(url, { params })
             .then(function (response)
             {
