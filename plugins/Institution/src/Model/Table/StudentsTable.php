@@ -929,11 +929,8 @@ class StudentsTable extends ControllerActionTable
                 $EducationGradesTable = TableRegistry::get('education_grades');	
                 $EducationGrades =   $EducationGradesTable->find('all',['conditions' =>['id' => $entity->education_grade_id]])->first();	
                 $maxAge = ($EducationGrades->admission_age + $ConfigItemAgePlus->value);	
-                if($EducationGrades->admission_age > $ConfigItemAgeMinus->value){	
-                    $minAge = $EducationGrades->admission_age - $ConfigItemAgeMinus->value;	
-                }else{	
-                    $minAge = $ConfigItemAgeMinus->value - $EducationGrades->admission_age;	
-                }	
+                $minAge = $EducationGrades->admission_age - $ConfigItemAgeMinus->value;	
+                
                 $studentCurrent = $this->find('all',['conditions'=>['student_id'=> $entity->student_id, 'education_grade_id'=> $entity->education_grade_id ]])->first();	
                 if(!empty($studentCurrentV1)){	
                     if($entity->student_status_id == 1){
