@@ -611,6 +611,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         StudentController.error.education_grade_id = '';
         StudentController.getClasses();
+
+        // POCOR-5672
+        const response = InstitutionsStudentsSvc.getDateOfBirthValidation({ date_of_birth: StudentController.selectedStudentData.date_of_birth, education_grade_id: educationGrade })
+        console.log('Date of birth Validation response', response)
+        if (response.validation_error === 1)
+        {
+            StudentController.error.date_of_birth = `The student should be between ${response.min_age} to ${response.max_age} years old`;
+        }
     }
 
     function changeTransferReason() {
