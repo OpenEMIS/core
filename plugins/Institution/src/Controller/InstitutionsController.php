@@ -4547,8 +4547,8 @@ class InstitutionsController extends AppController
         $EducationGradesTable = TableRegistry::get('education_grades'); 
         $EducationGrades = $EducationGradesTable->find('all',['conditions' =>['id' => $educationGradeId]])->first();    
         $maxAge = ($EducationGrades->admission_age + $ConfigItemAgePlus->value);    
-        $minAge = $EducationGrades->admission_age - $ConfigItemAgeMinus->value; 
-        
+        $minAge = $EducationGrades->admission_age - $ConfigItemAgeMinus->value;
+        if($minAge < 0){ $minAge =  0; } 
         if($yearDiff > $maxAge || $yearDiff < $minAge ){   
             $result_array[] = array("max_age" => $maxAge, "min_age" => $minAge, "validation_error" => 1);
         }else{
