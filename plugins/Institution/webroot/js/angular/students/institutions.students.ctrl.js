@@ -622,7 +622,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         const { validation_error,min_age,max_age } = dateOfBirthValidationResponse.data[0];
         if (validation_error === 1)
         {
-            StudentController.error.date_of_birth = `The student should be between ${min_age<=0?0:min_age} to ${max_age} years old`;
+            StudentController.error.date_of_birth = `The student should be between ${min_age} to ${max_age} years old`;
+        } else if (validation_error === 0)
+        {
+            StudentController.error.date_of_birth = "";
         }
     }
 
@@ -949,6 +952,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(!StudentController.selectedStudentData.startDate){
             StudentController.error.startDate = 'This field cannot be left empty';
         }
+        if (StudentController.error.date_of_birth !== '') return;
         StudentController.customFieldsArray.forEach((customField) => {
             customField.data.forEach((field) => {
                 if(field.is_mandatory === 1) {
