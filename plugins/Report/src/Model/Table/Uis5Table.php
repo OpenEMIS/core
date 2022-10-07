@@ -14,12 +14,12 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\ResultSet;
 use LDAP\Result;
 
-class UisTable extends AppTable
+class Uis5Table extends AppTable
 {
-    private $uisTabsData = [0 => "UIS-A2", 2 => "UIS-A9"];
+    private $uisTabsData = [0 => "UIS-A13"];
     public function initialize(array $config)       
     {
-        $this->table('summary_programme_sector_genders');
+        $this->table('summary_isced_sectors');
         parent::initialize($config);
 
         $this->addBehavior('Excel', [
@@ -205,24 +205,24 @@ class UisTable extends AppTable
         $reqData = json_decode($settings['process']['params'], true);
         $academic_period_id = $reqData['academic_period_id'];
         
-        if ($uisType == 'UIS-A2')
-        {
-            $summaryProgrammeSectorGendersTypes = TableRegistry::get('summary_programme_sector_genders');
-            $res = $query->select([
-                'academic_period_name' => 'academic_period_name',
-                'institution_sector_name' => 'institution_sector_name',
-                'education_system_name' => 'education_system_name',
-                'education_level_isced_level' => 'education_level_isced_level',
-                'education_level_isced_name' => 'education_level_isced_name',
-                'education_level_name' => 'education_level_name',
-                'education_cycle_name' => 'education_cycle_name',
-                'education_programme_code' => 'education_programme_code',
-                'education_programme_name' => 'education_programme_name',
-                'gender_name' => 'gender_name',
-                'total_students' => 'total_students',
-            ])
-            ->where(['academic_period_id' => $academic_period_id]);
-        }   
+        // if ($uisType == 'UIS-A2')
+        // {
+        //     $summaryProgrammeSectorGendersTypes = TableRegistry::get('summary_programme_sector_genders');
+        //     $res = $query->select([
+        //         'academic_period_name' => 'academic_period_name',
+        //         'institution_sector_name' => 'institution_sector_name',
+        //         'education_system_name' => 'education_system_name',
+        //         'education_level_isced_level' => 'education_level_isced_level',
+        //         'education_level_isced_name' => 'education_level_isced_name',
+        //         'education_level_name' => 'education_level_name',
+        //         'education_cycle_name' => 'education_cycle_name',
+        //         'education_programme_code' => 'education_programme_code',
+        //         'education_programme_name' => 'education_programme_name',
+        //         'gender_name' => 'gender_name',
+        //         'total_students' => 'total_students',
+        //     ])
+        //     ->where(['academic_period_id' => $academic_period_id]);
+        // }   
 
         // if ($uisType == 'UIS-A3')
         // {   
@@ -392,25 +392,25 @@ class UisTable extends AppTable
         //     });
         // }
 
-        if ($uisType == 'UIS-A9')
-        {
-            $res = $query->select([
-                'academic_period_name' => 'academic_period_name',
-                'institution_sector_name' => 'institution_sector_name',
-                'education_system_name' => 'education_system_name',
-                'education_level_isced_level' => 'education_level_isced_level',
-                'education_level_isced_name' => 'education_level_isced_name',
-                'education_level_name' => 'education_level_name',
-                'education_cycle_name' => 'education_cycle_name',
-                'education_programme_code' => 'education_programme_code',
-                'education_programme_name' => 'education_programme_name',
-                'gender_name' => 'gender_name',
-                'total_students' => 'total_students',
-                'total_staff_teaching_newly_recruited' => 'total_staff_teaching_newly_recruited'
-            ])
-            ->where(['academic_period_id' => $academic_period_id]);
+        // if ($uisType == 'UIS-A9')
+        // {
+        //     $res = $query->select([
+        //         'academic_period_name' => 'academic_period_name',
+        //         'institution_sector_name' => 'institution_sector_name',
+        //         'education_system_name' => 'education_system_name',
+        //         'education_level_isced_level' => 'education_level_isced_level',
+        //         'education_level_isced_name' => 'education_level_isced_name',
+        //         'education_level_name' => 'education_level_name',
+        //         'education_cycle_name' => 'education_cycle_name',
+        //         'education_programme_code' => 'education_programme_code',
+        //         'education_programme_name' => 'education_programme_name',
+        //         'gender_name' => 'gender_name',
+        //         'total_students' => 'total_students',
+        //         'total_staff_teaching_newly_recruited' => 'total_staff_teaching_newly_recruited'
+        //     ])
+        //     ->where(['academic_period_id' => $academic_period_id]);
             
-        }
+        // }
 
         // if ($uisType == 'UIS-A10(1)')
         // {
@@ -473,42 +473,36 @@ class UisTable extends AppTable
                 
         // }
 
-        // if ($uisType == 'UIS-A13')
-        // {
-        //     $SummaryIscedSectors = TableRegistry::get('summary_isced_sectors');
-        //     $res = $query->select([
-        //         'academic_period_name6' => 'summary_isced_sectors.academic_period_name',
-        //         'institution_sector_name6' => 'summary_isced_sectors.institution_sector_name',
-        //         'education_system_name6' => 'summary_isced_sectors.education_system_name',
-        //         'education_level_isced_level6' => 'summary_isced_sectors.education_level_isced_name',
+        if ($uisType == 'UIS-A13')
+        {
+            
+            $res = $query->select([
+                'academic_period_name6' => 'academic_period_name',
+                'institution_sector_name6' => 'institution_sector_name',
+                'education_system_name6' => 'education_system_name',
+                'education_level_isced_level6' => 'education_level_isced_name',
                 
-        //         'education_level_isced_name6' => 'summary_isced_sectors.education_level_isced_name',
-        //         'total_instiutions' => 'summary_isced_sectors.total_instiutions',
-        //         'total_electricity_institutions' => 'summary_isced_sectors.total_electricity_institutions',
-        //         'total_computer_institutions' => 'summary_isced_sectors.total_computer_institutions',
-        //         'total_internet_institutions' => 'summary_isced_sectors.total_internet_institutions',
-        //         'total_toilet_institutions' => 'summary_isced_sectors.total_toilet_institutions',
-        //         'total_improved_toilet_institutions' => 'summary_isced_sectors.total_improved_toilet_institutions',
-        //         'total_in_use_toilet_institutions' => 'summary_isced_sectors.total_in_use_toilet_institutions',
-        //         'total_improved_single_sex_toilet_institutions' => 'summary_isced_sectors.total_improved_single_sex_toilet_institutions',
+                'education_level_isced_name6' => 'education_level_isced_name',
+                'total_instiutions' => 'total_instiutions',
+                'total_electricity_institutions' => 'total_electricity_institutions',
+                'total_computer_institutions' => 'total_computer_institutions',
+                'total_internet_institutions' => 'total_internet_institutions',
+                'total_toilet_institutions' => 'total_toilet_institutions',
+                'total_improved_toilet_institutions' => 'total_improved_toilet_institutions',
+                'total_in_use_toilet_institutions' => 'total_in_use_toilet_institutions',
+                'total_improved_single_sex_toilet_institutions' => 'total_improved_single_sex_toilet_institutions',
 
-        //         'total_in_use_single_sex_toilet_institutions' => 'summary_isced_sectors.total_in_use_single_sex_toilet_institutions',
-        //         'total_improved_in_use_single_sex_toilet_institutions' => 'summary_isced_sectors.total_improved_in_use_single_sex_toilet_institutions',
-        //         'total_drinking_water_institutions' => 'summary_isced_sectors.total_drinking_water_institutions',
-        //         'total_functional_drinking_water_institutions' => 'summary_isced_sectors.total_functional_drinking_water_institutions',
-        //         'total_handwashing_facility_institutions' => 'summary_isced_sectors.total_handwashing_facility_institutions',
-        //         'total_accessible_room_institutions' => 'summary_isced_sectors.total_accessible_room_institutions',
+                'total_in_use_single_sex_toilet_institutions' => 'total_in_use_single_sex_toilet_institutions',
+                'total_improved_in_use_single_sex_toilet_institutions' => 'total_improved_in_use_single_sex_toilet_institutions',
+                'total_drinking_water_institutions' => 'total_drinking_water_institutions',
+                'total_functional_drinking_water_institutions' => 'total_functional_drinking_water_institutions',
+                'total_handwashing_facility_institutions' => 'total_handwashing_facility_institutions',
+                'total_accessible_room_institutions' => 'total_accessible_room_institutions',
                 
-        //     ])
-        //     ->LeftJoin([$SummaryIscedSectors->alias() => $SummaryIscedSectors->table() ], [
-        //         $this->aliasField('academic_period_id'). ' = ' . $SummaryIscedSectors->aliasField('academic_period_id'),
-        //         $this->aliasField('education_system_id'). ' = ' . $SummaryIscedSectors->aliasField('education_system_id'),
-        //         $this->aliasField('education_level_isced_id'). ' = ' . $SummaryIscedSectors->aliasField('education_level_isced_id'),
-               
-        //         ])
-        //     ->where(['summary_isced_sectors.academic_period_id' => $academic_period_id]);
+            ])
+            ->where(['academic_period_id' => $academic_period_id]);
              
-        // }
+        }
        
     }
 }

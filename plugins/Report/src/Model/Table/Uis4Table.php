@@ -14,12 +14,12 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\ResultSet;
 use LDAP\Result;
 
-class UisTable extends AppTable
+class Uis4Table extends AppTable
 {
-    private $uisTabsData = [0 => "UIS-A2", 2 => "UIS-A9"];
+    private $uisTabsData = [0 => "UIS-A10(2)"];
     public function initialize(array $config)       
     {
-        $this->table('summary_programme_sector_genders');
+        $this->table('summary_programme_sector_specialization_genders');
         parent::initialize($config);
 
         $this->addBehavior('Excel', [
@@ -205,24 +205,24 @@ class UisTable extends AppTable
         $reqData = json_decode($settings['process']['params'], true);
         $academic_period_id = $reqData['academic_period_id'];
         
-        if ($uisType == 'UIS-A2')
-        {
-            $summaryProgrammeSectorGendersTypes = TableRegistry::get('summary_programme_sector_genders');
-            $res = $query->select([
-                'academic_period_name' => 'academic_period_name',
-                'institution_sector_name' => 'institution_sector_name',
-                'education_system_name' => 'education_system_name',
-                'education_level_isced_level' => 'education_level_isced_level',
-                'education_level_isced_name' => 'education_level_isced_name',
-                'education_level_name' => 'education_level_name',
-                'education_cycle_name' => 'education_cycle_name',
-                'education_programme_code' => 'education_programme_code',
-                'education_programme_name' => 'education_programme_name',
-                'gender_name' => 'gender_name',
-                'total_students' => 'total_students',
-            ])
-            ->where(['academic_period_id' => $academic_period_id]);
-        }   
+        // if ($uisType == 'UIS-A2')
+        // {
+        //     $summaryProgrammeSectorGendersTypes = TableRegistry::get('summary_programme_sector_genders');
+        //     $res = $query->select([
+        //         'academic_period_name' => 'academic_period_name',
+        //         'institution_sector_name' => 'institution_sector_name',
+        //         'education_system_name' => 'education_system_name',
+        //         'education_level_isced_level' => 'education_level_isced_level',
+        //         'education_level_isced_name' => 'education_level_isced_name',
+        //         'education_level_name' => 'education_level_name',
+        //         'education_cycle_name' => 'education_cycle_name',
+        //         'education_programme_code' => 'education_programme_code',
+        //         'education_programme_name' => 'education_programme_name',
+        //         'gender_name' => 'gender_name',
+        //         'total_students' => 'total_students',
+        //     ])
+        //     ->where(['academic_period_id' => $academic_period_id]);
+        // }   
 
         // if ($uisType == 'UIS-A3')
         // {   
@@ -392,25 +392,25 @@ class UisTable extends AppTable
         //     });
         // }
 
-        if ($uisType == 'UIS-A9')
-        {
-            $res = $query->select([
-                'academic_period_name' => 'academic_period_name',
-                'institution_sector_name' => 'institution_sector_name',
-                'education_system_name' => 'education_system_name',
-                'education_level_isced_level' => 'education_level_isced_level',
-                'education_level_isced_name' => 'education_level_isced_name',
-                'education_level_name' => 'education_level_name',
-                'education_cycle_name' => 'education_cycle_name',
-                'education_programme_code' => 'education_programme_code',
-                'education_programme_name' => 'education_programme_name',
-                'gender_name' => 'gender_name',
-                'total_students' => 'total_students',
-                'total_staff_teaching_newly_recruited' => 'total_staff_teaching_newly_recruited'
-            ])
-            ->where(['academic_period_id' => $academic_period_id]);
+        // if ($uisType == 'UIS-A9')
+        // {
+        //     $res = $query->select([
+        //         'academic_period_name' => 'academic_period_name',
+        //         'institution_sector_name' => 'institution_sector_name',
+        //         'education_system_name' => 'education_system_name',
+        //         'education_level_isced_level' => 'education_level_isced_level',
+        //         'education_level_isced_name' => 'education_level_isced_name',
+        //         'education_level_name' => 'education_level_name',
+        //         'education_cycle_name' => 'education_cycle_name',
+        //         'education_programme_code' => 'education_programme_code',
+        //         'education_programme_name' => 'education_programme_name',
+        //         'gender_name' => 'gender_name',
+        //         'total_students' => 'total_students',
+        //         'total_staff_teaching_newly_recruited' => 'total_staff_teaching_newly_recruited'
+        //     ])
+        //     ->where(['academic_period_id' => $academic_period_id]);
             
-        }
+        // }
 
         // if ($uisType == 'UIS-A10(1)')
         // {
@@ -442,36 +442,36 @@ class UisTable extends AppTable
                 
         // }
 
-        // if ($uisType == 'UIS-A10(2)')
-        // {
-        //     $SummaryProgrammeSectorSpecializationGenders = TableRegistry::get('summary_programme_sector_specialization_genders');
-        //     $res = $query->select([
-        //         'academic_period_name5' => 'summary_programme_sector_specialization_genders.academic_period_name',
-        //         'education_system_name5' => 'summary_programme_sector_specialization_genders.education_system_name',
-        //         'education_level_isced_level5' => 'summary_programme_sector_specialization_genders.education_level_isced_level',
-        //         'education_level_isced_name5' => 'summary_programme_sector_specialization_genders.education_level_isced_name',
-        //         'education_level_name5' => 'summary_programme_sector_specialization_genders.education_level_name',
-        //         'education_cycle_name5' => 'summary_programme_sector_specialization_genders.education_cycle_name',
-        //         'education_programme_code5' => 'summary_programme_sector_specialization_genders.education_programme_code',
-        //         'education_programme_name5' => 'summary_programme_sector_specialization_genders.education_programme_name',
+        if ($uisType == 'UIS-A10(2)')
+        {
+            $SummaryProgrammeSectorSpecializationGenders = TableRegistry::get('summary_programme_sector_specialization_genders');
+            $res = $query->select([
+                'academic_period_name5' => 'summary_programme_sector_specialization_genders.academic_period_name',
+                'education_system_name5' => 'summary_programme_sector_specialization_genders.education_system_name',
+                'education_level_isced_level5' => 'summary_programme_sector_specialization_genders.education_level_isced_level',
+                'education_level_isced_name5' => 'summary_programme_sector_specialization_genders.education_level_isced_name',
+                'education_level_name5' => 'summary_programme_sector_specialization_genders.education_level_name',
+                'education_cycle_name5' => 'summary_programme_sector_specialization_genders.education_cycle_name',
+                'education_programme_code5' => 'summary_programme_sector_specialization_genders.education_programme_code',
+                'education_programme_name5' => 'summary_programme_sector_specialization_genders.education_programme_name',
                 
                 
-        //         'gender_name5' => 'summary_programme_sector_specialization_genders.staff_gender_name',
-        //         'training_category' => 'summary_programme_sector_specialization_genders.staff_training_category_name',
-        //         'total_staffs1' => 'summary_programme_sector_specialization_genders.total_staff_teaching',
-        //         'total_new_staff1' => 'summary_programme_sector_specialization_genders.total_staff_teaching_newly_recruited',
-        //     ])
-        //     ->LeftJoin([$SummaryProgrammeSectorSpecializationGenders->alias() => $SummaryProgrammeSectorSpecializationGenders->table() ], [
-        //         $this->aliasField('academic_period_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('academic_period_id'),
-        //         $this->aliasField('education_system_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('education_system_id'),
-        //         $this->aliasField('education_level_isced_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('education_level_isced_id'),
-        //         $this->aliasField('education_level_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('education_level_id'),
-        //         $this->aliasField('education_cycle_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('education_cycle_id'),
-        //         $this->aliasField('education_programme_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('education_programme_id')
-        //         ])
-        //     ->where(['summary_programme_sector_specialization_genders.academic_period_id' => $academic_period_id]);
+                'gender_name5' => 'summary_programme_sector_specialization_genders.staff_gender_name',
+                'training_category' => 'summary_programme_sector_specialization_genders.staff_training_category_name',
+                'total_staffs1' => 'summary_programme_sector_specialization_genders.total_staff_teaching',
+                'total_new_staff1' => 'summary_programme_sector_specialization_genders.total_staff_teaching_newly_recruited',
+            ])
+            ->LeftJoin([$SummaryProgrammeSectorSpecializationGenders->alias() => $SummaryProgrammeSectorSpecializationGenders->table() ], [
+                $this->aliasField('academic_period_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('academic_period_id'),
+                $this->aliasField('education_system_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('education_system_id'),
+                $this->aliasField('education_level_isced_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('education_level_isced_id'),
+                $this->aliasField('education_level_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('education_level_id'),
+                $this->aliasField('education_cycle_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('education_cycle_id'),
+                $this->aliasField('education_programme_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('education_programme_id')
+                ])
+            ->where(['summary_programme_sector_specialization_genders.academic_period_id' => $academic_period_id]);
                 
-        // }
+        }
 
         // if ($uisType == 'UIS-A13')
         // {
