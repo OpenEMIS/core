@@ -72,6 +72,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         getBirthplaceArea: getBirthplaceArea,
         getStudentTransferReason: getStudentTransferReason,
         getDateOfBirthValidation: getDateOfBirthValidation,
+        getStartDateFromAcademicPeriod: getStartDateFromAcademicPeriod,
     };
 
     var models = {
@@ -1003,7 +1004,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
     function getDateOfBirthValidation(params)
     {
         var deferred = $q.defer();
-        let url = angular.baseUrl + '/Institutions/checkStudentAdmissionAge';
+        let url = angular.baseUrl + '/Institutions/checkStudentAdmissionAgeValidation';
         $http.post(url, { params })
             .then(function (response)
             {
@@ -1014,4 +1015,24 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             });
         return deferred.promise;
     };
+
+    // Url: /Institutions/getStartDateFromAcademicPeriod
+    // Request Params: academic_period_id
+    // Response: [{ "id": 31, "name": "2022", "start_date": "2022-01-01", "start_year": 2022, "end_date": "2022-12-31", "end_year": 2022 }]
+
+    function getStartDateFromAcademicPeriod(params)
+    {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/getStartDateFromAcademicPeriod';
+        $http.post(url, { params })
+            .then(function (response)
+            {
+                deferred.resolve(response);
+            }, function (error)
+            {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    };
+
 };
