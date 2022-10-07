@@ -576,7 +576,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
-    function changeAcademicPeriod() {
+    async function changeAcademicPeriod() {
         var academicPeriod = StudentController.selectedStudentData.academic_period_id;
         var academicPeriodOptions = StudentController.academicPeriodOptions;
         for (var i = 0; i < academicPeriodOptions.length; i++) {
@@ -586,7 +586,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
         StudentController.error.academic_period_id = '';
+        const startDateRangeResponse = await InstitutionsStudentsSvc.getStartDateFromAcademicPeriod({ academic_period_id:academicPeriod});
+        const { start_date, end_date} = startDateRangeResponse.data[0];
         StudentController.getEducationGrades();
+        var startDatePicker2 = angular.element(document.getElementById('Student_start_date'));
+        startDatePicker2.datepicker("setStartDate", InstitutionsStudentsSvc.formatDate(start_date));
+        startDatePicker2.datepicker("setEndDate", InstitutionsStudentsSvc.formatDate(end_date));
     }
 
     function changeClass() {
@@ -600,7 +605,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
-    function changeEducationGrade() {
+    async function changeEducationGrade() {
         var educationGrade = StudentController.selectedStudentData.education_grade_id;
         var educationGradeOptions = StudentController.educationGradeOptions;
         for (var i = 0; i < educationGradeOptions.length; i++) {
@@ -613,11 +618,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.getClasses();
 
         // POCOR-5672
-        const response = InstitutionsStudentsSvc.getDateOfBirthValidation({ date_of_birth: StudentController.selectedStudentData.date_of_birth, education_grade_id: educationGrade })
-        console.log('Date of birth Validation response', response)
-        if (response.validation_error === 1)
+        const dateOfBirthValidationResponse =await InstitutionsStudentsSvc.getDateOfBirthValidation({ date_of_birth: StudentController.selectedStudentData.date_of_birth, education_grade_id: educationGrade })
+        const { validation_error,min_age,max_age } = dateOfBirthValidationResponse.data[0];
+        if (validation_error === 1)
         {
-            StudentController.error.date_of_birth = `The student should be between ${response.min_age} to ${response.max_age} years old`;
+            StudentController.error.date_of_birth = `The student should be between ${min_age} to ${max_age} years old`;
+        } else if (validation_error === 0)
+        {
+            StudentController.error.date_of_birth = "";
         }
     }
 
@@ -944,6 +952,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(!StudentController.selectedStudentData.startDate){
             StudentController.error.startDate = 'This field cannot be left empty';
         }
+        if (StudentController.error.date_of_birth !== '') return;
         StudentController.customFieldsArray.forEach((customField) => {
             customField.data.forEach((field) => {
                 if(field.is_mandatory === 1) {
