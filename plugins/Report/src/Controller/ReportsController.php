@@ -102,7 +102,13 @@ class ReportsController extends AppController
                 'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
                 'Report.Income' => __('Income Report'),
                 'Report.Expenditure' => __('Expenditure Report'),
-                'Report.Uis' => __('UIS'),
+                //Start:POCOR-4570
+                'Report.Uis' => __('UIS-A2&A9'),
+                'Report.Uis2' => __('UIS-A3,A5&A6'),
+                'Report.Uis3' => __('UIS-A10(1)'),
+                'Report.Uis4' => __('UIS-A10(2)'),
+                'Report.Uis5' => __('UIS-A13'),
+                //END:POCOR-4570
             ];
         } elseif ($module == 'Students') {
             $options = [
