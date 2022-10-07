@@ -576,7 +576,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
-    function changeAcademicPeriod() {
+    async function changeAcademicPeriod() {
         var academicPeriod = StudentController.selectedStudentData.academic_period_id;
         var academicPeriodOptions = StudentController.academicPeriodOptions;
         for (var i = 0; i < academicPeriodOptions.length; i++) {
@@ -586,7 +586,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
         StudentController.error.academic_period_id = '';
+        const startDateRangeResponse = await InstitutionsStudentsSvc.getStartDateFromAcademicPeriod({ academic_period_id:academicPeriod});
+        const { start_date, end_date} = startDateRangeResponse.data[0];
         StudentController.getEducationGrades();
+        var startDatePicker2 = angular.element(document.getElementById('Student_start_date'));
+        startDatePicker2.datepicker("setStartDate", InstitutionsStudentsSvc.formatDate(start_date));
+        startDatePicker2.datepicker("setEndDate", InstitutionsStudentsSvc.formatDate(end_date));
     }
 
     function changeClass() {
