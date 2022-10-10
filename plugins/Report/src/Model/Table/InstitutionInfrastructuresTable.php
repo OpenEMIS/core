@@ -143,22 +143,22 @@ class InstitutionInfrastructuresTable extends AppTable
 		}
 
         //Start POCOR-6731
-        // if($infrastructureLevel == 3 || $infrastructureLevel == 4) { 
-        //     $newFields[] = [
-        //         'key' => 'institution_buildings_name',
-        //         'field' => 'institution_buildings_name',
-        //         'type' => 'string',
-        //         'label' => __('Buildings Name')
-        //     ];
-        // }
-        // if($infrastructureLevel == 4) { 
-        //     $newFields[] = [
-        //         'key' => 'institution_floor_name',
-        //         'field' => 'institution_floor_name',
-        //         'type' => 'string',
-        //         'label' => __('Floors Name')
-        //     ];
-        // }
+        if($infrastructureLevel == 3 || $infrastructureLevel == 4) { 
+            $newFields[] = [
+                'key' => 'institution_buildings_name',
+                'field' => 'institution_buildings_name',
+                'type' => 'string',
+                'label' => __('Buildings Name')
+            ];
+        }
+        if($infrastructureLevel == 4) { 
+            $newFields[] = [
+                'key' => 'institution_floor_name',
+                'field' => 'institution_floor_name',
+                'type' => 'string',
+                'label' => __('Floors Name')
+            ];
+        }
 
         //End POCOR-6731
 		
