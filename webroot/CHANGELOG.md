@@ -1,3 +1,6 @@
+### [3.75.31.2] - 2022-10-11
+- Bug Fixed: Institutions>Students>Export: Students that are Repeated last year and Enrolled this year should show Enrolled (Repeater) in the report
+
 ### [3.75.31.1] - 2022-10-11
 - Bug Fixed: Administrations > Workflow > Actions tab : Institution > Pending Student Transfer: Changes in workflow
 - Bug Fixed: Institutions>Students>Student1>Academic>Assessment: It should show the current and past assessment marks even from other institutions
