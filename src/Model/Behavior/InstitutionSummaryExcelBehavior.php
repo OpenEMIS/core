@@ -707,10 +707,9 @@ class InstitutionSummaryExcelBehavior extends Behavior
 		$AreaLevelT = TableRegistry::get('area_levels');
 		$AreaT = TableRegistry::get('areas');
 		$AreaLevel = $AreaLevelT->find('all',['conditions'=>['id'=>$areaLevelId]])->first();
-
 		if(!empty($data)) {
 			if($AreaLevel->level == "1"){
-				//$arrayy;
+				
 				$arrayy[0] = $AreaLevel->name;
 				$arrayy[1] = 10;
 				$arrayy[2] = 10;
@@ -771,19 +770,48 @@ class InstitutionSummaryExcelBehavior extends Behavior
 				$arrayy1[20] = 10;
 
 				foreach($AreaData as $KEy => $AreaINs){
-					$finalArray[$data_keyy] = $arrayy1;
+					$finalArray[$KEy+1] = $arrayy1;
 				}
 
 			}else{
+				$AreasData = $AreaT->find('all',['conditions'=>['area_level_id'=>$areaLevelId]])->toArray();
 				foreach($data as $data_key => $data_row) { //echo "<pre>";print_r($data_row);die;
 					if($data_key === 0) {
 						$finalArray[$data_key] = $data_row;
 					}
-					if(!empty($data_key)) {
-						//echo "<pre>";print_r($data_row);die;
-						$finalArray[$data_key] = $data_row;
-					}
+					
 				}
+				//
+				$arrr =[];
+				
+				foreach($AreasData as $KEy => $AreaINs){ 
+					$arrr[0] =$AreaINs->name;
+					$arrr[1] =10;
+					$arrr[2] =15;
+					$arrr[3] =20;
+					
+					$arrr[4] = 12;
+					$arrr[5] =43;
+					$arrr[6] =   23;
+					$arrr[7] =23;
+					$arrr[8] =23;
+					$arrr[9] =32;
+					$arrr[10]=23;
+					$arrr[11]=23;
+					$arrr[12]=45;
+					$arrr[13]=14;
+					$arrr[14]=15;
+					$arrr[15]=2;
+					$arrr[16]=5;
+					$arrr[17]=7;
+					$arrr[18]=8;
+					$arrr[19]=4;
+					$arrr[20]=4;
+					$finalArray[$KEy+1] = $arrr;
+					
+				}
+
+				//echo "<pre>";print_r($finalArray);die;
 			}
 			
 		}
