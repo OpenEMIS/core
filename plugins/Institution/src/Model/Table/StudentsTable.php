@@ -249,6 +249,7 @@ class StudentsTable extends ControllerActionTable
                 'code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
                 'student_status' => 'StudentStatuses.name',
+                'student_status_ID' => 'StudentStatuses.id', //POCOR-7011
                 'academic_period' => 'AcademicPeriods.name',
                 'previous_institution_student_id' => $this->aliasField('previous_institution_student_id'),
                 'student_first_name' => 'Users.first_name',
@@ -373,13 +374,13 @@ class StudentsTable extends ControllerActionTable
                                                 $this->aliasField('student_id') => $row->student_id,
                                                 $this->aliasField('id') => $InstitutionStudentsCurrentData->previous_institution_student_id
                                             ])->first();
-                        if (!empty($previousInstStdId) && $previousInstStdId->student_status_id == 8) {
+                        if (!empty($previousInstStdId) && $previousInstStdId->student_status_id == 8 && $row->student_status_ID == 1) { //POCOR-7011
                             $row['student_status'] = "Enrolled (Repeater)";
                         } /*POCOR-6562 starts*/else {
                             $row['student_status'] = $InstitutionStudentsCurrentData->student_status->name;
                         }/*POCOR-6562 ends*/
                     }
-                //echo "<pre>";print_r();die();
+
                 $row['education_grade'] = $InstitutionStudentsCurrentData->education_grade->name;
                 $row['start_date'] = $InstitutionStudentsCurrentData->start_date;
                 $row['end_date']   = $InstitutionStudentsCurrentData->end_date;
