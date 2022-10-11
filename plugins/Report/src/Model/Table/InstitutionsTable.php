@@ -876,7 +876,12 @@ class InstitutionsTable extends AppTable
                     $attr['type'] = 'chosenSelect';
                     $attr['attr']['multiple'] = false;
                     $attr['select'] = true;
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas Level')] + $areaOptions->toArray();
+                    if($feature == "Report.InstitutionSummaryReport"){ 
+                        $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions->toArray();
+                    }else{
+                        $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas Level')] + $areaOptions->toArray();
+                    }
+                    
                     $attr['onChangeReload'] = true;
                 } else {
                     $attr['type'] = 'hidden';

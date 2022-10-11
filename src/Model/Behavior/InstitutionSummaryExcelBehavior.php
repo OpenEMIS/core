@@ -131,23 +131,46 @@ class InstitutionSummaryExcelBehavior extends Behavior
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
        
         $generate($_settings);
-		
-		$labelArray = array("area_education","area_administrative","locality","type","ownership","sector","provider","first_shift_gender","second_shift_gender","third_shift_gender","fourth_shift_gender","total_gender");
-		
-		foreach($labelArray as $label) {
-			$headerRow[] = $this->getFields($this->_table, $settings, $label);
-			$headerRow[] = ' ';
-			$headerRow[] = ' ';
-		}
-		//echo '<pre>';print_r($headerRow);die('aa');
-		
-		$data = $this->getData($settings);
 
-		$j = 0; //start column
-		for ($i=0; $i<12; $i++) {
-			$writer->markMergedCell('Summary', $start_row = 0, $start_col = $j, $end_row = 0, $end_col = $j+2);  //merge cells
-			$j+=3;
+		// institution_providers institution_types
+		$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+		$InstitutionProviders = $InstitutionProvidersTable->find('all')->toArray();
+		$providerArr = [];
+		foreach($InstitutionProviders as $keyy => $InstitutionProvider){
+			$providerArr[$keyy] = $InstitutionProvider->name;
 		}
+		$labelArray = $providerArr;
+		//$labelArray = array("area_education","area_administrative","locality","type","ownership","sector","provider","first_shift_gender","second_shift_gender","third_shift_gender","fourth_shift_gender","total_gender");
+		$headerRow1[] = 'Area Education';
+
+		foreach($labelArray as $label) {
+			$headerRow2[] = $this->getFields($this->_table, $settings, $label);
+			$headerRow2[] = ' ';
+			$headerRow2[] = ' ';
+			$headerRow2[] = ' ';
+			$headerRow2[] = ' ';
+		}
+		$ShiftOptionTable = TableRegistry::get('shift_options');
+		$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
+		$shiftArr = [];
+		foreach($ShiftOptions as $keyy => $ShiftOption){
+			$shiftArr[$keyy] = $ShiftOption->name;
+		}
+		foreach($shiftArr as $shiftObj) {
+			$headerRow3[] = $this->getFields($this->_table, $settings, $shiftObj);
+			$headerRow3[] = ' ';
+		}
+		$headerRow = array_merge($headerRow1,$headerRow2,$headerRow3);
+		$data = $this->getData($settings);
+		//echo "<pro>";print_r($headerRow);die;
+		$InstitutionTypesTable = TableRegistry::get('institution_types');
+		$InstitutionTypesCount = $InstitutionTypesTable->find('all')->count();
+		
+		// $j = 0; //start column
+		// for ($i=0; $i<12; $i++) {
+		// 	$writer->markMergedCell('Summary', $start_row = 0, $start_col = $j, $end_row = 0, $end_col = $j+4);  //merge cells
+		// 	$j+=5;
+		// }
 		$writer->writeSheetRow('Summary', $headerRow);
 		foreach($data as $row) {
 			if(array_filter($row)) {
@@ -164,11 +187,9 @@ class InstitutionSummaryExcelBehavior extends Behavior
         $writer->writeToFile($_settings['file_path']);
         $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerateComplete'), 'onExcelGenerateComplete', [$_settings]);
 
-
         if ($_settings['download']) {
             $this->download($filepath);
         }
-
         if ($_settings['purge']) {
             $this->purge($filepath);
         }
@@ -177,13 +198,63 @@ class InstitutionSummaryExcelBehavior extends Behavior
 	
     public function getData($settings)
     {
+		
     	$Institutions = TableRegistry::get('Institutions');
     	$requestData = json_decode($settings['process']['params']);
     	$institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+		$areaLevelId = $requestData->area_level_id;
+
+		//Start:POCOR-6818 Modified this for POCOR-6859
+        $AreaT = TableRegistry::get('areas');                    
+        //Level-1
+        $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
+        $childArea =[];
+        $childAreaMain = [];
+        $childArea3 = [];
+        $childArea4 = [];
+        foreach($AreaData as $kkk =>$AreaData11 ){
+            $childArea[$kkk] = $AreaData11->id;
+        }
+        //level-2
+        foreach($childArea as $kyy =>$AreaDatal2 ){
+            $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
+            foreach($AreaDatas as $ky =>$AreaDatal22 ){
+                $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
+            }
+        }
+        //level-3
+        if(!empty($childAreaMain)){
+            foreach($childAreaMain as $kyy =>$AreaDatal3 ){
+                $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
+                foreach($AreaDatass as $ky =>$AreaDatal222 ){
+                    $childArea3[$kyy.$ky] = $AreaDatal222->id;
+                }
+            }
+        }
+        
+        //level-4
+        if(!empty($childAreaMain)){
+            foreach($childArea3 as $kyy =>$AreaDatal4 ){
+                $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
+                foreach($AreaDatasss as $ky =>$AreaDatal44 ){
+                    $childArea4[$kyy.$ky] = $AreaDatal44->id;
+                }
+            }
+        }
+        $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
+        array_push($mergeArr,$areaId);
+        $mergeArr = array_unique($mergeArr);
+        $finalIds = implode(',',$mergeArr);
+        $finalIds = explode(',',$finalIds);
+		//echo "<pre>";print_r($finalIds);die;
+
         $where = [];
         if ($areaId != -1) {
-            $where[$Institutions->aliasField('area_id')] = $areaId;
+            $where[$Institutions->aliasField('area_id in')] = $finalIds;
+        }
+		if ($institution_id != 0) {
+            $where[$Institutions->aliasField('id')] = $institution_id;
         }
 		$institutionData = $Institutions->find()
                     ->select([
@@ -248,212 +319,44 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					)
 					->where([$where])
 					;
-					
+					//echo "<pre>";print_r($requestData);die;
+					//echo "<pre>";print_r($institutionData->toArray());die;
 		$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
 		$resultArray = array();
 		$i = 0;
-		foreach($institutionData as $key => $value) {
+		foreach($institutionData as $key => $value) { 
+			if($i == 0) { 
+				
+				$InstitutionTypesTable = TableRegistry::get('institution_types');
+				$InstitutionTypes = $InstitutionTypesTable->find('all')->toArray();
+				$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+				$InstitutionProviders = $InstitutionProvidersTable->find('all')->toArray();
+				$resultArray[0][] = 'atoll';
+				$keyy = 0;
+				$ki = 1;
 
-			if($i == 0) {
-				$resultArray[$key][] = 'Code';
-				$resultArray[$key][] = 'Name';
-				$resultArray[$key][] = 'Count';
-				$resultArray[$key][] = 'Code';
-				$resultArray[$key][] = 'Name';
-				$resultArray[$key][] = 'Count';
-				$resultArray[$key][] = 'Code';
-				$resultArray[$key][] = 'Name';
-				$resultArray[$key][] = 'Count';
-				$resultArray[$key][] = 'Code';
-				$resultArray[$key][] = 'Name';
-				$resultArray[$key][] = 'Count';
-				$resultArray[$key][] = 'Code';
-				$resultArray[$key][] = 'Name';
-				$resultArray[$key][] = 'Count';
-				$resultArray[$key][] = 'Code';
-				$resultArray[$key][] = 'Name';
-				$resultArray[$key][] = 'Count';
-				$resultArray[$key][] = 'Code';
-				$resultArray[$key][] = 'Name';
-				$resultArray[$key][] = 'Count';
-				$resultArray[$key][] = 'Code';
-				$resultArray[$key][] = 'Name';
-				$resultArray[$key][] = 'Count';
-				$resultArray[$key][] = 'Code';
-				$resultArray[$key][] = 'Name';
-				$resultArray[$key][] = 'Count';
-				$resultArray[$key][] = 'Code';
-				$resultArray[$key][] = 'Name';
-				$resultArray[$key][] = 'Count';
-				$resultArray[$key][] = 'Code';
-				$resultArray[$key][] = 'Name';
-				$resultArray[$key][] = 'Count';
-				$resultArray[$key][] = 'Code';
-				$resultArray[$key][] = 'Name';
-				$resultArray[$key][] = 'Count';
-			} else {
-				if(!empty($value->area_id)) {
-					
-					if (!in_array($value->area_id, $areaArray)) {
-						$resultArray[$key]['area_code'] = $value->area_code;
-						$resultArray[$key]['area_name'] = $value->area_name;
-						$areaCount = $Institutions->find()
-							->where([$Institutions->aliasField('area_id') => $value->area_id])
-							->count();
-							
-						$resultArray[$key]['area_count'] = $areaCount;	
-					} else {
-						$resultArray[$key]['area_code'] = '';
-						$resultArray[$key]['area_name'] = '';
-						$resultArray[$key]['area_count'] = '';
+				foreach($InstitutionProviders as $keyy => $InstitutionProvider){
+					foreach($InstitutionTypes as $ki => $InstitutionType){
+						$resultArray[$key][] = $InstitutionType->name;
+						$ki++;
 					}
+				}
+				
+			} else { 
+				if(!empty($value->area_id)) { 
+					//if (!in_array($value->area_id, $areaArray)) {
+						$resultArray[$key]['area_name'] = $value->area_name; 
+					// } else { 
+					// 	$resultArray[$key]['area_name'] = '';
+					// }
 					$areaArray[] = $value->area_id;
-					
 				} else {
-					$resultArray[$key]['area_code'] = '';
 					$resultArray[$key]['area_name'] = '';
-					$resultArray[$key]['area_count'] = '';
-				}
-				
-				if(!empty($value->area_administrative_id)) {
-					
-					if (!in_array($value->area_administrative_id, $areaAdministrativeArray)) {
-						$resultArray[$key]['area_administrative_code'] = $value->area_administrative_code;
-						$resultArray[$key]['area_administrative_name'] = $value->area_administrative_name;
-						$areaAdministrativeCount = $Institutions->find()
-							->where([$Institutions->aliasField('area_administrative_id') => $value->area_administrative_id])
-							->count();
-							
-						$resultArray[$key]['area_administrative_count'] = $areaAdministrativeCount;	
-					} else {
-						$resultArray[$key]['area_administrative_code'] = '';
-						$resultArray[$key]['area_administrative_name'] = '';
-						$resultArray[$key]['area_administrative_count'] = '';
-					}
-					$areaAdministrativeArray[] = $value->area_administrative_id;
-					
-				} else {
-					$resultArray[$key]['area_administrative_code'] = '';
-					$resultArray[$key]['area_administrative_name'] = '';
-					$resultArray[$key]['area_administrative_count'] = '';
-				}
-				
-				if(!empty($value->locality_id)) {
-					
-					if (!in_array($value->locality_id, $localityArray)) {
-						$resultArray[$key]['locality_code'] = '';
-						$resultArray[$key]['locality_name'] = $value->locality_name;
-						$localityCount = $Institutions->find()
-							->where([$Institutions->aliasField('institution_locality_id') => $value->locality_id])
-							->count();
-							
-						$resultArray[$key]['locality_count'] = $localityCount;	
-					} else {
-						$resultArray[$key]['locality_code'] = '';
-						$resultArray[$key]['locality_name'] = '';
-						$resultArray[$key]['locality_count'] = '';
-					}
-					$localityArray[] = $value->locality_id;
-					
-				} else {
-					$resultArray[$key]['locality_code'] = '';
-					$resultArray[$key]['locality_name'] = '';
-					$resultArray[$key]['locality_count'] = '';
-				}
-				
-				if(!empty($value->type_id)) {
-					
-					if (!in_array($value->type_id, $typeArray)) {
-						$resultArray[$key]['type_code'] = '';
-						$resultArray[$key]['type_name'] = $value->type_name;
-						$typeCount = $Institutions->find()
-							->where([$Institutions->aliasField('institution_type_id') => $value->type_id])
-							->count();
-							
-						$resultArray[$key]['type_count'] = $typeCount;	
-					} else {
-						$resultArray[$key]['type_code'] = '';
-						$resultArray[$key]['type_name'] = '';
-						$resultArray[$key]['type_count'] = '';
-					}
-					$typeArray[] = $value->type_id;
-					
-				} else {
-					$resultArray[$key]['type_code'] = '';
-					$resultArray[$key]['type_name'] = '';
-					$resultArray[$key]['type_count'] = '';
-				}
-				
-				if(!empty($value->ownership_id)) {
-					
-					if (!in_array($value->ownership_id, $ownershipArray)) {
-						$resultArray[$key]['ownership_code'] = '';
-						$resultArray[$key]['ownership_name'] = $value->ownership_name;
-						$ownershipCount = $Institutions->find()
-							->where([$Institutions->aliasField('institution_ownership_id') => $value->ownership_id])
-							->count();
-							
-						$resultArray[$key]['ownership_count'] = $ownershipCount;	
-					} else {
-						$resultArray[$key]['ownership_code'] = '';
-						$resultArray[$key]['ownership_name'] = '';
-						$resultArray[$key]['ownership_count'] = '';
-					}
-					$ownershipArray[] = $value->ownership_id;
-					
-				} else {
-					$resultArray[$key]['ownership_code'] = '';
-					$resultArray[$key]['ownership_name'] = '';
-					$resultArray[$key]['ownership_count'] = '';
-				}
-				if(!empty($value->sector_id)) {
-					
-					if (!in_array($value->sector_id, $sectorArray)) {
-						$resultArray[$key]['sector_code'] = '';
-						$resultArray[$key]['sector_name'] = $value->sector_name;
-						$sectorCount = $Institutions->find()
-							->where([$Institutions->aliasField('institution_sector_id') => $value->sector_id])
-							->count();
-							
-						$resultArray[$key]['sector_count'] = $sectorCount;	
-					} else {
-						$resultArray[$key]['sector_code'] = '';
-						$resultArray[$key]['sector_name'] = '';
-						$resultArray[$key]['sector_count'] = '';
-					}
-					$sectorArray[] = $value->sector_id;
-					
-				} else {
-					$resultArray[$key]['sector_code'] = '';
-					$resultArray[$key]['sector_name'] = '';
-					$resultArray[$key]['sector_count'] = '';
-				}
-				
-				if(!empty($value->provider_id)) {
-					
-					if (!in_array($value->provider_id, $providerArray)) {
-						$resultArray[$key]['provider_code'] = '';
-						$resultArray[$key]['provider_name'] = $value->provider_name;
-						$providerCount = $Institutions->find()
-							->where([$Institutions->aliasField('institution_provider_id') => $value->provider_id])
-							->count();
-							
-						$resultArray[$key]['provider_count'] = $providerCount;	
-					} else {
-						$resultArray[$key]['provider_code'] = '';
-						$resultArray[$key]['provider_name'] = '';
-						$resultArray[$key]['provider_count'] = '';
-					}
-					$providerArray[] = $value->provider_id;
-					
-				} else {
-					$resultArray[$key]['provider_code'] = '';
-					$resultArray[$key]['provider_name'] = '';
-					$resultArray[$key]['provider_count'] = '';
 				}
 			}
 			$i++;	
 		}
+		
 		
 		$shiftGenderData = $Institutions->find()
                     ->select([
@@ -492,222 +395,222 @@ class InstitutionSummaryExcelBehavior extends Behavior
 						'Genders.id = Users.gender_id'
 					]
 					);
-					
+					//echo "<pre>".print_r($shiftGenderData->toArray());die;
 		$shift_gender = array();
-		if(!empty($shiftGenderData)) {	
-			foreach($shiftGenderData as $gender_key => $gender_value) {
-				if($gender_value->code == 'M') {
-					$shift_gender[$gender_value->shift_option_id][$gender_value->code][] = $gender_value->gender;
-				} 
-				if($gender_value->code == 'F') {
-					$shift_gender[$gender_value->shift_option_id][$gender_value->code][] = $gender_value->gender;
-				}
-			}
-		}
+		// if(!empty($shiftGenderData)) {	
+		// 	foreach($shiftGenderData as $gender_key => $gender_value) {
+		// 		if($gender_value->code == 'M') {
+		// 			$shift_gender[$gender_value->shift_option_id][$gender_value->code][] = $gender_value->gender;
+		// 		} 
+		// 		if($gender_value->code == 'F') {
+		// 			$shift_gender[$gender_value->shift_option_id][$gender_value->code][] = $gender_value->gender;
+		// 		}
+		// 	}
+		// }
 		$totalMale = $totalFemale = 0;
 		$genderArray = [];
 		$ShiftOptions = TableRegistry::get('ShiftOptions');
 		$shiftOptionData = $ShiftOptions->find();
-		if(!empty($shiftOptionData)) {
-			foreach($shiftOptionData as $key => $value) {
-				$genderArray[$value->name]['male_name'] = 'Male';
-				$genderArray[$value->name]['male_code'] = 'M';
-				$genderArray[$value->name]['female_name'] = 'Female';
-				$genderArray[$value->name]['female_code'] = 'F';
-				if(!empty($shift_gender[$value->id])) {
-					$genderArray[$value->name]['male_count'] = count($shift_gender[$value->id]['M']);
-					$genderArray[$value->name]['female_count'] = count($shift_gender[$value->id]['F']);
-					$totalMale = $genderArray[$value->name]['male_count'] + $totalMale;
-					$totalFemale = $genderArray[$value->name]['female_count'] + $totalFemale;
-				} else {
-					$genderArray[$value->name]['male_count'] = 0;
-					$genderArray[$value->name]['female_count'] = 0;
-				}	
-			}
-		}
-		$genderArray['total_gender'] = array('male_name'=> 'Male','male_code'=> 'M','male_count'=> $totalMale, 'female_name'=> 'Female','female_code'=> 'F','female_count'=> $totalFemale);
+		// if(!empty($shiftOptionData)) {
+		// 	foreach($shiftOptionData as $key => $value) {
+		// 		$genderArray[$value->name]['male_name'] = 'Male';
+		// 		$genderArray[$value->name]['male_code'] = 'M';
+		// 		$genderArray[$value->name]['female_name'] = 'Female';
+		// 		$genderArray[$value->name]['female_code'] = 'F';
+		// 		if(!empty($shift_gender[$value->id])) {
+		// 			$genderArray[$value->name]['male_count'] = count($shift_gender[$value->id]['M']);
+		// 			$genderArray[$value->name]['female_count'] = count($shift_gender[$value->id]['F']);
+		// 			$totalMale = $genderArray[$value->name]['male_count'] + $totalMale;
+		// 			$totalFemale = $genderArray[$value->name]['female_count'] + $totalFemale;
+		// 		} else {
+		// 			$genderArray[$value->name]['male_count'] = 0;
+		// 			$genderArray[$value->name]['female_count'] = 0;
+		// 		}	
+		// 	}
+		// }
+		// $genderArray['total_gender'] = array('male_name'=> 'Male','male_code'=> 'M','male_count'=> $totalMale, 'female_name'=> 'Female','female_code'=> 'F','female_count'=> $totalFemale);
 		
 		$data = $area = $locality = $areaAdministrative = $sector = $ownership = $provider = $type = array();
 		$areaIndex = $areaAdministrativeIndex = $localityIndex = $sectorIndex = $providerIndex = $ownershipIndex = $typeIndex = NULL;
 		
 		if(!empty($resultArray)) {
-			foreach($resultArray as $key => $result) { 
+			foreach($resultArray as $key => $result) { //echo "<pre>";print_r($result);die;
 				if(array_filter($result)) {
-					if($key == 1) {
-						foreach($result as $key1 => $value1) {
-							$data[$key][$key1] = $value1;
-							if($key1 === 'area_name'|| $key1 === 'area_code'|| $key1 === 'area_count') {
-								if(!empty($value1)) {
-									$areaIndex = key($area);
-									if(!empty($areaIndex)) {
-										$data[$key][$key1] = '';
-									}
-									$data[$areaIndex][$key1] = $value1;
-								} else {
-									$area[$key] = $key;
-								}
-							}
-							if($key1 === 'area_administrative_name'|| $key1 === 'area_administrative_code'|| $key1 === 'area_administrative_count') {
-								if(!empty($value1)) {
-									$areaAdministrativeIndex = key($areaAdministrative);
-									if(!empty($areaAdministrativeIndex)) {
-										$data[$key][$key1] = '';
-									}
-									$data[$areaAdministrativeIndex][$key1] = $value1;
-								} else {
-									$areaAdministrative[$key] = $key;
-								}
-							}
-							if($key1 === 'locality_name'|| $key1 === 'locality_code'|| $key1 === 'locality_count') {
-								if(!empty($value1)) {
-									$localityIndex = key($locality);
-									if(!empty($localityIndex)) {
-										$data[$key][$key1] = '';
-									}
-									$data[$localityIndex][$key1] = $value1;
-								} else {
-									$locality[$key] = $key;
-								}
-							}
-							if($key1 === 'sector_name'|| $key1 === 'sector_code'|| $key1 === 'sector_count') {
-								if(!empty($value1)) {
-									$sectorIndex = key($sector);
-									if(!empty($sectorIndex)) {
-										$data[$key][$key1] = '';
-									}
-									$data[$sectorIndex][$key1] = $value1;
-								} else {
-									$sector[$key] = $key;
-								}
-							}
-							if($key1 === 'ownership_name'|| $key1 === 'ownership_code'|| $key1 === 'ownership_count') {
-								if(!empty($value1)) {
-									$ownershipIndex = key($ownership);
-									if(!empty($ownershipIndex)) {
-										$data[$key][$key1] = '';
-									}
-									$data[$ownershipIndex][$key1] = $value1;
-								} else {
-									$ownership[$key] = $key;
-								}
-							}
-							if($key1 === 'provider_name'|| $key1 === 'provider_code'|| $key1 === 'provider_count') {
-								if(!empty($value1)) {
-									$providerIndex = key($provider);
-									if(!empty($providerIndex)) {
-										$data[$key][$key1] = '';
-									}
-									$data[$providerIndex][$key1] = $value1;
-								} else {
-									$provider[$key] = $key;
-								}
-							}
-							if($key1 === 'type_name'|| $key1 === 'type_code'|| $key1 === 'type_count') {
-								if(!empty($value1)) {
-									$typeIndex = key($type);
-									if(!empty($typeIndex)) {
-										$data[$key][$key1] = '';
-									}
-									$data[$typeIndex][$key1] = $value1;
-								} else {
-									$type[$key] = $key;
-								}
-							}
-						} 
-						foreach($genderArray as $maleGender) {
-							$data[$key][] = $maleGender['male_code'];
-							$data[$key][] = $maleGender['male_name'];
-							$data[$key][] = $maleGender['male_count'];
-						}
-					}
-					if($key == 2) {
-						foreach($result as $key2 => $value2) {
-							$data[$key][$key2] = $value2;
-							if($key2 === 'sector_name'|| $key2 === 'sector_code'|| $key2 === 'sector_count') {
-								if(!empty($value2)) {
-									$sectorIndex = key($sector);
-									if(!empty($sectorIndex)) {
-										$data[$key][$key2] = '';
-									}
-									$data[$sectorIndex][$key2] = $value2;
-								} else {
-									$sector[$key] = $key;
-								}
-							}
-							if($key2 === 'area_name'|| $key2 === 'area_code'|| $key2 === 'area_count') {
-								if(!empty($value2)) {
-									$areaIndex = key($area);
-									if(!empty($areaIndex)) {
-										$data[$key][$key2] = '';
-									}
-									$data[$areaIndex][$key2] = $value2;
-								} else {
-									$area[$key] = $key;
-								}
-							}
-							if($key2 === 'area_administrative_name'|| $key2 === 'area_administrative_code'|| $key2 === 'area_administrative_count') {
-								if(!empty($value2)) {
-									$areaAdministrativeIndex = key($areaAdministrative);
-									if(!empty($areaAdministrativeIndex)) {
-										$data[$key][$key2] = '';
-									}
-									$data[$areaAdministrativeIndex][$key2] = $value2;
-								} else {
-									$areaAdministrative[$key] = $key;
-								}
-							}
-							if($key2 === 'locality_name'|| $key2 === 'locality_code'|| $key2 === 'locality_count') {
-								if(!empty($value2)) {
-									$localityIndex = key($locality);
-									if(!empty($localityIndex)) {
-										$data[$key][$key2] = '';
-									}
-									$data[$localityIndex][$key2] = $value2;
-								} else {
-									$locality[$key] = $key;
-								}
-							}
-							if($key2 === 'ownership_name'|| $key2 === 'ownership_code'|| $key2 === 'ownership_count') {
-								if(!empty($value2)) {
-									$ownershipIndex = key($ownership);
-									if(!empty($ownershipIndex)) {
-										$data[$key][$key2] = '';
-									}
-									$data[$ownershipIndex][$key2] = $value2;
-								} else {
-									$ownership[$key] = $key;
-								}
-							}
-							if($key2 === 'provider_name'|| $key2 === 'provider_code'|| $key2 === 'provider_count') {
-								if(!empty($value2)) {
-									$providerIndex = key($provider);
-									if(!empty($providerIndex)) {
-										$data[$key][$key2] = '';
-									}
-									$data[$providerIndex][$key2] = $value2;
-								} else {
-									$provider[$key] = $key;
-								}
-							}
-							if($key2 === 'type_name'|| $key2 === 'type_code'|| $key2 === 'type_count') {
-								if(!empty($value2)) {
-									$typeIndex = key($type);
-									if(!empty($typeIndex)) {
-										$data[$key][$key2] = '';
-									}
-									$data[$typeIndex][$key2] = $value2;
-								} else {
-									$type[$key] = $key;
-								}
-							}
-						} 
-						foreach($genderArray as $femaleGender) {
-							$data[$key][] = $femaleGender['female_code'];
-							$data[$key][] = $femaleGender['female_name'];
-							$data[$key][] = $femaleGender['female_count'];
-						}
-					}
-					foreach($result as $key3 => $value3) {
+					// if($key == 1) { //echo "<pre>";print_r($key);die;
+					// 	foreach($result as $key1 => $value1) {
+					// 		$data[$key][$key1] = $value1;
+					// 		if($key1 === 'area_name'|| $key1 === 'area_code'|| $key1 === 'area_count') {
+					// 			if(!empty($value1)) {
+					// 				$areaIndex = key($area);
+					// 				if(!empty($areaIndex)) {
+					// 					$data[$key][$key1] = '';
+					// 				}
+					// 				$data[$areaIndex][$key1] = $value1;
+					// 			} else {
+					// 				$area[$key] = $key;
+					// 			}
+					// 		}
+					// 		if($key1 === 'area_administrative_name'|| $key1 === 'area_administrative_code'|| $key1 === 'area_administrative_count') {
+					// 			if(!empty($value1)) {
+					// 				$areaAdministrativeIndex = key($areaAdministrative);
+					// 				if(!empty($areaAdministrativeIndex)) {
+					// 					$data[$key][$key1] = '';
+					// 				}
+					// 				$data[$areaAdministrativeIndex][$key1] = $value1;
+					// 			} else {
+					// 				$areaAdministrative[$key] = $key;
+					// 			}
+					// 		}
+					// 		if($key1 === 'locality_name'|| $key1 === 'locality_code'|| $key1 === 'locality_count') {
+					// 			if(!empty($value1)) {
+					// 				$localityIndex = key($locality);
+					// 				if(!empty($localityIndex)) {
+					// 					$data[$key][$key1] = '';
+					// 				}
+					// 				$data[$localityIndex][$key1] = $value1;
+					// 			} else {
+					// 				$locality[$key] = $key;
+					// 			}
+					// 		}
+					// 		if($key1 === 'sector_name'|| $key1 === 'sector_code'|| $key1 === 'sector_count') {
+					// 			if(!empty($value1)) {
+					// 				$sectorIndex = key($sector);
+					// 				if(!empty($sectorIndex)) {
+					// 					$data[$key][$key1] = '';
+					// 				}
+					// 				$data[$sectorIndex][$key1] = $value1;
+					// 			} else {
+					// 				$sector[$key] = $key;
+					// 			}
+					// 		}
+					// 		if($key1 === 'ownership_name'|| $key1 === 'ownership_code'|| $key1 === 'ownership_count') {
+					// 			if(!empty($value1)) {
+					// 				$ownershipIndex = key($ownership);
+					// 				if(!empty($ownershipIndex)) {
+					// 					$data[$key][$key1] = '';
+					// 				}
+					// 				$data[$ownershipIndex][$key1] = $value1;
+					// 			} else {
+					// 				$ownership[$key] = $key;
+					// 			}
+					// 		}
+					// 		if($key1 === 'provider_name'|| $key1 === 'provider_code'|| $key1 === 'provider_count') {
+					// 			if(!empty($value1)) {
+					// 				$providerIndex = key($provider);
+					// 				if(!empty($providerIndex)) {
+					// 					$data[$key][$key1] = '';
+					// 				}
+					// 				$data[$providerIndex][$key1] = $value1;
+					// 			} else {
+					// 				$provider[$key] = $key;
+					// 			}
+					// 		}
+					// 		if($key1 === 'type_name'|| $key1 === 'type_code'|| $key1 === 'type_count') {
+					// 			if(!empty($value1)) {
+					// 				$typeIndex = key($type);
+					// 				if(!empty($typeIndex)) {
+					// 					$data[$key][$key1] = '';
+					// 				}
+					// 				$data[$typeIndex][$key1] = $value1;
+					// 			} else {
+					// 				$type[$key] = $key;
+					// 			}
+					// 		}
+					// 	} 
+					// 	foreach($genderArray as $maleGender) {
+					// 		$data[$key][] = $maleGender['male_code'];
+					// 		$data[$key][] = $maleGender['male_name'];
+					// 		$data[$key][] = $maleGender['male_count'];
+					// 	}
+					// }
+					// if($key == 2) { //echo "Key2";die;
+					// 	foreach($result as $key2 => $value2) {
+					// 		$data[$key][$key2] = $value2;
+					// 		if($key2 === 'sector_name'|| $key2 === 'sector_code'|| $key2 === 'sector_count') {
+					// 			if(!empty($value2)) {
+					// 				$sectorIndex = key($sector);
+					// 				if(!empty($sectorIndex)) {
+					// 					$data[$key][$key2] = '';
+					// 				}
+					// 				$data[$sectorIndex][$key2] = $value2;
+					// 			} else {
+					// 				$sector[$key] = $key;
+					// 			}
+					// 		}
+					// 		if($key2 === 'area_name'|| $key2 === 'area_code'|| $key2 === 'area_count') {
+					// 			if(!empty($value2)) {
+					// 				$areaIndex = key($area);
+					// 				if(!empty($areaIndex)) {
+					// 					$data[$key][$key2] = '';
+					// 				}
+					// 				$data[$areaIndex][$key2] = $value2;
+					// 			} else {
+					// 				$area[$key] = $key;
+					// 			}
+					// 		}
+					// 		if($key2 === 'area_administrative_name'|| $key2 === 'area_administrative_code'|| $key2 === 'area_administrative_count') {
+					// 			if(!empty($value2)) {
+					// 				$areaAdministrativeIndex = key($areaAdministrative);
+					// 				if(!empty($areaAdministrativeIndex)) {
+					// 					$data[$key][$key2] = '';
+					// 				}
+					// 				$data[$areaAdministrativeIndex][$key2] = $value2;
+					// 			} else {
+					// 				$areaAdministrative[$key] = $key;
+					// 			}
+					// 		}
+					// 		if($key2 === 'locality_name'|| $key2 === 'locality_code'|| $key2 === 'locality_count') {
+					// 			if(!empty($value2)) {
+					// 				$localityIndex = key($locality);
+					// 				if(!empty($localityIndex)) {
+					// 					$data[$key][$key2] = '';
+					// 				}
+					// 				$data[$localityIndex][$key2] = $value2;
+					// 			} else {
+					// 				$locality[$key] = $key;
+					// 			}
+					// 		}
+					// 		if($key2 === 'ownership_name'|| $key2 === 'ownership_code'|| $key2 === 'ownership_count') {
+					// 			if(!empty($value2)) {
+					// 				$ownershipIndex = key($ownership);
+					// 				if(!empty($ownershipIndex)) {
+					// 					$data[$key][$key2] = '';
+					// 				}
+					// 				$data[$ownershipIndex][$key2] = $value2;
+					// 			} else {
+					// 				$ownership[$key] = $key;
+					// 			}
+					// 		}
+					// 		if($key2 === 'provider_name'|| $key2 === 'provider_code'|| $key2 === 'provider_count') {
+					// 			if(!empty($value2)) {
+					// 				$providerIndex = key($provider);
+					// 				if(!empty($providerIndex)) {
+					// 					$data[$key][$key2] = '';
+					// 				}
+					// 				$data[$providerIndex][$key2] = $value2;
+					// 			} else {
+					// 				$provider[$key] = $key;
+					// 			}
+					// 		}
+					// 		if($key2 === 'type_name'|| $key2 === 'type_code'|| $key2 === 'type_count') {
+					// 			if(!empty($value2)) {
+					// 				$typeIndex = key($type);
+					// 				if(!empty($typeIndex)) {
+					// 					$data[$key][$key2] = '';
+					// 				}
+					// 				$data[$typeIndex][$key2] = $value2;
+					// 			} else {
+					// 				$type[$key] = $key;
+					// 			}
+					// 		}
+					// 	} 
+					// 	foreach($genderArray as $femaleGender) {
+					// 		$data[$key][] = $femaleGender['female_code'];
+					// 		$data[$key][] = $femaleGender['female_name'];
+					// 		$data[$key][] = $femaleGender['female_count'];
+					// 	}
+					// }
+					foreach($result as $key3 => $value3) { //echo "Key3";
 						$data[$key][$key3] = $value3;
 						if(($key != 0) && ($key3 === 'area_name'|| $key3 === 'area_code'|| $key3 === 'area_count')) {
 							if(!empty($value3)) {
@@ -795,19 +698,66 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					unset($ownership[$ownershipIndex]);
 					unset($type[$typeIndex]);
 				}
+				//die;
 				
 			}
 		}		
 		$finalArray = array();
+		
+		$AreaLevelT = TableRegistry::get('area_levels');
+		$AreaLevel = $AreaLevelT->find('all',['conditions'=>['id'=>$areaLevelId]])->first();
+
 		if(!empty($data)) {
-			foreach($data as $data_key => $data_row) {
-				if($data_key === 0) {
-					$finalArray[$data_key] = $data_row;
+			if($AreaLevel->level == "1"){
+				//$arrayy;
+				$arrayy[0] = $AreaLevel->name;
+				$arrayy[1] = 10;
+				$arrayy[2] = 10;
+				$arrayy[3] = 10;
+				$arrayy[4] = 10;
+				$arrayy[5] = 10;
+				$arrayy[6] = 10;
+				$arrayy[7] = 10;
+				$arrayy[8] = 10;
+				$arrayy[9] = 10;
+				$arrayy[10] = 10;
+				$arrayy[11] = 10;
+				$arrayy[12] = 10;
+				$arrayy[13] = 10;
+				$arrayy[14] = 10;
+				$arrayy[15] = 10;
+				$arrayy[16] = 10;
+				$arrayy[17] = 10;
+				$arrayy[18] = 10;
+				$arrayy[19] = 10;
+				$arrayy[20] = 10;
+
+				
+				foreach($data as $data_keyy => $data_roww) { //echo "<pre>";print_r($arrayy);die;
+					if($data_keyy === 0) {
+						$finalArray[$data_keyy+1] = $data_roww;
+						$finalArray[$data_keyy+2] = $arrayy;
+					}
 				}
-				if(!empty($data_key)) {
-					$finalArray[$data_key] = $data_row;
+			}elseif($AreaLevel->level == "2"){
+				foreach($data as $data_keyy => $data_roww) {
+					if($data_keyy === 0) {
+						$finalArray[$data_roww] = $data_roww;
+					}
+				}
+
+			}else{
+				foreach($data as $data_key => $data_row) { //echo "<pre>";print_r($data_row);die;
+					if($data_key === 0) {
+						$finalArray[$data_key] = $data_row;
+					}
+					if(!empty($data_key)) {
+						//echo "<pre>";print_r($data_row);die;
+						$finalArray[$data_key] = $data_row;
+					}
 				}
 			}
+			
 		}
 		return $finalArray;
 	}
@@ -926,7 +876,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
     {
         $tableObj = $this->getAssociatedTable($table, $field);
         $key = null;
-        if (is_object($tableObj)) {
+         if (is_object($tableObj)) {
             $key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
         }
         return $key;
