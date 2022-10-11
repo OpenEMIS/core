@@ -1,3 +1,8 @@
+### [3.75.31.1] - 2022-10-11
+- Bug Fixed: Administrations > Workflow > Actions tab : Institution > Pending Student Transfer: Changes in workflow
+- Bug Fixed: Institutions>Students>Student1>Academic>Assessment: It should show the current and past assessment marks even from other institutions
+- Bug Fixed: Institutions > Students : Bulk Transfer for Enrolled students are showing the wrong results for "Next Grade" field
+
 ### [3.75.31] - 2022-09-29
 - Bug Fixed: Reports > Institution > Class Attendance Marked Summary Report: Report is empty
 - Bug Fixed: Institutions > Academic > Programmes > Delete Grades: When the system restricts the delete, the system counts Institution Students that are holding Enrolled status only
