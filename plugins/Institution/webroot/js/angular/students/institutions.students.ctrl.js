@@ -592,6 +592,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var startDatePicker2 = angular.element(document.getElementById('Student_start_date'));
         startDatePicker2.datepicker("setStartDate", InstitutionsStudentsSvc.formatDate(start_date));
         startDatePicker2.datepicker("setEndDate", InstitutionsStudentsSvc.formatDate(end_date));
+        StudentController.selectedStudentData.endDate = InstitutionsStudentsSvc.formatDate(end_date);
     }
 
     function changeClass() {
