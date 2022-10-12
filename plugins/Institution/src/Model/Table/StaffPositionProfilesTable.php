@@ -395,7 +395,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                         ->first();
-            if($StaffChangeTypesData['code'] == 'CHANGE_OF_SHIFT'){
+                //POCOR-7006 
+            if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT'){
+                //End of POCOR-7006
                 $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
