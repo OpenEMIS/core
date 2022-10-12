@@ -176,19 +176,32 @@ class SurveyStatusesTable extends ControllerActionTable
         if (!empty($entity->academic_periods)) {
             foreach ($entity->academic_periods as $periodObj) {
                 foreach ($institutionIds as $instId) {
-                    $InstitutionSurveys->deleteAll(['institution_id' => $instId, 'academic_period_id' => $periodObj->id, 'survey_form_id' => $surveyFormId]);
-                    $surveyData = [
-                        'status_id' => 1,
-                        'academic_period_id' => $periodObj->id,
-                        'survey_form_id' => $surveyFormId,
-                        'institution_id' => $instId,
-                        'assignee_id' => 0,
-                        'created_user_id' => 1,
-                        'created' => new Time('NOW')
-                    ];
+                   // $InstitutionSurveys->deleteAll(['institution_id' => $instId, 'academic_period_id' => $periodObj->id, 'survey_form_id' => $surveyFormId]);
+                    $surveyDataVal = $InstitutionSurveys->find()->where(['institution_id' => $instId, 'academic_period_id' => $periodObj->id, 'survey_form_id' => $surveyFormId])->first();
+                    //POCOR-7005 start conditon change for update record
+                    if(!empty($surveyDataVal)){
+                        $update =   $InstitutionSurveys->updateAll(
+                                ['status_id' => 1,'academic_period_id'=>$periodObj->id,'survey_form_id' => $surveyFormId,'institution_id' => $instId,'assignee_id' => 0,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
+                                [
+                                 'id' => $surveyDataVal['id'], //condition
+                                ] 
+                            );
+                    }else{
+                        $surveyData = [
+                            'status_id' => 1,
+                            'academic_period_id' => $periodObj->id,
+                            'survey_form_id' => $surveyFormId,
+                            'institution_id' => $instId,
+                            'assignee_id' => 0,
+                            'created_user_id' => 1,
+                            'created' => new Time('NOW')
+                        ];
+                    
     
-                    $surveyEntity = $InstitutionSurveys->newEntity($surveyData);
-                    $InstitutionSurveys->save($surveyEntity);
+                        $surveyEntity = $InstitutionSurveys->newEntity($surveyData);
+                        $InstitutionSurveys->save($surveyEntity);
+                    }
+                    //POCOR-7005 end conditon change for update record
                 }
             }
         }
