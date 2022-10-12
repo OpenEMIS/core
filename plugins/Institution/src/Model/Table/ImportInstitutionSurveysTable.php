@@ -348,6 +348,9 @@ class ImportInstitutionSurveysTable extends AppTable {
                             if (!empty($selectedAnswer)) {
                                 $codeIndex = key($selectedAnswer);
                                 $cellValue = $selectedAnswer[$codeIndex]->id;
+                            }elseif(empty($selectedAnswer)) { //POCOR-6942
+                                $codeIndex = '';
+                                $cellValue = '';
                             } else {
                                 $rowFailed = true;
                                 $rowInvalidCodeCols[$question->name] = $this->getExcelLabel('Import', 'value_not_in_list');
