@@ -288,7 +288,9 @@ class ReportsController extends AppController
     {
         ini_set('memory_limit', '-1');
         $data = $_GET;
-        $explode_data = explode("/", $data['file_path']);
+        //POCOR-7000
+        // $explode_data = explode("/", $data['file_path']);
+        $replace_data = str_replace('\\', '/', $data['file_path']);
         if (!empty($this->request->param('institutionId'))) {
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
         } else {
@@ -300,7 +302,9 @@ class ReportsController extends AppController
         $this->Navigation->addCrumb($data['module']);
         $header = __('Reports') . ' - ' .$data['module'];
 
-        $inputFileName = WWW_ROOT. 'export/'.end($explode_data);
+        //$inputFileName = WWW_ROOT. 'export/'.end($explode_data);
+        $inputFileName = $replace_data;
+        //end of POCOR-7000
 
         $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
         $objReader = PHPExcel_IOFactory::createReader($inputFileType);
