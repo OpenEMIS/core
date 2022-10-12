@@ -1,3 +1,8 @@
+<style>
+option:disabled {
+    display: none !important;
+  }
+</style>
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Institution.angular/staff/institutions.staff.svc', ['block' => true]); ?>
 <?= $this->Html->script('Institution.angular/staff/institutions.staff.ctrl', ['block' => true]); ?>
@@ -549,7 +554,11 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
 
 //]]>
 </script>
-
+<style>
+option:disabled {
+    display: none !important;
+  }
+</style>
 
 <?php
 $this->end();
