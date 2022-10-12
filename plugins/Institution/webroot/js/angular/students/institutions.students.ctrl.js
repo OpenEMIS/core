@@ -103,6 +103,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.changeTransferReason = changeTransferReason;
     StudentController.transferStudent = transferStudent;
     StudentController.setStudentDataFromExternalSearchData = setStudentDataFromExternalSearchData;
+    StudentController.transferStudentNextStep = transferStudentNextStep;
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
@@ -1423,4 +1424,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         });
     };
 
+
+    function transferStudentNextStep()
+    {
+        StudentController.step = 'transfer_student';
+        var startDatePicker = angular.element(document.getElementById('Student_transfer_start_date'));
+        var splitEndDate = StudentController.selectedStudentData.endDate.split('-');
+        var endDateYear = splitEndDate[splitEndDate.length - 1];
+        startDatePicker.datepicker("setStartDate", "01-01-" + endDateYear);
+        startDatePicker.datepicker("setEndDate", '31-12-' + endDateYear);
+    }
 }
