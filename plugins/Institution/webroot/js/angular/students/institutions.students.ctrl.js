@@ -844,7 +844,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         } else {
             switch(StudentController.step){
                 case 'internal_search': 
-                    StudentController.selectedStudentData.date_of_birth = new Date(StudentController.selectedStudentData.date_of_birth);
+                    StudentController.selectedStudentData.date_of_birth = InstitutionsStudentsSvc.formatDate(StudentController.selectedStudentData.date_of_birth);
                     StudentController.step = 'user_details';
                     break;
                 case 'external_search': 
