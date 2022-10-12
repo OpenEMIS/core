@@ -20,10 +20,10 @@ function SgTreeController($scope, $window, SgTreeSvc) {
 
     angular.element(document).ready(function () {
         SgTreeSvc.init(angular.baseUrl);
-        var userId = JSON.parse(Controller.userId);
+        var userId = JSON.parse(Controller.userId ? Controller.userId : 2);
         var authArea = [];
         var counter = 0;
-        SgTreeSvc.getRecords(Controller.model, userId, Controller.displayCountry, Controller.outputValue, true)
+        SgTreeSvc.getRecords(Controller.model ? Controller.model : 'Area.AreaAdministratives', userId, Controller.displayCountry, Controller.outputValue, true)
             .then(function(response) {
                 if (angular.isDefined(response[1]) && angular.isDefined(response[1].name)) {
                     $scope.textConfig['noSelection'] = response[1].name;
@@ -60,6 +60,50 @@ function SgTreeController($scope, $window, SgTreeSvc) {
      $scope.$watch('outputModelText', function (newValue, oldValue) {
         if (typeof newValue !== 'undefined' && newValue.length > 0) {
             Controller.outputValue = newValue[0].id;
+            if (Controller.triggerOnChange) {
+                setTimeout(function() {
+                    if (oldValue.length != 0 && Controller.outputValue != null && Controller.outputValue != oldValue[0].id) {
+                        $('#reload').val('changeAreaEducation').click();
+                        return false;
+                    }
+                }, 1);
+            }
+        }
+    });
+
+    $scope.$watch('addressAreaOutputModelText', function (newValue, oldValue) {
+        if (typeof newValue !== 'undefined' && newValue.length > 0) {
+            Controller.outputValue = newValue[0].id;
+            if($window.localStorage.getItem('address_area_id')) {
+                $window.localStorage.removeItem('address_area_id')
+            }
+            if($window.localStorage.getItem('address_area')) {
+                $window.localStorage.removeItem('address_area')
+            }
+            $window.localStorage.setItem('address_area_id', Controller.outputValue);
+            $window.localStorage.setItem('address_area', JSON.stringify(newValue[0]));
+            if (Controller.triggerOnChange) {
+                setTimeout(function() {
+                    if (oldValue.length != 0 && Controller.outputValue != null && Controller.outputValue != oldValue[0].id) {
+                        $('#reload').val('changeAreaEducation').click();
+                        return false;
+                    }
+                }, 1);
+            }
+        }
+    });
+
+    $scope.$watch('birthplaceAreaOutputModelText', function (newValue, oldValue) {
+        if (typeof newValue !== 'undefined' && newValue.length > 0) {
+            Controller.outputValue = newValue[0].id;
+            if($window.localStorage.getItem('birthplace_area_id')) {
+                $window.localStorage.removeItem('birthplace_area_id')
+            }
+            if($window.localStorage.getItem('birthplace_area')) {
+                $window.localStorage.removeItem('birthplace_area')
+            }
+            $window.localStorage.setItem('birthplace_area_id', Controller.outputValue);
+            $window.localStorage.setItem('birthplace_area', JSON.stringify(newValue[0]));
             if (Controller.triggerOnChange) {
                 setTimeout(function() {
                     if (oldValue.length != 0 && Controller.outputValue != null && Controller.outputValue != oldValue[0].id) {
