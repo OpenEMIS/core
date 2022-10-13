@@ -1367,7 +1367,38 @@ class InstitutionsTable extends ControllerActionTable
         $search = $this->getSearchKey();
         if (empty($search) && !$this->isAdvancedSearchEnabled()) {
             // redirect to school dashboard if it is only one record and no add access
-            $addAccess = $this->AccessControl->check(['Institutions', 'add']);
+            
+            //POCOR-6866[START]
+            $securityFunctions = TableRegistry::get('SecurityFunctions');
+            $securityFunctionsData = $securityFunctions
+            ->find()
+            ->select([
+                'SecurityFunctions.id'
+            ])
+            ->where([
+                'SecurityFunctions.name' => 'Institution',
+                'SecurityFunctions.controller' => 'Institutions',
+                'SecurityFunctions.module' => 'Institutions',
+                'SecurityFunctions.category' => 'General'
+            ])
+            ->first();
+            $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
+
+            $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+
+            $securityRoleFunctionsData = $securityRoleFunctions
+            ->find()
+            ->select([
+                'SecurityRoleFunctions._add'
+            ])
+            ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id' => $permission_id,
+            ])
+            ->first();
+            $addAccess = $securityRoleFunctionsData->_add;
+            // $addAccess = $this->AccessControl->check(['Institutions', 'add']);
+            //POCOR-6866[END]
             if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
                 $entity = $data->first();
                 $event->stopPropagation();
