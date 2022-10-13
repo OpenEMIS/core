@@ -191,13 +191,20 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                        'academic_term'=> 'AssessmentPeriods.academic_term',
                     ]
                 ],
+                'EducationGrades' => [
+                    'fields' => [
+                       'education_grade'=> 'EducationGrades.name',
+                    ]
+                ],
             ])
             ->leftJoin(
                 [$Users->alias() => $Users->table()],
                 [$Users->aliasField('id = ') . $this->aliasField('created_user_id')]
             )
+
         ->Where($where)
         ->group([$this->aliasField('created_user_id')]);
+        //print_r($query->toSql()); die;
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
             {
                 return $results->map(function ($row)
@@ -217,6 +224,24 @@ class InstitutionStandardMarksEnteredTable extends AppTable
             'field' => 'academic_period_name',
             'type'  => 'string',
             'label' => __('Academic Period'),
+        ];
+        $newFields[] = [
+            'key'   => 'education_grade',
+            'field' => 'education_grade',
+            'type'  => 'string',
+            'label' => __('Education Grade'),
+        ];
+        $newFields[] = [
+            'key'   => 'class',
+            'field' => 'class',
+            'type'  => 'string',
+            'label' => __('Class'),
+        ];
+        $newFields[] = [
+            'key'   => 'subject',
+            'field' => 'subject',
+            'type'  => 'string',
+            'label' => __('Subject'),
         ];
         $newFields[] = [
             'key'   => 'openemis_no',
