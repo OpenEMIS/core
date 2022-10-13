@@ -271,6 +271,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('workflow_status', ['type' => 'hidden']);
         //POCOR-5762 ends
         $this->ControllerAction->field('education_level_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('position_status', ['type' => 'hidden']);
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -327,6 +328,15 @@ class InstitutionsTable extends AppTable
                 case 'Report.StaffTransfers':
                 case 'Report.SpecialNeedsFacilities':
                 case 'Report.InstitutionCommittees':
+
+                case 'Report.InstitutionPositionsSummaries': //POCOR-6952
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'position_status';
+                    $fieldsOrder[] = 'format';
+                    break;
                 case 'Report.InfrastructureNeeds':
                     $fieldsOrder[] = 'academic_period_id';
                     $fieldsOrder[] = 'area_level_id';
@@ -766,6 +776,15 @@ class InstitutionsTable extends AppTable
                         }
                         break;
 
+
+                        case 'Report.InstitutionPositionsSummaries':
+                            $Statuses = TableRegistry::get('Staff.StaffStatuses');
+                            $statusData = $Statuses->getList();
+                            foreach ($statusData as $key => $value) {
+                                $statusOptions[$key] = $value;
+                            }
+                            break;
+    
                     //Start POCOR-6869
                     case 'Report.InstitutionPositions':
                         $Workflows = TableRegistry::get('Workflow.Workflows');
@@ -832,7 +851,8 @@ class InstitutionsTable extends AppTable
                              'Report.StaffTransfers',
                              'Report.Guardians',
                              'Report.SpecialNeedsFacilities',
-                             'Report.InfrastructureNeeds'
+                             'Report.InfrastructureNeeds',
+                             'Report.InstitutionPositionsSummaries'
 
 
                          ]
@@ -883,7 +903,8 @@ class InstitutionsTable extends AppTable
                 'Report.ClassAttendanceMarkedSummaryReport',
                 'Report.InfrastructureNeeds',
                 'Report.Income',
-                'Report.Expenditure'
+                'Report.Expenditure',
+                'Report.InstitutionPositionsSummaries'
             ]))) {
                 $Areas = TableRegistry::get('AreaLevel.AreaLevels');
                 $entity = $attr['entity'];
@@ -939,7 +960,8 @@ class InstitutionsTable extends AppTable
                     'Report.ClassAttendanceMarkedSummaryReport',
                     'Report.InfrastructureNeeds',
                     'Report.Income',
-                    'Report.Expenditure'
+                    'Report.Expenditure',
+                    'Report.InstitutionPositionsSummaries'
                 ]))) {
                 $Areas = TableRegistry::get('Area.Areas');
                 $entity = $attr['entity'];
@@ -1256,7 +1278,8 @@ class InstitutionsTable extends AppTable
                 'Report.StaffTransfers',
                 'Report.InstitutionCases',
                 'Report.ClassAttendanceNotMarkedRecords',
-                'Report.ClassAttendanceMarkedSummaryReport'
+                'Report.ClassAttendanceMarkedSummaryReport',
+                'Report.InstitutionPositionsSummaries'
             ];
 
 
@@ -1955,6 +1978,53 @@ class InstitutionsTable extends AppTable
         }
     }
 
+//POCOR-6952
+    public function onUpdateFieldPositionStatus(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.InstitutionPositionsSummaries'])) {
+                $institutionStaffLeave = TableRegistry::get('institution_staff_leave');
+                $workflowModelsTable = TableRegistry::get('workflow_models');
+                $workflowsTable = TableRegistry::get('workflow_statuses');
+
+                $workflowStepsTable = TableRegistry::get('workflow_steps');
+
+                $workflowModel = $workflowModelsTable->find('all',['conditions'=>['model'=> 'Institution.InstitutionPositions' ]])->first();
+                $workflowStepsOptions = $workflowsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'name'
+                        ])
+                        ->where(['workflow_model_id'=> $workflowModel->id]);
+                        
+                $institutionStaffLeaveList = $workflowStepsOptions->toArray();
+                if (empty($institutionStaffLeaveList)) {
+                    $workflowStepsOptions = ['' => $this->getMessage('general.select.noOptions')];
+                    $attr['type'] = 'select';
+                    $attr['options'] = $workflowStepsOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+                    if (in_array($feature, [
+                        'Report.InstitutionPositionsSummaries'
+                    ])) {
+                        $workflowStepsOptions = ['0' => __('All Status')] + $institutionStaffLeaveList;
+                    }else {
+                        $workflowStepsOptions = $institutionStaffLeaveList;
+                    }
+
+                    $attr['type'] = 'chosenSelect';
+                    $attr['onChangeReload'] = true;
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $workflowStepsOptions;
+                }
+
+               // echo "<pre>";print_r($attr);die;
+            }
+            return $attr;
+        }
+    }
+//POCOR-6952
     public function onUpdateFieldPosition(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
