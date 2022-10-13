@@ -1,7 +1,7 @@
 <style>
-option:disabled {
-    display: none !important;
-  }
+option[disabled] {
+  display: none !important;
+}
 </style>
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Institution.angular/staff/institutions.staff.svc', ['block' => true]); ?>
@@ -534,7 +534,11 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
     <div class="actions bottom">
     </div>
 </div>
-
+<style>
+option[disabled] {
+  display: none !important;
+}
+</style>
 <script>
 $(function () {
 var datepicker0 = $('#Staff_start_date_change').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
@@ -554,11 +558,6 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
 
 //]]>
 </script>
-<style>
-option:disabled {
-    display: none !important;
-  }
-</style>
 
 <?php
 $this->end();
