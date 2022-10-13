@@ -46,6 +46,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
         $this->addBehavior('FieldOption.FieldOption');
 
 		$this->positionGradeSelection = $this->getSelectOptions($this->aliasField('position_grade_selection'));
+
 	}
 
 	public function validationDefault(Validator $validator)
@@ -67,10 +68,12 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		$this->field('type', [
 			'visible' => true,
 			'options' => $this->getSelectOptions('Staff.position_types'),
-			'after' => 'name'
+			'after' => 'name',
+			'onChangeReload' => true
 		]);
+		$this->field('staff_position_categories_id', ['select' => false,'after' => 'type']); //POCOR-6950
 		$extra['roleList'] = $this->SecurityRoles->getSystemRolesList();
-		$this->field('security_role_id', ['after' => 'type', 'options' => $extra['roleList']]);
+		$this->field('security_role_id', ['after' => 'staff_position_categories_id', 'options' => $extra['roleList']]);
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
@@ -142,6 +145,46 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		$query->contain(['PositionGrades']);
 	}
 
+	/**
+     * Get all areas ids as key and name as value
+     * @usage  It is used as drop-down options
+     * @author Rahul Singh <rahul.singh@mail.valuecoders.com>
+     * @ticket POCOR-6950
+     */
+
+	public function onUpdateFieldStaffPositionCategoriesId(Event $event, array $attr, $action, Request $request) 
+	{
+        if ($action == 'add' || $action == 'edit') {
+        	list($levelOptions, $selectedLevel) = array_values($this->getTypeOptions($request));
+        	$attr['options'] = $levelOptions;
+        	if ($action == 'add') {
+        		$attr['default'] = $selectedLevel;
+        	}
+        }
+		return $attr;
+	}
+
+	/**
+     * Get all areas ids as key and name as value
+     * @usage  It is used as drop-down options
+     * @author Rahul Singh <rahul.singh@mail.valuecoders.com>
+     * @ticket POCOR-6950
+     */
+
+	public function getTypeOptions($request)
+    {
+		$type = $request->data['StaffPositionTitles']['type'];
+        $StaffPositionCategories = TableRegistry::get('Staff.StaffPositionCategories');
+        $levelOptions = $StaffPositionCategories
+            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+            ->where([ $StaffPositionCategories->aliasField('type') => $type ])
+            ->toArray();
+           
+         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+
+         return compact('levelOptions', 'selectedLevel');
+    }
+
 	public function onUpdateFieldPositionGradeSelection(Event $event, array $attr, $action, Request $request) 
 	{
 		if ($action == 'add' || $action == 'edit') {
@@ -208,11 +251,29 @@ class StaffPositionTitlesTable extends ControllerActionTable
             return (!empty($list))? implode(', ', $list) : ' ';
         }
     }
-
-	public function onGetType(Event $event, Entity $entity) 
+    public function onGetType(Event $event, Entity $entity) 
 	{
 		$types = $this->getSelectOptions('Staff.position_types');
 		return array_key_exists($entity->type, $types) ? $types[$entity->type] : $entity->type;
+	}
+
+	/**
+     * Get the value and name of Staff Position Categories
+     * @usage  It is used as drop-down options
+     * @author Rahul Singh <rahul.singh@mail.valuecoders.com>
+     * @ticket POCOR-6950
+     */
+
+	public function onGetStaffPositionCategoriesId(Event $event, Entity $entity) 
+	{
+		$StaffPositionCategories = TableRegistry::get('Staff.StaffPositionCategories');
+            $list = $StaffPositionCategories
+                ->find('list')
+                ->find('order')
+                ->where([ $StaffPositionCategories->aliasField('id') => $entity->staff_position_categories_id ])
+                ->toArray();
+
+            return (!empty($list))? implode(', ', $list) : ' ';
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
