@@ -198,7 +198,6 @@ class InstitutionSummaryExcelBehavior extends Behavior
 	
     public function getData($settings)
     {
-		
     	$Institutions = TableRegistry::get('Institutions');
     	$requestData = json_decode($settings['process']['params']);
     	$institution_id = $requestData->institution_id;
@@ -231,8 +230,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
                     $childArea3[$kyy.$ky] = $AreaDatal222->id;
                 }
             }
-        }
-        
+        }   
         //level-4
         if(!empty($childAreaMain)){
             foreach($childArea3 as $kyy =>$AreaDatal4 ){
@@ -335,13 +333,157 @@ class InstitutionSummaryExcelBehavior extends Behavior
 				$keyy = 0;
 				$ki = 1;
 
-				foreach($InstitutionProviders as $keyy => $InstitutionProvider){
-					foreach($InstitutionTypes as $ki => $InstitutionType){
+				foreach($InstitutionProviders as $keyy => $InstitutionProvider){ 
+					foreach($InstitutionTypes as $ki => $InstitutionType){ //echo "<pre>";print_r($institutionData->toArray());die;
+						//$insCount = $Institutions->find('all',['conditions'=>['institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id,'area_id in' => $finalIds]])->count();
+						$institut = $Institutions->find()
+									->select([
+										'ownership_name' => 'Ownerships.name',
+										'ownership_id' => 'Ownerships.id',
+										'sector_name' => 'Sectors.name',
+										'sector_id' => 'Sectors.id',
+										'provider_name' => 'Providers.name',
+										'provider_id' => 'Providers.id',
+										'type_name' => 'Types.name',
+										'type_id' => 'Types.id',
+										'area_id' => 'Areas.id',
+										'area_name' => 'Areas.name',
+										'area_code' => 'Areas.code',
+										'area_administrative_name' => 'AreaAdministratives.name',
+										'area_administrative_id' => 'AreaAdministratives.id',
+										'area_administrative_code' => 'AreaAdministratives.code',
+										'locality_name' => 'Localities.name',
+										'locality_id' => 'Localities.id'
+									])
+									->leftJoin(
+									['Ownerships' => 'institution_ownerships'],
+									[
+										'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+									]
+									)
+									->leftJoin(
+									['Sectors' => 'institution_sectors'],
+									[
+										'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+									]
+									)
+									->leftJoin(
+									['Areas' => 'areas'],
+									[
+										'Areas.id = '. $Institutions->aliasField('area_id')
+									]
+									)
+									->leftJoin(
+									['AreaAdministratives' => 'area_administratives'],
+									[
+										'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+									]
+									)
+									->leftJoin(
+									['Providers' => 'institution_providers'],
+									[
+										'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+									]
+									)
+									->leftJoin(
+									['Types' => 'institution_types'],
+									[
+										'Types.id = '. $Institutions->aliasField('institution_type_id')
+									]
+									)
+									->leftJoin(
+									['Localities' => 'institution_localities'],
+									[
+										'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+									]
+									)
+									->where(['institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id,$where])
+									;
+
+									
+						//For District..
+						$finalArrayyyy =[];
+						$AreasData = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
+						foreach($AreasData as $KEY => $Area_ins){ 
+							//$finalArrayyyy[$KEY+1] = $Area_ins->name;
+							//echo "<pre>";print_r($Area_ins->id." ".$InstitutionProvider->id." ".$InstitutionType->id );die;
+
+
+							$institutDist = $Institutions->find()
+									->select([
+										'ownership_name' => 'Ownerships.name',
+										'ownership_id' => 'Ownerships.id',
+										'sector_name' => 'Sectors.name',
+										'sector_id' => 'Sectors.id',
+										'provider_name' => 'Providers.name',
+										'provider_id' => 'Providers.id',
+										'type_name' => 'Types.name',
+										'type_id' => 'Types.id',
+										'area_id' => 'Areas.id',
+										'area_name' => 'Areas.name',
+										'area_code' => 'Areas.code',
+										'area_administrative_name' => 'AreaAdministratives.name',
+										'area_administrative_id' => 'AreaAdministratives.id',
+										'area_administrative_code' => 'AreaAdministratives.code',
+										'locality_name' => 'Localities.name',
+										'locality_id' => 'Localities.id'
+									])
+									->leftJoin(
+									['Ownerships' => 'institution_ownerships'],
+									[
+										'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+									]
+									)
+									->leftJoin(
+									['Sectors' => 'institution_sectors'],
+									[
+										'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+									]
+									)
+									->leftJoin(
+									['Areas' => 'areas'],
+									[
+										'Areas.id = '. $Institutions->aliasField('area_id')
+									]
+									)
+									->leftJoin(
+									['AreaAdministratives' => 'area_administratives'],
+									[
+										'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+									]
+									)
+									->leftJoin(
+									['Providers' => 'institution_providers'],
+									[
+										'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+									]
+									)
+									->leftJoin(
+									['Types' => 'institution_types'],
+									[
+										'Types.id = '. $Institutions->aliasField('institution_type_id')
+									]
+									)
+									->leftJoin(
+									['Localities' => 'institution_localities'],
+									[
+										'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+									]
+									)
+									->where(['area_id'=>$Area_ins->id,'institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id])
+									;
+
+						}
+						//echo "<pre>";print_r($institutDist->toArray());die;
+
+						//echo $insCount;die;	
 						$resultArray[$key][] = $InstitutionType->name;
+						$resultArray['countryData'][]= $institut->count();
+						//$resultArray['DistrictData'][]= $finalArrayyyy;
 						$ki++;
 					}
 				}
-				
+				//echo "<pre>";print_r($resultArray);die;
 			} else { 
 				if(!empty($value->area_id)) { 
 					//if (!in_array($value->area_id, $areaArray)) {
@@ -356,7 +498,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 			}
 			$i++;	
 		}
-		
+		//echo "<pre>"; print_r($resultArray);die;
 		
 		$shiftGenderData = $Institutions->find()
                     ->select([
@@ -708,35 +850,13 @@ class InstitutionSummaryExcelBehavior extends Behavior
 		$AreaT = TableRegistry::get('areas');
 		$AreaLevel = $AreaLevelT->find('all',['conditions'=>['id'=>$areaLevelId]])->first();
 		if(!empty($data)) {
-			if($AreaLevel->level == "1"){
-				
-				$arrayy[0] = $AreaLevel->name;
-				$arrayy[1] = 10;
-				$arrayy[2] = 10;
-				$arrayy[3] = 10;
-				$arrayy[4] = 10;
-				$arrayy[5] = 10;
-				$arrayy[6] = 10;
-				$arrayy[7] = 10;
-				$arrayy[8] = 10;
-				$arrayy[9] = 10;
-				$arrayy[10] = 10;
-				$arrayy[11] = 10;
-				$arrayy[12] = 10;
-				$arrayy[13] = 10;
-				$arrayy[14] = 10;
-				$arrayy[15] = 10;
-				$arrayy[16] = 10;
-				$arrayy[17] = 10;
-				$arrayy[18] = 10;
-				$arrayy[19] = 10;
-				$arrayy[20] = 10;
 
-				
+			if($AreaLevel->level == "1"){
 				foreach($data as $data_keyy => $data_roww) { //echo "<pre>";print_r($arrayy);die;
-					if($data_keyy === 0) {
+					if($data_keyy === 0) { 
+						array_unshift($data['countryData'] , 'Country');//echo "<pre>";print_r($data_roww['countryData']);die;
 						$finalArray[$data_keyy] = $data_roww;
-						$finalArray[$data_keyy+1] = $arrayy;
+						$finalArray[$data_keyy+1] = $data['countryData'];
 					}
 				}
 			}elseif($AreaLevel->level == "2"){
@@ -769,7 +889,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 				$arrayy1[19] = 10;
 				$arrayy1[20] = 10;
 
-				foreach($AreaData as $KEy => $AreaINs){
+				foreach($AreasData as $KEy => $AreaINs){
 					$finalArray[$KEy+1] = $arrayy1;
 				}
 
