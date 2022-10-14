@@ -884,9 +884,21 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.generatePassword();
             }
         } else if(StudentController.isExternalSearchSelected) {
-            StudentController.step = 'add_student';
-            StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
-            StudentController.generatePassword();
+
+            switch (StudentController.step)
+            {
+                case "external_search":
+                    StudentController.step = 'confirmation';
+                    StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
+                    StudentController.generatePassword();
+                    break;
+                
+                case "confirmation":
+                    StudentController.step = 'add_student';
+                    StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
+                    StudentController.generatePassword();
+                    break;
+            }
         } else {
             switch(StudentController.step){
                 case 'user_details': 
