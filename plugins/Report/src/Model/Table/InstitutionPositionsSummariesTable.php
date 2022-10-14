@@ -55,17 +55,18 @@ class InstitutionPositionsSummariesTable extends AppTable
         if ($institution_id != 0) {
             $where[$this->aliasField('institution_id')] = $institution_id;
         }
+
         if ($academicperiodid != -1) {
             //find academic priod
             $AcademicPeriodsTable = TableRegistry::get('academic_periods');
             $AcademicPeriod = $AcademicPeriodsTable->find('all',['conditions'=>['id'=>$academicperiodid]])->first();
-            $where[$this->aliasField('start_year')] = $AcademicPeriod->start_year;
+            $where[$this->aliasField('start_year')] >= $AcademicPeriod->start_year;
             //$where[$this->aliasField('end_year')] = $AcademicPeriod->start_year;
-            // if(($this->aliasField('end_year') != null || !empty($this->aliasField('end_year')  ){
-            //     $where[$this->aliasField('start_year')] = $AcademicPeriod->start_year;
-            // }else{
+            // if($this->aliasField('end_year') != null || !empty($this->aliasField('end_year'))  ){
             //     $where[$this->aliasField('start_year')] = $AcademicPeriod->start_year;
             //     $where[$this->aliasField('end_year')] = $AcademicPeriod->start_year;
+            // }else{
+            //     $where[$this->aliasField('start_year')] <= $AcademicPeriod->start_year;
             // }
             
         }
@@ -97,10 +98,29 @@ class InstitutionPositionsSummariesTable extends AppTable
         ->group(['Institutions.id','StaffPositionTitles.id','StaffPositionGrades.id'])
         ->order(['Areas.name','Institutions.name','StaffPositionTitles.name','StaffPositionGrades.name']);
         //echo "<pre>";print_r($query->sql());die;
+
+        // $query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
+        // {
+        //     return $results->map(function ($row)
+        //     {
+        //         if($row['total_male'] == 0){ 
+        //             $row['total_male'] = '-';
+        //         }
+        //         if($row['total_female'] == 0){
+        //             $row['total_female'] = '-';
+        //         }
+        //         if($row['total'] == 0){
+        //             $row['total'] = '-';
+        //         }
+        //         return $row;
+        //     });
+        // });
+
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+        
 
         $newFields = [];
 
