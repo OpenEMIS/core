@@ -196,6 +196,16 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                        'education_grade'=> 'EducationGrades.name',
                     ]
                 ],
+                'InstitutionClasses' => [
+                    'fields' => [
+                       'class'=> 'InstitutionClasses.name',
+                    ]
+                ],
+                'EducationSubjects' => [
+                    'fields' => [
+                       'subject'=> 'EducationSubjects.name',
+                    ]
+                ],
             ])
             ->leftJoin(
                 [$Users->alias() => $Users->table()],
@@ -328,6 +338,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
         $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $institutions = TableRegistry::get('Institution.Institutions');
+        $institutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $total = $studentSubject->find()
                 ->innerJoin(
                     [$academicPeriod->alias() => $academicPeriod->table()],
