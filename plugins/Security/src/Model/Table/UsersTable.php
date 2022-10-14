@@ -16,6 +16,14 @@ use App\Model\Traits\OptionsTrait;
 class UsersTable extends AppTable
 {
     use OptionsTrait;
+    //PCOOR-6922 Starts
+    const ALL = 0;
+    const STUDENT = 1;
+    const STAFF = 2;
+    const GUARDIAN = 3;
+    const OTHER = 4;
+    const ACTIVE = 1;
+    const INACTIVE = 2;//PCOOR-6922 Ends
     public function initialize(array $config)
     {
         $this->table('security_users');
@@ -63,6 +71,27 @@ class UsersTable extends AppTable
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
         $this->addBehavior('User.MoodleCreateUser');
+        //POCOR-6922 starts
+        $this->addBehavior('User.AdvancedIdentitySearch');
+        $this->addBehavior('User.AdvancedContactNumberSearch');
+        $this->addBehavior('User.AdvancedPositionSearch');
+        $this->addBehavior('User.AdvancedSpecificNameTypeSearch');
+
+        //specify order of advanced search fields
+        $advancedSearchFieldOrder = [
+            'user_type', 'first_name', 'middle_name', 'third_name', 'last_name',
+            'openemis_no', 'gender_id', 'contact_number', 'username', 'status', 'identity_type', 'identity_number'
+        ];
+
+        $this->addBehavior('AdvanceSearch', [
+            'include' =>[
+                'openemis_no', 'username'
+            ],
+            'order' => $advancedSearchFieldOrder,
+            'showOnLoad' => 1,
+            'customFields' => ['user_type','status']
+        ]);
+        //POCOR-6922 ends
     }
 
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
@@ -87,10 +116,82 @@ class UsersTable extends AppTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
+        $events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';//POCOR-6922
+        $events['AdvanceSearch.onModifyConditions'] = 'onModifyConditions';//POCOR-6922
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         return $events;
     }
+
+    //POCOR-6922 starts
+    public function getCustomFilter(Event $event)
+    {
+        $filters['user_type'] = [
+            'label' => __('User Type'),
+            'options' => [
+                self::STAFF => __('Staff'),
+                self::STUDENT => __('Students'),
+                self::GUARDIAN => __('Guardians'),
+                self::OTHER => __('Others')
+            ]
+        ];
+
+        $filters['status'] = [
+            'label' => __('Status'),
+            'options' => [
+                self::ACTIVE => __('Active'),
+                self::INACTIVE => __('Inactive')
+            ]
+        ];
+
+        return $filters;
+    }
+
+    public function onModifyConditions(Event $events, $key, $value)
+    {
+        $conditions = [];
+        if ($key == 'user_type') {
+            switch ($value) {
+                case self::STUDENT:
+                    $conditions = [$this->aliasField('is_student') => 1];
+                    break;
+
+                case self::STAFF:
+                    $conditions = [$this->aliasField('is_staff') => 1];
+                    break;
+
+                case self::GUARDIAN:
+                    $conditions = [$this->aliasField('is_guardian') => 1];
+                    break;
+
+                case self::OTHER:
+                    $conditions = [
+                        $this->aliasField('is_student') => 0,
+                        $this->aliasField('is_staff') => 0,
+                        $this->aliasField('is_guardian') => 0
+                    ];
+                    break;
+            }
+        }
+
+        if ($key == 'status') {
+            switch ($value) {
+                case self::ACTIVE:
+                    $conditions = [$this->aliasField('status') => 1];
+                    break;
+
+                case self::INACTIVE:
+                    $conditions = [$this->aliasField('status') => 0];
+                    break;
+            }
+        }
+        return $conditions;
+    }
+
+    public function indexAfterAction(Event $event)
+    {
+        $this->controller->set('ngController', 'AdvancedSearchCtrl');
+    }//POCOR-6922 ends
 
     public function studentsAfterSave(Event $event, Entity $entity)
     {
@@ -172,32 +273,111 @@ class UsersTable extends AppTable
 
     public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
     {
-        $options['auto_search'] = false;
+        //POCOR-6922 Start
+        if (!$this->isAdvancedSearchEnabled()) {
+            $event->stopPropagation();
+            return [];
+        } else {
+            $this->behaviors()->get('AdvanceSearch')->config([
+                'showOnLoad' => 0,
+            ]);
+        }
+
+        $conditions = [];
+        $notSuperAdminCondition = [
+            $this->aliasField('super_admin') => 0
+        ];
+        $conditions = array_merge($conditions, $notSuperAdminCondition);
 
         // POCOR-2547 sort list of staff and student by name
+        $orders = [];
         if (!isset($this->request->query['sort'])) {
-            $query->find('notSuperAdmin')->order([$this->aliasField('first_name'), $this->aliasField('last_name')]);
+            $orders = [
+                $this->aliasField('first_name'),
+                $this->aliasField('last_name')
+            ];
         }
-       
-        $search = $this->ControllerAction->getSearchKey();
 
-        if (!empty($search)) {
-            $query = $this->addSearchConditions($query, ['searchTerm' => $search, 'searchByUserName' => true]);
-        }
-        /*POCOR-6380 starts - select seletced fields only to reduce execution time*/
-        $query->select([
-            $this->aliasField('id'),
-            $this->aliasField('openemis_no'),
-            $this->aliasField('username'),
-            $this->aliasField('first_name'),
-            $this->aliasField('middle_name'),
-            $this->aliasField('third_name'),
-            $this->aliasField('last_name'),
-            $this->aliasField('status'),
-            $this->aliasField('email')
-        ]);
-        /*POCOR-6380 ends*/
+        $query->where($conditions)
+            ->order($orders);
+        $options['auto_search'] = true;
+        $userType = $this->Session->read('Users.advanceSearch.belongsTo.user_type');
+        if ($userType == self::STAFF || $userType == self::STUDENT) {
+            $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+            $UserIdentities = TableRegistry::get('User.Identities');
+            $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+            if($userType == self::STAFF){
+                $ConfigItem =   $ConfigItemTable
+                                ->find()
+                                ->where([
+                                    $ConfigItemTable->aliasField('code') => 'staff_identity_number',
+                                    $ConfigItemTable->aliasField('value') => 1
+                                ])
+                                ->first();
+            }else if($userType == self::STUDENT){
+                $ConfigItem =   $ConfigItemTable
+                                ->find()
+                                ->where([
+                                    $ConfigItemTable->aliasField('code') => 'student_identity_number',
+                                    $ConfigItemTable->aliasField('value') => 1
+                                ])
+                                ->first();
+            }else{
+                $ConfigItem =   $ConfigItemTable
+                                ->find()
+                                ->where([
+                                    $ConfigItemTable->aliasField('code') => 'directory_identity_number',
+                                    $ConfigItemTable->aliasField('value') => 1
+                                ])
+                                ->first();
+            }
+            
+            if(!empty($ConfigItem)){
+                //value_selection
+                //get data from Identity Type table 
+                $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
+                if(!empty($typesIdentity)){                
+                    $query
+                        ->select([
+                            'identity_type' => $IdentityTypes->aliasField('name'),
+                            // for POCOR-6561 changed $typesIdentity->identity_type to $typesIdentity->id below
+                            $typesIdentity->id => $UserIdentities->aliasField('number')
+                        ])
+                        ->LeftJoin(
+                                    [$UserIdentities->alias() => $UserIdentities->table()],
+                                    [
+                                        $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('id'),
+                                        $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
+                                    ]
+                                )
+                        ->LeftJoin(
+                            [$IdentityTypes->alias() => $IdentityTypes->table()],
+                            [
+                                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
+                                $IdentityTypes->aliasField('id = ') . $typesIdentity->id
+                            ]
+                        );
+                }
+            }   
+        }//POCOR-6922 ends
     }
+
+    //POCOR-6922 starts
+    public function getIdentityTypeData($value_selection)
+    {
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $typesIdentity =   $IdentityTypes
+                            ->find()
+                            ->select([
+                                'id' => $IdentityTypes->aliasField('id'),
+                                'identity_type' => $IdentityTypes->aliasField('name')
+                            ])
+                            ->where([
+                                $IdentityTypes->aliasField('id') => $value_selection
+                            ])
+                            ->first();
+        return  $typesIdentity;
+    }//POCOR-6922 ends
 
     public function findNotSuperAdmin(Query $query, array $options)
     {
