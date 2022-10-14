@@ -879,9 +879,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.getStudentTransferReason();
                 StudentController.isInternalSearchSelected = false;
         } else {
-                StudentController.step = 'add_student';
+                StudentController.step = 'confirmation';
                 StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
                 StudentController.generatePassword();
+                StudentController.isInternalSearchSelected = false;
             }
         } else if(StudentController.isExternalSearchSelected) {
 
