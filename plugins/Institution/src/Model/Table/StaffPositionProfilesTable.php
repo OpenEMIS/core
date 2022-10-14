@@ -392,10 +392,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
             return $this->controller->redirect($this->url('add'));
         } else { /**POCOR-6928- added else condition when staff_change_type_id is CHANGE_OF_SHIFT*/
             $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
+
             $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                         ->first();
-                //POCOR-7006 
+               //POCOR-7006 
             if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT'){
                 //End of POCOR-7006
                 $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
@@ -408,6 +409,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $shiftime = $ShiftOptions->find()
                     ->where([$ShiftOptions->aliasField('id IN') => $entity->new_shift['_ids']])
                     ->toArray();
+
                     //remove all shifts data of selected staff
                     $InstitutionStaffShifts->deleteAll([
                             $InstitutionStaffShifts->aliasField('staff_id') => $entity->staff_id
