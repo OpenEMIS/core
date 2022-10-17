@@ -426,27 +426,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         $institutionShiftData['shift_option_id'] = $value->id;
                         $institutionShiftData['created_user_id'] = 1;
                         $institutionShiftData['created'] = date('Y-m-d H:i:s');
-                        print_r($entity->staff_id);
-                        die;
-                        $InstitutionStaffShifts123 = TableRegistry::get('institution_staff_shifts')->find()->where(['staff_id'=>$entity->staff_id])->first();
-                        echo "<pre>"; print_r($InstitutionStaffShifts123);die;
                         $data = $InstitutionShifts->newEntity($institutionShiftData);
-                        $currentShift =($this->request->data['StaffPositionProfiles']['current_shift_one']);
-                        //echo "<pre>"; print_r($entity->staff_id);die;
-                        if (!empty($currentShift)) {
-
-                            $dataRecord = $InstitutionStaffShifts->find(['conditions'=> ['staff_id'=> $entity->staff_id]])->first();
-                           echo "<pre>"; print_r($dataRecord);die;
-                            $shiftEntity = $InstitutionStaffShifts->get($dataRecord->id);
-                            $shiftEntity->shift_id =  $insertRecord->id;
-                           
-                            $InstitutionStaffShifts->save($dataRecord);
-
-                        }
-                        //echo "<pre>"; print_r($entity);die;
+                        //echo "<pre>"; print_r($data);die;
                         $insertRecord = $InstitutionShifts->save($data);
                        
-
                        // echo "<pre>"; print_r($entity);die;
                         if ($insertRecord) {
                             $staffShiftData['staff_id'] = $entity->staff_id;
@@ -460,7 +443,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         ->where([$StaffChangeTypes->aliasField('id') => $this->request->data['StaffPositionProfiles']['staff_change_type_id']])
                         ->first();
                         
-                       // echo "<pre>"; print_r($this->request->data());die;
+                        //echo "<pre>"; print_r($this->request->data());die;
 
                 if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
                     $event->stopPropagation();
@@ -886,7 +869,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->field('end_date');
         $this->field('current_shift');//POCOR-6928
         $this->field('new_shift');//POCOR-6928
-        $this->field('current_shift_one');//POCOR-6928
+        $this->field('current_shift_one');
     }
 
     public function onUpdateFieldStaffChangeTypeId(Event $event, array $attr, $action, Request $request)
@@ -1327,7 +1310,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 $attr['visible'] = false;
             }else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_SHIFT'] || $request->data[$this->alias()]['staff_change_type_id'] == 5) {
                 $attr['visible'] = true;
-                $attr['type'] = 'disabled';
+                $attr['type'] = 'readOnly';
                 if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
                     $staffShifts  = $InstitutionStaffShifts
