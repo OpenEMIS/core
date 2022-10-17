@@ -407,7 +407,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                         $total_student_mark_entry = $value['total_marks'];
                     }
                     $entity->marks_entered = $total_student_mark_entry;
-                    $entity->marks_not_entered = $total_student-$sum;
+                    $entity->marks_not_entered = abs($total_student-$sum);
                     $entity->marks_entery_per = ($total_student_mark_entry/$total_student)*100;
                 }
         return $entity->marks_entery_per;
