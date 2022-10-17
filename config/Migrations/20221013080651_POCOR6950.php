@@ -18,6 +18,8 @@ class POCOR6950 extends AbstractMigration
         $this->execute('INSERT INTO `zz_6950_staff_position_titles` SELECT * FROM `staff_position_titles`');
 
         $this->execute('ALTER TABLE `staff_position_titles` ADD `staff_position_categories_id` INT(11) NOT NULL AFTER `type`');
+        $this->execute('UPDATE staff_position_titles SET staff_position_categories_id = 1 WHERE type = 1');
+        $this->execute('UPDATE staff_position_titles SET staff_position_categories_id = 3 WHERE type = 0');
     }
 
     // rollback
