@@ -12,6 +12,7 @@ use Cake\I18n\Time;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Log\Log;
+use Cake\Datasource\ResultSetInterface;
 
 class InstitutionPositionsSummariesTable extends AppTable
 {
@@ -29,24 +30,19 @@ class InstitutionPositionsSummariesTable extends AppTable
         $this->belongsTo('Areas', ['className' => 'Institution.Areas']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 
-
         $this->addBehavior('Excel', [
             'autoFields' => false
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('AcademicPeriod.Period');
-
-
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-
         $academicperiodid = $requestData->academic_period_id;
         $area_level_id = $requestData->area_level_id;
-       
         $statusFilter = $requestData->status;  
 
         $institution_id = $requestData->institution_id;
@@ -56,31 +52,19 @@ class InstitutionPositionsSummariesTable extends AppTable
             $where[$this->aliasField('institution_id')] = $institution_id;
         }
 
-        if ($academicperiodid != -1) {
-            //find academic priod
-            $AcademicPeriodsTable = TableRegistry::get('academic_periods');
-            $AcademicPeriod = $AcademicPeriodsTable->find('all',['conditions'=>['id'=>$academicperiodid]])->first();
-            $where[$this->aliasField('start_year')] >= $AcademicPeriod->start_year;
-            //$where[$this->aliasField('end_year')] = $AcademicPeriod->start_year;
-            // if($this->aliasField('end_year') != null || !empty($this->aliasField('end_year'))  ){
-            //     $where[$this->aliasField('start_year')] = $AcademicPeriod->start_year;
-            //     $where[$this->aliasField('end_year')] = $AcademicPeriod->start_year;
-            // }else{
-            //     $where[$this->aliasField('start_year')] <= $AcademicPeriod->start_year;
-            // }
-            
-        }
         if ($statusFilter != 0) {
             $where[$this->aliasField('InstitutionPositions.status_id')] <= $statusFilter; 
         }
-        //$where[$this->aliasField('staff_status_id')] = $statusFilter; 
+
         if ($areaId != -1) {
             $where['Institutions.area_id'] = $areaId;
         }
 
-
         $query
         ->SELECT ([
+           'start_year' =>'start_year',
+           'end_year' =>'end_year',
+           'id' =>'InstitutionPositionsSummaries.id',
            'area_code' =>'Areas.code',
            'area_name' =>'Areas.name',
            'institutions_code' =>'Institutions.code',
@@ -97,40 +81,33 @@ class InstitutionPositionsSummariesTable extends AppTable
         ->where([$where])
         ->group(['Institutions.id','StaffPositionTitles.id','StaffPositionGrades.id'])
         ->order(['Areas.name','Institutions.name','StaffPositionTitles.name','StaffPositionGrades.name']);
-        //echo "<pre>";print_r($query->sql());die;
+        
+         $query->formatResults(function (ResultSetInterface $results) use ( $academicperiodid) {
+            return $results->map(function ($row) use ($academicperiodid) {
+               
+               $AcademicPeriodsTable = TableRegistry::get('academic_periods');
+               $AcademicPeriod = $AcademicPeriodsTable->find('all',['conditions'=>['id'=>$academicperiodid]])->first();
+                //Conditions
+                if(!empty($row->end_year) || ($row->end_year !=null)){
+                    if($AcademicPeriod->start_year >  $row->end_year ){
+                        unset($row);
+                    }
 
-        // $query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
-        // {
-        //     return $results->map(function ($row)
-        //     {
-        //         if($row['total_male'] == 0){ 
-        //             $row['total_male'] = '-';
-        //         }
-        //         if($row['total_female'] == 0){
-        //             $row['total_female'] = '-';
-        //         }
-        //         if($row['total'] == 0){
-        //             $row['total'] = '-';
-        //         }
-        //         return $row;
-        //     });
-        // });
-
+                }
+                return $row;
+            });
+        });
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-        
-
         $newFields = [];
-
         $newFields[] = [
             'key' => 'Areas.code',
             'field' => 'area_code',
             'type' => 'string',
             'label' => __('Area Code')
         ];
-
 
         $newFields[] = [
             'key' => 'Areas.name',
@@ -167,7 +144,6 @@ class InstitutionPositionsSummariesTable extends AppTable
             'label' => __('Category')
         ];
 
-
         $newFields[] = [
             'key' => '',
             'field' => 'total_male',
@@ -191,6 +167,5 @@ class InstitutionPositionsSummariesTable extends AppTable
 
         $fields->exchangeArray($newFields);
     }
-
 
 }
