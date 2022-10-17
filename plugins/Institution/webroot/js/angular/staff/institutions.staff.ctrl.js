@@ -137,6 +137,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             $window.localStorage.removeItem('birthplace_area_id')
         }
         StaffController.getGenders();
+        StaffController.getPostionTypes();
     });
 
     function saveStaffDetails() {
