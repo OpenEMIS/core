@@ -60,6 +60,7 @@ class FieldOptionComponent extends Component
         'StaffTypes' => ['className' => 'Staff.StaffTypes', 'parent' => 'Staff'],
         'StaffTrainingCategories' => ['className' => 'Staff.StaffTrainingCategories', 'parent' => 'Staff'],
         'StaffAttachmentTypes' => ['className' => 'Staff.StaffAttachmentTypes', 'parent' => 'Staff'], //START:POCOR-5067
+        'StaffPositionCategories' => ['className' => 'Staff.StaffPositionCategories', 'parent' => 'Staff'], //START:POCOR-6949
 
     // Finance
         'Banks' => ['className' => 'FieldOption.Banks', 'parent' => 'Finance'],

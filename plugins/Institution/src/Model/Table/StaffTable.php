@@ -1885,6 +1885,7 @@ class StaffTable extends ControllerActionTable
                     $currentDate = date('Y-m-d');
                     /**Getting staff present and late data*/
                     $StaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
+                    //echo "<pre>"; print_r($StaffAttendances);die;
                     $StaffAttendancesObj = $StaffAttendances->find()
                         ->select(['time_in' => $StaffAttendances->aliasField('time_in')])
                         ->where([
@@ -1894,6 +1895,7 @@ class StaffTable extends ControllerActionTable
                             $StaffAttendances->aliasField('time_in IS NOT NULL'),
                             $StaffAttendances->aliasField('time_out IS NOT NULL')
                         ])->first();
+
                     if (!empty($StaffAttendancesObj)) {
                         $time = date("H:i:s", strtotime($StaffAttendancesObj->time_in));
                         $StaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
@@ -1902,14 +1904,16 @@ class StaffTable extends ControllerActionTable
                             ->where([$StaffShifts->aliasField('staff_id') => $staffId])
                             ->toArray();
                         if (!empty($staffShiftObj)) {
-                            foreach ($staffShiftObj as  $value) {
-                               $data =  $InstitutionShifts->find()
+                            //POCOR-6900
+                            foreach ($staffShiftObj as $key => $value) {
+                                $data[$key] =  $InstitutionShifts->find('all')
                                     ->select(['start_time' => 'MIN(InstitutionShifts.start_time)'])
                                     ->where([$InstitutionShifts->aliasField('id') => $value->shift_id])
                                     ->first();
-                            }                           
-                            $staffShiftTime = date("H:i:s", strtotime($data->start_time));
-                            if ($time >= $staffShiftTime) {
+                            } 
+                                                    
+                            $staffShiftTime = date("H:i:s", strtotime($data[$key]->start_time));
+                            if ($time > $staffShiftTime) {
                                 $row->late = 1;
                             } else {
                                 $row->late = 0;
@@ -1923,11 +1927,12 @@ class StaffTable extends ControllerActionTable
                                 ])
                                 ->first();
                             $InstitutionShiftTime = date("H:i:s", strtotime($InstitutionShiftsObj->start_time));
-                            if ($time >= $InstitutionShiftTime) {
+                            if ($time > $InstitutionShiftTime) {
                                 $row->late = 1;
                             } else {
                                 $row->late = 0;
                             }
+                            //end of POCOR-6900 
                         }
                     }
                     if (isset($StaffAttendancesObj)) {
@@ -1949,12 +1954,14 @@ class StaffTable extends ControllerActionTable
                     } else {
                         $row->absent = 0;
                     }
+                    
                     return $row;
                 });
             });
+// echo "<pre>"; print_r($staffAttendances->sql());die;
         /**POCOR-6900 ends*/ 
         $attendanceData = [];
-
+       // print_r($attendanceData);die;
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
         $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
         $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
@@ -1962,10 +1969,12 @@ class StaffTable extends ControllerActionTable
         $total_present = $total_absent = $total_late = 0;
 
         foreach ($staffAttendances as $key => $attendance) {
+
             $total_present = $attendance->present + $total_present;
             $total_absent = $attendance->absent + $total_absent;
             $total_late = $attendance->late + $total_late;
         }
+        //echo "<pre>"; print_r($total_late);die;
         if (!empty($currentYear)) {
             $attendanceData[$currentYear] = $currentYear;
             $dataSet['Present']['data'][$currentYear] = $total_present;
@@ -1973,11 +1982,13 @@ class StaffTable extends ControllerActionTable
             $dataSet['Late']['data'][$currentYear] = $total_late;
         }
 
+
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => __('For Today'));
         $params['options']['xAxis']['categories'] = array_values($attendanceData);
         $params['dataSet'] = $dataSet;
         return $params;
+
     }
 
     // Functions that are migrated over
