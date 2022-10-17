@@ -191,6 +191,21 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                        'academic_term'=> 'AssessmentPeriods.academic_term',
                     ]
                 ],
+                'EducationGrades' => [
+                    'fields' => [
+                       'education_grade'=> 'EducationGrades.name',
+                    ]
+                ],
+                'InstitutionClasses' => [
+                    'fields' => [
+                       'class'=> 'InstitutionClasses.name',
+                    ]
+                ],
+                'EducationSubjects' => [
+                    'fields' => [
+                        'subject'=> 'EducationSubjects.name',
+                    ]
+                ],
             ])
             ->leftJoin(
                 [$Users->alias() => $Users->table()],
@@ -217,6 +232,24 @@ class InstitutionStandardMarksEnteredTable extends AppTable
             'field' => 'academic_period_name',
             'type'  => 'string',
             'label' => __('Academic Period'),
+        ];
+        $newFields[] = [
+            'key'   => 'education_grade',
+            'field' => 'education_grade',
+            'type'  => 'string',
+            'label' => __('Education Grade'),
+        ];
+        $newFields[] = [
+            'key'   => 'class',
+            'field' => 'class',
+            'type'  => 'string',
+            'label' => __('Class'),
+        ];
+        $newFields[] = [
+            'key'   => 'subject',
+            'field' => 'subject',
+            'type'  => 'string',
+            'label' => __('Subject'),
         ];
         $newFields[] = [
             'key'   => 'openemis_no',
@@ -305,6 +338,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
         $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $institutions = TableRegistry::get('Institution.Institutions');
+        $institutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $total = $studentSubject->find()
                 ->innerJoin(
                     [$academicPeriod->alias() => $academicPeriod->table()],
@@ -373,7 +407,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                         $total_student_mark_entry = $value['total_marks'];
                     }
                     $entity->marks_entered = $total_student_mark_entry;
-                    $entity->marks_not_entered = $total_student-$sum;
+                    $entity->marks_not_entered = abs($total_student - $sum);
                     $entity->marks_entery_per = ($total_student_mark_entry/$total_student)*100;
                 }
         return $entity->marks_entery_per;
