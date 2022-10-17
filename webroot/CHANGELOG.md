@@ -1,3 +1,14 @@
+### [3.75.32] - 2022-10-13
+- Implemented: Develop a new Field Option - Staff Position Categories
+- Bug Fixed: Report>Institution>Infrastructure: Changes to the Infrastructure Report
+- Bug Fixed: Institutions: Validation for single institution
+- Bug Fixed: Institutions>Dashboard: Dashboard are not reflecting Staff Attendance
+- Bug Fixed: API : Validation to add student should be the same as Interface
+- Bug Fixed: Institutions>Survey>Forms:Unable to import non mandatory survey questions
+- Bug Fixed: Institution > Survey > Form: Unable to save
+- Bug Fixed: Report>Institution: Student Attendance Summary Report is Empty
+- Bug Fixed: Administration>Survey>Forms: System removes old records from the institution_surveys
+
 ### [3.75.31.2] - 2022-10-11
 - Bug Fixed: Institutions>Students>Export: Students that are Repeated last year and Enrolled this year should show Enrolled (Repeater) in the report
 
