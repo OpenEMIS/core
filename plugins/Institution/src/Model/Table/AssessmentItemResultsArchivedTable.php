@@ -90,7 +90,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         } else {
             $staffId = $this->Session->read('Staff.Staff.id');
         }
-
+        
         $academic_period_result = $this->find('all', array(
             'fields'=>'academic_period_id',
             'group' => 'academic_period_id'
@@ -100,8 +100,11 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
                 $archived_academic_period_arr[] = $academic_period_data['academic_period_id'];
             }
         }
-
-        $periodOptions = $AcademicPeriod->getArchivedYearList($archived_academic_period_arr);
+        //POCOR-6799[START]
+        if(!empty($archived_academic_period_arr)){
+            $periodOptions = $AcademicPeriod->getArchivedYearList($archived_academic_period_arr);
+        }
+        //POCOR-6799[END]
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
         }
@@ -109,15 +112,12 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         $selectedassessment = $this->request->query['assessment_id'];
         $selectedAssessmentPeriods = $this->request->query['assessment_period_id'];
         $selectedClassId = $this->request->query['institution_class_id'];
-        // $selectedSubject = $this->request->query['education_subject_id'];
 
         $this->request->query['academic_period_id'] = $selectedPeriod;
         $this->request->query['assessment_id'] = $selectedassessment;
         $this->request->query['assessment_period_id'] = $selectedAssessmentPeriods;
         $this->request->query['institution_class_id'] = $selectedClassId;
-        // $this->request->query['education_subject_id'] = $selectedSubject;
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);
-        // echo "<pre>";print_r($this->request->query);die;
 
         if ($selectedPeriod != 0) {
             $todayDate = date("Y-m-d");
@@ -286,7 +286,6 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             // $subjectOptions = ['-1' => __('All Subjects')] + $subjectOptions;
             // $this->advancedSelectOptions($subjectOptions, $selectedSubject);
             // $this->controller->set(compact('subjectOptions', 'selectedSubject'));
-
             $Classes = TableRegistry::get('Institution.InstitutionClasses');
             $selectedAcademicPeriodId = $params['academic_period_id'];
 
