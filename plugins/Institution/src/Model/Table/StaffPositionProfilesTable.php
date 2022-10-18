@@ -443,7 +443,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         ->where([$StaffChangeTypes->aliasField('id') => $this->request->data['StaffPositionProfiles']['staff_change_type_id']])
                         ->first();
                         
-                        //echo "<pre>"; print_r($this->request->data());die;
+                       // echo "<pre>"; print_r($this->request->data());die;
 
                 if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
                     $event->stopPropagation();
