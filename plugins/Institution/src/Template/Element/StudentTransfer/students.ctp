@@ -50,7 +50,16 @@
 	                                            echo '<i class="fa fa-info-circle fa-lg table-tooltip icon-orange" data-animation="false" data-container="body" data-placement="top" data-toggle="tooltip" title="" data-original-title="' .$tooltipMessage. '"></i>';
 	                                    ?>
 										</td>
-                                    <?php    	
+                                    <?php //POCOR-7007 Starts   	
+                                        }elseif($attr['attr']['statusOptions'][$obj->student_status_id] == 'Graduated' && $obj->student_already_enrolled_in_same_institution == 0 && $obj->student_already_enrolled_in_other_institution == 1){
+                                    ?>
+                                    	<td class='checkbox-column tooltip-orange'>
+	                                    <?php
+	                                    		$tooltipMessage = __('This student has an Enrolled status in other Institution.');
+	                                            echo '<i class="fa fa-info-circle fa-lg table-tooltip icon-orange" data-animation="false" data-container="body" data-placement="top" data-toggle="tooltip" title="" data-original-title="' .$tooltipMessage. '"></i>';
+	                                    ?>
+										</td>
+                                    <?php //POCOR-7007 Ends
                                         }else{//POCOR-6982 Ends
                                     ?>
 	                                    <td class=<?=$tdClass;?>>
