@@ -549,8 +549,17 @@ class WorkflowActionsTable extends AppTable
             $subject = TableRegistry::get($registryAlias);
             $eventsObject = new ArrayObject();
             $subjectEvent = $subject->dispatchEvent('Workflow.getEvents', [$eventsObject], $subject);
-           // print_r($subject);die;
-           // print_r($subjectEvent);die;
+            //POCOR-7016 start
+            if($selectedWorkflow == 6){
+                unset($eventsObject[1]);
+                unset($eventsObject[2]);
+                $eventsObject = $eventsObject;
+            }else{
+                unset($eventsObject[3]);
+                unset($eventsObject[4]);
+                $eventsObject = $eventsObject;
+            }
+            //POCOR-7016 end
             if ($subjectEvent->isStopped()) {
                 return $subjectEvent->result;
             }
@@ -639,27 +648,5 @@ class WorkflowActionsTable extends AppTable
         return ($existingEventCount == 0);
     }
 
-    protected function getPositionEvent(){
-
-        $positionEvents = [
-            [
-                'value' => 'Workflow.onAssignBack',
-                'text' => 'Assign Back to Creator',
-                'description' => 'Performing this action will assign the current record back to creator.',
-                'method' => 'onAssignBack'
-            ],
-            [
-                'value' => 'Workflow.onAssignBackToScholarshipApplicant',
-                'text' => 'Assign back to Scholarship Applicant',
-                'description' => 'Performing this action will assign the current record back to scholarship applicant.',
-                'method' => 'onAssignBackToScholarshipApplicant'
-            ],
-            [
-                'value' => 'Workflow.onApprovalofStudentTransfer',
-                'text' => 'Approval of Student Transfer',
-                'description' => 'Performing this action students will be transferred.',
-                'method' => 'onApprovalofStudentTransfer'
-            ]
-        ];
-    }
+    
 }
