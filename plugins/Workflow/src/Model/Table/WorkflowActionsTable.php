@@ -15,6 +15,7 @@ class WorkflowActionsTable extends AppTable
     // Workflow Actions - action
     const APPROVE = 0;
     const REJECT = 1;
+    
 
     public function initialize(array $config)
     {
@@ -543,11 +544,13 @@ class WorkflowActionsTable extends AppTable
                     $Workflows->aliasField('id') => $selectedWorkflow
                 ])
                 ->first();
-
+             
             $registryAlias = $workflow->_matchingData['WorkflowModels']->model;
             $subject = TableRegistry::get($registryAlias);
             $eventsObject = new ArrayObject();
             $subjectEvent = $subject->dispatchEvent('Workflow.getEvents', [$eventsObject], $subject);
+           // print_r($subject);die;
+           // print_r($subjectEvent);die;
             if ($subjectEvent->isStopped()) {
                 return $subjectEvent->result;
             }
@@ -634,5 +637,29 @@ class WorkflowActionsTable extends AppTable
             ->count();
 
         return ($existingEventCount == 0);
+    }
+
+    protected function getPositionEvent(){
+
+        $positionEvents = [
+            [
+                'value' => 'Workflow.onAssignBack',
+                'text' => 'Assign Back to Creator',
+                'description' => 'Performing this action will assign the current record back to creator.',
+                'method' => 'onAssignBack'
+            ],
+            [
+                'value' => 'Workflow.onAssignBackToScholarshipApplicant',
+                'text' => 'Assign back to Scholarship Applicant',
+                'description' => 'Performing this action will assign the current record back to scholarship applicant.',
+                'method' => 'onAssignBackToScholarshipApplicant'
+            ],
+            [
+                'value' => 'Workflow.onApprovalofStudentTransfer',
+                'text' => 'Approval of Student Transfer',
+                'description' => 'Performing this action students will be transferred.',
+                'method' => 'onApprovalofStudentTransfer'
+            ]
+        ];
     }
 }
