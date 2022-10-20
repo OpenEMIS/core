@@ -1663,11 +1663,11 @@ class InstitutionClassesTable extends ControllerActionTable
                             ->order([
                                 $Staff->Users->aliasField('first_name')
                             ]);
-                            if($homeTeacher) {
+                            //if($homeTeacher) {
                                 $query  ->matching('Positions', function ($q) {
                                     return $q->where(['Positions.is_homeroom' => 1]);
                                 });
-                            }
+                            //}   //POCOR-7014
                             $query->formatResults(function ($results) {
                                 $returnArr = [];
                                 foreach ($results as $result) {

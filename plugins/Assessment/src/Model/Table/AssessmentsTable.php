@@ -544,6 +544,7 @@ class AssessmentsTable extends ControllerActionTable {
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($filepath));
         echo file_get_contents($filepath);
+        exit(); //POCOR-7027
     }  
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
