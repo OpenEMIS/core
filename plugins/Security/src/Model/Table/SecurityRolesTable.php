@@ -774,4 +774,26 @@ class SecurityRolesTable extends ControllerActionTable
         }
     }
 
+    /*
+    * Function to get logged in user's role list
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * return @array
+    * @ticket POCOR-6800
+    */
+    public function getLoggedInUserRoles($userId = null)
+    {
+        $roles = [];
+        $usersGroup = TableRegistry::get('Security.SecurityGroupUsers');
+        $userRoles = $usersGroup
+                    ->find()
+                    ->where([$usersGroup->aliasField('security_user_id') => $userId ])
+                    ->toArray();
+        if (!empty($userRoles)) {
+            foreach ($userRoles as $role) {
+                $roles[] = $role->security_role_id;
+            }
+        }
+        return (!empty($roles))? $roles: null;
+    }
+
 }
