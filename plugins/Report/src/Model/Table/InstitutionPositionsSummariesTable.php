@@ -45,6 +45,8 @@ class InstitutionPositionsSummariesTable extends AppTable
         $area_level_id = $requestData->area_level_id;
         $statusFilter = $requestData->status;  
 
+        $AcademicPeriodsTable = TableRegistry::get('academic_periods');
+
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
         $where = [];
@@ -55,6 +57,9 @@ class InstitutionPositionsSummariesTable extends AppTable
         if ($statusFilter != 0) {
             $where[$this->aliasField('InstitutionPositions.status_id')] <= $statusFilter; 
         }
+        if ($academicperiodid != -1) {
+            $where[$AcademicPeriodsTable->aliasField('id')] = $academicperiodid; 
+        }
 
         if ($areaId != -1) {
             $where['Institutions.area_id'] = $areaId;
@@ -62,8 +67,8 @@ class InstitutionPositionsSummariesTable extends AppTable
 
         $query
         ->SELECT ([
-           'start_year' =>'start_year',
-           'end_year' =>'end_year',
+           'start_year' =>'InstitutionPositionsSummaries.start_year',
+           'end_year' =>'InstitutionPositionsSummaries.end_year',
            'id' =>'InstitutionPositionsSummaries.id',
            'area_code' =>'Areas.code',
            'area_name' =>'Areas.name',
@@ -78,25 +83,51 @@ class InstitutionPositionsSummariesTable extends AppTable
            'total' => "( SUM(CASE WHEN Staffs.gender_id in (1,2 ) THEN 1 ELSE 0 END) )",
         ])
         ->contain(['InstitutionPositions','InstitutionPositions.StaffPositionTitles','InstitutionPositions.StaffPositionGrades','Institutions.Areas','Staffs' ])
+
+        ->innerJoin(
+            [$AcademicPeriodsTable->alias() => $AcademicPeriodsTable->table()],
+            [
+                
+                ['OR'=>[
+
+                    'OR'=>[
+                            [
+                                $this->aliasField('end_date IS NOT NULL') ,
+                                $this->aliasField('start_date <=') .$AcademicPeriodsTable->aliasField('start_date'),
+                                $this->aliasField('end_date >=') .$AcademicPeriodsTable->aliasField('start_date'),
+                            ],
+                            [
+                                $this->aliasField('end_date IS NOT NULL') ,
+                                $this->aliasField('start_date <=') .$AcademicPeriodsTable->aliasField('end_date'),
+                                $this->aliasField('end_date >=') .$AcademicPeriodsTable->aliasField('end_date'),
+                            ],
+                            [
+                                $this->aliasField('end_date IS NOT NULL') ,
+                                $this->aliasField('start_date >=') .$AcademicPeriodsTable->aliasField('start_date'),
+                                $this->aliasField('end_date <=') .$AcademicPeriodsTable->aliasField('end_date'),
+                            ]
+                        ],
+                    
+                    
+                        ['AND'=>
+
+                            [
+                                $this->aliasField('end_date IS NULL') ,
+                                $this->aliasField('start_date <=') .$AcademicPeriodsTable->aliasField('end_date'),
+                            // $this->aliasField('end_date >=') .$AcademicPeriodsTable->aliasField('start_date'),
+                            ]
+                        
+                        ]
+                ]
+                ]
+                
+
+            ]
+        )
         ->where([$where])
         ->group(['Institutions.id','StaffPositionTitles.id','StaffPositionGrades.id'])
         ->order(['Areas.name','Institutions.name','StaffPositionTitles.name','StaffPositionGrades.name']);
         
-         $query->formatResults(function (ResultSetInterface $results) use ( $academicperiodid) {
-            return $results->map(function ($row) use ($academicperiodid) {
-               
-               $AcademicPeriodsTable = TableRegistry::get('academic_periods');
-               $AcademicPeriod = $AcademicPeriodsTable->find('all',['conditions'=>['id'=>$academicperiodid]])->first();
-                //Conditions
-                if(!empty($row->end_year) || ($row->end_year !=null)){
-                    if($AcademicPeriod->start_year >  $row->end_year ){
-                        unset($row);
-                    }
-
-                }
-                return $row;
-            });
-        });
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
