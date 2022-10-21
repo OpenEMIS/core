@@ -292,6 +292,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
             ->extract('education_grade_id')
             ->toArray();
+            //print_r($availableGrades);die;
 
         // Report Cards filter
         $reportCardOptions = [];
