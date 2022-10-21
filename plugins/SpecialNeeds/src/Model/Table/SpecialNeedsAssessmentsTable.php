@@ -50,6 +50,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
+            ->notEmpty('assessor_id')
             ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
                 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
@@ -71,7 +72,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             case 'special_need_type_id':
                 return __('Type');
             case 'special_need_difficulty_id':
-                return __('Level of Disability');
+                return __('Difficulty');
             case 'assessor_id':
                 return __('Assessor Name');  //POCOR-6873
             default:
@@ -156,8 +157,57 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('comment', ['type' => 'text']);
 
-        $this->setFieldOrder(['date', 'special_need_type_id', 'special_need_difficulty_id','assessor_id','file_name', 'file_content', 'comment']); //POCOR-6873
+        $this->setFieldOrder(['date', 'assessor_id', 'special_need_type_id', 'special_need_difficulty_id','file_name', 'file_content', 'comment']); //POCOR-6873
     }
+
+    //POCOR-6873[START]
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key' => '',
+            'field' => 'date',
+            'type' => 'date',
+            'label' => __('Date')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'file_name',
+            'type' => 'string',
+            'label' => __('File Name')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'comment',
+            'type' => 'string',
+            'label' => __('Comment')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'special_need_type_id',
+            'type' => 'string',
+            'label' => __('Special Need Type')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'special_need_difficulty_id',
+            'type' => 'string',
+            'label' => __('Difficulty')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'security_user_id',
+            'type' => 'string',
+            'label' => __('Security User')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'assessor_id',
+            'type' => 'string',
+            'label' => __('Assessor Name')
+        ];
+        $fields->exchangeArray($extraField);
+    }
+    //POCOR-6873[END]
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
