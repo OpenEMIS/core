@@ -186,10 +186,14 @@ class FieldOptionComponent extends Component
         'SpecialNeedsDifficulties' => ['className' => 'SpecialNeeds.SpecialNeedsDifficulties', 'parent' => 'Special Needs'],
         'SpecialNeedsReferrerTypes' => ['className' => 'SpecialNeeds.SpecialNeedsReferrerTypes', 'parent' => 'Special Needs'],
         'SpecialNeedsServiceTypes' => ['className' => 'SpecialNeeds.SpecialNeedsServiceTypes', 'parent' => 'Special Needs'],
+
         'SpecialNeedsDeviceTypes' => ['className' => 'SpecialNeeds.SpecialNeedsDeviceTypes', 'parent' => 'Special Needs'],
         'PlanTypes' => ['className' => 'SpecialNeeds.SpecialNeedsPlanTypes', 'parent' => 'Special Needs'],   //POCOR-6873
-        'DiagnosisTypes' => ['className' => 'SpecialNeeds.SpecialNeedsDiagnosisTypes', 'parent' => 'Special Needs'],  //POCOR-6873
-        'DiagnosisLevels' => ['className' => 'SpecialNeeds.SpecialNeedsDiagnosisLevels', 'parent' => 'Special Needs']  //POCOR-6873
+        'DiagnosticTypeOfDisability' => ['className' => 'SpecialNeeds.SpecialNeedsDiagnosisTypes', 'parent' => 'Special Needs'],  //POCOR-6873
+        'DiagnosticDisabilityDegree' => ['className' => 'SpecialNeeds.SpecialNeedsDiagnosisDegree', 'parent' => 'Special Needs'],  //POCOR-6873
+        // 'DiagnosisLevels' => ['className' => 'SpecialNeeds.SpecialNeedsDiagnosisLevels', 'parent' => 'Special Needs'],  //POCOR-6873
+
+        'SpecialNeedsServiceClassification' => ['className' => 'SpecialNeeds.SpecialNeedsServiceClassification', 'parent' => 'Special Needs'] //POCOR-6873
     ];
 
     public $components = ['AccessControl'];

@@ -13,7 +13,7 @@ class SpecialNeedsBehavior extends Behavior
         'SpecialNeedsServices' => 'Services',
         'SpecialNeedsDevices' => 'Devices',
         'SpecialNeedsPlans' => 'Plans',
-        'SpecialNeedsDiagnosis' => 'Diagnosis'
+        'SpecialNeedsDiagnosis' => 'Diagnostic'
     ];
 
     private $_sessionReadKeys = [

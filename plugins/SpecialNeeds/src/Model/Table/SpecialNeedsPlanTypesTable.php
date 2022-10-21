@@ -14,4 +14,13 @@ class SpecialNeedsPlanTypesTable extends ControllerActionTable
             'PlanTypes' => ['index', 'view']
         ]);
     }
+
+    public function getPlanTypeList($params = [])
+    {
+
+        $data = $this
+            ->find('list')
+            ->toArray();
+        return $data;
+    }
 }

@@ -1,0 +1,335 @@
+<?php
+use Migrations\AbstractMigration;
+
+class POCOR6873 extends AbstractMigration
+{
+    /**
+     * Change Method.
+     *
+     * More information on this method is available here:
+     * http://docs.phinx.org/en/latest/migrations.html#the-change-method
+     * @return void
+     */
+    public function up()
+    {
+        // Backup locale_contents table
+        $this->execute('CREATE TABLE `zz_6873_locale_contents` LIKE `locale_contents`');
+        $this->execute('INSERT INTO `zz_6873_locale_contents` SELECT * FROM `locale_contents`');
+
+        $this->execute('CREATE TABLE `zz_6873_user_special_needs_assessments` LIKE `user_special_needs_assessments`');
+        $this->execute('INSERT INTO `zz_6873_user_special_needs_assessments` SELECT * FROM `user_special_needs_assessments`');
+
+        $this->execute('CREATE TABLE `zz_6873_user_special_needs_services` LIKE `user_special_needs_services`');
+        $this->execute('INSERT INTO `zz_6873_user_special_needs_services` SELECT * FROM `user_special_needs_services`');
+
+        /**inserting data into locale_contents table*/
+        $localeContent = [
+            [
+                'en' => 'Diagnosis',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Diagnosis Types',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Diagnosis Degree',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]
+
+        ];
+        $this->insert('locale_contents', $localeContent);
+
+        $this->execute("CREATE TABLE `special_needs_plan_types` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+            `order` int(3) NOT NULL,
+            `visible` int(1) NOT NULL DEFAULT '1',
+            `editable` int(1) NOT NULL DEFAULT '1',
+            `default` int(1) NOT NULL DEFAULT '0',
+            `international_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `national_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `modified_user_id` int(11) DEFAULT NULL,
+            `modified` datetime DEFAULT NULL,
+            `created_user_id` int(11) NOT NULL,
+            `created` datetime NOT NULL,
+            PRIMARY KEY (`id`)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of special needs devices types used in user_special_needs_devices'");
+
+
+        /**inserting data into special_needs_plan_types table*/
+        $data = [
+            [
+                'name'  => 'Braille terminal',
+                'order'  => '1',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Hearing aid',
+                'order'  => '2',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Mobility aid',
+                'order'  => '3',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Cognitive assistance',
+                'order'  => '4',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+
+        $this->insert('special_needs_plan_types', $data);
+
+
+
+        //
+        $this->execute('ALTER TABLE `user_special_needs_assessments` ADD `assessor_id` INT NULL DEFAULT NULL AFTER `security_user_id`');
+
+        //
+        $this->execute('ALTER TABLE `user_special_needs_services` ADD `special_needs_service_classification_id` INT NOT NULL AFTER `special_needs_service_type_id`');
+
+
+        //
+        $this->execute("CREATE TABLE `user_special_needs_diagnosis` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `date` date NOT NULL,
+            `file_name` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `file_content` longblob,
+            `comment` text COLLATE utf8mb4_unicode_ci,
+            `special_needs_diagnosis_type_id` int(11) NOT NULL COMMENT 'links to special_needs_diagnostics_types.id',
+            `special_needs_diagnosis_degree_id` int(11) NOT NULL COMMENT 'links to special_needs_diagnostics_levels.id',
+            `security_user_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+            `modified_user_id` int(11) DEFAULT NULL,
+            `modified` datetime DEFAULT NULL,
+            `created_user_id` int(11) NOT NULL,
+            `created` datetime NOT NULL,
+             PRIMARY KEY (`id`)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all special needs assessments for all users'");
+
+        //
+
+        $this->execute("CREATE TABLE `special_needs_diagnosis_types` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+            `order` int(3) NOT NULL,
+            `visible` int(1) NOT NULL DEFAULT '1',
+            `editable` int(1) NOT NULL DEFAULT '1',
+            `default` int(1) NOT NULL DEFAULT '0',
+            `international_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `national_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `modified_user_id` int(11) DEFAULT NULL,
+            `modified` datetime DEFAULT NULL,
+            `created_user_id` int(11) NOT NULL,
+            `created` datetime NOT NULL,
+            PRIMARY KEY (`id`)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of special needs devices types used in user_special_needs_devices'");
+
+
+        /**inserting data into locale_contents table*/
+        $dataForDisability = [
+            [
+                'name'  => 'Mobility and Physical Impairments',
+                'order'  => '1',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Spinal Cord Disability',
+                'order'  => '2',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Head Injuries - Brain Disability',
+                'order'  => '3',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Vision Disability',
+                'order'  => '4',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Hearing Disability',
+                'order'  => '4',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Cognitive or Learning Disabilities',
+                'order'  => '4',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Psychological Disorders',
+                'order'  => '4',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Invisible Disabilities',
+                'order'  => '4',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+
+        $this->table('special_needs_diagnosis_types')->insert($dataForDisability)->save(); 
+
+        //
+        
+        $this->execute("CREATE TABLE `special_needs_diagnosis_degree` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+            `order` int(3) NOT NULL,
+            `visible` int(1) NOT NULL DEFAULT '1',
+            `editable` int(1) NOT NULL DEFAULT '1',
+            `default` int(1) NOT NULL DEFAULT '0',
+            `international_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `national_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `modified_user_id` int(11) DEFAULT NULL,
+            `modified` datetime DEFAULT NULL,
+            `created_user_id` int(11) NOT NULL,
+            `created` datetime NOT NULL,
+             PRIMARY KEY (`id`)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of special needs devices types used in user_special_needs_devices'");
+
+
+        $dataForDisabilityDegree = [
+            [
+                'name'  => 'Upper limb(s) disability',
+                'order'  => '1',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Lower limb(s) disability',
+                'order'  => '2',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Manual dexterity',
+                'order'  => '3',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name'  => 'Disability in co-ordination with different organs of the body',
+                'order'  => '4',
+                'visible'  => '1',
+                'editable'  => '1',
+                'default'  => '0',
+                'international_code'  => '',
+                'national_code' => '',
+                'created_user_id' => '2',
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+
+        $this->table('special_needs_diagnosis_degree')->insert($dataForDisabilityDegree)->save(); 
+
+
+    }
+
+    //rollback
+    public function down()
+    {
+        $this->execute('DROP TABLE IF EXISTS `locale_contents`');
+        $this->execute('RENAME TABLE `zz_6873_locale_contents` TO `locale_contents`'); 
+
+        $this->execute('DROP TABLE IF EXISTS `user_special_needs_assessments`');
+        $this->execute('RENAME TABLE `zz_6873_user_special_needs_assessments` TO `user_special_needs_assessments`'); 
+
+        $this->execute('DROP TABLE IF EXISTS `user_special_needs_services`');
+        $this->execute('RENAME TABLE `zz_6873_user_special_needs_services` TO `user_special_needs_services`'); 
+    }
+}
