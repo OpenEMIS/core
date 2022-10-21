@@ -453,7 +453,14 @@ class InstitutionClassesTable extends ControllerActionTable
                     }
                 }
             }
-
+            /**POCOR-6940 starts - modified condition when bulk student unassigned*/ 
+            else {
+                $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+                $SubjectStudents->deleteAll([
+                    $SubjectStudents->aliasField('institution_class_id') => $entity->id
+                ]);
+            }
+            /**POCOR-6940 ends*/ 
             // POCOR-5436 ->Webhook Feature class (update) -- start
             $bodyData = $this->find('all',
                         [ 'contain' => [
@@ -1656,11 +1663,11 @@ class InstitutionClassesTable extends ControllerActionTable
                             ->order([
                                 $Staff->Users->aliasField('first_name')
                             ]);
-                            if($homeTeacher) {
+                            //if($homeTeacher) {
                                 $query  ->matching('Positions', function ($q) {
                                     return $q->where(['Positions.is_homeroom' => 1]);
                                 });
-                            }
+                            //}   //POCOR-7014
                             $query->formatResults(function ($results) {
                                 $returnArr = [];
                                 foreach ($results as $result) {

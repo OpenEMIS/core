@@ -464,8 +464,13 @@ class ExcelBehavior extends Behavior
                                    ]);
                             //->first();
         foreach ($ConfigItem->toArray() as $value) {
-        $timezone =  $value['zonevalue']; 
-        date_default_timezone_set($timezone);
+            if (!empty($value['zonevalue'])) {
+                $timezone =  $value['zonevalue']; 
+                date_default_timezone_set($timezone);
+            }
+            else{
+                date_default_timezone_set('Europe/London');  //POCOR-6819
+            }
         }      
         // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>              
         $footer = [__("Report Generated") . ": "  . date("Y-m-d H:i:s")];
@@ -593,6 +598,7 @@ class ExcelBehavior extends Behavior
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($path));
         echo file_get_contents($path);
+        exit(); //POCOR-6881
     }
 
     private function purge($path)

@@ -267,19 +267,20 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $subjects = $requestData->subjects;
         $education_grade_id = $requestData->education_grade_id;
         $attendance_type = $requestData->attendance_type; 
-        $periods = $requestData->periods; 
+        //$periods = $requestData->periods; 
         $areaId = $requestData->area_education_id;
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
-        $attendanceTypeCode = '';
-        if (!empty($attendance_type)) {
-                $attendanceTypeData = $StudentAttendanceTypes
-                                        ->find()
-                                        ->where([
-                                            $StudentAttendanceTypes->aliasField('id') => $attendance_type
-                                        ])
-                                        ->toArray();
-                $attendanceTypeCode = $attendanceTypeData[0]->code;
-            }
+        // POCOR-6967
+        // $attendanceTypeCode = '';
+        // if (!empty($attendance_type)) {
+        //         $attendanceTypeData = $StudentAttendanceTypes
+        //                                 ->find()
+        //                                 ->where([
+        //                                     $StudentAttendanceTypes->aliasField('id') => $attendance_type
+        //                                 ])
+        //                                 ->toArray();
+        //         $attendanceTypeCode = $attendanceTypeData[0]->code;
+        //     }
         $this->reportStartDate = (new Date($requestData->report_start_date))->format('Y-m-d');
         $this->reportEndDate = (new Date($requestData->report_end_date))->format('Y-m-d');
 
@@ -299,9 +300,9 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         }
         }
 
-        if ($periods != 0) {
-            $where['StudentAttendanceMarkedRecords.period'] = $periods;
-        }
+        // if ($periods != 0) {
+        //     $where['StudentAttendanceMarkedRecords.period'] = $periods;
+        // }
         if ($areaId != -1) {
             $where['Institutions.area_id'] = $areaId;
         }
@@ -314,7 +315,8 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
         $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');       
 
-        if ($attendanceTypeCode == 'DAY') {
+        // POCOR-6967
+        //if ($attendanceTypeCode == 'DAY') {
             $query
             ->select([
                 $this->aliasField('id'),
@@ -339,6 +341,8 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 'total_female_students' => 'ClassAttendanceMarkedSummaryReport.total_female_students',
                 'total_students' => $query->newExpr('ClassAttendanceMarkedSummaryReport.total_male_students + ClassAttendanceMarkedSummaryReport.total_female_students'),
                 'period' => 'StudentAttendanceMarkedRecords.period',
+                'subject_id' => 'InstitutionSubjects.id',
+                'subject_name' => 'InstitutionSubjects.name',
                 'total_marked' => $query->func()->count('StudentAttendanceMarkedRecords.period')
             ])
             ->contain([
@@ -361,6 +365,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 ],
                 'Staff' => [
                     'fields' => [
+                        'Staff.id',
                         'Staff.openemis_no',
                         'Staff.first_name',
                         'Staff.middle_name',
@@ -373,7 +378,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             ['StudentAttendanceMarkedRecords' => 'student_attendance_marked_records'],
             [
                 'StudentAttendanceMarkedRecords.institution_class_id = '. $this->aliasField('id'),
-                'StudentAttendanceMarkedRecords.subject_id' => 0
+                'StudentAttendanceMarkedRecords.period'
             ]
             )
             ->leftJoin(
@@ -382,79 +387,6 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 'InstitutionClassGrades.institution_class_id = '. $this->aliasField('id')
             ]
             )
-            ->where([
-                'ClassAttendanceMarkedSummaryReport.academic_period_id' => $academic_period_id,
-                $StudentAttendanceMarkedRecords->aliasField('date >= "') . $this->reportStartDate . '"',
-                $StudentAttendanceMarkedRecords->aliasField('date <= "') . $this->reportEndDate . '"',
-                $where
-            ])
-            ->group([
-                'ClassAttendanceMarkedSummaryReport.id',
-                'StudentAttendanceMarkedRecords.period'
-            ])
-            ->order([
-                'AcademicPeriods.order',
-                'Institutions.code',
-                'ClassAttendanceMarkedSummaryReport.id',
-                'StudentAttendanceMarkedRecords.period'
-            ]);
-        } else {
-        $query
-            ->select([
-                $this->aliasField('id'),
-                'academic_period_id' => 'ClassAttendanceMarkedSummaryReport.academic_period_id',
-                'institution_code' => 'Institutions.code',
-                'institution_name' => 'Institutions.name',
-                'institution_type' => 'Types.name',
-                'area_name' => 'Areas.name',
-                'area_code' => 'Areas.code',
-                'area_administrative_code' => 'AreaAdministratives.code',
-                'area_administrative_name' => 'AreaAdministratives.name',
-                'shift_name' => 'ShiftOptions.name',
-                'name' => 'ClassAttendanceMarkedSummaryReport.name',
-                'staff_name' => $query->func()->concat([
-                    'Staff.openemis_no' => 'literal',
-                    " - ",
-                    'Staff.first_name' => 'literal',
-                    " ",
-                    'Staff.last_name' => 'literal'
-                ]),
-                'total_male_students' => 'ClassAttendanceMarkedSummaryReport.total_male_students',
-                'total_female_students' => 'ClassAttendanceMarkedSummaryReport.total_female_students',
-                'total_students' => $query->newExpr('ClassAttendanceMarkedSummaryReport.total_male_students + ClassAttendanceMarkedSummaryReport.total_female_students'),
-                'subject_id' => 'InstitutionSubjects.id',
-                'subject_name' => 'InstitutionSubjects.name',
-                'total_marked' => $query->func()->count('StudentAttendanceMarkedRecords.subject_id')
-            ])
-            ->contain([
-                'AcademicPeriods' => [
-                    'fields' => [
-                        'AcademicPeriods.name'
-                    ]
-                ],
-                'Institutions.Types',
-                'Institutions.Areas',
-                'Institutions.AreaAdministratives',
-                'InstitutionShifts.ShiftOptions',
-                'EducationGrades' => [
-                    'fields' => [
-                        'InstitutionClassGrades.institution_class_id',
-                        'EducationGrades.id',
-                        'EducationGrades.code',
-                        'EducationGrades.name'
-                    ]
-                ],
-                'Staff' => [
-                    'fields' => [
-                        'Staff.id',
-                        'Staff.openemis_no',
-                        'Staff.first_name',
-                        'Staff.middle_name',
-                        'Staff.third_name',
-                        'Staff.last_name'
-                    ]
-                ]
-            ])
             ->leftJoin(
             ['InstitutionClassSubjects' => 'institution_class_subjects'],
             [
@@ -467,12 +399,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 'InstitutionSubjects.id = InstitutionClassSubjects.institution_subject_id'
             ]
             )
-            ->innerJoin(
-            ['StudentAttendanceMarkedRecords' => 'student_attendance_marked_records'],
-            [
-                'StudentAttendanceMarkedRecords.subject_id = InstitutionClassSubjects.institution_subject_id'
-            ]
-            )
+
             ->where([
                 'ClassAttendanceMarkedSummaryReport.academic_period_id' => $academic_period_id,
                 $StudentAttendanceMarkedRecords->aliasField('date >= "') . $this->reportStartDate . '"',
@@ -480,15 +407,21 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 $where
             ])
             ->group([
-                'InstitutionSubjects.id'
+                'ClassAttendanceMarkedSummaryReport.id',
+                'StudentAttendanceMarkedRecords.period',
+                //'InstitutionSubjects.id'
             ])
             ->order([
                 'AcademicPeriods.order',
                 'Institutions.code',
-                'ClassAttendanceMarkedSummaryReport.id'
+                'ClassAttendanceMarkedSummaryReport.id',
+                'StudentAttendanceMarkedRecords.period'
             ]);
-        }            
+
+        // end POCOR-6967
+          
     }
+    
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {

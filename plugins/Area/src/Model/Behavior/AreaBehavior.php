@@ -46,9 +46,52 @@ class AreaBehavior extends Behavior {
 				$Table = TableRegistry::get('Institution.InstitutionShifts');
 			}
 			if (!empty($options['table'])) {
-				if (!empty($options['conditionCheck']['alternative_name']) && !empty($options['shift_option_id'])) {
-					return $query;
-				}
+				//start POCOR-6797
+				if (!empty($options['conditionCheck']['alternative_name'] == 2) && !empty($options['shift_option_id'])) {
+					$tableAlias = $options['columnName'].'institution_shifts';
+					$InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+					$academicPeriod = $this->getCurrent();
+					$conditions = [];
+					if (!empty($academicPeriod)) {
+						$conditions[$InstitutionShifts->aliasField('academic_period_id')] = $academicPeriod;
+					}
+					if (!empty($options['shift_option_id'])) {
+						$conditions[$InstitutionShifts->aliasField('shift_option_id')] = $options['shift_option_id'];
+					}
+					$data = $InstitutionShifts->find('all')
+							->select(['institution_id','location_institution_id',
+								'shift_ownershipss' => '(
+								CASE
+								WHEN '.$InstitutionShifts->aliasField('institution_id = location_institution_id').' THEN '."false".'
+								ELSE '."true".'
+								END
+							  )',
+							])
+							->where([$conditions])
+							->group('location_institution_id');
+							//->toArray();
+
+					$institutionId = [];
+					foreach ($data as $key => $value) {
+						if ($value->shift_ownershipss == 1){
+							$institutionId [] =$value->location_institution_id;
+						}
+					}
+			
+					$institutionId = !empty($institutionId) ? $institutionId : 0; 
+					$query->LeftJoin([ $tableAlias => $options['table']], [
+						$tableAlias.'.location_institution_id = '. $this->_table->alias().'.id'
+					])
+					->LeftJoin(['ShiftOptions' => 'shift_options'], [
+						'ShiftOptions.id = '. $tableAlias.'.shift_option_id',
+						$tableAlias.'.shift_option_id =' => $options['shift_option_id'],
+					])
+					->where([$tableAlias.'.shift_option_id =' => $options['shift_option_id'],
+								$tableAlias.'.location_institution_id IN' => $institutionId
+							])
+					->group($tableAlias.'.location_institution_id');
+					
+				}//end POCOR-6797
 				else{
 					$tableAlias = $options['columnName'].'institution_shifts';
 					$query->LeftJoin([ $tableAlias => $options['table']], [
@@ -124,8 +167,8 @@ class AreaBehavior extends Behavior {
 
 					if (!empty($institutionId)) {
 						$query->LeftJoin([ $tableAlias => $options['table']], [
-							$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
-						])
+							$tableAlias.'.location_institution_id = '. $this->_table->alias().'.id'
+						])//POCOR-6797
 						->where([$tableAlias.'.location_institution_id IN' => $institutionId])
 						->group($tableAlias.'.location_institution_id');
 					}

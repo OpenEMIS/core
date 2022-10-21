@@ -67,7 +67,6 @@ class WebhooksTable extends Table
 
     public function triggerShell($eventKey, $params = [], $body = [])
     { 
-		
         $webhooks = $this->find()
             ->innerJoinWith('WebhookEvents')
             ->where([

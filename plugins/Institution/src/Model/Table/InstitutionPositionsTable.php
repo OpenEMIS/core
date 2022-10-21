@@ -14,9 +14,9 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Collection\Collection;
 use Cake\Datasource\ResultSetInterface;
-
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Log\Log;
 
 class InstitutionPositionsTable extends ControllerActionTable
 {
@@ -37,7 +37,11 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
 
+        /*$this->belongsTo('InstitutionStaffs', ['className' => 'Institution.Staff', 'foreignKey' => 'institution_position_id',]);*/
+
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+
         $this->hasMany('StaffPositions', ['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferIn', ['className' => 'Institution.StaffTransferIn', 'foreignKey' => 'new_institution_position_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Workflow.Workflow');
@@ -855,62 +859,182 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $query;
     }
 
+    /**
+     * POCOR-6820 change in query get position number and associated staff
+    */
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $query
             ->select([
-                'openemis_no' => 'Users.openemis_no',
-                'staff_id' => 'InstitutionStaff.staff_id',
-                'fte' => 'InstitutionStaff.FTE',
-                'staff_status' => 'StaffStatuses.name',
-                'identity_type' => 'IdentityTypes.name',
-                'identity_number' => 'Users.identity_number'
+               'id'=> $this->aliasField('id'),
+                $this->aliasField('status_id'),
+               'position_no'=> $this->aliasField('position_no'),
+                $this->aliasField('staff_position_title_id'),
+                $this->aliasField('staff_position_grade_id'),
+                $this->aliasField('assignee_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('is_homeroom'),
+                $this->aliasField('created')
             ])
-            ->where([$this->aliasField('institution_id') => $institutionId])
-            ->leftJoinWith('InstitutionStaff.Users.IdentityTypes')
-            ->leftJoinWith('InstitutionStaff.StaffStatuses');
+            ->where([$this->aliasField('institution_id')=>$institutionId]);
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+                    $position = TableRegistry::get('Institution.InstitutionPositions');
+                    $data = $position->find()
+                    ->select([
+                        'status_name'=>'Statuses.name',
+                        //'staff_id'=>$position->aliasField('staff_id'),
+                        'titles'=>'StaffPositionTitles.name',
+                        'grades'=>'StaffPositionGrades.name',
+                        'institution_name' => 'Institutions.name',
+                        'assignees_name' => $position->find()->func()->concat([
+                            'Assignees.first_name' => 'literal',
+                            " ",
+                            'Assignees.middle_name' => 'literal',
+                            " ",
+                            'Assignees.third_name' => 'literal',
+                            " ",
+                            'Assignees.last_name' => 'literal',
+
+                        ]),
+                    ])
+                    ->contain([
+                    'Statuses' => [
+                        'fields' => [
+                            'Statuses.id',
+                            'status_name'=>'Statuses.name'
+                        ]
+                    ],
+                    'StaffPositionTitles'=> [
+                        'fields' => [
+                            'StaffPositionTitles.id',
+                           'titles'=> 'StaffPositionTitles.name',
+                            'StaffPositionTitles.order'
+                        ]
+                    ],
+                    'StaffPositionGrades'=> [
+                        'fields' => [
+                            'StaffPositionGrades.id',
+                          'grades'=>  'StaffPositionGrades.name',
+                            'StaffPositionGrades.order'
+                        ]
+                    ],
+                    'Institutions'=> [
+                        'fields' => [
+                            'Institutions.id',
+                          'institution_name'=>  'Institutions.name',
+                            'Institutions.code'
+                        ]
+                    ],
+                    'Assignees'=> [
+                        'fields' => [
+                            'Assignees.id',
+                            'Assignees.first_name',
+                            'Assignees.middle_name',
+                            'Assignees.third_name',
+                            'Assignees.last_name',
+                        ]
+                    ],
+                    
+                ])
+                ->where([$position->aliasField('id') => $row['id']])
+                ->first();
+                if(!empty($data)){
+                    $row['status_name'] = $data->status_name;
+                    $row['titles'] = $data->titles;
+                    $row['grades'] = $data->grades;
+                    $row['institution_name'] = $data->titles;
+                    $row['assignees_name'] = $data->assignees_name;
+                }
+
+                return $row;
+            });
+        });
+            
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
         $newArray = [];
         $newArray[] = [
-            'key' => 'Users.openemis_no',
-            'field' => 'openemis_no',
+            'key' => 'status_name',
+            'field' => 'status_name',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Status')
         ];
         $newArray[] = [
-            'key' => 'InstitutionStaff.staff_id',
-            'field' => 'staff_id',
+            'key' => 'position_no',
+            'field' => 'position_no',
+            'type' => 'string',
+            'label' => __('Number')
+        ];
+        $newArray[] = [
+            'key' => 'staff_position_title_id',
+            'field' => 'staff_position_title_id',
+            'type' => 'string',
+            'label' =>  __('Title')
+        ];
+        $newArray[] = [
+            'key' => 'grades',
+            'field' => 'grades',
+            'type' => 'string',
+            'label' => __('Grade')
+        ];
+        $newArray[] = [
+            'key' => 'institution_name',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution')
+        ];
+        $newArray[] = [
+            'key' => 'assignees_name',
+            'field' => 'assignees_name',
+            'type' => 'string',
+            'label' => __('Assignees')
+        ];
+        $newArray[] = [
+            'key' => 'is_homeroom',
+            'field' => 'is_homeroom',
+            'type' => 'string',
+            'label' => __('Homeroom Teacher')
+        ];
+        $newArray[] = [
+            'key' => 'openemis_id',
+            'field' => 'openemis_id',
+            'type' => 'string',
+            'label' => __('OpenEMIS Number')
+        ];
+        $newArray[] = [
+            'key' => 'staff_name',
+            'field' => 'staff_name',
             'type' => 'integer',
-            'label' => ''
+            'label' => __('Staff')
         ];
         $newArray[] = [
-            'key' => 'InstitutionStaff.FTE',
+            'key' => 'fte',
             'field' => 'fte',
             'type' => 'string',
             'label' => __('FTE')
         ];
         $newArray[] = [
-            'key' => 'StaffStatuses.name',
-            'field' => 'staff_status',
+            'key' => 'status_name',
+            'field' => 'status_name',
             'type' => 'string',
             'label' => __('Status')
         ];
         $newArray[] = [
-            'key' => 'IdentityTypes.name',
+            'key' => 'identity_type',
             'field' => 'identity_type',
             'type' => 'string',
             'label' => __('Identity Type')
         ];
         $newArray[] = [
-            'key' => 'Users.identity_number',
+            'key' => 'identity_number',
             'field' => 'identity_number',
             'type' => 'string',
             'label' => __('Identity Number')
         ];
-        $newFields = array_merge($fields->getArrayCopy(), $newArray);
-        $fields->exchangeArray($newFields);
+       // $newFields = array_merge($fields->getArrayCopy(), $newArray);
+        $fields->exchangeArray($newArray);
     }
 
     public function onExcelGetIsHomeroom(Event $event, Entity $entity)
@@ -968,5 +1092,180 @@ class InstitutionPositionsTable extends ControllerActionTable
             ->order([$Staff->aliasField('start_date')]);
 
         return $currentStaff;
+    }
+    /**
+     * POCOR-6820 
+     * on the basis of the position number get staff data.
+    */
+    public function onExcelGetOpenemisId(Event $event, Entity $entity)
+    {
+        
+        $session = $this->Session;
+        $position_id = $entity->id;
+        $Staff = $this->Institutions->Staff;
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $UserIdentities = TableRegistry::get('User.Identities');
+        $entity->fte = '';
+        $entity->openemis_no = '';
+        $entity->staff_name = '';
+        $entity->status_name = '';
+        $entity->identity_number = '';
+        $entity->identity_type = '';
+        
+        $currentStaff = $Staff
+                        ->find()
+                        ->select([
+                            'fte'=>$Staff->aliasField('FTE'),
+                            'date'=>  $Staff->aliasField('start_date'),
+                            'staff_id'=>  $Staff->aliasField('staff_id'),
+                            'id'=>'Users.id',
+                            'openemis_no'=> 'Users.openemis_no',
+                            'first_name'=> 'Users.first_name',
+                            'middle_name'=> 'Users.middle_name',
+                            'third_name'=>'Users.third_name',
+                            'last_name'=>'Users.last_name',
+                            'status_name'=>'StaffStatuses.name',
+                        ])
+                        ->contain(['Users'])
+                        ->leftJoinWith('StaffStatuses')
+                        ->where([
+                            $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                            $Staff->aliasField('institution_position_id') => $position_id,
+                        ])->first();
+                if(!empty($currentStaff)){
+                    $entity->fte = $currentStaff->fte;
+                    $StaffId = $currentStaff->staff_id;
+                    $entity->openemis_no = $currentStaff->openemis_no;
+                    $IdentityTypeId = $currentStaff->identity_type_id;
+                    $entity->staff_name = $currentStaff->first_name.' '.$currentStaff->middle_name.' '.$currentStaff->third_name.' '.$currentStaff->last_name ;
+                    $entity->status_name =  $currentStaff->status_name;
+                    
+                    $UserIdentitiesIds = $UserIdentities->find()->select(['number'=>'Identities.number','                 name'=>'IdentityTypes.name'])
+                                        ->leftJoin(
+                                    [$IdentityTypes->alias() => $IdentityTypes->table()],
+                                    [
+                                        $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
+                                    ])
+                                    ->where([$UserIdentities->aliasField('security_user_id')=>$StaffId,
+                                        $IdentityTypes->aliasField('default')=>1 ])->first();
+                    if(!empty($UserIdentitiesIds)){
+                        $entity->identity_type =  $UserIdentitiesIds->name;
+                        $entity->identity_number =  $UserIdentitiesIds->number;
+                    }
+
+                }
+        
+        return $entity->openemis_no;
+    }
+
+    public function onExcelGetFte(Event $event, Entity $entity)
+    {
+        return $entity->fte ;
+    }
+
+    public function onExcelGetStaffName(Event $event, Entity $entity)
+    {
+        return $entity->staff_name ;
+    }
+
+    public function onExcelGetStatusName(Event $event, Entity $entity)
+    {
+        return $entity->status_name ;
+    }
+
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        return $entity->identity_type ;
+    }
+
+    public function onExcelGetidentityNumber(Event $event, Entity $entity)
+    {
+        return $entity->identity_number ;
+    }
+
+    //POCOR-6925
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $workflowModel = 'Institutions > Positions';
+            $workflowModelsTable = TableRegistry::get('workflow_models');
+            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workModelId = $Workflows
+                            ->find()
+                            ->select(['id'=>$workflowModelsTable->aliasField('id'),
+                            'workflow_id'=>$Workflows->aliasField('id'),
+                            'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
+                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                                [
+                                    $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
+                                ])
+                            ->where([$workflowModelsTable->aliasField('name')=>$workflowModel])->first();
+            $workflowId = $workModelId->workflow_id;
+            $isSchoolBased = $workModelId->is_school_based;
+            $workflowStepsOptions = $workflowStepsTable
+                            ->find()
+                            ->select([
+                                'stepId'=>$workflowStepsTable->aliasField('id'),
+                            ])
+                            ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
+                            ->first();
+            $stepId = $workflowStepsOptions->stepId;
+            $session = $request->session();
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+            $institutionId = $institutionId;
+            $assigneeOptions = [];
+            if (!is_null($stepId)) {
+                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
+                if (!empty($stepRoles)) {
+                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::get('Area.Areas');
+                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    if ($isSchoolBased) {
+                        if (is_null($institutionId)) {                        
+                            Log::write('debug', 'Institution Id not found.');
+                        } else {
+                            $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
+                            $securityGroupId = $institutionObj->security_group_id;
+                            $areaObj = $institutionObj->area;
+                            // School based assignee
+                            $where = [
+                                'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
+                                        ['Institutions.id' => $institutionId]],
+                                $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
+                            ];
+                            $schoolBasedAssigneeQuery = $SecurityGroupUsers
+                                    ->find('userList', ['where' => $where])
+                                    ->leftJoinWith('SecurityGroups.Institutions');
+                            $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
+                            
+                            // Region based assignee
+                            $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                            $regionBasedAssigneeQuery = $SecurityGroupUsers
+                                        ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+                            
+                            $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
+                            // End
+                            $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
+                        }
+                    } else {
+                        $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                        $assigneeQuery = $SecurityGroupUsers
+                                ->find('userList', ['where' => $where])
+                                ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                        $assigneeOptions = $assigneeQuery->toArray();
+                    }
+                }
+            }
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
+            $attr['onChangeReload'] = 'changeStatus';
+            return $attr;
+        }
     }
 }
