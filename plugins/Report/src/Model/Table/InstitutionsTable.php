@@ -258,7 +258,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('report_start_date', ['type' => 'hidden']);
         $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
         $this->ControllerAction->field('attendance_type', ['type' => 'hidden', 'label' => 'Type']);
-        $this->ControllerAction->field('periods', ['type' => 'hidden']);
+        //$this->ControllerAction->field('periods', ['type' => 'hidden']);
         $this->ControllerAction->field('subjects', ['type' => 'hidden']);
         $this->ControllerAction->field('wash_type', ['type' => 'hidden']);
         $this->ControllerAction->field('education_subject_id', ['type' => 'hidden']);
@@ -340,6 +340,7 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'position_filter';
                     $fieldsOrder[] = 'teaching_filter';//POCOR-6614
+                    $fieldsOrder[] = 'status'; //POCOR-6869
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'format';
                     break;
@@ -603,6 +604,7 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.WashReports'])) {
                 $options = [
+                    'All' => __('All'),   //POCOR-6732
                     'Water' => __('Water'),
                     'Sanitation' => __('Sanitation'),
                     'Hygiene' => __('Hygiene'),
@@ -647,6 +649,7 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.InstitutionPositions'])) {
                 $options = [
+                    InstitutionPositions::ALL_STAFF => __('All Staff'),//POCOR-6850
                     InstitutionPositions::TEACHING => __('Teaching'),
                     InstitutionPositions::NON_TEACHING => __('Non Teaching')
                 ];
@@ -735,7 +738,8 @@ class InstitutionsTable extends AppTable
                         [
                             'Report.InstitutionStudents',
                             'Report.InstitutionStudentEnrollments',
-                            'Report.InstitutionStaff'
+                            'Report.InstitutionStaff',
+                            'Report.InstitutionPositions'  // POCOR-6869
                         ])
                 ) {
 
@@ -761,6 +765,22 @@ class InstitutionsTable extends AppTable
                             $statusOptions[$key] = $value;
                         }
                         break;
+
+                    //Start POCOR-6869
+                    case 'Report.InstitutionPositions':
+                        $Workflows = TableRegistry::get('Workflow.Workflows');
+                        $Statuses = TableRegistry::get('Workflow.WorkflowSteps');
+                        $workflowData = $Workflows->find()->select(['id', 'name'])
+                                        ->where([$Workflows->aliasField('name LIKE') => 'Positions'])
+                                        ->first();
+                        $statusData = $Statuses->find()->select(['id', 'name'])
+                                      ->where([$Statuses->aliasField('workflow_id') => $workflowData->id])  
+                                      ->toArray();
+                        foreach ($statusData as $key => $value) {
+                            $statusOptions[$value->id] = $value->name;
+                        }
+                        break;
+                    //End POCOR-6869
 
                     default:
                         return [];
@@ -1290,19 +1310,33 @@ class InstitutionsTable extends AppTable
                         $institutionList = $institutionQuery->toArray();
                     }
                 } elseif (!$institutionTypeId && array_key_exists('area_education_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['area_education_id']) && $areaId != -1) {
+                    /**POCOR-6896 starts - updated condition to fetch Institutions query on that bases of selected area level and area education*/
+                    $areaIds = [];
+                    $lft = $this->Areas->get($areaId)->lft;
+				    $rgt = $this->Areas->get($areaId)->rght;
+                    $areaFilter = $this->Areas->find('all')
+                                ->select(['area_id' => $this->Areas->aliasField('id')])
+                                ->where([
+                                    $this->Areas->aliasField('lft >= ') => $lft,
+								    $this->Areas->aliasField('rght <=') => $rgt,
+                                ])->toArray();
+                    if (!empty($areaFilter)) {
+                        foreach ($areaFilter as $area) {
+                            $areaIds[] = $area->area_id;
+                        }
+                    }
+                    $condition[$this->aliasField('area_id IN')] = $areaIds;
+                    /**POCOR-6896 ends*/  
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
                             'valueField' => 'code_name'
                         ])
-                        ->where([
-                            $InstitutionsTable->aliasField('area_id') => $areaId
-                        ])
+                        ->where([$condition])
                         ->order([
                             $InstitutionsTable->aliasField('code') => 'ASC',
                             $InstitutionsTable->aliasField('name') => 'ASC'
                         ]);
-
                     $superAdmin = $this->Auth->user('super_admin');
                     if (!$superAdmin) { // if user is not super admin, the list will be filtered
                         $userId = $this->Auth->user('id');
@@ -1648,7 +1682,6 @@ class InstitutionsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-
         $requestData = json_decode($settings['process']['params']);
         $filter = $requestData->institution_filter;
         $areaId = $requestData->area_education_id;

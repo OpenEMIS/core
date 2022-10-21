@@ -68,6 +68,12 @@ class WorkflowBehavior extends Behavior
             'text' => 'Assign back to Scholarship Applicant',
             'description' => 'Performing this action will assign the current record back to scholarship applicant.',
             'method' => 'onAssignBackToScholarshipApplicant'
+        ],
+        [
+            'value' => 'Workflow.onApprovalofStudentTransfer',
+            'text' => 'Approval of Student Transfer',
+            'description' => 'Performing this action students will be transferred.',
+            'method' => 'onApprovalofStudentTransfer'
         ]
     ];
 
@@ -235,6 +241,37 @@ class WorkflowBehavior extends Behavior
         }
     }
 
+    /*
+    * Function is set the post event in workflow
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-6987
+    */
+
+    public function onApprovalofStudentTransfer(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $model = $this->_table;
+
+        $result = $model
+                ->find()
+                ->where([$model->aliasField('id') => $id])
+                ->all();
+
+        if (!$result->isEmpty()) {
+            $entity = $result->first();
+            $this->setStudentTransferStudent($entity);
+            $model->save($entity);
+
+        } else {
+            // exception
+            Log::write('error', '---------------------------------------------------------');
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : $result is empty');
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : model : '.$model);
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : model alias : '.$model->alias());
+            Log::write('error', '---------------------------------------------------------');
+        }
+    }
+
     private function triggerUpdateAssigneeShell($registryAlias, $id = null, $statusId = null, $groupId = null, $userId = null, $roleId = null)
     {
         $args = '';
@@ -285,7 +322,8 @@ class WorkflowBehavior extends Behavior
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN) {
+        /** POCOR-6928 - added staff_change_type_id condition to skip Change-of-shift from workflow steps*/
+        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN && $entity->staff_change_type_id != 5) {
             $this->setStatusAsOpen($entity);
         }
 
@@ -2034,6 +2072,20 @@ class WorkflowBehavior extends Behavior
     {
         if ($entity->has('applicant_id')) {
             $entity->assignee_id = $entity->applicant_id;
+        }
+    }
+
+    /*
+    * Function is set applicant_id in workflow
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-6987
+    */
+
+    public function setStudentTransferStudent(Entity $entity)
+    {
+        if ($entity->has('applicant_id')) {
+            $entity->assignee_id = $entity->created_user_id;
         }
     }
 

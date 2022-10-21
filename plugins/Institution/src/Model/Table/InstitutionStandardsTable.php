@@ -49,12 +49,12 @@ class InstitutionStandardsTable extends AppTable
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
-        $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_class_id', ['type' => 'hidden']);
         $this->ControllerAction->field('assessment_id', ['type' => 'hidden']);
         $this->ControllerAction->field('assessment_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('format',['after' => 'month']);  // POCOR-6871
         
         $controllerName = $this->controller->name;
         $institutions_crumb = __('Institutions');
@@ -73,7 +73,8 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_class_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('month', ['type' => 'hidden']);
+        $this->ControllerAction->field('month', ['type' => 'hidden','after' => 'institution_class_id']);  // POCOR-6871
+
         $session = $this->request->session();
         $institution_id = $session->read('Institution.Institutions.id');
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institution_id]);
@@ -312,7 +313,13 @@ class InstitutionStandardsTable extends AppTable
         $group_by[]            = $this->aliasField('openemis_no');
         $group_by[]            = 'InstitutionStudent.student_status_id';
 
-        $birth_certificate_code_id = $IdentityTypesTable->getIdByName('Birth Certificate');
+        // $birth_certificate_code_id = $IdentityTypesTable->getIdByName('Birth Certificate');
+        // START:POCOR-6819
+        $birth_certificate_code_id = $IdentityTypesTable->find('all')
+                                     ->select('id')   
+                                     ->where(['visible' => 1,'editable' => 1,'default' => 1])
+                                     ->first();
+        // End:POCOR-6819
 
         // START: JOINs
         $join = [
@@ -360,7 +367,8 @@ class InstitutionStandardsTable extends AppTable
             $selectable['nationality_name'] = 'MainNationalities.name';
             $query->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
                 $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->aliasField('id'),
-                $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id",
+                // $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id",
+                 $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id->id", //POCOR-6819
             ]);
         
         } else if ( $sheet_tab_name == 'Academic' ) {

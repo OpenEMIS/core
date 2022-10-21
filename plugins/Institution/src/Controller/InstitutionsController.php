@@ -552,10 +552,14 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCards']);
     }
-	public function InstitutionReportCards()
+    public function InstitutionReportCards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionReportCards']);
-    }
+    }//POCOR-6822 Starts
+    public function ClassReportCards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ClassProfiles']);
+    }//POCOR-6822 Ends
     public function StaffTransferIn()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferIn']);
@@ -4255,8 +4259,9 @@ class InstitutionsController extends AppController
     public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffProfiles']); }
     public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentProfiles']); }
     /*POCOR-6286 ends*/
-
-
+    /*POCOR-6966 starts*/ 
+    public function ClassesProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ClassesProfiles']); }
+    /*POCOR-6966 ends*/ 
     /*POCOR-6264 starts*/
     public function Lands()
     {
@@ -4367,17 +4372,19 @@ class InstitutionsController extends AppController
      */
     public function getInstitutionStatisticStandardReportFeature() : array
     {
+        // Start POCOR-6871
         $options = [
+            'Institution.InstitutionStandardMarksEntered'  => __('Marks Entered by Staff'),//POCOR-6630
+            'Institution.InstitutionStaffPositionProfile'  => __('Staff Career'),//POCOR-6581 //POCOR-6715 //POCOR-6886(changed report name from Staff Absences to Staff Career as per client suggestion)
+            'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
+            'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
+            'Institution.InstitutionStandardStudentAbsences'  => __('Student Absences'),//POCOR-6631
+            'Institution.InstitutionStandardStudentAbsenceType'  => __('Student Absence Type'),//POCOR-6632
+            'Institution.StudentHealths'  => __('Student Health'),
             'Institution.InstitutionStandards' => __('Students') . ' ' . __('Overview'),
             'Institution.StudentSpecialNeeds'  => __('Student Special Needs'),
-            'Institution.StudentHealths'  => __('Student Health'),
-            'Institution.InstitutionStandardStaffTrainings'  => __('Staff Training'),
-            'Institution.InstitutionStandardStaffSpecialNeeds'  => __('Staff Special Needs'),
-            'Institution.InstitutionStaffPositionProfile'  => __('Staff Absences'),//POCOR-6581 //POCOR-6715
-            'Institution.InstitutionStandardStudentAbsenceType'  => __('Student Absence Type'),//POCOR-6632
-            'Institution.InstitutionStandardMarksEntered'  => __('Marks Entered by Staff'),//POCOR-6630
-            'Institution.InstitutionStandardStudentAbsences'  => __('Student Absences'),//POCOR-6631
         ];
+        // End POCOR-6871
         return $options;
     }
 }

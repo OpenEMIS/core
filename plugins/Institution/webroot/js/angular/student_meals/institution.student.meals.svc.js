@@ -267,14 +267,29 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 
     function getDayListOptions(academicPeriodId, weekId, institutionId, current_week_number_selected, current_day_number) {
         var success = function(response, deferred) {
-            console.log('response.data.data');
-            console.log(response.data.data);
             var dayList = response.data.data;
-            //START:POCOR-6681 // Exclude days after current day for current academic period
-            if(current_week_number_selected == 3 || current_week_number_selected == 0){
-                dayList.length = ++current_day_number;
+            console.log('response.data.data');
+            console.log(response.data.data)
+            var log = [];
+            var checkIsCurrent = 0;
+            if((response.data.data[1]['day'] == 'Sunday'  || response.data.data[1]['day'] == 'Saturday') && response.data.data[1]['selected'] == 'true' &&  response.data.data[1]['current_week_number_selected'] != 1){
+                log = dayList.length;
+            }
+            else if(response.data.data[1]['current_week_number_selected'] != 1){
+                angular.forEach(dayList, function(value, key) {
+                    if(value['day_number'] !== false){
+                        checkIsCurrent = 1;
+                        log = key;
+                    }
+                 },log);
             }else{
-                dayList.length =  dayList.length;
+                log = dayList.length;
+            }
+            //START:POCOR-6681 // Exclude days after current day for current academic period
+            if(checkIsCurrent == 1){
+                dayList.length = log+1;
+            }else{
+                dayList.length =  log;
             }
             //END:POCOR-6681
             if (angular.isObject(dayList) && dayList.length > 0) {
@@ -887,7 +902,13 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             .then(
                 function(response) {
                     clearError(data, dataKey);
-                    if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
+                    if (response.data == 0) {
+                        AlertSvc.error(scope, 'No meals configured for this date.');
+                        // AlertSvc.error(scope, 'The number of available meals exceeded');
+                    }else if(response.data == 1){
+                        AlertSvc.error(scope, 'The number of available meals exceeded.');
+                        return false;
+                    }else if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
                         data.save_error[dataKey] = true;
                         angular.forEach(oldParams, function(value, key) {
                             data.institution_student_meal[key] = value;
@@ -962,7 +983,9 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             .then(
                 function(response) {
                     clearError(data, dataKey);
-                    if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
+                    if (response.data == 0) {
+                        AlertSvc.error(scope, 'The number of available meals exceeded');
+                    }else if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
                         data.save_error[dataKey] = true;
                         data.institution_student_meal[dataKey] = oldValue;
                         AlertSvc.error(scope, 'There was an error when saving the record');
@@ -1037,7 +1060,9 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             saveMealBenifiet(data, context).then(
                 function(response) {
                     clearError(data, dataKey);
-                    if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
+                    if (response.data == 0) {
+                        AlertSvc.error(scope, 'The number of available meals exceeded');
+                    }else if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
                         data.save_error[dataKey] = true;
                         data.institution_student_meal[dataKey] = oldValue;
                         AlertSvc.error(scope, 'There was an error when saving the record');

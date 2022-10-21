@@ -607,6 +607,13 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.InstitutionProfiles'],
                 'params' => ['plugin' => 'Institution'],
             ],
+            /*POCOR-6966 starts*/
+            'Institutions.ClassesProfiles' => [
+                'title' => 'Classes',
+                'parent' => 'Profile',
+                'selected' => ['Institutions.ClassesProfiles'],
+                'params' => ['plugin' => 'Institution'],
+            ],/*POCOR-6966 ends*/
 		    //POCOR-6654 modified staff menu
             'Institutions.StaffProfiles' => [
                 'title' => 'Staff',
@@ -1918,7 +1925,12 @@ class NavigationComponent extends Component
                 'title' => 'Institutions',
                 'parent' => 'ProfileTemplates',
                 'selected' => ['ProfileTemplates.InstitutionProfiles', 'ProfileTemplates.view', 'ProfileTemplates.add', 'ProfileTemplates.edit', 'ProfileTemplates.delete']
-            ],
+            ],//POCOR-6822 Starts Add menu classes
+            'ProfileTemplates.Classes' => [
+                'title' => 'Classes',
+                'parent' => 'ProfileTemplates',
+                'selected' => ['ProfileTemplates.ClassesProfiles', 'Class.view', 'Class.add', 'Class.edit', 'Class.delete']
+            ],//POCOR-6822 Ends
             'ProfileTemplates.Staff' => [
                 'title' => 'Staff',
                 'parent' => 'ProfileTemplates',

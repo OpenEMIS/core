@@ -36,7 +36,7 @@ class InstitutionGradesTable extends ControllerActionTable
         $this->toggle('search', false);
         $this->setDeleteStrategy('restrict');
 
-        $this->addBehavior('Excel', ['excludes' => ['start_date', 'end_date', 'start_year', 'end_year'], 'pages' => ['index']]);;
+        $this->addBehavior('ContactExcel', ['excludes' => ['start_date', 'end_date', 'start_year', 'end_year'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
     }
 
     public function validationDefault(Validator $validator)
@@ -1287,7 +1287,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         $educationGradeId = $entity->education_grade_id;
         $entity->name = $EducationGrades->get($educationGradeId)->name;
         $institutionId = $entity->institution_id;
-
+      
         $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $associatedStudentRecordsCount = $InstitutionStudents->find()
         ->where([
@@ -1295,8 +1295,19 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
             $InstitutionStudents->aliasField('institution_id') => $institutionId
         ])
         ->count();
-        $extra['associatedRecords'][] = ['model' => 'InstitutionStudents', 'count' => $associatedStudentRecordsCount];
-
+        //$extra['associatedRecords'][] = ['model' => 'InstitutionStudents', 'count' => $associatedStudentRecordsCount];
+        //Start:POCOR-6964
+        //enrolledStudents
+        $enrolledStudentsRecordsCount = $InstitutionStudents->find()
+        ->where([
+            $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
+            $InstitutionStudents->aliasField('institution_id') => $institutionId,
+            $InstitutionStudents->aliasField('student_status_id') => 1
+        ])
+        ->count();
+        $extra['associatedRecords'][] = ['model' => 'InstitutionStudents', 'count' => $enrolledStudentsRecordsCount]; //POCOR-6991
+        $extra['associatedRecordsss'][] = ['model' => 'InstitutionEnrolledStudents', 'count' => $enrolledStudentsRecordsCount];
+        //End:POCOR-6964
         // to get the institution_class_id related to the education_grade_id
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $associatedClassObj = $InstitutionClassGrades->find()
