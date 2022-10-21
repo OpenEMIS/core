@@ -515,8 +515,9 @@ class SurveysTable extends AppTable
                                         ])
                                         ->where([
                                             $SurveyStatusTable->SurveyStatusPeriods->aliasField('academic_period_id') => $academicPeriodId,
-                                            $SurveyStatusTable->aliasField('date_enabled <=') => $todayTimestamp,
-                                            $SurveyStatusTable->aliasField('date_disabled >=') => $todayTimestamp
+                                            // $SurveyStatusTable->aliasField('date_enabled <=') => $todayTimestamp,
+                                            // $SurveyStatusTable->aliasField('date_disabled >=') => $todayTimestamp
+                                            //POCOR-7022
                                         ])
                                         ->toArray();
                     if (!empty($surveyFormOptions)) {
