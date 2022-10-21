@@ -226,6 +226,7 @@ class EmailAllExcelReportCardsShell extends Shell
         $ReportCardEmailTable = TableRegistry::get('ReportCard.ReportCardEmail');
         $modelAlias = $ReportCardEmailTable->registryAlias();
         $availablePlaceholders = $ReportCardEmailTable->getPlaceholders();
+        //print_r($availablePlaceholders); die;
         $reportCardId = $studentsReportCardEntity->report_card_id;
         $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, $reportCardId);
 
