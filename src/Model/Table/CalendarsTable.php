@@ -25,7 +25,7 @@ class CalendarsTable extends ControllerActionTable
 
         $this->hasMany('CalendarEventDates', ['className' => 'CalendarEventDates', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('ContactExcel', ['pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
     }
 
     public function validationDefault(Validator $validator)

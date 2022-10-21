@@ -308,6 +308,13 @@ class AdvanceSearchBehavior extends Behavior
                             break;
 
                         case 'area_administrative_id':
+                            //Start:POCOR-6798
+                            $tableName = 'area_administratives';
+                            $id = $advancedSearchBelongsTo[$key];
+                            $AreaAdministrativeTable = TableRegistry::get('Area.AreaAdministratives');
+                            $query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
+                            break;
+                            //End:POCOR-6798
                         case 'birthplace_area_id':
                         // start POCOR-6764
                         case 'shift_type':

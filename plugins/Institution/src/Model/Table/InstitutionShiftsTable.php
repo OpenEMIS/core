@@ -45,7 +45,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         ]);
         $this->setDeleteStrategy('restrict');
 
-        $this->addBehavior('Excel', ['excludes' => ['start_time','end_time','academic_period_id','previous_shift_id'], 'pages' => ['index']]);;
+        $this->addBehavior('ContactExcel', ['excludes' => ['start_time','end_time','academic_period_id','previous_shift_id'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
 
     }
 
@@ -57,13 +57,15 @@ class InstitutionShiftsTable extends ControllerActionTable
             ->add('start_time', 'ruleCompareDate', [
                     'rule' => ['compareDate', 'end_time', true]
                 ])
-            ->add('start_time', 'ruleCheckShiftAvailable', [
-                    'rule' => ['checkShiftAvailable'],
-                    'on' => function ($context) {
-                         //validate when only location_institution_id is not empty
-                            return !empty($context['data']['location_institution_id']);
-                    }
-                ])
+            //Start:POCOR-5065 Commented that validation
+            // ->add('start_time', 'ruleCheckShiftAvailable', [
+            //         'rule' => ['checkShiftAvailable'],
+            //         'on' => function ($context) {
+            //              //validate when only location_institution_id is not empty
+            //                 return !empty($context['data']['location_institution_id']);
+            //         }
+            //     ])
+            //END:POCOR-5065
             // ->add('location_institution_id', 'ruleCheckLocationInstitutionId', [
             //      'rule' => ['checkInstitutionLocation']
             //  ])

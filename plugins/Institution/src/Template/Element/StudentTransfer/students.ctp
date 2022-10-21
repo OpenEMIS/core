@@ -41,16 +41,28 @@
                                             $tdClass = 'checkbox-column';
                                             $tooltip = '';
                                         }
+                                        //POCOR-6982 Starts
+                                        if($attr['attr']['statusOptions'][$obj->student_status_id] == 'Promoted' && $obj->student_already_enrolled_in_same_institution == 1){ 
                                     ?>
-                                    <td class=<?=$tdClass;?>>
-                                    <?php
-                                            echo $this->Form->checkbox("$fieldPrefix.selected", $checkboxOptions);
-                                            echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
+	                                    <td class='checkbox-column tooltip-orange'>
+	                                    <?php
+	                                    		$tooltipMessage = __('There is an existing Enrolled status for this student.');
+	                                            echo '<i class="fa fa-info-circle fa-lg table-tooltip icon-orange" data-animation="false" data-container="body" data-placement="top" data-toggle="tooltip" title="" data-original-title="' .$tooltipMessage. '"></i>';
+	                                    ?>
+										</td>
+                                    <?php    	
+                                        }else{//POCOR-6982 Ends
                                     ?>
-									</td>
+	                                    <td class=<?=$tdClass;?>>
+	                                    <?php
+	                                            echo $this->Form->checkbox("$fieldPrefix.selected", $checkboxOptions);
+	                                            echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
+	                                    ?>
+										</td>
+									<?php } ?>
 									<td><?= $obj->_matchingData['Users']->openemis_no ?></td>
 									<td><?= $obj->_matchingData['Users']->name ?></td>
-									<td><?= $attr['attr']['statusOptions'][$obj->student_status_id ]?></td>
+									<td><?= $attr['attr']['statusOptions'][$obj->student_status_id] ?></td>
 									<td><?= isset($attr['classOptions'][$obj->institution_class_id]) ? $attr['classOptions'][$obj->institution_class_id] : '' ?></td>
 									<td><?= $obj->_matchingData['Genders']->name ?> <?=$tooltip;?></td>
 								</tr>

@@ -110,7 +110,11 @@ class StudentReportCardsTable extends ControllerActionTable
             $downloadAccess = $this->AccessControl->check(['Profiles', 'StudentReportCards', 'download']);
             unset($buttons['view']);
         }
-    
+        /**POCOR-6845 starts - Added condition to get download button when logged in as Guardian*/  
+        else if ($this->controller->name == 'GuardianNavs') {
+            $downloadAccess = $this->AccessControl->check(['GuardianNavs', 'StudentReportCards', 'download']);
+        }
+        /**POCOR-6845 ends*/
         if ($downloadAccess) {
             $params = [
                 'report_card_id' => $entity->report_card_id,

@@ -270,7 +270,8 @@ class BulkStudentTransferInTable extends ControllerActionTable
                             $params['institution_id'] = $institutionId;
                         }
                     }
-                    $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+                    // $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+                    $assigneeOptions = ['-1' => __('Auto Assign')];
                 }
                 $attr['type'] = 'select';
                 $attr['options'] = $assigneeOptions;
@@ -282,8 +283,10 @@ class BulkStudentTransferInTable extends ControllerActionTable
                     ->find()
                     ->where([$SecurityUsers->aliasField('id') => $this->_currentData->assignee_id])
                     ->first();
+                $assigneeOptions = 'Auto Assign'; //POCOR-6961 
                 $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $value->name;
+                $attr['value'] = '-1';
+                $attr['attr']['value'] = $assigneeOptions; //POCOR-6961 
                 break;
 
             default:

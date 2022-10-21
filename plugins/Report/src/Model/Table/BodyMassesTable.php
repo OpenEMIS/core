@@ -76,16 +76,19 @@ class BodyMassesTable extends AppTable
 
     public function onExcelGetBmi(Event $event, Entity $entity)
     {
+        
         $bodyMassIndex = '';
         
         if (!empty($entity->bmi) ) {
-            if($entity->bmi <= 18.5){
+            if($entity->bmi <= 18.59){
                 $bodyMassIndex = "Underweight";
-            }elseif($entity->bmi > 18.5 && $entity->bmi <= 24.9){
+            }elseif($entity->bmi > 18.59 && $entity->bmi <= 24.99){
                 $bodyMassIndex = "Normal";
-            }elseif($entity->bmi > 25 && $entity->bmi <= 29.9){
+            }elseif($entity->bmi == 25.00){ //POCOR-6918
+                $bodyMassIndex = "Normal";
+            }elseif($entity->bmi > 25.00 && $entity->bmi <= 29.99){
                 $bodyMassIndex = "Overweight";
-            }elseif($entity->bmi > 29.9){
+            }elseif($entity->bmi > 29.99){
                 $bodyMassIndex = "Obesity";
             }            
         }
@@ -110,6 +113,7 @@ class BodyMassesTable extends AppTable
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
+        $selectedArea = $requestData->area_education_id;
 
         $conditions = [];
         if (!empty($academicPeriodId)) {
@@ -118,8 +122,17 @@ class BodyMassesTable extends AppTable
         if ($institutionId != 0) {
             $conditions['Institutions.id'] = $institutionId;
         }
-        if ($areaId != -1) {
-            $conditions['Institutions.area_id'] = $areaId;
+        if ($areaId != -1 && $areaId != '') {
+            //POCOR-6944 starts
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }//POCOR-6944 code ends
+                $conditions['Institutions.area_id IN'] = $allselectedAreas;
         }
         
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;  
@@ -193,6 +206,7 @@ class BodyMassesTable extends AppTable
                     'UserBodyMasses.academic_period_id = ' . $this->aliasField('academic_period_id')
                 ]
             )
+             
             ->innerJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                 $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
@@ -408,5 +422,20 @@ class BodyMassesTable extends AppTable
         ($entity->student_last_name) ? $studentName[] = $entity->student_last_name : '';
 
         return implode(' ', $studentName);
+    }
+
+    //POCOR-6944
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 }

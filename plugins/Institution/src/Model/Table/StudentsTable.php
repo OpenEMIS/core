@@ -134,6 +134,10 @@ class StudentsTable extends ControllerActionTable
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'InstitutionStudents' => ['add']
+        ]);
     }
 
     public function implementedEvents()
@@ -249,6 +253,7 @@ class StudentsTable extends ControllerActionTable
                 'code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
                 'student_status' => 'StudentStatuses.name',
+                'student_status_ID' => 'StudentStatuses.id', //POCOR-7011
                 'academic_period' => 'AcademicPeriods.name',
                 'previous_institution_student_id' => $this->aliasField('previous_institution_student_id'),
                 'student_first_name' => 'Users.first_name',
@@ -373,13 +378,13 @@ class StudentsTable extends ControllerActionTable
                                                 $this->aliasField('student_id') => $row->student_id,
                                                 $this->aliasField('id') => $InstitutionStudentsCurrentData->previous_institution_student_id
                                             ])->first();
-                        if (!empty($previousInstStdId) && $previousInstStdId->student_status_id == 8) {
+                        if (!empty($previousInstStdId) && $previousInstStdId->student_status_id == 8 && $row->student_status_ID == 1) { //POCOR-7011
                             $row['student_status'] = "Enrolled (Repeater)";
                         } /*POCOR-6562 starts*/else {
                             $row['student_status'] = $InstitutionStudentsCurrentData->student_status->name;
                         }/*POCOR-6562 ends*/
                     }
-                //echo "<pre>";print_r();die();
+
                 $row['education_grade'] = $InstitutionStudentsCurrentData->education_grade->name;
                 $row['start_date'] = $InstitutionStudentsCurrentData->start_date;
                 $row['end_date']   = $InstitutionStudentsCurrentData->end_date;
@@ -907,6 +912,46 @@ class StudentsTable extends ControllerActionTable
         return $query;
     }
 
+    		
+    //Start:POCOR-6931	
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)	
+    { 	
+        if(strpos($_SERVER['REQUEST_URI'], "/restful/v2/Institution-Students.json") !== false){
+            if ($entity->isNew()) {	
+                $studentCurrentV1 = $this->find('all',['conditions'=>['student_status_id' => $entity->student_status_id, 'student_id'=> $entity->student_id]])->first();	
+                
+                $dobYear =  date('Y', strtotime($entity->date_of_birth));
+                $currentYear =  date('Y', strtotime(date('Y-m-d')));
+
+                $yearDiff = $currentYear - $dobYear;
+                $ConfigItemTable = TableRegistry::get('config_items');	
+                $ConfigItemAgePlus =   $ConfigItemTable->find('all',['conditions' =>['code' => 'admission_age_plus']])->first();	
+                $ConfigItemAgeMinus =   $ConfigItemTable->find('all',['conditions' =>['code' => 'admission_age_minus']])->first();	
+                $EducationGradesTable = TableRegistry::get('education_grades');	
+                $EducationGrades =   $EducationGradesTable->find('all',['conditions' =>['id' => $entity->education_grade_id]])->first();	
+                $maxAge = ($EducationGrades->admission_age + $ConfigItemAgePlus->value);	
+                $minAge = $EducationGrades->admission_age - $ConfigItemAgeMinus->value;	
+                
+                $studentCurrent = $this->find('all',['conditions'=>['student_id'=> $entity->student_id, 'education_grade_id'=> $entity->education_grade_id ]])->first();	
+                if(!empty($studentCurrentV1)){	
+                    if($entity->student_status_id == 1){
+                        $response["message"][] ="Student is already enrolled.";	
+                        $entity->errors($response);	
+                        return false;	
+                    }
+                }elseif($yearDiff > $maxAge || $yearDiff < $minAge ){	
+                    $response["message"][] ="Student age is out of age range for this education grade.";	
+                    $entity->errors($response);	
+                    return false;	
+                }else{	
+                    
+                }	
+                
+            }	
+        }
+    }	
+    //End:POCOR-6931
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('previous_institution_student_id', ['type' => 'hidden']);
@@ -922,11 +967,10 @@ class StudentsTable extends ControllerActionTable
     {
         $studentStatuses = $this->StudentStatuses->findCodeList();
         // if user tries to delete record that is not enrolled
-        if ($entity->student_status_id != $studentStatuses['CURRENT']) {
+        if ($entity->student_status_id != $studentStatuses['CURRENT']) { 
             $event->stopPropagation();
             return false;
         }
-
         $body = array();
 
         $body = [
@@ -1669,9 +1713,9 @@ class StudentsTable extends ControllerActionTable
 
 				}
 			}
-			$body = array();
+			$bodys = array();
 
-			$body = [
+			$bodys = [
 				'security_users_id' => !empty($user_id) ? $user_id : NULL,
 				'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
 				'security_users_first_name' =>	!empty($first_name) ? $first_name : NULL,
@@ -1702,7 +1746,70 @@ class StudentsTable extends ControllerActionTable
 				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
                 'role_name' => ($role == 1) ? 'student' : NULL
 			];
+            //POCOR-6805 start
+            $Guardians = TableRegistry::get('student_custom_field_values');
+            $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
+            $studentCustomFields = TableRegistry::get('student_custom_fields');
 
+            $guardianData = $Guardians->find()
+            ->select([
+                'id'                             => $Guardians->aliasField('id'),
+                'custom_id'                      => 'studentCustomField.id',
+                'student_id'                     => $Guardians->aliasField('student_id'),
+                'student_custom_field_id'        => $Guardians->aliasField('student_custom_field_id'),
+                'text_value'                     => $Guardians->aliasField('text_value'),
+                'number_value'                   => $Guardians->aliasField('number_value'),
+                'decimal_value'                  => $Guardians->aliasField('decimal_value'),
+                'textarea_value'                 => $Guardians->aliasField('textarea_value'),
+                'date_value'                     => $Guardians->aliasField('date_value'),
+                'time_value'                     => $Guardians->aliasField('time_value'),
+                'checkbox_value_text'            => $studentCustomFieldOptions->aliasField('name'),
+                'name'                           => 'studentCustomField.name',
+                'field_type'                     => 'studentCustomField.field_type',
+                ])->leftJoin(
+                ['studentCustomField' => 'student_custom_fields'],
+                [
+                    'studentCustomField.id = '.$Guardians->aliasField('student_custom_field_id')
+                ])
+                ->leftJoin(
+                [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                [
+                    $studentCustomFieldOptions->aliasField('student_custom_field_id') => $Guardians->aliasField('student_custom_field_id')
+                ])
+                ->where([
+                $Guardians->aliasField('student_id') => $user_id,
+                ])->hydrate(false)->toArray();
+                $custom_field = array();
+                $count = 0;
+                if(!empty($guardianData)){
+                    foreach ($guardianData as $val) {
+                        $custom_field['custom_field'][$count]["id"] = (!empty($val['custom_id']) ? $val['custom_id'] : '');
+                        $custom_field['custom_field'][$count]["name"]= (!empty($val['name']) ? $val['name'] : '');
+                        $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
+                        $fieldType = $fieldTypes[$count];
+                        if($fieldType == 'TEXT'){
+                            $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                        }else if ($fieldType == 'CHECKBOX') {
+                            $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
+                        }else if ($fieldType == 'NUMBER') {
+                            $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
+                        }else if ($fieldType == 'DECIMAL') {
+                            $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                        }else if ($fieldType == 'TEXTAREA') {
+                            $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                        }else if ($fieldType == 'DROPDOWN') {
+                            $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
+                        }else if ($fieldType == 'DATE') {
+                            $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
+                        }else if ($fieldType == 'TIME') {
+                            $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
+                        }else if ($fieldType == 'COORDINATES') {
+                            $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                        }
+                        $count++;
+                    }
+                }
+            $body = array_merge($bodys, $custom_field);    //POCOR-6805 end
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
 			if (!empty($entity->created_user_id)) {
 				$Webhooks->triggerShell('student_create', ['username' => ''], $body);
@@ -2345,10 +2452,11 @@ class StudentsTable extends ControllerActionTable
 				'institution_student_absence_details.student_id' => $record->student_id,
             ])
 			->toArray();
-
+            
 			$StudentAttendances[$record->education_grade_id][] = array('attendance'=>$StudentAttendancesData, 'education_grade_id'=> $record->education_grade_id, 'education_grade'=>$record->education_grade);
+            
 		}
-
+        
         $attendanceData = [];
 
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
@@ -2356,11 +2464,11 @@ class StudentsTable extends ControllerActionTable
         $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
 
         foreach ($StudentAttendances as $key => $attendances) {
-
+           
             // START: POCOR-6382
 			// $total_present = $total_absent = $total_late = 0;
             $total_absent = $total_late = 0;
-            $total_present = -1;
+            $total_present = 0; //POCOR-6900 changed value from -1 to 0 as due to -1 it was not displaying grades bases attendance
             // END: POCOR-6382
 
 			foreach ($attendances as $key => $attendance) {
@@ -2376,7 +2484,6 @@ class StudentsTable extends ControllerActionTable
 				} else {
 					$total_present = $total_present + 1;
 				}
-
 				foreach ($dataSet as $dkey => $dvalue) {
 					if (!array_key_exists($attendance['education_grade_id'], $dataSet[$dkey]['data'])) {
 						$dataSet[$dkey]['data'][$attendance['education_grade_id']] = 0;
@@ -2388,7 +2495,6 @@ class StudentsTable extends ControllerActionTable
 				$dataSet['Late']['data'][$attendance['education_grade_id']] = $total_late;
 			}
 		}
-
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => __('For Today'));
         $params['options']['xAxis']['categories'] = array_values($attendanceData);
