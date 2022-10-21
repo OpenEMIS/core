@@ -2918,9 +2918,14 @@ class StaffTable extends ControllerActionTable
     {
         $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-
         $staffId = $options['staff_id'];
         $institutionId = $options['institution_id'];
+        //POCOR-7020
+        $institutionStaff = TableRegistry::get('institution_staff');
+        $staffRecord = $institutionStaff->find('all', ['conditions' =>['staff_id' => $staffId]])
+            ->first();
+        $staffStatusId=  $staffRecord['staff_status_id'];
+        //End of POCOR-7020
         $conditions = [];
         if ($institutionId != '') {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
@@ -3007,7 +3012,7 @@ class StaffTable extends ControllerActionTable
             ->matching('Users')
             ->where([
                 $this->aliasField('staff_id') => $staffId,
-                $this->aliasField('staff_status_id') => 1,
+                $this->aliasField('staff_status_id') => $staffStatusId,
                 $conditions
             ])
             ->group([
@@ -3069,6 +3074,7 @@ class StaffTable extends ControllerActionTable
                 }
                 return $formatResultDates;
             });
+           // print_r($query->sql());die;
         return $query;
     }
 
