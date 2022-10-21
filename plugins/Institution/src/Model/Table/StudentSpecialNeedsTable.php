@@ -107,6 +107,7 @@ class StudentSpecialNeedsTable extends AppTable
             'SpecialNeedsServices',
             'SpecialNeedsDevices',
             'SpecialNeedsPlans',
+            'Diagnostic',
         ];
         foreach($sheet_tabs as $sheet_tab_name) {  
             $sheets[] = [
@@ -289,7 +290,37 @@ class StudentSpecialNeedsTable extends AppTable
                     'SpecialNeedsPlans.security_user_id = ' . $this->aliasField('id')
                 ],
             ];
+        } 
+        //POCOR-6873[START]
+        else if ( $sheet_tab_name == 'Diagnostic' ) {
+            $group_by[] = 'SpecialNeedsDiagnosis.id';
+            $selectable['date'] = 'SpecialNeedsDiagnosis.date';
+            $selectable['comment'] = 'SpecialNeedsDiagnosis.comment';
+            $selectable['diagnosis_type'] = 'SpecialNeedsDiagnosisTypes.name';
+            $selectable['diagnosis_degree'] = 'SpecialNeedsDiagnosisDegree.name';
+            $join['SpecialNeedsDiagnosis'] = [
+                'type' => 'inner',
+                'table' => 'user_special_needs_diagnosis',
+                'conditions' => [
+                    'SpecialNeedsDiagnosis.security_user_id = ' . $this->aliasField('id')
+                ],
+            ];
+            $join['SpecialNeedsDiagnosisDegree'] = [
+                'type' => 'left',
+                'table' => 'special_needs_diagnosis_degree',
+                'conditions' => [
+                    'SpecialNeedsDiagnosisDegree.id = SpecialNeedsDiagnosis.special_needs_diagnosis_degree_id',
+                ],
+            ];
+            $join['SpecialNeedsDiagnosisTypes'] = [
+                'type' => 'left',
+                'table' => 'special_needs_diagnosis_types',
+                'conditions' => [
+                    'SpecialNeedsDiagnosisTypes.id = SpecialNeedsDiagnosis.special_needs_diagnosis_type_id',
+                ],
+            ];
         }
+        //POCOR-6873[END]
 
         $query->join($join);
 
@@ -369,10 +400,45 @@ class StudentSpecialNeedsTable extends AppTable
         } else if ( $sheet_tab_name == 'SpecialNeedsPlans' ) {
             $extraField = $this->getPlanTabFields($extraField);
 
+        } else if ( $sheet_tab_name == 'Diagnostic' ) {  //POCOR-6873
+            $extraField = $this->getDiagnosticTabFields($extraField);
+
         }
 
         $fields->exchangeArray($extraField);
     }
+    //POCOR-6873[START]
+    private function getDiagnosticTabFields($extraField)
+    {
+        $extraField = $this->commonFields($extraField);
+        $extraField[] = [
+            'key'   => 'SpecialNeedsDiagnosis.date',
+            'field' => 'date',
+            'type'  => 'string',
+            'label' => __('Date'),
+        ];
+        $extraField[] = [
+            'key'   => 'SpecialNeedsDiagnosis.comment',
+            'field' => 'comment',
+            'type'  => 'string',
+            'label' => __('Comment'),
+        ];
+        $extraField[] = [
+            'key'   => 'SpecialNeedsDiagnosis.special_needs_diagnosis_type_id',
+            'field' => 'diagnosis_type',
+            'type'  => 'string',
+            'label' => __('Diagnosis Types'),
+        ];
+        $extraField[] = [
+            'key'   => 'SpecialNeedsDiagnosis.special_needs_diagnosis_degree_id',
+            'field' => 'diagnosis_degree',
+            'type'  => 'string',
+            'label' => __('Diagnosis Degree'),
+        ];
+        
+        return $extraField;
+    }
+    //POCOR-6873[END]
 
     private function getPlanTabFields($extraField)
     {

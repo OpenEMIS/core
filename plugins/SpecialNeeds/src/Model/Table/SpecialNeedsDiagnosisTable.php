@@ -10,6 +10,12 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
+/**
+ * Class is to get new tab data in dignosis in Special needs
+ * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+ * @ticket POCOR-6873
+ */
+
 
 class SpecialNeedsDiagnosisTable extends ControllerActionTable
 {
@@ -21,7 +27,7 @@ class SpecialNeedsDiagnosisTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('SpecialNeedsDiagnosisTypes', ['className' => 'SpecialNeeds.SpecialNeedsDiagnosisTypes']);
-        $this->belongsTo('SpecialNeedsDiagnosisLevels', ['className' => 'SpecialNeeds.SpecialNeedsDiagnosisLevels']);
+        $this->belongsTo('SpecialNeedsDiagnosisDegree', ['className' => 'SpecialNeeds.SpecialNeedsDiagnosisDegree']);
 
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -50,11 +56,37 @@ class SpecialNeedsDiagnosisTable extends ControllerActionTable
     {
         switch ($field) {
             case 'special_needs_diagnosis_type_id':
-                return __('Type');
-            case 'special_needs_diagnosis_level_id':
-                return __('levels');
+                return __('Type of disability');
+            case 'special_needs_diagnosis_degree_id':
+                return __('Disability Degree');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function onUpdateFieldSpecialNeedsDiagnosisTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['onChangeReload'] = true;
+        return $attr;
+    }
+
+    public function onUpdateFieldSpecialNeedsDiagnosisDegreeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            if($action == 'add'){
+                $degreeId = $request->data['SpecialNeedsDiagnosis']['special_needs_diagnosis_type_id'];
+                $SpecialNeedsDiagnosisDegree = TableRegistry::get('SpecialNeeds.SpecialNeedsDiagnosisDegree');
+                $degreeListOptions = $SpecialNeedsDiagnosisDegree->getDegreeList($degreeId);
+                        
+                $attr['type'] = 'select';
+
+                $attr['placeholder'] = __('--Select--');
+                $attr['attr']['options'] = $degreeListOptions;
+                $attr['onChangeReload'] = true;
+            }else{
+                $attr['value'] = $attr['entity']->special_needs_diagnosis_degree_id;
+            }
+            return $attr;
         }
     }
 
@@ -66,7 +98,7 @@ class SpecialNeedsDiagnosisTable extends ControllerActionTable
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
         $this->field('special_needs_diagnosis_type_id', ['type' => 'pg_select(connection, table_name, assoc_array)']);
-        $this->field('special_needs_diagnosis_level_id', ['type' => 'pg_select(connection, table_name, assoc_array)']);
+        $this->field('special_needs_diagnosis_degree_id', ['type' => 'pg_select(connection, table_name, assoc_array)']);
         $this->setFieldOrder(['special_needs_diagnosis_type_id','special_needs_diagnosis_level_id']);
     }
 
@@ -87,14 +119,13 @@ class SpecialNeedsDiagnosisTable extends ControllerActionTable
 
     private function setupFields($entity = null)
     {
-        $this->field('name');
         $this->field('special_needs_diagnosis_type_id', ['type' => 'select']);
-        $this->field('special_needs_diagnosis_level_id', ['type' => 'select']);
+        $this->field('special_needs_diagnosis_degree_id', ['type' => 'select']);
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['null' => false, 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
 
-        $this->setFieldOrder(['date','name', 'special_needs_diagnosis_type_id','special_needs_diagnosis_level_id','file_name', 'file_content', 'comment']);
+        $this->setFieldOrder(['date', 'special_needs_diagnosis_type_id','special_needs_diagnosis_degree_id', 'file_name', 'file_content', 'comment']);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -106,5 +137,46 @@ class SpecialNeedsDiagnosisTable extends ControllerActionTable
         ->where([
             'security_user_id =' .$studentUserId,
         ]);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key' => '',
+            'field' => 'date',
+            'type' => 'date',
+            'label' => __('Date')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'file_name',
+            'type' => 'string',
+            'label' => __('File Name')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'comment',
+            'type' => 'string',
+            'label' => __('Comment')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'special_needs_diagnosis_type_id',
+            'type' => 'string',
+            'label' => __('Type of disability')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'special_needs_diagnosis_degree_id',
+            'type' => 'string',
+            'label' => __('Disability Degree')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'security_user_id',
+            'type' => 'string',
+            'label' => __('Security User')
+        ];
+        $fields->exchangeArray($extraField);
     }
 }
