@@ -67,12 +67,24 @@ class SurveyStatusesTable extends ControllerActionTable
         $query->contain($this->_contain);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    //Change in POCOR-7021
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         //Setup fields
         list(, , $formOptions) = array_values($this->getSelectOptions());
 
         $this->fields['survey_form_id']['type'] = 'select';
+        $this->fields['survey_form_id']['options'] = $formOptions;
+    }
+    /**
+       / POCOR-7021 readonly in edit page
+    */
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
+        //Setup fields
+        list(, , $formOptions) = array_values($this->getSelectOptions());
+
+        $this->fields['survey_form_id']['type'] = 'readonly';
         $this->fields['survey_form_id']['options'] = $formOptions;
     }
 

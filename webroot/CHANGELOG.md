@@ -1,3 +1,13 @@
+### [3.75.33] - 2022-10-20
+- Implemented: Enhance the usability of the Admin > Security > Users
+- Bug Fixed: Institutions>Report Cards>Comments: Sees error message
+- Bug Fixed: Institutions > Statistics > Standard Report : Marks Entered by Staff: Missing grades and showing minus signs
+- Bug Fixed: Institutions>Staff>Career>Positions>Change of shift: Getting 404 error
+- Bug Fixed: Institution>Academic>Classes: Staff list is showing non academic staffs
+- Bug Fixed: Administration>Survey>Status tab > Update page: System should UPDATE instead of DELETE records
+- Bug Fixed: Report>Survey>Forms: An option to generate a report for surveys that are closed
+- Bug Fixed: Administration > Performance > Assessment: Template cannot be open
+
 ### [3.75.32] - 2022-10-13
 - Implemented: Develop a new Field Option - Staff Position Categories
 - Bug Fixed: Report>Institution>Infrastructure: Changes to the Infrastructure Report
