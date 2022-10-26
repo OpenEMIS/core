@@ -22,16 +22,20 @@ class POCOR7016 extends AbstractMigration
         $WorkflowStepsIdA = $WorkflowStepsTable->find()->select(['id' => $WorkflowStepsTable->aliasField('id')])->where([$WorkflowStepsTable->aliasField('workflow_id')=>$WorkflowsId['id'],$WorkflowStepsTable->aliasField('name')=>'Pending For Approval'])->first();
 
         $WorkflowStepsIdB = $WorkflowStepsTable->find()->select(['id' => $WorkflowStepsTable->aliasField('id')])->where([$WorkflowStepsTable->aliasField('workflow_id')=>$WorkflowsId['id'],$WorkflowStepsTable->aliasField('name')=>'Pending For Deactivation'])->first();
+        $WorkflowStepsIdOneA = $WorkflowStepsTable->find()->select(['id' => $WorkflowStepsTable->aliasField('id')])->where([$WorkflowStepsTable->aliasField('workflow_id')=>$WorkflowsId['id'],$WorkflowStepsTable->aliasField('name')=>'Active'])->first();
+        $WorkflowStepsIdOneB = $WorkflowStepsTable->find()->select(['id' => $WorkflowStepsTable->aliasField('id')])->where([$WorkflowStepsTable->aliasField('workflow_id')=>$WorkflowsId['id'],$WorkflowStepsTable->aliasField('name')=>'Inactive'])->first();
 
         $WorkflowStepsIda = $WorkflowStepsIdA['id'];
         $WorkflowStepsIdb = $WorkflowStepsIdB['id'];
+        $WorkflowStepsIdOna = $WorkflowStepsIdOneA['id'];
+        $WorkflowStepsIdOnb = $WorkflowStepsIdOneB['id'];
         // backup the table
         $this->execute('CREATE TABLE `z_7016_workflow_actions` LIKE `workflow_actions`');
         $this->execute('INSERT INTO `z_7016_workflow_actions` SELECT * FROM `workflow_actions`');
 
         $WorkflowActionTable = TableRegistry::get('Workflow.WorkflowActions');
-        $this->execute("UPDATE workflow_actions SET `event_key` = 'Workflow.onApprovalofEnableStaffAssignment' WHERE `next_workflow_step_id`=29 and `workflow_step_id`=$WorkflowStepsIda");
-        $this->execute("UPDATE workflow_actions SET `event_key` = 'Workflow.onApprovalofDisableStaffAssignment' WHERE `next_workflow_step_id`=31 and `workflow_step_id`=$WorkflowStepsIdb");
+        $this->execute("UPDATE workflow_actions SET `event_key` = 'Workflow.onApprovalofEnableStaffAssignment' WHERE `next_workflow_step_id`=$WorkflowStepsIdOna and `workflow_step_id`=$WorkflowStepsIda");
+        $this->execute("UPDATE workflow_actions SET `event_key` = 'Workflow.onApprovalofDisableStaffAssignment' WHERE `next_workflow_step_id`=$WorkflowStepsIdOnb and `workflow_step_id`=$WorkflowStepsIdb");
         
     }
 
