@@ -292,31 +292,31 @@ class StudentSpecialNeedsTable extends AppTable
             ];
         } 
         //POCOR-6873[START]
-        else if ( $sheet_tab_name == 'Diagnostic' ) {
-            $group_by[] = 'SpecialNeedsDiagnosis.id';
-            $selectable['date'] = 'SpecialNeedsDiagnosis.date';
-            $selectable['comment'] = 'SpecialNeedsDiagnosis.comment';
-            $selectable['diagnosis_type'] = 'SpecialNeedsDiagnosisTypes.name';
-            $selectable['diagnosis_degree'] = 'SpecialNeedsDiagnosisDegree.name';
-            $join['SpecialNeedsDiagnosis'] = [
+        else if ( $sheet_tab_name == 'Diagnostics' ) {
+            $group_by[] = 'SpecialNeedsDiagnostics.id';
+            $selectable['date'] = 'SpecialNeedsDiagnostics.date';
+            $selectable['comment'] = 'SpecialNeedsDiagnostic.comment';
+            $selectable['diagnostics_type'] = 'SpecialNeedsDiagnosticsTypes.name';
+            $selectable['diagnostics_degree'] = 'SpecialNeedsDiagnosticsDegree.name';
+            $join['SpecialNeedsDiagnostics'] = [
                 'type' => 'inner',
-                'table' => 'user_special_needs_diagnosis',
+                'table' => 'user_special_needs_diagnostics',
                 'conditions' => [
-                    'SpecialNeedsDiagnosis.security_user_id = ' . $this->aliasField('id')
+                    'SpecialNeedsDiagnostics.security_user_id = ' . $this->aliasField('id')
                 ],
             ];
-            $join['SpecialNeedsDiagnosisDegree'] = [
+            $join['SpecialNeedsDiagnosticsDegree'] = [
                 'type' => 'left',
-                'table' => 'special_needs_diagnosis_degree',
+                'table' => 'special_needs_diagnostics_degree',
                 'conditions' => [
-                    'SpecialNeedsDiagnosisDegree.id = SpecialNeedsDiagnosis.special_needs_diagnosis_degree_id',
+                    'SpecialNeedsDiagnosticsDegree.id = SpecialNeedsDiagnostics.special_needs_diagnostics_degree_id',
                 ],
             ];
-            $join['SpecialNeedsDiagnosisTypes'] = [
+            $join['SpecialNeedsDiagnosticsTypes'] = [
                 'type' => 'left',
-                'table' => 'special_needs_diagnosis_types',
+                'table' => 'special_needs_diagnostics_types',
                 'conditions' => [
-                    'SpecialNeedsDiagnosisTypes.id = SpecialNeedsDiagnosis.special_needs_diagnosis_type_id',
+                    'SpecialNeedsDiagnosticsTypes.id = SpecialNeedsDiagnosticsis.special_needs_diagnostics_type_id',
                 ],
             ];
         }
@@ -412,28 +412,28 @@ class StudentSpecialNeedsTable extends AppTable
     {
         $extraField = $this->commonFields($extraField);
         $extraField[] = [
-            'key'   => 'SpecialNeedsDiagnosis.date',
+            'key'   => 'SpecialNeedsDiagnostics.date',
             'field' => 'date',
             'type'  => 'string',
             'label' => __('Date'),
         ];
         $extraField[] = [
-            'key'   => 'SpecialNeedsDiagnosis.comment',
+            'key'   => 'SpecialNeedsDiagnostics.comment',
             'field' => 'comment',
             'type'  => 'string',
             'label' => __('Comment'),
         ];
         $extraField[] = [
-            'key'   => 'SpecialNeedsDiagnosis.special_needs_diagnosis_type_id',
-            'field' => 'diagnosis_type',
+            'key'   => 'SpecialNeedsDiagnostics.special_needs_diagnostics_type_id',
+            'field' => 'diagnostics_type',
             'type'  => 'string',
-            'label' => __('Diagnosis Types'),
+            'label' => __('diagnostics Types'),
         ];
         $extraField[] = [
-            'key'   => 'SpecialNeedsDiagnosis.special_needs_diagnosis_degree_id',
-            'field' => 'diagnosis_degree',
+            'key'   => 'SpecialNeedsDiagnostics.special_needs_diagnostics_degree_id',
+            'field' => 'diagnostics_degree',
             'type'  => 'string',
-            'label' => __('Diagnosis Degree'),
+            'label' => __('Diagnostics Degree'),
         ];
         
         return $extraField;

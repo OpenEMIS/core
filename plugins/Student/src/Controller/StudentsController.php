@@ -55,7 +55,7 @@ class StudentsController extends AppController
         'SpecialNeedsServices',
         'SpecialNeedsDevices',
         'SpecialNeedsPlans',
-        'SpecialNeedsDiagnosis'    //POCOR-6873
+        'SpecialNeedsDiagnostics'    //POCOR-6873
     ];
 
     public function initialize()
@@ -230,9 +230,9 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
     }
-    public function SpecialNeedsDiagnosis()
+    public function SpecialNeedsDiagnostics()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnosis']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
     } //POCOR-6873
     // Special Needs - End
 

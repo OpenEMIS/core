@@ -189,9 +189,9 @@ class FieldOptionComponent extends Component
 
         'SpecialNeedsDeviceTypes' => ['className' => 'SpecialNeeds.SpecialNeedsDeviceTypes', 'parent' => 'Special Needs'],
         'PlanTypes' => ['className' => 'SpecialNeeds.SpecialNeedsPlanTypes', 'parent' => 'Special Needs'],   //POCOR-6873
-        'DiagnosticTypeOfDisability' => ['className' => 'SpecialNeeds.SpecialNeedsDiagnosisTypes', 'parent' => 'Special Needs'],  //POCOR-6873
-        'DiagnosticDisabilityDegree' => ['className' => 'SpecialNeeds.SpecialNeedsDiagnosisDegree', 'parent' => 'Special Needs'],  //POCOR-6873
-        // 'DiagnosisLevels' => ['className' => 'SpecialNeeds.SpecialNeedsDiagnosisLevels', 'parent' => 'Special Needs'],  //POCOR-6873
+        'DiagnosticTypeOfDisability' => ['className' => 'SpecialNeeds.SpecialNeedsDiagnosticsTypes', 'parent' => 'Special Needs'],  //POCOR-6873
+        'DiagnosticDisabilityDegree' => ['className' => 'SpecialNeeds.SpecialNeedsDiagnosticsDegree', 'parent' => 'Special Needs'],  //POCOR-6873
+        // 'DiagnosticsLevels' => ['className' => 'SpecialNeeds.SpecialNeedsDiagnosticsLevels', 'parent' => 'Special Needs'],  //POCOR-6873
 
         'SpecialNeedsServiceClassification' => ['className' => 'SpecialNeeds.SpecialNeedsServiceClassification', 'parent' => 'Special Needs'] //POCOR-6873
     ];
