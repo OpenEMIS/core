@@ -1245,7 +1245,7 @@ class NavigationComponent extends Component
                 'title' => 'Special Needs',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.SpecialNeedsReferrals', 'Students.SpecialNeedsAssessments', 'Students.SpecialNeedsServices', 'Students.SpecialNeedsDevices', 'Students.SpecialNeedsPlans', 'Students.SpecialNeedsDiagnosis']
+                'selected' => ['Students.SpecialNeedsReferrals', 'Students.SpecialNeedsAssessments', 'Students.SpecialNeedsServices', 'Students.SpecialNeedsDevices', 'Students.SpecialNeedsPlans', 'Students.SpecialNeedsDiagnostics']
             ],
             'Students.StudentVisitRequests' => [
                 'title' => 'Visits',
