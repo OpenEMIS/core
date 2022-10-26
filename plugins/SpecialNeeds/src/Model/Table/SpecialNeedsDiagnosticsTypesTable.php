@@ -10,24 +10,24 @@ use App\Model\Table\ControllerActionTable;
  * @ticket POCOR-6873
  */
 
-class SpecialNeedsDiagnosisTypesTable extends ControllerActionTable
+class SpecialNeedsDiagnosticsTypesTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
         parent::initialize($config);
         $this->addBehavior('FieldOption.FieldOption');
-        $this->hasMany('SpecialNeedsDiagnosis', ['className' => 'SpecialNeeds.SpecialNeedsDiagnosis', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('SpecialNeedsDiagnostics', ['className' => 'SpecialNeeds.SpecialNeedsDiagnostics', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'DiagnosisTypes' => ['index', 'view']
+            'DiagnosticsTypes' => ['index', 'view']
         ]);
     }
 
-    public function getDiagnosisTypeList()
+    public function getDiagnosticsTypeList()
     {
 
         $data = $this
             ->find('list')
-            // ->where([$this->aliasField('special_needs_diagnosis_types_id') => $degreeId])
+            // ->where([$this->aliasField('special_needs_diagnostics_types_id') => $degreeId])
             ->toArray();
         return $data;
     }

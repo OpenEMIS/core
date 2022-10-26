@@ -16,39 +16,39 @@ use Cake\Validation\Validator;
  * @ticket POCOR-6873
  */
 
-class SpecialNeedsDiagnosisDegreeTable extends ControllerActionTable
+class SpecialNeedsDiagnosticsDegreeTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('SpecialNeedsDiagnosisTypes', [
-            'foreignKey' => 'special_needs_diagnosis_types_id',
+        $this->belongsTo('SpecialNeedsDiagnosticsTypes', [
+            'foreignKey' => 'special_needs_diagnostics_types_id',
             'joinType' => 'INNER',
-            'className' => 'SpecialNeeds.SpecialNeedsDiagnosisTypes'
+            'className' => 'SpecialNeeds.SpecialNeedsDiagnosticsTypes'
         ]);
         $this->addBehavior('FieldOption.FieldOption');
-        $this->hasMany('SpecialNeedsDiagnosis', ['className' => 'SpecialNeeds.SpecialNeedsDiagnosis', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('SpecialNeedsDiagnostics', ['className' => 'SpecialNeeds.SpecialNeedsDiagnostics', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'DiagnosisDegree' => ['index', 'view']
+            'DiagnosticsDegree' => ['index', 'view']
         ]);
     }
 
     private function setupFields($entity = null)
     {
-        $SpecialNeedsDiagnosisTypesTable = TableRegistry::get('SpecialNeeds.SpecialNeedsDiagnosisTypes');
-        $SpecialNeedsDiagnosisTypesOptions = $SpecialNeedsDiagnosisTypesTable->getDiagnosisTypeList();
+        $SpecialNeedsDiagnosticsTypesTable = TableRegistry::get('SpecialNeeds.SpecialNeedsDiagnosticsTypes');
+        $SpecialNeedsDiagnosticsTypesOptions = $SpecialNeedsDiagnosticsTypesTable->getDiagnosticsTypeList();
         $this->field('name');
         $this->field('default', ['entity' => $entity]);
         $this->field('international_code');
         $this->field('national_code');
-        $this->field('special_needs_diagnosis_types_id', ['type' => 'select', 'options' => $SpecialNeedsDiagnosisTypesOptions]);
+        $this->field('special_needs_diagnostics_types_id', ['type' => 'select', 'options' => $SpecialNeedsDiagnosticsTypesOptions]);
 
-        $this->setFieldOrder(['special_needs_diagnosis_types_id', 'name', 'default', 'international_code', 'national_code']);
+        $this->setFieldOrder(['special_needs_diagnostics_types_id', 'name', 'default', 'international_code', 'national_code']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder(['special_needs_diagnosis_types_id', 'name', 'default', 'international_code', 'national_code']);
+        $this->setFieldOrder(['special_needs_diagnostics_types_id', 'name', 'default', 'international_code', 'national_code']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -71,7 +71,7 @@ class SpecialNeedsDiagnosisDegreeTable extends ControllerActionTable
 
         $data = $this
             ->find('list')
-            ->where([$this->aliasField('special_needs_diagnosis_types_id') => $degreeId])
+            ->where([$this->aliasField('special_needs_diagnostics_types_id') => $degreeId])
             ->toArray();
         return $data;
     }
