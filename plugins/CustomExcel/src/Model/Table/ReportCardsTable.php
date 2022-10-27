@@ -1149,11 +1149,8 @@ class ReportCardsTable extends AppTable
                 ->toArray();
 				$name = [];
 				foreach ($StudentSubjectStaffData as $data) {
-					$name[] = $data->first_name.' '.$data->last_name;
+					$name[] = $data->first_name.' '.$data->last_name.' , '.$data->preferred_name;
 				}
-                if(isset($data->preferred_name)){
-                    $name[] = $data->first_name.' '.$data->last_name.' , '.$data->preferred_name;
-                }
 				$entity[] = [
 					'education_subject_id' => $value['education_subject_id'],
 					'name' => implode(",",$name)
