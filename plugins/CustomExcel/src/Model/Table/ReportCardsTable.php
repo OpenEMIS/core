@@ -551,10 +551,10 @@ class ReportCardsTable extends AppTable
                     'security_user_name' => $SecurityUsers->find()->func()->concat([
                         'first_name' => 'literal',
                         " ",
-                        'middle_name' => 'literal',
+                        /*'middle_name' => 'literal',
                         " ",
                          'third_name' => 'literal',
-                        " ",
+                        " ",*/
                         'last_name' => 'literal'
                     ])//POCOR-5227 Ends
                 ])
