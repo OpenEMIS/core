@@ -614,7 +614,8 @@ class ReportCardsTable extends AppTable
                             'preferred_name',
                             'email',
                             'address',
-                            'postal_code'
+                            'postal_code',
+                            'gender_id' // POCOR-7033
                         ]
                     ]
                 ])
@@ -623,6 +624,13 @@ class ReportCardsTable extends AppTable
                     'SecurityGroupUsers.security_role_id' => $principalRoleId
                 ])
                 ->first();
+                // POCOR-7033[START]
+                if($entity->user->gender_id == '1'){
+                    $entity->user->gender_id = "Male";
+                }else{
+                    $entity->user->gender_id = "Femail";
+                }
+                // POCOR-7033[END]
             return $entity;
         }
     }
@@ -689,7 +697,8 @@ class ReportCardsTable extends AppTable
                             'preferred_name',
                             'email',
                             'address',
-                            'postal_code'
+                            'postal_code',
+                            'gender_id' // POCOR-7033
                         ]
                     ],
                     'ClassesSecondaryStaff.SecondaryStaff' => [
@@ -707,6 +716,13 @@ class ReportCardsTable extends AppTable
                     ]
                 ]
             ]);
+            //POCOR-7033[START]
+            if($entity->staff->gender_id == '1'){
+                $entity->staff->gender_id = "Male";
+            }else{
+                $entity->staff->gender_id = "Femail";
+            }
+            //POCOR-7033[END]
             return $entity;
         }
     }
@@ -1138,6 +1154,8 @@ class ReportCardsTable extends AppTable
 					'institution_subject_id' => $StudentSubjectStaff->aliasField('institution_subject_id'),
 					'first_name' => 'SecurityUsers.first_name',
 					'last_name' => 'SecurityUsers.last_name',
+                    'preferred_name' => 'SecurityUsers.preferred_name',
+                    'gender_id' => 'SecurityUsers.gender_id', // POCOR[7033]
                 ])
 				 ->innerJoin(['SecurityUsers' => 'security_users'], [
                     'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
@@ -1147,8 +1165,16 @@ class ReportCardsTable extends AppTable
                 ])
                 ->toArray();
 				$name = [];
+                // POCOR[7033]
 				foreach ($StudentSubjectStaffData as $data) {
-					$name[] = $data->first_name.' '.$data->last_name;
+                    if(isset($data->gender_id)){
+                        if($data->gender_id == '1'){
+                            $gender = "Male";
+                        }else{
+                            $gender = "Female";
+                        }
+                    }
+					$name[] = $data->first_name.' '.$data->last_name.' , '.$data->preferred_name.' , '.$gender ;
 				}
 				$entity[] = [
 					'education_subject_id' => $value['education_subject_id'],
