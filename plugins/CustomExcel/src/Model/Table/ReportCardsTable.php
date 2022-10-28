@@ -628,7 +628,7 @@ class ReportCardsTable extends AppTable
                 if($entity->user->gender_id == '1'){
                     $entity->user->gender_id = "Male";
                 }else{
-                    $entity->user->gender_id = "Femail";
+                    $entity->user->gender_id = "Female";
                 }
                 // POCOR-7033[END]
             return $entity;
@@ -720,7 +720,7 @@ class ReportCardsTable extends AppTable
             if($entity->staff->gender_id == '1'){
                 $entity->staff->gender_id = "Male";
             }else{
-                $entity->staff->gender_id = "Femail";
+                $entity->staff->gender_id = "Female";
             }
             //POCOR-7033[END]
             return $entity;
