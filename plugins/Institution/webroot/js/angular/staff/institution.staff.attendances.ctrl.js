@@ -30,6 +30,9 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     vm.selectedDayDate = '';
     vm.selectedFormattedDayDate = '';
 
+    vm.shiftListOptions = [];
+    vm.selectedShift = '';
+
     // All attendances for a given day
     vm.totalStaff = '';
 
@@ -96,6 +99,12 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         }, vm.error)
         .then(function(dayListOptions) {
             vm.setDayListOptions(dayListOptions);
+            return InstitutionStaffAttendancesSvc.getShiftListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId);
+        }, vm.error)
+        .then(function(shiftListOptions) {
+            vm.setShiftListOptions(shiftListOptions);
+            console.log("---PARAM---");
+            console.log(vm.getAllStaffAttendancesParams());
             return InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams());
         }, vm.error)
         .then(function(allStaffAttendances) {
@@ -157,7 +166,6 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     }
 
     vm.changeDay = function() {
-        console.log('Change - day', vm.selectedDay);
         UtilsSvc.isAppendLoader(true);
         var dayObj = vm.dayListOptions.find(obj => obj.id == vm.selectedDay);
         vm.selectedDayDate = dayObj.date;
@@ -165,6 +173,21 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         vm.schoolClosed = (angular.isDefined(dayObj.closed) && dayObj.closed) ? true : false;
         vm.gridOptions.context.schoolClosed = vm.schoolClosed;
         vm.gridOptions.context.date = vm.selectedDay;
+        InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams())
+        .then(function(allStaffAttendances) {
+            vm.setAllStaffAttendances(allStaffAttendances);
+            vm.setColumnDef();
+            vm.setGridData();
+        }, vm.error)
+        .finally(function() {
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    vm.changeShift = function() {
+        UtilsSvc.isAppendLoader(true);
+        var shiftObj = vm.shiftListOptions.find(obj => obj.id == vm.selectedShift);
+        vm.gridOptions.context.date = vm.selectedShift;
         InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams())
         .then(function(allStaffAttendances) {
             vm.setAllStaffAttendances(allStaffAttendances);
@@ -185,6 +208,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
             week_start_day: vm.selectedStartDate,
             week_end_day: vm.selectedEndDate,
             day_id: vm.selectedDay,
+            shift_id: vm.selectedShift,
             day_date: vm.selectedDayDate,
 			own_attendance_view: vm.ownView,
             own_attendance_edit: vm.ownEdit,
@@ -248,6 +272,19 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         }
     }
 
+    vm.setShiftListOptions = function(shiftListOptions) {
+        vm.shiftListOptions = shiftListOptions;
+        if (shiftListOptions.length > 0) {
+            angular.forEach(shiftListOptions, function(shift) {
+                // if (shift.selected == true) {
+                   vm.selectedShift = shift.id;
+                   vm.selectedFormattedDayDate = shift.name;
+                   vm.gridOptions.context.date = vm.selectedShift;
+                // }
+            });
+        }
+    }
+
     vm.setAllStaffAttendances = function(staffList) {
         vm.allPresentCount = 0;
         vm.totalStaff = 0;
@@ -256,7 +293,6 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         vm.allLateCount = 0;
         vm.staffList = staffList;
         vm.totalStaff = staffList.length;
-        console.log(staffList.length);
         if (staffList.length > 0) {
             angular.forEach(staffList, function(staff) {
                 // for All Days Dashboard
@@ -270,7 +306,6 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
                     }
                     if (attendance.absence_type_id == 3) {
                        vm.allLateCount = vm.allLateCount + 1;
-                       console.log('Late:',vm.allLateCount );
                     }
                 });
             });
