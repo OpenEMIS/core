@@ -95,8 +95,11 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
                 $archived_academic_period_arr[] = $academic_period_data['academic_period_id'];
             }
         }
-
-        $periodOptions = $AcademicPeriod->getArchivedYearList($archived_academic_period_arr);
+        //POCOR-6799[START]
+        if(!empty($archived_academic_period_arr)){
+            $periodOptions = $AcademicPeriod->getArchivedYearList($archived_academic_period_arr);
+        }
+        //POCOR-6799[END]
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
         }
