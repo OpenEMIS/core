@@ -58,6 +58,7 @@ class StaffTable extends ControllerActionTable
         $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'staff_type_id']);
         $this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
+        $this->belongsTo('InstitutionStaffShifts', ['className' => 'Institution.InstitutionStaffShifts', 'foreignKey' => 'staff_id']);
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffRelease', ['className' => 'Institution.StaffRelease', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -3194,9 +3195,15 @@ class StaffTable extends ControllerActionTable
             }
         }
 
-
+        $InstitutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
         $query = $query
             ->matching('Users')
+            ->innerJoin(
+                [$InstitutionStaffShifts->alias() => $InstitutionStaffShifts->table()],
+                [
+                    $InstitutionStaffShifts->aliasField('staff_id = ') . $this->aliasField('staff_id')
+                ]
+                )
             ->where(
                 [
                     $this->aliasField('institution_id') => $institutionId,
