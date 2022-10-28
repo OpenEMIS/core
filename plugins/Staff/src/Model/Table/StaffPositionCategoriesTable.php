@@ -41,9 +41,9 @@ class StaffPositionCategoriesTable extends ControllerActionTable
     {
         
         $options = [
-            0 => __('Teaching'),
-            1 => __('Non Teaching')
-        ];
+            1 => __('Teaching'),
+            0 => __('Non Teaching')
+        ]; //POCOR-6950
         $attr['type'] = 'select';
         $attr['select'] = false;
         $attr['options'] = $options;
