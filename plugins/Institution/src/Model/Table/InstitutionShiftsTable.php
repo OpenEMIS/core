@@ -709,9 +709,12 @@ class InstitutionShiftsTable extends ControllerActionTable
                     }
                     $returnArr[] = [
                         'id' => intval($result->institutionShiftId),
-                        'name' => $shiftName
+                        'name' => $shiftName.': '. "7:00 - 1300"
                     ];
                 }
+                $defaultSelect = ['id' => $returnArr[0]['id'], 'name' => $returnArr[0]['name']];
+                $defaultSelect['selected'] = true;
+                // array_unshift($returnArr, $defaultSelect);
                 return $returnArr;
             });
     }

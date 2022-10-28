@@ -10,7 +10,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         InstitutionStaffAttendances: 'Staff.InstitutionStaffAttendances',
         Staff: 'Institution.Staff',
         StaffAttendances: 'Institution.StaffAttendances',
-        InstitutionShiftsTable:'Institution.InstitutionShifts'
+        InstitutionShiftsTable:'Institution.InstitutionShifts',
+        InstitutionShifts: 'Institution.InstitutionShifts',
     };
 
     var translateText = {
@@ -38,7 +39,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         getDayListOptions:getDayListOptions,
         getAllStaffAttendances: getAllStaffAttendances,
         getColumnDefs: getColumnDefs,
-        getAllDayColumnDefs: getAllDayColumnDefs
+        getAllDayColumnDefs: getAllDayColumnDefs,
+        getShiftListOptions: getShiftListOptions
     };
     return service;
 
@@ -127,6 +129,16 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             })
             .ajax({success: success, defer: true});
     }
+
+    function getShiftListOptions(academicPeriodId, weekId, institutionId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return InstitutionShifts.find('shiftOptions', 
+        {institution_id: institutionId, 
+            academic_period_id: academicPeriodId})
+                .ajax({success: success, defer: true});
+        }
 
     function getAllStaffAttendances(params) {
         var extra = {
