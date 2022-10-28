@@ -3081,6 +3081,7 @@ class StaffTable extends ControllerActionTable
         $academicPeriodId = $options['academic_period_id'];
         $ownAttendanceView = $options['own_attendance_view'];
         $otherAttendanceView = $options['other_attendance_view'];
+        $shiftId = $options['shift_id'];
 
         $weekStartDate = $options['week_start_day'];
         $weekEndDate = $options['week_end_day'];
