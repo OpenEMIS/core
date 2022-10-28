@@ -1138,6 +1138,7 @@ class ReportCardsTable extends AppTable
 					'institution_subject_id' => $StudentSubjectStaff->aliasField('institution_subject_id'),
 					'first_name' => 'SecurityUsers.first_name',
 					'last_name' => 'SecurityUsers.last_name',
+                    'preferred_name' => 'SecurityUsers.preferred_name',
                 ])
 				 ->innerJoin(['SecurityUsers' => 'security_users'], [
                     'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
@@ -1148,7 +1149,7 @@ class ReportCardsTable extends AppTable
                 ->toArray();
 				$name = [];
 				foreach ($StudentSubjectStaffData as $data) {
-					$name[] = $data->first_name.' '.$data->last_name;
+					$name[] = $data->first_name.' '.$data->last_name.' , '.$data->preferred_name;
 				}
 				$entity[] = [
 					'education_subject_id' => $value['education_subject_id'],
