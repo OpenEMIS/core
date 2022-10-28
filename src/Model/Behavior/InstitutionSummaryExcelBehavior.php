@@ -195,7 +195,8 @@ class InstitutionSummaryExcelBehavior extends Behavior
     	$institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
 		$areaLevelId = $requestData->area_level_id;
-
+		$academic_period_id = $requestData->academic_period_id;
+		//echo "<pre>";print_r($requestData);die;
 		//Start:POCOR-6818 Modified this for POCOR-6859
         $AreaT = TableRegistry::get('areas');                    
         //Level-1
@@ -237,8 +238,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
         $mergeArr = array_unique($mergeArr);
         $finalIds = implode(',',$mergeArr);
         $finalIds = explode(',',$finalIds);
-		//echo "<pre>";print_r($finalIds);die;
-
+		
         $where = [];
         if ($areaId != -1) {
             $where[$Institutions->aliasField('area_id in')] = $finalIds;
@@ -540,7 +540,11 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									->where(['area_id'=>$Area_ins->id,'institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id])
 									;
 
-						}	
+						}
+						//**************************************************************************** */
+						//********************  Section For District  END     *****************************
+						//**************************************************************************** */
+
 						$resultArray[$key][] = $InstitutionType->name;
 						$resultArray['countryData'][]= $institut->count();
 						$resultArray['DistrictData'][][$KEY]= $institutDist->count();
@@ -548,17 +552,162 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					}
 					
 				}
+
+				$ShiftOptionTable = TableRegistry::get('shift_options');
+				$InsStudentTable = TableRegistry::get('institution_students');
+				$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
+				$shiftArr = [];
+				$shiftArrResult = [];
+				foreach($ShiftOptions as $keyy => $ShiftOption){ 
+					$shiftArr[$keyy] = 'male';
+					$shiftArrResult[$keyy] = $InsStudentTable->find()
+					->select([
+						//'id','institution_id','student_id'
+						'student_id' => 'student_id',
+						'academic_period_id' => 'academic_period_id',
+						'institution_id' => 'institution_id',
+						'student_status_id' => 'student_status_id',
+						'gender_id' => 'Students.gender_id',
+					])
+					
+					->leftJoin(
+						['Students' => 'security_users'],
+						[
+							'Students.id = '. $InsStudentTable->aliasField('student_id')
+						]
+						)
+					
+					->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>1])
+					->count();
+					
+
+					$shiftArr[$keyy.'1'] = 'female';
+					$shiftArrResult[$keyy.'1'] = $InsStudentTable->find()
+					->select([
+						//'id','institution_id','student_id'
+						'student_id' => 'student_id',
+						'academic_period_id' => 'academic_period_id',
+						'institution_id' => 'institution_id',
+						'student_status_id' => 'student_status_id',
+						'gender_id' => 'Students.gender_id',
+					])
+					
+					->leftJoin(
+						['Students' => 'security_users'],
+						[
+							'Students.id = '. $InsStudentTable->aliasField('student_id')
+						]
+						)
+					
+					->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>2])
+					->count();
+				}
+				//echo "<pre>";print_r($shiftArrResult);die;
+
+				$arr = ['0'=>'male','1'=>'female'];
+				array_merge($resultArray[0],$shiftArr);
+				array_merge($resultArray[1],$shiftArrResult);
+				$aa =(array_merge($resultArray[0],$shiftArr));//die;
+				$resultArray[0] = $aa;
+				$aa1 =(array_merge($resultArray['countryData'],$shiftArrResult));//die;
+				$resultArray['countryData'] = $aa1;
 				//echo "<pre>";print_r($resultArray);die;
 				array_unshift($resultArray['countryData'] , 'Country');
-				$AreasData1 = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
+			    $AreasData1 = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
 				foreach($AreasData1 as $KEYY => $Area_insss){ 
+
+					//provider & types..
+					// $InstitutionsTypesTable = TableRegistry::get('institution_types');
+					// $InstitutionsTypes = $InstitutionsTypesTable->find('all')->toArray();
+					// $InstitutionProviderssTable = TableRegistry::get('institution_providers');
+					// $InstitutionsProviders = $InstitutionProviderssTable->find('all')->toArray();
+					// $resultArray[0][] = 'atoll';
+					// $keyy = 0;
+					// $ki = 1;
+					// foreach($InstitutionsProviders as $keyy => $InstitutionsProvider){ 
+					// 	foreach($InstitutionsTypes as $ki => $InstitutionsType){ 
+					// 		$finalArrayyyy =[];
+					// 	//$$institutDist=[];
+					// 	$AreasData = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
+					// 	foreach($AreasData as $K => $Area_ins){ 
+					// 		$finalArrayyyy[$K-1] = $Area_ins->name;
+
+					// 		$institutDist = $Institutions->find()
+					// 				->select([
+					// 					'ownership_name' => 'Ownerships.name',
+					// 					'ownership_id' => 'Ownerships.id',
+					// 					'sector_name' => 'Sectors.name',
+					// 					'sector_id' => 'Sectors.id',
+					// 					'provider_name' => 'Providers.name',
+					// 					'provider_id' => 'Providers.id',
+					// 					'type_name' => 'Types.name',
+					// 					'type_id' => 'Types.id',
+					// 					'area_id' => 'Areas.id',
+					// 					'area_name' => 'Areas.name',
+					// 					'area_code' => 'Areas.code',
+					// 					'area_administrative_name' => 'AreaAdministratives.name',
+					// 					'area_administrative_id' => 'AreaAdministratives.id',
+					// 					'area_administrative_code' => 'AreaAdministratives.code',
+					// 					'locality_name' => 'Localities.name',
+					// 					'locality_id' => 'Localities.id'
+					// 				])
+					// 				->leftJoin(
+					// 				['Ownerships' => 'institution_ownerships'],
+					// 				[
+					// 					'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+					// 				]
+					// 				)
+					// 				->leftJoin(
+					// 				['Sectors' => 'institution_sectors'],
+					// 				[
+					// 					'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+					// 				]
+					// 				)
+					// 				->leftJoin(
+					// 				['Areas' => 'areas'],
+					// 				[
+					// 					'Areas.id = '. $Institutions->aliasField('area_id')
+					// 				]
+					// 				)
+					// 				->leftJoin(
+					// 				['AreaAdministratives' => 'area_administratives'],
+					// 				[
+					// 					'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+					// 				]
+					// 				)
+					// 				->leftJoin(
+					// 				['Providers' => 'institution_providers'],
+					// 				[
+					// 					'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+					// 				]
+					// 				)
+					// 				->leftJoin(
+					// 				['Types' => 'institution_types'],
+					// 				[
+					// 					'Types.id = '. $Institutions->aliasField('institution_type_id')
+					// 				]
+					// 				)
+					// 				->leftJoin(
+					// 				['Localities' => 'institution_localities'],
+					// 				[
+					// 					'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+					// 				]
+					// 				)
+					// 				->where(['area_id'=>$Area_ins->id,'institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id])
+					// 				;
+
+					// 	}
+					// 	}
+					// }
+
 					$resultArray[$KEYY+1] = $resultArray['DistrictData'];
 					array_unshift($resultArray[$KEYY+1], $Area_ins->name);
 				}
 
 				//echo "<pre>";print_r($resultArray);die;
-			} else { 
-				if(!empty($value->area_id)) { 
+			} else {  
+
+				if(!empty($value->area_id)) {
 					//if (!in_array($value->area_id, $areaArray)) {
 						$resultArray[$key]['area_name'] = $value->area_name; 
 					// } else { 
@@ -568,48 +717,64 @@ class InstitutionSummaryExcelBehavior extends Behavior
 				} else {
 					$resultArray[$key]['area_name'] = '';
 				}
+				//echo "<pre>";print_r($resultArray);die;
+				// $ShiftOptionTable = TableRegistry::get('shift_options');
+				// $ShiftOptions = $ShiftOptionTable->find('all')->toArray();
+				// $shiftArr = [];
+				// foreach($ShiftOptions as $keyy => $ShiftOption){
+				// 	$shiftArr[$keyy] = 'male';
+				// 	$shiftArr[$keyy.'1'] = 'female';
+				// }
+				// // echo "<pre>";print_r($resultArray[0]);
+				// // echo "<pre>";print_r($shiftArr);
+				// array_merge($resultArray[0],$shiftArr);
+				// echo "<pre>";print_r($resultArray);
+				// $resultArray[0] =(array_merge($resultArray[0],$shiftArr));die;
+				// unset ($shiftArr);
+				// echo "<pre>";print_r($resultArray);die;
 			}
 			$i++;	
 		}
-		//echo "<pre>"; print_r($resultArray);die;
+		//echo "<pre>";print_r($resultArray);die;
 		
-		$shiftGenderData = $Institutions->find()
-                    ->select([
-                        'gender' => 'Genders.name',
-                        'code' => 'Genders.code',
-                        'shift_option' => 'ShiftOptions.name',
-                        'shift_option_id' => 'ShiftOptions.id'
-                    ])
-					->innerJoin(
-					['InstitutionShifts' => 'institution_shifts'],
-					[
-						'InstitutionShifts.institution_id = '. $Institutions->aliasField('id')
-					]
-					)
-					->innerJoin(
-					['InstitutionStudents' => 'institution_students'],
-					[
-						'InstitutionStudents.institution_id = '. $Institutions->aliasField('id')
-					]
-					)
-					->innerJoin(
-					['ShiftOptions' => 'shift_options'],
-					[
-						'ShiftOptions.id = InstitutionShifts.shift_option_id'
-					]
-					)
-					->innerJoin(
-					['Users' => 'security_users'],
-					[
-						'Users.id = InstitutionStudents.student_id'
-					]
-					)
-					->innerJoin(
-					['Genders' => 'genders'],
-					[
-						'Genders.id = Users.gender_id'
-					]
-					);
+		
+		// $shiftGenderData = $Institutions->find()
+        //             ->select([
+        //                 'gender' => 'Genders.name',
+        //                 'code' => 'Genders.code',
+        //                 'shift_option' => 'ShiftOptions.name',
+        //                 'shift_option_id' => 'ShiftOptions.id'
+        //             ])
+		// 			->innerJoin(
+		// 			['InstitutionShifts' => 'institution_shifts'],
+		// 			[
+		// 				'InstitutionShifts.institution_id = '. $Institutions->aliasField('id')
+		// 			]
+		// 			)
+		// 			->innerJoin(
+		// 			['InstitutionStudents' => 'institution_students'],
+		// 			[
+		// 				'InstitutionStudents.institution_id = '. $Institutions->aliasField('id')
+		// 			]
+		// 			)
+		// 			->innerJoin(
+		// 			['ShiftOptions' => 'shift_options'],
+		// 			[
+		// 				'ShiftOptions.id = InstitutionShifts.shift_option_id'
+		// 			]
+		// 			)
+		// 			->innerJoin(
+		// 			['Users' => 'security_users'],
+		// 			[
+		// 				'Users.id = InstitutionStudents.student_id'
+		// 			]
+		// 			)
+		// 			->innerJoin(
+		// 			['Genders' => 'genders'],
+		// 			[
+		// 				'Genders.id = Users.gender_id'
+		// 			]
+		// 			);
 					//echo "<pre>".print_r($shiftGenderData->toArray());die;
 		$shift_gender = array();
 		// if(!empty($shiftGenderData)) {	
@@ -939,39 +1104,126 @@ class InstitutionSummaryExcelBehavior extends Behavior
 
 				unset($data['DistrictData']);
 				unset($data['countryData']);
-				// $AreasData = $AreaT->find('all',['conditions'=>['area_level_id'=>2]])->toArray();
-				// foreach($data as $data_keyy => $data_roww) {
-				// 	if($data_keyy === 0) {
-				// 		$finalArray[$data_keyy] = $data_roww;
-				// 	}
-				// }
-				// $arrayy1[0] = "sd";
-				// $arrayy1[1] = 10;
-				// $arrayy1[2] = 10;
-				// $arrayy1[3] = 10;
-				// $arrayy1[4] = 10;
-				// $arrayy1[5] = 10;
-				// $arrayy1[6] = 10;
-				// $arrayy1[7] = 10;
-				// $arrayy1[8] = 10;
-				// $arrayy1[9] = 10;
-				// $arrayy1[10] = 10;
-				// $arrayy1[11] = 10;
-				// $arrayy1[12] = 10;
-				// $arrayy1[13] = 10;
-				// $arrayy1[14] = 10;
-				// $arrayy1[15] = 10;
-				// $arrayy1[16] = 10;
-				// $arrayy1[17] = 10;
-				// $arrayy1[18] = 10;
-				// $arrayy1[19] = 10;
-				// $arrayy1[20] = 10;
+				$AreasData = $AreaT->find('all',['conditions'=>['area_level_id'=>2]])->toArray();
+				foreach($data as $data_keyy => $data_roww) {
+					if($data_keyy === 0) {
+						$finalArray[$data_keyy] = $data_roww;
+					}
+				}
+					//provider & types..
+					$InstitutionsTypesTable = TableRegistry::get('institution_types');
+					$InstitutionsTypes = $InstitutionsTypesTable->find('all')->toArray();
+					$InstitutionProviderssTable = TableRegistry::get('institution_providers');
+					$InstitutionsProviders = $InstitutionProviderssTable->find('all')->toArray();
+					$resultArray[0][] = 'atoll';
+					$keyy = 0;
+					$ki = 1;
+					foreach($InstitutionsProviders as $keyy => $InstitutionsProvider){ 
+						foreach($InstitutionsTypes as $ki => $InstitutionsType){ 
+							$finalArrayyyy =[];
+							//$$institutDist=[];
+							$AreasData = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
+							foreach($AreasData as $K => $Area_ins){ 
+								$finalArrayyyy[$K-1] = $Area_ins->name;
 
-				// foreach($AreasData as $KEy => $AreaINs){
-				// 	$finalArray[$KEy+1] = $arrayy1;
-				// }
+								$institutDist = $Institutions->find()
+										->select([
+											'ownership_name' => 'Ownerships.name',
+											'ownership_id' => 'Ownerships.id',
+											'sector_name' => 'Sectors.name',
+											'sector_id' => 'Sectors.id',
+											'provider_name' => 'Providers.name',
+											'provider_id' => 'Providers.id',
+											'type_name' => 'Types.name',
+											'type_id' => 'Types.id',
+											'area_id' => 'Areas.id',
+											'area_name' => 'Areas.name',
+											'area_code' => 'Areas.code',
+											'area_administrative_name' => 'AreaAdministratives.name',
+											'area_administrative_id' => 'AreaAdministratives.id',
+											'area_administrative_code' => 'AreaAdministratives.code',
+											'locality_name' => 'Localities.name',
+											'locality_id' => 'Localities.id'
+										])
+										->leftJoin(
+										['Ownerships' => 'institution_ownerships'],
+										[
+											'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+										]
+										)
+										->leftJoin(
+										['Sectors' => 'institution_sectors'],
+										[
+											'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+										]
+										)
+										->leftJoin(
+										['Areas' => 'areas'],
+										[
+											'Areas.id = '. $Institutions->aliasField('area_id')
+										]
+										)
+										->leftJoin(
+										['AreaAdministratives' => 'area_administratives'],
+										[
+											'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+										]
+										)
+										->leftJoin(
+										['Providers' => 'institution_providers'],
+										[
+											'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+										]
+										)
+										->leftJoin(
+										['Types' => 'institution_types'],
+										[
+											'Types.id = '. $Institutions->aliasField('institution_type_id')
+										]
+										)
+										->leftJoin(
+										['Localities' => 'institution_localities'],
+										[
+											'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+										]
+										)
+										->where(['area_id'=>$Area_ins->id,'institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id])
+										;
+
+							}
+						}
+					}
+
+				$arrayy1[0] = "sd";
+				$arrayy1[1] = 10;
+				$arrayy1[2] = 10;
+				$arrayy1[3] = 10;
+				$arrayy1[4] = 10;
+				$arrayy1[5] = 10;
+				$arrayy1[6] = 10;
+				$arrayy1[7] = 10;
+				$arrayy1[8] = 10;
+				$arrayy1[9] = 10;
+				$arrayy1[10] = 10;
+				$arrayy1[11] = 10;
+				$arrayy1[12] = 10;
+				$arrayy1[13] = 10;
+				$arrayy1[14] = 10;
+				$arrayy1[15] = 10;
+				$arrayy1[16] = 10;
+				$arrayy1[17] = 10;
+				$arrayy1[18] = 10;
+				$arrayy1[19] = 10;
+				$arrayy1[20] = 10;
+
+				foreach($AreasData as $KEy => $AreaINs){
+					$finalArray[$KEy+1] = $arrayy1;
+				}
 
 			}else{
+				unset($data['DistrictData']);
+				unset($data['countryData']);
+
 				$AreasData = $AreaT->find('all',['conditions'=>['area_level_id'=>$areaLevelId]])->toArray();
 				foreach($data as $data_key => $data_row) { //echo "<pre>";print_r($data_row);die;
 					if($data_key === 0) {
@@ -1013,6 +1265,8 @@ class InstitutionSummaryExcelBehavior extends Behavior
 			}
 			
 		}
+		//echo "<pre>";print_r($AreaLevel);die;
+		//echo "<pre>";print_r($finalArray);die;
 		return $finalArray;
 	}
 
