@@ -356,8 +356,6 @@ class WorkflowBehavior extends Behavior
         $value = '';
         if (empty($entity->assignee_id)) {
             $value = '<span>&lt;'.$model->getMessage('general.unassigned').'&gt;</span>';
-        }elseif($entity->assignee_id == -1){ //POCOR-7025
-            $value = _('Auto Assign');
         }
 
         return $value;
@@ -2146,12 +2144,8 @@ class WorkflowBehavior extends Behavior
 
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $assigneeId = $SecurityGroupUsers->getFirstAssignee($params);
-
-        if($entity->assignee_id == -1){ //POCOR-7025
-            $entity->assignee_id = -1;
-        }else{
-            $entity->assignee_id = $assigneeId;
-        }
+        
+        $entity->assignee_id = $assigneeId;
     }
 
     public function setAssigneeId(Entity $entity, $requestData)
