@@ -321,7 +321,135 @@ class TransferConnectionsTable extends ControllerActionTable
         else{
             $entity->conn_status_id = "1";
         }
-        // echo "<pre>";print_r($post_data);exit;
+        //POCOR-6799[START]
+        $collection = $connection->schemaCollection();
+        $tableSchema = $collection->listTables();
+        if (!in_array('institution_staff_attendances', $tableSchema)) {
+
+            $connection->execute("CREATE TABLE IF NOT EXISTS `institution_staff_attendances` (
+                `id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+                `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+                `institution_id` int(11) NOT NULL COMMENT 'links to instututions.id',
+                `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
+                `date` date NOT NULL,
+                `time_in` time DEFAULT NULL,
+                `time_out` time DEFAULT NULL,
+                `comment` text COLLATE utf8mb4_unicode_ci,
+                `modified_user_id` int(11) DEFAULT NULL,
+                `modified` datetime DEFAULT NULL,
+                `created_user_id` int(11) NOT NULL,
+                `created` datetime NOT NULL,
+                `absence_type_id` int(11) DEFAULT '1'
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the attendance records for staff';
+              ");
+
+
+            $connection->execute("CREATE TABLE IF NOT EXISTS `institution_staff_leave` (
+                `id` int(11) NOT NULL,
+                `date_from` date NOT NULL,
+                `date_to` date NOT NULL,
+                `start_time` time DEFAULT NULL,
+                `end_time` time DEFAULT NULL,
+                `full_day` int(1) NOT NULL DEFAULT '1',
+                `comments` text COLLATE utf8mb4_unicode_ci,
+                `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+                `staff_leave_type_id` int(11) NOT NULL COMMENT 'links to staff_leave_types.id',
+                `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
+                `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
+                `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
+                `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
+                `number_of_days` decimal(5,1) NOT NULL,
+                `file_name` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                `file_content` longblob,
+                `modified_user_id` int(11) DEFAULT NULL,
+                `modified` datetime DEFAULT NULL,
+                `created_user_id` int(11) NOT NULL,
+                `created` datetime NOT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of leave for a specific staff';
+            ");
+
+            $connection->execute("CREATE TABLE IF NOT EXISTS `assessment_item_results` (
+                `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+                `marks` decimal(6,2) DEFAULT NULL,
+                `assessment_grading_option_id` int(11) DEFAULT NULL,
+                `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+                `assessment_id` int(11) NOT NULL COMMENT 'links to assessments.id',
+                `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
+                `education_grade_id` int(11) NOT NULL COMMENT 'links to education_grades.id',
+                `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
+                `assessment_period_id` int(11) NOT NULL COMMENT 'links to assessment_periods.id',
+                `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
+                `modified_user_id` int(11) DEFAULT NULL,
+                `modified` datetime DEFAULT NULL,
+                `created_user_id` int(11) NOT NULL,
+                `created` datetime NOT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the assessment results for an individual student in an institution'
+            PARTITION BY HASH (`assessment_id`)
+            PARTITIONS 101");
+
+            $connection->execute("CREATE TABLE IF NOT EXISTS `institution_student_absences` (
+                `id` int(11) NOT NULL,
+                `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+                `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
+                `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
+                `institution_class_id` int(11) NOT NULL COMMENT 'links to institution_classes.id',
+                `education_grade_id` int(11) NOT NULL DEFAULT '0',
+                `date` date NOT NULL,
+                `absence_type_id` int(11) NOT NULL COMMENT 'links to student_absence_reasons.id',
+                `institution_student_absence_day_id` int(11) DEFAULT NULL COMMENT 'links to institution_student_absence_days.id',
+                `modified_user_id` int(11) DEFAULT NULL,
+                `modified` datetime DEFAULT NULL,
+                `created_user_id` int(11) NOT NULL,
+                `created` datetime NOT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains absence records of students for day type attendance marking';
+            ");
+
+            $connection->execute("CREATE TABLE IF NOT EXISTS `student_attendance_marked_records` (
+                `institution_id` int(11) NOT NULL COMMENT 'links to instututions.id',
+                `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
+                `institution_class_id` int(11) NOT NULL COMMENT 'links to institution_classes.id',
+                `education_grade_id` int(11) NOT NULL DEFAULT '0',
+                `date` date NOT NULL,
+                `period` int(1) NOT NULL,
+                `subject_id` int(11) NOT NULL DEFAULT '0',
+                `no_scheduled_class` tinyint(4) NOT NULL DEFAULT '0'
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains attendance marking records';
+            ");
+
+            $connection->execute("CREATE TABLE IF NOT EXISTS `student_attendance_mark_types` (
+                `id` int(11) NOT NULL,
+                `name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                `code` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                `education_grade_id` int(11) DEFAULT NULL COMMENT 'links to education_grades.id',
+                `academic_period_id` int(11) DEFAULT NULL COMMENT 'links to academic_periods.id',
+                `student_attendance_type_id` int(11) NOT NULL COMMENT 'links to student_attendance_types.id',
+                `attendance_per_day` int(1) NOT NULL,
+                `modified_user_id` int(11) DEFAULT NULL,
+                `modified` datetime DEFAULT NULL,
+                `created_user_id` int(11) NOT NULL,
+                `created` datetime NOT NULL
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains different attendance marking for different academic periods for different programme'");
+
+            $connection->execute("CREATE TABLE IF NOT EXISTS `institution_student_absence_details` (
+                `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+                `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
+                `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
+                `institution_class_id` int(11) NOT NULL COMMENT 'links to institution_classes.id',
+                `education_grade_id` int(11) NOT NULL DEFAULT '0',
+                `date` date NOT NULL,
+                `period` int(1) NOT NULL,
+                `comment` text,
+                `absence_type_id` int(11) NOT NULL COMMENT 'links to student_absence_reasons.id',
+                `student_absence_reason_id` int(11) DEFAULT NULL COMMENT 'links to absence_types.id',
+                `subject_id` int(11) NOT NULL DEFAULT '0',
+                `modified_user_id` int(11) DEFAULT NULL,
+                `modified` datetime DEFAULT NULL,
+                `created_user_id` int(11) NOT NULL,
+                `created` datetime NOT NULL
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains absence records of students for day type attendance marking'");
+
+        }
+        //POCOR-6799[END]
         // $password  = ((new DefaultPasswordHasher)->hash($entity->password));
         // $password = $this->PasswordHash->encrypt($entity->password, Security::salt());
         $password = $this->encrypt($entity->password, Security::salt());
