@@ -883,7 +883,8 @@ class StudentAttendancesTable extends ControllerActionTable
                     ])
                     ->count();
         if($AttendanceMarkedData > 0){
-            return true;
+            return $query->find('list')->where(['institution_id'=>$institutionId,'academic_period_id'=>$academicPeriodId,'institution_class_id'=>$institutionClassId,'education_grade_id'=>$educationGradeId]);//POCOR-7028
+           // return true;
         } else{
             $connection = ConnectionManager::get('default');
             $dbConfig = $connection->config();
