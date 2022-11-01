@@ -685,11 +685,27 @@ class StudentTransferTable extends ControllerActionTable
                                     $InstitutionStudents->aliasField('student_status_id') => 1
                                 ])
                                 ->count();
+                        //POCOR-7007 Starts   
                         if($StudentRecords == 1){
                             $row['student_already_enrolled_in_same_institution'] = 1;
+                            $row['student_already_enrolled_in_other_institution'] = 0;
                         }else{
-                            $row['student_already_enrolled_in_same_institution'] = 0;
-                        }
+                            $StudentEnrollRecords = $InstitutionStudents
+                                ->find()
+                                ->where([
+                                    $InstitutionStudents->aliasField('student_id') => $studentId,
+                                    $InstitutionStudents->aliasField('academic_period_id >') => $academicPeriodId,
+                                    $InstitutionStudents->aliasField('student_status_id') => 1
+                                ])
+                                ->count();
+                            if($StudentEnrollRecords == 1){ //this condition check for graduate student who is enrolled in other institution
+                                $row['student_already_enrolled_in_same_institution'] = 0;
+                                $row['student_already_enrolled_in_other_institution'] = 1;
+                            }else{
+                                $row['student_already_enrolled_in_same_institution'] = 0;
+                                $row['student_already_enrolled_in_other_institution'] = 0;
+                            }
+                        }//POCOR-7007 Ends   
                         return $row;
                     });
                 })//POCOR-6982 Ends
