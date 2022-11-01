@@ -97,7 +97,7 @@ class InstitutionStudentReportsTable extends AppTable
 
         $conditions = [];
         if ($areaId != -1) {
-            $conditions['Institution.area_id IN'] = $finalIds;
+            $conditions['Institutions.area_id IN'] = $finalIds; //POCOR-7012
         }
         if (!empty($academicPeriodId)) {
             $conditions['academic_period_id'] = $academicPeriodId;
