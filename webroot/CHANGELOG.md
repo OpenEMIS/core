@@ -1,4 +1,4 @@
-### [3.75.34] - 2022-10-31
+### [3.75.34] - 2022-11-01
 - Implemented: Develop a "preferred name" student report card placeholder
 - Bug Fixed: Institutions>Student>Transfer: Assignee is not showing during Pending transfer step
 - Bug Fixed: Institutions>Staff>Career>Attendance: End of assignment staff cannot view attendances
