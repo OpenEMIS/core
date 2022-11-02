@@ -1,3 +1,6 @@
+### [3.75.35] - 2022-11-02
+- Bug Fixed: Institution_class_students:Retrieve 18013660 rows
+
 ### [3.75.34] - 2022-11-01
 - Implemented: Develop a "preferred name" student report card placeholder
 - Bug Fixed: Institutions>Student>Transfer: Assignee is not showing during Pending transfer step
