@@ -33,6 +33,9 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     vm.shiftListOptions = [];
     vm.selectedShift = '';
 
+    vm.selectedShiftStartTime = '';
+    vm.selectedShiftEndTime = '';
+
     // All attendances for a given day
     vm.totalStaff = '';
 
@@ -188,6 +191,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         UtilsSvc.isAppendLoader(true);
         var shiftObj = vm.shiftListOptions.find(obj => obj.id == vm.selectedShift);
         vm.gridOptions.context.date = vm.selectedShift;
+        
         InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams())
         .then(function(allStaffAttendances) {
             vm.setAllStaffAttendances(allStaffAttendances);
@@ -209,6 +213,8 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
             week_end_day: vm.selectedEndDate,
             day_id: vm.selectedDay,
             shift_id: vm.selectedShift,
+            start_time: vm.selectedShiftStartTime,
+            end_time: vm.selectedShiftEndTime,
             day_date: vm.selectedDayDate,
 			own_attendance_view: vm.ownView,
             own_attendance_edit: vm.ownEdit,
@@ -276,11 +282,12 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         vm.shiftListOptions = shiftListOptions;
         if (shiftListOptions.length > 0) {
             angular.forEach(shiftListOptions, function(shift) {
-                // if (shift.selected == true) {
+                if (shift.id == '-1') {
                    vm.selectedShift = shift.id;
                    vm.selectedFormattedDayDate = shift.name;
                    vm.gridOptions.context.date = vm.selectedShift;
-                // }
+
+                }
             });
         }
     }
@@ -344,13 +351,20 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     }
 
     vm.onEditClick = function() {
-        vm.action = 'edit';
-		vm.gridOptions.context.ownEdit = vm.ownEdit;
-        vm.gridOptions.context.otherEdit = vm.otherEdit;
-        vm.gridOptions.context.permissionStaffId = vm.permissionStaffId;  
-        vm.gridOptions.context.action = vm.action;
-        vm.setColumnDef();
-        AlertSvc.info($scope, 'Attendance will be saved automatically.');
+        //POCOR-6971[START]
+        if(vm.selectedShift == -1){
+            AlertSvc.info($scope, 'Please select shift');
+            return false;
+        }else{
+            //POCOR-6971[END]
+            vm.action = 'edit';
+            vm.gridOptions.context.ownEdit = vm.ownEdit;
+            vm.gridOptions.context.otherEdit = vm.otherEdit;
+            vm.gridOptions.context.permissionStaffId = vm.permissionStaffId;  
+            vm.gridOptions.context.action = vm.action;
+            vm.setColumnDef();
+            AlertSvc.info($scope, 'Attendance will be saved automatically.');
+        }
     };
 
     vm.onBackClick = function() {

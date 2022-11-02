@@ -709,12 +709,59 @@ class InstitutionShiftsTable extends ControllerActionTable
                     }
                     $returnArr[] = [
                         'id' => intval($result->institutionShiftId),
-                        'name' => $shiftName.': '. "7:00 - 1300"
+                        'name' => $shiftName
                     ];
                 }
-                $defaultSelect = ['id' => $returnArr[0]['id'], 'name' => $returnArr[0]['name']];
+                return $returnArr;
+            });
+    }
+
+    /*
+    * Function to get staff shift option
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return array
+    * @ticket POCOR-6971
+    */
+
+    public function findStaffShiftOptions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+
+        return $query
+            ->innerJoinWith('ShiftOptions')
+            ->innerJoinWith('Institutions')
+            ->select([
+                    'institutionShiftId' => 'InstitutionShifts.id',
+                    'institutionShiftStartTime' => 'InstitutionShifts.start_time',
+                    'institutionShiftEndTime' => 'InstitutionShifts.end_time',
+                    'institutionId' => 'Institutions.id',
+                    'institutionCode' => 'Institutions.code',
+                    'institutionName' => 'Institutions.name',
+                    'shiftOptionName' => 'ShiftOptions.name'
+                ])
+            ->where([
+                'institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId
+            ])
+            ->formatResults(function ($results) use ($institutionId) {
+                $returnArr = [];
+                foreach ($results as $result) {
+                    if ($result->institutionId == $institutionId) { //if the shift owned by itself, then no need to show the shift owner
+                        $shiftName = __($result->shiftOptionName);
+                    } else {
+                        $shiftName = $result->institutionCode . " - " . $result->institutionName . " - " . __($result->shiftOptionName);
+                    }
+                    $returnArr[] = [
+                        'id' => intval($result->institutionShiftId),
+                        'name' => $shiftName.': '.$result->institutionShiftStartTime. ' - '.$result->institutionShiftEndTime,
+                        'start_time' => $result->institutionShiftStartTime,
+                        'end_time' => $result->institutionShiftEndTime
+                    ];
+                }
+                $defaultSelect = ['id' => '-1', 'name' => __('-- Select --')];
                 $defaultSelect['selected'] = true;
-                // array_unshift($returnArr, $defaultSelect);
+                array_unshift($returnArr, $defaultSelect);
                 return $returnArr;
             });
     }
