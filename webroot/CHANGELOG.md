@@ -1,3 +1,14 @@
+### [3.75.34] - 2022-11-01
+- Implemented: Develop a "preferred name" student report card placeholder
+- Bug Fixed: Institutions>Student>Transfer: Assignee is not showing during Pending transfer step
+- Bug Fixed: Institutions>Staff>Career>Attendance: End of assignment staff cannot view attendances
+- Bug Fixed: Reports > Students > Students: Report get stuck in progress
+- Bug Fixed: Institutions>Student>Bulk Transfer: Changes to bulk transfer
+- Bug Fixed: Institutions>Profile>Classes:Missing linkage in the existing query for populating report_student_assessment_summary table
+- Implemented: Develop a new Report: Institution Positions Summaries
+- Implemented: Update an existing Page: Field Option - Staff Position Titles
+- Bug Fixed: Institution > Attendance > Students: Archive is getting 404 error
+
 ### [3.75.33] - 2022-10-20
 - Implemented: Enhance the usability of the Admin > Security > Users
 - Bug Fixed: Institutions>Report Cards>Comments: Sees error message
