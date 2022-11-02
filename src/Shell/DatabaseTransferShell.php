@@ -92,7 +92,7 @@ class DatabaseTransferShell extends Shell
         $Tablecollection = $archive_connection->schemaCollection();
         $tableSchema = $Tablecollection->listTables();
         if (! in_array('institution_staff_attendances', $tableSchema)) {
-              $archive_connection->execute("CREATE TABLE `institution_staff_attendances` (
+              $archive_connection->execute("CREATE TABLE IF NOT EXISTS `institution_staff_attendances` (
                 `id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
                 `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
                 `institution_id` int(11) NOT NULL COMMENT 'links to instututions.id',
@@ -215,7 +215,6 @@ class DatabaseTransferShell extends Shell
                     
                 }
             }
-            $InstitutionStaffAttendancesData->deleteAll(['academic_period_id' => $academicPeriodId]);
             
         }
         $checkconnection = ConnectionManager::get($transferConnectionsData['db_name']);
@@ -232,7 +231,7 @@ class DatabaseTransferShell extends Shell
         $TablecollectionOne = $archive_connection->schemaCollection();
         $tableSchemaOne = $TablecollectionOne->listTables();
         if (! in_array('institution_staff_leave', $tableSchemaOne)) {
-              $archive_connection->execute("CREATE TABLE `institution_staff_leave` (
+              $archive_connection->execute("CREATE TABLE IF NOT EXISTS `institution_staff_leave` (
                 `id` int(11) NOT NULL,
                 `date_from` date NOT NULL,
                 `date_to` date NOT NULL,
@@ -374,7 +373,7 @@ class DatabaseTransferShell extends Shell
                 }catch (PDOException $e) {
                 }
             }
-            $InstitutionStaffLeaveData->deleteAll(['academic_period_id' => $academicPeriodId]);
+            
         }
         $checkconnection = ConnectionManager::get($transferConnectionsData['db_name']);
         $collection = $checkconnection->schemaCollection();
@@ -390,7 +389,7 @@ class DatabaseTransferShell extends Shell
         $TablecollectionTwo = $archive_connection->schemaCollection();
         $tableSchemaTwo = $TablecollectionTwo->listTables();
         if (! in_array('assessment_item_results', $tableSchemaTwo)) {
-              $archive_connection->execute("CREATE TABLE `assessment_item_results` (
+              $archive_connection->execute("CREATE TABLE IF NOT EXISTS `assessment_item_results` (
                 `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
                 `marks` decimal(6,2) DEFAULT NULL,
                 `assessment_grading_option_id` int(11) DEFAULT NULL,
@@ -514,7 +513,7 @@ class DatabaseTransferShell extends Shell
         }
         $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW assessment_item_results_archived AS SELECT * FROM $assessment_item_results_table_name");
         $stmt1->execute();
-        $AssessmentItemResults->deleteAll(['academic_period_id' => $academicPeriodId]);
+        
 
         $classAttendanceRecordsData = $ClassAttendanceRecords->find('all')
                     ->select([
@@ -643,12 +642,12 @@ class DatabaseTransferShell extends Shell
                 
             }
         }
-        $ClassAttendanceRecords->deleteAll(['academic_period_id' => $academicPeriodId]);
+        
 
         $Tablecollection = $archive_connection->schemaCollection();
         $tableSchema = $Tablecollection->listTables();
         if (! in_array('institution_student_absences', $tableSchema)) {
-              $archive_connection->execute("CREATE TABLE `institution_student_absences` (
+              $archive_connection->execute("CREATE TABLE IF NOT EXISTS `institution_student_absences` (
                 `id` int(11) NOT NULL,
                 `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
                 `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
@@ -752,7 +751,7 @@ class DatabaseTransferShell extends Shell
         }
         $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_student_absences_archived AS SELECT * FROM $table_name");
         $stmt1->execute();
-        $StudentAbsences->deleteAll(['academic_period_id' => $academicPeriodId]);
+        
 
         $institutionStudentAbsenceDetailsData = $InstitutionStudentAbsenceDetails->find('all')
                     ->select([
@@ -839,7 +838,7 @@ class DatabaseTransferShell extends Shell
                 
             }
         }
-        $InstitutionStudentAbsenceDetails->deleteAll(['academic_period_id' => $academicPeriodId]);
+        
 
         $StudentAttendanceMarkedRecordsData = $StudentAttendanceMarkedRecords->find('all')
                     ->select([
@@ -888,7 +887,7 @@ class DatabaseTransferShell extends Shell
                 
             }
         }
-        $StudentAttendanceMarkedRecords->deleteAll(['academic_period_id' => $academicPeriodId]);
+       
 
         $StudentAttendanceMarkTypesData = $StudentAttendanceMarkTypes->find('all')
                     ->select([
@@ -959,6 +958,14 @@ class DatabaseTransferShell extends Shell
                 
             }
         }
+        //POCOR-6799[START]
+        $InstitutionStaffAttendancesData->deleteAll(['academic_period_id' => $academicPeriodId]);
+        $InstitutionStaffLeaveData->deleteAll(['academic_period_id' => $academicPeriodId]);
+        $AssessmentItemResults->deleteAll(['academic_period_id' => $academicPeriodId]);
+        $StudentAbsences->deleteAll(['academic_period_id' => $academicPeriodId]);
+        $InstitutionStudentAbsenceDetails->deleteAll(['academic_period_id' => $academicPeriodId]);
+        $StudentAttendanceMarkedRecords->deleteAll(['academic_period_id' => $academicPeriodId]);
+        //POCOR-6799[END]
         $statement = $connection->execute('DELETE FROM student_attendance_mark_types WHERE academic_period_id ='.$academicPeriodId);
         return true;
     }
