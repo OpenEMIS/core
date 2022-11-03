@@ -107,7 +107,7 @@ class StudentSpecialNeedsTable extends AppTable
             'SpecialNeedsServices',
             'SpecialNeedsDevices',
             'SpecialNeedsPlans',
-            'Diagnostic',
+            'Diagnostics',
         ];
         foreach($sheet_tabs as $sheet_tab_name) {  
             $sheets[] = [
@@ -295,7 +295,7 @@ class StudentSpecialNeedsTable extends AppTable
         else if ( $sheet_tab_name == 'Diagnostics' ) {
             $group_by[] = 'SpecialNeedsDiagnostics.id';
             $selectable['date'] = 'SpecialNeedsDiagnostics.date';
-            $selectable['comment'] = 'SpecialNeedsDiagnostic.comment';
+            $selectable['comment'] = 'SpecialNeedsDiagnostics.comment';
             $selectable['diagnostics_type'] = 'SpecialNeedsDiagnosticsTypes.name';
             $selectable['diagnostics_degree'] = 'SpecialNeedsDiagnosticsDegree.name';
             $join['SpecialNeedsDiagnostics'] = [
@@ -316,7 +316,7 @@ class StudentSpecialNeedsTable extends AppTable
                 'type' => 'left',
                 'table' => 'special_needs_diagnostics_types',
                 'conditions' => [
-                    'SpecialNeedsDiagnosticsTypes.id = SpecialNeedsDiagnosticsis.special_needs_diagnostics_type_id',
+                    'SpecialNeedsDiagnosticsTypes.id = SpecialNeedsDiagnostics.special_needs_diagnostics_type_id',
                 ],
             ];
         }
@@ -400,15 +400,15 @@ class StudentSpecialNeedsTable extends AppTable
         } else if ( $sheet_tab_name == 'SpecialNeedsPlans' ) {
             $extraField = $this->getPlanTabFields($extraField);
 
-        } else if ( $sheet_tab_name == 'Diagnostic' ) {  //POCOR-6873
-            $extraField = $this->getDiagnosticTabFields($extraField);
+        } else if ( $sheet_tab_name == 'Diagnostics' ) {  //POCOR-6873
+            $extraField = $this->getDiagnosticsTabFields($extraField);
 
         }
 
         $fields->exchangeArray($extraField);
     }
     //POCOR-6873[START]
-    private function getDiagnosticTabFields($extraField)
+    private function getDiagnosticsTabFields($extraField)
     {
         $extraField = $this->commonFields($extraField);
         $extraField[] = [
