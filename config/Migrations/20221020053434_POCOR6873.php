@@ -126,7 +126,7 @@ class POCOR6873 extends AbstractMigration
         $this->execute('ALTER TABLE `user_special_needs_plans` ADD `academic_period_id` INT NOT NULL AFTER `security_user_id`');
 
 
-        $sql = 'INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (NULL, "Diagnostics", "Students", "Institutions", "Students - Special Needs", "2000", "SpecialNeedsDiagnosis.index|SpecialNeedsDiagnosis.view", "SpecialNeedsDiagnosis.edit", "SpecialNeedsDiagnosis.add", "SpecialNeedsDiagnosis.remove", "SpecialNeedsDiagnosis.excel", "182", "1", NULL, "2", NOW(), "1", NOW());';
+        $sql = 'INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (NULL, "Diagnostics", "Students", "Institutions", "Students - Special Needs", "2000", "SpecialNeedsDiagnostics.index|SpecialNeedsDiagnostics.view", "SpecialNeedsDiagnostics.edit", "SpecialNeedsDiagnostics.add", "SpecialNeedsDiagnostics.remove", "SpecialNeedsDiagnostics.excel", "182", "1", NULL, "2", NOW(), "1", NOW());';
         $this->execute($sql);
 
         // //
