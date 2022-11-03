@@ -522,6 +522,7 @@ class ReportCardsTable extends AppTable
             $ReportCardSubjects = TableRegistry::get('ReportCard.ReportCardSubjects');
             /**POCOR-6810 starts- modified query to get only assigned subjects of student*/ 
             $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $SecurityUsers = TableRegistry::get('security_users');//POCOR-5227
             $AssessmentItemData = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
@@ -544,9 +545,23 @@ class ReportCardsTable extends AppTable
                 $reprotCardComment = $StudentsReportCardsComments->find()
                 ->select([
                     'comment_code_name' => 'CommentCodes.name', 
-                    'comment' => $StudentsReportCardsComments->aliasField('comments')
+                    'comment' => $StudentsReportCardsComments->aliasField('comments'),
+                    //POCOR-5227 Starts
+                    'security_user_openemis_no' => $SecurityUsers->aliasField('openemis_no'),
+                    'security_user_name' => $SecurityUsers->find()->func()->concat([
+                        'first_name' => 'literal',
+                        " ",
+                        /*'middle_name' => 'literal',
+                        " ",
+                         'third_name' => 'literal',
+                        " ",*/
+                        'last_name' => 'literal'
+                    ])//POCOR-5227 Ends
                 ])
                 ->leftJoinWith('CommentCodes')
+                ->leftJoin([$SecurityUsers->alias() => $SecurityUsers->table()], [
+                    $SecurityUsers->aliasField('id') . ' = ' .  $StudentsReportCardsComments->aliasField('created_user_id')
+                ])//POCOR-5227
                 ->innerJoin([$ReportCardSubjects->alias() => $ReportCardSubjects->table()], [
                     $ReportCardSubjects->aliasField('report_card_id = ') .  $StudentsReportCardsComments->aliasField('report_card_id'),
                     $ReportCardSubjects->aliasField('education_grade_id = ') .  $StudentsReportCardsComments->aliasField('education_grade_id'),
@@ -566,7 +581,9 @@ class ReportCardsTable extends AppTable
 				$entity[] = [
 					'education_subject_id' => $value['education_subject_id'],
 					'comment_code_name' => $reprotCardComment['comment_code_name'],
-                    'comments' => $reprotCardComment['comment']
+                    'comments' => $reprotCardComment['comment'],
+                    'security_user_openemis_no' => $reprotCardComment['security_user_openemis_no'],//POCOR-5227
+                    'security_user_name' => $reprotCardComment['security_user_name']//POCOR-5227
 				];
                 /**POCOR-6810 ends*/ 
             }
