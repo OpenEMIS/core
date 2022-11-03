@@ -19,8 +19,14 @@ class POCOR6873 extends AbstractMigration
         // $this->execute('CREATE TABLE `zz_6873_user_special_needs_assessments` LIKE `user_special_needs_assessments`');
         // $this->execute('INSERT INTO `zz_6873_user_special_needs_assessments` SELECT * FROM `user_special_needs_assessments`');
 
-        // $this->execute('CREATE TABLE `zz_6873_user_special_needs_services` LIKE `user_special_needs_services`');
-        // $this->execute('INSERT INTO `zz_6873_user_special_needs_services` SELECT * FROM `user_special_needs_services`');
+        $this->execute('CREATE TABLE `zz_6873_user_special_needs_services` LIKE `user_special_needs_services`');
+        $this->execute('INSERT INTO `zz_6873_user_special_needs_services` SELECT * FROM `user_special_needs_services`');
+
+        $this->execute('CREATE TABLE `zz_6873_user_special_needs_plans` LIKE `user_special_needs_plans`');
+        $this->execute('INSERT INTO `zz_6873_user_special_needs_plans` SELECT * FROM `user_special_needs_plans`');
+
+        $this->execute('CREATE TABLE `zz_6873_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `zz_6873_security_functions` SELECT * FROM `security_functions`');
 
         // /**inserting data into locale_contents table*/
         $localeContent = [
@@ -117,7 +123,11 @@ class POCOR6873 extends AbstractMigration
 
         // //
         $this->execute('ALTER TABLE `user_special_needs_services` ADD `special_needs_service_classification_id` INT NOT NULL AFTER `special_needs_service_type_id`');
+        $this->execute('ALTER TABLE `user_special_needs_plans` ADD `academic_period_id` INT NOT NULL AFTER `security_user_id`');
 
+
+        $sql = 'INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (NULL, "Diagnostics", "Students", "Institutions", "Students - Special Needs", "2000", "SpecialNeedsDiagnosis.index|SpecialNeedsDiagnosis.view", "SpecialNeedsDiagnosis.edit", "SpecialNeedsDiagnosis.add", "SpecialNeedsDiagnosis.remove", "SpecialNeedsDiagnosis.excel", "182", "1", NULL, "2", NOW(), "1", NOW());';
+        $this->execute($sql);
 
         // //
         $this->execute("CREATE TABLE `user_special_needs_diagnostics` (
@@ -378,6 +388,12 @@ class POCOR6873 extends AbstractMigration
 
         $this->execute('DROP TABLE IF EXISTS `user_special_needs_services`');
         $this->execute('RENAME TABLE `zz_6873_user_special_needs_services` TO `user_special_needs_services`');
+
+        $this->execute('DROP TABLE IF EXISTS `user_special_needs_plans`');
+        $this->execute('RENAME TABLE `zz_6873_user_special_needs_plans` TO `user_special_needs_plans`');
+
+        $this->execute('DROP TABLE IF EXISTS `security_functions`');
+        $this->execute('RENAME TABLE `zz_6873_security_functions` TO `security_functions`');
         
         //New Tables
         $this->execute('DROP TABLE IF EXISTS `special_needs_plan_types`');
