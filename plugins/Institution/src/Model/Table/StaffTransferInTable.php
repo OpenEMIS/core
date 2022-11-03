@@ -67,6 +67,12 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        //POCOR-7034 start
+        $url = $_SERVER['REQUEST_URI'];
+        if(strpos($url, "StaffTransferIn/approve")!==false){
+            $this->field('assignee_id', ['type' => 'hidden']);
+        }
+        //POCOR-7034 end
         parent::beforeAction($event, $extra);
 
         $this->field('previous_institution_staff_id', ['type' => 'hidden']);
@@ -407,17 +413,17 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
         return $query;
     }
+
     //POCOR-6925
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
     {
-
-        // change in POCOR-7034 add auto assign
-        $assigneeOptions = [-1 => __('Auto Assign')]; 
-        $attr['options'] = $assigneeOptions;
-        $attr['onChangeReload'] = 'changeStatus';
-        return $attr;
+        if(in_array($action, ['add','edit'])) { 
+            $assigneeOptions = [-1 => __('Auto Assign')]; 
+            $attr['options'] = $assigneeOptions;
+            $attr['onChangeReload'] = 'changeStatus';
+            return $attr;
+        }
         
     }
-    
     
 }
