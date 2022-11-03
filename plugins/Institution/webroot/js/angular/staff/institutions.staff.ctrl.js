@@ -448,19 +448,21 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             endDate: StaffController.selectedStaffData.endDate ? $filter('date')(StaffController.selectedStaffData.startDate, 'yyyy-MM-dd') : $filter('date')(new Date(), 'yyyy-MM-dd'),
             openemis_no: StaffController.selectedStaffData.openemis_no,
         };
-        InstitutionsStaffSvc.getPositions(params).then(function(resp){
+        InstitutionsStaffSvc.getPositions(params).then(function (resp)
+        {
+            resp.data = resp.data.filter((data) => data.disabled === false)
             StaffController.institutionPositionOptions.availableOptions = resp.data;
             StaffController.institutionPositionOptions.selectedOption = null;
-            if(StaffController.staffData && StaffController.staffData.is_same_school > 0) {
-                StaffController.staffData.positions.forEach((positionId) => {
-                    StaffController.institutionPositionOptions.availableOptions.forEach((option) => {
-                        if(option.value === positionId) {
-                            option.disabled = true;
-                        }
-                    });
-                });
-                
-            }
+            // if(StaffController.staffData && StaffController.staffData.is_same_school > 0) {
+            //     StaffController.staffData.positions.forEach((positionId) => {
+            //         StaffController.institutionPositionOptions.availableOptions.forEach((option) => {
+            //             if(option.value === positionId) {
+            //                 option.disabled = true;
+            //             }
+            //         });
+            //     });
+            // }
+
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
@@ -951,7 +953,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         } else {
             switch(StaffController.step){
                 case 'internal_search': 
-                    StaffController.selectedStaffData.date_of_birth = new Date(StaffController.selectedStaffData.date_of_birth);
+                    StaffController.selectedStaffData.date_of_birth = InstitutionsStaffSvc.formatDate(StaffController.selectedStaffData.date_of_birth);
                     StaffController.step = 'user_details';
                     break;
                 case 'external_search': 
@@ -1047,7 +1049,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if(StaffController.staffData && StaffController.staffData.is_diff_school > 0) {
                 StaffController.step = 'transfer_staff';
                 StaffController.messageClass = 'alert-warning';
-                StaffController.message = 'Staff is currently assigned to another institution';
+                StaffController.message = `Staff is currently assigned to ${StaffController.staffData.currentlyAssignedTo}`
             } else {
                 StaffController.saveStaffDetails();
             }
@@ -1056,8 +1058,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function goToNextStep() {
         if(StaffController.isInternalSearchSelected) {
-            StaffController.step = 'add_staff';
+            StaffController.step = 'confirmation';
             StaffController.generatePassword();
+            StaffController.isInternalSearchSelected = false;
         } else if(StaffController.isExternalSearchSelected) {
             StaffController.step = 'add_staff';
             StaffController.generatePassword();
