@@ -69,6 +69,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         getAddressArea: getAddressArea,
         getBirthplaceArea: getBirthplaceArea,
         getStaffCustomFields: getStaffCustomFields,
+        getPositionList: getPositionList,
     };
 
     var models = {
@@ -931,9 +932,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         });
     };
 
-    function getPositionList(fte, startDate, endDate, openemisNo, staffUserPriId = 0) {
-        var vm = this;
-        var institutionId = vm.getInstitutionId();
+    function getPositionList(institutionId, fte, startDate, endDate, openemisNo, staffUserPriId = 0)
+    {
         var deferred = $q.defer();
 
         if (endDate == '') {
