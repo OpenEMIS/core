@@ -51,7 +51,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.staffStatus = 'Pending';
     StaffController.customFields = [];
     StaffController.customFieldsArray = [];
-
+    StaffController.enableStaffTranferTab = false;
 
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
@@ -1046,11 +1046,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if(!StaffController.selectedStaffData.startDate || !StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.staff_type_id || !StaffController.staffShiftsId.length === 0 || StaffController.error.fte_id || StaffController.error.position_id || isCustomFieldNotValidated){
                 return;
             }
-            if(StaffController.staffData && StaffController.staffData.is_diff_school > 0) {
+            if (StaffController.staffData && StaffController.staffData.is_diff_school > 0)
+            {
+                StaffController.enableStaffTranferTab = true;
                 StaffController.step = 'transfer_staff';
                 StaffController.messageClass = 'alert-warning';
                 StaffController.message = `Staff is currently assigned to ${StaffController.staffData.currentlyAssignedTo}`
-            } else {
+            } else
+            {
+                StaffController.enableStaffTranferTab = false;
                 StaffController.saveStaffDetails();
             }
         }
@@ -1101,7 +1105,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         $window.history.back();
     }
 
-    StaffController.selectStaffFromInternalSearch = function(id) {
+    StaffController.selectStaffFromInternalSearch = function (id)
+    {
         StaffController.selectedUser = id;
         StaffController.isInternalSearchSelected = true;
         StaffController.isExternalSearchSelected = false;
