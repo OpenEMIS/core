@@ -20,8 +20,12 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('SpecialNeedsTypes', ['className' => 'SpecialNeeds.SpecialNeedsTypes', 'foreignKey' => 'special_need_type_id', 'conditions' => array('SpecialNeedsTypes.type' => 2, )]);
+        $this->belongsTo('Assessor', ['className' => 'Security.Users', 'foreignKey' => 'assessor_id']);    //POCOR-6873
         $this->belongsTo('SpecialNeedDifficulties', ['className' => 'SpecialNeeds.SpecialNeedsDifficulties', 'foreignKey' => 'special_need_difficulty_id']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
+
+        $this->addBehavior('OpenEmis.Autocomplete');    //POCOR-6873
+        $this->addBehavior('User.AdvancedNameSearch');  //POCOR-6873
 
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -46,6 +50,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
+            ->notEmpty('assessor_id')
             ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
                 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
@@ -57,6 +62,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
+        $events['ControllerAction.Model.ajaxAssessorAutocomplete'] = 'ajaxAssessorAutocomplete';  //POCOR-6873
         return $events;
     }
 
@@ -67,6 +73,8 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                 return __('Type');
             case 'special_need_difficulty_id':
                 return __('Difficulty');
+            case 'assessor_id':
+                return __('Assessor Name');  //POCOR-6873
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -78,7 +86,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
         $this->field('date', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
-        $this->setFieldOrder(['special_need_type_id', 'special_need_difficulty_id']);
+        $this->setFieldOrder(['special_need_type_id', 'special_need_difficulty_id','assessor_id']);  //POCOR-6873
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -144,12 +152,62 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->field('date');
         $this->field('special_need_type_id', ['type' => 'select']);
         $this->field('special_need_difficulty_id', ['type' => 'select']);
+        $this->field('assessor_id', ['entity' => $entity]);  //POCOR-6873
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('comment', ['type' => 'text']);
 
-        $this->setFieldOrder(['date', 'special_need_type_id', 'special_need_difficulty_id', 'file_name', 'file_content', 'comment']);
+        $this->setFieldOrder(['date', 'assessor_id', 'special_need_type_id', 'special_need_difficulty_id','file_name', 'file_content', 'comment']); //POCOR-6873
     }
+
+    //POCOR-6873[START]
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key' => '',
+            'field' => 'date',
+            'type' => 'date',
+            'label' => __('Date')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'file_name',
+            'type' => 'string',
+            'label' => __('File Name')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'comment',
+            'type' => 'string',
+            'label' => __('Comment')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'special_need_type_id',
+            'type' => 'string',
+            'label' => __('Special Need Type')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'special_need_difficulty_id',
+            'type' => 'string',
+            'label' => __('Difficulty')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'security_user_id',
+            'type' => 'string',
+            'label' => __('Security User')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'assessor_id',
+            'type' => 'string',
+            'label' => __('Assessor Name')
+        ];
+        $fields->exchangeArray($extraField);
+    }
+    //POCOR-6873[END]
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
@@ -161,6 +219,127 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         ->where([
             'security_user_id =' .$studentUserId,
         ]);
+    }
+
+    /**
+     * Get all Assessor ids as key and name as value
+     * @usage  It is used as drop-down options for auto search
+     * @author Rahul Singh <rahul.singh@mail.valuecoders.com>
+     * @ticket POCOR-6873
+     */
+
+    public function onUpdateFieldAssessorId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $dataKey = 'assessor_id';
+
+            $attr['type'] = 'autocomplete';
+            $attr['target'] = ['key' => $dataKey, 'name' => $this->aliasField($dataKey)];
+            $attr['noResults'] = __('No User found.');
+            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
+            // $attr['onSelect'] = "$('#reload').click();";
+
+            $urlAction = $this->alias();
+            $attr['url'] = ['controller' => $this->controller->name, 'action' => $urlAction, 'ajaxAssessorAutocomplete'];
+
+            $requestData = $this->request->data;
+            if (isset($requestData) && !empty($requestData[$this->alias()][$dataKey])) {
+                $assessorId = $requestData[$this->alias()][$dataKey];
+                $assessorName = $this->Assessor->get($assessorId)->name_with_id;
+                $attr['attr']['value'] = $assessorName;
+            }
+
+            $entity = $attr['entity'];
+            if ($entity->has($dataKey) && !is_null($entity->{$dataKey})) {
+                $assessorId = $entity->{$dataKey};
+                $assessorName = $this->Assessor->get($assessorId)->name_with_id;
+                $attr['attr']['value'] = $assessorName;
+            }
+
+            return $attr;
+        }
+    }
+
+    /**
+     * Get all Assessor ids as key and name as value
+     * @usage  It is used get value
+     * @author Rahul Singh <rahul.singh@mail.valuecoders.com>
+     * @ticket POCOR-6873
+     */
+
+    public function onGetAssessorId(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            if ($entity->has('assessor_id')) {
+                return $event->subject()->Html->link($entity->assessor->name_with_id, [
+                    'plugin' => 'Directory',
+                    'controller' => 'Directories',
+                    'action' => 'Directories',
+                    'view',
+                    $this->paramsEncode(['id' => $entity->assessor->id])
+                ]);
+            }
+        } elseif ($this->action == 'index') {
+            return $entity->assessor->name_with_id;
+        }
+    }
+
+    /**
+     * Get all OpenEMIS ID, Identity Number or Name as value
+     * @usage  It is used as drop-down options for auto search
+     * @author Rahul Singh <rahul.singh@mail.valuecoders.com>
+     * @ticket POCOR-6873
+     */
+
+    public function ajaxAssessorAutocomplete()
+    {
+        $this->controller->autoRender = false;
+        $this->ControllerAction->autoRender = false;
+
+        if ($this->request->is(['ajax'])) {
+            $term = $this->request->query['term'];
+
+            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+
+            $query = $this->Assessor
+                ->find()
+                ->select([
+                    $this->Assessor->aliasField('openemis_no'),
+                    $this->Assessor->aliasField('first_name'),
+                    $this->Assessor->aliasField('middle_name'),
+                    $this->Assessor->aliasField('third_name'),
+                    $this->Assessor->aliasField('last_name'),
+                    $this->Assessor->aliasField('preferred_name'),
+                    $this->Assessor->aliasField('id')
+                ])
+                ->leftJoin(
+                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
+                    [
+                        $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->Assessor->aliasField('id')
+                    ]
+                )
+                ->group([
+                    $this->Assessor->aliasField('id')
+                ])
+                ->limit(100);
+
+            $term = trim($term);
+
+            if (!empty($term)) {
+                $query = $this->addSearchConditions($query, ['alias' => 'Assessor', 'searchTerm' => $term, 'OR' => ['`Identities`.number LIKE ' => $term . '%']]);
+            }
+
+            $list = $query->all();
+
+            $data = [];
+            foreach ($list as $obj) {
+                $label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
+                $data[] = ['label' => $label, 'value' => $obj->id];
+            }
+
+            echo json_encode($data);
+            die;
+        }
     }
 
 }
