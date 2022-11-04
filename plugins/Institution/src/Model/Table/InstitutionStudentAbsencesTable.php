@@ -340,9 +340,11 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 'end_date' => $e
             ])
             ->where([
-                $InstitutionStudentAbsenceDays->aliasField('absence_type_id') => $entity->absence_type_id,
                 $InstitutionStudentAbsenceDays->aliasField('student_id') => $entity->student_id,
-                $InstitutionStudentAbsenceDays->aliasField('institution_id') => $entity->institution_id
+                // $InstitutionStudentAbsenceDays->aliasField('absence_type_id') => $entity->absence_type_id, // POCOR-7035
+                $InstitutionStudentAbsenceDays->aliasField('institution_id') => $entity->institution_id,
+                $InstitutionStudentAbsenceDays->aliasField('start_date') => $startDate,
+                $InstitutionStudentAbsenceDays->aliasField('end_date') => $endDate
             ])
             ->order([$InstitutionStudentAbsenceDays->aliasField('start_date')]);
         $count = $consecutiveRecords->count();
@@ -391,13 +393,18 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                     }
                     $s->addDay(1);
                 } while ($s->lte($recordEndDate));
+                //POCOR-7035[START]
 
-                $dayEntity = $InstitutionStudentAbsenceDays->patchEntity($recordEntity, [
-                    'start_date' => $recordStartDate,
-                    'end_date' => $recordEndDate,
-                    'absent_days' => $daysAbsent
-                ]);
-                $dayEntity = $InstitutionStudentAbsenceDays->save($dayEntity);
+                // $dayEntity = $InstitutionStudentAbsenceDays->patchEntity($recordEntity, [
+                //     'start_date' => $recordStartDate,
+                //     'end_date' => $recordEndDate,
+                //     'absence_type_id' => $entity->absence_type_id,
+                //     'absent_days' => $daysAbsent
+                // ]);
+                // $dayEntity = $InstitutionStudentAbsenceDays->save($dayEntity);
+                $InstitutionStudentAbsenceDays->updateAll(['absence_type_id' => $entity->absence_type_id], ['student_id' => $entity->student_id, 'institution_id'=>$entity->institution_id, 'start_date'=>$startDate, 'end_date'=>$endDate]);
+                
+                //POCOR-7035[END]
                 $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['id' => $entity->id]);
                 break;
             // When there is two records found, it means this record happen to fall in between the two record
@@ -417,15 +424,20 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                     $s->addDay(1);
                 } while ($s->lte($recordEndDate));
 
-                $dayEntity = $InstitutionStudentAbsenceDays->newEntity([
-                    'student_id' => $entity->student_id,
-                    'institution_id' => $entity->institution_id,
-                    'absence_type_id' => $entity->absence_type_id,
-                    'absent_days' => $daysAbsent,
-                    'start_date' => $recordStartDate,
-                    'end_date' => $recordEndDate
-                ]);
-                $dayEntity = $InstitutionStudentAbsenceDays->save($dayEntity);
+                //POCOR-7035[START]
+
+                // $dayEntity = $InstitutionStudentAbsenceDays->newEntity([
+                //     'student_id' => $entity->student_id,
+                //     'institution_id' => $entity->institution_id,
+                //     'absence_type_id' => $entity->absence_type_id,
+                //     'absent_days' => $daysAbsent,
+                //     'start_date' => $recordStartDate,
+                //     'end_date' => $recordEndDate
+                // ]);
+                // $dayEntity = $InstitutionStudentAbsenceDays->save($dayEntity);
+                $InstitutionStudentAbsenceDays->updateAll(['absence_type_id' => $entity->absence_type_id], ['student_id' => $entity->student_id, 'institution_id'=>$entity->institution_id, 'start_date'=>$startDate, 'end_date'=>$endDate]);
+
+                //POCOR-7035[END]
                 $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['institution_student_absence_day_id IN ' => $recordsId]);
                 $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['id' => $entity->id]);
                 break;
@@ -446,10 +458,13 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         // $InstitutionStudentAbsenceDays = $this->InstitutionStudentAbsenceDays;
         $startDate = $entity->date;
         $endDate = $entity->date;
-
-        if ($entity->isNew()) {
-            $this->addInstitutionStudentAbsenceDayRecord($entity, $startDate, $endDate);
-        }
+        
+        //POCOR-7035[START]
+        // if ($entity->isNew()) {
+        //     $this->addInstitutionStudentAbsenceDayRecord($entity, $startDate, $endDate);
+        // }
+        $this->addInstitutionStudentAbsenceDayRecord($entity, $startDate, $endDate);
+        //POCOR-7035[END]
     }
 
     public function onSetCustomCaseTitle(Event $event, Entity $entity)
