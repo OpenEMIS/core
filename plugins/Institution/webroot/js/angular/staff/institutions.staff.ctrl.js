@@ -7,6 +7,7 @@ InstitutionStaffController.$inject = ['$location', '$q', '$scope', '$window', '$
 function InstitutionStaffController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsStaffSvc, $rootScope) {
     // ag-grid vars
 
+    console.log("Nov 4 - Works")
 
     var StaffController = this;
 
@@ -236,7 +237,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.saveStaffDetails(params).then(function(resp){
             UtilsSvc.isAppendLoader(false);
-            if(StaffController.staffData && StaffController.staffData.is_diff_school > 0) {
+            if (StaffController.staffData && StaffController.staffData.current_enrol_institution_name != "" && StaffController.staffData.is_diff_school > 0) {
                 StaffController.message = 'Staff transfer request is added successfully.';
                 StaffController.messageClass = 'alert-success';
                 $window.history.back();
@@ -443,7 +444,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         UtilsSvc.isAppendLoader(true);
         var params = {
             institution_id: StaffController.institutionId,
-            fte: StaffController.selectedStaffData.position_type_id === 'Full-Time' ? 1 : StaffController.selectedStaffData.fte_id,
+            fte: StaffController.selectedStaffData.position_type_id === 'Full-Time' ? 1 : Number(StaffController.selectedStaffData.fte_id),
             startDate: StaffController.selectedStaffData.startDate ? $filter('date')(StaffController.selectedStaffData.startDate, 'yyyy-MM-dd') : $filter('date')(new Date(), 'yyyy-MM-dd'),
             endDate: StaffController.selectedStaffData.endDate ? $filter('date')(StaffController.selectedStaffData.startDate, 'yyyy-MM-dd') : $filter('date')(new Date(), 'yyyy-MM-dd'),
             openemis_no: StaffController.selectedStaffData.openemis_no,
@@ -1045,9 +1046,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             });
             if(!StaffController.selectedStaffData.startDate || !StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.staff_type_id || !StaffController.staffShiftsId.length === 0 || StaffController.error.fte_id || StaffController.error.position_id || isCustomFieldNotValidated){
                 return;
-            }
-            if (StaffController.staffData && StaffController.staffData.is_diff_school > 0)
-            {
+            } 
+            if (StaffController.staffData && StaffController.staffData.current_enrol_institution_name !="" && StaffController.staffData.is_diff_school > 0)
+            { 
                 StaffController.enableStaffTranferTab = true;
                 StaffController.step = 'transfer_staff';
                 StaffController.messageClass = 'alert-warning';
@@ -1066,8 +1067,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.generatePassword();
             StaffController.isInternalSearchSelected = false;
         } else if(StaffController.isExternalSearchSelected) {
-            StaffController.step = 'add_staff';
+            StaffController.step = 'confirmation';
             StaffController.generatePassword();
+            StaffController.isExternalSearchSelected = false;
         } else {
             switch(StaffController.step){
                 case 'user_details': 
@@ -1128,8 +1130,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 StaffController.staffData = value;
                 if(StaffController.isInternalSearchSelected) {
                     StaffController.staffStatus = 'Assigned';
-                    StaffController.staffData.currentlyAssignedTo = value.current_enrol_institution_code + ' - ' + value.institution_name;
-                    StaffController.staffData.requestedBy = value.institution_code + ' - ' + value.current_enrol_institution_name;
+                    StaffController.staffData.currentlyAssignedTo = value.current_enrol_institution_code + ' - ' + value.current_enrol_institution_name;
+                    StaffController.staffData.requestedBy = value.institution_code + ' - ' + value.institution_name;
                     StaffController.setstaffData(value);
                 }
                 if(StaffController.isExternalSearchSelected) {
@@ -1160,8 +1162,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.postalCode = selectedData.postal_code;
         StaffController.selectedStaffData.addressArea.name = selectedData.area_name;
         StaffController.selectedStaffData.birthplaceArea.name = selectedData.birth_area_name;
-        StaffController.selectedStaffData.currentlyAssignedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.institution_name;
-        StaffController.selectedStaffData.requestedBy = selectedData.institution_code + ' - ' + selectedData.current_enrol_institution_name;
+        StaffController.selectedStaffData.currentlyAssignedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.current_enrol_institution_name;
+        StaffController.selectedStaffData.requestedBy = selectedData.institution_code + ' - ' + selectedData.institution_name;
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
     }
 
