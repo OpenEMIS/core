@@ -17,8 +17,7 @@ class POCOR6971 extends AbstractMigration
         $this->execute('INSERT INTO `zz_6971_institution_staff_attendances` SELECT * FROM `institution_staff_attendances`');
         // End
 
-        $this->execute("ALTER TABLE `institution_staff_attendances` ADD `shift_id` INT NOT NULL AFTER `academic_period_id`;
-        ");
+        $this->execute("ALTER TABLE `institution_staff_attendances` ADD `shift_id` INT NULL DEFAULT NULL AFTER `academic_period_id`");
     }
 
     // rollback
