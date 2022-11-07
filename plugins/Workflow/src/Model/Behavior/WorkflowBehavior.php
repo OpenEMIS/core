@@ -74,7 +74,20 @@ class WorkflowBehavior extends Behavior
             'text' => 'Approval of Student Transfer',
             'description' => 'Performing this action students will be transferred.',
             'method' => 'onApprovalofStudentTransfer'
-        ]
+        ],
+
+        [
+            'value' => 'Workflow.onApprovalofEnableStaffAssignment',
+            'text' => 'Enable Staff Assignment',
+            'description' => 'Performing this action position will appear in the list ',
+            'method' => 'onApprovalofEnableStaffAssignment'
+        ],  //POCOR-7016
+        [
+            'value' => 'Workflow.onApprovalofDisableStaffAssignment',
+            'text' => 'Disable Staff Assignment',
+            'description' => 'Performing this action position will not appear in the list ',
+            'method' => 'onApprovalofDisableStaffAssignment'
+        ]  //POCOR-7016
     ];
 
     private $controller;
@@ -2518,5 +2531,63 @@ class WorkflowBehavior extends Behavior
             ->extract('value')
             ->first();
         return $value;
+    }
+
+    /*
+    * Function is set the post event in workflow
+    * return data
+    * @ticket POCOR-7016
+    */
+    public function onApprovalofEnableStaffAssignment(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $model = $this->_table;
+
+        $result = $model
+                ->find()
+                ->where([$model->aliasField('id') => $id])
+                ->all();
+
+        if (!$result->isEmpty()) {
+            $entity = $result->first();
+            $this->setStudentTransferStudent($entity);
+            $model->save($entity);
+
+        } else {
+            // exception
+            Log::write('error', '---------------------------------------------------------');
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : $result is empty');
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : model : '.$model);
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : model alias : '.$model->alias());
+            Log::write('error', '---------------------------------------------------------');
+        }
+    }
+
+    /*
+    * Function is set the post event in workflow
+    * return data
+    * @ticket POCOR-7016
+    */
+    public function onApprovalofDisableStaffAssignment(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $model = $this->_table;
+
+        $result = $model
+                ->find()
+                ->where([$model->aliasField('id') => $id])
+                ->all();
+
+        if (!$result->isEmpty()) {
+            $entity = $result->first();
+            $this->setStudentTransferStudent($entity);
+            $model->save($entity);
+
+        } else {
+            // exception
+            Log::write('error', '---------------------------------------------------------');
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : $result is empty');
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : model : '.$model);
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : model alias : '.$model->alias());
+            Log::write('error', '---------------------------------------------------------');
+        }
     }
 }
