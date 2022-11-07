@@ -177,10 +177,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             is_same_school: StaffController.staffData && StaffController.staffData.is_same_school ? StaffController.staffData.is_same_school : 0,
             is_diff_school: StaffController.staffData && StaffController.staffData.is_diff_school ?  StaffController.staffData.is_diff_school : 0,
             staff_id: StaffController.staffData && StaffController.staffData.id ? StaffController.staffData.id : null,
-
-            previous_institution_id: StaffController.staffData && StaffController.staffData.current_enrol_institution_id ? StaffController.staffData.
-            
-            current_enrol_institution_id : null,
+            previous_institution_id: StaffController.staffData && StaffController.staffData.current_enrol_institution_id ? StaffController.staffData.current_enrol_institution_id : null,
             comment: StaffController.selectedStaffData.comment,
             custom: [],
         };
@@ -1165,7 +1162,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.postalCode = selectedData.postal_code;
         StaffController.selectedStaffData.addressArea.name = selectedData.area_name;
         StaffController.selectedStaffData.birthplaceArea.name = selectedData.birth_area_name;
-        // POCOR-5672 : fixed showing wrong institution name
         StaffController.selectedStaffData.currentlyAssignedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.current_enrol_institution_name;
         StaffController.selectedStaffData.requestedBy = selectedData.institution_code + ' - ' + selectedData.institution_name;
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
