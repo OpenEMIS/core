@@ -2152,7 +2152,6 @@ class WorkflowBehavior extends Behavior
         }else{
             $entity->assignee_id = $assigneeId;
         }
-        
     }
 
     public function setAssigneeId(Entity $entity, $requestData)
