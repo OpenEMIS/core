@@ -1586,7 +1586,8 @@ class StaffTable extends ControllerActionTable
         $InstitutionStaffCount = $InstitutionRecords
             ->matching('Users.Genders')
             ->select([
-                'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),
+                // 'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),
+                'count' => $InstitutionRecords->func()->count('DISTINCT '.$this->aliasField('staff_id')), //POCOR-6971
                 'gender' => 'Genders.name',
                 'gender_code' => 'Genders.code'
             ])
