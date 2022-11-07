@@ -69,7 +69,6 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         getAddressArea: getAddressArea,
         getBirthplaceArea: getBirthplaceArea,
         getStaffCustomFields: getStaffCustomFields,
-        getPositionList: getPositionList,
     };
 
     var models = {
