@@ -20,6 +20,7 @@ use Cake\Routing\Router;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\I18n\Time;
 use Institution\Model\Behavior\LatLongBehavior as LatLongOptions;
 
 class InstitutionsTable extends ControllerActionTable
@@ -235,6 +236,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
 
         $this->addBehavior('Institution.LatLong');
+        $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
     }
 
     public function validationDefault(Validator $validator)
@@ -985,6 +987,83 @@ class InstitutionsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        //Start POCOR-7029
+        $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $todayDate = date("Y-m-d");
+        $SurveyFormsFilterObj = $SurveyFormsFilters->find()
+        ->where([
+            $SurveyFormsFilters->aliasField('survey_filter_id') => $entity->institution_type_id
+        ])
+        ->toArray();
+
+        $institutionFormIds = [];
+        if (!empty($SurveyFormsFilterObj)) {
+            foreach ($SurveyFormsFilterObj as $value) {
+                $institutionFormIds[] = $value->survey_form_id;
+            }
+        }
+        if($institutionFormIds[0]!=0) //POCOR-6976
+        {
+            $SurveyStatusesFilters = TableRegistry::get('Survey.SurveyStatuses');
+            $SurveyStatusPeriodsFilters = TableRegistry::get('Survey.SurveyStatusPeriods');
+            $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
+            $SurveyStatusesFiltersObj = $SurveyStatusesFilters->find()
+            ->where([
+                $SurveyStatusesFilters->aliasField('date_enabled <=') => $todayDate,
+                $SurveyStatusesFilters->aliasField('date_disabled >=') => $todayDate,
+                $SurveyStatusesFilters->aliasField('survey_form_id IN') => $institutionFormIds
+            ])
+            ->toArray();
+
+            $SurveyStatusesIds = [];
+            if (!empty($SurveyStatusesFiltersObj)) {
+                $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                foreach ($SurveyStatusesFiltersObj as $statusID => $value) {
+                    $surveyFormCount = $this->SurveyForms->find()
+                    ->select([
+                        'SurveyForms.id',
+                        'SurveyStatusPeriods.academic_period_id',
+                    ])
+                    ->leftJoin(['SurveyStatuses' => 'survey_statuses'], [
+                        'SurveyStatuses.survey_form_id = SurveyForms.id'
+                    ])
+                    ->leftJoin(['SurveyStatusPeriods' => 'survey_status_periods'], [
+                        'SurveyStatusPeriods.survey_status_id = SurveyStatuses.id'
+                    ])
+                    ->where([
+                            'SurveyForms.id' => $institutionFormIds[$statusID],                       
+                            'SurveyStatuses.id' => $value->id                       
+                        ])
+                    ->first();
+                     $SurveyStatusesIds[] = $surveyFormCount->SurveyStatusPeriods['academic_period_id'] . ',' . $surveyFormCount->id;
+                }
+            }
+ 
+
+            foreach ($SurveyStatusesIds as $key => $periodObj) {
+                $value = explode(",",$periodObj);
+
+                $surveyData = [
+                    'status_id' => 1,
+                    'academic_period_id' => $value[0],
+                    'survey_form_id' => $value[1],
+                    'institution_id' => $entity->id,
+                    'assignee_id' => 0,
+                    'created_user_id' => 1,
+                    'created' => new Time('NOW')
+                ];
+
+
+                $surveyEntity = $InstitutionSurveys->newEntity($surveyData);
+                $InstitutionSurveys->save($surveyEntity);
+            }
+
+
+
+        }       
+
+        //End POCOR-7029
+
         $SecurityGroup = TableRegistry::get('Security.SystemGroups');
         $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 
