@@ -102,6 +102,7 @@ class InstitutionPositionsTable extends AppTable
                 'InstitutionStaffs_start_date' => 'InstitutionStaffs.start_date ', //POCOR-6887
                 'InstitutionStaffs_end_date' => 'InstitutionStaffs.end_date', //POCOR-6887
                 'InstitutionStaffs_FTE' => 'InstitutionStaffs.FTE', //POCOR-6887
+                'staff_gender_name' => 'SecurityUsersGender.name', //POCOR-6951
             ])
             ->contain([
                 'Statuses' => [
@@ -150,12 +151,6 @@ class InstitutionPositionsTable extends AppTable
                         'Assignees.last_name',
                         'Assignees.preferred_name',
                         'Assignees.openemis_no',
-                        'gender_name' => 'Genders.name'        // POCOR-6951
-                    ]
-                ],
-                'Assignees.Genders' => [
-                    'fields' => [
-                        'name'
                     ]
                 ],
             ]);// Start POCOR-6887
@@ -188,6 +183,13 @@ class InstitutionPositionsTable extends AppTable
                 ],
             ];
             // End POCOR-6887
+            $join['SecurityUsersGender'] = [
+                'type' => 'left',
+                'table' => 'genders',
+                'conditions' => [
+                    'SecurityUsersGender.id = SecurityUsersStaff.gender_id',
+                ],
+            ];  //POCOR-6951
             $query->join($join)
             ->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
                     $UserIdentitiesTable->aliasField('security_user_id = ') . ' SecurityUsersStaff.id',
@@ -349,8 +351,8 @@ class InstitutionPositionsTable extends AppTable
 
         //Start POCOR-6951
         $newFields[] = [
-            'key' => 'Genders.gender',
-            'field' => 'gender_name',
+            'key' => 'staff_gender_name',
+            'field' => 'staff_gender_name',
             'type' => 'string',
             'label' => __('Staff Gender')
         ];
