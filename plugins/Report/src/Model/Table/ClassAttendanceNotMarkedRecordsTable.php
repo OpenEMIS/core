@@ -116,6 +116,11 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                         'ShiftOptions.name'
                     ]
                 ],
+                // 'InstitutionClasses.Marked' => [
+                //     'fields' => [
+                //         'Marked.total_mark'
+                //     ]
+                // ],
                 'EducationGrades' => [
                     'fields' => [
                         'InstitutionClassGrades.institution_class_id',
@@ -207,15 +212,18 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                                 $status = __('Not Marked');
                             }
                         }
-
-                        $row->total_mark = $mark;
+                        // print_r($row); die;
+//                        $row->total_mark = $mark;
+                        $row->mark = $mark;
                         $row->total_unmark = $unmark;
                         $row->{$dayColumn} = $status;
                     }
+// print_r($row); die;
                     return $row;
                 });
             })
         ;
+         
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -353,8 +361,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionClasses.Marked',
-            'field' => 'total_mark',
+            'key' => '',
+            'field' => 'mark',
             'type' => 'string',
             'label' => 'Marked'
         ];
