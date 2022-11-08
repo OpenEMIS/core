@@ -152,17 +152,23 @@ class InstitutionSummaryExcelBehavior extends Behavior
 			$headerRow3[] = $this->getFields($this->_table, $settings, $shiftObj);
 			$headerRow3[] = ' ';
 		}
-		$headerRow = array_merge($headerRow1,$headerRow2,$headerRow3);
-		$data = $this->getData($settings);
-		//echo "<pro>";print_r($headerRow);die;
+		$headerRow4[] = 'Total';
+		$headerRow = array_merge($headerRow1,$headerRow2,$headerRow3,$headerRow4);
+		
+		$requestData = json_decode($settings['process']['params']);
+		if($requestData->area_level_id == 1){
+			$data = $this->getCountryData($settings);
+		}elseif($requestData->area_level_id == 2){
+			$data = $this->getDistrictData($settings);
+		}elseif($requestData->area_level_id == 3){
+			$data = $this->getDistrictData($settings);
+		}else{
+			$data = $this->getData($settings);
+		}
+		
 		$InstitutionTypesTable = TableRegistry::get('institution_types');
 		$InstitutionTypesCount = $InstitutionTypesTable->find('all')->count();
 		
-		// $j = 0; //start column
-		// for ($i=0; $i<12; $i++) {
-		// 	$writer->markMergedCell('Summary', $start_row = 0, $start_col = $j, $end_row = 0, $end_col = $j+4);  //merge cells
-		// 	$j+=5;
-		// }
 		$writer->writeSheetRow('Summary', $headerRow);
 		foreach($data as $row) {
 			if(array_filter($row)) {
@@ -188,6 +194,1663 @@ class InstitutionSummaryExcelBehavior extends Behavior
         return $_settings;
     }
 	
+
+	public function getCountryData($settings)
+    {
+		$Institutions = TableRegistry::get('Institutions');
+    	$requestData = json_decode($settings['process']['params']);
+    	$institution_id = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
+		$areaLevelId = $requestData->area_level_id;
+		$academic_period_id = $requestData->academic_period_id;
+		
+        $AreaT = TableRegistry::get('areas');       
+		$ShiftOptionTable = TableRegistry::get('shift_options');
+		$InsStudentTable = TableRegistry::get('institution_students');
+		$InsStudentTable1 = TableRegistry::get('institution_students');             
+        //Level-1
+        $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
+        $childArea =[];
+        $childAreaMain = [];
+        $childArea3 = [];
+        $childArea4 = [];
+        foreach($AreaData as $kkk =>$AreaData11 ){
+            $childArea[$kkk] = $AreaData11->id;
+        }
+        //level-2
+        foreach($childArea as $kyy =>$AreaDatal2 ){
+            $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
+            foreach($AreaDatas as $ky =>$AreaDatal22 ){
+                $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
+            }
+        }
+        //level-3
+        if(!empty($childAreaMain)){
+            foreach($childAreaMain as $kyy =>$AreaDatal3 ){
+                $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
+                foreach($AreaDatass as $ky =>$AreaDatal222 ){
+                    $childArea3[$kyy.$ky] = $AreaDatal222->id;
+                }
+            }
+        }   
+        //level-4
+        if(!empty($childAreaMain)){
+            foreach($childArea3 as $kyy =>$AreaDatal4 ){
+                $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
+                foreach($AreaDatasss as $ky =>$AreaDatal44 ){
+                    $childArea4[$kyy.$ky] = $AreaDatal44->id;
+                }
+            }
+        }
+        $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
+        array_push($mergeArr,$areaId);
+        $mergeArr = array_unique($mergeArr);
+        $finalIds = implode(',',$mergeArr);
+        $finalIds = explode(',',$finalIds);
+		
+        $where = [];
+        if ($areaId != -1) {
+            $where[$Institutions->aliasField('area_id in')] = $finalIds;
+        }
+		if ($institution_id != 0) {
+            $where[$Institutions->aliasField('id')] = $institution_id;
+        }
+		$institutionData = $Institutions->find()
+                    ->select([
+                        'ownership_name' => 'Ownerships.name',
+                        'ownership_id' => 'Ownerships.id',
+                        'sector_name' => 'Sectors.name',
+                        'sector_id' => 'Sectors.id',
+                        'provider_name' => 'Providers.name',
+                        'provider_id' => 'Providers.id',
+                        'type_name' => 'Types.name',
+                        'type_id' => 'Types.id',
+                        'area_id' => 'Areas.id',
+                        'area_name' => 'Areas.name',
+                        'area_code' => 'Areas.code',
+                        'area_administrative_name' => 'AreaAdministratives.name',
+                        'area_administrative_id' => 'AreaAdministratives.id',
+                        'area_administrative_code' => 'AreaAdministratives.code',
+                        'locality_name' => 'Localities.name',
+                        'locality_id' => 'Localities.id'
+                    ])
+					->leftJoin(
+					['Ownerships' => 'institution_ownerships'],
+					[
+						'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+					]
+					)
+					->leftJoin(
+					['Sectors' => 'institution_sectors'],
+					[
+						'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+					]
+					)
+					->leftJoin(
+					['Areas' => 'areas'],
+					[
+						'Areas.id = '. $Institutions->aliasField('area_id')
+					]
+					)
+					->leftJoin(
+					['AreaAdministratives' => 'area_administratives'],
+					[
+						'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+					]
+					)
+					->leftJoin(
+					['Providers' => 'institution_providers'],
+					[
+						'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+					]
+					)
+					->leftJoin(
+					['Types' => 'institution_types'],
+					[
+						'Types.id = '. $Institutions->aliasField('institution_type_id')
+					]
+					)
+					->leftJoin(
+					['Localities' => 'institution_localities'],
+					[
+						'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+					]
+					)
+					->where([$where])
+					;
+					$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
+					$resultArray = array();
+					$i = 0;
+					foreach($institutionData as $key => $value) { 
+						if($i == 0) { 
+							$InstitutionTypesTable = TableRegistry::get('institution_types');
+							$InstitutionTypes = $InstitutionTypesTable->find('all')->toArray();
+							$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+							$InstitutionProviders = $InstitutionProvidersTable->find('all')->toArray();
+							$resultArray[0][] = 'atoll';
+							$keyy = 0;
+							$ki = 1;
+							foreach($InstitutionProviders as $keyy => $InstitutionProvider){ 
+								foreach($InstitutionTypes as $ki => $InstitutionType){ 
+
+						//**************************************************************************** */
+						//********************  Section For Country  Start     *****************************
+						//**************************************************************************** */
+						// $institut = $Institutions->find()
+						// 			->select([
+						// 				'ownership_name' => 'Ownerships.name',
+						// 				'ownership_id' => 'Ownerships.id',
+						// 				'sector_name' => 'Sectors.name',
+						// 				'sector_id' => 'Sectors.id',
+						// 				'provider_name' => 'Providers.name',
+						// 				'provider_id' => 'Providers.id',
+						// 				'type_name' => 'Types.name',
+						// 				'type_id' => 'Types.id',
+						// 				'area_id' => 'Areas.id',
+						// 				'area_name' => 'Areas.name',
+						// 				'area_code' => 'Areas.code',
+						// 				'area_administrative_name' => 'AreaAdministratives.name',
+						// 				'area_administrative_id' => 'AreaAdministratives.id',
+						// 				'area_administrative_code' => 'AreaAdministratives.code',
+						// 				'locality_name' => 'Localities.name',
+						// 				'locality_id' => 'Localities.id'
+						// 			])
+						// 			->leftJoin(
+						// 			['Ownerships' => 'institution_ownerships'],
+						// 			[
+						// 				'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+						// 			]
+						// 			)
+						// 			->leftJoin(
+						// 			['Sectors' => 'institution_sectors'],
+						// 			[
+						// 				'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+						// 			]
+						// 			)
+						// 			->leftJoin(
+						// 			['Areas' => 'areas'],
+						// 			[
+						// 				'Areas.id = '. $Institutions->aliasField('area_id')
+						// 			]
+						// 			)
+						// 			->leftJoin(
+						// 			['AreaAdministratives' => 'area_administratives'],
+						// 			[
+						// 				'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+						// 			]
+						// 			)
+						// 			->leftJoin(
+						// 			['Providers' => 'institution_providers'],
+						// 			[
+						// 				'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+						// 			]
+						// 			)
+						// 			->leftJoin(
+						// 			['Types' => 'institution_types'],
+						// 			[
+						// 				'Types.id = '. $Institutions->aliasField('institution_type_id')
+						// 			]
+						// 			)
+						// 			->leftJoin(
+						// 			['Localities' => 'institution_localities'],
+						// 			[
+						// 				'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+						// 			]
+						// 			)
+						// 			->where(['institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id,$where])
+						// 			;
+
+
+
+									$institut =	$InsStudentTable->find()
+								->select([
+									//'id','institution_id','student_id'
+									'student_id' => $InsStudentTable->aliasField('student_id'),
+									'academic_period_id' => $InsStudentTable->aliasField('academic_period_id'),
+									'institution_id' => $InsStudentTable->aliasField('institution_id'),
+									'student_status_id' => $InsStudentTable->aliasField('student_status_id'),
+									'gender_id' => 'Students.gender_id',
+								])
+								
+								->leftJoin(
+									['Students' => 'security_users'],
+									[
+										'Students.id = '. $InsStudentTable->aliasField('student_id')
+									]
+									)
+
+									->leftJoin(
+										['Institutions' => 'institutions'],
+										[
+											'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
+										]
+										)
+
+										
+								
+								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id ,$where])
+								->group([$InsStudentTable->aliasField('student_id')])
+								//->count()
+								;
+						
+						//**************************************************************************** */
+						//********************  Section For Counrty  END     *****************************
+						//**************************************************************************** */
+						$resultArray[$key][] = $InstitutionType->name;
+						$resultArray['countryData'][]= $institut->count();
+						$ki++;
+					}
+					
+				}
+				$totalValue = array_sum($resultArray['countryData']);
+				//echo "<pre>";print_r($totalValue);die;
+				$ShiftOptionTable = TableRegistry::get('shift_options');
+				$InsStudentTable = TableRegistry::get('institution_students');
+				$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
+				$shiftArr = [];
+				$shiftArrResult = [];
+				foreach($ShiftOptions as $keyy => $ShiftOption){  
+					$shiftArr[$keyy] = 'male';
+					$shiftArrResult[$keyy] = $InsStudentTable->find()
+					->select([
+						//'id','institution_id','student_id'
+						'student_id' => 'student_id',
+						'academic_period_id' => 'academic_period_id',
+						'institution_id' => 'institution_id',
+						'student_status_id' => 'student_status_id',
+						'gender_id' => 'Students.gender_id',
+					])
+					
+					->leftJoin(
+						['Students' => 'security_users'],
+						[
+							'Students.id = '. $InsStudentTable->aliasField('student_id')
+						]
+						)
+
+						->leftJoin(
+							['Institutions' => 'institutions'],
+							[
+								'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
+							]
+							)
+
+							->leftJoin(
+								['InsShifts' => 'institution_shifts'],
+								[
+									'InsShifts.institution_id = '. $InsStudentTable->aliasField('institution_id')
+								]
+								)
+					
+					->where([$InsStudentTable->aliasField('institution_id in') => $finalIds,$InsStudentTable->aliasField('academic_period_id')=> $academic_period_id,'Students.gender_id'=>1,'InsShifts.shift_option_id'=>$ShiftOption->id])
+					->count()
+					;
+					$shiftArr[$keyy.'1'] = 'female';
+					$shiftArrResult[$keyy.'1'] = $InsStudentTable->find()
+					->select([
+						//'id','institution_id','student_id'
+						'student_id' => 'student_id',
+						'academic_period_id' => 'academic_period_id',
+						'institution_id' => 'institution_id',
+						'student_status_id' => 'student_status_id',
+						'gender_id' => 'Students.gender_id',
+					])
+					
+					->leftJoin(
+						['Students' => 'security_users'],
+						[
+							'Students.id = '. $InsStudentTable->aliasField('student_id')
+						]
+						)
+						->leftJoin(
+							['Institutions' => 'institutions'],
+							[
+								'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
+							]
+							)
+
+							->leftJoin(
+								['InsShifts' => 'institution_shifts'],
+								[
+									'InsShifts.institution_id = '. $InsStudentTable1->aliasField('institution_id')
+								]
+								)
+								->where([$InsStudentTable->aliasField('institution_id in') => $finalIds,$InsStudentTable->aliasField('academic_period_id')=> $academic_period_id,'Students.gender_id'=>2,'InsShifts.shift_option_id'=>$ShiftOption->id])
+					->count()
+					;
+				}
+				$arr = ['0'=>'male','1'=>'female'];
+				array_merge($resultArray[0],$shiftArr);
+				array_merge($resultArray[1],$shiftArrResult);
+				$aa =(array_merge($resultArray[0],$shiftArr));//die;
+				$resultArray[0] = $aa;
+				$aa1 =(array_merge($resultArray['countryData'],$shiftArrResult));//die;
+				$resultArray['countryData'] = $aa1;
+				//echo "<pre>";print_r($resultArray);die;
+				array_unshift($resultArray['countryData'] , 'Country');
+			    $AreasData1 = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
+				foreach($AreasData1 as $KEYY => $Area_insss){ 
+					$resultArray[$KEYY+1] = $resultArray['DistrictData'];
+					array_unshift($resultArray[$KEYY+1], $Area_ins->name);
+				}
+				
+			} else {  
+
+				if(!empty($value->area_id)) {
+					//if (!in_array($value->area_id, $areaArray)) {
+						$resultArray[$key]['area_name'] = $value->area_name; 
+					$areaArray[] = $value->area_id;
+				} else {
+					$resultArray[$key]['area_name'] = '';
+				}
+			}
+			$i++;	
+		}
+		
+		$shift_gender = array();
+		$totalMale = $totalFemale = 0;
+		$genderArray = [];
+		$ShiftOptions = TableRegistry::get('ShiftOptions');
+		$shiftOptionData = $ShiftOptions->find();
+		
+		$data = $area = $locality = $areaAdministrative = $sector = $ownership = $provider = $type = array();
+		$areaIndex = $areaAdministrativeIndex = $localityIndex = $sectorIndex = $providerIndex = $ownershipIndex = $typeIndex = NULL;
+		
+		if(!empty($resultArray)) {
+			foreach($resultArray as $key => $result) { //echo "<pre>";print_r($result);die;
+				if(array_filter($result)) {
+					
+					foreach($result as $key3 => $value3) { //echo "Key3";
+						$data[$key][$key3] = $value3;
+						if(($key != 0) && ($key3 === 'area_name'|| $key3 === 'area_code'|| $key3 === 'area_count')) {
+							if(!empty($value3)) {
+								$areaIndex = key($area);
+								if(!empty($areaIndex)) {
+									$data[$key][$key3] = '';
+								}
+								$data[$areaIndex][$key3] = $value3;
+							} else {
+								$area[$key] = $key;
+							}
+						}
+						if(($key != 0) && $key3 === 'area_administrative_name'|| $key3 === 'area_administrative_code'|| $key3 === 'area_administrative_count') {
+							if(!empty($value3)) {
+								$areaAdministrativeIndex = key($areaAdministrative);
+								if(!empty($areaAdministrativeIndex)) {
+									$data[$key][$key3] = '';
+								}
+								$data[$areaAdministrativeIndex][$key3] = $value3;
+							} else {
+								$areaAdministrative[$key] = $key;
+							}
+						}
+						if(($key != 0) && $key3 === 'locality_name'|| $key3 === 'locality_code'|| $key3 === 'locality_count') {
+							if(!empty($value3)) {
+								$localityIndex = key($locality);
+								if(!empty($localityIndex)) {
+									$data[$key][$key3] = '';
+								}
+								$data[$localityIndex][$key3] = $value3;
+							} else {
+								$locality[$key] = $key;
+							}
+						}
+						if(($key != 0) && ($key3 === 'sector_name'|| $key3 === 'sector_code'|| $key3 === 'sector_count')) {
+							if(!empty($value3)) {
+								$sectorIndex = key($sector);
+								if(!empty($sectorIndex)) {
+									$data[$key][$key3] = '';
+								}
+								$data[$sectorIndex][$key3] = $value3;
+							} else {
+								$sector[$key] = $key;
+							}
+						}
+						if(($key != 0) && ($key3 === 'provider_name'|| $key3 === 'provider_code'|| $key3 === 'provider_count')) {
+							if(!empty($value3)) {
+								$providerIndex = key($provider);
+								if(!empty($providerIndex)) {
+									$data[$key][$key3] = '';
+								}
+								$data[$providerIndex][$key3] = $value3;
+							} else {
+								$provider[$key] = $key;
+							}
+						}
+						if(($key != 0) && ($key3 === 'ownership_name'|| $key3 === 'ownership_code'|| $key3 === 'ownership_count')) {
+							if(!empty($value3)) {
+								$ownershipIndex = key($sector);
+								if(!empty($ownershipIndex)) {
+									$data[$key][$key3] = '';
+								}
+								$data[$ownershipIndex][$key3] = $value3;
+							} else {
+								$ownership[$key] = $key;
+							}
+						}
+						if(($key != 0) && $key3 === 'type_name'|| $key3 === 'type_code'|| $key3 === 'type_count') {
+							if(!empty($value3)) {
+								$typeIndex = key($type);
+								if(!empty($typeIndex)) {
+									$data[$key][$key3] = '';
+								}
+								$data[$typeIndex][$key3] = $value3;
+							} else {
+								$type[$key] = $key;
+							}
+						}
+					}
+					unset($area[$areaIndex]);
+					unset($areaAdministrative[$areaAdministrativeIndex]);
+					unset($locality[$localityIndex]);
+					unset($sector[$sectorIndex]);
+					unset($provider[$providerIndex]);
+					unset($ownership[$ownershipIndex]);
+					unset($type[$typeIndex]);
+				}
+				
+			}
+		}		
+		$finalArray = array();
+		$AreaLevelT = TableRegistry::get('area_levels');
+		$AreaT = TableRegistry::get('areas');
+		$AreaLevel = $AreaLevelT->find('all',['conditions'=>['id'=>$areaLevelId]])->first();
+		if(!empty($data)) {
+			foreach($data as $data_keyy => $data_roww) { //echo "<pre>";print_r($arrayy);die;
+				if($data_keyy === 0) { 
+					$finalArray[$data_keyy] = $data_roww;
+					$finalArray[$data_keyy+1] = $data['countryData'];
+				}else{
+					unset($data_row);
+				}
+			}
+		}
+		array_push($finalArray[1],$totalValue);
+		//echo "<pre>";print_r($finalArray);die;
+		return $finalArray;
+		
+	}
+
+	public function getReagionData($settings)
+    {
+		$Institutions = TableRegistry::get('Institutions');
+    	$requestData = json_decode($settings['process']['params']);
+    	$institution_id = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
+		$areaLevelId = $requestData->area_level_id;
+		$academic_period_id = $requestData->academic_period_id;
+		
+        $AreaT = TableRegistry::get('areas');  
+		$ShiftOptionTable = TableRegistry::get('shift_options');
+		$InsStudentTable = TableRegistry::get('institution_students');
+		$InsStudentTable1 = TableRegistry::get('institution_students');                  
+        //Level-1
+        $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
+        $childArea =[];
+        $childAreaMain = [];
+        $childArea3 = [];
+        $childArea4 = [];
+        foreach($AreaData as $kkk =>$AreaData11 ){
+            $childArea[$kkk] = $AreaData11->id;
+        }
+        //level-2
+        foreach($childArea as $kyy =>$AreaDatal2 ){
+            $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
+            foreach($AreaDatas as $ky =>$AreaDatal22 ){
+                $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
+            }
+        }
+        //level-3
+        if(!empty($childAreaMain)){
+            foreach($childAreaMain as $kyy =>$AreaDatal3 ){
+                $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
+                foreach($AreaDatass as $ky =>$AreaDatal222 ){
+                    $childArea3[$kyy.$ky] = $AreaDatal222->id;
+                }
+            }
+        }   
+        //level-4
+        if(!empty($childAreaMain)){
+            foreach($childArea3 as $kyy =>$AreaDatal4 ){
+                $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
+                foreach($AreaDatasss as $ky =>$AreaDatal44 ){
+                    $childArea4[$kyy.$ky] = $AreaDatal44->id;
+                }
+            }
+        }
+        $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
+        array_push($mergeArr,$areaId);
+        $mergeArr = array_unique($mergeArr);
+        $finalIds = implode(',',$mergeArr);
+        $finalIds = explode(',',$finalIds);
+		
+        $where = [];
+        if ($areaId != -1) {
+            $where[$Institutions->aliasField('area_id in')] = $finalIds;
+        }
+		if ($institution_id != 0) {
+            $where[$Institutions->aliasField('id')] = $institution_id;
+        }
+		$institutionData = $Institutions->find()
+                    ->select([
+                        'ownership_name' => 'Ownerships.name',
+                        'ownership_id' => 'Ownerships.id',
+                        'sector_name' => 'Sectors.name',
+                        'sector_id' => 'Sectors.id',
+                        'provider_name' => 'Providers.name',
+                        'provider_id' => 'Providers.id',
+                        'type_name' => 'Types.name',
+                        'type_id' => 'Types.id',
+                        'area_id' => 'Areas.id',
+                        'area_name' => 'Areas.name',
+                        'area_code' => 'Areas.code',
+                        'area_administrative_name' => 'AreaAdministratives.name',
+                        'area_administrative_id' => 'AreaAdministratives.id',
+                        'area_administrative_code' => 'AreaAdministratives.code',
+                        'locality_name' => 'Localities.name',
+                        'locality_id' => 'Localities.id'
+                    ])
+					->leftJoin(
+					['Ownerships' => 'institution_ownerships'],
+					[
+						'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+					]
+					)
+					->leftJoin(
+					['Sectors' => 'institution_sectors'],
+					[
+						'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+					]
+					)
+					->leftJoin(
+					['Areas' => 'areas'],
+					[
+						'Areas.id = '. $Institutions->aliasField('area_id')
+					]
+					)
+					->leftJoin(
+					['AreaAdministratives' => 'area_administratives'],
+					[
+						'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+					]
+					)
+					->leftJoin(
+					['Providers' => 'institution_providers'],
+					[
+						'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+					]
+					)
+					->leftJoin(
+					['Types' => 'institution_types'],
+					[
+						'Types.id = '. $Institutions->aliasField('institution_type_id')
+					]
+					)
+					->leftJoin(
+					['Localities' => 'institution_localities'],
+					[
+						'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+					]
+					)
+					->where([$where])
+					;
+					$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
+					$resultArray = array();
+					$resultArray1 = array();
+					$i = 0;
+					foreach($institutionData as $key => $value) { 
+						if($i == 0) { 
+							$InstitutionTypesTable = TableRegistry::get('institution_types');
+							$InstitutionTypes = $InstitutionTypesTable->find('all')->toArray();
+							$InstitutionTypesCount = $InstitutionTypesTable->find('all')->count();
+							$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+							$InstitutionProviders = $InstitutionProvidersTable->find('all')->toArray();
+							$InstitutionProvidersCount = $InstitutionProvidersTable->find('all')->count();
+							$totalCount = $InstitutionProvidersCount*$InstitutionTypesCount;
+
+							$resultArray[0][] = 'atoll';
+							$keyy = 0;
+							$ki = 1;
+
+
+							$AreasData1 = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
+							foreach($AreasData1 as $KEYY => $Area_insss){
+
+
+
+							foreach($InstitutionProviders as $keyy => $InstitutionProvider){ 
+								foreach($InstitutionTypes as $ki => $InstitutionType){ 
+									
+									
+									//**************************************************************************** */
+									//********************  Section For Country  Start     *****************************
+									//**************************************************************************** */
+									//  $institut = $Institutions->find()
+									// 			->select([
+									// 				'ownership_name' => 'Ownerships.name',
+									// 				'ownership_id' => 'Ownerships.id',
+									// 				'sector_name' => 'Sectors.name',
+									// 				'sector_id' => 'Sectors.id',
+									// 				'provider_name' => 'Providers.name',
+									// 				'provider_id' => 'Providers.id',
+									// 				'type_name' => 'Types.name',
+									// 				'type_id' => 'Types.id',
+									// 				'area_id' => 'Areas.id',
+									// 				'area_name' => 'Areas.name',
+									// 				'area_code' => 'Areas.code',
+									// 				'area_administrative_name' => 'AreaAdministratives.name',
+									// 				'area_administrative_id' => 'AreaAdministratives.id',
+									// 				'area_administrative_code' => 'AreaAdministratives.code',
+									// 				'locality_name' => 'Localities.name',
+									// 				'locality_id' => 'Localities.id'
+									// 			])
+									// 			->leftJoin(
+									// 			['Ownerships' => 'institution_ownerships'],
+									// 			[
+									// 				'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+									// 			]
+									// 			)
+									// 			->leftJoin(
+									// 			['Sectors' => 'institution_sectors'],
+									// 			[
+									// 				'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+									// 			]
+									// 			)
+									// 			->leftJoin(
+									// 			['Areas' => 'areas'],
+									// 			[
+									// 				'Areas.id = '. $Institutions->aliasField('area_id')
+									// 			]
+									// 			)
+									// 			->leftJoin(
+									// 			['AreaAdministratives' => 'area_administratives'],
+									// 			[
+									// 				'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+									// 			]
+									// 			)
+									// 			->leftJoin(
+									// 			['Providers' => 'institution_providers'],
+									// 			[
+									// 				'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+									// 			]
+									// 			)
+									// 			->leftJoin(
+									// 			['Types' => 'institution_types'],
+									// 			[
+									// 				'Types.id = '. $Institutions->aliasField('institution_type_id')
+									// 			]
+									// 			)
+									// 			->leftJoin(
+									// 			['Localities' => 'institution_localities'],
+									// 			[
+									// 				'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+									// 			]
+									// 			)
+									// 			->where(['area_id' => $Area_insss->id,'institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id,$where])
+									// 			;
+
+
+												$institut =	$InsStudentTable->find()
+													->select([
+														//'id','institution_id','student_id'
+														'student_id' => $InsStudentTable->aliasField('student_id'),
+														'academic_period_id' => $InsStudentTable->aliasField('academic_period_id'),
+														'institution_id' => $InsStudentTable->aliasField('institution_id'),
+														'student_status_id' => $InsStudentTable->aliasField('student_status_id'),
+														'gender_id' => 'Students.gender_id',
+													])
+													
+													->leftJoin(
+														['Students' => 'security_users'],
+														[
+															'Students.id = '. $InsStudentTable->aliasField('student_id')
+														]
+														)
+
+														->leftJoin(
+															['Institutions' => 'institutions'],
+															[
+																'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
+															]
+															)
+
+															
+													
+													->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id,'Institutions.area_id' => $Area_insss->id,$where])
+													->group([$InsStudentTable->aliasField('student_id')]);
+									
+									//**************************************************************************** */
+									//********************  Section For Counrty  END     *****************************
+									//**************************************************************************** */
+									
+									$resultArray[$key][] = $InstitutionType->name;
+									$resultArray[$KEYY+1][]= $institut->count();
+									$ki++;
+								}
+								
+							}
+
+
+								
+								$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
+								$shiftArr = [];
+								$shiftArrResult = [];
+								foreach($ShiftOptions as $keyy => $ShiftOption){  
+									$shiftArr[$keyy] = 'male';
+									$shiftArrResult[$keyy] = $InsStudentTable->find()
+									->select([
+										//'id','institution_id','student_id'
+										'student_id' => 'student_id',
+										'academic_period_id' => 'academic_period_id',
+										'institution_id' => 'institution_id',
+										'student_status_id' => 'student_status_id',
+										'gender_id' => 'Students.gender_id',
+									])
+									
+									->leftJoin(
+										['Students' => 'security_users'],
+										[
+											'Students.id = '. $InsStudentTable->aliasField('student_id')
+										]
+										)
+
+										->leftJoin(
+											['Institutions' => 'institutions'],
+											[
+												'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
+											]
+											)
+
+											->leftJoin(
+												['InsShifts' => 'institution_shifts'],
+												[
+													'InsShifts.institution_id = '. $InsStudentTable->aliasField('institution_id')
+												]
+												)
+									
+									->where([$InsStudentTable->aliasField('institution_id in') => $finalIds,$InsStudentTable->aliasField('academic_period_id')=> $academic_period_id,'Students.gender_id'=>1,'Institutions.area_id'=>$Area_insss->id,'InsShifts.shift_option_id'=>$ShiftOption->id])
+									->count()
+									;
+									$shiftArr[$keyy.'1'] = 'female';
+									$shiftArrResult[$keyy.'1'] = $InsStudentTable->find()
+									->select([
+										//'id','institution_id','student_id'
+										'student_id' => 'student_id',
+										'academic_period_id' => 'academic_period_id',
+										'institution_id' => 'institution_id',
+										'student_status_id' => 'student_status_id',
+										'gender_id' => 'Students.gender_id',
+									])
+									
+									->leftJoin(
+										['Students' => 'security_users'],
+										[
+											'Students.id = '. $InsStudentTable->aliasField('student_id')
+										]
+										)
+										->leftJoin(
+											['Institutions' => 'institutions'],
+											[
+												'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
+											]
+											)
+
+											->leftJoin(
+												['InsShifts' => 'institution_shifts'],
+												[
+													'InsShifts.institution_id = '. $InsStudentTable1->aliasField('institution_id')
+												]
+												)
+												->where([$InsStudentTable->aliasField('institution_id in') => $finalIds,$InsStudentTable->aliasField('academic_period_id')=> $academic_period_id,'Students.gender_id'=>2,'Institutions.area_id'=>$Area_insss->id,'InsShifts.shift_option_id'=>$ShiftOption->id])
+									->count()
+									;
+								}
+
+								$abc = $shiftArrResult;
+								// echo "<pre>";print_r($finalIds)."<br/>";
+								// echo "<pre>";print_r($academic_period_id)."<br/>";
+								// //echo "<pre>";print_r($shiftArrResult[$keyy]->sql())."<br/>";
+								// echo "<pre>";print_r($Area_insss->id)."<br/>";die;
+
+								// echo "<pre>";print_r($shiftArrResult[$keyy]->sql());die;
+								 array_unshift($resultArray[$KEYY+1], $Area_insss->name);
+								 $mergeshift[] = array_merge($resultArray[$KEYY+1], $abc);
+						}
+						
+						unset($resultArray[0]);
+						
+						//add level array start
+												$institutionData1 = $Institutions->find()
+													->select([
+														'ownership_name' => 'Ownerships.name',
+														'ownership_id' => 'Ownerships.id',
+														'sector_name' => 'Sectors.name',
+														'sector_id' => 'Sectors.id',
+														'provider_name' => 'Providers.name',
+														'provider_id' => 'Providers.id',
+														'type_name' => 'Types.name',
+														'type_id' => 'Types.id',
+														'area_id' => 'Areas.id',
+														'area_name' => 'Areas.name',
+														'area_code' => 'Areas.code',
+														'area_administrative_name' => 'AreaAdministratives.name',
+														'area_administrative_id' => 'AreaAdministratives.id',
+														'area_administrative_code' => 'AreaAdministratives.code',
+														'locality_name' => 'Localities.name',
+														'locality_id' => 'Localities.id'
+													])
+													->leftJoin(
+													['Ownerships' => 'institution_ownerships'],
+													[
+														'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+													]
+													)
+													->leftJoin(
+													['Sectors' => 'institution_sectors'],
+													[
+														'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+													]
+													)
+													->leftJoin(
+													['Areas' => 'areas'],
+													[
+														'Areas.id = '. $Institutions->aliasField('area_id')
+													]
+													)
+													->leftJoin(
+													['AreaAdministratives' => 'area_administratives'],
+													[
+														'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+													]
+													)
+													->leftJoin(
+													['Providers' => 'institution_providers'],
+													[
+														'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+													]
+													)
+													->leftJoin(
+													['Types' => 'institution_types'],
+													[
+														'Types.id = '. $Institutions->aliasField('institution_type_id')
+													]
+													)
+													->leftJoin(
+													['Localities' => 'institution_localities'],
+													[
+														'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+													]
+													)
+													->where([$where])
+													;
+													$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
+													$resultArray1 = array();
+													$i = 0;
+													foreach($institutionData as $key => $value) { 
+														if($i == 0) { 
+															$InstitutionTypesTable = TableRegistry::get('institution_types');
+															$InstitutionTypess = $InstitutionTypesTable->find('all')->toArray();
+															$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+															$InstitutionProviderss = $InstitutionProvidersTable->find('all')->toArray();
+															$resultArray1[0][] = 'atoll';
+															$keyy = 0;
+															$ki = 1;
+															foreach($InstitutionProviderss as $keyy => $InstitutionProvider1){ 
+																foreach($InstitutionTypess as $ki => $InstitutionType1){ 
+						
+												//**************************************************************************** */
+												//********************  Section For Country  Start     *****************************
+												//**************************************************************************** */
+												$institut11 = $Institutions->find()
+															->select([
+																'ownership_name' => 'Ownerships.name',
+																'ownership_id' => 'Ownerships.id',
+																'sector_name' => 'Sectors.name',
+																'sector_id' => 'Sectors.id',
+																'provider_name' => 'Providers.name',
+																'provider_id' => 'Providers.id',
+																'type_name' => 'Types.name',
+																'type_id' => 'Types.id',
+																'area_id' => 'Areas.id',
+																'area_name' => 'Areas.name',
+																'area_code' => 'Areas.code',
+																'area_administrative_name' => 'AreaAdministratives.name',
+																'area_administrative_id' => 'AreaAdministratives.id',
+																'area_administrative_code' => 'AreaAdministratives.code',
+																'locality_name' => 'Localities.name',
+																'locality_id' => 'Localities.id'
+															])
+															->leftJoin(
+															['Ownerships' => 'institution_ownerships'],
+															[
+																'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+															]
+															)
+															->leftJoin(
+															['Sectors' => 'institution_sectors'],
+															[
+																'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+															]
+															)
+															->leftJoin(
+															['Areas' => 'areas'],
+															[
+																'Areas.id = '. $Institutions->aliasField('area_id')
+															]
+															)
+															->leftJoin(
+															['AreaAdministratives' => 'area_administratives'],
+															[
+																'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+															]
+															)
+															->leftJoin(
+															['Providers' => 'institution_providers'],
+															[
+																'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+															]
+															)
+															->leftJoin(
+															['Types' => 'institution_types'],
+															[
+																'Types.id = '. $Institutions->aliasField('institution_type_id')
+															]
+															)
+															->leftJoin(
+															['Localities' => 'institution_localities'],
+															[
+																'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+															]
+															)
+															->where(['institution_provider_id'=>$InstitutionProvider1->id,'institution_type_id'=>$InstitutionType1->id,$where])
+															;
+						
+												
+												//**************************************************************************** */
+												//********************  Section For Counrty  END     *****************************
+												//**************************************************************************** */
+						
+												$resultArray1[$key][] = $InstitutionType1->name;
+												//$resultArray['countryData'][]= $institut11->count();
+						
+												$ki++;
+											}
+											
+										}
+									}
+								}
+								//add level array end
+							array_unshift($resultArray1[1],'atoll');
+							$arrrr[]= $resultArray1[1];
+							$resultfinalArr =	array_merge($arrrr,$mergeshift);
+							$ShiftOptionTable = TableRegistry::get('shift_options');
+							$InsStudentTable = TableRegistry::get('institution_students');
+							$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
+							$shiftArr = [];
+							$shiftArrResult = [];
+							foreach($ShiftOptions as $keyy => $ShiftOption){  
+								$shiftArr[$keyy] = 'male';
+								$shiftArrResult[$keyy] = $InsStudentTable->find()
+						->select([
+							//'id','institution_id','student_id'
+							'student_id' => 'student_id',
+							'academic_period_id' => 'academic_period_id',
+							'institution_id' => 'institution_id',
+							'student_status_id' => 'student_status_id',
+							'gender_id' => 'Students.gender_id',
+						])
+						
+						->leftJoin(
+							['Students' => 'security_users'],
+							[
+								'Students.id = '. $InsStudentTable->aliasField('student_id')
+							]
+							)
+
+							->leftJoin(
+								['Institutions' => 'institutions'],
+								[
+									'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
+								]
+								)
+						
+						->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>1])
+						->count();
+						$shiftArr[$keyy.'1'] = 'female';
+						$shiftArrResult[$keyy.'1'] = $InsStudentTable->find()
+						->select([
+							//'id','institution_id','student_id'
+							'student_id' => 'student_id',
+							'academic_period_id' => 'academic_period_id',
+							'institution_id' => 'institution_id',
+							'student_status_id' => 'student_status_id',
+							'gender_id' => 'Students.gender_id',
+						])
+						
+						->leftJoin(
+							['Students' => 'security_users'],
+							[
+								'Students.id = '. $InsStudentTable->aliasField('student_id')
+							]
+							)
+						
+						->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>2])
+						->count();
+					}
+					$arr = ['0'=>'male','1'=>'female'];
+					if(!empty($institution_id)){
+						$resultfinalArr[0] =array_merge($resultArray1[0],$shiftArr);
+					}else{
+						$resultfinalArr[0] =array_merge($resultfinalArr[0],$shiftArr);
+					}
+					
+
+			} else {  
+				if(!empty($value->area_id)) {
+						$resultArray[$key]['area_name'] = $value->area_name; 
+					$areaArray[] = $value->area_id;
+				} else {
+					$resultArray[$key]['area_name'] = '';
+				}
+			}
+			$i++;	
+		}
+		
+		return $resultfinalArr;
+	}
+
+	public function getDistrictData($settings)
+    {
+		$Institutions = TableRegistry::get('Institutions');
+    	$requestData = json_decode($settings['process']['params']);
+    	$institution_id = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
+		$areaLevelId = $requestData->area_level_id;
+		$academic_period_id = $requestData->academic_period_id;
+		
+        $AreaT = TableRegistry::get('areas');  
+		$ShiftOptionTable = TableRegistry::get('shift_options');
+		$InsStudentTable = TableRegistry::get('institution_students');
+		$InsStudentTable1 = TableRegistry::get('institution_students');                  
+        //Level-1
+        $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
+        $childArea =[];
+        $childAreaMain = [];
+        $childArea3 = [];
+        $childArea4 = [];
+        foreach($AreaData as $kkk =>$AreaData11 ){
+            $childArea[$kkk] = $AreaData11->id;
+        }
+        //level-2
+        foreach($childArea as $kyy =>$AreaDatal2 ){
+            $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
+            foreach($AreaDatas as $ky =>$AreaDatal22 ){
+                $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
+            }
+        }
+        //level-3
+        if(!empty($childAreaMain)){
+            foreach($childAreaMain as $kyy =>$AreaDatal3 ){
+                $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
+                foreach($AreaDatass as $ky =>$AreaDatal222 ){
+                    $childArea3[$kyy.$ky] = $AreaDatal222->id;
+                }
+            }
+        }   
+        //level-4
+        if(!empty($childAreaMain)){
+            foreach($childArea3 as $kyy =>$AreaDatal4 ){
+                $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
+                foreach($AreaDatasss as $ky =>$AreaDatal44 ){
+                    $childArea4[$kyy.$ky] = $AreaDatal44->id;
+                }
+            }
+        }
+        $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
+        array_push($mergeArr,$areaId);
+        $mergeArr = array_unique($mergeArr);
+        $finalIds = implode(',',$mergeArr);
+        $finalIds = explode(',',$finalIds);
+		
+        $where = [];
+        if ($areaId != -1) {
+            $where[$Institutions->aliasField('area_id in')] = $finalIds;
+        }
+		if ($institution_id != 0) {
+            $where[$Institutions->aliasField('id')] = $institution_id;
+        }
+		$institutionData = $Institutions->find()
+                    ->select([
+                        'ownership_name' => 'Ownerships.name',
+                        'ownership_id' => 'Ownerships.id',
+                        'sector_name' => 'Sectors.name',
+                        'sector_id' => 'Sectors.id',
+                        'provider_name' => 'Providers.name',
+                        'provider_id' => 'Providers.id',
+                        'type_name' => 'Types.name',
+                        'type_id' => 'Types.id',
+                        'area_id' => 'Areas.id',
+                        'area_name' => 'Areas.name',
+                        'area_code' => 'Areas.code',
+                        'area_administrative_name' => 'AreaAdministratives.name',
+                        'area_administrative_id' => 'AreaAdministratives.id',
+                        'area_administrative_code' => 'AreaAdministratives.code',
+                        'locality_name' => 'Localities.name',
+                        'locality_id' => 'Localities.id'
+                    ])
+					->leftJoin(
+					['Ownerships' => 'institution_ownerships'],
+					[
+						'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+					]
+					)
+					->leftJoin(
+					['Sectors' => 'institution_sectors'],
+					[
+						'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+					]
+					)
+					->leftJoin(
+					['Areas' => 'areas'],
+					[
+						'Areas.id = '. $Institutions->aliasField('area_id')
+					]
+					)
+					->leftJoin(
+					['AreaAdministratives' => 'area_administratives'],
+					[
+						'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+					]
+					)
+					->leftJoin(
+					['Providers' => 'institution_providers'],
+					[
+						'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+					]
+					)
+					->leftJoin(
+					['Types' => 'institution_types'],
+					[
+						'Types.id = '. $Institutions->aliasField('institution_type_id')
+					]
+					)
+					->leftJoin(
+					['Localities' => 'institution_localities'],
+					[
+						'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+					]
+					)
+					->where([$where])
+					;
+					$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
+					$resultArray = array();
+					$resultArray1 = array();
+					$i = 0;
+					foreach($institutionData as $key => $value) { 
+						if($i == 0) {
+							$InstitutionTypesTable = TableRegistry::get('institution_types');
+							$InstitutionTypes = $InstitutionTypesTable->find('all')->toArray();
+							$InstitutionTypesCount = $InstitutionTypesTable->find('all')->count();
+							$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+							$InstitutionProviders = $InstitutionProvidersTable->find('all')->toArray();
+							$InstitutionProvidersCount = $InstitutionProvidersTable->find('all')->count();
+							$totalCount = $InstitutionProvidersCount*$InstitutionTypesCount;
+
+							$resultArray[0][] = 'atoll';
+							$keyy = 0;
+							$ki = 1;
+
+
+							$AreasData1 = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
+							//echo "<pre>";print_r($AreasData1);die;
+							foreach($AreasData1 as $KEYY => $Area_insss){
+
+
+
+							foreach($InstitutionProviders as $keyy => $InstitutionProvider){ 
+								foreach($InstitutionTypes as $ki => $InstitutionType){ 
+
+									//**************************************************************************** */
+									//********************  Section For Country  Start     *****************************
+									//**************************************************************************** */
+
+
+									$institut =	$InsStudentTable->find()
+								->select([
+									//'id','institution_id','student_id'
+									'student_id' => $InsStudentTable->aliasField('student_id'),
+									'academic_period_id' => $InsStudentTable->aliasField('academic_period_id'),
+									'institution_id' => $InsStudentTable->aliasField('institution_id'),
+									'student_status_id' => $InsStudentTable->aliasField('student_status_id'),
+									'gender_id' => 'Students.gender_id',
+								])
+								
+								->leftJoin(
+									['Students' => 'security_users'],
+									[
+										'Students.id = '. $InsStudentTable->aliasField('student_id')
+									]
+									)
+
+									->leftJoin(
+										['Institutions' => 'institutions'],
+										[
+											'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
+										]
+										)
+
+										
+								
+								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id,'Institutions.area_id' => $Area_insss->id,$where])
+								->group([$InsStudentTable->aliasField('student_id')])
+								//->count()
+								;
+
+
+									// $institut = $Institutions->find()
+									// 			->select([
+									// 				'ownership_name' => 'Ownerships.name',
+									// 				'ownership_id' => 'Ownerships.id',
+									// 				'sector_name' => 'Sectors.name',
+									// 				'sector_id' => 'Sectors.id',
+									// 				'provider_name' => 'Providers.name',
+									// 				'provider_id' => 'Providers.id',
+									// 				'type_name' => 'Types.name',
+									// 				'type_id' => 'Types.id',
+									// 				'area_id' => 'Areas.id',
+									// 				'area_name' => 'Areas.name',
+									// 				'area_code' => 'Areas.code',
+									// 				'area_administrative_name' => 'AreaAdministratives.name',
+									// 				'area_administrative_id' => 'AreaAdministratives.id',
+									// 				'area_administrative_code' => 'AreaAdministratives.code',
+									// 				'locality_name' => 'Localities.name',
+									// 				'locality_id' => 'Localities.id'
+									// 			])
+									// 			->leftJoin(
+									// 			['Ownerships' => 'institution_ownerships'],
+									// 			[
+									// 				'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+									// 			]
+									// 			)
+									// 			->leftJoin(
+									// 			['Sectors' => 'institution_sectors'],
+									// 			[
+									// 				'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+									// 			]
+									// 			)
+									// 			->leftJoin(
+									// 			['Areas' => 'areas'],
+									// 			[
+									// 				'Areas.id = '. $Institutions->aliasField('area_id')
+									// 			]
+									// 			)
+									// 			->leftJoin(
+									// 			['AreaAdministratives' => 'area_administratives'],
+									// 			[
+									// 				'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+									// 			]
+									// 			)
+									// 			->leftJoin(
+									// 			['Providers' => 'institution_providers'],
+									// 			[
+									// 				'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+									// 			]
+									// 			)
+									// 			->leftJoin(
+									// 			['Types' => 'institution_types'],
+									// 			[
+									// 				'Types.id = '. $Institutions->aliasField('institution_type_id')
+									// 			]
+									// 			)
+									// 			->leftJoin(
+									// 			['Localities' => 'institution_localities'],
+									// 			[
+									// 				'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+									// 			]
+									// 			)
+									// 			->where(['area_id' => $Area_insss->id,'institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id,$where])
+									// 			;
+									
+									//**************************************************************************** */
+									//********************  Section For Counrty  END     *****************************
+									//**************************************************************************** */
+									
+									$resultArray[$key][] = $InstitutionType->name;
+									$resultArray[$KEYY+1][]= $institut->count();
+									$ki++;
+								}
+								
+							}
+							
+							$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
+							$shiftArr = [];
+							$shiftArrResult = [];
+							foreach($ShiftOptions as $keyy => $ShiftOption){  
+								$shiftArr[$keyy] = 'male';
+								$shiftArrResult[$keyy] = $InsStudentTable->find()
+								->select([
+									//'id','institution_id','student_id'
+									'student_id' => 'student_id',
+									'academic_period_id' => 'academic_period_id',
+									'institution_id' => 'institution_id',
+									'student_status_id' => 'student_status_id',
+									'gender_id' => 'Students.gender_id',
+								])
+								
+								->leftJoin(
+									['Students' => 'security_users'],
+									[
+										'Students.id = '. $InsStudentTable->aliasField('student_id')
+									]
+									)
+
+									->leftJoin(
+										['Institutions' => 'institutions'],
+										[
+											'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
+										]
+										)
+
+										->leftJoin(
+											['InsShifts' => 'institution_shifts'],
+											[
+												'InsShifts.institution_id = '. $InsStudentTable->aliasField('institution_id')
+											]
+											)
+								
+								->where([$InsStudentTable->aliasField('institution_id in') => $finalIds,$InsStudentTable->aliasField('academic_period_id')=> $academic_period_id,'Students.gender_id'=>1,'Institutions.area_id'=>$Area_insss->id,'InsShifts.shift_option_id'=>$ShiftOption->id])
+								->count()
+								;
+								$shiftArr[$keyy.'1'] = 'female';
+								$shiftArrResult[$keyy.'1'] = $InsStudentTable->find()
+								->select([
+									//'id','institution_id','student_id'
+									'student_id' => 'student_id',
+									'academic_period_id' => 'academic_period_id',
+									'institution_id' => 'institution_id',
+									'student_status_id' => 'student_status_id',
+									'gender_id' => 'Students.gender_id',
+								])
+								
+								->leftJoin(
+									['Students' => 'security_users'],
+									[
+										'Students.id = '. $InsStudentTable->aliasField('student_id')
+									]
+									)
+									->leftJoin(
+										['Institutions' => 'institutions'],
+										[
+											'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
+										]
+										)
+
+										->leftJoin(
+											['InsShifts' => 'institution_shifts'],
+											[
+												'InsShifts.institution_id = '. $InsStudentTable1->aliasField('institution_id')
+											]
+											)
+											->where([$InsStudentTable->aliasField('institution_id in') => $finalIds,$InsStudentTable->aliasField('academic_period_id')=> $academic_period_id,'Students.gender_id'=>2,'Institutions.area_id'=>$Area_insss->id,'InsShifts.shift_option_id'=>$ShiftOption->id])
+								->count()
+								;
+							}
+							
+								$abc = $shiftArrResult;
+								array_unshift($resultArray[$KEYY+1], $Area_insss->name);
+								 $mergeshift[] = array_merge($resultArray[$KEYY+1], $abc );
+								 
+						}
+						
+						unset($resultArray[0]);
+
+						foreach($mergeshift as $e=>$ms){
+							$mergeshift[$e][count($ms)-1] = array_sum($mergeshift[$e]);
+						}
+						
+						//add level array start
+												$institutionData1 = $Institutions->find()
+													->select([
+														'ownership_name' => 'Ownerships.name',
+														'ownership_id' => 'Ownerships.id',
+														'sector_name' => 'Sectors.name',
+														'sector_id' => 'Sectors.id',
+														'provider_name' => 'Providers.name',
+														'provider_id' => 'Providers.id',
+														'type_name' => 'Types.name',
+														'type_id' => 'Types.id',
+														'area_id' => 'Areas.id',
+														'area_name' => 'Areas.name',
+														'area_code' => 'Areas.code',
+														'area_administrative_name' => 'AreaAdministratives.name',
+														'area_administrative_id' => 'AreaAdministratives.id',
+														'area_administrative_code' => 'AreaAdministratives.code',
+														'locality_name' => 'Localities.name',
+														'locality_id' => 'Localities.id'
+													])
+													->leftJoin(
+													['Ownerships' => 'institution_ownerships'],
+													[
+														'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+													]
+													)
+													->leftJoin(
+													['Sectors' => 'institution_sectors'],
+													[
+														'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+													]
+													)
+													->leftJoin(
+													['Areas' => 'areas'],
+													[
+														'Areas.id = '. $Institutions->aliasField('area_id')
+													]
+													)
+													->leftJoin(
+													['AreaAdministratives' => 'area_administratives'],
+													[
+														'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+													]
+													)
+													->leftJoin(
+													['Providers' => 'institution_providers'],
+													[
+														'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+													]
+													)
+													->leftJoin(
+													['Types' => 'institution_types'],
+													[
+														'Types.id = '. $Institutions->aliasField('institution_type_id')
+													]
+													)
+													->leftJoin(
+													['Localities' => 'institution_localities'],
+													[
+														'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+													]
+													)
+													->where([$where])
+													;
+													$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
+													$resultArray1 = array();
+													$i = 0;
+													foreach($institutionData as $key => $value) { 
+														if($i == 0) { 
+															$InstitutionTypesTable = TableRegistry::get('institution_types');
+															$InstitutionTypess = $InstitutionTypesTable->find('all')->toArray();
+															$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+															$InstitutionProviderss = $InstitutionProvidersTable->find('all')->toArray();
+															$resultArray1[0][] = 'atoll';
+															$keyy = 0;
+															$ki = 1;
+															foreach($InstitutionProviderss as $keyy => $InstitutionProvider1){ 
+																foreach($InstitutionTypess as $ki => $InstitutionType1){ 
+						
+												//**************************************************************************** */
+												//********************  Section For Country  Start     *****************************
+												//**************************************************************************** */
+												$institut11 = $Institutions->find()
+															->select([
+																'ownership_name' => 'Ownerships.name',
+																'ownership_id' => 'Ownerships.id',
+																'sector_name' => 'Sectors.name',
+																'sector_id' => 'Sectors.id',
+																'provider_name' => 'Providers.name',
+																'provider_id' => 'Providers.id',
+																'type_name' => 'Types.name',
+																'type_id' => 'Types.id',
+																'area_id' => 'Areas.id',
+																'area_name' => 'Areas.name',
+																'area_code' => 'Areas.code',
+																'area_administrative_name' => 'AreaAdministratives.name',
+																'area_administrative_id' => 'AreaAdministratives.id',
+																'area_administrative_code' => 'AreaAdministratives.code',
+																'locality_name' => 'Localities.name',
+																'locality_id' => 'Localities.id'
+															])
+															->leftJoin(
+															['Ownerships' => 'institution_ownerships'],
+															[
+																'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+															]
+															)
+															->leftJoin(
+															['Sectors' => 'institution_sectors'],
+															[
+																'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+															]
+															)
+															->leftJoin(
+															['Areas' => 'areas'],
+															[
+																'Areas.id = '. $Institutions->aliasField('area_id')
+															]
+															)
+															->leftJoin(
+															['AreaAdministratives' => 'area_administratives'],
+															[
+																'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+															]
+															)
+															->leftJoin(
+															['Providers' => 'institution_providers'],
+															[
+																'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+															]
+															)
+															->leftJoin(
+															['Types' => 'institution_types'],
+															[
+																'Types.id = '. $Institutions->aliasField('institution_type_id')
+															]
+															)
+															->leftJoin(
+															['Localities' => 'institution_localities'],
+															[
+																'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+															]
+															)
+															->where(['institution_provider_id'=>$InstitutionProvider1->id,'institution_type_id'=>$InstitutionType1->id,$where])
+															;
+						
+												
+												//**************************************************************************** */
+												//********************  Section For Counrty  END     *****************************
+												//**************************************************************************** */
+						
+												$resultArray1[$key][] = $InstitutionType1->name;
+												//$resultArray['countryData'][]= $institut11->count();
+						
+												$ki++;
+											}
+											
+										}
+									}
+								}
+								//add level array end
+							array_unshift($resultArray1[1],'atoll');
+							$arrrr[]= $resultArray1[1];
+							$resultfinalArr =	array_merge($arrrr,$mergeshift);
+							$ShiftOptionTable = TableRegistry::get('shift_options');
+							$InsStudentTable = TableRegistry::get('institution_students');
+							$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
+							$shiftArr = [];
+							$shiftArrResult = [];
+							
+							foreach($ShiftOptions as $keyy => $ShiftOption){  
+								$shiftArr[$keyy] = 'male';
+							$shiftArrResult[$keyy] = $InsStudentTable->find()
+							->select([
+								//'id','institution_id','student_id'
+								'student_id' => 'student_id',
+								'academic_period_id' => 'academic_period_id',
+								'institution_id' => 'institution_id',
+								'student_status_id' => 'student_status_id',
+								'gender_id' => 'Students.gender_id',
+							])
+						
+							->leftJoin(
+								['Students' => 'security_users'],
+								[
+									'Students.id = '. $InsStudentTable->aliasField('student_id')
+								]
+								)
+
+								->leftJoin(
+									['Institutions' => 'institutions'],
+									[
+										'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
+									]
+									)
+						
+						->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>1])
+						->count();
+						$shiftArr[$keyy.'1'] = 'female';
+						$shiftArrResult[$keyy.'1'] = $InsStudentTable->find()
+						->select([
+							//'id','institution_id','student_id'
+							'student_id' => 'student_id',
+							'academic_period_id' => 'academic_period_id',
+							'institution_id' => 'institution_id',
+							'student_status_id' => 'student_status_id',
+							'gender_id' => 'Students.gender_id',
+						])
+						
+						->leftJoin(
+							['Students' => 'security_users'],
+							[
+								'Students.id = '. $InsStudentTable->aliasField('student_id')
+							]
+							)
+						
+						->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>2])
+						->count();
+					}
+					$arr = ['0'=>'male','1'=>'female'];
+					if(!empty($institution_id)){
+						$resultfinalArr[0] =array_merge($resultArray1[0],$shiftArr);
+					}else{
+						$resultfinalArr[0] =array_merge($resultfinalArr[0],$shiftArr);
+					}
+					
+
+			} else {  
+				if(!empty($value->area_id)) {
+						$resultArray[$key]['area_name'] = $value->area_name; 
+					$areaArray[] = $value->area_id;
+				} else {
+					$resultArray[$key]['area_name'] = '';
+				}
+			}
+			$i++;	
+		}
+		
+		return $resultfinalArr;
+		
+	}
+
+
     public function getData($settings)
     {
     	$Institutions = TableRegistry::get('Institutions');
