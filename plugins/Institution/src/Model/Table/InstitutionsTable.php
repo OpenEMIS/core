@@ -236,7 +236,6 @@ class InstitutionsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
 
         $this->addBehavior('Institution.LatLong');
-        $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
     }
 
     public function validationDefault(Validator $validator)
@@ -1017,24 +1016,29 @@ class InstitutionsTable extends ControllerActionTable
 
             $SurveyStatusesIds = [];
             if (!empty($SurveyStatusesFiltersObj)) {
-                $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                // $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                $SurveyFormsFilters = TableRegistry::get('Survey.SurveyForms');
                 foreach ($SurveyStatusesFiltersObj as $statusID => $value) {
-                    $surveyFormCount = $this->SurveyForms->find()
+                    $surveyFormCount = $SurveyFormsFilters->find()
                     ->select([
-                        'SurveyForms.id',
+                        'id' => $SurveyFormsFilters->aliasField('id'),
+                        // 'SurveyForms.id',
                         'SurveyStatusPeriods.academic_period_id',
                     ])
-                    ->leftJoin(['SurveyStatuses' => 'survey_statuses'], [
-                        'SurveyStatuses.survey_form_id = SurveyForms.id'
+
+                    ->LeftJoin(['SurveyStatuses' => 'survey_statuses'],[
+                        $SurveyFormsFilters->aliasField('id').' = SurveyStatuses.survey_form_id',
                     ])
+
                     ->leftJoin(['SurveyStatusPeriods' => 'survey_status_periods'], [
                         'SurveyStatusPeriods.survey_status_id = SurveyStatuses.id'
                     ])
                     ->where([
-                            'SurveyForms.id' => $institutionFormIds[$statusID],                       
+                            $SurveyFormsFilters->aliasField('id = ').$institutionFormIds[$statusID],
                             'SurveyStatuses.id' => $value->id                       
                         ])
                     ->first();
+                    
                      $SurveyStatusesIds[] = $surveyFormCount->SurveyStatusPeriods['academic_period_id'] . ',' . $surveyFormCount->id;
                 }
             }
