@@ -15,6 +15,7 @@ class WorkflowActionsTable extends AppTable
     // Workflow Actions - action
     const APPROVE = 0;
     const REJECT = 1;
+    
 
     public function initialize(array $config)
     {
@@ -543,11 +544,22 @@ class WorkflowActionsTable extends AppTable
                     $Workflows->aliasField('id') => $selectedWorkflow
                 ])
                 ->first();
-
+             
             $registryAlias = $workflow->_matchingData['WorkflowModels']->model;
             $subject = TableRegistry::get($registryAlias);
             $eventsObject = new ArrayObject();
             $subjectEvent = $subject->dispatchEvent('Workflow.getEvents', [$eventsObject], $subject);
+            //POCOR-7016 start
+            if($selectedWorkflow == 6){
+                unset($eventsObject[1]);
+                unset($eventsObject[2]);
+                $eventsObject = $eventsObject;
+            }else{
+                unset($eventsObject[3]);
+                unset($eventsObject[4]);
+                $eventsObject = $eventsObject;
+            }
+            //POCOR-7016 end
             if ($subjectEvent->isStopped()) {
                 return $subjectEvent->result;
             }
@@ -635,4 +647,6 @@ class WorkflowActionsTable extends AppTable
 
         return ($existingEventCount == 0);
     }
+
+    
 }

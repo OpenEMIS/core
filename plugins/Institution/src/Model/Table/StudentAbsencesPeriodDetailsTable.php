@@ -160,6 +160,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         $educationGradeId = $entity->education_grade_id;
         
         $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        $InstitutionStudentAbsenceDays = TableRegistry::get('Institution.InstitutionStudentAbsenceDays');
         
         $totalRecordCount = $this
                 ->find()
@@ -184,6 +185,14 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                         'student_id' => $studentId
                     ];
             $InstitutionStudentAbsences->deleteAll($data);
+            
+            //POCOR-7035[START]
+            $data1 = [
+                'institution_id' => $institutionId,
+                'student_id' => $studentId
+            ];
+            $InstitutionStudentAbsenceDays->deleteAll($data1);
+            //POCOR-7035[END]
         }
     }
 }

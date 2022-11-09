@@ -2430,6 +2430,7 @@ class StudentsTable extends ControllerActionTable
 				'student_attendance_marked_records.institution_id' => $conditions['institution_id'],
 				'educationGrades.id IS NOT NULL',
             ])
+            ->distinct(['InstitutionClassesStudents.student_id'])//POCOR-7019
 			->order(['educationGrades.id' => 'ASC'])
 			->toArray()
             ;

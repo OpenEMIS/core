@@ -550,7 +550,6 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
 //]]>
 </script>
 
-
 <?php
 $this->end();
 ?>
