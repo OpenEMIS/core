@@ -20,6 +20,18 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
+        $this->belongsTo('AcademicPeriods', [
+            'foreignKey' => 'academic_period_id',
+            'joinType' => 'INNER',
+            'className' => 'AcademicPeriod.AcademicPeriods'
+        ]);
+
+        $this->belongsTo('SpecialNeedsPlanTypes', [
+            'foreignKey' => 'special_needs_plan_types_id',
+            'joinType' => 'INNER',
+            'className' => 'SpecialNeeds.SpecialNeedsPlanTypes'
+        ]);
+        
 
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -46,6 +58,9 @@ class SpecialNeedsPlansTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('academic_period_id');
+        $this->field('special_needs_plan_types_id');
+        $this->field('plan_name');
         $this->field('comment', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
@@ -69,12 +84,17 @@ class SpecialNeedsPlansTable extends ControllerActionTable
 
     private function setupFields($entity = null)
     {
+        $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"];
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+        $specialNeedsPlanTypesOptions = $this->SpecialNeedsPlanTypes->getPlanTypeList();
+        $this->field('academic_period_id', ['type' => 'select', 'options' => $academicPeriodOptions]);
+        $this->field('special_needs_plan_types_id', ['type' => 'select', 'options' => $specialNeedsPlanTypesOptions]);
         $this->field('plan_name');
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['null' => false, 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
 
-        $this->setFieldOrder(['plan_name', 'file_name', 'file_content', 'comment']);
+        $this->setFieldOrder(['academic_period_id', 'special_needs_plan_types_id', 'plan_name', 'file_name', 'file_content', 'comment']);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -86,5 +106,15 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         ->where([
             'security_user_id =' .$studentUserId,
         ]);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'special_needs_plan_types_id':
+                return __('Plan Type');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
