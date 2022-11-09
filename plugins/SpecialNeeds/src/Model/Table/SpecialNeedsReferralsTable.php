@@ -72,7 +72,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             case 'special_needs_referrer_type_id':
                 return __('Referrer Type');
             case 'reason_type_id':
-                return __('Reason');
+                return __('Reason for Referral');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -278,12 +278,71 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
         $academicPeriodId = $this->request->query['academic_period_id'];
         $institutionId  = $session->read('Institution.Institutions.id');
+        if($academicPeriodId == '-1'){
+            $query
+            ->where([
+                'security_user_id =' .$studentUserId,
+            ]);
+        }else{
+            $query
+            ->where([
+                'academic_period_id =' .$academicPeriodId,
+                'security_user_id =' .$studentUserId,
+            ]);
+        }
+    }
 
-        $query
-        ->where([
-            'academic_period_id =' .$academicPeriodId,
-            'security_user_id =' .$studentUserId,
-        ]);
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $extraField[] = [
+            'key' => '',
+            'field' => 'date',
+            'type' => 'date',
+            'label' => __('Date')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'file_name',
+            'type' => 'string',
+            'label' => __('File Name')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'comment',
+            'type' => 'string',
+            'label' => __('Comment')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'academic_period_id',
+            'type' => 'string',
+            'label' => __('Academic Period')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'security_user_id',
+            'type' => 'string',
+            'label' => __('Security User')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'referrer_id',
+            'type' => 'string',
+            'label' => __('Referrer Name')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'special_needs_referrer_type_id',
+            'type' => 'string',
+            'label' => __('Special Needs Referrer Type')
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'reason_type_id',
+            'type' => 'string',
+            'label' => __('Reason Type')
+        ];
+        $fields->exchangeArray($extraField);
     }
 
 }
