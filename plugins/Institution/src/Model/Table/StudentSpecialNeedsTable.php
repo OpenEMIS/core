@@ -427,7 +427,7 @@ class StudentSpecialNeedsTable extends AppTable
             'key'   => 'SpecialNeedsDiagnostics.special_needs_diagnostics_type_id',
             'field' => 'diagnostics_type',
             'type'  => 'string',
-            'label' => __('diagnostics Types'),
+            'label' => __('Diagnostics Types'),
         ];
         $extraField[] = [
             'key'   => 'SpecialNeedsDiagnostics.special_needs_diagnostics_degree_id',
