@@ -1282,7 +1282,6 @@ class InstitutionsTable extends ControllerActionTable
             }
         }
         $extra['formButtons'] = false;
-        $session = $this->controller->request->session();
         
     }
 
