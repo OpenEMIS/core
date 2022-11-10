@@ -1005,7 +1005,6 @@ class InstitutionsTable extends ControllerActionTable
         {
             $SurveyStatusesFilters = TableRegistry::get('Survey.SurveyStatuses');
             $SurveyStatusPeriodsFilters = TableRegistry::get('Survey.SurveyStatusPeriods');
-            $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
             $SurveyStatusesFiltersObj = $SurveyStatusesFilters->find()
             ->where([
                 $SurveyStatusesFilters->aliasField('date_enabled <=') => $todayDate,
@@ -1037,32 +1036,34 @@ class InstitutionsTable extends ControllerActionTable
                             $SurveyFormsFilters->aliasField('id = ').$institutionFormIds[$statusID],
                             'SurveyStatuses.id' => $value->id                       
                         ])
-                    ->first();
+                    ->toArray();
+                    foreach ($surveyFormCount as $mlp => $multipleForm) {
+                     $SurveyStatusesIds[] = $multipleForm->SurveyStatusPeriods['academic_period_id'] . ',' . $multipleForm->id;
+                    }
                     
-                     $SurveyStatusesIds[] = $surveyFormCount->SurveyStatusPeriods['academic_period_id'] . ',' . $surveyFormCount->id;
                 }
+
+                foreach ($SurveyStatusesIds as $key => $periodObj) {
+                    $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
+
+                    $value = explode(",",$periodObj);
+
+                    $surveyData = [
+                        'status_id' => 1,
+                        'academic_period_id' => $value[0],
+                        'survey_form_id' => $value[1],
+                        'institution_id' => $entity->id,
+                        'assignee_id' => 0,
+                        'created_user_id' => 1,
+                        'created' => new Time('NOW')
+                    ];
+
+
+                    $surveyEntity = $InstitutionSurveys->newEntity($surveyData);
+                    $InstitutionSurveys->save($surveyEntity);
+                }
+
             }
- 
-
-            foreach ($SurveyStatusesIds as $key => $periodObj) {
-                $value = explode(",",$periodObj);
-
-                $surveyData = [
-                    'status_id' => 1,
-                    'academic_period_id' => $value[0],
-                    'survey_form_id' => $value[1],
-                    'institution_id' => $entity->id,
-                    'assignee_id' => 0,
-                    'created_user_id' => 1,
-                    'created' => new Time('NOW')
-                ];
-
-
-                $surveyEntity = $InstitutionSurveys->newEntity($surveyData);
-                $InstitutionSurveys->save($surveyEntity);
-            }
-
-
 
         }       
 
@@ -1212,6 +1213,16 @@ class InstitutionsTable extends ControllerActionTable
         foreach ($dispatchTable as $model) {
             $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
         }
+
+        $institutionSurveysDelete = $InstitutionSurveys->find()
+        ->where([
+            $InstitutionSurveys->aliasField('institution_id = ').$entity->id,
+        ])
+        ->group(['institution_id','academic_period_id','survey_form_id','assignee_id'])
+        ->toArray();
+        foreach ($institutionSurveysDelete as $single) {
+            return $InstitutionSurveys->delete($single);
+        }
     }
 
 
@@ -1271,6 +1282,8 @@ class InstitutionsTable extends ControllerActionTable
             }
         }
         $extra['formButtons'] = false;
+        $session = $this->controller->request->session();
+        
     }
 
     public function getNumberOfInstitutionsByModel($params = [])
