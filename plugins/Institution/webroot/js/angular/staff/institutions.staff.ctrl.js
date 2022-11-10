@@ -7,7 +7,7 @@ InstitutionStaffController.$inject = ['$location', '$q', '$scope', '$window', '$
 function InstitutionStaffController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsStaffSvc, $rootScope) {
     // ag-grid vars
 
-    console.log("Nov 4 - Works")
+    console.log("Nov 10 - Works")
 
     var StaffController = this;
 
