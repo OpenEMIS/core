@@ -750,7 +750,6 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         return $query;
     }
 
-    
     //POCOR-6925
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
     {

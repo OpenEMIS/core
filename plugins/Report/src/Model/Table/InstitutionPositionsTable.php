@@ -46,14 +46,14 @@ class InstitutionPositionsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     { 
-	    /*POCOR-6534 starts*/
-		$identity_types = TableRegistry::get('identity_types'); //POCOR-6887
+        /*POCOR-6534 starts*/
+        $identity_types = TableRegistry::get('identity_types'); //POCOR-6887
         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
-		$UserIdentitiesTable   = TableRegistry::get('User.Identities');
+        $UserIdentitiesTable   = TableRegistry::get('User.Identities');
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
         //Start POCOR-6605  JO UAT environment is not working blank birthCertificateId
-		//$birthCertificateId = $IdentityTypesTable->getIdByName('Birth Certificate');
+        //$birthCertificateId = $IdentityTypesTable->getIdByName('Birth Certificate');
         //$birth_certificate_code_id = !empty($birthCertificateId) ? $birthCertificateId : 0;
         //End POCOR-6605
         //Start POCOR-6887
@@ -93,15 +93,16 @@ class InstitutionPositionsTable extends AppTable
                 'is_homeroom' => $this->aliasField('is_homeroom'),
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
-				'assignee_openemis_no' => 'SecurityUsersStaff.openemis_no',
-				'staff_firstname' => 'SecurityUsersStaff.first_name',
-				'staff_lastname' => 'SecurityUsersStaff.last_name',
-				'birth_certificate' => 'Identities.number',
+                'assignee_openemis_no' => 'SecurityUsersStaff.openemis_no',
+                'staff_firstname' => 'SecurityUsersStaff.first_name',
+                'staff_lastname' => 'SecurityUsersStaff.last_name',
+                'birth_certificate' => 'Identities.number',
                 'identity_types_name' => 'identity_types.name', //POCOR-6887
                 'StaffStatuses_name' => 'StaffStatuses.name', //POCOR-6887
                 'InstitutionStaffs_start_date' => 'InstitutionStaffs.start_date ', //POCOR-6887
                 'InstitutionStaffs_end_date' => 'InstitutionStaffs.end_date', //POCOR-6887
                 'InstitutionStaffs_FTE' => 'InstitutionStaffs.FTE', //POCOR-6887
+                'staff_gender_name' => 'SecurityUsersGender.name', //POCOR-6951
             ])
             ->contain([
                 'Statuses' => [
@@ -113,7 +114,8 @@ class InstitutionPositionsTable extends AppTable
                     'fields' => [
                         'StaffPositionTitles.id',
                         'StaffPositionTitles.name',
-                        'StaffPositionTitles.type'
+                        'StaffPositionTitles.type',
+                        'StaffPositionTitles.staff_position_categories_id'
                     ]
                 ],
                 'StaffPositionGrades' => [
@@ -148,11 +150,11 @@ class InstitutionPositionsTable extends AppTable
                         'Assignees.third_name',
                         'Assignees.last_name',
                         'Assignees.preferred_name',
-						'Assignees.openemis_no',
+                        'Assignees.openemis_no',
                     ]
-                ]
+                ],
             ]);// Start POCOR-6887
-			$join['InstitutionStaffs'] = [
+            $join['InstitutionStaffs'] = [
                 'type' => 'left',
                 'table' => 'institution_staff',
                 'conditions' => [
@@ -181,8 +183,15 @@ class InstitutionPositionsTable extends AppTable
                 ],
             ];
             // End POCOR-6887
+            $join['SecurityUsersGender'] = [
+                'type' => 'left',
+                'table' => 'genders',
+                'conditions' => [
+                    'SecurityUsersGender.id = SecurityUsersStaff.gender_id',
+                ],
+            ];  //POCOR-6951
             $query->join($join)
-    		->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
+            ->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
                     $UserIdentitiesTable->aliasField('security_user_id = ') . ' SecurityUsersStaff.id',
                     $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id->id",  //POCOR-6887
                 ])
@@ -195,12 +204,13 @@ class InstitutionPositionsTable extends AppTable
             
             ->where([$where])
             ->order(['institution_name', 'position_no']);
+            // echo "<pre>"; print_r($query->sql()); die();
        
         // if ($positionFilter == self::POSITION_WITH_STAFF) {
         //     $query = $this->onExcelBeforePositionWithStaffQuery($query);
         // }
 
-		$query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
         {
             return $results->map(function ($row)
             {
@@ -208,7 +218,7 @@ class InstitutionPositionsTable extends AppTable
                 return $row;
             });
         });
-		/*POCOR-6534 ends*/
+        /*POCOR-6534 ends*/
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -309,21 +319,21 @@ class InstitutionPositionsTable extends AppTable
             'type' => 'string',
             'label' => __('Homeroom Teacher')
         ];
-		/*POCOR-6534 starts*/
+        /*POCOR-6534 starts*/
         $newFields[] = [
             'key' => 'Assignees.openemis_no',
             'field' => 'assignee_openemis_no',
             'type' => 'string',
             'label' => __('OpenEMIS ID')
         ];
-		$newFields[] = [
+        $newFields[] = [
             'key' => 'staff_user_full_name',
             'field' => 'staff_user_full_name',
             'type' => 'string',
             'label' => __('Staff Name')
         ];
         //Start POCOR-6887
-		$newFields[] = [
+        $newFields[] = [
             'key' => 'identity_types_name',
             'field' => 'identity_types_name',
             'type' => 'string',
@@ -338,8 +348,24 @@ class InstitutionPositionsTable extends AppTable
         ];
 
         //End POCOR-6887
-	
-		/*POCOR-6534 ends*/
+
+        //Start POCOR-6951
+        $newFields[] = [
+            'key' => 'staff_gender_name',
+            'field' => 'staff_gender_name',
+            'type' => 'string',
+            'label' => __('Staff Gender')
+        ];
+
+        $newFields[] = [
+            'key' => 'StaffPositionTitles.staff_position_categories_id',
+            'field' => 'staff_position_categories_id',
+            'type' => 'string',
+            'label' => __('Position Category')
+        ];
+        //End POCOR-6951
+    
+        /*POCOR-6534 ends*/
         if ($positionFilter == self::POSITION_WITH_STAFF) {
             $staffFields = $this->onExcelUpdatePositionWithStaffFields();
             $newFields = array_merge($newFields, $staffFields);
@@ -354,7 +380,7 @@ class InstitutionPositionsTable extends AppTable
         $staffPositionTitleType = '';
 
         if ($entity->has('staff_position_title')) {
-            $staffPositionTitleType = $entity->staff_position_title->name;
+            $staffPositionCategoriesType = $entity->staff_position_title->staff_position_categories_id;
             $staffType = $entity->staff_position_title->type;
             $type = array_key_exists($staffType, $options) ? $options[$staffType] : '';
 
@@ -491,5 +517,51 @@ class InstitutionPositionsTable extends AppTable
             // });
 
         return $query;
+    }
+
+    /** Get the feature of value of gender
+        * @author Rahul Singh <rahul.singh@mail.valuecoder.com>
+        *return array
+        *POCOR-6951
+    */
+
+
+    public function onExcelGetGender(Event $event, Entity $entity)
+    {
+        $gender = '';
+        if (!empty($entity->user->gender->name) ) {
+            $gender = $entity->user->gender->name;
+        }
+
+        return $gender;
+    }
+
+    /** Get the feature of value of Position Categories
+        * @author Rahul Singh <rahul.singh@mail.valuecoder.com>
+        *return array
+        *POCOR-6951
+    */
+
+    public function onExcelGetStaffPositionCategoriesId(Event $event, Entity $entity)
+    {
+        $StaffPositionCategories =  TableRegistry::get('Staff.StaffPositionCategories');
+        $categories = '';
+
+        if ($entity->has('staff_position_title')) {
+            $staffPositionCategoriesType = $entity->staff_position_title->staff_position_categories_id;
+        $conditions = [
+            $StaffPositionCategories->aliasField('id = ') => $staffPositionCategoriesType
+        ];
+            $categories = $StaffPositionCategories
+            ->find()
+            ->select([
+                $StaffPositionCategories->aliasField('name')
+            ])
+            ->where($conditions)
+            ->first();
+        }
+        // echo "<pre>"; print_r($categories); die(); 
+
+        return $categories->name;
     }
 }

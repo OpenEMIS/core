@@ -15,9 +15,11 @@ class LatLongBehavior extends Behavior
     public function LatLongValidation()
     {    
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $LatLongPermission = $ConfigItems->value("latitude_longitude");
+       // $LatLongPermission = $ConfigItems->value("latitude_longitude");
+        $LatLongPermission = $ConfigItems->value("latitude_mandatory"); //POCOR-7045
+        $LongPermission = $ConfigItems->value("longitude_mandatory"); //POCOR-7045
         
-        if ($LatLongPermission == self::MANDATORY) {
+        if ($LatLongPermission == self::MANDATORY && $LongPermission == self::MANDATORY) { //POCOR-7045
             $validator = new Validator();
             return $validator
                 ->requirePresence('longitude')
@@ -29,7 +31,7 @@ class LatLongBehavior extends Behavior
                     'rule' => 'checkLatitude'
                 ])
             ;
-        } elseif ($LatLongPermission == self::NON_MANDATORY) {
+        } elseif ($LatLongPermission == self::NON_MANDATORY && $LongPermission == self::NON_MANDATORY) { //POCOR-7045
             $validator = new Validator();
             return $validator
                 ->allowEmpty('longitude')
