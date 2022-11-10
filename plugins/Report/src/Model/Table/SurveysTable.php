@@ -330,10 +330,11 @@ class SurveysTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $status = $requestData->status;
         $institutionStatus = $requestData->institution_status;
+        $areaId = $requestData->area_id;
 
         $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
 
-        if (!empty($academicPeriodId)) {
+        if (!empty($academicPeriodId) && empty($areaId)) { //POCOR-7046
             $surveyStatuses = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusesCode('Institution.InstitutionSurveys');
 
             if($status == '' || $status == 'all'){
@@ -353,7 +354,27 @@ class SurveysTable extends AppTable
                   $settings['renderNotOpen'] = false;
                   $settings['renderNotComplete'] = false;
             }
-        } else {
+        }//Start POCOR-7046
+        else if (!empty($areaId)) {
+            if($status == '' || $status == 'all'){
+                  $settings['renderNotOpen'] = false;
+                  $settings['renderNotComplete'] = true;
+
+            } elseif ($surveyStatuses[$status] == 'Open') {
+
+                  $settings['renderNotOpen'] = true;
+                  $settings['renderNotComplete'] = false;
+
+            } elseif (  !$status || $surveyStatuses[$status] == 'NOT_COMPLETED') {
+                  $settings['renderNotOpen'] = false;
+                  $settings['renderNotComplete'] = true;
+
+            } else {
+                  $settings['renderNotOpen'] = false;
+                  $settings['renderNotComplete'] = false;
+            }
+        }//End POCOR-7046
+        else {
             $academicPeriodId = 0;
         }
 
