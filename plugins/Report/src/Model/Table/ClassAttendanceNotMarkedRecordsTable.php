@@ -179,6 +179,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             ])
             ->formatResults(function (ResultSetInterface $results) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
                 return $results->map(function ($row) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
+                   // print_r($row); die;
                     $institutionId = $row->institution_id;
                     $mark= 0;
                     $unmark= 0;
@@ -212,17 +213,19 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                                 $status = __('Not Marked');
                             }
                         }
-                        // print_r($row); die;
-//                        $row->total_mark = $mark;
-                        $row->mark = $mark;
+
+                        $row->total_mark = $mark;
+                       // $row->abc = $mark;
                         $row->total_unmark = $unmark;
                         $row->{$dayColumn} = $status;
                     }
-// print_r($row); die;
+//print_r($row->abc); die;
                     return $row;
                 });
             })
         ;
+        print_r($query); die;
+
          
     }
 
@@ -362,7 +365,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
 
         $newFields[] = [
             'key' => '',
-            'field' => 'mark',
+            'field' => 'abc',
             'type' => 'string',
             'label' => 'Marked'
         ];
