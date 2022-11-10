@@ -1,3 +1,19 @@
+### [3.75.36] - 2022-11-09
+- Implemented: Create Placeholder for Student Report Card to display user that enters marks and comments
+- Implemented: Change to the OpenEMIS Core Special Needs feature
+- Implemented: Update an existing Report: Institution Positions
+- Implemented: Develop gender placeholder in student report card
+- Implemented: Change to the OpenEMIS Core Special Needs feature(Plan)
+- Bug Fixed: Institution>Performance>Report Card: User should be allow to email all pdf or email all excels
+- Bug Fixed: Institutions>Appointment>Positions: User is able to add positions that is inactive
+- Bug Fixed: Institutions>Dashboard: Dashboard are not reflecting Student Attendance correctly
+- Bug Fixed: Institutions>Staff>Transfer: Assignee is not showing during Pending transfer step
+- Bug Fixed: Institutions>Attendance>Student: System should update the record in institution_student_absence_days AND institution_student_absence_details correctly
+- Bug Fixed: Institutions>Performance>Report Cards: Report card generated is showing the wrong number for attendance
+- Bug Fixed: Institutions>Students>Transfer: Assignee option is not accurate
+- Bug Fixed: Administration>System Setup>Configurations>Coordination: Mandatory fields set to false but it is still mandatory
+- Bug Fixed: Institutions>Survey>Forms>Export: Report is showing double records
+
 ### [3.75.35] - 2022-11-02
 - Bug Fixed: Institution_class_students:Retrieve 18013660 rows
 
