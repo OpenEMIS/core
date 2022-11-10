@@ -20,6 +20,9 @@ use Institution\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
 use PHPExcel_IOFactory;
 use Cake\Datasource\ResultSetInterface;
+use Cake\Utility\Security; //POCOR-5672
+use Cake\Utility\Text;//POCOR-5672
+use Cake\Datasource\ConnectionManager;
 
 class InstitutionsController extends AppController
 {
@@ -210,6 +213,10 @@ class InstitutionsController extends AppController
         $this->loadComponent('Institution.CreateUsers');
         $this->attachAngularModules();
         $this->loadModel('Institution.StaffBodyMasses');
+        //POCOR-5672 it is used for removing csrf token mismatch condition in save student Api 
+        if ($this->request->action == 'saveStudentData' || $this->request->action == 'saveStaffData' || $this->request->action == 'saveGuardianData' || $this->request->action == 'saveDirectoryData') {
+            $this->eventManager()->off($this->Csrf);
+        }//POCOR-5672 ends
     }
 
     // CAv4
@@ -1689,16 +1696,66 @@ class InstitutionsController extends AppController
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        //for api purpose POCOR-5672 starts
+        if($this->request->params['action'] == 'getEducationGrade'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getEducationGrade';
+        }
+        if($this->request->params['action'] == 'getClassOptions'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getClassOptions';
+        }
+        if($this->request->params['action'] == 'getPositionType'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getPositionType';
+        }
+        if($this->request->params['action'] == 'getFTE'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getFTE';
+        }
+        if($this->request->params['action'] == 'getShifts'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getShifts';
+        }
+        if($this->request->params['action'] == 'getPositions'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getPositions';
+        }
+        if($this->request->params['action'] == 'getStaffType'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStaffType';
+        }
+        if($this->request->params['action'] == 'studentCustomFields'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'studentCustomFields';
+        }
+        if($this->request->params['action'] == 'staffCustomFields'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'staffCustomFields';
+        }
+        if($this->request->params['action'] == 'saveStudentData'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveStudentData';
+        }
+        if($this->request->params['action'] == 'saveStaffData'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveStaffData';
+        }
+        if($this->request->params['action'] == 'saveGuardianData'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveGuardianData';
+        }
+        if($this->request->params['action'] == 'saveDirectoryData'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveDirectoryData';
+        }
+        if($this->request->params['action'] == 'getStudentTransferReason'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStudentTransferReason';
+        }
+        if($this->request->params['action'] == 'checkStudentAdmissionAgeValidation'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkStudentAdmissionAgeValidation';
+        }
+        if($this->request->params['action'] == 'getStartDateFromAcademicPeriod'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStartDateFromAcademicPeriod';
+        }
+        //for api purpose POCOR-5672 ends
         return $events;
     }
-
+    //POCOR-5672 starts
     public function isActionIgnored(Event $event, $action)
     {
         $pass = $this->request->pass;
         if (isset($pass[0]) && $pass[0] == 'downloadFile') {
             return true;
         }
-    }
+    }//POCOR-5672 ends
 
     public function changeUserHeader($model, $modelAlias, $userType)
     {
@@ -3339,7 +3396,7 @@ class InstitutionsController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate, $staffUserPriId = '')
+    public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate, $openemisNo, $staffUserPriId = '')
     {
         if ($endDate == 'null') {
             $endDate = null;
@@ -3452,7 +3509,6 @@ class InstitutionsController extends AppController
         $staffPositionsOptions = array_intersect_key($staffPositionsOptions, array_intersect($staffPositionRoles, $roleOptions));
 
         // POCOR-4269 same staff cant add to same position regardsless the FTE
-        $openemisNo = $this->request->params['pass'][3];
         $positionHeldByStaff = $StaffTable->find()
             ->select([
                 'position_id' => $StaffTable->aliasField('institution_position_id'),
@@ -3491,7 +3547,6 @@ class InstitutionsController extends AppController
 
         $this->response->body(json_encode($options, JSON_UNESCAPED_UNICODE));
         $this->response->type('json');
-
         return $this->response;
     }
 
@@ -4263,6 +4318,2125 @@ class InstitutionsController extends AppController
     /*POCOR-6966 starts*/ 
     public function ClassesProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ClassesProfiles']); }
     /*POCOR-6966 ends*/ 
+
+    public function getAcademicPeriod()
+    {
+        $academic_periods = TableRegistry::get('academic_periods');
+        $academic_periods_result = $academic_periods
+            ->find()
+            ->select(['id','name'])
+            ->where(['code !=' => 'All','visible' => 1])
+            ->order([$academic_periods->aliasField('id DESC')])
+            ->toArray();
+        foreach($academic_periods_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getEducationGrade()
+    {
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+       /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
+        echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
+        $institution_name = $this->request->session()->read('Institution.Institutions.name');
+        $institutions = TableRegistry::get('institutions');
+        $institution = $institutions
+                        ->find()
+                        ->select(['id','name'])
+                        ->where(['name' => $institution_name])
+                        ->first();
+        //get instituiton                 
+        $institution_id = 0;       
+        if(!empty($institution)){
+            $institution_id = $institution->id;
+        }
+        //get academic period
+        $academic_period = $requestData['academic_periods'];
+        $academic_periods = TableRegistry::get('academic_periods');
+        $academic_periods_result = $academic_periods
+            ->find()
+            ->select(['id','name', 'start_date','end_date'])
+            ->where(['id' => $academic_period])
+            ->first();
+       
+        $startDate = date('Y-m-d', strtotime($academic_periods_result->start_date));
+        $endDate = date('Y-m-d', strtotime($academic_periods_result->end_date));
+        
+        $institution_grades = TableRegistry::get('institution_grades');
+        $institution_grades_result = $institution_grades
+            ->find()
+            ->select([
+                $institution_grades->aliasField('id'),
+                'EducationGrades.id',
+                'EducationGrades.name'
+            ])
+            ->LeftJoin(['EducationGrades' => 'education_grades'],[
+                'EducationGrades.id = '. $institution_grades->aliasField('education_grade_id')
+            ])
+            ->LeftJoin(['EducationProgrammes' => 'education_programmes'],[
+                'EducationProgrammes.id = EducationGrades.education_programme_id'
+            ])
+            ->LeftJoin(['EducationCycles' => 'education_cycles'],[
+                'EducationCycles.id = EducationProgrammes.education_cycle_id'
+            ])
+            ->LeftJoin(['EducationLevels' => 'education_levels'],[
+                'EducationLevels.id = EducationCycles.education_level_id'
+            ])
+            ->LeftJoin(['EducationSystems' => 'education_systems'],[
+                'EducationSystems.id = EducationLevels.education_system_id'
+            ])
+            ->where([
+                $institution_grades->aliasField('institution_id') => $institution_id,
+                'EducationSystems.academic_period_id' => $academic_period,
+                'OR'=>[
+                    'OR' => [
+                        [
+                            $institution_grades->aliasField('end_date') . ' IS NOT NULL',
+                            $institution_grades->aliasField('start_date') . ' <=' => $startDate,
+                            $institution_grades->aliasField('end_date') . ' >=' => $startDate
+                        ],
+                        [
+                            $institution_grades->aliasField('end_date') . ' IS NOT NULL',
+                            $institution_grades->aliasField('start_date') . ' <=' => $endDate,
+                            $institution_grades->aliasField('end_date') . ' >=' => $endDate
+                        ],
+                        [
+                            $institution_grades->aliasField('end_date') . ' IS NOT NULL',
+                            $institution_grades->aliasField('start_date') . ' >=' => $startDate,
+                            $institution_grades->aliasField('end_date') . ' <=' => $endDate
+                        ]
+                    ],
+                    [
+                        $institution_grades->aliasField('end_date') . ' IS NULL',
+                        $institution_grades->aliasField('start_date') . ' <=' => $endDate
+                    ]
+                ]
+        ])
+        ->group([$institution_grades->aliasField('education_grade_id')])
+        ->toArray();
+        foreach($institution_grades_result AS $result){
+            $result_array[] = array("id" => $result['id'], "education_grade_id" => $result->EducationGrades['id'], "name" => $result->EducationGrades['name']);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getClassOptions()
+    {
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        $academic_period = $requestData['academic_period'];
+        $grade_id = $requestData['grade_id'];
+        $institution_id = $this->request->session()->read('Institution.Institutions.id');
+
+        $institution_classes = TableRegistry::get('institution_classes');
+        $institution_classes_result = $institution_classes
+            ->find()
+            ->select([
+                $institution_classes->aliasField('id'),
+                $institution_classes->aliasField('name')
+            ])
+            ->InnerJoin(['InstitutionClassGrades' => 'institution_class_grades'],[
+                'InstitutionClassGrades.institution_class_id = '. $institution_classes->aliasField('id'),
+                'InstitutionClassGrades.education_grade_id = '. $grade_id,
+            ])
+            ->where([
+                $institution_classes->aliasField('academic_period_id') => $academic_period,
+                $institution_classes->aliasField('institution_id') => $institution_id
+            ])
+            ->group([$institution_classes->aliasField('id')])
+            ->toArray();
+        
+        foreach($institution_classes_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getPositionType()
+    {
+        $postype = [
+            'Full-Time' => 'Full-Time',
+            'Part-Time' => 'Part-Time'
+        ];
+
+        foreach($postype AS $result){
+             $result_array[] = array("id" => $result, "name" => $result);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getFTE()
+    {
+        $ftetype = [
+            '0.25' => '25%',
+            '0.5' => '50%',
+            '0.75' => '75%'
+        ];
+
+        foreach($ftetype AS $k=>$v){
+           $result_array[] = array("id" => $k, "name" => $v);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getStaffType()
+    {
+        $staff_types = TableRegistry::get('staff_types');
+        $staff_types_result = $staff_types
+            ->find()
+            ->select(['id','name'])
+            ->where(['visible' => 1])
+            ->toArray();
+        foreach($staff_types_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getShifts()
+    {   //get current academic period
+        $academic_periods = TableRegistry::get('academic_periods');
+        $academic_periods_result = $academic_periods
+            ->find()
+            ->select(['id','name'])
+            ->where(['current' => 1,'visible' => 1])
+            ->first();
+
+        $academic_period_id = !empty($academic_periods_result) ? $academic_periods_result->id : 0;
+        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $shift =  TableRegistry::get('Institution.InstitutionShifts');
+        $shiftData = $shift->find('all',
+                            [ 'contain' => [
+                                'ShiftOptions'                   
+                            ],
+                ])->where([
+                    $shift->aliasField('academic_period_id') => $academic_period_id,
+                    $shift->aliasField('institution_id') => $institutionId
+                ])->toArray();
+        
+        if (!empty($shiftData)) {
+            foreach ($shiftData as $k => $val) {
+                $result_array[] = array("id" => $val['id'], "name" => $val->shift_option->name);
+            }
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getPositions()
+    {
+        $requestData = $this->request->input('json_decode', true);
+        $fte = $requestData['params']['fte'];
+        $startDate = $requestData['params']['startDate'];
+        $institutionId = $requestData['params']['institution_id'];
+        $openemisNo = $requestData['params']['openemis_no'];
+        $endDate = null;
+        if ($endDate == 'null') {
+            $endDate = null;
+        }
+        $result = $this->getInstitutionPositions($institutionId, $fte, $startDate, $endDate, $openemisNo);
+        echo $result; die;
+    }
+
+    public function checkStudentAdmissionAgeValidation()
+    {
+        $requestData = $this->request->input('json_decode', true);
+        $dateOfBirth = $requestData['params']['date_of_birth'];
+        $educationGradeId = $requestData['params']['education_grade_id'];
+        
+        $dobYear =  date('Y', strtotime($dateOfBirth));
+        $currentYear =  date('Y', strtotime(date('Y-m-d')));
+        $yearDiff = $currentYear - $dobYear;
+
+        $ConfigItemTable = TableRegistry::get('config_items');
+        $ConfigItemAgePlus = $ConfigItemTable->find('all',['conditions' =>['code' => 'admission_age_plus']])->first();
+        $ConfigItemAgeMinus = $ConfigItemTable->find('all',['conditions' =>['code' => 'admission_age_minus']])->first();  
+        $EducationGradesTable = TableRegistry::get('education_grades'); 
+        $EducationGrades = $EducationGradesTable->find('all',['conditions' =>['id' => $educationGradeId]])->first();    
+        $maxAge = ($EducationGrades->admission_age + $ConfigItemAgePlus->value);    
+        $minAge = $EducationGrades->admission_age - $ConfigItemAgeMinus->value;
+        if($minAge < 0){ $minAge =  0; } 
+        if($yearDiff > $maxAge || $yearDiff < $minAge ){   
+            $result_array[] = array("max_age" => $maxAge, "min_age" => $minAge, "validation_error" => 1);
+        }else{
+            $result_array[] = array("max_age" => $maxAge, "min_age" => $minAge, "validation_error" => 0);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function getStartDateFromAcademicPeriod()
+    {
+        $requestData = $this->request->input('json_decode', true);
+        $academicPeriodId = $requestData['params']['academic_period_id'];
+
+        $AcademicPeriodsTable = TableRegistry::get('academic_periods');
+        $academic_periods_result = $AcademicPeriodsTable
+            ->find()
+            ->where(['id' => $academicPeriodId])
+            ->toArray();
+        foreach($academic_periods_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name" => $result['name'], "start_date" => date('Y-m-d',strtotime($result['start_date'])), "start_year" => $result['start_year'], "end_date" => date('Y-m-d',strtotime($result['end_date'])), "end_year" => $result['end_year']);
+        }
+        echo json_encode($result_array);die;
+   }
+
+    public function getStudentTransferReason()
+    {
+        $student_transfer_reasons = TableRegistry::get('student_transfer_reasons');
+        $student_transfer_reasons_result = $student_transfer_reasons
+            ->find()
+            ->select(['id','name'])
+            ->where(['visible' => 1])
+            ->order([$student_transfer_reasons->aliasField('order ASC')])
+            ->toArray();
+        foreach($student_transfer_reasons_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+        }
+        echo json_encode($result_array);die;
+    }
+
+    public function studentCustomFields()
+    {
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        $studentId = (array_key_exists('student_id', $requestData))? $requestData['student_id']: '';
+        $studentCustomForms =  TableRegistry::get('student_custom_forms');
+        $studentCustomFormsFields =  TableRegistry::get('student_custom_forms_fields');
+        $studentCustomFields =  TableRegistry::get('student_custom_fields');
+        $studentCustomFieldOptions =  TableRegistry::get('student_custom_field_options');
+        $studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
+
+        $SectionData = $studentCustomForms->find()
+                            ->select([
+                                'student_custom_form_id'=>$studentCustomFormsFields->aliasField('student_custom_form_id'),
+                                'student_custom_field_id'=>$studentCustomFormsFields->aliasField('student_custom_field_id'),
+                                'section'=>$studentCustomFormsFields->aliasField('section'),
+                            ])
+                            ->LeftJoin([$studentCustomFormsFields->alias() => $studentCustomFormsFields->table()], [
+                                $studentCustomFormsFields->aliasField('student_custom_form_id =') . $studentCustomForms->aliasField('id'),
+                            ])
+                            ->where([
+                                $studentCustomForms->aliasField('name') => 'Student Custom Fields'
+                            ])
+                            ->group([$studentCustomFormsFields->aliasField('section')])
+                            ->toArray();
+
+        $remove_field_type = ['FILE','COORDINATES','TABLE'];  
+        $i= 0;    
+        $fieldsArr = [];              
+        foreach ($SectionData as $skey => $sval) {
+            //$SectionArr[$skey][$sval->section] = $sval->section;
+            $CustomFieldsData = $studentCustomFormsFields->find()
+                            ->select([
+                                'student_custom_form_id'=>$studentCustomFormsFields->aliasField('student_custom_form_id'),
+                                'student_custom_field_id'=>$studentCustomFormsFields->aliasField('student_custom_field_id'),
+                                'section'=>$studentCustomFormsFields->aliasField('section'),
+                                'name'=>$studentCustomFormsFields->aliasField('name'),
+                                'order'=>$studentCustomFormsFields->aliasField('order'),
+                                'description'=>$studentCustomFields->aliasField('description'),
+                                'field_type'=>$studentCustomFields->aliasField('field_type'),
+                                'is_mandatory'=>$studentCustomFields->aliasField('is_mandatory'),
+                                'is_unique'=>$studentCustomFields->aliasField('is_unique'),
+                                'params'=>$studentCustomFields->aliasField('params'),
+                            ])
+                            ->LeftJoin([$studentCustomFields->alias() => $studentCustomFields->table()], [
+                                $studentCustomFields->aliasField('id =') . $studentCustomFormsFields->aliasField('student_custom_field_id'),
+                            ])
+                            ->where([
+                                $studentCustomFormsFields->aliasField('section') => $sval->section,
+                                $studentCustomFields->aliasField('field_type NOT IN') => $remove_field_type
+                            ])->toArray();
+            
+            foreach ($CustomFieldsData as $ckey => $cval) {
+                $fieldsArr[$i]['student_custom_form_id'] = $cval->student_custom_form_id;
+                $fieldsArr[$i]['student_custom_field_id'] = $cval->student_custom_field_id;
+                $fieldsArr[$i]['section'] = $cval->section;
+                $fieldsArr[$i]['name'] = $cval->name;
+                $fieldsArr[$i]['order'] = $cval->order;
+                $fieldsArr[$i]['description'] = $cval->description;
+                $fieldsArr[$i]['field_type'] = $cval->field_type;
+                $fieldsArr[$i]['is_mandatory'] = $cval->is_mandatory;
+                $fieldsArr[$i]['is_unique'] = $cval->is_unique;
+                $fieldsArr[$i]['params'] = $cval->params;
+
+                if($cval->field_type == 'DROPDOWN' || $cval->field_type == 'CHECKBOX'){
+                    $OptionData = $studentCustomFieldOptions->find()
+                                    ->select([
+                                        'option_id'=>$studentCustomFieldOptions->aliasField('id'),
+                                        'option_name'=>$studentCustomFieldOptions->aliasField('name'),
+                                        'is_default'=>$studentCustomFieldOptions->aliasField('is_default'),
+                                        'visible'=>$studentCustomFieldOptions->aliasField('visible'),
+                                        'option_order'=>$studentCustomFieldOptions->aliasField('order')
+                                    ])
+                                    ->where([
+                                        $studentCustomFieldOptions->aliasField('student_custom_field_id') => $cval->student_custom_field_id
+                                    ])->toArray();
+                    $OptionDataArr =[];
+                    foreach ($OptionData as $opkey => $opval) {
+                        $OptionDataArr[$opkey]['option_id'] = $opval->option_id;
+                        $OptionDataArr[$opkey]['option_name'] = $opval->option_name;
+                        $OptionDataArr[$opkey]['is_default'] = $opval->is_default;
+                        $OptionDataArr[$opkey]['visible'] = $opval->visible;
+                        $OptionDataArr[$opkey]['option_order'] = $opval->option_order;
+                    }
+                    $fieldsArr[$i]['option'] = $OptionDataArr;
+                }
+                //get student custom field values
+                if($studentId != ''){
+                    $studentCustomFieldValuesData = $studentCustomFieldValues->find()
+                            ->select([
+                                'text_value'=>$studentCustomFieldValues->aliasField('text_value'),
+                                'number_value'=>$studentCustomFieldValues->aliasField('number_value'),
+                                'decimal_value'=>$studentCustomFieldValues->aliasField('decimal_value'),
+                                'textarea_value'=>$studentCustomFieldValues->aliasField('textarea_value'),
+                                'date_value'=>$studentCustomFieldValues->aliasField('date_value'),
+                                'time_value'=>$studentCustomFieldValues->aliasField('time_value'),
+                                'student_custom_field_id'=>$studentCustomFieldValues->aliasField('student_custom_field_id'),
+                                'student_id'=>$studentCustomFieldValues->aliasField('student_id')
+                            ])
+                            ->where([
+                                $studentCustomFieldValues->aliasField('student_custom_field_id') => $cval->student_custom_field_id,
+                                $studentCustomFieldValues->aliasField('student_id') => $studentId
+                            ])->toArray();
+                    if(!empty($studentCustomFieldValuesData)){
+                        if($cval->field_type == 'TEXT'){
+                            $fieldsArr[$i]['values'] = $studentCustomFieldValuesData[0]->text_value;
+                        } else if($cval->field_type == 'DECIMAL'){
+                            $fieldsArr[$i]['values'] = $studentCustomFieldValuesData[0]->decimal_value;
+                        } else if($cval->field_type == 'NUMBER'){
+                            $fieldsArr[$i]['values'] = $studentCustomFieldValuesData[0]->number_value;
+                        } else if($cval->field_type == 'TEXTAREA'){
+                            $fieldsArr[$i]['values'] = $studentCustomFieldValuesData[0]->textarea_value;
+                        } else if($cval->field_type == 'DATE'){
+                            $fieldsArr[$i]['values'] = date('Y-m-d', strtotime($studentCustomFieldValuesData[0]->date_value));
+                        } else if($cval->field_type == 'TIME'){
+                            $fieldsArr[$i]['values'] = date('H:i:s', strtotime($studentCustomFieldValuesData[0]->time_value));
+                        } else if($cval->field_type == 'DROPDOWN'){
+                            $DropdownValDataArr =[];
+                            foreach ($studentCustomFieldValuesData as $SV_key => $SV_value) {
+                                $DropdownValDataArr[$SV_key]['dropdown_val'] = $SV_value->number_value;
+                            }
+                            $fieldsArr[$i]['values'] = $DropdownValDataArr;
+                        }  else if($cval->field_type == 'CHECKBOX'){
+                            $CheckboxValDataArr =[];
+                            foreach ($studentCustomFieldValuesData as $SV_key => $SV_value) {
+                                $CheckboxValDataArr[$SV_key]['checkbox_val'] = $SV_value->number_value;
+                            }
+                            $fieldsArr[$i]['values'] = $CheckboxValDataArr;
+                        }
+                    }else{
+                        $fieldsArr[$i]['values'] = '';    
+                    }
+                }else{
+                    $fieldsArr[$i]['values'] = '';  
+                }
+                $i++;
+            }
+            //$SectionArr[$skey][$sval->section] = $fieldsArr;
+            $SectionArr = $fieldsArr;
+        }
+        echo json_encode($SectionArr);die;
+    }
+
+    public function staffCustomFields()
+    {
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        $staffId = (array_key_exists('staff_id', $requestData))? $requestData['staff_id']: '';
+        $staffCustomForms =  TableRegistry::get('staff_custom_forms');
+        $staffCustomFormsFields =  TableRegistry::get('staff_custom_forms_fields');
+        $staffCustomFields =  TableRegistry::get('staff_custom_fields');
+        $staffCustomFieldOptions =  TableRegistry::get('staff_custom_field_options');
+        $staffCustomFieldValues =  TableRegistry::get('staff_custom_field_values');
+
+        $SectionData = $staffCustomForms->find()
+                            ->select([
+                                'staff_custom_form_id'=>$staffCustomFormsFields->aliasField('staff_custom_form_id'),
+                                'staff_custom_field_id'=>$staffCustomFormsFields->aliasField('staff_custom_field_id'),
+                                'section'=>$staffCustomFormsFields->aliasField('section'),
+                            ])
+                            ->LeftJoin([$staffCustomFormsFields->alias() => $staffCustomFormsFields->table()], [
+                                $staffCustomFormsFields->aliasField('staff_custom_form_id =') . $staffCustomForms->aliasField('id'),
+                            ])
+                            ->where([
+                                $staffCustomForms->aliasField('name') => 'ID'
+                            ])
+                            ->group([$staffCustomFormsFields->aliasField('section')])
+                            ->toArray();
+                           
+        $remove_field_type = ['FILE','COORDINATES','TABLE'];  
+        $i= 0;    
+        $fieldsArr = [];              
+        foreach ($SectionData as $skey => $sval) {
+            //$SectionArr[$skey][$sval->section] = $sval->section;
+            $CustomFieldsData = $staffCustomFormsFields->find()
+                            ->select([
+                                'staff_custom_form_id'=>$staffCustomFormsFields->aliasField('staff_custom_form_id'),
+                                'staff_custom_field_id'=>$staffCustomFormsFields->aliasField('staff_custom_field_id'),
+                                'section'=>$staffCustomFormsFields->aliasField('section'),
+                                'name'=>$staffCustomFormsFields->aliasField('name'),
+                                'order'=>$staffCustomFormsFields->aliasField('order'),
+                                'description'=>$staffCustomFields->aliasField('description'),
+                                'field_type'=>$staffCustomFields->aliasField('field_type'),
+                                'is_mandatory'=>$staffCustomFields->aliasField('is_mandatory'),
+                                'is_unique'=>$staffCustomFields->aliasField('is_unique'),
+                                'params'=>$staffCustomFields->aliasField('params'),
+                            ])
+                            ->LeftJoin([$staffCustomFields->alias() => $staffCustomFields->table()], [
+                                $staffCustomFields->aliasField('id =') . $staffCustomFormsFields->aliasField('staff_custom_field_id'),
+                            ])
+                            ->where([
+                                $staffCustomFormsFields->aliasField('section') => $sval->section,
+                                $staffCustomFields->aliasField('field_type NOT IN') => $remove_field_type
+                            ])->toArray();
+            
+            foreach ($CustomFieldsData as $ckey => $cval) {
+                $fieldsArr[$i]['staff_custom_form_id'] = $cval->staff_custom_form_id;
+                $fieldsArr[$i]['staff_custom_field_id'] = $cval->staff_custom_field_id;
+                $fieldsArr[$i]['section'] = $cval->section;
+                $fieldsArr[$i]['name'] = $cval->name;
+                $fieldsArr[$i]['order'] = $cval->order;
+                $fieldsArr[$i]['description'] = $cval->description;
+                $fieldsArr[$i]['field_type'] = $cval->field_type;
+                $fieldsArr[$i]['is_mandatory'] = $cval->is_mandatory;
+                $fieldsArr[$i]['is_unique'] = $cval->is_unique;
+                $fieldsArr[$i]['params'] = $cval->params;
+
+                if($cval->field_type == 'DROPDOWN' || $cval->field_type == 'CHECKBOX'){
+                    $OptionData = $staffCustomFieldOptions->find()
+                                    ->select([
+                                        'option_id'=>$staffCustomFieldOptions->aliasField('id'),
+                                        'option_name'=>$staffCustomFieldOptions->aliasField('name'),
+                                        'is_default'=>$staffCustomFieldOptions->aliasField('is_default'),
+                                        'visible'=>$staffCustomFieldOptions->aliasField('visible'),
+                                        'option_order'=>$staffCustomFieldOptions->aliasField('order')
+                                    ])
+                                    ->where([
+                                        $staffCustomFieldOptions->aliasField('staff_custom_field_id') => $cval->staff_custom_field_id
+                                    ])->toArray();
+                    $OptionDataArr =[];
+                    foreach ($OptionData as $opkey => $opval) {
+                        $OptionDataArr[$opkey]['option_id'] = $opval->option_id;
+                        $OptionDataArr[$opkey]['option_name'] = $opval->option_name;
+                        $OptionDataArr[$opkey]['is_default'] = $opval->is_default;
+                        $OptionDataArr[$opkey]['visible'] = $opval->visible;
+                        $OptionDataArr[$opkey]['option_order'] = $opval->option_order;
+                    }
+                    $fieldsArr[$i]['option'] = $OptionDataArr;
+                }
+                //get staff custom field values
+                if($staffId != ''){
+                    $staffCustomFieldValuesData = $staffCustomFieldValues->find()
+                            ->select([
+                                'text_value'=>$staffCustomFieldValues->aliasField('text_value'),
+                                'number_value'=>$staffCustomFieldValues->aliasField('number_value'),
+                                'decimal_value'=>$staffCustomFieldValues->aliasField('decimal_value'),
+                                'textarea_value'=>$staffCustomFieldValues->aliasField('textarea_value'),
+                                'date_value'=>$staffCustomFieldValues->aliasField('date_value'),
+                                'time_value'=>$staffCustomFieldValues->aliasField('time_value'),
+                                'staff_custom_field_id'=>$staffCustomFieldValues->aliasField('staff_custom_field_id'),
+                                'staff_id'=>$staffCustomFieldValues->aliasField('staff_id')
+                            ])
+                            ->where([
+                                $staffCustomFieldValues->aliasField('staff_custom_field_id') => $cval->staff_custom_field_id,
+                                $staffCustomFieldValues->aliasField('staff_id') => $staffId
+                            ])->toArray();
+                    if(!empty($staffCustomFieldValuesData)){
+                        if($cval->field_type == 'TEXT'){
+                            $fieldsArr[$i]['values'] = $staffCustomFieldValuesData[0]->text_value;
+                        } else if($cval->field_type == 'DECIMAL'){
+                            $fieldsArr[$i]['values'] = $staffCustomFieldValuesData[0]->decimal_value;
+                        } else if($cval->field_type == 'NUMBER'){
+                            $fieldsArr[$i]['values'] = $staffCustomFieldValuesData[0]->number_value;
+                        } else if($cval->field_type == 'TEXTAREA'){
+                            $fieldsArr[$i]['values'] = $staffCustomFieldValuesData[0]->textarea_value;
+                        } else if($cval->field_type == 'DATE'){
+                            $fieldsArr[$i]['values'] = date('Y-m-d', strtotime($staffCustomFieldValuesData[0]->date_value));
+                        } else if($cval->field_type == 'TIME'){
+                            $fieldsArr[$i]['values'] = date('H:i:s', strtotime($staffCustomFieldValuesData[0]->time_value));
+                        } else if($cval->field_type == 'DROPDOWN'){
+                            $DropdownValDataArr =[];
+                            foreach ($staffCustomFieldValuesData as $SV_key => $SV_value) {
+                                $DropdownValDataArr[$SV_key]['dropdown_val'] = $SV_value->number_value;
+                            }
+                            $fieldsArr[$i]['values'] = $DropdownValDataArr;
+                        }  else if($cval->field_type == 'CHECKBOX'){
+                            $CheckboxValDataArr =[];
+                            foreach ($staffCustomFieldValuesData as $SV_key => $SV_value) {
+                                $CheckboxValDataArr[$SV_key]['checkbox_val'] = $SV_value->number_value;
+                            }
+                            $fieldsArr[$i]['values'] = $CheckboxValDataArr;
+                        }
+                    }else{
+                        $fieldsArr[$i]['values'] = '';    
+                    }
+                }else{
+                    $fieldsArr[$i]['values'] = '';  
+                }
+                $i++;
+            }
+            //$SectionArr[$skey][$sval->section] = $fieldsArr;
+            $SectionArr = $fieldsArr;
+        }
+        echo json_encode($SectionArr);die;
+    }
+
+    public function saveStudentData()
+    {
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        /*$requestData = json_decode('{"institution_id":"6","login_user_id":"1","openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021","end_date":"31-12-2021","institution_class_id":"524","student_status_id":1,"custom":[{"student_custom_field_id":17,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":27,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":29,"text_value":"test.jpg","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":28,"text_value":"","number_value":2,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":3,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":26,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":4,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":8,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":9,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":30,"text_value":"{\"latitude\":\"11.1\",\"longitude\":\"2.22\"}","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":18,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"}]}', true);*/
+        if(!empty($requestData)){
+            $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
+            $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
+            $middleName = (array_key_exists('middle_name', $requestData))? $requestData['middle_name']: null;
+            $thirdName = (array_key_exists('third_name', $requestData))? $requestData['third_name']: null;
+            $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
+            $preferredName = (array_key_exists('preferred_name', $requestData))? $requestData['preferred_name']: null;
+            $genderId = (array_key_exists('gender_id', $requestData))? $requestData['gender_id']: null;
+            $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
+            $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
+            $nationalityId = (array_key_exists('nationality_id', $requestData))? $requestData['nationality_id']: null;
+            $nationalityName = (array_key_exists('nationality_name', $requestData))? $requestData['nationality_name']: null;
+            $username = (array_key_exists('username', $requestData))? $requestData['username']: null;
+            $password = (array_key_exists('password', $requestData))? password_hash($requestData['password'],  PASSWORD_DEFAULT) : null;
+            $address  = (array_key_exists('address', $requestData))? $requestData['address'] : null;
+            $postalCode = (array_key_exists('postal_code', $requestData))? $requestData['postal_code'] : null;
+            $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData))? $requestData['birthplace_area_id'] : null;
+            $addressAreaId = (array_key_exists('address_area_id', $requestData))? $requestData['address_area_id'] : null;
+            $identityTypeId = (array_key_exists('identity_type_id', $requestData))? $requestData['identity_type_id'] : null;
+            $identityTypeName = (array_key_exists('identity_type_name', $requestData))? $requestData['identity_type_name'] : null;
+            
+            $institutionClassId = (array_key_exists('institution_class_id', $requestData))? $requestData['institution_class_id'] : null;
+            $educationGradeId = (array_key_exists('education_grade_id', $requestData))? $requestData['education_grade_id'] : null;
+            $academicPeriodId = (array_key_exists('academic_period_id', $requestData))? $requestData['academic_period_id'] : null;
+            $startDate = (array_key_exists('start_date', $requestData))? date('Y-m-d', strtotime($requestData['start_date'])) : null;
+            $endDate = (array_key_exists('end_date', $requestData))? date('Y-m-d', strtotime($requestData['end_date'])) : null;
+            
+            //$institutionId = $this->request->session()->read('Institution.Institutions.id');
+            $institutionId = (array_key_exists('institution_id', $requestData))? $requestData['institution_id'] : null;
+            $studentStatusId = (array_key_exists('student_status_id', $requestData))? $requestData['student_status_id'] : null;
+            $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
+            $custom = (array_key_exists('custom', $requestData))? $requestData['custom'] : "";
+            $photoContent = (array_key_exists('photo_base_64', $requestData))? $requestData['photo_base_64'] : null;
+            $photoName = (array_key_exists('photo_name', $requestData))? $requestData['photo_name'] : null;
+            //when student transfer in other institution starts
+            $isDiffSchool = (array_key_exists('is_diff_school', $requestData))? $requestData['is_diff_school'] : 0;
+            $studentId = (array_key_exists('student_id', $requestData))? $requestData['student_id'] : 0;
+            $previousInstitutionId = (array_key_exists('previous_institution_id', $requestData))? $requestData['previous_institution_id'] : 0;
+            $previousAcademicPeriodId = (array_key_exists('previous_academic_period_id', $requestData))? $requestData['previous_academic_period_id'] : 0;
+            $previousEducationGradeId = (array_key_exists('previous_education_grade_id', $requestData))? $requestData['previous_education_grade_id'] : 0;
+            $studentTransferReasonId = (array_key_exists('student_transfer_reason_id', $requestData))? $requestData['student_transfer_reason_id'] : 0;
+            $comment = (array_key_exists('comment', $requestData))? $requestData['comment'] : '';
+            //when student transfer in other institution end
+            //get academic period data
+            $academicPeriods = TableRegistry::get('academic_periods');
+            $periods = $academicPeriods->find()
+                        ->where([
+                            $academicPeriods->aliasField('id') => $academicPeriodId,
+                        ])
+                        ->first();
+            $startYear = $endYear = '';
+            if(!empty($periods)){
+                $startYear = $periods->start_year;
+                $endYear = $periods->end_year;
+            }
+            //get prefered language
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $pref_lang = $ConfigItems->find()
+                    ->where([
+                        $ConfigItems->aliasField('code') => 'language',
+                        $ConfigItems->aliasField('type') => 'System'
+                    ])
+                    ->first();
+            //get Student Status List        
+            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+            $statuses = $StudentStatuses->findCodeList();
+            //get nationality data
+            $nationalities = '';
+            if(!empty($nationalityName)){
+                $nationalitiesTbl = TableRegistry::get('nationalities');
+                $nationalities = $nationalitiesTbl->find()
+                    ->where([
+                        $nationalitiesTbl->aliasField('name') => $nationalityName,
+                    ])
+                    ->first();
+                
+                if(empty($nationalities)){
+                    $orderNationalities = $nationalitiesTbl->find()
+                        ->order([$nationalitiesTbl->aliasField('order DESC')])
+                        ->first();
+                    
+                    $entityNationality = [
+                        'name' => $nationalityName,
+                        'order' => !empty($orderNationalities->order) ? $orderNationalities->order + 1 : 0,
+                        'visible' => 1,
+                        'editable' => 1,
+                        'identity_type_id' => null,
+                        'default' => 0,
+                        'international_code' => '',
+                        'national_code' => '',
+                        'external_validation' => 0,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in nationalities table if doesn't exist in table
+                    $entityNationalityData = $nationalitiesTbl->newEntity($entityNationality);
+                    $NationalitiesResult = $nationalitiesTbl->save($entityNationalityData);
+                    if($NationalitiesResult){
+                        $nationalities->id = $NationalitiesResult->id;
+                    } 
+                }
+            }
+            //transfer student in other institution
+            if($isDiffSchool == 1){
+                $workflows = TableRegistry::get('workflows');
+                $workflowSteps = TableRegistry::get('workflow_steps');
+                $workflowResults = $workflows->find()
+                            ->select(['workflowSteps_id'=>$workflowSteps->aliasField('id')])
+                            ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
+                                $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                                $workflowSteps->aliasField('name')=> 'Open'
+                            ])
+                            ->where([
+                                $workflows->aliasField('name') => 'Student Transfer - Receiving'
+                            ])
+                            ->first();
+                $InstitutionStudentTransfers = TableRegistry::get('institution_student_transfers');
+                $entityTransferData = [
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                    'requested_date' => null,
+                    'student_id' => $studentId,
+                    'status_id' => $workflowResults->workflowSteps_id,
+                    'assignee_id' => 0,
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'education_grade_id' => $educationGradeId,
+                    'institution_class_id' => $institutionClassId,
+                    'previous_institution_id' => $previousInstitutionId,
+                    'previous_academic_period_id' => $previousAcademicPeriodId,
+                    'previous_education_grade_id' => $previousEducationGradeId,
+                    'student_transfer_reason_id' => $studentTransferReasonId,
+                    'comment' => $comment,
+                    'all_visible' => 1,
+                    'modified_user_id' => null,
+                    'modified' => null,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                $entity1 = $InstitutionStudentTransfers->newEntity($entityTransferData);
+                try{
+                    $InstitutionStudentTransferResult = $InstitutionStudentTransfers->save($entity1);
+                    unset($entity1);
+                    unset($InstitutionStudentTransferResult);
+                    die('success');
+                }catch (Exception $e) {
+                    return null;
+                }
+            }else{
+                $SecurityUsers = TableRegistry::get('security_users');
+                $CheckStudentExist = $SecurityUsers->find()
+                                ->where([
+                                    $SecurityUsers->aliasField('openemis_no') => $openemisNo
+                                ])->first();
+
+                $SecurityUsers = TableRegistry::get('security_users');
+                if(!empty($CheckStudentExist)){
+                    $existStudentId = $CheckStudentExist->id;
+                    $entityData = [
+                        'id'=> $existStudentId,
+                        'openemis_no' => $openemisNo,
+                        'first_name' => $firstName,
+                        'middle_name' => $middleName,
+                        'third_name' => $thirdName,
+                        'last_name' => $lastName,
+                        'preferred_name' => $preferredName,
+                        'gender_id' => $genderId,
+                        'date_of_birth' => $dateOfBirth,
+                        'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                        'preferred_language' => $pref_lang->value,
+                        'username' => $username,
+                        'password' => $password,
+                        'address' => $address,
+                        'address_area_id' => $addressAreaId,
+                        'birthplace_area_id' => $birthplaceAreaId,
+                        'postal_code' => $postalCode,
+                        'photo_name' => $photoName,
+                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                        'is_student' => 1,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                }else{
+                    $entityData = [
+                        'openemis_no' => $openemisNo,
+                        'first_name' => $firstName,
+                        'middle_name' => $middleName,
+                        'third_name' => $thirdName,
+                        'last_name' => $lastName,
+                        'preferred_name' => $preferredName,
+                        'gender_id' => $genderId,
+                        'date_of_birth' => $dateOfBirth,
+                        'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                        'preferred_language' => $pref_lang->value,
+                        'username' => $username,
+                        'password' => $password,
+                        'address' => $address,
+                        'address_area_id' => $addressAreaId,
+                        'birthplace_area_id' => $birthplaceAreaId,
+                        'postal_code' => $postalCode,
+                        'photo_name' => $photoName,
+                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                        'is_student' => 1,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                }
+                //save in security_users table
+                $entity = $SecurityUsers->newEntity($entityData);
+                try{
+                    $SecurityUserResult = $SecurityUsers->save($entity);
+                    unset($entity);
+                }catch (Exception $e) {
+                    return null;
+                }
+                     
+                if($SecurityUserResult){
+                    $user_record_id=$SecurityUserResult->id;
+                    if(!empty($nationalityId) || !empty($nationalityName)){
+                        if(!empty($nationalities->id)){
+                            $UserNationalities = TableRegistry::get('user_nationalities');
+                            $primaryKey = $UserNationalities->primaryKey();
+                            $hashString = [];
+                            foreach ($primaryKey as $key) {
+                                if($key == 'nationality_id'){
+                                    $hashString[] = $nationalities->id;
+                                }
+                                if($key == 'security_user_id'){
+                                    $hashString[] = $user_record_id;
+                                }
+                            }
+                 
+                            $entityNationalData = [
+                                'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                                'preferred' => 1,
+                                'nationality_id' => $nationalities->id,
+                                'security_user_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in user_nationalities table
+                            $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                            $UserNationalitiesResult = $UserNationalities->save($entityNationalData); 
+                        }
+                    }
+
+                    if(!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)){
+                        $identityTypesTbl = TableRegistry::get('identity_types');
+                        $identityTypes = $identityTypesTbl->find()
+                            ->where([
+                                $identityTypesTbl->aliasField('name') => $identityTypeName,
+                            ])
+                            ->first();
+                        if(!empty($identityTypes)){
+                            $UserIdentities = TableRegistry::get('user_identities');
+                            $entityIdentitiesData = [
+                                'identity_type_id' => $identityTypes->id,
+                                'number' => $identityNumber,
+                                'nationality_id' => $nationalities->id,
+                                'security_user_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in user_identities table
+                            $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                            $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                        }
+                    }
+
+                    if(!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId)){
+                        $InstitutionStudents = TableRegistry::get('institution_students');
+                        $entityStudentsData = [
+                            'id' => Text::uuid(),
+                            'student_status_id' => $studentStatusId,
+                            'student_id' => $user_record_id,
+                            'education_grade_id' => $educationGradeId,
+                            'academic_period_id' => $academicPeriodId,
+                            'start_date' => $startDate,
+                            'start_year' => $startYear,
+                            'end_date' => $endDate,
+                            'end_year' => $endYear,
+                            'institution_id' => $institutionId,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in institution_students table
+                        $entityStudentsData = $InstitutionStudents->newEntity($entityStudentsData);
+                        $InstitutionStudentsResult = $InstitutionStudents->save($entityStudentsData);
+                    }
+
+                    $workflows = TableRegistry::get('workflows');
+                    $workflowSteps = TableRegistry::get('workflow_steps');
+                    $workflowResults = $workflows->find()
+                                ->select(['workflowSteps_id'=>$workflowSteps->aliasField('id')])
+                                ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
+                                    $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                                    $workflowSteps->aliasField('name')=> 'Approved'
+                                ])
+                                ->where([
+                                    $workflows->aliasField('name') => 'Student Admission'
+                                ])
+                                ->first();          
+                    if(!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId) && !empty($workflowResults)){
+                        $institutionStudentAdmission = TableRegistry::get('institution_student_admission');
+                        $entityAdmissionData = [
+                            'start_date' => $startDate,
+                            'end_date' => $endDate,
+                            'student_id' => $user_record_id,
+                            'status_id' => $workflowResults->workflowSteps_id, 
+                            'assignee_id' => 0,
+                            'institution_id' => $institutionId,
+                            'academic_period_id' => $academicPeriodId,
+                            'education_grade_id' => $educationGradeId,
+                            'institution_class_id' => $institutionClassId,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in institution_student_admission table
+                        $entityAdmissionData = $institutionStudentAdmission->newEntity($entityAdmissionData);
+                        $InstitutionAdmissionResult = $institutionStudentAdmission->save($entityAdmissionData);
+                    }
+
+                    if(!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)){
+                        $institutionClassStudents = TableRegistry::get('institution_class_students');
+                        $entityAdmissionData = [
+                            'id' => Text::uuid(),
+                            'student_id' => $user_record_id,
+                            'institution_class_id' => $institutionClassId,
+                            'education_grade_id' => $educationGradeId,
+                            'academic_period_id' => $academicPeriodId,
+                            'institution_id' => $institutionId,
+                            'student_status_id' => $statuses['CURRENT'], 
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in institution_class_students table
+                        $entityClassData = $institutionClassStudents->newEntity($entityAdmissionData);
+                        $InstitutionClassResult = $institutionClassStudents->save($entityClassData);
+                    }
+
+                    if(!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)){
+                        $institutionClassSubjects = TableRegistry::get('institution_class_subjects');
+                        $institutionSubjects = TableRegistry::get('institution_subjects');
+                        $SubjectsResult = $institutionClassSubjects
+                            ->find()
+                            ->select([
+                                $institutionClassSubjects->aliasField('institution_class_id'),
+                                $institutionClassSubjects->aliasField('institution_subject_id'),
+                                'name' => $institutionSubjects->aliasField('name'),
+                                'institution_id' => $institutionSubjects->aliasField('institution_id'),
+                                'education_grade_id' => $institutionSubjects->aliasField('education_grade_id'),
+                                'education_subject_id' => $institutionSubjects->aliasField('education_subject_id'),
+                                'academic_period_id' => $institutionSubjects->aliasField('academic_period_id'),
+                            ])
+                            ->LeftJoin([$institutionSubjects->alias() => $institutionSubjects->table()], [
+                                $institutionSubjects->aliasField('id =') . $institutionClassSubjects->aliasField('institution_subject_id')
+                            ])
+                            ->where([
+                                $institutionClassSubjects->aliasField('institution_class_id') => $institutionClassId
+                            ])
+                            ->toArray();
+                           
+                        if(!empty($SubjectsResult)){
+                            $institutionSubjectStudents = TableRegistry::get('institution_subject_students');
+                            foreach ($SubjectsResult as $skey => $sval) {
+                                $primaryKey = $institutionSubjectStudents->primaryKey();
+                                $hashString = [];
+                                foreach ($primaryKey as $key) {
+                                    if($key == 'student_id'){
+                                        $hashString[] = $user_record_id;
+                                    }
+                                    if($key == 'institution_class_id'){
+                                        $hashString[] = $institutionClassId;
+                                    }
+                                    if($key == 'academic_period_id'){
+                                        $hashString[] = $academicPeriodId;
+                                    }
+                                    if($key == 'education_grade_id'){
+                                        $hashString[] = $educationGradeId;
+                                    }
+                                    if($key == 'institution_id'){
+                                        $hashString[] = $institutionId;
+                                    }
+                                    if($key == 'education_subject_id'){
+                                        $hashString[] = $sval->education_subject_id;
+                                    }
+                                }
+                                
+                                $entitySubjectsData = [
+                                    'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                                    'student_id' => $user_record_id,
+                                    'institution_subject_id' => $sval->institution_subject_id,
+                                    'institution_class_id' => $institutionClassId,
+                                    'institution_id' => $institutionId,
+                                    'academic_period_id' => $academicPeriodId,
+                                    'education_subject_id' => $sval->education_subject_id,
+                                    'education_grade_id' => $educationGradeId,
+                                    'student_status_id' => $statuses['CURRENT'],
+                                    'created_user_id' => $userId,
+                                    'created' => date('Y-m-d H:i:s')
+                                ];
+                                //save in institution_subject_students table
+                                $entitySubjectsData = $institutionSubjectStudents->newEntity($entitySubjectsData);
+                                $institutionSubjectStudentsResult = $institutionSubjectStudents->save($entitySubjectsData);
+
+                                unset($entitySubjectsData);
+                                unset($hashString);
+                            }
+                        }        
+                    }
+                    
+                    if(!empty($custom)){
+                        //if student custom field values already exist in student_custom_field_values table the delete the old values and insert the new ones.
+                        $studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
+                        $StudentCustomFieldValuesCount = $studentCustomFieldValues
+                                                            ->find()
+                                                            ->where([$studentCustomFieldValues->aliasField('student_id') => $user_record_id])
+                                                            ->count();
+                        if($StudentCustomFieldValuesCount > 0){
+                            $studentCustomFieldValues->deleteAll(['student_id' => $user_record_id]);
+                        }
+                        
+                        foreach ($custom as $skey => $sval) {
+                            $entityCustomData = [
+                                'id' => Text::uuid(),
+                                'text_value' => $sval['text_value'],
+                                'number_value' => $sval['number_value'],
+                                'decimal_value' => $sval['decimal_value'],
+                                'textarea_value' => $sval['textarea_value'],
+                                'date_value' => $sval['date_value'],
+                                'time_value' => $sval['time_value'],
+                                'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
+                                'student_custom_field_id' => $sval['student_custom_field_id'],
+                                'student_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in student_custom_field_values table
+                            $entityCustomData = $studentCustomFieldValues->newEntity($entityCustomData);
+                            $studentCustomFieldsResult = $studentCustomFieldValues->save($entityCustomData);
+                            unset($studentCustomFieldsResult);
+                            unset($entityCustomData);
+                        }
+                    }
+
+                    try{
+                        die('success');        
+                    }catch(Exception $e){
+                        return $e;
+                    }
+                }else{
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public function saveStaffData()
+    {
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        /*$requestData = json_decode('{"login_user_id":"1","openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","academic_period_id":"30","start_date":"01-01-2021","end_date":"31-12-2021","staff_type_id":"1","institution_position_id":1,"fte":1,"custom":[{"staff_custom_field_id":17,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":27,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":29,"text_value":"test.jpg","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":28,"text_value":"","number_value":2,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":31,"text_value":"","number_value":3,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":26,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":31,"text_value":"","number_value":4,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":8,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":9,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":30,"text_value":"{\"latitude\":\"11.1\",\"longitude\":\"2.22\"}","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":18,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"}]}', true);*/
+        if(!empty($requestData)){
+            $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
+            $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
+            $middleName = (array_key_exists('middle_name', $requestData))? $requestData['middle_name']: null;
+            $thirdName = (array_key_exists('third_name', $requestData))? $requestData['third_name']: null;
+            $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
+            $preferredName = (array_key_exists('preferred_name', $requestData))? $requestData['preferred_name']: null;
+            $genderId = (array_key_exists('gender_id', $requestData))? $requestData['gender_id']: null;
+            $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
+            $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
+            $nationalityId = (array_key_exists('nationality_id', $requestData))? $requestData['nationality_id']: null;
+            $nationalityName = (array_key_exists('nationality_name', $requestData))? $requestData['nationality_name']: null;
+            $username = (array_key_exists('username', $requestData))? $requestData['username']: null;
+            $password = (array_key_exists('password', $requestData))? password_hash($requestData['password'],  PASSWORD_DEFAULT) : null;
+            $address  = (array_key_exists('address', $requestData))? $requestData['address'] : null;
+            $postalCode = (array_key_exists('postal_code', $requestData))? $requestData['postal_code'] : null;
+            $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData))? $requestData['birthplace_area_id'] : null;
+            $addressAreaId = (array_key_exists('address_area_id', $requestData))? $requestData['address_area_id'] : null;
+            $identityTypeId = (array_key_exists('identity_type_id', $requestData))? $requestData['identity_type_id'] : null;
+            $identityTypeName = (array_key_exists('identity_type_name', $requestData))? $requestData['identity_type_name'] : null;
+            
+            $institutionPositionId = (array_key_exists('institution_position_id', $requestData))? $requestData['institution_position_id'] : null;
+            $fte = (array_key_exists('fte', $requestData))? $requestData['fte'] : null;
+            $startDate = (array_key_exists('start_date', $requestData))? date('Y-m-d', strtotime($requestData['start_date'])) : NULL;
+            $endDate = (array_key_exists('end_date', $requestData) && !empty($requestData['end_date']))? date('Y-m-d', strtotime($requestData['end_date'])) : '';
+            
+            //$institutionId = $this->request->session()->read('Institution.Institutions.id');
+            $institutionId = (array_key_exists('institution_id', $requestData))? $requestData['institution_id'] : null;
+            $staffTypeId = (array_key_exists('staff_type_id', $requestData))? $requestData['staff_type_id'] : null;
+            $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
+            $photoContent = (array_key_exists('photo_base_64', $requestData))? $requestData['photo_base_64'] : null;
+            $photoName = (array_key_exists('photo_name', $requestData))? $requestData['photo_name'] : null;
+            $custom = (array_key_exists('custom', $requestData))? $requestData['custom'] : "";
+            $shiftIds = (array_key_exists('shift_ids', $requestData))? $requestData['shift_ids'] : "";
+
+            //when staff transfer in other institution starts
+            $isSameSchool = (array_key_exists('is_same_school', $requestData))? $requestData['is_same_school'] : 0;
+            $isDiffSchool = (array_key_exists('is_diff_school', $requestData))? $requestData['is_diff_school'] : 0;
+            $staffId = (array_key_exists('staff_id', $requestData))? $requestData['staff_id'] : 0;
+            $previousInstitutionId = (array_key_exists('previous_institution_id', $requestData))? $requestData['previous_institution_id'] : 0;
+            $comment = (array_key_exists('comment', $requestData))? $requestData['comment'] : '';
+            //when staff transfer in other institution end
+            
+            //get academic period data
+            $academicPeriods = TableRegistry::get('academic_periods');
+            $periods = $academicPeriods->find()
+                           ->where(['current'=> 1])
+                           ->first();
+            $startYear = $endYear = '';
+            if(!empty($periods)){
+                $startYear = $periods->start_year;
+                if($endDate == NULL || $endDate == ''){
+                    $endYear = NULL;
+                }else{
+                    $endYear = $periods->end_year;
+                }
+            }
+            //get prefered language
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $pref_lang = $ConfigItems->find()
+                    ->where([
+                        $ConfigItems->aliasField('code') => 'language',
+                        $ConfigItems->aliasField('type') => 'System'
+                    ])
+                    ->first();
+            //get Student Status List        
+            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+            $statuses = $StaffStatuses->findCodeList();
+            //get nationality data
+            $nationalities = '';
+            if(!empty($nationalityName)){
+                $nationalitiesTbl = TableRegistry::get('nationalities');
+                $nationalities = $nationalitiesTbl->find()
+                    ->where([
+                        $nationalitiesTbl->aliasField('name') => $nationalityName,
+                    ])
+                    ->first();
+                if(empty($nationalities)){
+                    $orderNationalities = $nationalitiesTbl->find()
+                        ->order([$nationalitiesTbl->aliasField('order DESC')])
+                        ->first();
+                    
+                    $entityNationality = [
+                        'name' => $nationalityName,
+                        'order' => !empty($orderNationalities->order) ? $orderNationalities->order + 1 : 0,
+                        'visible' => 1,
+                        'editable' => 1,
+                        'identity_type_id' => null,
+                        'default' => 0,
+                        'international_code' => '',
+                        'national_code' => '',
+                        'external_validation' => 0,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in nationalities table if doesn't exist in table
+                    $entityNationalityData = $nationalitiesTbl->newEntity($entityNationality);
+                    $NationalitiesResult = $nationalitiesTbl->save($entityNationalityData);
+                    if($NationalitiesResult){
+                        $nationalities->id = $NationalitiesResult->id;
+                    } 
+                }
+            }
+            if($isSameSchool == 1){
+                if(!empty($institutionId)){
+                    //get id from `institution_positions` table
+                    $InstitutionPositions = TableRegistry::get('institution_positions');
+                    $InstitutionPositionsTbl = $InstitutionPositions->find()
+                                            ->where([
+                                                $InstitutionPositions->aliasField('id') => $institutionPositionId,
+                                            ])
+                                            ->first();
+
+                    $SecurityGroupUsers = TableRegistry::get('security_group_users');
+                    if(!empty($InstitutionPositionsTbl)){
+                        $SecurityRoles = TableRegistry::get('security_roles');
+                        if($InstitutionPositionsTbl->is_homeroom == 1){
+                            $roleArr = ['STAFF', 'HOMEROOM_TEACHER'];
+                        }else{
+                            $roleArr = ['STAFF'];
+                        }
+                        $SecurityRolesTbl = $SecurityRoles->find()
+                                            ->where([
+                                                $SecurityRoles->aliasField('code IN') => $roleArr
+                                            ])->toArray();
+
+                        if(!empty($SecurityRolesTbl)){
+                            foreach ($SecurityRolesTbl as $rolekey => $roleval) {
+                                $entityGroupData = [
+                                    'id' => Text::uuid(),
+                                    'security_group_id' => $institutionId,
+                                    'security_user_id' => $staffId,
+                                    'security_role_id' => $roleval->id,
+                                    'created_user_id' => $userId,
+                                    'created' => date('Y-m-d H:i:s')
+                                ];
+                                //save in security_group_users table
+                                $entityGroupData = $SecurityGroupUsers->newEntity($entityGroupData);
+                                $entityGroupResult = $SecurityGroupUsers->save($entityGroupData);
+                                unset($entityGroupResult);
+                                unset($entityGroupData);
+                            }
+                        }
+                    }                        
+
+                    //get id from `security_group_users` table
+                    $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
+                                            ->where([
+                                                $SecurityGroupUsers->aliasField('security_group_id') => $institutionId,
+                                                $SecurityGroupUsers->aliasField('security_user_id') => $staffId,
+                                            ])->first();
+                    $InstitutionStaffs = TableRegistry::get('institution_staff');
+                    $entityStaffsData = [
+                        'FTE' => $fte,
+                        'start_date' => $startDate,
+                        'start_year' => $startYear,
+                        'end_date' => $endDate,
+                        'end_year' => $endYear,
+                        'staff_id' => $staffId,
+                        'staff_type_id' => $staffTypeId,
+                        'staff_status_id' => $statuses['ASSIGNED'],
+                        'institution_id' => $institutionId,
+                        'institution_position_id' => $institutionPositionId,
+                        'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $SecurityGroupUsersTbl->id : null,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in institution_staff table
+                    $entityStaffsData = $InstitutionStaffs->newEntity($entityStaffsData);
+                    $InstitutionStaffsResult = $InstitutionStaffs->save($entityStaffsData);
+                }
+                if(!empty($shiftIds)){
+                    $InstitutionStaffShifts = TableRegistry::get('institution_staff_shifts');
+                    foreach ($shiftIds as $shkey => $shval) {
+                        $entityShiftData = [
+                            'staff_id' => $staffId,
+                            'shift_id' => $shval,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in institution_staff_shifts table
+                        $entityShiftData = $InstitutionStaffShifts->newEntity($entityShiftData);
+                        $staffShiftResult = $InstitutionStaffShifts->save($entityShiftData);
+                        unset($staffShiftResult);
+                        unset($entityShiftData);
+                    }
+                }
+
+                try{
+                    die('success');
+                }catch (Exception $e) {
+                    return null;
+                }
+            }else if($isDiffSchool == 1){
+                $workflows = TableRegistry::get('workflows');
+                $workflowSteps = TableRegistry::get('workflow_steps');
+                $workflowResults = $workflows->find()
+                            ->select(['workflowSteps_id'=>$workflowSteps->aliasField('id')])
+                            ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
+                                $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                                $workflowSteps->aliasField('name')=> 'Open'
+                            ])
+                            ->where([
+                                $workflows->aliasField('name') => 'Staff Transfer - Receiving'
+                            ])
+                            ->first();
+
+                $institutionStaffTransfers = TableRegistry::get('institution_staff_transfers');
+                $entityTransferData = [
+                    'staff_id' => $staffId,
+                    'new_institution_id' => $institutionId,
+                    'previous_institution_id' => $previousInstitutionId,
+                    'status_id' => $workflowResults->workflowSteps_id,
+                    'assignee_id' => 0,
+                    'new_institution_position_id' => $institutionPositionId,
+                    'new_staff_type_id' => $staffTypeId,
+                    'new_FTE' => $fte,
+                    'new_start_date' => $startDate,
+                    'new_end_date' => $endDate,
+                    'previous_institution_staff_id' => '',
+                    'previous_staff_type_id' => '',
+                    'previous_FTE' => '',
+                    'previous_end_date' => '',
+                    'previous_effective_date' => '',
+                    'comment' => $comment,
+                    'transfer_type' => 0,
+                    'all_visible' => 0,
+                    'modified_user_id' => '',
+                    'modified' => '',
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s'),
+                ];
+                //save in `institution_staff_transfers` table
+                $entity = $institutionStaffTransfers->newEntity($entityTransferData);
+                try{
+                    $StaffTransfersResult = $institutionStaffTransfers->save($entity);
+                    unset($entity);
+                    die('success');
+                }catch (Exception $e) {
+                    return null;
+                }
+            }else{
+                $SecurityUsers = TableRegistry::get('security_users');
+                $CheckStaffExist = $SecurityUsers->find()
+                                ->where([
+                                    $SecurityUsers->aliasField('openemis_no') => $openemisNo
+                                ])->first();
+
+                $SecurityUsers = TableRegistry::get('security_users');
+                if(!empty($CheckStaffExist)){
+                    $existStaffId = $CheckStaffExist->id;
+                    $entityData = [
+                        'id'=> $existStaffId,
+                        'openemis_no' => $openemisNo,
+                        'first_name' => $firstName,
+                        'middle_name' => $middleName,
+                        'third_name' => $thirdName,
+                        'last_name' => $lastName,
+                        'preferred_name' => $preferredName,
+                        'gender_id' => $genderId,
+                        'date_of_birth' => $dateOfBirth,
+                        'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                        'preferred_language' => $pref_lang->value,
+                        'username' => $username,
+                        'password' => $password,
+                        'address' => $address,
+                        'address_area_id' => $addressAreaId,
+                        'birthplace_area_id' => $birthplaceAreaId,
+                        'postal_code' => $postalCode,
+                        'photo_name' => $photoName,
+                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                        'is_staff' => 1,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s'),
+                    ];
+                }else{
+                    $entityData = [
+                        'openemis_no' => $openemisNo,
+                        'first_name' => $firstName,
+                        'middle_name' => $middleName,
+                        'third_name' => $thirdName,
+                        'last_name' => $lastName,
+                        'preferred_name' => $preferredName,
+                        'gender_id' => $genderId,
+                        'date_of_birth' => $dateOfBirth,
+                        'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                        'preferred_language' => $pref_lang->value,
+                        'username' => $username,
+                        'password' => $password,
+                        'address' => $address,
+                        'address_area_id' => $addressAreaId,
+                        'birthplace_area_id' => $birthplaceAreaId,
+                        'postal_code' => $postalCode,
+                        'photo_name' => $photoName,
+                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                        'is_staff' => 1,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s'),
+                    ];
+                }
+                //save in security_users table
+                $entity = $SecurityUsers->newEntity($entityData);
+                try{
+                    $SecurityUserResult = $SecurityUsers->save($entity);
+                    unset($entity);
+                }catch (Exception $e) {
+                    return null;
+                }
+                if($SecurityUserResult){
+                    $user_record_id=$SecurityUserResult->id;
+                    if(!empty($nationalityId) || !empty($nationalityName)){
+                        if(!empty($nationalities->id)){
+                            $UserNationalities = TableRegistry::get('user_nationalities');
+                            $primaryKey = $UserNationalities->primaryKey();
+                            $hashString = [];
+                            foreach ($primaryKey as $key) {
+                                if($key == 'nationality_id'){
+                                    $hashString[] = $nationalities->id;
+                                }
+                                if($key == 'security_user_id'){
+                                    $hashString[] = $user_record_id;
+                                }
+                            }
+                 
+                            $entityNationalData = [
+                                'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                                'preferred' => 1,
+                                'nationality_id' => $nationalities->id,
+                                'security_user_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in user_nationalities table
+                            $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                            $UserNationalitiesResult = $UserNationalities->save($entityNationalData);    
+                        }
+                    }
+
+                    if(!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)){
+                        $identityTypesTbl = TableRegistry::get('identity_types');
+                        $identityTypes = $identityTypesTbl->find()
+                            ->where([
+                                $identityTypesTbl->aliasField('name') => $identityTypeName,
+                            ])
+                            ->first();
+                        if(!empty($identityTypes)){
+                            $UserIdentities = TableRegistry::get('user_identities');
+                            $entityIdentitiesData = [
+                                'identity_type_id' => $identityTypes->id,
+                                'number' => $identityNumber,
+                                'nationality_id' => $nationalities->id,
+                                'security_user_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in user_identities table
+                            $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                            $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                        }
+                    }
+
+                    if(!empty($institutionId)){
+                        //get id from `institution_positions` table
+                        $InstitutionPositions = TableRegistry::get('institution_positions');
+                        $InstitutionPositionsTbl = $InstitutionPositions->find()
+                                                ->where([
+                                                    $InstitutionPositions->aliasField('id') => $institutionPositionId,
+                                                ])
+                                                ->first();
+
+                        $SecurityGroupUsers = TableRegistry::get('security_group_users');
+                        if(!empty($InstitutionPositionsTbl)){
+                            $SecurityRoles = TableRegistry::get('security_roles');
+                            if($InstitutionPositionsTbl->is_homeroom == 1){
+                                $roleArr = ['STAFF', 'HOMEROOM_TEACHER'];
+                            }else{
+                                $roleArr = ['STAFF'];
+                            }
+                            $SecurityRolesTbl = $SecurityRoles->find()
+                                                        ->where([
+                                                            $SecurityRoles->aliasField('code IN') => $roleArr
+                                                        ])->toArray();
+
+                            if(!empty($SecurityRolesTbl)){
+                                foreach ($SecurityRolesTbl as $rolekey => $roleval) {
+                                    $entityGroupData = [
+                                        'id' => Text::uuid(),
+                                        'security_group_id' => $institutionId,
+                                        'security_user_id' => $user_record_id,
+                                        'security_role_id' => $roleval->id,
+                                        'created_user_id' => $userId,
+                                        'created' => date('Y-m-d H:i:s')
+                                    ];
+                                    //save in security_group_users table
+                                    $entityGroupData = $SecurityGroupUsers->newEntity($entityGroupData);
+                                    $entityGroupResult = $SecurityGroupUsers->save($entityGroupData);
+                                    unset($entityGroupResult);
+                                    unset($entityGroupData);
+                                }
+                            }
+                        }                        
+                        //get id from `security_group_users` table
+                        $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
+                                                ->where([
+                                                    $SecurityGroupUsers->aliasField('security_group_id') => $institutionId,
+                                                    $SecurityGroupUsers->aliasField('security_user_id') => $user_record_id,
+                                                ])->first();
+                        $InstitutionStaffs = TableRegistry::get('institution_staff');
+                        $entityStaffsData = [
+                            'FTE' => $fte,
+                            'start_date' => $startDate,
+                            'start_year' => $startYear,
+                            'end_date' => $endDate,
+                            'end_year' => $endYear,
+                            'staff_id' => $user_record_id,
+                            'staff_type_id' => $staffTypeId,
+                            'staff_status_id' => $statuses['ASSIGNED'],
+                            'institution_id' => $institutionId,
+                            'institution_position_id' => $institutionPositionId,
+                            'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $SecurityGroupUsersTbl->id : null,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in institution_staff table
+                        $entityStaffsData = $InstitutionStaffs->newEntity($entityStaffsData);
+                        $InstitutionStaffsResult = $InstitutionStaffs->save($entityStaffsData);
+                    }
+                    if(!empty($shiftIds)){
+                        $InstitutionStaffShifts = TableRegistry::get('institution_staff_shifts');
+                        foreach ($shiftIds as $shkey => $shval) {
+                            $entityShiftData = [
+                                'staff_id' => $user_record_id,
+                                'shift_id' => $shval,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in institution_staff_shifts table
+                            $entityShiftData = $InstitutionStaffShifts->newEntity($entityShiftData);
+                            $staffShiftResult = $InstitutionStaffShifts->save($entityShiftData);
+                            unset($staffShiftResult);
+                            unset($entityShiftData);
+                        }
+                    }
+                    if(!empty($custom)){
+                        //if staff custom field values already exist in `staff_custom_field_values` table the delete the old values and insert the new ones.
+                        $staffCustomFieldValues =  TableRegistry::get('staff_custom_field_values');
+                        $StaffCustomFieldValuesCount = $staffCustomFieldValues
+                                                            ->find()
+                                                            ->where([$staffCustomFieldValues->aliasField('staff_id') => $user_record_id])
+                                                            ->count();
+                        if($StaffCustomFieldValuesCount > 0){
+                            $staffCustomFieldValues->deleteAll(['staff_id' => $user_record_id]);
+                        }
+
+                        foreach ($custom as $skey => $sval) {
+                            $entityCustomData = [
+                                'id' => Text::uuid(),
+                                'text_value' => $sval['text_value'],
+                                'number_value' => $sval['number_value'],
+                                'decimal_value' => $sval['decimal_value'],
+                                'textarea_value' => $sval['textarea_value'],
+                                'date_value' => $sval['date_value'],
+                                'time_value' => $sval['time_value'],
+                                'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
+                                'staff_custom_field_id' => $sval['staff_custom_field_id'],
+                                'staff_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in staff_custom_field_values table
+                            $entityCustomData = $staffCustomFieldValues->newEntity($entityCustomData);
+                            $staffCustomFieldsResult = $staffCustomFieldValues->save($entityCustomData);
+                            unset($staffCustomFieldsResult);
+                            unset($entityCustomData);
+                        }
+                    }
+                    try{
+                        die('success');        
+                    }catch(Exception $e){
+                        return $e;
+                    }
+                }else{
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public function saveGuardianData()
+    {
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        /*$requestData = json_decode('{"guardian_relation_id":"1","student_id":"1161","login_user_id":"1","openemis_no":"152227434344","first_name":"GuardianPita","middle_name":"","third_name":"","last_name":"GuardianPita","preferred_name":"","gender_id":"1","date_of_birth":"1989-01-01","identity_number":"555555","nationality_id":"2","username":"pita123","password":"pita123","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160",}', true);*/
+        if(!empty($requestData)){
+            $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData))? $requestData['student_openemis_no']: null;
+            $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
+            $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
+            $middleName = (array_key_exists('middle_name', $requestData))? $requestData['middle_name']: null;
+            $thirdName = (array_key_exists('third_name', $requestData))? $requestData['third_name']: null;
+            $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
+            $preferredName = (array_key_exists('preferred_name', $requestData))? $requestData['preferred_name']: null;
+            $genderId = (array_key_exists('gender_id', $requestData))? $requestData['gender_id']: null;
+            $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
+            $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
+            $nationalityId = (array_key_exists('nationality_id', $requestData))? $requestData['nationality_id']: null;
+            $nationalityName = (array_key_exists('nationality_name', $requestData))? $requestData['nationality_name']: null;
+            $username = (array_key_exists('username', $requestData))? $requestData['username']: null;
+            $password = (array_key_exists('password', $requestData))? password_hash($requestData['password'],  PASSWORD_DEFAULT) : null;
+            $address  = (array_key_exists('address', $requestData))? $requestData['address'] : null;
+            $postalCode = (array_key_exists('postal_code', $requestData))? $requestData['postal_code'] : null;
+            $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData))? $requestData['birthplace_area_id'] : null;
+            $addressAreaId = (array_key_exists('address_area_id', $requestData))? $requestData['address_area_id'] : null;
+            $identityTypeId = (array_key_exists('identity_type_id', $requestData))? $requestData['identity_type_id'] : null;
+            $identityTypeName = (array_key_exists('identity_type_name', $requestData))? $requestData['identity_type_name'] : null;
+            
+            $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData))? $requestData['guardian_relation_id'] : null;
+            $studentId = (array_key_exists('student_id', $requestData))? $requestData['student_id'] : null;
+            $photoContent = (array_key_exists('photo_base_64', $requestData))? $requestData['photo_base_64'] : null;
+            $photoName = (array_key_exists('photo_name', $requestData))? $requestData['photo_name'] : null;
+            
+            $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
+            $contactType = (array_key_exists('contact_type', $requestData))? $requestData['contact_type'] : null;
+            $contactValue = (array_key_exists('contact_value', $requestData))? $requestData['contact_value'] : null;
+            
+            //get prefered language
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $pref_lang = $ConfigItems->find()
+                    ->where([
+                        $ConfigItems->aliasField('code') => 'language',
+                        $ConfigItems->aliasField('type') => 'System'
+                    ])
+                    ->first();
+            //get nationality data
+            $nationalities = '';
+            if(!empty($nationalityName)){
+                $nationalitiesTbl = TableRegistry::get('nationalities');
+                $nationalities = $nationalitiesTbl->find()
+                    ->where([
+                        $nationalitiesTbl->aliasField('name') => $nationalityName,
+                    ])->first();
+                if(empty($nationalities)){
+                    $orderNationalities = $nationalitiesTbl->find()
+                        ->order([$nationalitiesTbl->aliasField('order DESC')])
+                        ->first();
+                    
+                    $entityNationality = [
+                        'name' => $nationalityName,
+                        'order' => !empty($orderNationalities->order) ? $orderNationalities->order + 1 : 0,
+                        'visible' => 1,
+                        'editable' => 1,
+                        'identity_type_id' => null,
+                        'default' => 0,
+                        'international_code' => '',
+                        'national_code' => '',
+                        'external_validation' => 0,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in nationalities table if doesn't exist in table
+                    $entityNationalityData = $nationalitiesTbl->newEntity($entityNationality);
+                    $NationalitiesResult = $nationalitiesTbl->save($entityNationalityData);
+                    if($NationalitiesResult){
+                        $nationalities->id = $NationalitiesResult->id;
+                    } 
+                }
+            }
+
+            $SecurityUsers = TableRegistry::get('security_users');
+            $CheckGaurdianExist = $SecurityUsers->find()
+                            ->where([
+                                $SecurityUsers->aliasField('openemis_no') => $openemisNo
+                            ])->first();
+
+            $SecurityUsers = TableRegistry::get('security_users');
+            if(!empty($CheckGaurdianExist)){
+                $existGaurdianId = $CheckGaurdianExist->id;
+                $entityData = [
+                    'id' => !empty($existGaurdianId) ? $existGaurdianId : '',
+                    'openemis_no' => $openemisNo,
+                    'first_name' => $firstName,
+                    'middle_name' => $middleName,
+                    'third_name' => $thirdName,
+                    'last_name' => $lastName,
+                    'preferred_name' => $preferredName,
+                    'gender_id' => $genderId,
+                    'date_of_birth' => $dateOfBirth,
+                    'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                    'preferred_language' => $pref_lang->value,
+                    'username' => $username,
+                    'password' => $password,
+                    'address' => $address,
+                    'address_area_id' => $addressAreaId,
+                    'birthplace_area_id' => $birthplaceAreaId,
+                    'postal_code' => $postalCode,
+                    'photo_name' => $photoName,
+                    'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                    'is_guardian' => 1,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s'),
+                ];
+            }else{
+                $entityData = [
+                    'openemis_no' => $openemisNo,
+                    'first_name' => $firstName,
+                    'middle_name' => $middleName,
+                    'third_name' => $thirdName,
+                    'last_name' => $lastName,
+                    'preferred_name' => $preferredName,
+                    'gender_id' => $genderId,
+                    'date_of_birth' => $dateOfBirth,
+                    'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                    'preferred_language' => $pref_lang->value,
+                    'username' => $username,
+                    'password' => $password,
+                    'address' => $address,
+                    'address_area_id' => $addressAreaId,
+                    'birthplace_area_id' => $birthplaceAreaId,
+                    'postal_code' => $postalCode,
+                    'photo_name' => $photoName,
+                    'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                    'is_guardian' => 1,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s'),
+                ];
+            }
+            //save in security_users table
+            $entity = $SecurityUsers->newEntity($entityData);
+            try{
+                $SecurityUserResult = $SecurityUsers->save($entity);
+                unset($entity);
+            }catch (Exception $e) {
+                return null;
+            }
+            if($SecurityUserResult){
+                $user_record_id=$SecurityUserResult->id;
+                if(!empty($nationalityId) || !empty($nationalityName)){
+                    if(!empty($nationalities->id)){
+                        $UserNationalities = TableRegistry::get('user_nationalities');
+                        $primaryKey = $UserNationalities->primaryKey();
+                        $hashString = [];
+                        foreach ($primaryKey as $key) {
+                            if($key == 'nationality_id'){
+                                $hashString[] = $nationalities->id;
+                            }
+                            if($key == 'security_user_id'){
+                                $hashString[] = $user_record_id;
+                            }
+                        }
+             
+                        $entityNationalData = [
+                            'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                            'preferred' => 1,
+                            'nationality_id' => $nationalities->id,
+                            'security_user_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in user_nationalities table
+                        $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                        $UserNationalitiesResult = $UserNationalities->save($entityNationalData);    
+                    }
+                }
+
+                if(!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)){
+                    $identityTypesTbl = TableRegistry::get('identity_types');
+                    $identityTypes = $identityTypesTbl->find()
+                        ->where([
+                            $identityTypesTbl->aliasField('name') => $identityTypeName,
+                        ])
+                        ->first();
+                    if(!empty($identityTypes)){
+                        $UserIdentities = TableRegistry::get('user_identities');
+                        $entityIdentitiesData = [
+                            'identity_type_id' => $identityTypes->id,
+                            'number' => $identityNumber,
+                            'nationality_id' => $nationalities->id,
+                            'security_user_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in user_identities table
+                        $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                        $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                    }
+                }                
+
+                if(!empty($contactType) && !empty($contactValue)){
+                    $UserContacts = TableRegistry::get('user_contacts');
+                    $entityContactData = [
+                        'contact_type_id' => $contactType,
+                        'value' => $contactValue,
+                        'preferred' => 1,
+                        'security_user_id' => $user_record_id,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in user_identities table
+                    $entityContactData = $UserContacts->newEntity($entityContactData);
+                    $UserContactResult = $UserContacts->save($entityContactData);
+                }
+                //if relationship id and staudent openemis_no is not empty
+                if(!empty($guardianRelationId) && !empty($studentOpenemisNo)){
+                    $SecurityUsers = TableRegistry::get('security_users');
+                    $StudentData = $SecurityUsers->find()
+                                    ->where([
+                                        $SecurityUsers->aliasField('openemis_no') => $studentOpenemisNo
+                                    ])->first();
+                    //get id from `security_group_users` table
+                    $StudentGuardians = TableRegistry::get('student_guardians');
+                    $entityGuardiansData = [
+                        'id' => Text::uuid(),
+                        'student_id' => $StudentData->id,
+                        'guardian_id' => $user_record_id,
+                        'guardian_relation_id' => $guardianRelationId,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+
+                    $entityGuardiansData = $StudentGuardians->newEntity($entityGuardiansData);
+                    if ($StudentGuardians->save($entityGuardiansData)) {
+                        try{
+                            die('success');        
+                        }catch(Exception $e){
+                            return $e;
+                        }
+                    }
+                }
+            }else{
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function saveDirectoryData()
+    {
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        /*{"user_type": "1","openemis_no": "152227233311111222","first_name": "AMARTAA","middle_name": "","third_name": "","last_name": "Fenicott","preferred_name": "","gender_id": "1","date_of_birth": "2011-01-01","identity_number": "1231122","nationality_id": "2","username": "kkk111","password": "sdsd","postal_code": "12233","address": "sdsdsds","birthplace_area_id": "2","address_area_id": "2","identity_type_id": "160","contact_type": "1","contact_value": "254232","photo_name":"index.jpg","photo_content":"base64_encode(string)","custom": [{"custom_field_id": 17,"text_value": "yes","number_value": "","decimal_value": "","textarea_value": "","time_value": "","file": "", "created_user_id": 1,"created": "22-01-20 08:59:35" }, {"custom_field_id": 27,"text_value": "yes","number_value": "",   "decimal_value": "","textarea_value": "","time_value": "","file": "","created_user_id": 1,"created": "22-01-20 08:59:35"}, {"custom_field_id": 29,"text_value": "test.jpg","number_value": "","decimal_value": "","textarea_value": "","time_value": "","file": "base64_encode(string)","created_user_id": 1,"created": "22-01-20 08:59:35"}, {"custom_field_id": 28,"text_value": "","number_value": 2,    "decimal_value": "","textarea_value": "","time_value": "","file": "","created_user_id": 1,"created": "22-01-20 08:59:35"}, {"custom_field_id": 31,"text_value": "","number_value": 3,"decimal_value": "","textarea_value": "","time_value": "", "file": "","created_user_id": 1,"created": "22-01-20 08:59:35"}, {"custom_field_id": 26,"text_value": "yes","number_value": "","decimal_value": "", "textarea_value": "","time_value": "","file": "","created_user_id": 1,"created": "22-01-20 08:59:35"}, {"custom_field_id": 31,"text_value": "", "number_value": 4,"decimal_value": "","textarea_value": "","time_value": "","file": "","created_user_id": 1,"created": "22-01-20 08:59:35"}, {"custom_field_id": 8,"text_value": "yes","number_value": "","decimal_value": "","textarea_value": "","time_value": "","file": "","created_user_id": 1,"created": "22-01-20 08:59:35"}, {"custom_field_id": 9,"text_value": "yes","number_value": "","decimal_value": "", "textarea_value": "","time_value": "","file": "","created_user_id": 1,"created": "22-01-20 08:59:35"}, {"custom_field_id": 30,"text_value": "{\"latitude\":\"11.1\",\"longitude\":\"2.22\"}","number_value": "","decimal_value": "","textarea_value": "","time_value": "","file": "","created_user_id": 1,"created": "22-01-20 08:59:35"}, {"custom_field_id": 18,"text_value": "yes","number_value": "","decimal_value": "","textarea_value": "","time_value": "","file": "","created_user_id": 1,"created": "22-01-20 08:59:35"}]}*/
+        if(!empty($requestData)){
+            $userType = (array_key_exists('user_type', $requestData))? $requestData['user_type']: null;
+            $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
+            $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
+            $middleName = (array_key_exists('middle_name', $requestData))? $requestData['middle_name']: null;
+            $thirdName = (array_key_exists('third_name', $requestData))? $requestData['third_name']: null;
+            $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
+            $preferredName = (array_key_exists('preferred_name', $requestData))? $requestData['preferred_name']: null;
+            $genderId = (array_key_exists('gender_id', $requestData))? $requestData['gender_id']: null;
+            $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
+            $identityTypeId = (array_key_exists('identity_type_id', $requestData))? $requestData['identity_type_id'] : null;
+            $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
+            $identityTypeName = (array_key_exists('identity_type_name', $requestData))? $requestData['identity_type_name'] : null;
+            $nationalityId = (array_key_exists('nationality_id', $requestData))? $requestData['nationality_id']: null;
+            $nationalityName = (array_key_exists('nationality_name', $requestData))? $requestData['nationality_name']: null;
+            $username = (array_key_exists('username', $requestData))? $requestData['username']: null;
+            $password = (array_key_exists('password', $requestData))? password_hash($requestData['password'],  PASSWORD_DEFAULT) : null;
+            $address  = (array_key_exists('address', $requestData))? $requestData['address'] : null;
+            $postalCode = (array_key_exists('postal_code', $requestData))? $requestData['postal_code'] : null;
+            $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData))? $requestData['birthplace_area_id'] : null;
+            $addressAreaId = (array_key_exists('address_area_id', $requestData))? $requestData['address_area_id'] : null;
+            $custom = (array_key_exists('custom', $requestData))? $requestData['custom'] : "";
+            $photoContent = (array_key_exists('photo_base_64', $requestData))? $requestData['photo_base_64'] : null;
+            $photoName = (array_key_exists('photo_name', $requestData))? $requestData['photo_name'] : null;
+            $contactType = (array_key_exists('contact_type', $requestData))? $requestData['contact_type'] : null;
+            $contactValue = (array_key_exists('contact_value', $requestData))? $requestData['contact_value'] : null;
+
+            $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
+            //get prefered language
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $pref_lang = $ConfigItems->find()
+                    ->where([
+                        $ConfigItems->aliasField('code') => 'language',
+                        $ConfigItems->aliasField('type') => 'System'
+                    ])
+                    ->first();
+            //get nationality data
+            $nationalities = '';
+            if(!empty($nationalityName)){
+                $nationalitiesTbl = TableRegistry::get('nationalities');
+                $nationalities = $nationalitiesTbl->find()
+                    ->where([
+                        $nationalitiesTbl->aliasField('name') => $nationalityName,
+                    ])
+                    ->first();
+                if(empty($nationalities)){
+                    $orderNationalities = $nationalitiesTbl->find()
+                        ->order([$nationalitiesTbl->aliasField('order DESC')])
+                        ->first();
+                    
+                    $entityNationality = [
+                        'name' => $nationalityName,
+                        'order' => !empty($orderNationalities->order) ? $orderNationalities->order + 1 : 0,
+                        'visible' => 1,
+                        'editable' => 1,
+                        'identity_type_id' => null,
+                        'default' => 0,
+                        'international_code' => '',
+                        'national_code' => '',
+                        'external_validation' => 0,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in nationalities table if doesn't exist in table
+                    $entityNationalityData = $nationalitiesTbl->newEntity($entityNationality);
+                    $NationalitiesResult = $nationalitiesTbl->save($entityNationalityData);
+                    if($NationalitiesResult){
+                        $nationalities->id = $NationalitiesResult->id;
+                    } 
+                }
+            }
+        
+            $StudVal = $StaffVal= $GaurdianVal = 0;        
+            if($userType == 1){ 
+                $StudVal = 1; 
+            }else if($userType == 2){ 
+                $StaffVal  = 1;
+            }else if($userType == 3){ 
+                $GaurdianVal = 1;
+            }      
+
+            $SecurityUsers = TableRegistry::get('security_users');
+            $CheckUserExist = $SecurityUsers->find()
+                            ->where([
+                                $SecurityUsers->aliasField('openemis_no') => $openemisNo
+                            ])->first();
+            $SecurityUsers = TableRegistry::get('security_users');
+            if(!empty($CheckUserExist)){
+                $existUserId = $CheckUserExist->id;
+                $entityData = [
+                    'id' => !empty($existUserId) ? $existUserId : '',
+                    'openemis_no' => $openemisNo,
+                    'first_name' => $firstName,
+                    'middle_name' => $middleName,
+                    'third_name' => $thirdName,
+                    'last_name' => $lastName,
+                    'preferred_name' => $preferredName,
+                    'gender_id' => $genderId,
+                    'date_of_birth' => $dateOfBirth,
+                    'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                    'preferred_language' => $pref_lang->value,
+                    'username' => $username,
+                    'password' => $password,
+                    'address' => $address,
+                    'address_area_id' => $addressAreaId,
+                    'birthplace_area_id' => $birthplaceAreaId,
+                    'postal_code' => $postalCode,
+                    'photo_name' => $photoName,
+                    'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                    'is_student' => $StudVal,
+                    'is_staff' => $StaffVal,
+                    'is_guardian' => $GaurdianVal,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+            }else{
+                $entityData = [
+                    'openemis_no' => $openemisNo,
+                    'first_name' => $firstName,
+                    'middle_name' => $middleName,
+                    'third_name' => $thirdName,
+                    'last_name' => $lastName,
+                    'preferred_name' => $preferredName,
+                    'gender_id' => $genderId,
+                    'date_of_birth' => $dateOfBirth,
+                    'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                    'preferred_language' => $pref_lang->value,
+                    'username' => $username,
+                    'password' => $password,
+                    'address' => $address,
+                    'address_area_id' => $addressAreaId,
+                    'birthplace_area_id' => $birthplaceAreaId,
+                    'postal_code' => $postalCode,
+                    'photo_name' => $photoName,
+                    'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                    'is_student' => $StudVal,
+                    'is_staff' => $StaffVal,
+                    'is_guardian' => $GaurdianVal,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+            }                
+            //save in security_users table
+            $entity = $SecurityUsers->newEntity($entityData);
+            try{
+                $SecurityUserResult = $SecurityUsers->save($entity);
+                unset($entity);
+            }catch (Exception $e) {
+                return null;
+            }
+
+            if($SecurityUserResult){
+                $user_record_id=$SecurityUserResult->id;
+                if(!empty($nationalityId) || !empty($nationalityName)){
+                    if(!empty($nationalities->id)){
+                        $UserNationalities = TableRegistry::get('user_nationalities');
+                        $primaryKey = $UserNationalities->primaryKey();
+                        $hashString = [];
+                        foreach ($primaryKey as $key) {
+                            if($key == 'nationality_id'){
+                                $hashString[] = $nationalities->id;
+                            }
+                            if($key == 'security_user_id'){
+                                $hashString[] = $user_record_id;
+                            }
+                        }
+             
+                        $entityNationalData = [
+                            'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                            'preferred' => 1,
+                            'nationality_id' => $nationalities->id,
+                            'security_user_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in user_nationalities table
+                        $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                        $UserNationalitiesResult = $UserNationalities->save($entityNationalData);    
+                    }
+                }
+
+                if(!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)){
+                    $identityTypesTbl = TableRegistry::get('identity_types');
+                    $identityTypes = $identityTypesTbl->find()
+                        ->where([
+                            $identityTypesTbl->aliasField('name') => $identityTypeName,
+                        ])
+                        ->first();
+                    if(!empty($identityTypes)){
+                        $UserIdentities = TableRegistry::get('user_identities');
+                        $entityIdentitiesData = [
+                            'identity_type_id' => $identityTypes->id,
+                            'number' => $identityNumber,
+                            'nationality_id' => $nationalities->id,
+                            'security_user_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in user_identities table
+                        $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                        $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                    }
+                }
+
+                if(!empty($contactType) && !empty($contactValue)){
+                    $UserContacts = TableRegistry::get('user_contacts');
+                    $entityContactData = [
+                        'contact_option_id' => $contactType,
+                        'contact_type_id' => $contactType,
+                        'value' => $contactValue,
+                        'preferred' => 1,
+                        'security_user_id' => $user_record_id,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in user_contacts table
+                    $entityContactData = $UserContacts->newEntity($entityContactData);
+                    $UserContactResult = $UserContacts->save($entityContactData);
+                }
+
+                if(!empty($custom)){
+                    if($userType == 1){ //for student
+                        //if student custom field values already exist in student_custom_field_values table the delete the old values and insert the new ones.
+                        $studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
+                        $StudentCustomFieldValuesCount = $studentCustomFieldValues
+                                                            ->find()
+                                                            ->where([$studentCustomFieldValues->aliasField('student_id') => $user_record_id])
+                                                            ->count();
+                        if($StudentCustomFieldValuesCount > 0){
+                            $studentCustomFieldValues->deleteAll(['student_id' => $user_record_id]);
+                        }
+                    }else if($userType == 2){ //for staff
+                        //if staff custom field values already exist in `staff_custom_field_values` table the delete the old values and insert the new ones.
+                        $staffCustomFieldValues =  TableRegistry::get('staff_custom_field_values');
+                        $StaffCustomFieldValuesCount = $staffCustomFieldValues
+                                                            ->find()
+                                                            ->where([$staffCustomFieldValues->aliasField('staff_id') => $user_record_id])
+                                                            ->count();
+                        if($StaffCustomFieldValuesCount > 0){
+                            $staffCustomFieldValues->deleteAll(['staff_id' => $user_record_id]);
+                        }
+                    }
+                    
+                    foreach ($custom as $skey => $sval) {
+                        if($userType == 1){ 
+                            $entityCustomData = [
+                                'id' => Text::uuid(),
+                                'text_value' => $sval['text_value'],
+                                'number_value' => $sval['number_value'],
+                                'decimal_value' => $sval['decimal_value'],
+                                'textarea_value' => $sval['textarea_value'],
+                                'date_value' => $sval['date_value'],
+                                'time_value' => $sval['time_value'],
+                                'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
+                                'student_custom_field_id' => $sval['custom_field_id'],
+                                'student_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in student_custom_field_values table
+                            $entityCustomData = $studentCustomFieldValues->newEntity($entityCustomData);
+                            $customFieldsResult = $studentCustomFieldValues->save($entityCustomData);
+                        }else if($userType == 2){ 
+                            $entityCustomData = [
+                                'id' => Text::uuid(),
+                                'text_value' => $sval['text_value'],
+                                'number_value' => $sval['number_value'],
+                                'decimal_value' => $sval['decimal_value'],
+                                'textarea_value' => $sval['textarea_value'],
+                                'date_value' => $sval['date_value'],
+                                'time_value' => $sval['time_value'],
+                                'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
+                                'staff_custom_field_id' => $sval['custom_field_id'],
+                                'staff_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in staff_custom_field_values table
+                            $entityCustomData = $staffCustomFieldValues->newEntity($entityCustomData);
+                            $customFieldsResult = $staffCustomFieldValues->save($entityCustomData);
+                        }
+                        unset($customFieldsResult);
+                        unset($entityCustomData);
+                    }
+                }
+            }else{
+                return false;
+            }
+            return $data;
+        }
+    }
+
+    public function customFieldsUseJustForExample()
+    {
+        /*$studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
+        $SectionData = $studentCustomFieldValues->find()
+                            ->where([
+                                $studentCustomFieldValues->aliasField('student_id') => 13077
+                            ])
+                            ->toArray();
+        
+        $SectionArr = [];
+        foreach ($SectionData as $skey => $sval) {
+            $SectionArr[$skey]['student_custom_field_id'] = $sval->student_custom_field_id;
+            $SectionArr[$skey]['text_value'] = !empty($sval->text_value) ? $sval->text_value : '';
+            $SectionArr[$skey]['number_value'] = !empty($sval->number_value) ? $sval->number_value : '';
+            $SectionArr[$skey]['decimal_value'] = !empty($sval->decimal_value) ? $sval->decimal_value : '';
+            $SectionArr[$skey]['textarea_value'] = !empty($sval->textarea_value) ? $sval->textarea_value : '';
+            $SectionArr[$skey]['time_value'] = !empty($sval->time_value) ? $sval->time_value : '';
+            $SectionArr[$skey]['file'] = "";
+            $SectionArr[$skey]['created_user_id'] = 1;
+            $SectionArr[$skey]['created'] = date('y-m-d H:i:s');
+        }
+
+        $newarry['custom'] = $SectionArr;
+        //echo "<pre>"; print_r($SectionArr); die;
+        echo json_encode($newarry);die;*/
+
+        $this->autoRender = false;
+        $requestData = json_decode('{"login_user_id":"1","openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021","end_date":"31-12-2021","institution_class_id":"524","student_status_id":1,"custom":[{"student_custom_field_id":17,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":27,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":29,"text_value":"test.jpg","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":28,"text_value":"","number_value":2,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":3,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":26,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":4,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":8,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":9,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":30,"text_value":"{\"latitude\":\"11.1\",\"longitude\":\"2.22\"}","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":18,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"}]}', true);
+        
+        $custom = $requestData['custom'];
+        //echo "<pre>"; print_r($custom); die;
+        if(!empty($custom)){
+            $studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
+            foreach ($custom as $skey => $sval) {
+                $entityCustomData = [
+                    'id' => Text::uuid(),
+                    'text_value' => $sval->text_value,
+                    'number_value' => $sval->number_value,
+                    'decimal_value' => $sval->decimal_value,
+                    'textarea_value' => $sval->textarea_value,
+                    'time_value' => $sval->time_value,
+                    'file' => $sval->file,
+                    'student_custom_field_id' => $sval->student_custom_field_id,
+                    'student_id' => $user_record_id,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                //save in student_custom_field_values table
+                $entityCustomData = $studentCustomFieldValues->newEntity($entitySubjectsData);
+                $studentCustomFieldsResult = $studentCustomFieldValues->save($entityCustomData);
+                unset($studentCustomFieldsResult);
+            }
+        }
+    }
+
     /*POCOR-6264 starts*/
     public function Lands()
     {
