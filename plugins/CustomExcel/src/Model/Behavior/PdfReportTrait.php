@@ -328,7 +328,7 @@ trait PdfReportTrait
         $filePaths = [];
         $basePath = $filepath;
         for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4-L']);//POCOR-6916
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_top' => 10, 'margin_right' => 10, 'margin_bottom' => 1, 'orientation' => 'P' ]); //POCOR-6916
             $filepath = $basePath.'_'.$sheetIndex;
             $writer->setSheetIndex($sheetIndex);
             $writer->save($filepath);
