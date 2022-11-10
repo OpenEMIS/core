@@ -53,6 +53,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.customFields = [];
     StaffController.customFieldsArray = [];
     StaffController.enableStaffTranferTab = false;
+    StaffController.user_identity_number = "";
 
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
@@ -153,7 +154,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             preferred_name: StaffController.selectedStaffData.preferred_name,
             gender_id: StaffController.selectedStaffData.gender_id,
             date_of_birth: StaffController.selectedStaffData.date_of_birth,
-            identity_number: StaffController.selectedStaffData.identity_number,
+            identity_number: StaffController.user_identity_number == "" ? StaffController.selectedStaffData.identity_number : StaffController.user_identity_number,
             nationality_id: StaffController.selectedStaffData.nationality_id,
             nationality_name: StaffController.selectedStaffData.nationality_name,
             username: StaffController.selectedStaffData.username,
@@ -235,7 +236,17 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             })
         });
         UtilsSvc.isAppendLoader(true);
-        InstitutionsStaffSvc.saveStaffDetails(params).then(function(resp){
+
+        if (StaffController.isExternalSearchSelected || StaffController.isInternalSearchSelected)
+        {
+            params = { ...params, identity_number: StaffController.user_identity_number }
+            StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
+        }
+            
+        InstitutionsStaffSvc.saveStaffDetails(params).then(function (resp)
+        {
+            StaffController.selectedStaffData.identity_number = resp.config.data.identity_number;
+
             UtilsSvc.isAppendLoader(false);
             if (
                 StaffController.staffData
@@ -1083,6 +1094,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     break;
                 case 'confirmation': 
                     StaffController.step = 'add_staff';
+                    console.log(StaffController.selectedStaffData)
                     StaffController.generatePassword();
                     break;
             }
@@ -1109,6 +1121,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedUser = id;
         StaffController.isInternalSearchSelected = true;
         StaffController.isExternalSearchSelected = false;
+        StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         StaffController.getStaffData();
     }
 
@@ -1116,6 +1129,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedUser = id;
         StaffController.isInternalSearchSelected = false;
         StaffController.isExternalSearchSelected = true;
+        StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         StaffController.getStaffData();
     }
 
@@ -1141,7 +1155,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }, log);
     }
 
-    function setstaffData(selectedData) {
+    function setstaffData(selectedData)
+    {
+        const deepCopy = { ...selectedData };
         StaffController.selectedStaffData.addressArea = {};
         StaffController.selectedStaffData.birthplaceArea = {};
         StaffController.selectedStaffData.openemis_no = selectedData.openemis_no;
@@ -1165,9 +1181,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.currentlyAssignedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.current_enrol_institution_name;
         StaffController.selectedStaffData.requestedBy = selectedData.institution_code + ' - ' + selectedData.institution_name;
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
+        StaffController.user_identity_number = deepCopy.identity_number;
     }
 
-    function setStaffDataFromExternalSearchData(selectedData) {
+    function setStaffDataFromExternalSearchData(selectedData)
+    {
+        const deepCopy = { ...selectedData };
+
         StaffController.selectedStaffData.addressArea = {};
         StaffController.selectedStaffData.birthplaceArea = {};
         StaffController.selectedStaffData.openemis_no = selectedData.openemis_no;
@@ -1182,14 +1202,17 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         };
         StaffController.selectedStaffData.date_of_birth = selectedData.date_of_birth;
         StaffController.selectedStaffData.email = selectedData.email;
-        StaffController.selectedStaffData.identity_type_id = selectedData.identity_type_id;
-        StaffController.selectedStaffData.identity_type_name = selectedData.identity_type;
-        StaffController.selectedStaffData.identity_number = selectedData.identity_number;
+        StaffController.selectedStaffData.identity_type_id = deepCopy.identity_type_id;
+        StaffController.selectedStaffData.identity_type_name = deepCopy.identity_type;
+        StaffController.selectedStaffData.identity_number = deepCopy.identity_number;
         StaffController.selectedStaffData.nationality_id = selectedData.nationality_id;
         StaffController.selectedStaffData.nationality_name = selectedData.nationality;
         StaffController.selectedStaffData.address = selectedData.address;
         StaffController.selectedStaffData.postalCode = selectedData.postal_code;
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
+
+        StaffController.user_identity_number = deepCopy.identity_number;
+    
     }
 
     function initGrid() {
