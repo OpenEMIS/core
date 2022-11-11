@@ -3454,9 +3454,11 @@ class InstitutionsController extends AppController
 
         // Filter by active status
         $activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
+        $InactiveStatus = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'INACTIVE');
+        $InactiveStatusId = array_values($InactiveStatus[0]);
         $positionConditions = [];
         $positionConditions[$StaffTable->Positions->aliasField('institution_id')] = $institutionId;
-        $positionConditions[$StaffTable->Positions->aliasField('status_id IS NOT')] = 31;//POCOR-7016
+        $positionConditions[$StaffTable->Positions->aliasField('status_id IS NOT')] = $InactiveStatusId;//POCOR-7016
         /* START : POCOR-6450
         if (!empty($activeStatusId)) {
             $positionConditions[$StaffTable->Positions->aliasField('status_id').' IN '] = $activeStatusId;
