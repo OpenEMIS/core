@@ -1047,8 +1047,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         file:"",
                         institution_id: StudentController.institutionId,
                     };
-                    if(field.field_type === 'TEXT' || field.field_type === 'NOTE' || field.field_type === 'TEXTAREA') {
+                    if(field.field_type === 'TEXT' || field.field_type === 'NOTE') {
                         fieldData.text_value = field.answer;
+                    }
+                    if (field.field_type === 'TEXTAREA'){
+                        fieldData.textarea_value = field.answer;
                     }
                     if(field.field_type === 'NUMBER') {
                         fieldData.number_value = field.answer;
