@@ -741,7 +741,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                     'shiftOptionName' => 'ShiftOptions.name'
                 ])
             ->where([
-                'institution_id' => $institutionId,
+                'location_institution_id' => $institutionId,
                 'academic_period_id' => $academicPeriodId
             ])
             ->formatResults(function ($results) use ($institutionId) {
