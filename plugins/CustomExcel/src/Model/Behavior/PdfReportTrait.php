@@ -328,7 +328,7 @@ trait PdfReportTrait
         $filePaths = [];
         $basePath = $filepath;
         for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_top' => 10, 'margin_right' => 10, 'margin_bottom' => 1, 'orientation' => 'P' ]); //POCOR-6916
+            $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
             $filepath = $basePath.'_'.$sheetIndex;
             $writer->setSheetIndex($sheetIndex);
             $writer->save($filepath);
@@ -384,7 +384,7 @@ trait PdfReportTrait
         $filePaths = [];
         $basePath = $filepath;
         for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $mpdf = new \Mpdf\Mpdf();
+            $mpdf = $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
             $filepath = $basePath.'_'.$sheetIndex;
             $prefixName = 'AssessmentResults';
             $date =  date("Ymd:HHmmss");
@@ -429,7 +429,7 @@ trait PdfReportTrait
 
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
     {
-        $mpdf = new \Mpdf\Mpdf();
+        $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
