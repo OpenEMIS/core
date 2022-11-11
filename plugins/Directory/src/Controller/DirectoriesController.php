@@ -1426,8 +1426,12 @@ class DirectoriesController extends AppController
                                         $institutionStaff->aliasField('staff_id') => $result['id'],
                                         $institutionStaff->aliasField('staff_status_id') => $assignedStatus
                                     ])->toArray();
+                        if(empty($institutionStaffTbl)){
+                            $is_diff_school = 0;
+                        }else{
+                            $is_diff_school = 1;
+                        }
                         $positionArray = [];
-                        $is_diff_school = 1;
                         foreach ($institutionStaffTbl as $skey => $sval) {
                             $institution_id = $sval->institution_id;
                             $institution_name = $sval->institution_name;
