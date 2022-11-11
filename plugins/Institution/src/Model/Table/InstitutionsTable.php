@@ -986,89 +986,6 @@ class InstitutionsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        //Start POCOR-7029
-        $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
-        $todayDate = date("Y-m-d");
-        $SurveyFormsFilterObj = $SurveyFormsFilters->find()
-        ->where([
-            $SurveyFormsFilters->aliasField('survey_filter_id') => $entity->institution_type_id
-        ])
-        ->toArray();
-
-        $institutionFormIds = [];
-        if (!empty($SurveyFormsFilterObj)) {
-            foreach ($SurveyFormsFilterObj as $value) {
-                $institutionFormIds[] = $value->survey_form_id;
-            }
-        }
-        if($institutionFormIds[0]!=0) //POCOR-6976
-        {
-            $SurveyStatusesFilters = TableRegistry::get('Survey.SurveyStatuses');
-            $SurveyStatusPeriodsFilters = TableRegistry::get('Survey.SurveyStatusPeriods');
-            $SurveyStatusesFiltersObj = $SurveyStatusesFilters->find()
-            ->where([
-                $SurveyStatusesFilters->aliasField('date_enabled <=') => $todayDate,
-                $SurveyStatusesFilters->aliasField('date_disabled >=') => $todayDate,
-                $SurveyStatusesFilters->aliasField('survey_form_id IN') => $institutionFormIds
-            ])
-            ->toArray();
-
-            $SurveyStatusesIds = [];
-            if (!empty($SurveyStatusesFiltersObj)) {
-                // $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
-                $SurveyFormsFilters = TableRegistry::get('Survey.SurveyForms');
-                foreach ($SurveyStatusesFiltersObj as $statusID => $value) {
-                    $surveyFormCount = $SurveyFormsFilters->find()
-                    ->select([
-                        'id' => $SurveyFormsFilters->aliasField('id'),
-                        // 'SurveyForms.id',
-                        'SurveyStatusPeriods.academic_period_id',
-                    ])
-
-                    ->LeftJoin(['SurveyStatuses' => 'survey_statuses'],[
-                        $SurveyFormsFilters->aliasField('id').' = SurveyStatuses.survey_form_id',
-                    ])
-
-                    ->leftJoin(['SurveyStatusPeriods' => 'survey_status_periods'], [
-                        'SurveyStatusPeriods.survey_status_id = SurveyStatuses.id'
-                    ])
-                    ->where([
-                            $SurveyFormsFilters->aliasField('id = ').$institutionFormIds[$statusID],
-                            'SurveyStatuses.id' => $value->id                       
-                        ])
-                    ->toArray();
-                    foreach ($surveyFormCount as $mlp => $multipleForm) {
-                     $SurveyStatusesIds[] = $multipleForm->SurveyStatusPeriods['academic_period_id'] . ',' . $multipleForm->id;
-                    }
-                    
-                }
-
-                foreach ($SurveyStatusesIds as $key => $periodObj) {
-                    $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
-
-                    $value = explode(",",$periodObj);
-
-                    $surveyData = [
-                        'status_id' => 1,
-                        'academic_period_id' => $value[0],
-                        'survey_form_id' => $value[1],
-                        'institution_id' => $entity->id,
-                        'assignee_id' => 0,
-                        'created_user_id' => 1,
-                        'created' => new Time('NOW')
-                    ];
-
-
-                    $surveyEntity = $InstitutionSurveys->newEntity($surveyData);
-                    $InstitutionSurveys->save($surveyEntity);
-                }
-
-            }
-
-        }       
-
-        //End POCOR-7029
-
         $SecurityGroup = TableRegistry::get('Security.SystemGroups');
         $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 
@@ -1214,15 +1131,6 @@ class InstitutionsTable extends ControllerActionTable
             $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
         }
 
-        $institutionSurveysDelete = $InstitutionSurveys->find()
-        ->where([
-            $InstitutionSurveys->aliasField('institution_id = ').$entity->id,
-        ])
-        ->group(['institution_id','academic_period_id','survey_form_id','assignee_id'])
-        ->toArray();
-        foreach ($institutionSurveysDelete as $single) {
-            return $InstitutionSurveys->delete($single);
-        }
     }
 
 
