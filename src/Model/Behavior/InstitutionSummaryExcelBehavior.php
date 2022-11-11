@@ -215,19 +215,32 @@ class InstitutionSummaryExcelBehavior extends Behavior
 
 	public function getCountryData($settings)
     {
-		$Institutions = TableRegistry::get('Institutions');
+	$Institutions = TableRegistry::get('Institutions');
     	$requestData = json_decode($settings['process']['params']);
     	$institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
-		$areaLevelId = $requestData->area_level_id;
-		$academic_period_id = $requestData->academic_period_id;
+	$areaLevelId = $requestData->area_level_id;
+	$academic_period_id = $requestData->academic_period_id;
+	
+	$AcademicPriodT = TableRegistry::get('academic_periods'); 
+	$AcademicPeriodDataforYear = $AcademicPriodT->find('all')->where(['id' => $academic_period_id])->first();
+	$startDate = $AcademicPeriodDataforYear->start_date->format('Y-m-d');;
+	$endDate = $AcademicPeriodDataforYear->end_date->format('Y-m-d');;
 		
-		$AreaLvlT = TableRegistry::get('area_levels'); 
+	$currDate = date('Y-m-d');
+	if($currDate >= $startDate && $currDate <= $endDate){
+		$stuStatussArr = [1];
+	}else{
+		$stuStatussArr = [1,6,7,8];
+	}
+	
+		
+	$AreaLvlT = TableRegistry::get('area_levels'); 
 	$AreaLvlData = $AreaLvlT->find('all')->where(['id' => $areaLevelId])->first();
         $AreaT = TableRegistry::get('areas');       
-		$ShiftOptionTable = TableRegistry::get('shift_options');
-		$InsStudentTable = TableRegistry::get('institution_students');
-		$InsStudentTable1 = TableRegistry::get('institution_students');             
+	$ShiftOptionTable = TableRegistry::get('shift_options');
+	$InsStudentTable = TableRegistry::get('institution_students');
+	$InsStudentTable1 = TableRegistry::get('institution_students');             
         //Level-1
         $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
         $childArea =[];
@@ -272,7 +285,10 @@ class InstitutionSummaryExcelBehavior extends Behavior
         if ($areaId != -1) {
             $where[$Institutions->aliasField('area_id in')] = $finalIds;
         }
-		if ($institution_id != 0) {
+        /*if ($academic_period_id) {
+            $where[$Institutions->aliasField('academic_period_id')] = $academic_period_id;
+        }*/
+	if ($institution_id != 0) {
             $where[$Institutions->aliasField('id')] = $institution_id;
         }
 		$institutionData = $Institutions->find()
@@ -420,8 +436,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 						// 			->where(['institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id,$where])
 						// 			;
 
-
-
+								
 									$institut =	$InsStudentTable->find()
 								->select([
 									//'id','institution_id','student_id'
@@ -445,11 +460,17 @@ class InstitutionSummaryExcelBehavior extends Behavior
 											'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
 										]
 										)
+									->leftJoin(
+										['Institutions' => 'institutions'],
+										[
+											'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
+										]
+										)
 
 										
 								
-								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id ,$where])
-								->group([$InsStudentTable->aliasField('student_id')])
+								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id ,'student_status_id in'=>$stuStatussArr,'academic_period_id'=>$academic_period_id])
+								->distinct([$InsStudentTable->aliasField('student_id')])
 								//->count()
 								;
 						
@@ -699,6 +720,20 @@ class InstitutionSummaryExcelBehavior extends Behavior
         $areaId = $requestData->area_education_id;
 		$areaLevelId = $requestData->area_level_id;
 		$academic_period_id = $requestData->academic_period_id;
+		
+		$AcademicPriodT = TableRegistry::get('academic_periods'); 
+	$AcademicPeriodDataforYear = $AcademicPriodT->find('all')->where(['id' => $academic_period_id])->first();
+	$startDate = $AcademicPeriodDataforYear->start_date->format('Y-m-d');;
+	$endDate = $AcademicPeriodDataforYear->end_date->format('Y-m-d');;
+		
+	$currDate = date('Y-m-d');
+	if($currDate >= $startDate && $currDate <= $endDate){
+		$stuStatussArr = [1];
+	}else{
+		$stuStatussArr = [1,6,7,8];
+	}
+		
+		
 	$AreaLvlT = TableRegistry::get('area_levels'); 
 	$AreaLvlData = $AreaLvlT->find('all')->where(['id' => $areaLevelId])->first();
         $AreaT = TableRegistry::get('areas');  
@@ -925,7 +960,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 
 										
 								
-								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id,'Institutions.area_id in' => $childAreaMain2,$where])
+								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id,'Institutions.area_id in' => $childAreaMain2,'student_status_id in'=>$stuStatussArr,'academic_period_id'=>$academic_period_id,$where])
 								->group([$InsStudentTable->aliasField('student_id')])
 								//->count()
 								;
@@ -1336,12 +1371,27 @@ class InstitutionSummaryExcelBehavior extends Behavior
 
 	public function getReagionAtollData($settings)
     {
+    
 	$Institutions = TableRegistry::get('Institutions');
     	$requestData = json_decode($settings['process']['params']);
     	$institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
 		$areaLevelId = $requestData->area_level_id;
 		$academic_period_id = $requestData->academic_period_id;
+		
+		$AcademicPriodT = TableRegistry::get('academic_periods'); 
+	$AcademicPeriodDataforYear = $AcademicPriodT->find('all')->where(['id' => $academic_period_id])->first();
+	$startDate = $AcademicPeriodDataforYear->start_date->format('Y-m-d');;
+	$endDate = $AcademicPeriodDataforYear->end_date->format('Y-m-d');;
+		
+	$currDate = date('Y-m-d');
+	if($currDate >= $startDate && $currDate <= $endDate){
+		$stuStatussArr = [1];
+	}else{
+		$stuStatussArr = [1,6,7,8];
+	}
+	
+	
 	$AreaLvlT = TableRegistry::get('area_levels'); 
 	$AreaLvlData = $AreaLvlT->find('all')->where(['id' => $areaLevelId])->first();
         $AreaT = TableRegistry::get('areas');  
@@ -1568,7 +1618,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 
 										
 								
-								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id,'Institutions.area_id in' => $childArea1,$where])
+								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id,'Institutions.area_id in' => $childArea1,'student_status_id in'=>$stuStatussArr,'academic_period_id'=>$academic_period_id,$where])
 								->group([$InsStudentTable->aliasField('student_id')])
 								//->count()
 								;
@@ -1985,6 +2035,18 @@ class InstitutionSummaryExcelBehavior extends Behavior
 		$areaLevelId = $requestData->area_level_id;
 		$academic_period_id = $requestData->academic_period_id;
 		
+		$AcademicPriodT = TableRegistry::get('academic_periods'); 
+	$AcademicPeriodDataforYear = $AcademicPriodT->find('all')->where(['id' => $academic_period_id])->first();
+	$startDate = $AcademicPeriodDataforYear->start_date->format('Y-m-d');;
+	$endDate = $AcademicPeriodDataforYear->end_date->format('Y-m-d');;
+		
+	$currDate = date('Y-m-d');
+	if($currDate >= $startDate && $currDate <= $endDate){
+		$stuStatussArr = [1];
+	}else{
+		$stuStatussArr = [1,6,7,8];
+	}
+		
 		$AreaLvlT = TableRegistry::get('area_levels'); 
 	$AreaLvlData = $AreaLvlT->find('all')->where(['id' => $areaLevelId])->first();
 	//print_r($AreaLvlData);die;
@@ -2161,7 +2223,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 
 										
 								
-								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id,'Institutions.area_id' => $Area_insss->id,$where])
+								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id,'Institutions.area_id' => $Area_insss->id,'student_status_id in'=>$stuStatussArr,'academic_period_id'=>$academic_period_id,$where])
 								->group([$InsStudentTable->aliasField('student_id')])
 								//->count()
 								;
