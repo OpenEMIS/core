@@ -284,7 +284,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
             angular.forEach(shiftListOptions, function(shift) {
                 if (shift.id == '-1') {
                    vm.selectedShift = shift.id;
-                   vm.selectedFormattedDayDate = shift.name;
+                //    vm.selectedFormattedDayDate = shift.name;
                    vm.gridOptions.context.date = vm.selectedShift;
 
                 }
