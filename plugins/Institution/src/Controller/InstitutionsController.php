@@ -3464,6 +3464,11 @@ class InstitutionsController extends AppController
         END : POCOR-6450 */
 
         // START : POCOR-6450
+        $SecurityUsers = TableRegistry::get('Security.SecurityUsers');
+        $SecurityUsersData = $SecurityUsers->find()
+                            ->where([$SecurityUsers->aliasField('openemis_no') => $openemisNo])
+                            ->first();
+        $staffUserPriId = $SecurityUsersData->id;
         $expectedStaffStatuses = $this->getSpecificInstitutionStaff($institutionId, $staffUserPriId);
         if ( !empty($expectedStaffStatuses) ) {
             $positionConditions[$StaffTable->Positions->aliasField('staff_position_title_id').' NOT IN '] = $expectedStaffStatuses;
