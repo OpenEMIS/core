@@ -75,6 +75,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $schoolClosedDays = $this->schoolClosedDays;
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $reportStartDate = date('Y-m-d', strtotime($requestData->report_start_date));
+        $reportEndDate = date('Y-m-d', strtotime($requestData->report_end_date));
         $where = [];
         if ($institution_id != 0) {
             $where['Institutions.id'] = $institution_id;
@@ -116,11 +118,6 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                         'ShiftOptions.name'
                     ]
                 ],
-                // 'InstitutionClasses.Marked' => [
-                //     'fields' => [
-                //         'Marked.total_mark'
-                //     ]
-                // ],
                 'EducationGrades' => [
                     'fields' => [
                         'InstitutionClassGrades.institution_class_id',
@@ -163,7 +160,22 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 'academic_period_name' => 'AcademicPeriods.name',
                 'staff_id' => 'Staff.id',
                 'shift_name' => 'ShiftOptions.name',
-                'education_stage_order' => $query->func()->min('EducationStages.order')
+                'education_stage_order' => $query->func()->min('EducationStages.order'),
+                'total_mark' => 'marking_info.marked_records',
+                'total_unmark' => 'marking_info.unmarked_records'
+            ])
+            //POCOR-7039
+            ->join([
+                'marking_info' => [
+                    'type' => 'inner',
+                    'table' => '(SELECT total_students.institution_id, total_students.institution_class_id, @total_stud := total_students.total_student_count * @WD, @marked_records := IFNULL(marked_students.marked_student_count, 0) marked_records, @total_stud - @marked_records unmarked_records FROM ( SELECT institution_class_students.institution_id, institution_class_students.institution_class_id, COUNT(institution_class_students.student_id) total_student_count FROM institution_class_students WHERE institution_class_students.academic_period_id = '.$academicPeriodId.' GROUP BY institution_class_students.institution_id, institution_class_students.institution_class_id) total_students
+                        LEFT JOIN (SELECT student_attendance_marked_records.institution_id, student_attendance_marked_records.institution_class_id, COUNT(*) marked_student_count FROM student_attendance_marked_records, (SELECT @S := "'.$reportStartDate.'", @E := "'.$reportEndDate.'", @WD := 5 * (DATEDIFF(@E, @S) DIV 7) + MID("0123444401233334012222340111123400001234000123440", 7 * WEEKDAY(@S) + WEEKDAY(@E) + 1, 1)) r WHERE student_attendance_marked_records.date BETWEEN @S AND @E GROUP BY student_attendance_marked_records.institution_id,  student_attendance_marked_records.institution_class_id
+                            ) marked_students ON marked_students.institution_id = total_students.institution_id AND marked_students.institution_class_id = total_students.institution_class_id ) ',
+                    'conditions' => [
+                        'marking_info.institution_class_id = ' . $this->aliasField('id'),
+                        'marking_info.institution_id = ' . $this->aliasField('institution_id')
+                    ]
+                ],
             ])
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
@@ -179,7 +191,6 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             ])
             ->formatResults(function (ResultSetInterface $results) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
                 return $results->map(function ($row) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
-                   // print_r($row); die;
                     $institutionId = $row->institution_id;
                     $mark= 0;
                     $unmark= 0;
@@ -214,20 +225,18 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                             }
                         }
 
-                        $row->total_mark = $mark;
-                       // $row->abc = $mark;
-                        $row->total_unmark = $unmark;
+                        //$row->total_mark = $mark;
+                        //$row->total_unmark = $unmark;
                         $row->{$dayColumn} = $status;
                     }
-//print_r($row->abc); die;
+                    //Enf of POCOR-7039
                     return $row;
                 });
             })
         ;
-        print_r($query); die;
-
-         
     }
+
+    
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
@@ -363,19 +372,32 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             'label' => ''
         ];
 
+        // $newFields[] = [
+        //     'key' => '',
+        //     'field' => 'abc',
+        //     'type' => 'string',
+        //     'label' => 'Marked'
+        // ];
+
+        // $newFields[] = [
+        //     'key' => 'InstitutionClasses.Unmarked',
+        //     'field' => 'total_unmark',
+        //     'type' => 'string',
+        //     'label' => 'Unmarked'
+        // ];   
         $newFields[] = [
             'key' => '',
-            'field' => 'abc',
+            'field' => 'total_mark',
             'type' => 'string',
             'label' => 'Marked'
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionClasses.Unmarked',
+            'key' => '',
             'field' => 'total_unmark',
             'type' => 'string',
             'label' => 'Unmarked'
-        ];                
+        ];              
 
         $newFields[] = [
             'key' => 'InstitutionClasses.staff_id',
