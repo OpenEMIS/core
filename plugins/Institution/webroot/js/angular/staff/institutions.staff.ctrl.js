@@ -1077,14 +1077,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             // StaffController.step = 'confirmation';
             // StaffController.generatePassword();
             // StaffController.isInternalSearchSelected = false;
-            if (StaffController.staffData && StaffController.staffData.is_same_school)
-            {
-                StaffController.step = 'summary';
-                StaffController.messageClass = 'alert-warning';
-                StaffController.message = 'This staff is already allocated to the current institution';
-                StaffController.isInternalSearchSelected = false;
-                StaffController.generatePassword();
-            } else if (StaffController.staffData && StaffController.staffData.is_diff_school)
+            // if (StaffController.staffData && StaffController.staffData.is_same_school)
+            // {
+            //     StaffController.step = 'summary';
+            //     StaffController.messageClass = 'alert-warning';
+            //     StaffController.message = 'This staff is already allocated to the current institution';
+            //     StaffController.isInternalSearchSelected = false;
+            //     StaffController.generatePassword();
+            // } else
+            
+            if (StaffController.staffData && StaffController.staffData.is_diff_school)
             {
                 StaffController.messageClass = 'alert-warning';
                 StaffController.message = `This staff is already allocated to ${StaffController.staffData.current_enrol_institution_code} - ${StaffController.staffData.current_enrol_institution_name}`;
