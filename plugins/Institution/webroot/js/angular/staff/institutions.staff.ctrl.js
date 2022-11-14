@@ -52,7 +52,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.staffStatus = 'Pending';
     StaffController.customFields = [];
     StaffController.customFieldsArray = [];
-    StaffController.enableStaffTranferTab = false;
+    
     StaffController.user_identity_number = "";
 
     //controller function
@@ -98,6 +98,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.selectOption = selectOption;
     StaffController.filterBySection= filterBySection;
     StaffController.mapBySection= mapBySection;
+    StaffController.transferStaffNextStep = transferStaffNextStep;
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -1060,13 +1061,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 && StaffController.staffData.current_enrol_institution_name != ""
                 && StaffController.staffData.is_diff_school > 0)
             { 
-                StaffController.enableStaffTranferTab = true;
                 StaffController.step = 'transfer_staff';
                 StaffController.messageClass = 'alert-warning';
                 StaffController.message = `Staff is currently assigned to ${StaffController.staffData.currentlyAssignedTo}`
             } else
             {
-                StaffController.enableStaffTranferTab = false;
+                
                 StaffController.saveStaffDetails();
             }
         }
@@ -1074,9 +1074,29 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function goToNextStep() {
         if(StaffController.isInternalSearchSelected) {
-            StaffController.step = 'confirmation';
-            StaffController.generatePassword();
-            StaffController.isInternalSearchSelected = false;
+            // StaffController.step = 'confirmation';
+            // StaffController.generatePassword();
+            // StaffController.isInternalSearchSelected = false;
+            if (StaffController.staffData && StaffController.staffData.is_same_school)
+            {
+                StaffController.step = 'summary';
+                StaffController.messageClass = 'alert-warning';
+                StaffController.message = 'This staff is already allocated to the current institution';
+                StaffController.isInternalSearchSelected = false;
+                StaffController.generatePassword();
+            } else if (StaffController.staffData && StaffController.staffData.is_diff_school)
+            {
+                StaffController.messageClass = 'alert-warning';
+                StaffController.message = `This staff is already allocated to ${StaffController.staffData.current_enrol_institution_code} - ${StaffController.staffData.current_enrol_institution_name}`;
+                StaffController.step = 'summary';
+                StaffController.isInternalSearchSelected = false;
+                StaffController.generatePassword();
+            } else
+            {
+                StaffController.step = 'confirmation';
+                StaffController.isInternalSearchSelected = false;
+                StaffController.generatePassword();
+            }
         } else if(StaffController.isExternalSearchSelected) {
             StaffController.step = 'confirmation';
             StaffController.generatePassword();
@@ -2134,4 +2154,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.step = 'transfer_staff';
         }
     });
+
+    function transferStaffNextStep()
+    {
+        StaffController.step = 'transfer_staff';
+    }
 }
