@@ -3157,6 +3157,7 @@ class StaffTable extends ControllerActionTable
                 $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
                 $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
                 $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
+                $InstitutionStaffAttendances->aliasField('shift_id') => $shiftId,
             ])
             ->hydrate(false)
             ->toArray();
