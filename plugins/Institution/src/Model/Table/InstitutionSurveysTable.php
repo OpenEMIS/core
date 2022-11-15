@@ -631,6 +631,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             $extra['OR'] = array_merge($nameConditions, $surveyConditions, $descriptionConditions);
         }
         // end POCOR-4027
+
     }
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
