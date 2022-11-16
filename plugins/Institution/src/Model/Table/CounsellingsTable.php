@@ -99,16 +99,26 @@ class CounsellingsTable extends AppTable
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $InstitutionStudents = TableRegistry::get('Institution.Students');
         $Institutions = TableRegistry::get('Institution.Institutions');
+        $UserData = TableRegistry::get('User.Users');//POCOR-7044 add
 
-        $requestorOptions = $this->Requesters
+        $requestorOptions = $UserData
             ->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'name_with_id'
             ])
+            ->select([
+                    $UserData->aliasField('id'),
+                    $UserData->aliasField('openemis_no'),
+                    $UserData->aliasField('first_name'),
+                    $UserData->aliasField('middle_name'),
+                    $UserData->aliasField('third_name'),
+                    $UserData->aliasField('last_name')
+                    //POCOR-7044 add select condition
+            ])
             ->leftJoin(
                     [$InstitutionStaff->alias() => $InstitutionStaff->table()],
                     [
-                        $InstitutionStaff->aliasField('staff_id = ') . $this->Requesters->aliasField('id'),
+                        $InstitutionStaff->aliasField('staff_id = ') . $UserData->aliasField('id'),
                         $InstitutionStaff->aliasField('institution_id') => $institutionId,
                         $InstitutionStaff->aliasField('staff_status_id') => self::ASSIGNED
                     ]
@@ -116,7 +126,7 @@ class CounsellingsTable extends AppTable
             ->leftJoin(
                     [$InstitutionStudents->alias() => $InstitutionStudents->table()],
                     [
-                        $InstitutionStudents->aliasField('student_id = ') . $this->Requesters->aliasField('id'),
+                        $InstitutionStudents->aliasField('student_id = ') . $UserData->aliasField('id'),
                         $InstitutionStudents->aliasField('institution_id') => $institutionId
                     ]
                 )
@@ -132,10 +142,10 @@ class CounsellingsTable extends AppTable
                     ]
                 ])
             ->where(['Institutions.id is not NULL']) 
-            ->group([$this->Requesters->aliasField('id')])   
+            ->group([$UserData->aliasField('id')])   
             ->order([
-                $this->Requesters->aliasField('first_name'),
-                $this->Requesters->aliasField('last_name')
+                $UserData->aliasField('first_name'),
+                $UserData->aliasField('last_name')
             ])
             ->toArray();
             return $requestorOptions;

@@ -1,3 +1,8 @@
+<style>
+.table-wrapper {
+    clear: both !important;
+}
+</style>
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Survey.angular/rules/survey.rules.svc', ['block' => true]); ?>
 <?= $this->Html->script('Survey.angular/rules/survey.rules.ctrl', ['block' => true]); ?>
@@ -105,7 +110,11 @@ $institutionId = $session->read('Institution.Institutions.id');
 			</div>
 		</div>
 	</form>
-
+<style>
+.table-wrapper {
+    clear: both !important;
+}
+</style>
 <?php
 $this->end();
 ?>
