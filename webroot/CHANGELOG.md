@@ -1,3 +1,11 @@
+### [3.75.37] - 2022-11-16
+- Bug Fixed: Report>Institution>Institutions Summary Report: Report is not having correct format
+- Bug Fixed: Administration>Survey>Forms: Dropdown field for the 'survey form section' is not showing the list of the survey section.
+- Bug Fixed: Institutions>Survey>Forms: Survey form does not appear when a new institution is added
+- Bug Fixed: Identity the source of this query
+- Bug Fixed: Institutions>General>Map: Url is redirected to the wrong page
+- Bug Fixed: Institution_class_students:Retrieve 18013660 rows(Happening when session ends)
+
 ### [3.75.36] - 2022-11-09
 - Implemented: Create Placeholder for Student Report Card to display user that enters marks and comments
 - Implemented: Change to the OpenEMIS Core Special Needs feature
