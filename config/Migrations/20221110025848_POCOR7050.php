@@ -19,8 +19,8 @@ class POCOR7050 extends AbstractMigration
 
         // Creating backup
         $this->execute('DROP TABLE IF EXISTS `zz_7050_config_item_options`');
-        $this->execute('CREATE TABLE `zz_7050_config_item_options` LIKE `config_items_options`');
-        $this->execute('INSERT INTO `zz_7050_config_item_options` SELECT * FROM `config_items_options`');
+        $this->execute('CREATE TABLE `zz_7050_config_item_options` LIKE `config_item_options`');
+        $this->execute('INSERT INTO `zz_7050_config_item_options` SELECT * FROM `config_item_options`');
 
         $configItemData = [
             [
