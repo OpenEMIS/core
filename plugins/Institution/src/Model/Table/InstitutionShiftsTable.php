@@ -735,6 +735,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                     'institutionShiftId' => 'InstitutionShifts.id',
                     'institutionShiftStartTime' => 'InstitutionShifts.start_time',
                     'institutionShiftEndTime' => 'InstitutionShifts.end_time',
+                    'institutionShiftsId' => 'InstitutionShifts.shift_option_id',//add
                     'institutionId' => 'Institutions.id',
                     'institutionCode' => 'Institutions.code',
                     'institutionName' => 'Institutions.name',
@@ -753,13 +754,13 @@ class InstitutionShiftsTable extends ControllerActionTable
                         $shiftName = $result->institutionCode . " - " . $result->institutionName . " - " . __($result->shiftOptionName);
                     }
                     $returnArr[] = [
-                        'id' => intval($result->institutionShiftId),
+                        'id' => intval($result->institutionShiftsId),
                         'name' => $shiftName.': '.$result->institutionShiftStartTime. ' - '.$result->institutionShiftEndTime,
                         'start_time' => $result->institutionShiftStartTime,
                         'end_time' => $result->institutionShiftEndTime
                     ];
                 }
-                $defaultSelect = ['id' => '-1', 'name' => __('-- Select --')];
+                $defaultSelect = ['id' => '-1', 'name' => __('-- All --')];
                 $defaultSelect['selected'] = true;
                 array_unshift($returnArr, $defaultSelect);
                 return $returnArr;
