@@ -162,7 +162,9 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 'shift_name' => 'ShiftOptions.name',
                 'education_stage_order' => $query->func()->min('EducationStages.order'),
                 'total_mark' => 'marking_info.marked_records',
-                'total_unmark' => 'marking_info.unmarked_records'
+                'total_unmark' => "(CASE WHEN marking_info.unmarked_records > '0' THEN 'marking_info.unmarked_records'
+                    ELSE 0 END)"
+                //'marking_info.unmarked_records'
             ])
             //POCOR-7039
             ->join([
@@ -388,14 +390,14 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $newFields[] = [
             'key' => '',
             'field' => 'total_mark',
-            'type' => 'string',
+            'type' => 'integer',
             'label' => 'Marked'
         ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'total_unmark',
-            'type' => 'string',
+            'type' => 'integer',
             'label' => 'Unmarked'
         ];              
 
