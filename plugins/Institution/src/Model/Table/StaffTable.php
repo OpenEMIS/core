@@ -3085,19 +3085,24 @@ class StaffTable extends ControllerActionTable
         $ownAttendanceView = $options['own_attendance_view'];
         $otherAttendanceView = $options['other_attendance_view'];
         $shiftId = $options['shift_id'];
-
         $weekStartDate = $options['week_start_day'];
         $weekEndDate = $options['week_end_day'];
 
         $dayId = $options['day_id'];
         $dayDate = $options['day_date'];
         //POCOR-6971[START]
+        $shiftOptionsList = TableRegistry::get('shift_options');
+        $list = $shiftOptionsList->find()->select(['id'=>$shiftOptionsList->aliasField('id')])->where(['visible'=>1])->toArray();
         $InstitutionShiftsTable = TableRegistry::get('Institution.InstitutionShifts');
         $InstitutionStaffAttendancesData = TableRegistry::get('Staff.InstitutionStaffAttendances');
+        $positions = TableRegistry::get('Institution.InstitutionPositions');
+        $staff = TableRegistry::get('institution_staff');
         $InstitutionShiftsData = $InstitutionShiftsTable->find()
-            ->select([$InstitutionShiftsTable->aliasField('start_time'), $InstitutionShiftsTable->aliasField('end_time')])
+            ->select([$InstitutionShiftsTable->aliasField('start_time'), $InstitutionShiftsTable->aliasField('end_time'),$InstitutionShiftsTable->aliasField('id')])
             ->where([
-                $InstitutionShiftsTable->aliasField('id') => $shiftId
+                $InstitutionShiftsTable->aliasField('shift_option_id') => $shiftId, //add
+                $InstitutionShiftsTable->aliasField('academic_period_id') => $academicPeriodId, //add
+                $InstitutionShiftsTable->aliasField('institution_id') => $institutionId //add
             ])->first();
         //POCOR-6971[END]
         $staffShiftStartTime = date("H:i:s", strtotime($InstitutionShiftsData['start_time']));
@@ -3149,19 +3154,40 @@ class StaffTable extends ControllerActionTable
                 $workingDaysArr[] = $date;
             }
         }
-
-        $allStaffAttendances = $InstitutionStaffAttendances
-            ->find('all')
+        if($shiftId==-1){
+            $allStaffAttendances = $InstitutionStaffAttendances
+            ->find('list')
+            ->leftJoin([$staff->alias() => $staff->table()],
+                        [$staff->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
+            ->leftJoin([$positions->alias() => $positions->table()],
+                        [$positions->aliasField('id = ') . $staff->aliasField('institution_position_id')])
             ->where([
                 $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
                 $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
                 $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
                 $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
-                $InstitutionStaffAttendances->aliasField('shift_id') => $shiftId,
+                $positions->aliasField('shift_id IN') => $list,
             ])
             ->hydrate(false)
             ->toArray();
-
+        }else{
+            $allStaffAttendances = $InstitutionStaffAttendances
+                ->find('list')
+                ->leftJoin([$staff->alias() => $staff->table()],
+                            [$staff->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
+                ->leftJoin([$positions->alias() => $positions->table()],
+                            [$positions->aliasField('id = ') . $staff->aliasField('institution_position_id')])
+                ->where([
+                    $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
+                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+                    $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
+                    $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
+                   // $InstitutionStaffAttendances->aliasField('shift_id') => $shiftId,
+                    $positions->aliasField('shift_id') => $shiftId,
+                ])
+                ->hydrate(false)
+                ->toArray();
+        }
         $allStaffLeaves = $StaffLeaveTable
             ->find()
             ->matching('StaffLeaveTypes')
@@ -3197,6 +3223,7 @@ class StaffTable extends ControllerActionTable
         }
         //POCOR-6971[START]
         if($shiftId == -1){
+            //return 'yes';
         }else{
             // $conditionQueryForTime = [
             //     $InstitutionStaffAttendancesData->aliasField('time_in >= ') => $staffShiftStartTime,
