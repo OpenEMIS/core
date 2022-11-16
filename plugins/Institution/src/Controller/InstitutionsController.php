@@ -2101,6 +2101,15 @@ class InstitutionsController extends AppController
                 $header = __($institutionName) ;
                 $this->set('contentHeader', $header);
             }
+            //Start: POCOR-7048
+            elseif ($model->alias() == 'InstitutionMaps') {
+                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+                $institutionName = $session->read('Institution.Institutions.name');
+                $this->Navigation->addCrumb('InstitutionMaps', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'InstitutionMaps','view']);
+                $header = __($institutionName) ;
+                $this->set('contentHeader', $header);
+            }
+            //End: POCOR-7048
             else {
                 $this->Navigation->addCrumb($crumbTitle, $crumbOptions);
                 $header = $this->activeObj->name;
