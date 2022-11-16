@@ -55,8 +55,16 @@ class StudentReportCardsTable extends ControllerActionTable
        
         $InstitutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
         $StudentGuardians = TableRegistry::get('student_guardians');
+
+        //Start POCOR-7055
+        if ($user['is_student'] == 1 && $user['is_guardian'] == 1 && $user['is_staff'] == 1) {
+            $query
+            ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
+            ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED])
+            ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
+        }//End POCOR-7055
         
-        if ($user['is_student'] == 1) {
+        else if ($user['is_student'] == 1) {
             $query
             ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
             ->where([$this->aliasField('student_id') => $user['id']])   //  POCOR-5910
