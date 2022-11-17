@@ -732,7 +732,7 @@ class InstitutionShiftsTable extends ControllerActionTable
             ->innerJoinWith('ShiftOptions')
             ->innerJoinWith('Institutions')
             ->select([
-                    'institutionShiftId' => 'InstitutionShifts.id',
+                    //'institutionShiftId' => 'InstitutionShifts.id',
                     'institutionShiftStartTime' => 'InstitutionShifts.start_time',
                     'institutionShiftEndTime' => 'InstitutionShifts.end_time',
                     'institutionShiftsId' => 'InstitutionShifts.shift_option_id',//add
