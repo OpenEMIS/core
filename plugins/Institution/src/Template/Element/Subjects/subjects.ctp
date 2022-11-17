@@ -215,9 +215,9 @@
 <script>
 	$(document).on("change", "#institutionsubjects-education-grade-id", function(event) {
 	    event.preventDefault();
-	    alert('qweqwe')
-	    alert($(this).val())
-	    console.log('eee', $(this).val());
+	    //alert('qweqwe')
+	    //alert($(this).val())
+	    //console.log('eee', $(this).val());
 	    if($(this).val() != '') {
 	        $('.subject_section').css('display', '');
 	    } else {
