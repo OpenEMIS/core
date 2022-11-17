@@ -58,9 +58,23 @@ class StudentReportCardsTable extends ControllerActionTable
 
         //Start POCOR-7055
         if ($user['is_student'] == 1 && $user['is_guardian'] == 1 && $user['is_staff'] == 1) {
+            if ($this->controller->name == 'Profiles') {
+                $query
+                ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
+                ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED,
+                    $this->aliasField('student_id') => $user['id'] 
+                ])
+                ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
+            }
+            $session = $this->request->session();
+            $session = $this->request->session();//POCOR-6267
+            $student_id = $session->read('Student.Students.id');
+
             $query
             ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
-            ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED])
+            ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED,
+                $this->aliasField('student_id') => $student_id 
+            ])
             ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
         }//End POCOR-7055
         
@@ -108,6 +122,22 @@ class StudentReportCardsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        //Start POCOR-7055
+        if (array_key_exists('view', $buttons)) {
+            $url = [
+                    'plugin' => 'Student',
+                    'controller' => 'Students',
+                    'action' => 'ReportCards',
+                    'view',
+                    'report_card_id' => $entity->report_card_id,
+                    'student_id' => $entity->student_id,
+                    'academic_period_id' => $entity->academic_period_id,
+                    'education_grade_id' => $entity->education_grade_id,
+                    'institution_id' => $entity->institution_id,
+                ];
+                $buttons['view']['url'] = $url;
+        }
+        //End POCOR-7055
    
         $downloadAccess = false;
         if ($this->controller->name == 'Students') {
@@ -116,7 +146,7 @@ class StudentReportCardsTable extends ControllerActionTable
             $downloadAccess = $this->AccessControl->check(['Directories', 'StudentReportCards', 'download']);
         } else if ($this->controller->name == 'Profiles') {
             $downloadAccess = $this->AccessControl->check(['Profiles', 'StudentReportCards', 'download']);
-            unset($buttons['view']);
+            // unset($buttons['view']);
         }
         /**POCOR-6845 starts - Added condition to get download button when logged in as Guardian*/  
         else if ($this->controller->name == 'GuardianNavs') {
