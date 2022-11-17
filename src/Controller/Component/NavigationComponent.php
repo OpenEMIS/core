@@ -332,6 +332,11 @@ class NavigationComponent extends Component
                     $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
                     $userInfo = TableRegistry::get('Security.Users')->get($userId);
                 } 
+                //Start POCOR-7055
+                elseif ($action == 'StudentReportCards') {
+                    $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
+                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
+                }//End POCOR-7055
                 /*POCOR-6286 ends*/
                 else{
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
@@ -357,6 +362,7 @@ class NavigationComponent extends Component
                    $userType = 7;
                 }/*POCOR-6332 ends*/
             }
+
 
 			$userType = '';
 			if(!empty($userInfo)) {
