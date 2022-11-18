@@ -984,6 +984,12 @@ class InstitutionShiftsTable extends ControllerActionTable
                                     $institutionStaffShifts->aliasField('shift_id = ') . $this->aliasField('id')
                                 ]
                             )
+                           /*->leftJoin(
+                                [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
+                                [
+                                    $institutionStaffShifts->aliasField('shift_id = ') . $this->aliasField('id')
+                                ]
+                            )*/
                            ->select([
                                 'institutionShiftId' => $this->aliasField('id'),
                                 'startTime' => $this->aliasField('start_time'),
