@@ -35,8 +35,8 @@ class POCOR7050 extends AbstractMigration
                 'visible' => '1',
                 'field_type' => 'Dropdown',
                 'option_type' => 'calculate_daily_attendance',
-                'modified_user_id' => 'NULL',
-                'modified' => 'NULL',
+                'modified_user_id' => NULL,
+                'modified' => NULL,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
