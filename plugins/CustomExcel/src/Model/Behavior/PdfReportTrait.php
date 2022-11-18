@@ -330,11 +330,12 @@ trait PdfReportTrait
         $basePath = $filepath;
         //POCOR-6916 start
         $reportCard = TableRegistry::get('report_cards');
-        $configValue = $reportCard->find()->select(['pdf_no'=>$reportCard->aliasField('pdf_page_number')])->where([$reportCard->aliasField('id')=>$report_card_id])->first();
+        $configVal = $reportCard->find()->select(['pdf_no'=>$reportCard->aliasField('pdf_page_number')])->where([$reportCard->aliasField('id')=>$report_card_id])->first();
+        $configValue =  $configVal['pdf_no'];
         if($configValue == -1){
             $sheetCount = $objSpreadsheet->getSheetCount();
         }else{
-            $sheetCount = $configValue['pdf_no'];
+            $sheetCount = $configValue;
         }
         //POCOR-6916 end
         for ($sheetIndex = 0; $sheetIndex < $sheetCount; $sheetIndex++) {
