@@ -312,6 +312,12 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('private_key', ['type' => 'text']);
                 $this->field('public_key', ['type' => 'text']);
                 break;
+            //POCOR-6930 Starts    
+            case 'Jordan CSPD':
+                $this->field('url');
+                $this->field('username', ['type' => 'string']);
+                $this->field('password', ['type' => 'string']);
+                break;//POCOR-6930 Ends
 
             default:
                 break;
