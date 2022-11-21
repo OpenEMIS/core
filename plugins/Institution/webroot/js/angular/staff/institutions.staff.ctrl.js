@@ -7,16 +7,13 @@ InstitutionStaffController.$inject = ['$location', '$q', '$scope', '$window', '$
 function InstitutionStaffController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsStaffSvc, $rootScope) {
     // ag-grid vars
 
-    console.log("Nov 16 - Works")
+    console.log("Nov 21 - Works")
 
     var StaffController = this;
 
     StaffController.pageSize = 10;
     StaffController.step = 'user_details';
-    StaffController.selectedStaffData = {
-        // CLean up + Template fristname,lastname & gender
-        date_of_birth:'10-11-2022'
-    };
+    StaffController.selectedStaffData = { };
     StaffController.internalGridOptions = null;
     StaffController.externalGridOptions = null;
     StaffController.postRespone = null;
@@ -59,9 +56,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.user_identity_number = "";
     StaffController.isEnableBirthplaceArea = false;
     StaffController.isEnableAddressArea = false;
-
-    $scope.addressAreaId = null;
-    $scope.birthplaceAreaId = null;
 
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
@@ -107,9 +101,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.filterBySection= filterBySection;
     StaffController.mapBySection= mapBySection;
     StaffController.transferStaffNextStep = transferStaffNextStep;
-    StaffController.toggleBirthPlaceArea = toggleBirthPlaceArea;
-    StaffController.toggleAddressPlaceArea = toggleAddressPlaceArea;
-    StaffController.addressOnChange = addressOnChange;
+  
     
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -1215,29 +1207,25 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
         StaffController.user_identity_number = deepCopy.identity_number;
 
-        if ($window.localStorage.getItem('birthplace_area_id'))
+      /*   if (selectedData.address_area_id > 0)
         {
-            $window.localStorage.removeItem('birthplace_area_id')
-        }
-        if ($window.localStorage.getItem('address_area_id'))
+            document.getElementById('addressArea_textbox').style.visibility = 'visible';
+            document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
+        } else
         {
-            $window.localStorage.removeItem('address_area_id')
+            document.getElementById('addressArea_textbox').style.display = 'none';
+            document.getElementById('addressArea_dropdown').style.visibility = 'visible';
         }
-        $window.localStorage.setItem('birthplace_area_id', selectedData.birthplace_area_id);
-        $window.localStorage.setItem('address_area_id', selectedData.address_area_id);
-        if ($window.localStorage.getItem('birthplace_area'))
-        {
-            $window.localStorage.removeItem('birthplace_area')
-        }
-        if ($window.localStorage.getItem('address_area'))
-        {
-            $window.localStorage.removeItem('address_area')
-        }
-        $window.localStorage.setItem('birthplace_area', JSON.stringify({ id: selectedData.birthplace_area_id, name: selectedData.birth_area_name }));
-        $window.localStorage.setItem('address_area', JSON.stringify({ id: selectedData.address_area_id, name: selectedData.area_name }));
 
-        $scope.addressAreaId = selectedData.address_area_id;
-        $scope.birthplaceAreaId = selectedData.birthplace_area_id;
+        if (selectedData.birthplace_area_id > 0)
+        {
+            document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('birthplaceArea_textbox').style.display = 'none';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+        } */
     }
 
     function setStaffDataFromExternalSearchData(selectedData)
@@ -1273,32 +1261,27 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.address = selectedData.address;
         StaffController.selectedStaffData.postalCode = selectedData.postal_code;
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-
         StaffController.user_identity_number = deepCopy.identity_number;
 
-        if ($window.localStorage.getItem('birthplace_area_id'))
+       /*  if (selectedData.address_area_id > 0)
         {
-            $window.localStorage.removeItem('birthplace_area_id')
-        }
-        if ($window.localStorage.getItem('address_area_id'))
+            document.getElementById('addressArea_textbox').style.visibility = 'visible';
+            document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
+        } else
         {
-            $window.localStorage.removeItem('address_area_id')
+            document.getElementById('addressArea_textbox').style.display = 'none';
+            document.getElementById('addressArea_dropdown').style.visibility = 'visible';
         }
-        $window.localStorage.setItem('birthplace_area_id', selectedData.birthplace_area_id);
-        $window.localStorage.setItem('address_area_id', selectedData.address_area_id);
-        if ($window.localStorage.getItem('birthplace_area'))
-        {
-            $window.localStorage.removeItem('birthplace_area')
-        }
-        if ($window.localStorage.getItem('address_area'))
-        {
-            $window.localStorage.removeItem('address_area')
-        }
-        $window.localStorage.setItem('birthplace_area', JSON.stringify({ id: selectedData.birthplace_area_id, name: selectedData.birth_area_name }));
-        $window.localStorage.setItem('address_area', JSON.stringify({ id: selectedData.address_area_id, name: selectedData.area_name }));
 
-        $scope.addressAreaId = selectedData.address_area_id;
-        $scope.birthplaceAreaId = selectedData.birthplace_area_id;
+        if (selectedData.birthplace_area_id > 0)
+        {
+            document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('birthplaceArea_textbox').style.display = 'none';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+        } */
     
     }
 
@@ -2223,7 +2206,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     {
         StaffController.step = 'transfer_staff';
     }
-    function toggleBirthPlaceArea()
+  /*   function toggleBirthPlaceArea()
     {
         document.getElementById("birthplace_area_control_textbox").style.display = "none";
         document.getElementById("birthplace_area_control_dropdown").style.display = "block";
@@ -2239,10 +2222,5 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         setTimeout(() => {
             document.querySelector("multi-select-tree").getElementsByClassName("input-select-wrapper")[0].click()
         }, 10);
-    }
-
-    function addressOnChange($event)
-    {
-        console.log($event)
-    }
+    } */
 }
