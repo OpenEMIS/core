@@ -299,10 +299,22 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var openemis_no = null;
         var date_of_birth = '';
         var identity_number = '';
+
+        var nationality_id = '';
+        var nationality_name = ''; 
+        var identity_type_name = '';
+        var identity_type_id = '';
+
         first_name = StaffController.selectedStaffData.first_name;
         last_name = StaffController.selectedStaffData.last_name;
         date_of_birth = StaffController.selectedStaffData.date_of_birth;
         identity_number = StaffController.selectedStaffData.identity_number;
+      
+        nationality_id = StaffController.selectedStaffData.nationality_id;
+        nationality_name = StaffController.selectedStaffData.nationality_name;
+        identity_type_name = StaffController.selectedStaffData.identity_type_name;
+        identity_type_id = StaffController.selectedStaffData.identity_type_id;
+
         var dataSource = {
             pageSize: StaffController.pageSize,
             getRows: function (params) {
@@ -317,6 +329,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     identity_number: identity_number,
                     institution_id: StaffController.institutionId,
                     user_type_id: 2,
+                    nationality_id: nationality_id,
+                    nationality_name: nationality_name,
+                    identity_type_name: identity_type_name,
+                    identity_type_id: identity_type_id
                 }
                 InstitutionsStaffSvc.getInternalSearchData(param)
                 .then(function(response) {
