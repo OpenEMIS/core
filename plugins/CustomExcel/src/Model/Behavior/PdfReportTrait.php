@@ -331,7 +331,6 @@ trait PdfReportTrait
             $mpdf = new \Mpdf\Mpdf();
             $filepath = $basePath.'_'.$sheetIndex;
             $writer->setSheetIndex($sheetIndex);
-            print_r($sheetIndex);die;
             $writer->save($filepath);
 
             // Read the html file and convert them into a variable

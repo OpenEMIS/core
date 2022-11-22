@@ -3076,7 +3076,6 @@ class StaffTable extends ControllerActionTable
 
     public function findAllStaffAttendances(Query $query, array $options)
     {
-
         $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
         $InstitutionStaffShiftsTable = TableRegistry::get('Institution.InstitutionStaffShifts');
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -3100,7 +3099,7 @@ class StaffTable extends ControllerActionTable
         $InstitutionShiftsData = $InstitutionShiftsTable->find()
             ->select([$InstitutionShiftsTable->aliasField('start_time'), $InstitutionShiftsTable->aliasField('end_time'),$InstitutionShiftsTable->aliasField('id')])
             ->where([
-               // $InstitutionShiftsTable->aliasField('shift_option_id') => $shiftId, //add
+                $InstitutionShiftsTable->aliasField('shift_option_id') => $shiftId, //add
                 $InstitutionShiftsTable->aliasField('academic_period_id') => $academicPeriodId, //add
                 $InstitutionShiftsTable->aliasField('institution_id') => $institutionId //add
             ])->first();
@@ -3172,17 +3171,19 @@ class StaffTable extends ControllerActionTable
         }else{
             $allStaffAttendances = $InstitutionStaffAttendances
                 ->find('all')
-                /*->leftJoin([$staff->alias() => $staff->table()],
+                ->leftJoin([$staff->alias() => $staff->table()],
                             [$staff->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
                 ->leftJoin([$positions->alias() => $positions->table()],
-                            [$positions->aliasField('id = ') . $staff->aliasField('institution_position_id')])*/
+                            [$positions->aliasField('id = ') . $staff->aliasField('institution_position_id')])
+                /*->leftJoin([$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
+                            [$institutionStaffShifts->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])*/
                 ->where([
                     $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
                     $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
                     $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
                     $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
-                   // $InstitutionStaffAttendances->aliasField('shift_id') => $shiftId,
-                    $positions->aliasField('shift_id') => $shiftId,
+                    $InstitutionStaffAttendances->aliasField('shift_id') => $shiftId,
+                    //$institutionStaffShifts->aliasField('shift_id') => $shiftId,
                 ])
                 ->hydrate(false)
                 ->toArray();
