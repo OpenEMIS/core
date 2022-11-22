@@ -735,7 +735,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                     'institutionShiftId' => 'InstitutionShifts.id',
                     'institutionShiftStartTime' => 'InstitutionShifts.start_time',
                     'institutionShiftEndTime' => 'InstitutionShifts.end_time',
-                    //'institutionShiftsId' => 'InstitutionShifts.shift_option_id',//add
+                    'institutionShiftsId' => 'InstitutionShifts.shift_option_id',
                     'institutionId' => 'Institutions.id',
                     'institutionCode' => 'Institutions.code',
                     'institutionName' => 'Institutions.name',
@@ -754,7 +754,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                         $shiftName = $result->institutionCode . " - " . $result->institutionName . " - " . __($result->shiftOptionName);
                     }
                     $returnArr[] = [
-                        'id' => intval($result->institutionShiftId),
+                        'id' => intval($result->institutionShiftsId),
                         'name' => $shiftName.': '.$result->institutionShiftStartTime. ' - '.$result->institutionShiftEndTime,
                         'start_time' => $result->institutionShiftStartTime,
                         'end_time' => $result->institutionShiftEndTime
@@ -973,23 +973,31 @@ class InstitutionShiftsTable extends ControllerActionTable
         return $query;
     }
 
-    public function findStaffShiftsAttendance(Query $query, array $options)
+    public function findStaffShiftsAttendancedata(Query $query, array $options)
     {
         $staffId = $options['staff_id'];
         $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
+        $institutionStaff = TableRegistry::get('institution_staff');
+        $positions = TableRegistry::get('Institution.InstitutionPositions');
+        $shiftOption = TableRegistry::get('shift_options');
         $staffShiftsData   = $query
                            ->leftJoin(
                                 [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
                                 [
                                     $institutionStaffShifts->aliasField('shift_id = ') . $this->aliasField('id')
                                 ]
-                            )
-                           /*->leftJoin(
-                                [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
+                            )->
+                           leftJoin(
+                                [$positions->alias() => $positions->table()],
                                 [
-                                    $institutionStaffShifts->aliasField('shift_id = ') . $this->aliasField('id')
+                                    $positions->aliasField('id = ') . $institutionStaff->aliasField('institution_position_id')
+                                ])
+                           ->leftJoin(
+                                [$shiftOption->alias() => $shiftOption->table()],
+                                [
+                                    $shiftOption->aliasField('id = ') . $positions->aliasField('shift_id')
                                 ]
-                            )*/
+                            )
                            ->select([
                                 'institutionShiftId' => $this->aliasField('id'),
                                 'startTime' => $this->aliasField('start_time'),
