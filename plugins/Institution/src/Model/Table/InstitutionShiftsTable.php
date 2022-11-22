@@ -732,10 +732,10 @@ class InstitutionShiftsTable extends ControllerActionTable
             ->innerJoinWith('ShiftOptions')
             ->innerJoinWith('Institutions')
             ->select([
-                    //'institutionShiftId' => 'InstitutionShifts.id',
+                    'institutionShiftId' => 'InstitutionShifts.id',
                     'institutionShiftStartTime' => 'InstitutionShifts.start_time',
                     'institutionShiftEndTime' => 'InstitutionShifts.end_time',
-                    'institutionShiftsId' => 'InstitutionShifts.shift_option_id',//add
+                    //'institutionShiftsId' => 'InstitutionShifts.shift_option_id',//add
                     'institutionId' => 'Institutions.id',
                     'institutionCode' => 'Institutions.code',
                     'institutionName' => 'Institutions.name',
@@ -754,7 +754,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                         $shiftName = $result->institutionCode . " - " . $result->institutionName . " - " . __($result->shiftOptionName);
                     }
                     $returnArr[] = [
-                        'id' => intval($result->institutionShiftsId),
+                        'id' => intval($result->institutionShiftId),
                         'name' => $shiftName.': '.$result->institutionShiftStartTime. ' - '.$result->institutionShiftEndTime,
                         'start_time' => $result->institutionShiftStartTime,
                         'end_time' => $result->institutionShiftEndTime
