@@ -339,7 +339,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             deferred.resolve(response.data.data);
         };
         
-        var shiftsAttendance =  InstitutionShiftsTable.find('StaffShiftsAttendance', 
+        var shiftsAttendance =  Staff.find('StaffShiftsAttendance', 
          {staff_id: staffId})
                 .ajax({success: successInstitutionShifts, defer: true});
         
