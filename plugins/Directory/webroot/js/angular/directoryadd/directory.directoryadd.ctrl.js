@@ -117,10 +117,21 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         var openemis_no = null;
         var date_of_birth = '';
         var identity_number = '';
+        
+        var nationality_id = '';
+        var nationality_name = '';
+        var identity_type_name = '';
+        var identity_type_id = '';
+        
         first_name = scope.selectedUserData.first_name;
         last_name = scope.selectedUserData.last_name;
         date_of_birth = scope.selectedUserData.date_of_birth;
         identity_number = scope.selectedUserData.identity_number;
+
+        nationality_id = scope.selectedUserData.nationality_id;
+        nationality_name = scope.selectedUserData.nationality_name;
+        identity_type_name = scope.selectedUserData.identity_type_name;
+        identity_type_id = scope.selectedUserData.identity_type_id;
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
@@ -135,6 +146,10 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     identity_number: identity_number,
                     institution_id: null,
                     user_type_id: scope.selectedUserData.user_type_id,
+                    nationality_id: nationality_id,
+                    nationality_name: nationality_name,
+                    identity_type_name: identity_type_name,
+                    identity_type_id: identity_type_id
                 };
                 DirectoryaddSvc.getInternalSearchData(param)
                 .then(function(response) {
