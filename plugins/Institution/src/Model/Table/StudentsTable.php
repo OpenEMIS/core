@@ -2397,6 +2397,7 @@ class StudentsTable extends ControllerActionTable
 				'education_grade_id' => 'educationGrades.id',
 				'period' => 'student_attendance_marked_records.period',
 				'student_id' => 'InstitutionClassesStudents.student_id',
+                'institution_class_id' => 'InstitutionClassesStudents.institution_class_id',
             ])
 			->innerJoin(
 			['InstitutionClasses' => 'institution_classes'],
@@ -2434,7 +2435,7 @@ class StudentsTable extends ControllerActionTable
 			->order(['educationGrades.id' => 'ASC'])
 			->toArray()
             ;
-
+        $periodId = array(1,2);
 		foreach ($StudentAttendancesRecords as $key => $record) {
 
 			$InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
@@ -2446,6 +2447,7 @@ class StudentsTable extends ControllerActionTable
     			$StudentAttendancesData = $InstitutionStudentAbsenceDetails->find('all')
                 ->select([
     				'student_id' => 'institution_student_absence_details.student_id',
+                    'period' => 'institution_student_absence_details.period',
     				'class_id' => 'institution_student_absence_details.institution_class_id',
     				'present' => '(IF(institution_student_absence_details.absence_type_id IS NULL OR institution_student_absence_details.absence_type_id = 3,1,0))',
     				'absent' => '(IF(institution_student_absence_details.absence_type_id IN (1,2),1,0))',
@@ -2453,10 +2455,12 @@ class StudentsTable extends ControllerActionTable
                 ])->innerJoin(["(SELECT value from config_items WHERE code = 'calculate_daily_attendance') attendance_config" ])
     			->where([
                     'institution_student_absence_details.date' => date('Y-m-d'),
-    				'institution_student_absence_details.period' => $record->period,
+    				//'institution_student_absence_details.period' => $record->period,
     				'institution_student_absence_details.student_id' => $record->student_id,
-                ])
+                    $InstitutionStudentAbsenceDetails->aliasField('period IN')=>$periodId,
+                ])->group([$InstitutionStudentAbsenceDetails->aliasField('student_id'),$InstitutionStudentAbsenceDetails->aliasField('absence_type_id')])
     			->toArray();
+                // print_r($StudentAttendancesData->Sql());die;
             }else{
                 $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find('all')
                 ->select([
@@ -2469,14 +2473,14 @@ class StudentsTable extends ControllerActionTable
                 ])->innerJoin(["(SELECT value from config_items WHERE code = 'calculate_daily_attendance') attendance_config" ])
                 ->where([
                     'institution_student_absence_details.date' => date('Y-m-d'),
-                    //'institution_student_absence_details.period' => $record->period,
+                   // 'institution_student_absence_details.period' => $record->period,
                     'institution_student_absence_details.student_id' => $record->student_id,
                 ])->group([$InstitutionStudentAbsenceDetails->aliasField('student_id')])->toArray();
 
             } 
             //POCOR-7050 end
             
-			$StudentAttendances[$record->education_grade_id][] = array('attendance'=>$StudentAttendancesData, 'education_grade_id'=> $record->education_grade_id, 'education_grade'=>$record->education_grade);
+			$StudentAttendances[$record->education_grade_id][] = array('attendance'=>$StudentAttendancesData, 'education_grade_id'=> $record->education_grade_id, 'education_grade'=>$record->education_grade,'institution_class_id'=> $record->institution_class_id,'student_id'=> $record->student_id);
             
 		}
         
@@ -2495,14 +2499,23 @@ class StudentsTable extends ControllerActionTable
             // END: POCOR-6382
 
 			foreach ($attendances as $key => $attendance) {
-
 				$attendanceData[$attendance['education_grade_id']] = $attendance['education_grade'];
-
+                /*$checkstudent = $InstitutionStudentAbsenceDetails->find()->select(['period'=>$InstitutionStudentAbsenceDetails->aliasField('period')])->where([$InstitutionStudentAbsenceDetails->aliasField('student_id')=>$attendance['student_id'],$InstitutionStudentAbsenceDetails->aliasField('education_grade_id')=>$attendance['education_grade_id'],$InstitutionStudentAbsenceDetails->aliasField('institution_class_id')=>$attendance['institution_class_id']])->toArray();*/
+               // print_r($checkstudent);die;
 				if(!empty($attendance['attendance'])) {
 					foreach ($attendance['attendance'] as $key => $markAttendanceData) {
-						$total_present = $markAttendanceData->present + $total_present;
-						$total_absent = $markAttendanceData->absent + $total_absent;
-						$total_late = $markAttendanceData->late + $total_late;
+                        if($configOption==2){
+                            $total_present = $markAttendanceData->present + $total_present;
+                            $total_absent = $markAttendanceData->absent + $total_absent;
+                           // $absent = $markAttendanceData->absent + $total_absent;
+                            //$total_present = $markAttendanceData->present + $absent;
+                            $total_late = $markAttendanceData->late + $total_late;
+
+                        }else{
+    						$total_present = $markAttendanceData->present + $total_present;
+    						$total_absent = $markAttendanceData->absent + $total_absent;
+    						$total_late = $markAttendanceData->late + $total_late;
+                        }
 					}
 				} else {
 					$total_present = $total_present + 1;
