@@ -161,10 +161,21 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var openemis_no = null;
         var date_of_birth = '';
         var identity_number = '';
+        var nationality_id = '';
+        var nationality_name = '';
+        var identity_type_name = '';
+        var identity_type_id = '';
+     
         first_name = StudentController.selectedStudentData.first_name;
         last_name = StudentController.selectedStudentData.last_name;
         date_of_birth = StudentController.selectedStudentData.date_of_birth;
         identity_number = StudentController.selectedStudentData.identity_number;
+
+        nationality_id = StudentController.selectedStudentData.nationality_id;
+        nationality_name = StudentController.selectedStudentData.nationality_name;
+        identity_type_name = StudentController.selectedStudentData.identity_type_name;
+        identity_type_id = StudentController.selectedStudentData.identity_type_id;
+
         var dataSource = {
             pageSize: StudentController.pageSize,
             getRows: function (params) {
@@ -179,6 +190,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     identity_number: identity_number,
                     institution_id: StudentController.institutionId,
                     user_type_id: 1,
+                    nationality_id: nationality_id,
+                    nationality_name: nationality_name,
+                    identity_type_name: identity_type_name,
+                    identity_type_id: identity_type_id
                 }
                 InstitutionsStudentsSvc.getInternalSearchData(param)
                 .then(function(response) {
