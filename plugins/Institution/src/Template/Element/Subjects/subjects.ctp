@@ -2,7 +2,15 @@
 
 <?php if ($action == 'add' || $action == 'edit') : ?>
 
-<div class="input clearfix">
+<?php 
+	if($action == 'add') { ?>
+		<div class="input clearfix subject_section" style="display:none;">
+<?php } else { ?>
+
+		<div class="input clearfix">
+
+<?php } ?>
+?>
 	<label for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
 	<div class="table-wrapper">
 		<div class="table-in-view">
@@ -203,3 +211,19 @@
 ?>
 
 <?php endif ?>
+
+<script>
+	$(document).on("change", "#institutionsubjects-education-grade-id", function(event) {
+	    event.preventDefault();
+	    //alert('qweqwe')
+	    //alert($(this).val())
+	    //console.log('eee', $(this).val());
+	    if($(this).val() != '') {
+	        $('.subject_section').css('display', '');
+	    } else {
+	        $('.subject_section').css('display', 'none');        
+	    }
+
+	    return false;
+	});
+</script>
