@@ -882,7 +882,7 @@ class ReportCardsTable extends AppTable
             $configVal = TableRegistry::get('config_items');
             $configData = $configVal->find()->select(['val'=>$configVal->aliasField('value')])->where([$configVal->aliasField('code')=>'calculate_daily_attendance'])->first();
             $configOption = $configData['val']; 
-            if($configOption==2){
+            $InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
             $studentAbsenceResults = $InstitutionStudentAbsences
                     ->find()
                     ->innerJoin(
@@ -892,25 +892,7 @@ class ReportCardsTable extends AppTable
                             $this->aliasField('institution_id = ') . $InstitutionStudentAbsences->aliasField('institution_id'),
                             $this->aliasField('student_id = ') . $InstitutionStudentAbsences->aliasField('student_id'),
                         ]
-                    )->innerJoin(["(SELECT value from config_items WHERE code = 'calculate_daily_attendance') attendance_config" ])
-                    ->where([
-                        $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
-                        $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
-                        //$InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id']
-                    ])
-                    ->hydrate(false)
-                    ->all();
-                }else{
-                    $studentAbsenceResults = $InstitutionStudentAbsences
-                    ->find()
-                    ->innerJoin(
-                    [$this->alias() => $this->table()],
-                        [
-                            $this->aliasField('institution_class_id') => $params['institution_class_id'],
-                            $this->aliasField('institution_id = ') . $InstitutionStudentAbsences->aliasField('institution_id'),
-                            $this->aliasField('student_id = ') . $InstitutionStudentAbsences->aliasField('student_id'),
-                        ]
-                    )->innerJoin(["(SELECT value from config_items WHERE code = 'calculate_daily_attendance') attendance_config" ])
+                    )
                     ->where([
                         $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
                         $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
@@ -934,14 +916,26 @@ class ReportCardsTable extends AppTable
 
             // sum all number_of_days a student absence in an academic period
             foreach ($studentAbsenceResults as $key => $obj) {
+                $checkstudent = $InstitutionStudentAbsenceDetails->find()->select(['period'=>$InstitutionStudentAbsenceDetails->aliasField('period')])->where([$InstitutionStudentAbsenceDetails->aliasField('student_id')=>$params['student_id'],$InstitutionStudentAbsenceDetails->aliasField('education_grade_id')=>$obj['education_grade_id'],$InstitutionStudentAbsenceDetails->aliasField('institution_class_id')=>$obj['institution_class_id']])->toArray();
+                $periodCount = count($checkstudent);
                 $absenceType = $absenceTypes[$obj['absence_type_id']];
 
                 if (in_array($absenceType, ['EXCUSED', 'UNEXCUSED'])) {
-                    $results['TOTAL_ABSENCE']['number_of_days'] += 1;
+                    // add if else condition for count total absent based on configuration POCOR-7050
+                    if($periodCount==2 && $configVal ==2){
+                        $results['TOTAL_ABSENCE']['number_of_days'] += 1;
+                    }elseif($periodCount==1 && $configVal ==2){
+                        $results['TOTAL_ABSENCE']['number_of_days'] += 0;
+                    }elseif($periodCount==1 || $periodCount==2 || $configVal==1){
+                        $results['TOTAL_ABSENCE']['number_of_days'] += 1;
+                    }else{
+                        $results['TOTAL_ABSENCE']['number_of_days'] += 1;
+                    }
                 }
 
                 $results[$absenceType]['number_of_days'] += 1;
             }
+            
             return $results;
         }
     }
