@@ -2460,7 +2460,6 @@ class StudentsTable extends ControllerActionTable
                     $InstitutionStudentAbsenceDetails->aliasField('period IN')=>$periodId,
                 ])->group([$InstitutionStudentAbsenceDetails->aliasField('student_id'),$InstitutionStudentAbsenceDetails->aliasField('absence_type_id')])
     			->toArray();
-                // print_r($StudentAttendancesData->Sql());die;
             }else{
                 $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find('all')
                 ->select([
@@ -2500,17 +2499,24 @@ class StudentsTable extends ControllerActionTable
 
 			foreach ($attendances as $key => $attendance) {
 				$attendanceData[$attendance['education_grade_id']] = $attendance['education_grade'];
-                /*$checkstudent = $InstitutionStudentAbsenceDetails->find()->select(['period'=>$InstitutionStudentAbsenceDetails->aliasField('period')])->where([$InstitutionStudentAbsenceDetails->aliasField('student_id')=>$attendance['student_id'],$InstitutionStudentAbsenceDetails->aliasField('education_grade_id')=>$attendance['education_grade_id'],$InstitutionStudentAbsenceDetails->aliasField('institution_class_id')=>$attendance['institution_class_id']])->toArray();*/
-               // print_r($checkstudent);die;
+                $checkstudent = $InstitutionStudentAbsenceDetails->find()->select(['period'=>$InstitutionStudentAbsenceDetails->aliasField('period')])->where([$InstitutionStudentAbsenceDetails->aliasField('student_id')=>$attendance['student_id'],$InstitutionStudentAbsenceDetails->aliasField('education_grade_id')=>$attendance['education_grade_id'],$InstitutionStudentAbsenceDetails->aliasField('institution_class_id')=>$attendance['institution_class_id']])->toArray();
+                $periodCount = count($checkstudent);
 				if(!empty($attendance['attendance'])) {
 					foreach ($attendance['attendance'] as $key => $markAttendanceData) {
-                        if($configOption==2){
+                        //add these if else condition for dashboard count data //POCOR-7050
+                        if($configOption==2 && $periodCount==1){
+                            $total_present = $markAttendanceData->present + $total_present;
+                            $absent = $markAttendanceData->absent;
+                            $total_present = $total_present + $absent;
+                            $total_late = $markAttendanceData->late + $total_late;
+                        }elseif($configOption==2 && $periodCount==2){
                             $total_present = $markAttendanceData->present + $total_present;
                             $total_absent = $markAttendanceData->absent + $total_absent;
-                           // $absent = $markAttendanceData->absent + $total_absent;
-                            //$total_present = $markAttendanceData->present + $absent;
                             $total_late = $markAttendanceData->late + $total_late;
-
+                        }elseif($configOption==2 && $periodCount==0){
+                            $total_present = $markAttendanceData->present + $total_present;
+                           // $total_absent = $markAttendanceData->absent + $total_absent;
+                            $total_late = $markAttendanceData->late + $total_late;
                         }else{
     						$total_present = $markAttendanceData->present + $total_present;
     						$total_absent = $markAttendanceData->absent + $total_absent;
