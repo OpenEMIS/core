@@ -164,7 +164,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
 
         // $this->field('education_grade_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>false, 'add'=>true], 'onChangeReload' => true, 'sort' => ['field' => 'EducationGrades.name']]);
-         $this->field('education_grade_id',['type' => 'select', 'visible' => ['index'=>true,'view'=>true, 'edit'=>true, 'add'=>true], 'onChangeReload' => true]);
+         $this->field('education_grade_id',['type' => 'select', 'visible' => ['index'=>true,'view'=>true, 'edit'=>true, 'add'=>true]]);
         $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true, 'add'=>true], 'onChangeReload' => true]);
         $this->field('created', ['type' => 'string', 'visible' => false]);
         $this->field('created_user_id', ['type' => 'string', 'visible' => false]);
@@ -678,8 +678,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                     $Classes->aliasField('institution_id') => $institutionId
                                 ])
                                 ->toArray();
+            
         $ClassGrades = $this->InstitutionClassGrades;
-        $selectedClassId = $this->postString('class_name', $classOptions);
+        $query = $this->request->query;
+        $selectedClassId = isset($query['class_id']) && !empty($query['class_id']) ? $query['class_id'] : '';
         $this->advancedSelectOptions($classOptions, $selectedClassId, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
             'callable' => function ($id) use ($ClassGrades) {
@@ -702,6 +704,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
         // $className = isset($request->query) ? $request->query['class_id'] : $request['data']['InstitutionSubjects']['class_name'];
         $className = '';
         $className = $request['data']['InstitutionSubjects']['class_name'];
+       // $className = $request->query['class_id'];
+
         if ($className == '') {
            $className = $this->Session->read('is_className');
         }
@@ -732,7 +736,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ])
             ->toArray();
                
-         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+         $selectedLevel = '';
 
          return compact('levelOptions', 'selectedLevel');
     }
