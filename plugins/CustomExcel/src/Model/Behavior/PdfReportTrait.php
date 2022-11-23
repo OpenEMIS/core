@@ -2,6 +2,7 @@
 namespace CustomExcel\Model\Behavior;
 
 use Cake\Log\Log;
+use Cake\ORM\TableRegistry;
 
 /*
     This trait is for ExcelReportBehavior.php
@@ -317,7 +318,7 @@ trait PdfReportTrait
     }
     //  ================ END REMOVE COLUMN AND ROW ================
 
-    private function savePDF($objSpreadsheet, $filepath, $student_id)
+    private function savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id)
     {
         Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
         // Convert spreadsheet object into html
@@ -327,8 +328,18 @@ trait PdfReportTrait
         $processedHtml = '';
         $filePaths = [];
         $basePath = $filepath;
-        for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $mpdf = new \Mpdf\Mpdf();
+        //POCOR-6916 start
+        $reportCard = TableRegistry::get('report_cards');
+        $configVal = $reportCard->find()->select(['pdf_no'=>$reportCard->aliasField('pdf_page_number')])->where([$reportCard->aliasField('id')=>$report_card_id])->first();
+        $configValue =  $configVal['pdf_no'];
+        if($configValue == -1){
+            $sheetCount = $objSpreadsheet->getSheetCount();
+        }else{
+            $sheetCount = $configValue;
+        }
+        //POCOR-6916 end
+        for ($sheetIndex = 0; $sheetIndex < $sheetCount; $sheetIndex++) {
+            $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
             $filepath = $basePath.'_'.$sheetIndex;
             $writer->setSheetIndex($sheetIndex);
             $writer->save($filepath);
@@ -384,7 +395,7 @@ trait PdfReportTrait
         $filePaths = [];
         $basePath = $filepath;
         for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $mpdf = new \Mpdf\Mpdf();
+            $mpdf = $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
             $filepath = $basePath.'_'.$sheetIndex;
             $prefixName = 'AssessmentResults';
             $date =  date("Ymd:HHmmss");
@@ -429,7 +440,7 @@ trait PdfReportTrait
 
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
     {
-        $mpdf = new \Mpdf\Mpdf();
+        $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
