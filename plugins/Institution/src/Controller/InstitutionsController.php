@@ -5151,17 +5151,25 @@ class InstitutionsController extends AppController
                             ->first();
                         if(!empty($identityTypes)){
                             $UserIdentities = TableRegistry::get('user_identities');
-                            $entityIdentitiesData = [
-                                'identity_type_id' => $identityTypes->id,
-                                'number' => $identityNumber,
-                                'nationality_id' => $nationalities->id,
-                                'security_user_id' => $user_record_id,
-                                'created_user_id' => $userId,
-                                'created' => date('Y-m-d H:i:s')
-                            ];
-                            //save in user_identities table
-                            $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
-                            $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                            $checkexistingIdentities = $UserIdentities->find()
+                                ->where([
+                                    $UserIdentities->aliasField('nationality_id') => $nationalities->id,
+                                    $UserIdentities->aliasField('identity_type_id') => $identityTypeId,
+                                    $UserIdentities->aliasField('number') => $identityNumber,
+                                ])->first();
+                            if(empty($checkexistingIdentities)){
+                                $entityIdentitiesData = [
+                                    'identity_type_id' => $identityTypes->id,
+                                    'number' => $identityNumber,
+                                    'nationality_id' => $nationalities->id,
+                                    'security_user_id' => $user_record_id,
+                                    'created_user_id' => $userId,
+                                    'created' => date('Y-m-d H:i:s')
+                                ];
+                                //save in user_identities table
+                                $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                                $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                            }
                         }
                     }
 
@@ -5705,17 +5713,26 @@ class InstitutionsController extends AppController
                             ->first();
                         if(!empty($identityTypes)){
                             $UserIdentities = TableRegistry::get('user_identities');
-                            $entityIdentitiesData = [
-                                'identity_type_id' => $identityTypes->id,
-                                'number' => $identityNumber,
-                                'nationality_id' => $nationalities->id,
-                                'security_user_id' => $user_record_id,
-                                'created_user_id' => $userId,
-                                'created' => date('Y-m-d H:i:s')
-                            ];
-                            //save in user_identities table
-                            $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
-                            $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                            $checkexistingIdentities = $UserIdentities->find()
+                                ->where([
+                                    $UserIdentities->aliasField('nationality_id') => $nationalities->id,
+                                    $UserIdentities->aliasField('identity_type_id') => $identityTypeId,
+                                    $UserIdentities->aliasField('number') => $identityNumber,
+                                ])->first();
+                            if(empty($checkexistingIdentities)){
+                                $UserIdentities = TableRegistry::get('user_identities');
+                                $entityIdentitiesData = [
+                                    'identity_type_id' => $identityTypes->id,
+                                    'number' => $identityNumber,
+                                    'nationality_id' => $nationalities->id,
+                                    'security_user_id' => $user_record_id,
+                                    'created_user_id' => $userId,
+                                    'created' => date('Y-m-d H:i:s')
+                                ];
+                                //save in user_identities table
+                                $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                                $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                            }
                         }
                     }
 
@@ -6030,17 +6047,25 @@ class InstitutionsController extends AppController
                         ->first();
                     if(!empty($identityTypes)){
                         $UserIdentities = TableRegistry::get('user_identities');
-                        $entityIdentitiesData = [
-                            'identity_type_id' => $identityTypes->id,
-                            'number' => $identityNumber,
-                            'nationality_id' => $nationalities->id,
-                            'security_user_id' => $user_record_id,
-                            'created_user_id' => $userId,
-                            'created' => date('Y-m-d H:i:s')
-                        ];
-                        //save in user_identities table
-                        $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
-                        $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                        $checkexistingIdentities = $UserIdentities->find()
+                            ->where([
+                                $UserIdentities->aliasField('nationality_id') => $nationalities->id,
+                                $UserIdentities->aliasField('identity_type_id') => $identityTypeId,
+                                $UserIdentities->aliasField('number') => $identityNumber,
+                            ])->first();
+                        if(empty($checkexistingIdentities)){
+                            $entityIdentitiesData = [
+                                'identity_type_id' => $identityTypes->id,
+                                'number' => $identityNumber,
+                                'nationality_id' => $nationalities->id,
+                                'security_user_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in user_identities table
+                            $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                            $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                        }
                     }
                 }                
 
@@ -6287,17 +6312,25 @@ class InstitutionsController extends AppController
                         ->first();
                     if(!empty($identityTypes)){
                         $UserIdentities = TableRegistry::get('user_identities');
-                        $entityIdentitiesData = [
-                            'identity_type_id' => $identityTypes->id,
-                            'number' => $identityNumber,
-                            'nationality_id' => $nationalities->id,
-                            'security_user_id' => $user_record_id,
-                            'created_user_id' => $userId,
-                            'created' => date('Y-m-d H:i:s')
-                        ];
-                        //save in user_identities table
-                        $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
-                        $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                        $checkexistingIdentities = $UserIdentities->find()
+                            ->where([
+                                $UserIdentities->aliasField('nationality_id') => $nationalities->id,
+                                $UserIdentities->aliasField('identity_type_id') => $identityTypeId,
+                                $UserIdentities->aliasField('number') => $identityNumber,
+                            ])->first();
+                        if(empty($checkexistingIdentities)){
+                            $entityIdentitiesData = [
+                                'identity_type_id' => $identityTypes->id,
+                                'number' => $identityNumber,
+                                'nationality_id' => $nationalities->id,
+                                'security_user_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in user_identities table
+                            $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                            $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                        }
                     }
                 }
 
