@@ -64,26 +64,37 @@ class AssessmentItemResultsTable extends AppTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        //POCOR-6947
-        $institutionStudents = TableRegistry::get('institution_students');
-        $institutionStudentsData = $institutionStudents
-                                            ->find()
-                                            ->where([
-                                                $institutionStudents->aliasField('student_id') => $entity->student_id,
-                                                $institutionStudents->aliasField('education_grade_id') => $entity->education_grade_id,
-                                                $institutionStudents->aliasField('institution_id') => $entity->institution_id,
-                                                $institutionStudents->aliasField('academic_period_id') => $entity->academic_period_id
-                                            ])->toArray();
-        if(empty($institutionStudentsData)){
-            $response[] ="No academic records for this student";
+        //POCOR-6824 start
+        $institutionId = $entity->institution_id;
+        $InstitutionClassId = $entity->institution_classes_id;
+        $institutionClass = TableRegistry::get('institution_classes');
+        $findclass = $institutionClass->find()->select(['id'=>$institutionClass->aliasField('id')])->where([$institutionClass->aliasField('institution_id')=>$institutionId,$institutionClass->aliasField('id')=>$InstitutionClassId])->first();
+        if($findclass==null && $findclass['id']!=$InstitutionClassId){
+            $response[] ="No Institution class Id record Exist";
             $entity->errors($response);
-            return false;
-        }else{
-            if ($entity->isNew()) {
-                $entity->id = Text::uuid();
-            }
+            return false; 
+        }else{ //POCOR-6824 end add if else condition
+            //POCOR-6947
+            $institutionStudents = TableRegistry::get('institution_students');
+            $institutionStudentsData = $institutionStudents
+                                                ->find()
+                                                ->where([
+                                                    $institutionStudents->aliasField('student_id') => $entity->student_id,
+                                                    $institutionStudents->aliasField('education_grade_id') => $entity->education_grade_id,
+                                                    $institutionStudents->aliasField('institution_id') => $entity->institution_id,
+                                                    $institutionStudents->aliasField('academic_period_id') => $entity->academic_period_id
+                                                ])->toArray();
+            if(empty($institutionStudentsData)){
+                $response[] ="No academic records for this student";
+                $entity->errors($response);
+                return false;
+            }else{
+                if ($entity->isNew()) {
+                    $entity->id = Text::uuid();
+                }
 
-            $this->getAssessmentGrading($entity);
+                $this->getAssessmentGrading($entity);
+            }
         }
     }
 
