@@ -6382,6 +6382,11 @@ class InstitutionsController extends AppController
                         unset($entityCustomData);
                     }
                 }
+                try{
+                    die('success');        
+                }catch(Exception $e){
+                    return $e;
+                }
             }else{
                 return false;
             }
