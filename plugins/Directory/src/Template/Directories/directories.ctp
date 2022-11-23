@@ -264,7 +264,7 @@
                             <p ng-repeat="error in postResponse.error.identities[0].identity_type_id">{{ error }}</p>
                         </div>
                     </div>
-                    <div ng-class="identity_class" ng-show="selectedUserData.identity_type_name">
+                    <div ng-class="identity_class" ng-show="selectedUserData.identity_type_id">
                         <label><?= __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
                         <input ng-model="selectedUserData.identity_number" type="string">
                     </div>
