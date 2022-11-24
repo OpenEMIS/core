@@ -146,7 +146,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
 			if(!empty($this->request->query('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
 				$academicPeriodId = $this->request->query('period');
 			} else {
-				$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();					
+				$academicPeriodId = !empty($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();	//POCOR-7066				
 			}	
 			
 			$programmeOptions = $EducationProgrammes
