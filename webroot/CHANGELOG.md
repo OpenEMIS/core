@@ -1,3 +1,7 @@
+### [3.76.0] - 2022-11-24
+- Implemented: Record validation when adding guardians
+- Implemented: Implement database foreign keys for OpenEMIS Core
+
 ### [3.75.38] - 2022-11-23
 - Implemented: Develop Summary Tables for WebGIS
 - Bug Fixed: API : Add validation if class_id does not match institution_id
