@@ -571,11 +571,13 @@ class ReportCardsTable extends ControllerActionTable
             $attr['type'] = 'select';
             $attr['onChangeReload'] = true;
             $attr['options'] = $pdfPage;
+            $attr['attr']['label'] =  __('Number sheets in PDF');//POCOR-7064
 
         } else if ($action == 'edit') {
             $attr['type'] = 'select';
             $attr['value'] = $attr['entity']->pdf_page_number;
             $attr['options'] = $pdfPage;
+            $attr['attr']['label'] =  __('Number sheets in PDF');//POCOR-7064
         }
         return $attr;
     }
