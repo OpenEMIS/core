@@ -118,27 +118,11 @@ class StudentReportCardsTable extends ControllerActionTable
     {
         $this->setFieldOrder(['academic_period_id', 'report_card_id', 'institution_id', 'institution_class_id', 'education_grade_id']);
     }
-
+        
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        //Start POCOR-7055
-        if (array_key_exists('view', $buttons)) {
-            $url = [
-                    'plugin' => 'Student',
-                    'controller' => 'Students',
-                    'action' => 'ReportCards',
-                    'view',
-                    'report_card_id' => $entity->report_card_id,
-                    'student_id' => $entity->student_id,
-                    'academic_period_id' => $entity->academic_period_id,
-                    'education_grade_id' => $entity->education_grade_id,
-                    'institution_id' => $entity->institution_id,
-                ];
-                $buttons['view']['url'] = $url;
-        }
-        //End POCOR-7055
-   
+          
         $downloadAccess = false;
         if ($this->controller->name == 'Students') {
             $downloadAccess = $this->AccessControl->check(['Students', 'ReportCards', 'download']);
@@ -164,6 +148,7 @@ class StudentReportCardsTable extends ControllerActionTable
 
             $url = $this->url('downloadPdf');
             $url[1] = $this->paramsEncode($params);
+
             $buttons['downloadPdf'] = [
                 'label' => '<i class="fa kd-download"></i>'.__('Download'),
                 'attr' => ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false],
@@ -185,4 +170,5 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'ReportCards');
     }
+
 }
