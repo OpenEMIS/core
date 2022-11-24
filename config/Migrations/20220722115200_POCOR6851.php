@@ -846,7 +846,7 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE staff_custom_table_cells ADD CONSTRAINT `staff_custo_table_cells_fk_staff_custo_table_row_id` FOREIGN KEY (`staff_custom_table_row_id`) REFERENCES staff_custom_table_rows(`id`)");
         $this->execute("ALTER TABLE institution_staff_duties ADD CONSTRAINT `insti_staff_dutie_fk_staff_dutie_id` FOREIGN KEY (`staff_duties_id`) REFERENCES staff_duties(`id`)");
         $this->execute("ALTER TABLE historical_staff_leave ADD CONSTRAINT `histo_staff_leave_fk_staff_id` FOREIGN KEY (`staff_id`) REFERENCES security_users(`id`)");
-        $this->execute("ALTER TABLE institution_classes ADD CONSTRAINT `insti_class_fk_staff_id` FOREIGN KEY (`staff_id`) REFERENCES security_users(`id`)");
+        //$this->execute("ALTER TABLE institution_classes ADD CONSTRAINT `insti_class_fk_staff_id` FOREIGN KEY (`staff_id`) REFERENCES security_users(`id`)");
         $this->execute("ALTER TABLE institution_quality_rubrics ADD CONSTRAINT `insti_quali_rubri_fk_staff_id` FOREIGN KEY (`staff_id`) REFERENCES security_users(`id`)");
         $this->execute("ALTER TABLE institution_quality_visits ADD CONSTRAINT `insti_quali_visit_fk_staff_id` FOREIGN KEY (`staff_id`) REFERENCES security_users(`id`)");
         $this->execute("ALTER TABLE institution_staff ADD CONSTRAINT `insti_staff_fk_staff_id` FOREIGN KEY (`staff_id`) REFERENCES security_users(`id`)");
@@ -1917,7 +1917,7 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE staff_custom_table_cells DROP FOREIGN KEY `staff_custo_table_cells_fk_staff_custo_table_row_id`");
         $this->execute("ALTER TABLE institution_staff_duties DROP FOREIGN KEY `insti_staff_dutie_fk_staff_dutie_id`");
         $this->execute("ALTER TABLE historical_staff_leave DROP FOREIGN KEY `histo_staff_leave_fk_staff_id`");
-        $this->execute("ALTER TABLE institution_classes DROP FOREIGN KEY `insti_class_fk_staff_id`");
+        //$this->execute("ALTER TABLE institution_classes DROP FOREIGN KEY `insti_class_fk_staff_id`");
         $this->execute("ALTER TABLE institution_quality_rubrics DROP FOREIGN KEY `insti_quali_rubri_fk_staff_id`");
         $this->execute("ALTER TABLE institution_quality_visits DROP FOREIGN KEY `insti_quali_visit_fk_staff_id`");
         $this->execute("ALTER TABLE institution_staff DROP FOREIGN KEY `insti_staff_fk_staff_id`");
