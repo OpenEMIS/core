@@ -1020,6 +1020,9 @@ class ReportCardStatusesTable extends ControllerActionTable
             header("Content-Length: ".filesize($filepath));
             header("Content-Disposition: attachment; filename=".$zipName);
             readfile($filepath);
+            ob_clean();
+            flush();
+            sleep(10);
 
             // delete file after download
             unlink($filepath);
