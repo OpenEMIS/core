@@ -127,6 +127,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->fields['principal_comments_required']['visible'] = false;
         $this->fields['homeroom_teacher_comments_required']['visible'] = false;
         $this->fields['teacher_comments_required']['visible'] = false;
+        $this->fields['pdf_page_number']['visible'] = false;
         $this->setFieldOrder(['code', 'name', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_grade_id', 'excel_template']);
     }
 
@@ -151,9 +152,11 @@ class ReportCardsTable extends ControllerActionTable
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('education_grade_id', ['entity' => $entity]);
         $this->field('subjects', ['entity' => $entity]);
+        $this->field('pdf_page_number');
         $this->field('principal_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('homeroom_teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
+        
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -170,7 +173,7 @@ class ReportCardsTable extends ControllerActionTable
         // End
 
         $this->setupFields($entity);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
 
         // Added
         $this->setupTabElements($entity);
@@ -212,7 +215,7 @@ class ReportCardsTable extends ControllerActionTable
     {
         $this->setupFields($entity);
         $this->field('education_programme_id', ['type' => 'select']);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -236,7 +239,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->fields['code']['type'] = 'readonly';
         $this->fields['name']['type'] = 'readonly';
         $this->field('education_programme_id', ['entity' => $entity]);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
     }
 
     public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
@@ -544,7 +547,8 @@ class ReportCardsTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->alias());
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
 
         if (!empty($entity->generate_start_date)) {
             $entity->generate_start_date = (new Date($entity->generate_start_date))->format('Y-m-d H:i:s');
@@ -555,5 +559,25 @@ class ReportCardsTable extends ControllerActionTable
         }        
 
     } 
+
+    /**
+     * * POCOR-6916
+     * add number of pages print while pdf generate 
+     */
+    public function onUpdateFieldPdfPageNumber(Event $event, array $attr, $action, Request $request)
+    {
+        $pdfPage = array(-1 =>'All',1=>1,2=>2,3=>3,4=>4,5=>5,6=>6,7=>7,8=>8,9=>9,10=>10);
+        if ($action == 'add') {
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = true;
+            $attr['options'] = $pdfPage;
+
+        } else if ($action == 'edit') {
+            $attr['type'] = 'select';
+            $attr['value'] = $attr['entity']->pdf_page_number;
+            $attr['options'] = $pdfPage;
+        }
+        return $attr;
+    }
 
 }

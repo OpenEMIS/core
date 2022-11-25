@@ -1,3 +1,14 @@
+### [3.76.0] - 2022-11-24
+- Implemented: Record validation when adding guardians
+- Implemented: Implement database foreign keys for OpenEMIS Core
+
+### [3.75.38] - 2022-11-23
+- Implemented: Develop Summary Tables for WebGIS
+- Bug Fixed: API : Add validation if class_id does not match institution_id
+- Bug Fixed: Institutions>Performance>Report Cards: Report formatting for pdf and excel is different
+- Bug Fixed: Institutions > Subjects > Add page : System allows user to add subjects for the wrong grade and class
+- Bug Fixed: Institutions>Students>Overview: Student email should be able to be edited
+
 ### [3.75.37] - 2022-11-16
 - Bug Fixed: Report>Institution>Institutions Summary Report: Report is not having correct format
 - Bug Fixed: Administration>Survey>Forms: Dropdown field for the 'survey form section' is not showing the list of the survey section.
