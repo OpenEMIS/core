@@ -50,6 +50,7 @@ trait MessagesTrait
             'f' => 'Female'
         ],
         'general' => [
+            'externalSourceDataErr' => 'Please enter the values in required fields.',//POCOR-6930
             'notExists' => 'The record does not exist.',
             'notEditable' => 'This record is not editable',
             'notConfigured' => 'Not Configured',
