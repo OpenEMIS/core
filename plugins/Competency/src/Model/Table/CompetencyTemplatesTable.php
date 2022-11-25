@@ -99,11 +99,11 @@ class CompetencyTemplatesTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        /*$this->field('academic_period_id', [
-            'type' => 'select',
+        $this->field('academic_period_id', [ 
+            'type' => 'hidden',
             'select' => false,
             'entity' => $entity
-        ]);*/
+        ]);
         $this->field('education_programme_id', [
             'type' => 'select',
             'entity' => $entity
@@ -122,10 +122,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
     {
         if ($action == 'add') {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-
-            $attr['options'] = $periodOptions;
-            $attr['default'] = $selectedPeriod;
-			$attr['onChangeReload'] = true;
+            $attr['value'] = $selectedPeriod; //POCOR-7066
         } else if ($action == 'edit') {
             $academicPeriodId = $attr['entity']->academic_period_id;
             $attr['type'] = 'readonly';
@@ -146,7 +143,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
 			if(!empty($this->request->query('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
 				$academicPeriodId = $this->request->query('period');
 			} else {
-				$academicPeriodId = !empty($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();	//POCOR-7066				
+                $academicPeriodId = !empty($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();	//POCOR-7066				
 			}	
 			
 			$programmeOptions = $EducationProgrammes
@@ -211,7 +208,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
-    {
+    {  
         if (empty($entity->errors())) {
             $extra['redirect'] = [
                 'plugin' => 'Competency',
@@ -233,7 +230,6 @@ class CompetencyTemplatesTable extends ControllerActionTable
     public function getAcademicPeriodOptions($querystringPeriod)
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
-
         if ($querystringPeriod) {
             $selectedPeriod = $querystringPeriod;
         } else {
