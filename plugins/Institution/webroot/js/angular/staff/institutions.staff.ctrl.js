@@ -1223,7 +1223,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
         StaffController.user_identity_number = deepCopy.identity_number;
 
-      /*   if (selectedData.address_area_id > 0)
+        if (selectedData.address_area_id > 0)
         {
             document.getElementById('addressArea_textbox').style.visibility = 'visible';
             document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
@@ -1241,7 +1241,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         {
             document.getElementById('birthplaceArea_textbox').style.display = 'none';
             document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
-        } */
+        }
     }
 
     function setStaffDataFromExternalSearchData(selectedData)
@@ -1279,7 +1279,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
         StaffController.user_identity_number = deepCopy.identity_number;
 
-       /*  if (selectedData.address_area_id > 0)
+        if (selectedData.address_area_id > 0)
         {
             document.getElementById('addressArea_textbox').style.visibility = 'visible';
             document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
@@ -1297,7 +1297,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         {
             document.getElementById('birthplaceArea_textbox').style.display = 'none';
             document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
-        } */
+        }
     
     }
 
