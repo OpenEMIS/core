@@ -62,182 +62,6 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $this->schoolClosedDays = $this->getSchoolClosedDate($requestData);
     }
 
-    // public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    // {
-    //     $requestData = json_decode($settings['process']['params']);
-    //     $sheetData = $settings['sheet']['sheetData'];
-    //     $academicPeriodId = $requestData->academic_period_id;
-    //     $educationGradesId = $requestData->education_grade_id;
-    //     $year = $sheetData['year'];
-    //     $month = $sheetData['month'];
-    //     $startDay = $sheetData['startDay'];
-    //     $endDay = $sheetData['endDay'];
-    //     $schoolClosedDays = $this->schoolClosedDays;
-    //     $institution_id = $requestData->institution_id;
-    //     $areaId = $requestData->area_education_id;
-    //     $reportStartDate = date('Y-m-d', strtotime($requestData->report_start_date));
-    //     $reportEndDate = date('Y-m-d', strtotime($requestData->report_end_date));
-    //     $where = [];
-    //     if ($institution_id != 0) {
-    //         $where['Institutions.id'] = $institution_id;
-    //     }
-    //     if ($areaId != -1) {
-    //         $where['Institutions.area_id'] = $areaId;
-    //     }
-    //     $query
-    //         ->find('byGrades', [
-    //             'education_grade_id' => $educationGradesId,
-    //         ])
-    //         ->contain([
-    //             'Institutions' => [
-    //                 'fields' => [
-    //                     'Institutions.id',
-    //                     'Institutions.code',
-    //                     'Institutions.name'
-    //                 ]
-    //             ],
-    //             'Institutions.Areas' => [
-    //                 'fields' => [
-    //                     'Areas.name',
-    //                     'Areas.code'
-    //                 ]
-    //             ],
-    //             'Institutions.AreaAdministratives' => [
-    //                 'fields' => [
-    //                     'AreaAdministratives.code',
-    //                     'AreaAdministratives.name'
-    //                 ]
-    //             ],
-    //             'Institutions.Types' => [
-    //                 'fields' => [
-    //                     'Types.name'
-    //                 ]
-    //             ],
-    //             'InstitutionShifts.ShiftOptions' => [
-    //                 'fields' => [
-    //                     'ShiftOptions.name'
-    //                 ]
-    //             ],
-    //             'EducationGrades' => [
-    //                 'fields' => [
-    //                     'InstitutionClassGrades.institution_class_id',
-    //                     'EducationGrades.id',
-    //                     'EducationGrades.code',
-    //                     'EducationGrades.name'
-    //                 ]
-    //             ],
-    //             'AcademicPeriods' => [
-    //                 'fields' => [
-    //                     'AcademicPeriods.name'
-    //                 ]
-    //             ],
-    //             'Staff' => [
-    //                 'fields' => [
-    //                     'Staff.id',
-    //                     'Staff.first_name',
-    //                     'Staff.middle_name',
-    //                     'Staff.third_name',
-    //                     'Staff.last_name',
-    //                     'Staff.preferred_name'
-    //                 ]
-    //             ],
-    //             'ClassAttendanceRecords' => function ($q) use ($academicPeriodId, $year, $month) {
-    //                 return $q
-    //                     ->where([
-    //                         'ClassAttendanceRecords.academic_period_id' => $academicPeriodId,
-    //                         'ClassAttendanceRecords.year' => $year,
-    //                         'ClassAttendanceRecords.month' => $month
-    //                     ]);
-    //             }
-    //         ])
-    //         ->select([
-    //             $this->aliasField('id'),
-    //             $this->aliasField('name'),
-    //             'institution_id' => 'Institutions.id',
-    //             'institution_code' => 'Institutions.code',
-    //             'institution_name' => 'Institutions.name',
-    //             'institution_type' => 'Types.name',
-    //             'academic_period_name' => 'AcademicPeriods.name',
-    //             'staff_id' => 'Staff.id',
-    //             'shift_name' => 'ShiftOptions.name',
-    //             'education_stage_order' => $query->func()->min('EducationStages.order'),
-    //             'total_mark' => 'marking_info.marked_records',
-    //             'total_unmark' => "(CASE WHEN marking_info.unmarked_records > '0' THEN 'marking_info.unmarked_records'
-    //                 ELSE 0 END)"
-    //             //'marking_info.unmarked_records'
-    //         ])
-    //         //POCOR-7039
-    //         ->join([
-    //             'marking_info' => [
-    //                 'type' => 'inner',
-    //                 'table' => '(SELECT total_students.institution_id, total_students.institution_class_id, @total_stud := total_students.total_student_count * @WD, @marked_records := IFNULL(marked_students.marked_student_count, 0) marked_records, @total_stud - @marked_records unmarked_records FROM ( SELECT institution_class_students.institution_id, institution_class_students.institution_class_id, COUNT(institution_class_students.student_id) total_student_count FROM institution_class_students WHERE institution_class_students.academic_period_id = '.$academicPeriodId.' GROUP BY institution_class_students.institution_id, institution_class_students.institution_class_id) total_students
-    //                     LEFT JOIN (SELECT student_attendance_marked_records.institution_id, student_attendance_marked_records.institution_class_id, COUNT(*) marked_student_count FROM student_attendance_marked_records, (SELECT @S := "'.$reportStartDate.'", @E := "'.$reportEndDate.'", @WD := 5 * (DATEDIFF(@E, @S) DIV 7) + MID("0123444401233334012222340111123400001234000123440", 7 * WEEKDAY(@S) + WEEKDAY(@E) + 1, 1)) r WHERE student_attendance_marked_records.date BETWEEN @S AND @E GROUP BY student_attendance_marked_records.institution_id,  student_attendance_marked_records.institution_class_id
-    //                         ) marked_students ON marked_students.institution_id = total_students.institution_id AND marked_students.institution_class_id = total_students.institution_class_id ) ',
-    //                 'conditions' => [
-    //                     'marking_info.institution_class_id = ' . $this->aliasField('id'),
-    //                     'marking_info.institution_id = ' . $this->aliasField('institution_id')
-    //                 ]
-    //             ],
-    //         ])
-    //         ->where([
-    //             $this->aliasField('academic_period_id') => $academicPeriodId,
-    //             $where
-    //         ])
-    //         ->group([
-    //             $this->aliasField('id')
-    //         ])
-    //         ->order([
-    //             'institution_name' => 'ASC',
-    //             'education_stage_order' => 'ASC',
-    //             $this->aliasField('name') => 'ASC'
-    //         ])
-    //         ->formatResults(function (ResultSetInterface $results) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
-    //             return $results->map(function ($row) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
-    //                 $institutionId = $row->institution_id;
-    //                 $mark= 0;
-    //                 $unmark= 0;
-    //                 if (!empty($row->class_attendance_records)) {
-    //                     $attendanceRecord = $row->class_attendance_records[0];
-    //                 }
-
-    //                 for ($day = $startDay; $day <= $endDay; ++$day) {
-    //                     $dayColumn = 'day_' . $day;
-    //                     $dayFormat = (new DateTime($year . '-' . $month . '-' . $day))->format('Y-m-d');
-    //                     $dayText = (new DateTime($year . '-' . $month . '-' . $day))->format('l');
-
-    //                     if(in_array($dayText, $this->workingDays)){
-    //                         if (isset($schoolClosedDays[$institutionId]) &&
-    //                             isset($schoolClosedDays[$institutionId][$dayFormat]) &&
-    //                             $schoolClosedDays[$institutionId][$dayFormat] == 0) {
-    //                                 $status = __('School Closed');
-    //                         } elseif (isset($attendanceRecord)) {
-    //                             if ($attendanceRecord[$dayColumn] == MarkedType::MARKED) {
-    //                                 $status = __('Marked');
-    //                                 $mark++;
-    //                             } elseif ($attendanceRecord[$dayColumn] == MarkedType::PARTIAL_MARKED) {
-    //                                 $status = __('Partial Marked');
-    //                                 $unmark++;
-    //                             } else { // MarkedType::NOT_MARKED
-    //                                 $status = __('Not Marked');
-    //                                 $unmark++;
-    //                             }
-    //                         } else {
-    //                             // no school closed and no attendances record found - default to NOT_MARKED
-    //                             $status = __('Not Marked');
-    //                         }
-    //                     }
-
-    //                     //$row->total_mark = $mark;
-    //                     //$row->total_unmark = $unmark;
-    //                     $row->{$dayColumn} = $status;
-    //                 }
-    //                 //Enf of POCOR-7039
-    //                 return $row;
-    //             });
-    //         })
-    //     ;
-    // }
-
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
@@ -340,9 +164,9 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $where
             ])
-            // ->group([
-            //     $this->aliasField('id')
-            // ])
+            ->group([
+                $this->aliasField('id')
+            ])
             ->order([
                 'institution_name' => 'ASC',
                 'education_stage_order' => 'ASC',
@@ -351,8 +175,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             ->formatResults(function (ResultSetInterface $results) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
                 return $results->map(function ($row) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
                     $institutionId = $row->institution_id;
-                    $mark= 0;
-                    $unmark= 0;
+                    // $mark= 0;
+                    // $unmark= 0;
                     if (!empty($row->class_attendance_records)) {
                         $attendanceRecord = $row->class_attendance_records[0];
                     }
@@ -370,10 +194,10 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                             } elseif (isset($attendanceRecord)) {
                                 if ($attendanceRecord[$dayColumn] == MarkedType::MARKED) {
                                     $status = __('Marked');
-                                    $mark++;
+                                    //$mark++;
                                 } elseif ($attendanceRecord[$dayColumn] == MarkedType::PARTIAL_MARKED) {
                                     $status = __('Partial Marked');
-                                    $unmark++;
+                                    //$unmark++;
                                 } else { // MarkedType::NOT_MARKED
                                     $status = __('Not Marked');
                                     $unmark++;
@@ -383,15 +207,17 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                                 $status = __('Not Marked');
                             }
                         }
+                        // $row->total_mark = $mark;
+                        // $row->total_unmark = $unmark;
                         $row->{$dayColumn} = $status;
                     }
-// print_r($row); die;
                     return $row;
                 });
             })
         ;
          
     }
+
 
     
 
@@ -528,21 +354,23 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             'type' => 'string',
             'label' => ''
         ];
+        //POCOR-7039
 
         // $newFields[] = [
         //     'key' => '',
-        //     'field' => 'abc',
+        //     'field' => 'total_mark',
         //     'type' => 'string',
         //     'label' => 'Marked'
         // ];
 
         // $newFields[] = [
-        //     'key' => 'InstitutionClasses.Unmarked',
+        //     'key' => '',
         //     'field' => 'total_unmark',
         //     'type' => 'string',
         //     'label' => 'Unmarked'
         // ]; 
-
+                     
+        //End of POCOR-7039
         $newFields[] = [
             'key' => 'InstitutionClasses.staff_id',
             'field' => 'staff_id',
