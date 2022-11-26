@@ -1221,8 +1221,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function setStudentData(selectedData) {
-        StudentController.selectedStudentData.addressArea = {};
-        StudentController.selectedStudentData.birthplaceArea = {};
+        StudentController.selectedStudentData.addressArea = {
+            id: selectedData.address_area_id,
+            name: selectedData.area_name,
+            code: selectedData.area_code
+        };
+        StudentController.selectedStudentData.birthplaceArea = {
+            id: selectedData.birthplace_area_id,
+            name: selectedData.birth_area_name,
+            code: selectedData.birth_area_code
+        };
         StudentController.selectedStudentData.openemis_no = selectedData.openemis_no;
         StudentController.selectedStudentData.first_name = selectedData.first_name;
         StudentController.selectedStudentData.middle_name = selectedData.middle_name;
@@ -1249,9 +1257,40 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.isSameSchool = selectedData.is_same_school > 0 ? true : false;
         StudentController.isDiffSchool = selectedData.is_diff_school > 0 ? true : false;
         StudentController.selectedStudentData.currentlyAllocatedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.current_enrol_institution_name;
+
+        if (selectedData.address_area_id > 0)
+        {
+            document.getElementById('addressArea_textbox').style.visibility = 'visible';
+            document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('addressArea_textbox').style.display = 'none';
+            document.getElementById('addressArea_dropdown').style.visibility = 'visible';
+        }
+
+        if (selectedData.birthplace_area_id > 0)
+        {
+            document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('birthplaceArea_textbox').style.display = 'none';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+        }
     }
 
-    function setStudentDataFromExternalSearchData(selectedData) {
+    function setStudentDataFromExternalSearchData(selectedData)
+    {
+        StudentController.selectedStudentData.addressArea = {
+            id: selectedData.address_area_id,
+            name: selectedData.area_name,
+            code: selectedData.area_code
+        };
+        StudentController.selectedStudentData.birthplaceArea = {
+            id: selectedData.birthplace_area_id,
+            name: selectedData.birth_area_name,
+            code: selectedData.birth_area_code
+        };
         StudentController.selectedStudentData.openemis_no = selectedData.openemis_no;
         StudentController.selectedStudentData.first_name = selectedData.first_name;
         StudentController.selectedStudentData.middle_name = selectedData.middle_name;
@@ -1274,6 +1313,26 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
         var todayDate = new Date();
         StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+
+        if (selectedData.address_area_id > 0)
+        {
+            document.getElementById('addressArea_textbox').style.visibility = 'visible';
+            document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('addressArea_textbox').style.display = 'none';
+            document.getElementById('addressArea_dropdown').style.visibility = 'visible';
+        }
+
+        if (selectedData.birthplace_area_id > 0)
+        {
+            document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('birthplaceArea_textbox').style.display = 'none';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+        }
     }
 
     StudentController.getStudentTransferReason = function() {
