@@ -359,8 +359,13 @@
                         <label><?= __('Postal Code') ?></label>
                         <input ng-model="selectedUserData.postalCode" type="string">
                     </div>
+                    <!-- Address area start -->
                     <div class="row section-header header-space-lg">Address Area</div>
-                    <div class="input string">
+                    <div class="input string" id="addressArea_textbox" style="visibility:hidden">
+                        <label><?= __('Address Area') ?></label>
+                        <input ng-model="selectedUserData.addressArea.name" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string" id="addressArea_dropdown">
                         <label><?= __('Address Area') ?></label>
                         <div
                             class="tree-form"
@@ -370,8 +375,15 @@
                             <kd-tree-dropdown-ng id="address_area_id-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="addressAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
                         </div>
                     </div>
+                    <!-- Address area end -->
+                    <!-- Birthplace area start -->
                     <div class="row section-header header-space-lg">Birthplace Area</div>
-                    <div class="input string">
+                    <div class="input string" id="birthplaceArea_textbox" style="visibility:hidden">
+                        <label><?= __('Birthplace Area') ?></label>
+                        <input ng-model="selectedUserData.birthplaceArea.name" type="string" ng-disabled="true">
+                    </div>
+
+                    <div class="input string" id="birthplaceArea_dropdown">
                         <label><?= __('Birthplace Area') ?></label>
                         <div
                             class="tree-form"
@@ -381,6 +393,7 @@
                             <kd-tree-dropdown-ng id="birthplace_area-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="birthplaceAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
                         </div>
                     </div>
+                    <!-- Birthplace area end -->
                     <div class="row section-header header-space-lg">Identities / Nationalities</div>
                     <div class="input string">
                         <label><?= __('Nationalities') ?></label>
