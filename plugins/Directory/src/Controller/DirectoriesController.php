@@ -1433,7 +1433,7 @@ class DirectoriesController extends AppController
 
             $is_same_school = $is_diff_school = $academic_period_id = $academic_period_year = 0;
             $education_grade_id = $institution_id = $institution_code = $institution_name = '';
-            
+            $CustomDataArray = [];
             if (!empty($userTypeId)) {
                 if($userTypeId == 1){
                     $account_type = 'Student';
@@ -1472,6 +1472,8 @@ class DirectoriesController extends AppController
                             $is_diff_school = 1;
                         }
                     }
+                    //get student custom data
+                    $CustomDataArray = $this->getStudentCustomData($result['id']);
                 }else if($userTypeId == 2){
                     $account_type = 'Staff';
                     $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
@@ -1536,6 +1538,8 @@ class DirectoriesController extends AppController
                             $positionArray[$skey] = $sval->institution_position_id;  
                         }
                     }
+                    //get staff custom data
+                    $CustomDataArray = $this->getStaffCustomData($result['id']);
                 }else if($userTypeId ==3){
                     $account_type = 'Guardian';
                 }else{
@@ -1543,10 +1547,142 @@ class DirectoriesController extends AppController
                 }
             }
 
-            $result_array[] = array('id' => $result['id'],'username' => $result['username'],'password' => $result['password'],'openemis_no' => $result['openemis_no'],'first_name' => $result['first_name'],'middle_name' => $result['middle_name'],'third_name' => $result['third_name'],'last_name' => $result['last_name'],'preferred_name' => $result['preferred_name'],'email' => $result['email'],'address' => $result['address'],'postal_code' => $result['postal_code'],'gender_id' => $result['gender_id'],'external_reference' => $result['external_reference'],'last_login' => $result['last_login'],'photo_name' => $result['photo_name'],'photo_content' => $result['photo_content'],'preferred_language' => $result['preferred_language'],'address_area_id' => $result['address_area_id'],'birthplace_area_id' => $result['birthplace_area_id'],'super_admin' => $result['super_admin'],'status' => $result['status'],'is_student' => $result['is_student'],'is_staff' => $result['is_staff'],'is_guardian' => $result['is_guardian'],'name'=>$result['first_name']." ".$result['last_name'],'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'),'gender'=>$result['Genders_name'],'nationality_id'=>$MainNationalities_id,'nationality'=>$MainNationalities_name,'identity_type_id'=>$MainIdentityTypes_id,'identity_type'=>$MainIdentityTypes_name,'identity_number'=>$identity_number,'has_special_needs'=>$has_special_needs,'area_name'=>$result['area_name'],'area_code'=>$result['area_code'],'birth_area_name'=>$result['birth_area_name'],'birth_area_code'=>$result['birth_area_code'], 'is_same_school'=>$is_same_school, 'is_diff_school'=>$is_diff_school, 'current_enrol_institution_id'=> $institution_id, 'current_enrol_institution_name'=> $institution_name, 'current_enrol_institution_code'=> $institution_code, 'current_enrol_academic_period_id'=> $academic_period_id, 'current_enrol_academic_period_year'=> $academic_period_year, 'current_enrol_education_grade_id'=> $education_grade_id, 'institution_name'=>$institutionsTbl->institution_name, 'institution_code'=>$institutionsTbl->institution_code, 'positions'=>$positionArray, 'account_type'=> $account_type);
+            $result_array[] = array('id' => $result['id'],'username' => $result['username'],'password' => $result['password'],'openemis_no' => $result['openemis_no'],'first_name' => $result['first_name'],'middle_name' => $result['middle_name'],'third_name' => $result['third_name'],'last_name' => $result['last_name'],'preferred_name' => $result['preferred_name'],'email' => $result['email'],'address' => $result['address'],'postal_code' => $result['postal_code'],'gender_id' => $result['gender_id'],'external_reference' => $result['external_reference'],'last_login' => $result['last_login'],'photo_name' => $result['photo_name'],'photo_content' => $result['photo_content'],'preferred_language' => $result['preferred_language'],'address_area_id' => $result['address_area_id'],'birthplace_area_id' => $result['birthplace_area_id'],'super_admin' => $result['super_admin'],'status' => $result['status'],'is_student' => $result['is_student'],'is_staff' => $result['is_staff'],'is_guardian' => $result['is_guardian'],'name'=>$result['first_name']." ".$result['last_name'],'date_of_birth'=>$result['date_of_birth']->format('Y-m-d'),'gender'=>$result['Genders_name'],'nationality_id'=>$MainNationalities_id,'nationality'=>$MainNationalities_name,'identity_type_id'=>$MainIdentityTypes_id,'identity_type'=>$MainIdentityTypes_name,'identity_number'=>$identity_number,'has_special_needs'=>$has_special_needs,'area_name'=>$result['area_name'],'area_code'=>$result['area_code'],'birth_area_name'=>$result['birth_area_name'],'birth_area_code'=>$result['birth_area_code'], 'is_same_school'=>$is_same_school, 'is_diff_school'=>$is_diff_school, 'current_enrol_institution_id'=> $institution_id, 'current_enrol_institution_name'=> $institution_name, 'current_enrol_institution_code'=> $institution_code, 'current_enrol_academic_period_id'=> $academic_period_id, 'current_enrol_academic_period_year'=> $academic_period_year, 'current_enrol_education_grade_id'=> $education_grade_id, 'institution_name'=>$institutionsTbl->institution_name, 'institution_code'=>$institutionsTbl->institution_code, 'positions'=>$positionArray, 'account_type'=> $account_type, 'custom_data'=>$CustomDataArray);
         }
         echo json_encode(['data' => $result_array, 'total' => $totalCount], JSON_PARTIAL_OUTPUT_ON_ERROR); die;
     }
+    //POCOR-7072 starts
+    public function getStaffCustomData($staff_id=null){
+        $staffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
+        $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
+        $staffCustomFields = TableRegistry::get('staff_custom_fields');
+        $staffCustomData = $staffCustomFieldValues->find()
+            ->select([
+                    'id'                             => $staffCustomFieldValues->aliasField('id'),
+                    'custom_id'                      => 'staffCustomField.id',
+                    'staff_id'                     => $staffCustomFieldValues->aliasField('staff_id'),
+                    'staff_custom_field_id'        => $staffCustomFieldValues->aliasField('staff_custom_field_id'),
+                    'text_value'                     => $staffCustomFieldValues->aliasField('text_value'),
+                    'number_value'                   => $staffCustomFieldValues->aliasField('number_value'),
+                    'decimal_value'                  => $staffCustomFieldValues->aliasField('decimal_value'),
+                    'textarea_value'                 => $staffCustomFieldValues->aliasField('textarea_value'),
+                    'date_value'                     => $staffCustomFieldValues->aliasField('date_value'),
+                    'time_value'                     => $staffCustomFieldValues->aliasField('time_value'),
+                    'option_value_text'              => $staffCustomFieldOptions->aliasField('name'),
+                    'name'                           => 'staffCustomField.name',
+                    'field_type'                     => 'staffCustomField.field_type',
+                ])->leftJoin(
+                ['staffCustomField' => 'staff_custom_fields'],
+                [
+                    'staffCustomField.id = '.$staffCustomFieldValues->aliasField('staff_custom_field_id')
+                ])
+                ->leftJoin(
+                [$staffCustomFieldOptions->alias() => $staffCustomFieldOptions->table()],
+                [
+                    $staffCustomFieldOptions->aliasField('staff_custom_field_id = ') . $staffCustomFieldValues->aliasField('staff_custom_field_id'),
+                    $staffCustomFieldOptions->aliasField('id = ') . $staffCustomFieldValues->aliasField('number_value')
+                ])
+                ->where([
+                $staffCustomFieldValues->aliasField('staff_id') => $staff_id,
+                ])->hydrate(false)->toArray();
+        $custom_field = array();
+        $count = 0;
+        if(!empty($staffCustomData)){
+            foreach ($staffCustomData as $val) {
+                $custom_field['custom_field'][$count]["id"] = (!empty($val['custom_id']) ? $val['custom_id'] : '');
+                $custom_field['custom_field'][$count]["name"]= (!empty($val['name']) ? $val['name'] : '');
+                $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
+                $fieldType = $fieldTypes[$count];
+                if($fieldType == 'TEXT'){
+                    $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                }else if ($fieldType == 'CHECKBOX') {
+                    $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                }else if ($fieldType == 'NUMBER') {
+                    $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
+                }else if ($fieldType == 'DECIMAL') {
+                    $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                }else if ($fieldType == 'TEXTAREA') {
+                    $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                }else if ($fieldType == 'DROPDOWN') {
+                    $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                }else if ($fieldType == 'DATE') {
+                    $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
+                }else if ($fieldType == 'TIME') {
+                    $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
+                }else if ($fieldType == 'COORDINATES') {
+                    $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                }
+                $count++;
+            }
+        }
+        return $custom_field;
+    }
+
+    public function getStudentCustomData($student_id=null){
+        $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
+        $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
+        $studentCustomFields = TableRegistry::get('student_custom_fields');
+        $studentCustomData = $studentCustomFieldValues->find()
+            ->select([
+                    'id'                             => $studentCustomFieldValues->aliasField('id'),
+                    'custom_id'                      => 'studentCustomField.id',
+                    'student_id'                     => $studentCustomFieldValues->aliasField('student_id'),
+                    'student_custom_field_id'        => $studentCustomFieldValues->aliasField('student_custom_field_id'),
+                    'text_value'                     => $studentCustomFieldValues->aliasField('text_value'),
+                    'number_value'                   => $studentCustomFieldValues->aliasField('number_value'),
+                    'decimal_value'                  => $studentCustomFieldValues->aliasField('decimal_value'),
+                    'textarea_value'                 => $studentCustomFieldValues->aliasField('textarea_value'),
+                    'date_value'                     => $studentCustomFieldValues->aliasField('date_value'),
+                    'time_value'                     => $studentCustomFieldValues->aliasField('time_value'),
+                    'option_value_text'              => $studentCustomFieldOptions->aliasField('name'),
+                    'name'                           => 'studentCustomField.name',
+                    'field_type'                     => 'studentCustomField.field_type',
+                ])->leftJoin(
+                ['studentCustomField' => 'student_custom_fields'],
+                [
+                    'studentCustomField.id = '.$studentCustomFieldValues->aliasField('student_custom_field_id')
+                ])
+                ->leftJoin(
+                [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                [
+                    $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
+                    $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
+                ])
+                ->where([
+                $studentCustomFieldValues->aliasField('student_id') => $student_id,
+                ])->hydrate(false)->toArray();
+        $custom_field = array();
+        $count = 0;
+        if(!empty($studentCustomData)){
+            foreach ($studentCustomData as $val) {
+                $custom_field['custom_field'][$count]["id"] = (!empty($val['custom_id']) ? $val['custom_id'] : '');
+                $custom_field['custom_field'][$count]["name"]= (!empty($val['name']) ? $val['name'] : '');
+                $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
+                $fieldType = $fieldTypes[$count];
+                if($fieldType == 'TEXT'){
+                    $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                }else if ($fieldType == 'CHECKBOX') {
+                    $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                }else if ($fieldType == 'NUMBER') {
+                    $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
+                }else if ($fieldType == 'DECIMAL') {
+                    $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                }else if ($fieldType == 'TEXTAREA') {
+                    $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                }else if ($fieldType == 'DROPDOWN') {
+                    $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                }else if ($fieldType == 'DATE') {
+                    $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
+                }else if ($fieldType == 'TIME') {
+                    $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
+                }else if ($fieldType == 'COORDINATES') {
+                    $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                }
+                $count++;
+            }
+        }
+        return $custom_field;
+    }//POCOR-7072 ends
 
     public function getCountInernalSearch($conditions = [], $identityNumber, $identityCondition = [], $userTypeCondition = []){
         $security_users = TableRegistry::get('security_users');
