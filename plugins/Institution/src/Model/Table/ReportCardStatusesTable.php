@@ -110,6 +110,44 @@ class ReportCardStatusesTable extends ControllerActionTable
                     '0' => 'download',
                     '1' => $this->paramsEncode($params)
                 ];
+
+                //Start POCOR-7060
+
+                $loginUserIdUser = $this->Auth->user('id');
+
+                $securityGroupInstitutions = TableRegistry::get('Security.securityGroupInstitutions');
+
+                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+
+                $SecurityGroupInstitutionsData = $securityGroupInstitutions
+                ->find()        
+                ->where([
+                    $securityGroupInstitutions->aliasField('institution_id') => $entity->institution_id])
+                ->toArray();
+
+                $securityGroupIds = [];
+                if (!empty($SecurityGroupInstitutionsData)) {
+                    foreach ($SecurityGroupInstitutionsData as $value) {
+                        $securityGroupIds[] = $value->security_group_id;
+                    }
+                }
+
+                $SecurityGroupUsersData = $SecurityGroupUsers
+                ->find()        
+                ->innerJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
+                    $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
+                ])
+                ->where([
+                    $SecurityGroupUsers->aliasField('security_group_id IN') => $securityGroupIds,
+                    $SecurityGroupUsers->aliasField('security_user_id IN') => $loginUserIdUser
+                ])
+                ->group([$SecurityGroupUsers->aliasField('security_role_id')])
+                ->order([$SecurityRoles->aliasField('order') => 'ASC'])
+                ->first();
+                //End POCOR-7060
+
+
                 //POCOR:6838 START
                 $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
                 $SecurityFunctionsDownloadExcelData = $SecurityFunctions
@@ -120,10 +158,11 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableDownloadExcelData = $SecurityRoleFunctionsTable
-                                    ->find()
-                                    ->where([
-                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id])
-                                    ->first();
+                ->find()
+                ->where([
+                    $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id,
+                    $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id]) //POCOR-7060
+                ->first();
                 
                 if ($this->AccessControl->isAdmin()) {
                     $buttons['download'] = [
@@ -157,10 +196,12 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableDownloadPdfData = $SecurityRoleFunctionsTable
-                                    ->find()
-                                    ->where([
-                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadPdfData->id])
-                                    ->first();
+                ->find()
+                ->where([
+                    $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadPdfData->id,
+                    $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id  //POCOR-7060
+                ])
+                ->first();
 
                 if ($this->AccessControl->isAdmin()) {
                     $buttons['downloadPdf'] = [
@@ -211,10 +252,12 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableGenerateData = $SecurityRoleFunctionsTable
-                                    ->find()
-                                    ->where([
-                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateData->id])
-                                    ->first();
+                ->find()
+                ->where([
+                    $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateData->id,
+                    $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id  //POCOR-7060
+                ])
+                ->first();
                 //POCOR-6838: End
                 
                 if ($this->AccessControl->isAdmin()) {
