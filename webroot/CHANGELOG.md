@@ -1,3 +1,11 @@
+### [3.76.1] - 2022-11-29
+- Bug Fixed: Administration>System Setup>Configurations: Student webhook is not showing custom fields
+- Bug Fixed: Directory > Students > Academic > Report Cards tab: Report card is published but cannot see details
+- Bug Fixed: Institutions>Performance>Report Cards: Download button that disappears and then reappears
+- Bug Fixed: Institution>Performance>Report Cards: Download all is not working
+- Bug Fixed: Administration>Performance>Report Cards: Pages should change to sheets
+- Bug Fixed: API: Api should return education grade id and education subject id
+
 ### [3.76.0] - 2022-11-24
 - Implemented: Record validation when adding guardians
 - Implemented: Implement database foreign keys for OpenEMIS Core
