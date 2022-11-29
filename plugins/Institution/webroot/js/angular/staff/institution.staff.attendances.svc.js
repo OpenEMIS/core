@@ -643,13 +643,13 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     function saveStaffAttendance(params, dataKey, dataValue, academicPeriodId) {
         var dateString = params.data.date;
-        var shift_id = params.context.date;
+        //var shift_id = params.context.date;
         var staffAttendanceData = {
             staff_id: params.data.staff_id,
             institution_id: params.data.institution_id,
             academic_period_id: academicPeriodId,
             date: dateString,
-            shift_id: shift_id, //POCOR-6971
+           // shift_id: shift_id, //POCOR-6971
             time_in: params.data.attendance[dateString].time_in,
             time_out: params.data.attendance[dateString].time_out,
             comment: params.data.attendance[dateString].comment
