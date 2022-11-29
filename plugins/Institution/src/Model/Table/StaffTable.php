@@ -3181,6 +3181,7 @@ class StaffTable extends ControllerActionTable
                 ])
                 ->hydrate(false)
                 ->toArray();
+              //  print_r($allStaffAttendances->Sql());die;
         }
         $allStaffLeaves = $StaffLeaveTable
             ->find()
@@ -3512,7 +3513,13 @@ class StaffTable extends ControllerActionTable
         $institutionStaff = TableRegistry::get('institution_staff');
         $positions = TableRegistry::get('Institution.InstitutionPositions');
         $shiftOption = TableRegistry::get('shift_options');
+        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
         $staffShiftsData =  $query
+                            ->leftJoin(
+                                [$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
+                                [
+                                    $InstitutionStaffAttendances->aliasField('staff_id = ') . $this->aliasField('id')
+                                ])
                            ->leftJoin(
                                 [$positions->alias() => $positions->table()],
                                 [
@@ -3530,7 +3537,9 @@ class StaffTable extends ControllerActionTable
                                 //'endTime'   => $this->aliasField('end_time'),
                              ])
                             ->where([
-                             $this->aliasField('staff_id') => $staffId,
+                            // $this->aliasField('staff_id') => $staffId,
+                             $InstitutionStaffAttendances->aliasField('staff_id') => $staffId,
+
                             ])->first();
 
         return $staffShiftsData;
