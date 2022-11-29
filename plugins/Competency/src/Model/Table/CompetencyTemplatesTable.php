@@ -47,6 +47,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
                 ]
             ]);
     }
+    
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -207,6 +208,17 @@ class CompetencyTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
+    //Start:POCOR-7066
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $RecordAlready = $this->find()->where(['education_grade_id'=> $entity->education_grade_id, 'academic_period_id'=>$entity->academic_period_id])->first();
+        if(!empty($RecordAlready)){
+            $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+            return false;
+        }
+    }
+    //End:POCOR-7066
+
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {  
         if (empty($entity->errors())) {
@@ -223,8 +235,18 @@ class CompetencyTemplatesTable extends ControllerActionTable
             $url = $this->url('view');
             $url[] = $pass;
             $extra['redirect'] = $this->setQueryString($url, ['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
-            $this->Alert->success('Templates.addSuccess', ['reset' => true]);
+            $RecordAlready = $this->find()->where(['education_grade_id'=> $entity->education_grade_id, 'academic_period_id'=>$entity->academic_period_id])->first();
+            //Start:POCOR-7066
+            if(!empty($RecordAlready)){
+                $this->Alert->error('Templates.alreadyexist', ['reset' => true]);
+            }else{
+                $this->Alert->success('Templates.addSuccess', ['reset' => true]);
+            }
+            //End:POCOR-7066
+            
         }
+        
+        
     }
 
     public function getAcademicPeriodOptions($querystringPeriod)
