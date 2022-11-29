@@ -918,15 +918,16 @@ class ReportCardsTable extends AppTable
             foreach ($studentAbsenceResults as $key => $obj) {
                 $checkstudent = $InstitutionStudentAbsenceDetails->find()->select(['period'=>$InstitutionStudentAbsenceDetails->aliasField('period')])->where([$InstitutionStudentAbsenceDetails->aliasField('student_id')=>$params['student_id'],$InstitutionStudentAbsenceDetails->aliasField('education_grade_id')=>$obj['education_grade_id'],$InstitutionStudentAbsenceDetails->aliasField('institution_class_id')=>$obj['institution_class_id']])->toArray();
                 $periodCount = count($checkstudent);
+                $checkdata = $studentAttendanceMarkedRecords->find()->select(['institution_class_id'=>$studentAttendanceMarkedRecords->aliasField('institution_class_id')])->where([$studentAttendanceMarkedRecords->aliasField('period')=>1,$studentAttendanceMarkedRecords->aliasField('period')=>2,$studentAttendanceMarkedRecords->aliasField('institution_class_id')=>$obj['institution_class_id']])->toArray();
                 $absenceType = $absenceTypes[$obj['absence_type_id']];
 
                 if (in_array($absenceType, ['EXCUSED', 'UNEXCUSED'])) {
                     // add if else condition for count total absent based on configuration POCOR-7050
-                    if($periodCount==2 && $configVal ==2){
+                    if($periodCount==2 && $configVal ==2 && !empty($checkdata)){
                         $results['TOTAL_ABSENCE']['number_of_days'] += 1;
-                    }elseif($periodCount==1 && $configVal ==2){
+                    }elseif($periodCount==1 && $configVal ==2 && !empty($checkdata)){
                         $results['TOTAL_ABSENCE']['number_of_days'] += 0;
-                    }elseif($periodCount==1 || $periodCount==2 || $configVal==1){
+                    }elseif($periodCount==1 && $configVal ==2 && empty($checkdata)){
                         $results['TOTAL_ABSENCE']['number_of_days'] += 1;
                     }else{
                         $results['TOTAL_ABSENCE']['number_of_days'] += 1;
