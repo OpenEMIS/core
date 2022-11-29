@@ -2499,23 +2499,28 @@ class StudentsTable extends ControllerActionTable
 
 			foreach ($attendances as $key => $attendance) {
 				$attendanceData[$attendance['education_grade_id']] = $attendance['education_grade'];
-                $checkstudent = $InstitutionStudentAbsenceDetails->find()->select(['period'=>$InstitutionStudentAbsenceDetails->aliasField('period')])->where([$InstitutionStudentAbsenceDetails->aliasField('student_id')=>$attendance['student_id'],$InstitutionStudentAbsenceDetails->aliasField('education_grade_id')=>$attendance['education_grade_id'],$InstitutionStudentAbsenceDetails->aliasField('institution_class_id')=>$attendance['institution_class_id']])->toArray();
+                $checkstudent = $InstitutionStudentAbsenceDetails->find()->select(['period'=>$InstitutionStudentAbsenceDetails->aliasField('period')])->where([$InstitutionStudentAbsenceDetails->aliasField('student_id')=>$attendance['student_id'],$InstitutionStudentAbsenceDetails->aliasField('education_grade_id')=>$attendance['education_grade_id'],$InstitutionStudentAbsenceDetails->aliasField('institution_class_id')=>$attendance['institution_class_id'],$InstitutionStudentAbsenceDetails->aliasField('date') => date('Y-m-d')])->toArray();
                 $periodCount = count($checkstudent);
+                $checkdata = $studentAttendanceMarkedRecords->find()->select(['institution_class_id'=>$studentAttendanceMarkedRecords->aliasField('institution_class_id')])->where([$studentAttendanceMarkedRecords->aliasField('period')=>1,$studentAttendanceMarkedRecords->aliasField('period')=>2,$studentAttendanceMarkedRecords->aliasField('institution_class_id')=>$attendance['institution_class_id']])->toArray();
 				if(!empty($attendance['attendance'])) {
 					foreach ($attendance['attendance'] as $key => $markAttendanceData) {
                         //add these if else condition for dashboard count data //POCOR-7050
-                        if($configOption==2 && $periodCount==1){
+                        if($configOption==2 && $periodCount==1 && !empty($checkdata)){
                             $total_present = $markAttendanceData->present + $total_present;
                             $absent = $markAttendanceData->absent;
                             $total_present = $total_present + $absent;
                             $total_late = $markAttendanceData->late + $total_late;
-                        }elseif($configOption==2 && $periodCount==2){
+                        }elseif($configOption==2 && $periodCount==2 && !empty($checkdata)){
                             $total_present = $markAttendanceData->present + $total_present;
                             $total_absent = $markAttendanceData->absent + $total_absent;
                             $total_late = $markAttendanceData->late + $total_late;
-                        }elseif($configOption==2 && $periodCount==0){
+                        }elseif($configOption==2 && $periodCount==0 && !empty($checkdata)){
                             $total_present = $markAttendanceData->present + $total_present;
-                           // $total_absent = $markAttendanceData->absent + $total_absent;
+                            $total_absent = $markAttendanceData->absent + $total_absent;
+                            $total_late = $markAttendanceData->late + $total_late;
+                        }elseif($configOption==2 && $periodCount==1 && empty($checkdata)){
+                            $total_present = $markAttendanceData->present + $total_present;
+                            $total_absent = $markAttendanceData->absent + $total_absent;
                             $total_late = $markAttendanceData->late + $total_late;
                         }else{
     						$total_present = $markAttendanceData->present + $total_present;
