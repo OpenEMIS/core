@@ -213,8 +213,11 @@ class CompetencyTemplatesTable extends ControllerActionTable
     {
         $RecordAlready = $this->find()->where(['education_grade_id'=> $entity->education_grade_id, 'academic_period_id'=>$entity->academic_period_id])->first();
         if(!empty($RecordAlready)){
+            $entity->alreayexit = 1;
             $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
             return false;
+        }else{
+            $entity->alreayexit = 0;
         }
     }
     //End:POCOR-7066
@@ -235,9 +238,8 @@ class CompetencyTemplatesTable extends ControllerActionTable
             $url = $this->url('view');
             $url[] = $pass;
             $extra['redirect'] = $this->setQueryString($url, ['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
-            $RecordAlready = $this->find()->where(['education_grade_id'=> $entity->education_grade_id, 'academic_period_id'=>$entity->academic_period_id])->first();
             //Start:POCOR-7066
-            if(!empty($RecordAlready)){
+            if($entity->alreayexit == 1){
                 $this->Alert->error('Templates.alreadyexist', ['reset' => true]);
             }else{
                 $this->Alert->success('Templates.addSuccess', ['reset' => true]);
