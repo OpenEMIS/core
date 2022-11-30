@@ -555,8 +555,6 @@ class StudentsTable extends ControllerActionTable
 						])->where([
 							$this->aliasField('student_id') => $entity->student_id
 						]);
-
-
 			if (!empty($bodyData)) {
 				foreach ($bodyData as $key => $value) {
 					$user_id = $value->user->id;
@@ -618,11 +616,9 @@ class StudentsTable extends ControllerActionTable
 							$endDate = $date;
 						}
 					}
-
 				}
 			}
 			$body = array();
-
 			$body = [
 				'security_users_id' => !empty($user_id) ? $user_id : NULL,
 				'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
@@ -653,7 +649,70 @@ class StudentsTable extends ControllerActionTable
 				'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
 				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
 			];
-
+            //POCOR-7078 start
+            $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
+            $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
+            $studentCustomFields = TableRegistry::get('student_custom_fields');
+            $studentCustomData = $studentCustomFieldValues->find()
+                ->select([
+                        'id'                             => $studentCustomFieldValues->aliasField('id'),
+                        'custom_id'                      => 'studentCustomField.id',
+                        'student_id'                     => $studentCustomFieldValues->aliasField('student_id'),
+                        'student_custom_field_id'        => $studentCustomFieldValues->aliasField('student_custom_field_id'),
+                        'text_value'                     => $studentCustomFieldValues->aliasField('text_value'),
+                        'number_value'                   => $studentCustomFieldValues->aliasField('number_value'),
+                        'decimal_value'                  => $studentCustomFieldValues->aliasField('decimal_value'),
+                        'textarea_value'                 => $studentCustomFieldValues->aliasField('textarea_value'),
+                        'date_value'                     => $studentCustomFieldValues->aliasField('date_value'),
+                        'time_value'                     => $studentCustomFieldValues->aliasField('time_value'),
+                        'option_value_text'              => $studentCustomFieldOptions->aliasField('name'),
+                        'name'                           => 'studentCustomField.name',
+                        'field_type'                     => 'studentCustomField.field_type',
+                    ])->leftJoin(
+                    ['studentCustomField' => 'student_custom_fields'],
+                    [
+                        'studentCustomField.id = '.$studentCustomFieldValues->aliasField('student_custom_field_id')
+                    ])
+                    ->leftJoin(
+                    [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                    [
+                        $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
+                        $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
+                    ])
+                    ->where([
+                    $studentCustomFieldValues->aliasField('student_id') => $user_id,
+                    ])->hydrate(false)->toArray();
+            $custom_field = array();
+            $count = 0;
+            if(!empty($studentCustomData)){
+                foreach ($studentCustomData as $val) {
+                    $custom_field['custom_field'][$count]["id"] = (!empty($val['custom_id']) ? $val['custom_id'] : '');
+                    $custom_field['custom_field'][$count]["name"]= (!empty($val['name']) ? $val['name'] : '');
+                    $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
+                    $fieldType = $fieldTypes[$count];
+                    if($fieldType == 'TEXT'){
+                        $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                    }else if ($fieldType == 'CHECKBOX') {
+                        $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                    }else if ($fieldType == 'NUMBER') {
+                        $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
+                    }else if ($fieldType == 'DECIMAL') {
+                        $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                    }else if ($fieldType == 'TEXTAREA') {
+                        $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                    }else if ($fieldType == 'DROPDOWN') {
+                        $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                    }else if ($fieldType == 'DATE') {
+                        $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
+                    }else if ($fieldType == 'TIME') {
+                        $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
+                    }else if ($fieldType == 'COORDINATES') {
+                        $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                    }
+                    $count++;
+                }
+            }
+            $body = array_merge($bodys, $custom_field);//POCOR-7078 end
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
 			if (!empty($entity->created_user_id)) {
 				$Webhooks->triggerShell('student_create', ['username' => ''], $body);
