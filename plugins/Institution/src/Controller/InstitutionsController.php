@@ -6617,6 +6617,7 @@ class InstitutionsController extends AppController
     {
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
         if(!empty($requestData)){
             $identityTypeId = (array_key_exists('identity_type_id', $requestData))? $requestData['identity_type_id'] : null;
             $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
