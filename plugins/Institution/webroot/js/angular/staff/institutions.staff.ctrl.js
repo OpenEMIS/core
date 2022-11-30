@@ -1091,7 +1091,19 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
     }
 
-    function goToNextStep() {
+    async function goToNextStep()
+    {
+        
+        /* Here check the user identity number is already exist or not */
+       const result = await InstitutionsStaffSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': StaffController.selectedStaffData.identity_type_id,
+            'identity_number': StaffController.selectedStaffData.identity_number,
+            'nationality_id': StaffController.selectedStaffData.nationality_id
+       })
+        
+        console.log(result)
+        return;
+
         if(StaffController.isInternalSearchSelected) {
             if (StaffController.staffData && StaffController.staffData.is_diff_school)
             {
