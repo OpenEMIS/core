@@ -3465,18 +3465,20 @@ class InstitutionsController extends AppController
         }
 
         // Filter by active status
-        $activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
+        $ActiveStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
+        $ActStatus = array_values($ActiveStatusId);
+        $ActiveStatusId = $ActStatus[0];
+        // Filter by Inactive status
         $InactiveStatus = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'INACTIVE');
         $InactiveStatusId = array_values($InactiveStatus[0]);
         $positionConditions = [];
         $positionConditions[$StaffTable->Positions->aliasField('institution_id')] = $institutionId;
-        $positionConditions[$StaffTable->Positions->aliasField('status_id IS NOT')] = $InactiveStatusId;//POCOR-7016
+        $positionConditions[$StaffTable->Positions->aliasField('status_id')] = $ActiveStatusId;//POCOR-7016
         /* START : POCOR-6450
         if (!empty($activeStatusId)) {
             $positionConditions[$StaffTable->Positions->aliasField('status_id').' IN '] = $activeStatusId;
         }
         END : POCOR-6450 */
-
         // START : POCOR-6450
         $SecurityUsers = TableRegistry::get('Security.SecurityUsers');
         $SecurityUsersData = $SecurityUsers->find()
@@ -3505,7 +3507,6 @@ class InstitutionsController extends AppController
          * END
          * @ticket POCOR-6522
          */
-
         if ($selectedFTE > 0) {
             $staffPositionsOptions = $StaffTable->Positions
                 ->find()
@@ -3556,10 +3557,8 @@ class InstitutionsController extends AppController
             }
         }
         // end POCOR-4269
-
         foreach ($staffPositionsOptions as $position) {
             $name = $position->name . ' - ' . $position->grade_name;
-
             $type = __($types[$position->type]);
             $options[] = ['value' => $position->id, 'group' => $type, 'name' => $name, 'disabled' => in_array($position->id, $excludePositions)];
         }
