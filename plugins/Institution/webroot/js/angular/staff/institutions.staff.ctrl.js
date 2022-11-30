@@ -204,7 +204,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                         fieldData.text_value = field.answer;
                     }
                     if (field.field_type === 'TEXTAREA'){
-                        field.textarea_value = field.answer;
+                        fieldData.textarea_value = field.answer;
                     }
                     if(field.field_type === 'NUMBER') {
                         fieldData.number_value = field.answer;
@@ -1155,6 +1155,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.isExternalSearchSelected = false;
         StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         StaffController.getStaffData();
+        StaffController.getStaffCustomFields();
     }
 
     StaffController.selectStaffFromExternalSearch = function(id) {
@@ -1163,6 +1164,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.isExternalSearchSelected = true;
         StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         StaffController.getStaffData();
+        StaffController.getStaffCustomFields();
     }
 
     StaffController.getStaffData = function() {
