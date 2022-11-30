@@ -5740,6 +5740,39 @@ class InstitutionsController extends AppController
                     }
                 }
 
+                if(!empty($custom)){
+                    //if staff custom field values already exist in `staff_custom_field_values` table the delete the old values and insert the new ones.
+                    $staffCustomFieldValues =  TableRegistry::get('staff_custom_field_values');
+                    $StaffCustomFieldValuesCount = $staffCustomFieldValues
+                                                        ->find()
+                                                        ->where([$staffCustomFieldValues->aliasField('staff_id') => $user_record_id])
+                                                        ->count();
+                    if($StaffCustomFieldValuesCount > 0){
+                        $staffCustomFieldValues->deleteAll(['staff_id' => $user_record_id]);
+                    }
+                    foreach ($custom as $skey => $sval) {
+                        $entityCustomData = [
+                            'id' => Text::uuid(),
+                            'text_value' => $sval['text_value'],
+                            'number_value' => $sval['number_value'],
+                            'decimal_value' => $sval['decimal_value'],
+                            'textarea_value' => $sval['textarea_value'],
+                            'date_value' => $sval['date_value'],
+                            'time_value' => $sval['time_value'],
+                            'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
+                            'staff_custom_field_id' => $sval['staff_custom_field_id'],
+                            'staff_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+                        //save in staff_custom_field_values table
+                        $entityCustomData = $staffCustomFieldValues->newEntity($entityCustomData);
+                        $staffCustomFieldsResult = $staffCustomFieldValues->save($entityCustomData);
+                        unset($staffCustomFieldsResult);
+                        unset($entityCustomData);
+                    }
+                }
+
                 try{
                     die('success');
                 }catch (Exception $e) {
@@ -6010,6 +6043,7 @@ class InstitutionsController extends AppController
                                                             ->find()
                                                             ->where([$staffCustomFieldValues->aliasField('staff_id') => $user_record_id])
                                                             ->count();
+
                         if($StaffCustomFieldValuesCount > 0){
                             $staffCustomFieldValues->deleteAll(['staff_id' => $user_record_id]);
                         }
