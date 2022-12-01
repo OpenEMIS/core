@@ -126,15 +126,19 @@ class StudentReportCardsTable extends ControllerActionTable
         $downloadAccess = false;
         if ($this->controller->name == 'Students') {
             $downloadAccess = $this->AccessControl->check(['Students', 'ReportCards', 'download']);
+            $downloadExcel = $this->AccessControl->check(['Students', 'ReportCard', 'download']);
         } else if ($this->controller->name == 'Directories') {
             $downloadAccess = $this->AccessControl->check(['Directories', 'StudentReportCards', 'download']);
+            $downloadExcel = $this->AccessControl->check(['Directories', 'StudentReportCard', 'download']);
         } else if ($this->controller->name == 'Profiles') {
             $downloadAccess = $this->AccessControl->check(['Profiles', 'StudentReportCards', 'download']);
+            $downloadExcel = $this->AccessControl->check(['Profiles', 'StudentReportCard', 'download']);
             // unset($buttons['view']);
         }
         /**POCOR-6845 starts - Added condition to get download button when logged in as Guardian*/  
         else if ($this->controller->name == 'GuardianNavs') {
             $downloadAccess = $this->AccessControl->check(['GuardianNavs', 'StudentReportCards', 'download']);
+            $downloadExcel = $this->AccessControl->check(['GuardianNavs', 'StudentReportCard', 'download']);
         }
         /**POCOR-6845 ends*/
         if ($downloadAccess) {
@@ -150,11 +154,31 @@ class StudentReportCardsTable extends ControllerActionTable
             $url[1] = $this->paramsEncode($params);
 
             $buttons['downloadPdf'] = [
-                'label' => '<i class="fa kd-download"></i>'.__('Download'),
+                'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
                 'attr' => ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false],
                 'url' => $url
             ];
         }
+
+        if ($downloadExcel) {
+            $params = [
+                'report_card_id' => $entity->report_card_id,
+                'student_id' => $entity->student_id,
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'education_grade_id' => $entity->education_grade_id
+            ];
+
+            $url = $this->url('download');
+            $url[1] = $this->paramsEncode($params);
+
+            $buttons['download'] = [
+                'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+                'attr' => ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false],
+                'url' => $url
+            ];
+        }
+
         return $buttons;
     }
 
