@@ -1068,4 +1068,26 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             UtilsSvc.isAppendLoader(false);
         });
     }
+
+
+    async function checkUserAlreadyExistByIdentity()
+    {
+        const result = await InstitutionsStaffSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': StaffController.selectedStaffData.identity_type_id,
+            'identity_number': StaffController.selectedStaffData.identity_number,
+            'nationality_id': StaffController.selectedStaffData.nationality_id
+        });
+        if (result.data.user_exist === 1)
+        {
+            StaffController.messageClass = 'alert-warning';
+            StaffController.message = result.data.message;
+            StaffController.isIdentityUserExist = true;
+        } else
+        {
+            StaffController.messageClass = '';
+            StaffController.message = '';
+            StaffController.isIdentityUserExist = false;
+        }
+        /*  return result.data.user_exist === 1; */
+    }
 }
