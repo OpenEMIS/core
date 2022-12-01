@@ -634,6 +634,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.error.education_grade_id = '';
         StudentController.getClasses();
 
+        const date_of_birth = StudentController.selectedStudentData.date_of_birth.split('-')[2].length;
+        if (!educationGrade && date_of_birth !== 4) return;
         // POCOR-5672
         const dateOfBirthValidationResponse =await InstitutionsStudentsSvc.getDateOfBirthValidation({ date_of_birth: StudentController.selectedStudentData.date_of_birth, education_grade_id: educationGrade })
         const { validation_error,min_age,max_age } = dateOfBirthValidationResponse.data[0];
