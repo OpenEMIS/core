@@ -104,6 +104,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.transferStudent = transferStudent;
     StudentController.setStudentDataFromExternalSearchData = setStudentDataFromExternalSearchData;
     StudentController.transferStudentNextStep = transferStudentNextStep;
+    StudentController.isIdentityUserExist = false;
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
@@ -881,7 +882,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
-    function goToNextStep() {
+    async function goToNextStep() {
         if(StudentController.isInternalSearchSelected) {
             if(StudentController.studentData && StudentController.studentData.is_same_school) {
                 StudentController.step = 'summary';
@@ -920,6 +921,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         } else {
             switch(StudentController.step){
                 case 'user_details': 
+                    await checkUserAlreadyExistByIdentity();
                     StudentController.validateDetails();
                     break;
                 case 'internal_search': 
@@ -1197,6 +1199,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.isInternalSearchSelected = true;
         StudentController.isExternalSearchSelected = false;
         StudentController.getStudentData();
+
+        if (StudentController.isIdentityUserExist)
+        {
+            StudentController.messageClass = '';
+            StudentController.message = '';
+            StudentController.isIdentityUserExist = false;
+        }
     }
 
     StudentController.selectStudentFromExternalSearch = function(id) {
@@ -1525,5 +1534,26 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var endDateYear = splitEndDate[splitEndDate.length - 1];
         startDatePicker.datepicker("setStartDate", "01-01-" + endDateYear);
         startDatePicker.datepicker("setEndDate", '31-12-' + endDateYear);
+    }
+
+    async function checkUserAlreadyExistByIdentity()
+    {
+        const result = await InstitutionsStudentsSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': StudentController.selectedStudentData.identity_type_id,
+            'identity_number': StudentController.selectedStudentData.identity_number,
+            'nationality_id': StudentController.selectedStudentData.nationality_id
+        });
+        if (result.data.user_exist === 1)
+        {
+            StudentController.messageClass = 'alert-warning';
+            StudentController.message = result.data.message;
+            StudentController.isIdentityUserExist = true;
+        } else
+        {
+            StudentController.messageClass = '';
+            StudentController.message = '';
+            StudentController.isIdentityUserExist = false;
+        }
+        /*  return result.data.user_exist === 1; */
     }
 }
