@@ -1,3 +1,8 @@
+### [3.76.2] - 2022-12-01
+- Implemented: Develop a function to download Student Report Cards in Excel format
+- Bug Fixed: Administration>Performance>Competencies: Education programme becomes empty when selected
+- Bug Fixed: Institutions>Performance>Report Cards: Pdf configuration is set to one but it is printing two worksheets
+
 ### [3.76.1] - 2022-11-29
 - Bug Fixed: Administration>System Setup>Configurations: Student webhook is not showing custom fields
 - Bug Fixed: Directory > Students > Academic > Report Cards tab: Report card is published but cannot see details
