@@ -29,6 +29,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.error = {};
     scope.studentOpenEmisId;
     scope.isInternalSearchSelected = false;
+    scope.isIdentityUserExist = false;
 
     scope.datepickerOptions = {
         minDate: new Date('01/01/1900'),
@@ -1072,21 +1073,21 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     async function checkUserAlreadyExistByIdentity()
     {
-        const result = await InstitutionsStaffSvc.checkUserAlreadyExistByIdentity({
-            'identity_type_id': StaffController.selectedStaffData.identity_type_id,
-            'identity_number': StaffController.selectedStaffData.identity_number,
-            'nationality_id': StaffController.selectedStaffData.nationality_id
+        const result = await DirectoryaddguardianSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': scope.selectedStaffData.identity_type_id,
+            'identity_number': scope.selectedStaffData.identity_number,
+            'nationality_id': scope.selectedStaffData.nationality_id
         });
         if (result.data.user_exist === 1)
         {
-            StaffController.messageClass = 'alert-warning';
-            StaffController.message = result.data.message;
-            StaffController.isIdentityUserExist = true;
+            scope.messageClass = 'alert-warning';
+            scope.message = result.data.message;
+            scope.isIdentityUserExist = true;
         } else
         {
-            StaffController.messageClass = '';
-            StaffController.message = '';
-            StaffController.isIdentityUserExist = false;
+            scope.messageClass = '';
+            scope.message = '';
+            scope.isIdentityUserExist = false;
         }
         /*  return result.data.user_exist === 1; */
     }
