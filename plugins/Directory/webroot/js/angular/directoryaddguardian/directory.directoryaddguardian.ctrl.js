@@ -879,6 +879,13 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         scope.selectedGuardian = id;
         scope.isInternalSearchSelected = true;
         scope.getGuardianData();
+
+        if (scope.isIdentityUserExist)
+        {
+            scope.messageClass = '';
+            scope.message = '';
+            scope.isIdentityUserExist = false;
+        }
     }
 
     scope.selectGuardianFromExternalSearch = function(id) {

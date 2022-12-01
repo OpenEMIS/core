@@ -950,6 +950,13 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         scope.selectedUser = id;
         scope.isInternalSearchSelected = true;
         scope.getUserData();
+
+        if (scope.isIdentityUserExist)
+        {
+            scope.messageClass = '';
+            scope.message = '';
+            scope.isIdentityUserExist = false;
+        }
     }
 
     scope.selectUserFromExternalSearch = function(id) {
