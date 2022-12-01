@@ -47,6 +47,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     };
     scope.addressAreaId = null;
     scope.birthplaceAreaId = null;
+    scope.isIdentityUserExist = false;
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -1412,21 +1413,21 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     async function checkUserAlreadyExistByIdentity()
     {
-        const result = await InstitutionsStaffSvc.checkUserAlreadyExistByIdentity({
-            'identity_type_id': StaffController.selectedStaffData.identity_type_id,
-            'identity_number': StaffController.selectedStaffData.identity_number,
-            'nationality_id': StaffController.selectedStaffData.nationality_id
+        const result = await DirectoryaddSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': scope.selectedStaffData.identity_type_id,
+            'identity_number': scope.selectedStaffData.identity_number,
+            'nationality_id': scope.selectedStaffData.nationality_id
         });
         if (result.data.user_exist === 1)
         {
-            StaffController.messageClass = 'alert-warning';
-            StaffController.message = result.data.message;
-            StaffController.isIdentityUserExist = true;
+            scope.messageClass = 'alert-warning';
+            scope.message = result.data.message;
+            scope.isIdentityUserExist = true;
         } else
         {
-            StaffController.messageClass = '';
-            StaffController.message = '';
-            StaffController.isIdentityUserExist = false;
+            scope.messageClass = '';
+            scope.message = '';
+            scope.isIdentityUserExist = false;
         }
         /*  return result.data.user_exist === 1; */
     }
