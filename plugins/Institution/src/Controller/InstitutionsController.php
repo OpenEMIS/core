@@ -5361,25 +5361,25 @@ class InstitutionsController extends AppController
                     }
 
                     try{
-                        /*$InstitutionStudents = TableRegistry::get('Institution.Students');
+                        //for sending webhook while student update / create
+                        $InstitutionStudents = TableRegistry::get('Institution.Students');
                         $bodyData = $InstitutionStudents->find('all',
-                                                [ 'contain' => [
-                                                    'Institutions',
-                                                    'EducationGrades',
-                                                    'AcademicPeriods',
-                                                    'StudentStatuses',
-                                                    'Users',
-                                                    'Users.Genders',
-                                                    'Users.MainNationalities',
-                                                    'Users.Identities.IdentityTypes',
-                                                    'Users.AddressAreas',
-                                                    'Users.BirthplaceAreas',
-                                                    'Users.Contacts.ContactTypes'
-                                                ],
+                                        [ 'contain' => [
+                                            'Institutions',
+                                            'EducationGrades',
+                                            'AcademicPeriods',
+                                            'StudentStatuses',
+                                            'Users',
+                                            'Users.Genders',
+                                            'Users.MainNationalities',
+                                            'Users.Identities.IdentityTypes',
+                                            'Users.AddressAreas',
+                                            'Users.BirthplaceAreas',
+                                            'Users.Contacts.ContactTypes'
+                                        ],
                                     ])->where([
-                                        $InstitutionStudents->aliasField('student_id') => $afterSaveOrDeleteEntity->id
+                                        $InstitutionStudents->aliasField('student_id') => $user_record_id
                                     ]);
-
                         
                         if (!empty($bodyData)) { 
                             foreach ($bodyData as $key => $value) { 
@@ -5400,8 +5400,7 @@ class InstitutionsController extends AppController
                                 $birthplaceArea = $value->user->birthplace_area->name;
                                 $role = $value->user->is_student;
                                 
-                                $contactValue = [];
-                                $contactType = [];
+                                $contactValue = $contactType = [];
                                 if(!empty($value->user['contacts'])) {
                                     foreach ($value->user['contacts'] as $key => $contact) {
                                         $contactValue[] = $contact->value;
@@ -5409,8 +5408,7 @@ class InstitutionsController extends AppController
                                     }
                                 }
                                 
-                                $identityNumber = [];
-                                $identityType = [];
+                                $identityNumber = $identityType = [];
                                 if(!empty($value->user['identities'])) {
                                     foreach ($value->user['identities'] as $key => $identity) {
                                         $identityNumber[] = $identity->number;
@@ -5431,7 +5429,6 @@ class InstitutionsController extends AppController
                             }
                         }
                         $bodys = array();
-                               
                         $bodys = [   
                             'security_users_id' => !empty($user_id) ? $user_id : NULL,
                             'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
@@ -5470,19 +5467,19 @@ class InstitutionsController extends AppController
                         $studentCustomFields = TableRegistry::get('student_custom_fields');
                         $studentCustomData = $studentCustomFieldValues->find()
                             ->select([
-                                    'id'                             => $studentCustomFieldValues->aliasField('id'),
-                                    'custom_id'                      => 'studentCustomField.id',
-                                    'student_id'                     => $studentCustomFieldValues->aliasField('student_id'),
-                                    'student_custom_field_id'        => $studentCustomFieldValues->aliasField('student_custom_field_id'),
-                                    'text_value'                     => $studentCustomFieldValues->aliasField('text_value'),
-                                    'number_value'                   => $studentCustomFieldValues->aliasField('number_value'),
-                                    'decimal_value'                  => $studentCustomFieldValues->aliasField('decimal_value'),
-                                    'textarea_value'                 => $studentCustomFieldValues->aliasField('textarea_value'),
-                                    'date_value'                     => $studentCustomFieldValues->aliasField('date_value'),
-                                    'time_value'                     => $studentCustomFieldValues->aliasField('time_value'),
-                                    'option_value_text'              => $studentCustomFieldOptions->aliasField('name'),
-                                    'name'                           => 'studentCustomField.name',
-                                    'field_type'                     => 'studentCustomField.field_type',
+                                    'id' => $studentCustomFieldValues->aliasField('id'),
+                                    'custom_id' => 'studentCustomField.id',
+                                    'student_id'=> $studentCustomFieldValues->aliasField('student_id'),
+                                    'student_custom_field_id' => $studentCustomFieldValues->aliasField('student_custom_field_id'),
+                                    'text_value' => $studentCustomFieldValues->aliasField('text_value'),
+                                    'number_value' => $studentCustomFieldValues->aliasField('number_value'),
+                                    'decimal_value' => $studentCustomFieldValues->aliasField('decimal_value'),
+                                    'textarea_value'=> $studentCustomFieldValues->aliasField('textarea_value'),
+                                    'date_value' => $studentCustomFieldValues->aliasField('date_value'),
+                                    'time_value' => $studentCustomFieldValues->aliasField('time_value'),
+                                    'option_value_text' => $studentCustomFieldOptions->aliasField('name'),
+                                    'name' => 'studentCustomField.name',
+                                    'field_type' => 'studentCustomField.field_type',
                                 ])->leftJoin(
                                 ['studentCustomField' => 'student_custom_fields'],
                                 [
@@ -5530,10 +5527,12 @@ class InstitutionsController extends AppController
                         $body = array_merge($bodys, $custom_field);//POCOR-7078 end
                         if (!empty($body)) {
                             $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                            if (!empty($afterSaveOrDeleteEntity->modified_user_id)) {
+                            if (!empty($studentId)) {
                                 $Webhooks->triggerShell('student_update', ['username' => ''], $body);
+                            }else{
+                                $Webhooks->triggerShell('student_create', ['username' => ''], $body);
                             }
-                        }*/
+                        }
                         
                         die('success');        
                     }catch(Exception $e){
