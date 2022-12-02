@@ -67,6 +67,13 @@
     clear: both!important;
     height: auto !important;
 }
+
+.alert_warn{
+    color: #8a6d3b !important;
+    border-color: #faebcc !important;
+    background-color: #E6BA64 !important;
+    border: 1px solid #E6BA64 !important;
+}
 </style>
 
 <link data-require="bootstrap@3.3.2" data-semver="3.3.2" rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
