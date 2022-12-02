@@ -250,7 +250,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             params = { ...params, identity_number: StaffController.user_identity_number }
             StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         }
-            
         InstitutionsStaffSvc.saveStaffDetails(params).then(function (resp)
         {
             StaffController.selectedStaffData.identity_number = resp.config.data.identity_number;
@@ -573,7 +572,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                         maxDate: new Date('01/01/2100'),
                         showWeeks: false
                     };
-                    fieldData.answer = new Date(fieldData.values);
+                    const splitDate = fieldData.values.split('-').map((d=> parseInt(d)));
+                    fieldData.answer = fieldData.values === "" ? new Date() : new Date(splitDate[0], splitDate[1]-1, splitDate[2]) ;
                 }
                 if(fieldData.field_type === 'TIME') {
                     fieldData.hourStep = 1;
