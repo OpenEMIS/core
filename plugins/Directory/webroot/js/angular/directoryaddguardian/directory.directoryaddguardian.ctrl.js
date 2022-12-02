@@ -651,13 +651,14 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         }
     }
 
-    scope.goToNextStep = function() {
+    scope.goToNextStep = async function() {
         if(scope.isInternalSearchSelected) {
             scope.step = 'confirmation';
             scope.getUniqueOpenEmisId();
         } else {
             switch(scope.step){
                 case 'user_details': 
+                    await checkUserAlreadyExistByIdentity()
                     scope.validateDetails();
                     break;
                 case 'internal_search': 
@@ -1081,13 +1082,13 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     async function checkUserAlreadyExistByIdentity()
     {
         const result = await DirectoryaddguardianSvc.checkUserAlreadyExistByIdentity({
-            'identity_type_id': scope.selectedStaffData.identity_type_id,
-            'identity_number': scope.selectedStaffData.identity_number,
-            'nationality_id': scope.selectedStaffData.nationality_id
+            'identity_type_id': scope.selectedUserData.identity_type_id,
+            'identity_number': scope.selectedUserData.identity_number,
+            'nationality_id': scope.selectedUserData.nationality_id
         });
         if (result.data.user_exist === 1)
         {
-            scope.messageClass = 'alert-warning';
+            scope.messageClass = 'alert-warn';
             scope.message = result.data.message;
             scope.isIdentityUserExist = true;
         } else
