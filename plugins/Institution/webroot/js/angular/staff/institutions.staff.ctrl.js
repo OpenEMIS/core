@@ -57,6 +57,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.isEnableBirthplaceArea = false;
     StaffController.isEnableAddressArea = false;
     StaffController.isIdentityUserExist = false;
+    StaffController.disableFields = {
+        username: false,
+        pasword: false
+    }
 
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
@@ -1164,12 +1168,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         StaffController.getStaffData();
         StaffController.getStaffCustomFields();
-
         if (StaffController.isIdentityUserExist)
         {
             StaffController.messageClass = '';
             StaffController.message = '';
             StaffController.isIdentityUserExist = false;
+        }
+        StaffController.disableFields = {
+            username: true,
+            password: true,
         }
     }
 
@@ -1180,6 +1187,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         StaffController.getStaffData();
         StaffController.getStaffCustomFields();
+        StaffController.disableFields = {
+            username: false,
+            password: false,
+        }
     }
 
     StaffController.getStaffData = function() {
