@@ -48,6 +48,10 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.addressAreaId = null;
     scope.birthplaceAreaId = null;
     scope.isIdentityUserExist = false;
+    scope.disableFields = {
+        username: false,
+        password: false
+    }
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -958,12 +962,21 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             scope.message = '';
             scope.isIdentityUserExist = false;
         }
+
+        scope.disableFields = {
+            username: true,
+            password: true
+        }
     }
 
     scope.selectUserFromExternalSearch = function(id) {
         scope.selectedUser = id;
         scope.isInternalSearchSelected = false;
         scope.getUserData();
+        scope.disableFields = {
+            username: false,
+            password: false
+        }
     }
 
     scope.setUserData = function (selectedData)

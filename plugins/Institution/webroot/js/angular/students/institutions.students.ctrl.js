@@ -56,6 +56,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         maxDate: new Date(),
         showWeeks: false
     };
+    StudentController.disableFields = {
+        username: false,
+        password:false
+    }
 
     //controller function
     StudentController.getUniqueOpenEmisId = getUniqueOpenEmisId;
@@ -635,17 +639,19 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.error.education_grade_id = '';
         StudentController.getClasses();
 
-        const date_of_birth = StudentController.selectedStudentData.date_of_birth.split('-')[2].length;
-        if (!educationGrade && date_of_birth !== 4) return;
-        // POCOR-5672
-        const dateOfBirthValidationResponse =await InstitutionsStudentsSvc.getDateOfBirthValidation({ date_of_birth: StudentController.selectedStudentData.date_of_birth, education_grade_id: educationGrade })
-        const { validation_error,min_age,max_age } = dateOfBirthValidationResponse.data[0];
-        if (validation_error === 1)
+        const date_of_birth = StudentController.selectedStudentData.date_of_birth.split('-')[2];
+        if (StudentController.selectedStudentData.education_grade_id !== undefined && date_of_birth.length === 4)
         {
-            StudentController.error.date_of_birth = `The student should be between ${min_age} to ${max_age} years old`;
-        } else if (validation_error === 0)
-        {
-            StudentController.error.date_of_birth = "";
+            // POCOR-5672
+            const dateOfBirthValidationResponse = await InstitutionsStudentsSvc.getDateOfBirthValidation({ date_of_birth: StudentController.selectedStudentData.date_of_birth, education_grade_id: educationGrade })
+            const { validation_error, min_age, max_age } = dateOfBirthValidationResponse.data[0];
+            if (validation_error === 1)
+            {
+                StudentController.error.date_of_birth = `The student should be between ${min_age} to ${max_age} years old`;
+            } else if (validation_error === 0)
+            {
+                StudentController.error.date_of_birth = "";
+            }
         }
     }
 
@@ -882,7 +888,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
-    async function goToNextStep() {
+    async function goToNextStep()
+    {
         if(StudentController.isInternalSearchSelected) {
             if(StudentController.studentData && StudentController.studentData.is_same_school) {
                 StudentController.step = 'summary';
@@ -1206,6 +1213,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.message = '';
             StudentController.isIdentityUserExist = false;
         }
+
+        StudentController.disableFields = {
+            username: true,
+            password:true
+        }
     }
 
     StudentController.selectStudentFromExternalSearch = function(id) {
@@ -1213,6 +1225,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.isInternalSearchSelected = false;
         StudentController.isExternalSearchSelected = true;
         StudentController.getStudentData();
+        StudentController.disableFields = {
+            username: false,
+            password: false
+        }
     }
 
     StudentController.getStudentData = function() {
