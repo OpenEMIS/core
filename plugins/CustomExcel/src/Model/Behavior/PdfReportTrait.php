@@ -339,8 +339,8 @@ trait PdfReportTrait
         }
         //POCOR-6916 end
         for ($sheetIndex = 0; $sheetIndex < $sheetCount; $sheetIndex++) {
-            //$sheetStatus = $objSpreadsheet->getSheet($sheetIndex)->getSheetState(); //POCOR-7077
-           // if($sheetStatus == 'visible'){ //POCOR-7077
+            $sheetStatus = $objSpreadsheet->getSheet($sheetIndex)->getSheetState(); //POCOR-7077
+            if($sheetStatus == 'visible'){ //POCOR-7077
                 $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
                 $filepath = $basePath.'_'.$sheetIndex;
                 $writer->setSheetIndex($sheetIndex);
@@ -361,7 +361,7 @@ trait PdfReportTrait
                 $mpdf->Output($filepath,'F');
                 $filePaths[] = $filepath;
                 unset($mdpf);
-            //}
+            }
         }
         // Merge all the pdf that belongs to one report
         if(!empty($student_id)) {
