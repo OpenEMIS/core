@@ -13,7 +13,6 @@ class POCOR7089 extends AbstractMigration
     public function up()
     {
         // Creating backup
-        $this->execute('DROP TABLE IF EXISTS `zz_7089_security_functions`');
         $this->execute('CREATE TABLE `zz_7089_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `zz_7089_security_functions` SELECT * FROM `security_functions`');
 
