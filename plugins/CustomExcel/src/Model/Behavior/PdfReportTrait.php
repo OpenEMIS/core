@@ -331,11 +331,15 @@ trait PdfReportTrait
         //POCOR-6916 start
         $reportCard = TableRegistry::get('report_cards');
         $configVal = $reportCard->find()->select(['pdf_no'=>$reportCard->aliasField('pdf_page_number')])->where([$reportCard->aliasField('id')=>$report_card_id])->first();
-        $configValue =  $configVal['pdf_no'];
-        if($configValue == -1){
-            $sheetCount = $objSpreadsheet->getSheetCount();
+        if(!empty($configValue)){ //POCOR-7096
+            $configValue =  $configVal['pdf_no'];
+            if($configValue == -1){
+                $sheetCount = $objSpreadsheet->getSheetCount();
+            }else{
+                $sheetCount = $configValue;
+            }
         }else{
-            $sheetCount = $configValue;
+            $sheetCount = $objSpreadsheet->getSheetCount();
         }
         //POCOR-6916 end
         for ($sheetIndex = 0; $sheetIndex < $sheetCount; $sheetIndex++) {

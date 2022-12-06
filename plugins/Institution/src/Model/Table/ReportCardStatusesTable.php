@@ -159,8 +159,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableDownloadExcelData = $SecurityRoleFunctionsTable
                 ->find()
-                ->where([
-                    $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id])->orWhere([$SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id]) //POCOR-7060 //POCOR-7060
+                ->where([$SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id])
+                ->orWhere([$SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id]) //POCOR-7060 //POCOR-7060
                 ->first();
                 
                 if ($this->AccessControl->isAdmin()) {
@@ -198,7 +198,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ->find()
                 ->where([
                     $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadPdfData->id])
-                    ->orWhere([
+                ->orWhere([
                     $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id  //POCOR-7060  //POCOR-7060
                 ])
                 ->first();
