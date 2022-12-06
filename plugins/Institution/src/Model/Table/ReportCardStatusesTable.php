@@ -159,10 +159,26 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableDownloadExcelData = $SecurityRoleFunctionsTable
                 ->find()
-                ->where([$SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id])
-                ->orWhere([$SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id]) //POCOR-7060 //POCOR-7060
-                ->first();
-                
+                ->where([
+                    $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id,
+                    $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
+                    $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id //POCOR-7060
+                    ])->first();
+
+                //POCOR-7096 start
+                if(empty($SecurityRoleFunctionsTableDownloadExcelData)){
+                    $SecurityRoleFunctionsTableDownloadExcelData = $SecurityRoleFunctionsTable
+                    ->find()
+                    ->where([
+                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id,
+                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
+                        ])
+                    ->orWhere([
+                        $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id 
+                    ])->first();
+                }
+                //POCOR-7096 end
+
                 if ($this->AccessControl->isAdmin()) {
                     $buttons['download'] = [
                         'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
@@ -178,7 +194,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ];
                     }
                 }
-				$downloadPdfUrl = [
+                $downloadPdfUrl = [
                     'plugin' => 'Institution',
                     'controller' => 'Institutions',
                     'action' => 'InstitutionStudentsReportCards',
@@ -197,12 +213,24 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $SecurityRoleFunctionsTableDownloadPdfData = $SecurityRoleFunctionsTable
                 ->find()
                 ->where([
-                    $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadPdfData->id])
-                ->orWhere([
-                    $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id  //POCOR-7060  //POCOR-7060
-                ])
-                ->first();
+                    $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadPdfData->id,
+                    $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
+                    $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id //POCOR-7060
+                    ])->first();
+                //POCOR-7096 start
+                if(empty($SecurityRoleFunctionsTableDownloadPdfData)) {
+                    $SecurityRoleFunctionsTableDownloadPdfData = $SecurityRoleFunctionsTable
+                    ->find()
+                    ->where([
+                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadPdfData->id,
+                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
+                        ])
+                    ->orWhere([
+                        $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id
+                    ])->first();
+                }
 
+                //POCOR-7096 end
                 if ($this->AccessControl->isAdmin()) {
                     $buttons['downloadPdf'] = [
                         'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
@@ -255,7 +283,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ->find()
                 ->where([
                     $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateData->id,
-                   // $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id  //POCOR-7060 // remove POCOR-7096
+                   // $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id  //POCOR-7060
                 ])
                 ->first();
                 //POCOR-6838: End
@@ -1371,6 +1399,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards '.$args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
+           // print_r($shellCmd);die('ok');
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);
