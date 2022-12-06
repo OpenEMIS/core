@@ -2,6 +2,7 @@
 namespace CustomExcel\Model\Behavior;
 
 use Cake\Log\Log;
+use Cake\ORM\TableRegistry;
 
 /*
     This trait is for ExcelReportBehavior.php
@@ -317,7 +318,7 @@ trait PdfReportTrait
     }
     //  ================ END REMOVE COLUMN AND ROW ================
 
-    private function savePDF($objSpreadsheet, $filepath, $student_id)
+    private function savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id)
     {
         Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
         // Convert spreadsheet object into html
@@ -327,27 +328,44 @@ trait PdfReportTrait
         $processedHtml = '';
         $filePaths = [];
         $basePath = $filepath;
-        for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $mpdf = new \Mpdf\Mpdf();
-            $filepath = $basePath.'_'.$sheetIndex;
-            $writer->setSheetIndex($sheetIndex);
-            $writer->save($filepath);
+        //POCOR-6916 start
+        $reportCard = TableRegistry::get('report_cards');
+        $configVal = $reportCard->find()->select(['pdf_no'=>$reportCard->aliasField('pdf_page_number')])->where([$reportCard->aliasField('id')=>$report_card_id])->first();
+        if(!empty($configValue)){
+            $configValue =  $configVal['pdf_no'];
+            if($configValue == -1){
+                $sheetCount = $objSpreadsheet->getSheetCount();
+            }else{
+                $sheetCount = $configValue;
+            }
+        }else{
+            $sheetCount = $objSpreadsheet->getSheetCount();
+        }
+        //POCOR-6916 end
+        for ($sheetIndex = 0; $sheetIndex < $sheetCount; $sheetIndex++) {
+            $sheetStatus = $objSpreadsheet->getSheet($sheetIndex)->getSheetState(); //POCOR-7077
+            if($sheetStatus == 'visible'){ //POCOR-7077
+                $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
+                $filepath = $basePath.'_'.$sheetIndex;
+                $writer->setSheetIndex($sheetIndex);
+                $writer->save($filepath);
 
-            // Read the html file and convert them into a variable
-            $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
+                // Read the html file and convert them into a variable
+                $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
 
-            // Remove all the redundant rows and columns
-            $processedHtml = $this->processHtml($file, $sheetIndex);
+                // Remove all the redundant rows and columns
+                $processedHtml = $this->processHtml($file, $sheetIndex);
 
-            // Save the processed html into a temp pdf
-            $mpdf->AddPage('L');
+                // Save the processed html into a temp pdf
+                $mpdf->AddPage('L');
 
-            $mpdf->WriteHTML($processedHtml);
-            $filepath = $filepath.'.pdf';
+                $mpdf->WriteHTML($processedHtml);
+                $filepath = $filepath.'.pdf';
 
-            $mpdf->Output($filepath,'F');
-            $filePaths[] = $filepath;
-            unset($mdpf);
+                $mpdf->Output($filepath,'F');
+                $filePaths[] = $filepath;
+                unset($mdpf);
+            }
         }
         // Merge all the pdf that belongs to one report
         if(!empty($student_id)) {
@@ -384,7 +402,7 @@ trait PdfReportTrait
         $filePaths = [];
         $basePath = $filepath;
         for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $mpdf = new \Mpdf\Mpdf();
+            $mpdf = $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
             $filepath = $basePath.'_'.$sheetIndex;
             $prefixName = 'AssessmentResults';
             $date =  date("Ymd:HHmmss");
@@ -429,7 +447,7 @@ trait PdfReportTrait
 
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
     {
-        $mpdf = new \Mpdf\Mpdf();
+        $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
@@ -461,13 +479,13 @@ trait PdfReportTrait
                 }
             }
         }
-		
+        
         $file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $outFile.'.pdf';
         $pdf_file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
         $content = $mpdf->Output($file_path, "S");
-		$fp = fopen($pdf_file_path . $outFile . ".txt","wb");
-		fwrite($fp,$content);
-		fclose($fp);
+        $fp = fopen($pdf_file_path . $outFile . ".txt","wb");
+        fwrite($fp,$content);
+        fclose($fp);
         unset($mpdf);
     }
 
