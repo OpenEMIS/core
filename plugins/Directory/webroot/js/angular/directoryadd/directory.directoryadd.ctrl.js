@@ -47,6 +47,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     };
     scope.addressAreaId = null;
     scope.birthplaceAreaId = null;
+    scope.isIdentityUserExist = false;
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -707,13 +708,14 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         }
     }
 
-    scope.goToNextStep = function() {
+    scope.goToNextStep = async function() {
         if(scope.isInternalSearchSelected) {
             scope.step = 'confirmation';
             scope.getUniqueOpenEmisId();
         } else {
             switch(scope.step){
                 case 'user_details': 
+                    await checkUserAlreadyExistByIdentity();
                     scope.internalGridOptions = null;
                     scope.validateDetails();
                     break;
@@ -949,6 +951,13 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         scope.selectedUser = id;
         scope.isInternalSearchSelected = true;
         scope.getUserData();
+
+        if (scope.isIdentityUserExist)
+        {
+            scope.messageClass = '';
+            scope.message = '';
+            scope.isIdentityUserExist = false;
+        }
     }
 
     scope.selectUserFromExternalSearch = function(id) {
@@ -957,7 +966,18 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         scope.getUserData();
     }
 
-    scope.setUserData = function(selectedData) {
+    scope.setUserData = function (selectedData)
+    {
+        scope.selectedUserData.addressArea = {
+            id: selectedData.address_area_id,
+            name: selectedData.area_name,
+            code: selectedData.area_code
+        };
+        scope.selectedUserData.birthplaceArea = {
+            id: selectedData.birthplace_area_id,
+            name: selectedData.birth_area_name,
+            code: selectedData.birth_area_code
+        };
         scope.selectedUserData.openemis_no = selectedData.openemis_no;
         scope.selectedUserData.first_name = selectedData.first_name;
         scope.selectedUserData.middle_name = selectedData.middle_name;
@@ -1000,9 +1020,40 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         $window.localStorage.setItem('address_area', JSON.stringify({id: selectedData.address_area_id, name: selectedData.area_name}));
         scope.addressAreaId = selectedData.address_area_id;
         scope.birthplaceAreaId = selectedData.birthplace_area_id;
+
+        if (selectedData.address_area_id > 0)
+        {
+            document.getElementById('addressArea_textbox').style.visibility = 'visible';
+            document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('addressArea_textbox').style.display = 'none';
+            document.getElementById('addressArea_dropdown').style.visibility = 'visible';
+        }
+
+        if (selectedData.birthplace_area_id > 0)
+        {
+            document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('birthplaceArea_textbox').style.display = 'none';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+        }
     }
 
-    scope.setExternalUserData = function(selectedData) {
+    scope.setExternalUserData = function (selectedData)
+    {
+        scope.selectedUserData.addressArea = {
+            id: selectedData.address_area_id,
+            name: selectedData.area_name,
+            code: selectedData.area_code
+        };
+        scope.selectedUserData.birthplaceArea = {
+            id: selectedData.birthplace_area_id,
+            name: selectedData.birth_area_name,
+            code: selectedData.birth_area_code
+        };
         scope.selectedUserData.openemis_no = selectedData.openemis_no;
         scope.selectedUserData.first_name = selectedData.first_name;
         scope.selectedUserData.middle_name = selectedData.middle_name;
@@ -1022,6 +1073,26 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         scope.selectedUserData.password = selectedData.password;
         scope.selectedUserData.address = selectedData.address;
         scope.selectedUserData.postalCode = selectedData.postal_code;
+
+        if (selectedData.address_area_id > 0)
+        {
+            document.getElementById('addressArea_textbox').style.visibility = 'visible';
+            document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('addressArea_textbox').style.display = 'none';
+            document.getElementById('addressArea_dropdown').style.visibility = 'visible';
+        }
+
+        if (selectedData.birthplace_area_id > 0)
+        {
+            document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('birthplaceArea_textbox').style.display = 'none';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+        }
     }
 
     scope.getUserData = function() {
@@ -1346,5 +1417,26 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             console.log(error);
             UtilsSvc.isAppendLoader(false);
         });
+    }
+
+    async function checkUserAlreadyExistByIdentity()
+    {
+        const result = await DirectoryaddSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': scope.selectedUserData.identity_type_id,
+            'identity_number': scope.selectedUserData.identity_number,
+            'nationality_id': scope.selectedUserData.nationality_id
+        });
+        if (result.data.user_exist === 1)
+        {
+            scope.messageClass = 'alert_warn';
+            scope.message = result.data.message;
+            scope.isIdentityUserExist = true;
+        } else
+        {
+            scope.messageClass = '';
+            scope.message = '';
+            scope.isIdentityUserExist = false;
+        }
+        /*  return result.data.user_exist === 1; */
     }
 }
