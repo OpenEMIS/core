@@ -62,7 +62,7 @@
             <button
                 ng-if="(step=='summary')"
                 type="button" class="btn close-btn" ng-click="cancelProcess()" style="font-size: 12px;">Close</button>
-            <button type="button" class="btn btn-default btn-next"
+            <button  ng-disabled="isIdentityUserExist" type="button" class="btn btn-default btn-next"
                 ng-if="step!=='confirmation' && step!=='summary'" ng-click="goToNextStep()" style="font-size: 12px;">Next</button>
         </div>
         <div class="step-content">
@@ -257,8 +257,13 @@
                         <label><?= __('Postal Code') ?></label>
                         <input ng-model="selectedUserData.postalCode" type="string">
                     </div>
+                    <!-- Address area start -->
                     <div class="row section-header header-space-lg">Address Area</div>
-                    <div class="input string">
+                     <div class="input string" id="addressArea_textbox" style="visibility:hidden">
+                        <label><?= __('Address Area') ?></label>
+                        <input ng-model="selectedUserData.addressArea.name" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string" id="addressArea_dropdown" >
                         <label><?= __('Address Area') ?></label>
                         <div
                             class="tree-form"
@@ -268,8 +273,14 @@
                             <kd-tree-dropdown-ng id="address_area_id-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="addressAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
                         </div>
                     </div>
+                    <!-- Address area end -->
+                    <!-- Address area start -->
                     <div class="row section-header header-space-lg">Birthplace Area</div>
-                    <div class="input string">
+                    <div class="input string" id="birthplaceArea_textbox" style="visibility:hidden">
+                        <label><?= __('Birthplace Area') ?></label>
+                        <input ng-model="selectedUserData.birthplaceArea.name" type="string" ng-disabled="true">
+                    </div>
+                    <div class="input string" id="birthplaceArea_dropdown">
                         <label><?= __('Birthplace Area') ?></label>
                         <div
                             class="tree-form"
@@ -904,4 +915,11 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
         border: 1px solid #77B576 !important;
         color:
     }
+
+    .alert_warn{
+    color: #8a6d3b !important;
+    border-color: #faebcc !important;
+    background-color: #E6BA64 !important;
+    border: 1px solid #E6BA64 !important;
+}
 </style>
