@@ -3097,7 +3097,7 @@ class StaffTable extends ControllerActionTable
         $InstitutionShiftsData = $InstitutionShiftsTable->find()
             ->select([$InstitutionShiftsTable->aliasField('start_time'), $InstitutionShiftsTable->aliasField('end_time'),$InstitutionShiftsTable->aliasField('id')])
             ->where([
-                $InstitutionShiftsTable->aliasField('shift_option_id') => $shiftId, //add
+                $InstitutionShiftsTable->aliasField('shift_option_id') => 256, //add
                 $InstitutionShiftsTable->aliasField('academic_period_id') => $academicPeriodId, //add
                 $InstitutionShiftsTable->aliasField('institution_id') => $institutionId //add
             ])->first();
@@ -3246,7 +3246,7 @@ class StaffTable extends ControllerActionTable
             }
         }
         //POCOR-6971[START]
-        $conditionQuery = array_merge($conditionQuery, $conditionQueryForTime); 
+        //$conditionQuery = array_merge($conditionQuery, $conditionQueryForTime); 
 
         if($shiftId == -1){
             $query = $query
@@ -3261,6 +3261,7 @@ class StaffTable extends ControllerActionTable
                 [
                     $this->aliasField('institution_id') => $institutionId,
                     $this->aliasField('staff_status_id') => 1,
+                    
                     $conditionQuery
                 ]
             )
@@ -3377,10 +3378,13 @@ class StaffTable extends ControllerActionTable
             //         $InstitutionStaffShiftsTable->aliasField('staff_id = ') . $this->aliasField('staff_id')
             //     ]
             //     )
+            ->leftJoin([$positions->alias() => $positions->table()],
+                        [$positions->aliasField('id = ') . $this->aliasField('institution_position_id')])
             ->where(
                 [
                     $this->aliasField('institution_id') => $institutionId,
-                    $this->aliasField('staff_status_id') => 1
+                    $this->aliasField('staff_status_id') => 1,
+                    //$positions->aliasField('shift_id')=>$shiftId
                 ]
             )
             ->order([
@@ -3390,6 +3394,7 @@ class StaffTable extends ControllerActionTable
                 $this->aliasField('staff_id')
             ])
             ->formatResults(function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
+               // echo "<pre>";print_r($results);die('ok');
                 return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
                     $staffId = $row->staff_id;
                     $staffRecords = [];
