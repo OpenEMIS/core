@@ -1613,25 +1613,24 @@ class StudentsTable extends ControllerActionTable
             }
         }
 
-        if($entity->isNew()) {
-            $bodyData = $this->find('all',
-                            [ 'contain' => [
-                                'Institutions',
-                                'EducationGrades',
-                                'AcademicPeriods',
-                                'StudentStatuses',
-                                'Users',
-                                'Users.Genders',
-                                'Users.MainNationalities',
-                                'Users.Identities.IdentityTypes',
-                                'Users.AddressAreas',
-                                'Users.BirthplaceAreas',
-                                'Users.Contacts.ContactTypes'
-                            ],
-                        ])->where([
-                            $this->aliasField('student_id') => $entity->student_id
-                        ]);
-
+		if($entity->isNew()) {
+			$bodyData = $this->find('all',
+									[ 'contain' => [
+										'Institutions',
+										'EducationGrades',
+										'AcademicPeriods',
+										'StudentStatuses',
+										'Users',
+										'Users.Genders',
+										'Users.MainNationalities',
+										'Users.Identities.IdentityTypes',
+										'Users.AddressAreas',
+										'Users.BirthplaceAreas',
+										'Users.Contacts.ContactTypes'
+									],
+						])->where([
+							$this->aliasField('student_id') => $entity->student_id
+						]);
             if (!empty($bodyData)) {
                 foreach ($bodyData as $key => $value) {
                     $user_id = $value->user->id;
@@ -1698,50 +1697,48 @@ class StudentsTable extends ControllerActionTable
                         $i=0;
                         foreach ($value->end_date as $key => $date) {
                             if($i==0){
-                                $endDate = $date;
-                                $i++; 
-                            }
-                        }
-                    }
-                }
-            }
-            $bodys = array();
-            $bodys = [
-                'security_users_id' => !empty($user_id) ? $user_id : NULL,
-                'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
-                'security_users_first_name' =>  !empty($first_name) ? $first_name : NULL,
-                'security_users_middle_name' => !empty($middle_name) ? $middle_name : NULL,
-                'security_users_third_name' => !empty($third_name) ? $third_name : NULL,
-                'security_users_last_name' => !empty($last_name) ? $last_name : NULL,
-                'security_users_preferred_name' => !empty($preferred_name) ? $preferred_name : NULL,
-                'security_users_gender' => !empty($gender) ? $gender : NULL,
-                'security_users_date_of_birth' => !empty($dateOfBirth) ? date("d-m-Y", strtotime($dateOfBirth)) : NULL,
-                'security_users_address' => !empty($address) ? $address : NULL,
-                'security_users_postal_code' => !empty($postalCode) ? $postalCode : NULL,
-                'area_administrative_name_birthplace' => !empty($addressArea) ? $addressArea : NULL,
-                'area_administrative_name_address' => !empty($birthplaceArea) ? $birthplaceArea : NULL,
-                'contact_type_name' => !empty($contactType) ? $contactType : NULL,
-                'user_contact_type_value' => !empty($contactValue) ? $contactValue : NULL,
-                'nationality_name' => !empty($nationality) ? $nationality : NULL,
-                'identity_type_name' => !empty($identityType) ? $identityType : NULL,
-                'user_identities_number' => !empty($identityNumber) ? $identityNumber : NULL,
-                'security_user_username' => !empty($username) ? $username : NULL,
-                'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
-                'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
-                'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-                'academic_period_code' => !empty($academicCode) ? $academicCode : NULL,
-                'academic_period_name' => !empty($academicGrade) ? $academicGrade : NULL,
-                'education_grade_name' => !empty($educationGrade) ? $educationGrade : NULL,
-                'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
-                'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
-                'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
+							  $endDate = $date;
+                           $i++; }
+						}
+					}
+				}
+			}
+			$bodys = array();
+			$bodys = [
+				'security_users_id' => !empty($user_id) ? $user_id : NULL,
+				'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
+				'security_users_first_name' =>	!empty($first_name) ? $first_name : NULL,
+				'security_users_middle_name' => !empty($middle_name) ? $middle_name : NULL,
+				'security_users_third_name' => !empty($third_name) ? $third_name : NULL,
+				'security_users_last_name' => !empty($last_name) ? $last_name : NULL,
+				'security_users_preferred_name' => !empty($preferred_name) ? $preferred_name : NULL,
+				'security_users_gender' => !empty($gender) ? $gender : NULL,
+				'security_users_date_of_birth' => !empty($dateOfBirth) ? date("d-m-Y", strtotime($dateOfBirth)) : NULL,
+				'security_users_address' => !empty($address) ? $address : NULL,
+				'security_users_postal_code' => !empty($postalCode) ? $postalCode : NULL,
+				'area_administrative_name_birthplace' => !empty($addressArea) ? $addressArea : NULL,
+				'area_administrative_name_address' => !empty($birthplaceArea) ? $birthplaceArea : NULL,
+				'contact_type_name' => !empty($contactType) ? $contactType : NULL,
+				'user_contact_type_value' => !empty($contactValue) ? $contactValue : NULL,
+				'nationality_name' => !empty($nationality) ? $nationality : NULL,
+				'identity_type_name' => !empty($identityType) ? $identityType : NULL,
+				'user_identities_number' => !empty($identityNumber) ? $identityNumber : NULL,
+				'security_user_username' => !empty($username) ? $username : NULL,
+				'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
+				'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+				'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+				'academic_period_code' => !empty($academicCode) ? $academicCode : NULL,
+				'academic_period_name' => !empty($academicGrade) ? $academicGrade : NULL,
+				'education_grade_name' => !empty($educationGrade) ? $educationGrade : NULL,
+				'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
+				'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
+				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
                 'role_name' => ($role == 1) ? 'student' : NULL
-            ];
-            //POCOR-6805 start
+			];
+            //POCOR-7078 start
             $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
             $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
             $studentCustomFields = TableRegistry::get('student_custom_fields');
-            //POCOR-6805 start
             $studentCustomData = $studentCustomFieldValues->find()
                 ->select([
                         'id'                             => $studentCustomFieldValues->aliasField('id'),
@@ -1754,7 +1751,7 @@ class StudentsTable extends ControllerActionTable
                         'textarea_value'                 => $studentCustomFieldValues->aliasField('textarea_value'),
                         'date_value'                     => $studentCustomFieldValues->aliasField('date_value'),
                         'time_value'                     => $studentCustomFieldValues->aliasField('time_value'),
-                        'option_value_text'              => $studentCustomFieldOptions->aliasField('name'),//POCOR-7052
+                        'option_value_text'              => $studentCustomFieldOptions->aliasField('name'),
                         'name'                           => 'studentCustomField.name',
                         'field_type'                     => 'studentCustomField.field_type',
                     ])->leftJoin(
@@ -1766,7 +1763,7 @@ class StudentsTable extends ControllerActionTable
                     [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
                     [
                         $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
-                        $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')//POCOR-7052
+                        $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
                     ])
                     ->where([
                     $studentCustomFieldValues->aliasField('student_id') => $user_id,
@@ -1782,7 +1779,7 @@ class StudentsTable extends ControllerActionTable
                     if($fieldType == 'TEXT'){
                         $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
                     }else if ($fieldType == 'CHECKBOX') {
-                        $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');//POCOR-7052
+                        $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
                     }else if ($fieldType == 'NUMBER') {
                         $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
                     }else if ($fieldType == 'DECIMAL') {
@@ -1790,7 +1787,7 @@ class StudentsTable extends ControllerActionTable
                     }else if ($fieldType == 'TEXTAREA') {
                         $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
                     }else if ($fieldType == 'DROPDOWN') {
-                        $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');//POCOR-7052
+                        $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
                     }else if ($fieldType == 'DATE') {
                         $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
                     }else if ($fieldType == 'TIME') {
@@ -1801,13 +1798,12 @@ class StudentsTable extends ControllerActionTable
                     $count++;
                 }
             }
-            $body = array_merge($bodys, $custom_field);//POCOR-6805 end
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if (!empty($entity->created_user_id)) {
-                $Webhooks->triggerShell('student_create', ['username' => ''], $body);
-            }
-        }
-
+            $body = array_merge($bodys, $custom_field);//POCOR-7078 end
+			$Webhooks = TableRegistry::get('Webhook.Webhooks');
+			if (!empty($entity->created_user_id)) {
+				$Webhooks->triggerShell('student_create', ['username' => ''], $body);
+			}
+		}
     }
 
     public function onGetStudentId(Event $event, Entity $entity)
