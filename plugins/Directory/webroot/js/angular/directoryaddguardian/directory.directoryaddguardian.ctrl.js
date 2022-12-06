@@ -1111,4 +1111,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         }
         /*  return result.data.user_exist === 1; */
     }
+    scope.addGuardian=function addGuardian()
+    {
+        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
+    }
 }
