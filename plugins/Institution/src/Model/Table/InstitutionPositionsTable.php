@@ -341,6 +341,12 @@ class InstitutionPositionsTable extends ControllerActionTable
             'type' => 'select',
             'entity' => $entity
         ]);
+
+        //POCOR-6971
+        $this->field('shift_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
         $this->field('is_homeroom', ['entity' => $entity]);
 
         // POCOR-3003 - [...] decision is to make Position Title not editable on the position edit page
@@ -476,6 +482,7 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
+        $this->fields['shift_id']['visible'] = false; //POCOR-6971
 
         $this->fields['staff_position_title_id']['sort'] = ['field' => 'StaffPositionTitles.order'];
         $this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];
@@ -589,7 +596,7 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         $this->setFieldOrder([
             'position_no', 'staff_position_title_id',
-            'staff_position_grade_id',
+            'staff_position_grade_id','shift_id',
         ]);
     }
 
@@ -600,6 +607,11 @@ class InstitutionPositionsTable extends ControllerActionTable
             'entity' => $entity
         ]);
         $this->field('is_homeroom');
+        //POCOR-6971
+        $this->field('shift_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
     }
 
 /******************************************************************************************************************
@@ -618,7 +630,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             'staff_position_title_id',
             'is_homeroom',
             'modified_user_id', 'modified', 'created_user_id', 'created',
-            'current_staff_list', 'past_staff_list'
+            'current_staff_list', 'past_staff_list','shift_id'
         ]);
 
         $session = $this->Session;
@@ -1265,6 +1277,28 @@ class InstitutionPositionsTable extends ControllerActionTable
             $attr['select'] = false;
             $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
             $attr['onChangeReload'] = 'changeStatus';
+            return $attr;
+        }
+    }
+
+    /**
+     * POCOR-6971
+     * add shift dropdown
+    */
+    public function onUpdateFieldShiftId(Event $event, array $attr, $action, Request $request)
+    {   $shiftOptions = TableRegistry::get('shift_options'); 
+        $option = $shiftOptions->find('list')->toArray();
+        foreach($option as $key=>$result) {
+            $optionAll = $shiftOptions->find('all')->select(['stime'=>$shiftOptions->aliasField('start_time'),'etime'=>$shiftOptions->aliasField('end_time'),'name'=>$shiftOptions->aliasField('name')])->where([$shiftOptions->aliasField('id')=>$key])->first();
+            $option[$key] = $optionAll->name.': '.$optionAll->stime. ' - '.$optionAll->etime;
+        }
+        if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = ['id' => '-- ' . __('Select Shift') . ' --']+$option;
+            $attr['onChangeReload'] = 'changeStatus';
+
             return $attr;
         }
     }
