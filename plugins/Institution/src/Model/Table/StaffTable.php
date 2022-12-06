@@ -2671,12 +2671,14 @@ class StaffTable extends ControllerActionTable
                 }
             } //POCOR-6814 Ends
             $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
-            $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
+            if(!empty($funArr) && !empty($RoleArr)){ //POCOR-7068
+                $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
                 ->where([
                     $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $funArr,
                     $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $RoleArr,
                     $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
                 ])->hydrate(false)->toArray();
+            }
             if (!empty($SecurityRoleFunctions)) {
                 foreach ($SecurityRoleFunctions as $rkey => $rvalue) {
                     if ($rvalue['_view'] == 1) {
