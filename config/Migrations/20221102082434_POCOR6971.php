@@ -26,7 +26,7 @@ class POCOR6971 extends AbstractMigration
 
         //insert new column
         $this->execute('ALTER TABLE `institution_positions` ADD `shift_id` INT NULL AFTER `assignee_id`');
-        
+       
         $this->execute("ALTER TABLE `institution_positions` CHANGE `shift_id` `shift_id` INT(11) NULL COMMENT 'links to shift_options.id'");
 
         //updating shift_id column value
@@ -34,23 +34,20 @@ class POCOR6971 extends AbstractMigration
         $staff = TableRegistry::get('institution_staff');
         $position = TableRegistry::get('institution_positions');
         $shiftOption = TableRegistry::get('institution_shifts');
-        $staffshiftVal = $shift->
-                    find()->select(['staff_id'=>$staff->aliasField('staff_id'),'shift_id'=>$shift->aliasField('shift_id'),'position_id'=>$staff->aliasField('institution_position_id'),'shift_option_id'=>$shiftOption->aliasField('shift_option_id')])
-                    ->leftJoin([$staff->alias() => $staff->table()],
-                                [$staff->aliasField('staff_id = ') . $shift->aliasField('staff_id')])
-                    ->leftJoin([$shiftOption->alias() => $shiftOption->table()],
-                                [$shiftOption->aliasField('id = ') . $shift->aliasField('shift_id')])
-                    ->toArray();
-        foreach($staffshiftVal as $value){
-            $staffId = $value['staff_id'];
-            $shiftId = $value['shift_id'];
-            $shiftOptionId = $value['shift_option_id'];
-            $positionId = $value['position_id'];
-
+        $staffIds = $shift->find()->select(['staff_id'])->group([$shift->aliasField('staff_id')])->toArray();  
+        foreach($staffIds as $staffId){
+           $staffidss =  $staffId['staff_id'];
+           $staffData = $shift->find('all')->select(['staff_id'=>$shift->aliasField('staff_id'),'shift_id'=>$shift->aliasField('shift_id')])->where([$shift->aliasField('staff_id')=>$staffidss])->order([$shift->aliasField('id DESC')])->limit(1); 
+           foreach($staffData->toArray() as $val) {
+            $staffGet  = $val['staff_id'];
+            $shiftGet  = $val['shift_id'];
+            }
+           $positionVal = $staff->find('all')->select(['institution_position_id'=>$staff->aliasField('institution_position_id')])->where([$staff->aliasField('staff_id')=>$staffGet])->first();
+           $shiftVal = $shiftOption->find('all')->select(['shift_option_id'=>$shiftOption->aliasField('shift_option_id')])->where([$shiftOption->aliasField('id')=>$shiftGet])->first();
+           $shiftOptionId =$shiftVal->shift_option_id; 
+           $positionId =$positionVal->institution_position_id; 
             $this->execute("UPDATE `institution_positions` SET `shift_id` = $shiftOptionId WHERE `id`= $positionId");
         }
-        
-        
     }
 
     // rollback
