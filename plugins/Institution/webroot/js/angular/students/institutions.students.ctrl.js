@@ -104,6 +104,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.transferStudent = transferStudent;
     StudentController.setStudentDataFromExternalSearchData = setStudentDataFromExternalSearchData;
     StudentController.transferStudentNextStep = transferStudentNextStep;
+    StudentController.isIdentityUserExist = false;
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
@@ -634,6 +635,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.error.education_grade_id = '';
         StudentController.getClasses();
 
+        const date_of_birth = StudentController.selectedStudentData.date_of_birth.split('-')[2].length;
+        if (!educationGrade && date_of_birth !== 4) return;
         // POCOR-5672
         const dateOfBirthValidationResponse =await InstitutionsStudentsSvc.getDateOfBirthValidation({ date_of_birth: StudentController.selectedStudentData.date_of_birth, education_grade_id: educationGrade })
         const { validation_error,min_age,max_age } = dateOfBirthValidationResponse.data[0];
@@ -879,7 +882,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
-    function goToNextStep() {
+    async function goToNextStep() {
         if(StudentController.isInternalSearchSelected) {
             if(StudentController.studentData && StudentController.studentData.is_same_school) {
                 StudentController.step = 'summary';
@@ -918,6 +921,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         } else {
             switch(StudentController.step){
                 case 'user_details': 
+                    await checkUserAlreadyExistByIdentity();
                     StudentController.validateDetails();
                     break;
                 case 'internal_search': 
@@ -1195,6 +1199,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.isInternalSearchSelected = true;
         StudentController.isExternalSearchSelected = false;
         StudentController.getStudentData();
+
+        if (StudentController.isIdentityUserExist)
+        {
+            StudentController.messageClass = '';
+            StudentController.message = '';
+            StudentController.isIdentityUserExist = false;
+        }
     }
 
     StudentController.selectStudentFromExternalSearch = function(id) {
@@ -1221,8 +1232,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function setStudentData(selectedData) {
-        StudentController.selectedStudentData.addressArea = {};
-        StudentController.selectedStudentData.birthplaceArea = {};
+        StudentController.selectedStudentData.addressArea = {
+            id: selectedData.address_area_id,
+            name: selectedData.area_name,
+            code: selectedData.area_code
+        };
+        StudentController.selectedStudentData.birthplaceArea = {
+            id: selectedData.birthplace_area_id,
+            name: selectedData.birth_area_name,
+            code: selectedData.birth_area_code
+        };
         StudentController.selectedStudentData.openemis_no = selectedData.openemis_no;
         StudentController.selectedStudentData.first_name = selectedData.first_name;
         StudentController.selectedStudentData.middle_name = selectedData.middle_name;
@@ -1249,9 +1268,40 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.isSameSchool = selectedData.is_same_school > 0 ? true : false;
         StudentController.isDiffSchool = selectedData.is_diff_school > 0 ? true : false;
         StudentController.selectedStudentData.currentlyAllocatedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.current_enrol_institution_name;
+
+        if (selectedData.address_area_id > 0)
+        {
+            document.getElementById('addressArea_textbox').style.visibility = 'visible';
+            document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('addressArea_textbox').style.display = 'none';
+            document.getElementById('addressArea_dropdown').style.visibility = 'visible';
+        }
+
+        if (selectedData.birthplace_area_id > 0)
+        {
+            document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('birthplaceArea_textbox').style.display = 'none';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+        }
     }
 
-    function setStudentDataFromExternalSearchData(selectedData) {
+    function setStudentDataFromExternalSearchData(selectedData)
+    {
+        StudentController.selectedStudentData.addressArea = {
+            id: selectedData.address_area_id,
+            name: selectedData.area_name,
+            code: selectedData.area_code
+        };
+        StudentController.selectedStudentData.birthplaceArea = {
+            id: selectedData.birthplace_area_id,
+            name: selectedData.birth_area_name,
+            code: selectedData.birth_area_code
+        };
         StudentController.selectedStudentData.openemis_no = selectedData.openemis_no;
         StudentController.selectedStudentData.first_name = selectedData.first_name;
         StudentController.selectedStudentData.middle_name = selectedData.middle_name;
@@ -1274,6 +1324,26 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
         var todayDate = new Date();
         StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+
+        if (selectedData.address_area_id > 0)
+        {
+            document.getElementById('addressArea_textbox').style.visibility = 'visible';
+            document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('addressArea_textbox').style.display = 'none';
+            document.getElementById('addressArea_dropdown').style.visibility = 'visible';
+        }
+
+        if (selectedData.birthplace_area_id > 0)
+        {
+            document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
+        } else
+        {
+            document.getElementById('birthplaceArea_textbox').style.display = 'none';
+            document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+        }
     }
 
     StudentController.getStudentTransferReason = function() {
@@ -1464,5 +1534,26 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var endDateYear = splitEndDate[splitEndDate.length - 1];
         startDatePicker.datepicker("setStartDate", "01-01-" + endDateYear);
         startDatePicker.datepicker("setEndDate", '31-12-' + endDateYear);
+    }
+
+    async function checkUserAlreadyExistByIdentity()
+    {
+        const result = await InstitutionsStudentsSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': StudentController.selectedStudentData.identity_type_id,
+            'identity_number': StudentController.selectedStudentData.identity_number,
+            'nationality_id': StudentController.selectedStudentData.nationality_id
+        });
+        if (result.data.user_exist === 1)
+        {
+            StudentController.messageClass = 'alert-warning';
+            StudentController.message = result.data.message;
+            StudentController.isIdentityUserExist = true;
+        } else
+        {
+            StudentController.messageClass = '';
+            StudentController.message = '';
+            StudentController.isIdentityUserExist = false;
+        }
+        /*  return result.data.user_exist === 1; */
     }
 }

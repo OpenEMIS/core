@@ -73,6 +73,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         getStudentTransferReason: getStudentTransferReason,
         getDateOfBirthValidation: getDateOfBirthValidation,
         getStartDateFromAcademicPeriod: getStartDateFromAcademicPeriod,
+        checkUserAlreadyExistByIdentity: checkUserAlreadyExistByIdentity,
     };
 
     var models = {
@@ -1034,5 +1035,28 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             });
         return deferred.promise;
     };
+
+    /**
+     * Parameters are - identity_type_id, identity_number & nationality_id pass as a object
+     * If staff exist then user_exist will be 1 otherwise 0 & show the message as warning
+     * @required {identity_type_id} identity_type_id
+     * @required {identity_number} identity_number
+     * @required {nationality_id} nationality_id
+     * @returns {[{"user_exist":1,"status_code":2,"message":"User already exist with this nationality, identity type & identity type. Kindly select user from below list."}]}
+     */
+    function checkUserAlreadyExistByIdentity(params)
+    {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/checkUserAlreadyExistByIdentity';
+        $http.post(url, { params: params })
+            .then(function (response)
+            {
+                deferred.resolve(response);
+            }, function (error)
+            {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    }
 
 };
