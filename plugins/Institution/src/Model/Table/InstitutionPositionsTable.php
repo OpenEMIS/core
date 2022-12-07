@@ -92,6 +92,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'rule' => 'checkNoSpaces',
                 'provider' => 'custom'
             ])
+           // ->requirePresence('shift_id')
             ->add('staff_position_grade_id', 'custom', [
                 'rule' => function ($value, $context) {
                     $StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
@@ -167,6 +168,17 @@ class InstitutionPositionsTable extends ControllerActionTable
                     return false;
                 }
             ])
+            ->add('shift_id', 'rulecheckShiftPresent', [ //POCOR-6971
+                'rule' => function ($value, $context) {
+                    if($value == 0){
+                            return 'This field cannot be left empty';
+                    }else{
+                        return true;
+                    }
+
+                }
+            ])
+            
             ->add('status_id', 'ruleCheckStatusIdValid', [
                 'rule' => ['checkStatusIdValid'],
                 'provider' => 'table',
@@ -694,6 +706,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity)
     {
         $this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
+        
         if (!empty($entity->modified_user_id)) {
             $this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
         }
@@ -1301,5 +1314,6 @@ class InstitutionPositionsTable extends ControllerActionTable
 
             return $attr;
         }
+
     }
 }
