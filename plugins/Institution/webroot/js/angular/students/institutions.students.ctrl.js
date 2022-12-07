@@ -163,7 +163,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function getInternalSearchData() {
         var first_name = '';
         var last_name = '';
-        var openemis_no = null;
+        var openemis_no = '';
         var date_of_birth = '';
         var identity_number = '';
         var nationality_id = '';
@@ -175,7 +175,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         last_name = StudentController.selectedStudentData.last_name;
         date_of_birth = StudentController.selectedStudentData.date_of_birth;
         identity_number = StudentController.selectedStudentData.identity_number;
-
+        openemis_no = StudentController.selectedStudentData.openemis_no;
         nationality_id = StudentController.selectedStudentData.nationality_id;
         nationality_name = StudentController.selectedStudentData.nationality_name;
         identity_type_name = StudentController.selectedStudentData.identity_type_name;
@@ -569,6 +569,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function changeNationality() {
         var nationalityId = StudentController.selectedStudentData.nationality_id;
+        if (nationalityId === null)
+        {
+            StudentController.selectedStudentData.nationality_name = "";
+        }
         var nationalityOptions = StudentController.nationalitiesOptions;
         var identityOptions = StudentController.identityTypeOptions;
         for (var i = 0; i < nationalityOptions.length; i++) {
@@ -588,6 +592,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function changeIdentityType() {
         var identityType = StudentController.selectedStudentData.identity_type_id;
+        if (identityType === null)
+        {
+            StudentController.selectedStudentData.identity_number = '';
+            StudentController.selectedStudentData.identity_type_name = '';
+            return;
+        }
         var identityOptions = StudentController.identityTypeOptions;
         for (var i = 0; i < identityOptions.length; i++) {
             if (identityOptions[i].id == identityType) {
@@ -951,27 +961,48 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
-    function validateDetails() {
-        if(!StudentController.selectedStudentData.first_name){
-            StudentController.error.first_name = 'This field cannot be left empty';
+    function validateDetails()
+    {
+        const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
+        StudentController.error.first_name = '';
+        StudentController.error.last_name = '';
+        StudentController.error.gender_id = '';
+        StudentController.error.date_of_birth = '';
+        
+        if (blockName === "General_Info" && hasError)
+        {
+            if (!StudentController.selectedStudentData.first_name)
+            {
+                StudentController.error.first_name = 'This field cannot be left empty';
+            }
+            if (!StudentController.selectedStudentData.last_name)
+            {
+                StudentController.error.last_name = 'This field cannot be left empty';
+            }
+            if (!StudentController.selectedStudentData.gender_id)
+            {
+                StudentController.error.gender_id = 'This field cannot be left empty';
+            }
+            if (!StudentController.selectedStudentData.date_of_birth)
+            {
+                StudentController.error.date_of_birth = 'This field cannot be left empty';
+            } else
+            {
+                StudentController.selectedStudentData.date_of_birth = $filter('date')(StudentController.selectedStudentData.date_of_birth, 'yyyy-MM-dd');
+            }
         }
-        if(!StudentController.selectedStudentData.last_name){
-            StudentController.error.last_name = 'This field cannot be left empty';
-        }
-        if(!StudentController.selectedStudentData.gender_id){
-            StudentController.error.gender_id = 'This field cannot be left empty';
-        }
-        if(!StudentController.selectedStudentData.date_of_birth) {
-            StudentController.error.date_of_birth = 'This field cannot be left empty';
-        } else {
-            StudentController.selectedStudentData.date_of_birth = $filter('date')(StudentController.selectedStudentData.date_of_birth, 'yyyy-MM-dd');
-        }
+        
+       /*  if(!StudentController.selectedStudentData.first_name || !StudentController.selectedStudentData.last_name || !StudentController.selectedStudentData.gender_id || !StudentController.selectedStudentData.date_of_birth){
+            return;
+        } */
 
-        if(!StudentController.selectedStudentData.first_name || !StudentController.selectedStudentData.last_name || !StudentController.selectedStudentData.gender_id || !StudentController.selectedStudentData.date_of_birth){
+        if (hasError)
+        {
             return;
         }
+
         StudentController.step = 'internal_search';
-        StudentController.selectedStudentData.openemis_no = null;
+        /* StudentController.selectedStudentData.openemis_no = ''; */
         StudentController.internalGridOptions = null;
         StudentController.goToInternalSearch();
     }
@@ -1571,5 +1602,34 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.isIdentityUserExist = false;
         }
         /*  return result.data.user_exist === 1; */
+    }
+
+    /**
+     * @desc 1)Identity Number is mandatory OR 
+     * @desc 2)OpenEMIS ID is mandatory OR
+     * @desc 3)First Name, Last Name, Date of Birth and Gender are mandatory
+     * @returns [ error block name | true or false]
+     */
+    function checkUserDetailValidationBlocksHasError()
+    {
+        const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no } = StudentController.selectedStudentData;
+        const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
+        const isIdentityHasError = (identity_number !== "" && identity_number !== undefined && !identity_type_id !== "" && identity_type_id!==undefined)        
+        const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
+
+        if (isOpenEmisNoHasError)
+        {
+            return ["OpenEMIS_ID", false];
+        }
+        if (isIdentityHasError)
+        {
+            return ['Identity', false]
+        }
+        if (isGeneralInfodHasError)
+        {
+            return ["General_Info", true];
+        }
+
+        return ["",false];
     }
 }
