@@ -938,7 +938,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         } else {
             switch(StudentController.step){
                 case 'user_details': 
-                    await checkUserAlreadyExistByIdentity();
                     StudentController.validateDetails();
                     break;
                 case 'internal_search': 
@@ -961,7 +960,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
-    function validateDetails()
+    async function validateDetails()
     {
         const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
         StudentController.error.first_name = '';
@@ -1005,6 +1004,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         /* StudentController.selectedStudentData.openemis_no = ''; */
         StudentController.internalGridOptions = null;
         StudentController.goToInternalSearch();
+        await checkUserAlreadyExistByIdentity();
     }
 
     function confirmUser() {
