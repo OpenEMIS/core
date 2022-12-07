@@ -3384,7 +3384,7 @@ class StaffTable extends ControllerActionTable
                 [
                     $this->aliasField('institution_id') => $institutionId,
                     $this->aliasField('staff_status_id') => 1,
-                    //$positions->aliasField('shift_id')=>$shiftId
+                    $positions->aliasField('shift_id')=>$shiftId
                 ]
             )
             ->order([
