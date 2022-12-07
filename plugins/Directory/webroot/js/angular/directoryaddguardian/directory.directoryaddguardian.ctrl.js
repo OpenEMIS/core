@@ -112,10 +112,21 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         var openemis_no = null;
         var date_of_birth = '';
         var identity_number = '';
+
+        var nationality_id = '';
+        var nationality_name = '';
+        var identity_type_name = '';
+        var identity_type_id = '';
+
         first_name = scope.selectedUserData.first_name;
         last_name = scope.selectedUserData.last_name;
         date_of_birth = scope.selectedUserData.date_of_birth;
         identity_number = scope.selectedUserData.identity_number;
+        openemis_no = scope.selectedUserData.openemis_no;
+        nationality_id = scope.selectedUserData.nationality_id;
+        nationality_name = scope.selectedUserData.nationality_name;
+        identity_type_name = scope.selectedUserData.identity_type_name;
+        identity_type_id = scope.selectedUserData.identity_type_id;
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
@@ -130,6 +141,11 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     identity_number: identity_number,
                     institution_id: null,
                     user_type_id: 3,
+                    relation_type_id: scope.selectedUserData.relation_type_id,
+                    nationality_id: nationality_id,
+                    nationality_name: nationality_name,
+                    identity_type_name: identity_type_name,
+                    identity_type_id: identity_type_id
                 }
                 DirectoryaddguardianSvc.getInternalSearchData(param)
                 .then(function(response) {
@@ -322,6 +338,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     scope.changeNationality =  function() {
         var nationalityId = scope.selectedUserData.nationality_id;
+        if (nationalityId === null)
+        {
+            scope.selectedUserData.nationality_name = "";
+        }
         var options = scope.nationalitiesOptions;
         var identityOptions = scope.identityTypeOptions;
         for (var i = 0; i < options.length; i++) {
@@ -341,6 +361,12 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     scope.changeIdentityType =  function() {
         var identityType = scope.selectedUserData.identity_type_id;
+        if (identityType == null)
+        {
+            scope.selectedUserData.identity_type_id = '';
+            scope.selectedUserData.identity_number = '';
+            scope.selectedUserData.identity_type_name = '';
+        }
         var options = scope.identityTypeOptions;
         for (var i = 0; i < options.length; i++) {
             if (options[i].id == identityType) {
@@ -588,34 +614,47 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         });
     }
 
-    scope.validateDetails = function() {
-        if(scope.step === 'user_details') {
-            if(!scope.selectedUserData.relation_type_id){
-                scope.error.relation_type_id = 'This field cannot be left empty';
-            }
-            if(!scope.selectedUserData.first_name){
-                scope.error.first_name = 'This field cannot be left empty';
-            }
-            if(!scope.selectedUserData.last_name){
-                scope.error.last_name = 'This field cannot be left empty';
-            }
-            if(!scope.selectedUserData.gender_id){
-                scope.error.gender_id = 'This field cannot be left empty';
-            }
-            if(!scope.selectedUserData.date_of_birth) {
-                scope.error.date_of_birth = 'This field cannot be left empty';
-            } else {
-                // let dob = scope.selectedUserData.date_of_birth.toLocaleDateString();
-                // let dobArray = dob.split('/');
-                scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
+    scope.validateDetails = async function ()
+    {
+        scope.error = {};
+        if (scope.step === 'user_details')
+        {
+            const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
+            if (blockName === "General_Info" && hasError)
+            {
+
+                if (!scope.selectedUserData.relation_type_id)
+                {
+                    scope.error.relation_type_id = 'This field cannot be left empty';
+                }
+                if (!scope.selectedUserData.first_name)
+                {
+                    scope.error.first_name = 'This field cannot be left empty';
+                }
+                if (!scope.selectedUserData.last_name)
+                {
+                    scope.error.last_name = 'This field cannot be left empty';
+                }
+                if (!scope.selectedUserData.gender_id)
+                {
+                    scope.error.gender_id = 'This field cannot be left empty';
+                }
+                if (!scope.selectedUserData.date_of_birth)
+                {
+                    scope.error.date_of_birth = 'This field cannot be left empty';
+                } else
+                {
+                    // let dob = scope.selectedUserData.date_of_birth.toLocaleDateString();
+                    // let dobArray = dob.split('/');
+                    scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
+                }
             }
     
-            if(!scope.selectedUserData.relation_type_id || !scope.selectedUserData.first_name || !scope.selectedUserData.last_name || !scope.selectedUserData.gender_id || !scope.selectedUserData.date_of_birth){
-                return;
-            }
+            if (hasError) return;
             scope.step = 'internal_search';
             scope.internalGridOptions = null;
             scope.goToInternalSearch();
+            await checkUserAlreadyExistByIdentity()
         }
         if(scope.step === 'confirmation') {
             if(!scope.selectedUserData.username){
@@ -632,7 +671,9 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.goToPrevStep = function(){
-        if(scope.isInternalSearchSelected) {
+        if (scope.isInternalSearchSelected)
+        {
+            scope.isInternalSearchSelected = false;
             scope.step = 'internal_search';
             scope.internalGridOptions = null;
             scope.goToInternalSearch();
@@ -662,7 +703,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         } else {
             switch(scope.step){
                 case 'user_details': 
-                    await checkUserAlreadyExistByIdentity()
                     scope.validateDetails();
                     break;
                 case 'internal_search': 
@@ -1114,5 +1154,34 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.addGuardian=function addGuardian()
     {
         $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
+    }
+
+    /**
+* @desc 1)Identity Number is mandatory OR 
+* @desc 2)OpenEMIS ID is mandatory OR
+* @desc 3)First Name, Last Name, Date of Birth and Gender are mandatory
+* @returns [ error block name | true or false]
+*/
+    function checkUserDetailValidationBlocksHasError()
+    {
+        const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no } = scope.selectedUserData;
+        const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
+        const isIdentityHasError = (identity_number !== "" && identity_number !== undefined && !identity_type_id !== "" && identity_type_id !== undefined)
+        const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
+
+        if (isOpenEmisNoHasError)
+        {
+            return ["OpenEMIS_ID", false];
+        }
+        if (isIdentityHasError)
+        {
+            return ['Identity', false]
+        }
+        if (isGeneralInfodHasError)
+        {
+            return ["General_Info", true];
+        }
+
+        return ["", false];
     }
 }
