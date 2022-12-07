@@ -380,6 +380,10 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        //POCOR-7067 Starts
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $timeZone= $ConfigItems->value("time_zone");
+        date_default_timezone_set($timeZone);//POCOR-7067 Ends
         //Start:POCOR-6785 need to convert this custom query to cake query
         $conn = ConnectionManager::get('default');
         $institutionId = $this->Session->read('Institution.Institutions.id');
@@ -390,14 +394,13 @@ class ReportCardStatusesTable extends ControllerActionTable
         ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();
        
         foreach($entitydata as $keyy =>$entity ){ 
+            //POCOR-7067 Starts
             $now = new DateTime();
-            $c_timestap = $now->getTimestamp();
+            $currentDateTime = $now->format('Y-m-d H:i:s');
+            $c_timestap = strtotime($currentDateTime);
             $modifiedDate = $entity->modified;
             //POCOR-6841 starts
             if($entity->status == 2){
-                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-                $timeZone= $ConfigItems->value("time_zone");
-                date_default_timezone_set($timeZone);
                 //POCOR-6895: START
                 if($timeZone == 'Asia/Kuwait'){
                     $date = new DateTime("now", new DateTimeZone('Asia/Kuwait') );
@@ -407,16 +410,17 @@ class ReportCardStatusesTable extends ControllerActionTable
                 //POCOR-6895: END
                 $currentTimeZone = new DateTime();
                 $modifiedDate = ($modifiedDate === null) ? $currentTimeZone : $modifiedDate;
-                $m_timestap =$modifiedDate->getTimestamp();
-                $diff_mins = abs($c_timestap - $m_timestap) / 60;
+                $m_timestap = strtotime($modifiedDate);
+                $interval  = abs($c_timestap - $m_timestap);
+                $diff_mins   = round($interval / 60);
                 if($diff_mins > 5 && $diff_mins < 30){
                     $entity->status = 1;
                     $ReportCardProcessesTable->save($entity);
                 }elseif($diff_mins > 30){
-                    $entity->status = -1;
+                    $entity->status = self::ERROR; //(-1)
                     $entity->modified = $currentTimeZone;//POCOR-6841
                     $ReportCardProcessesTable->save($entity);
-                }
+                }//POCOR-7067 Ends
             }//POCOR-6841 ends
         }
         $stmtNew = $conn->query("UPDATE institution_students_report_cards INNER JOIN report_card_processes ON institution_students_report_cards.report_card_id = report_card_processes.report_card_id AND institution_students_report_cards.student_id = report_card_processes.student_id AND institution_students_report_cards.institution_id = report_card_processes.institution_id AND institution_students_report_cards.academic_period_id = report_card_processes.academic_period_id AND institution_students_report_cards.education_grade_id = report_card_processes.education_grade_id AND institution_students_report_cards.institution_class_id = report_card_processes.institution_class_id SET institution_students_report_cards.status = report_card_processes.status");
@@ -1230,6 +1234,10 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     private function addReportCardsToProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
+        //POCOR-7067 Starts
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $timeZone= $ConfigItems->value("time_zone");
+        date_default_timezone_set($timeZone);//POCOR-7067 Ends
         Log::write('debug', 'Initialize Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
 
         $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
@@ -1382,6 +1390,10 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     private function addReportCardsToEmailProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
+        //POCOR-7067 Starts
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $timeZone= $ConfigItems->value("time_zone");
+        date_default_timezone_set($timeZone);//POCOR-7067 Ends
         Log::write('debug', 'Initialize Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.Time::now().')');
 
         $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
