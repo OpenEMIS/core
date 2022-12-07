@@ -56,6 +56,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.user_identity_number = "";
     StaffController.isEnableBirthplaceArea = false;
     StaffController.isEnableAddressArea = false;
+    StaffController.isIdentityUserExist = false;
 
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
@@ -204,7 +205,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                         fieldData.text_value = field.answer;
                     }
                     if (field.field_type === 'TEXTAREA'){
-                        field.textarea_value = field.answer;
+                        fieldData.textarea_value = field.answer;
                     }
                     if(field.field_type === 'NUMBER') {
                         fieldData.number_value = field.answer;
@@ -249,7 +250,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             params = { ...params, identity_number: StaffController.user_identity_number }
             StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         }
-            
         InstitutionsStaffSvc.saveStaffDetails(params).then(function (resp)
         {
             StaffController.selectedStaffData.identity_number = resp.config.data.identity_number;
@@ -572,7 +572,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                         maxDate: new Date('01/01/2100'),
                         showWeeks: false
                     };
-                    fieldData.answer = new Date(fieldData.values);
+                    const splitDate = fieldData.values.split('-').map((d=> parseInt(d)));
+                    fieldData.answer = fieldData.values === "" ? new Date() : new Date(splitDate[0], splitDate[1]-1, splitDate[2]) ;
                 }
                 if(fieldData.field_type === 'TIME') {
                     fieldData.hourStep = 1;
@@ -1091,8 +1092,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
     }
 
-    function goToNextStep() {
-        if(StaffController.isInternalSearchSelected) {
+    async function goToNextStep()
+    {
+        /* Here check the user identity number is already exist or not  - PENDING*/
+       
+      
+        if (StaffController.isInternalSearchSelected)
+        {
+           
             if (StaffController.staffData && StaffController.staffData.is_diff_school)
             {
                 StaffController.messageClass = 'alert-warning';
@@ -1113,6 +1120,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         } else {
             switch(StaffController.step){
                 case 'user_details': 
+                    await checkUserAlreadyExistByIdentity();
                     StaffController.validateDetails();
                     break;
                 case 'internal_search': 
@@ -1155,6 +1163,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.isExternalSearchSelected = false;
         StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         StaffController.getStaffData();
+        StaffController.getStaffCustomFields();
+
+        if (StaffController.isIdentityUserExist)
+        {
+            StaffController.messageClass = '';
+            StaffController.message = '';
+            StaffController.isIdentityUserExist = false;
+        }
     }
 
     StaffController.selectStaffFromExternalSearch = function(id) {
@@ -1163,6 +1179,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.isExternalSearchSelected = true;
         StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         StaffController.getStaffData();
+        StaffController.getStaffCustomFields();
     }
 
     StaffController.getStaffData = function() {
@@ -1223,7 +1240,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
         StaffController.user_identity_number = deepCopy.identity_number;
 
-      /*   if (selectedData.address_area_id > 0)
+        if (selectedData.address_area_id > 0)
         {
             document.getElementById('addressArea_textbox').style.visibility = 'visible';
             document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
@@ -1241,7 +1258,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         {
             document.getElementById('birthplaceArea_textbox').style.display = 'none';
             document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
-        } */
+        }
     }
 
     function setStaffDataFromExternalSearchData(selectedData)
@@ -1279,7 +1296,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
         StaffController.user_identity_number = deepCopy.identity_number;
 
-       /*  if (selectedData.address_area_id > 0)
+        if (selectedData.address_area_id > 0)
         {
             document.getElementById('addressArea_textbox').style.visibility = 'visible';
             document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
@@ -1297,7 +1314,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         {
             document.getElementById('birthplaceArea_textbox').style.display = 'none';
             document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
-        } */
+        }
     
     }
 
@@ -2222,21 +2239,25 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     {
         StaffController.step = 'transfer_staff';
     }
-  /*   function toggleBirthPlaceArea()
+
+    async function checkUserAlreadyExistByIdentity()
     {
-        document.getElementById("birthplace_area_control_textbox").style.display = "none";
-        document.getElementById("birthplace_area_control_dropdown").style.display = "block";
-        setTimeout(() =>
+        const result = await InstitutionsStaffSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': StaffController.selectedStaffData.identity_type_id,
+            'identity_number': StaffController.selectedStaffData.identity_number,
+            'nationality_id': StaffController.selectedStaffData.nationality_id
+        });
+        if (result.data.user_exist===1)
         {
-            document.querySelector("multi-select-tree").getElementsByClassName("input-select-wrapper")[0].click()
-        }, 10);
+            StaffController.messageClass = 'alert-warning';
+            StaffController.message = result.data.message;
+            StaffController.isIdentityUserExist = true;
+        } else
+        {
+            StaffController.messageClass = '';
+            StaffController.message = '';
+            StaffController.isIdentityUserExist = false;
+        }
+       /*  return result.data.user_exist === 1; */
     }
-    function toggleAddressPlaceArea()
-    {
-        document.getElementById("address_area_control_textbox").style.display = "none";
-        document.getElementById("address_area_control_dropdown").style.display = "block";
-        setTimeout(() => {
-            document.querySelector("multi-select-tree").getElementsByClassName("input-select-wrapper")[0].click()
-        }, 10);
-    } */
 }
