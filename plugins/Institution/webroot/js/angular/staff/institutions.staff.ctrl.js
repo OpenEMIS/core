@@ -313,7 +313,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         last_name = StaffController.selectedStaffData.last_name;
         date_of_birth = StaffController.selectedStaffData.date_of_birth;
         identity_number = StaffController.selectedStaffData.identity_number;
-      
+        openemis_no = StaffController.selectedStaffData.openemis_no; 
         nationality_id = StaffController.selectedStaffData.nationality_id;
         nationality_name = StaffController.selectedStaffData.nationality_name;
         identity_type_name = StaffController.selectedStaffData.identity_type_name;
