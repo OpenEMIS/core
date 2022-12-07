@@ -479,13 +479,13 @@ trait PdfReportTrait
                 }
             }
         }
-		
+        
         $file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $outFile.'.pdf';
         $pdf_file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
         $content = $mpdf->Output($file_path, "S");
-		$fp = fopen($pdf_file_path . $outFile . ".txt","wb");
-		fwrite($fp,$content);
-		fclose($fp);
+        $fp = fopen($pdf_file_path . $outFile . ".txt","wb");
+        fwrite($fp,$content);
+        fclose($fp);
         unset($mpdf);
     }
 
