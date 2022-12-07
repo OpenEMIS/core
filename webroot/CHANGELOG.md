@@ -1,3 +1,11 @@
+### [3.76.3] - 2022-12-07
+- Bug Fixed: Institutions>Academic>Classes: The system removes the count of students if the students are promoted/graduated/repeated
+- Bug Fixed: Administration>Report Card>Comments: Only the institution Inagua All Age is affected where any roles besides superadmin cannot comment
+- Bug Fixed: Directory/Institution>Students/Staff:Followups for POCOR-5672
+- Bug Fixed: Develop a function to download Student Report Cards in Excel format
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to generate or download even when permission is given
+- Bug Fixed: Migration Script: Import bypass the existing outcome_criterias.name column's limit size of 500 to 1000
+
 ### [3.76.2] - 2022-12-01
 - Implemented: Develop a function to download Student Report Cards in Excel format
 - Bug Fixed: Administration>Performance>Competencies: Education programme becomes empty when selected
