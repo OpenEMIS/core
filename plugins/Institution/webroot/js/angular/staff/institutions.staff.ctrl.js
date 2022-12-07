@@ -704,6 +704,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function changeNationality() {
         var nationalityId = StaffController.selectedStaffData.nationality_id;
+        if (nationalityId === null)
+        {
+            StaffController.selectedStaffData.nationality_name = "";
+        }
         var options = StaffController.nationalitiesOptions;
         var identityOptions = StaffController.identityTypeOptions;
         for (var i = 0; i < options.length; i++) {
@@ -723,6 +727,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function changeIdentityType() {
         var identityType = StaffController.selectedStaffData.identity_type_id;
+        if (identityType == null)
+        {
+            StaffController.selectedStaffData.identity_type_id = '';
+            StaffController.selectedStaffData.identity_number = '';
+            StaffController.selectedStaffData.identity_type_name = '';
+        }
         var identityTypeOptions = StaffController.identityTypeOptions;
         for (var i = 0; i < identityTypeOptions.length; i++) {
             if (identityTypeOptions[i].id == identityType) {
@@ -976,7 +986,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
     
     function goToPrevStep(){
-        if(StaffController.isInternalSearchSelected) {
+        if (StaffController.isInternalSearchSelected)
+        {
+            StaffController.isInternalSearchSelected=false
             StaffController.step = 'internal_search';
             StaffController.internalGridOptions = null;
             StaffController.goToInternalSearch();
@@ -1007,30 +1019,39 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
     }
 
-    function validateDetails() {
+    async function validateDetails() {
         StaffController.error = {};
-        if(StaffController.step === 'user_details') {
-            if(!StaffController.selectedStaffData.first_name){
-                StaffController.error.first_name = 'This field cannot be left empty';
+        if (StaffController.step === 'user_details')
+        {
+            const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
+            if (blockName === "General_Info" && hasError)
+            { 
+                if (!StaffController.selectedStaffData.first_name)
+                {
+                    StaffController.error.first_name = 'This field cannot be left empty';
+                }
+                if (!StaffController.selectedStaffData.last_name)
+                {
+                    StaffController.error.last_name = 'This field cannot be left empty';
+                }
+                if (!StaffController.selectedStaffData.gender_id)
+                {
+                    StaffController.error.gender_id = 'This field cannot be left empty';
+                }
+                if (!StaffController.selectedStaffData.date_of_birth)
+                {
+                    StaffController.error.date_of_birth = 'This field cannot be left empty';
+                } else
+                {
+                    StaffController.selectedStaffData.date_of_birth = $filter('date')(StaffController.selectedStaffData.date_of_birth, 'yyyy-MM-dd');
+                }
             }
-            if(!StaffController.selectedStaffData.last_name){
-                StaffController.error.last_name = 'This field cannot be left empty';
-            }
-            if(!StaffController.selectedStaffData.gender_id){
-                StaffController.error.gender_id = 'This field cannot be left empty';
-            }
-            if(!StaffController.selectedStaffData.date_of_birth) {
-                StaffController.error.date_of_birth = 'This field cannot be left empty';
-            } else {
-                StaffController.selectedStaffData.date_of_birth = $filter('date')(StaffController.selectedStaffData.date_of_birth, 'yyyy-MM-dd');
-            }
-    
-            if(!StaffController.selectedStaffData.first_name || !StaffController.selectedStaffData.last_name || !StaffController.selectedStaffData.gender_id || !StaffController.selectedStaffData.date_of_birth){
-                return;
-            }
+
+            if (hasError) return;
             StaffController.step = 'internal_search';
             StaffController.internalGridOptions = null;
             StaffController.goToInternalSearch();
+            await checkUserAlreadyExistByIdentity();
         }
         if(StaffController.step === 'add_staff') {
             let shouldPositionRequired = false;
@@ -1098,12 +1119,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     async function goToNextStep()
     {
-        /* Here check the user identity number is already exist or not  - PENDING*/
-       
-      
+     
         if (StaffController.isInternalSearchSelected)
         {
-           
             if (StaffController.staffData && StaffController.staffData.is_diff_school)
             {
                 StaffController.messageClass = 'alert-warning';
@@ -1124,10 +1142,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         } else {
             switch(StaffController.step){
                 case 'user_details': 
-                    await checkUserAlreadyExistByIdentity();
                     StaffController.validateDetails();
+                   
                     break;
                 case 'internal_search': 
+                  
                     StaffController.step = 'external_search';
                     StaffController.externalGridOptions = null;
                     StaffController.goToExternalSearch();
@@ -2270,5 +2289,34 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.isIdentityUserExist = false;
         }
        /*  return result.data.user_exist === 1; */
+    }
+
+    /**
+ * @desc 1)Identity Number is mandatory OR 
+ * @desc 2)OpenEMIS ID is mandatory OR
+ * @desc 3)First Name, Last Name, Date of Birth and Gender are mandatory
+ * @returns [ error block name | true or false]
+ */
+    function checkUserDetailValidationBlocksHasError()
+    {
+        const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no } = StaffController.selectedStaffData;
+        const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
+        const isIdentityHasError = (identity_number !== "" && identity_number !== undefined && !identity_type_id !== "" && identity_type_id !== undefined)
+        const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
+
+        if (isOpenEmisNoHasError)
+        {
+            return ["OpenEMIS_ID", false];
+        }
+        if (isIdentityHasError)
+        {
+            return ['Identity', false]
+        }
+        if (isGeneralInfodHasError)
+        {
+            return ["General_Info", true];
+        }
+
+        return ["", false];
     }
 }
