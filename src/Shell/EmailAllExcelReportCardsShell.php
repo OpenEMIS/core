@@ -154,7 +154,7 @@ class EmailAllExcelReportCardsShell extends Shell
                         // default email status is error
                         $emailStatus = $this->ReportCardEmailProcesses::ERROR;
                         $errorMsg = NULL;
-                        if (empty($emailProcessesData['recipients'])) {
+                        if (!empty($emailProcessesData['recipients'])) {//POCOR-7106 empty change to !empty
                             $errorMsg = 'Email address is not configured';
 
                             $this->out($errorMsg);
