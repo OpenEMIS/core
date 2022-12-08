@@ -52,3 +52,5 @@ class POCOR6971 extends AbstractMigration
         $this->execute('RENAME TABLE `zz_6971_institution_positions` TO `institution_positions`');
     }
 }
+
+?>
