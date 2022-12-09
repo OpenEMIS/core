@@ -3,7 +3,8 @@ namespace App\Shell;
 
 use ArrayObject;
 use Exception;
-use Cake\ORM\TableRegistry;
+use message;
+Use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
 use Cake\Utility\Hash;
@@ -154,7 +155,7 @@ class EmailAllExcelReportCardsShell extends Shell
                         // default email status is error
                         $emailStatus = $this->ReportCardEmailProcesses::ERROR;
                         $errorMsg = NULL;
-                        if (empty($emailProcessesData['recipients'])) {
+                        if (empty($emailProcessesData['recipients'])) {//POCOR-7106 empty change to !empty
                             $errorMsg = 'Email address is not configured';
 
                             $this->out($errorMsg);
