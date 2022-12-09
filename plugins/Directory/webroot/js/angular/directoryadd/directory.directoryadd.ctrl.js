@@ -48,6 +48,10 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.addressAreaId = null;
     scope.birthplaceAreaId = null;
     scope.isIdentityUserExist = false;
+    scope.disableFields = {
+        username: false,
+        password: false
+    }
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -128,7 +132,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         last_name = scope.selectedUserData.last_name;
         date_of_birth = scope.selectedUserData.date_of_birth;
         identity_number = scope.selectedUserData.identity_number;
-
+        openemis_no = scope.selectedUserData.openemis_no;
         nationality_id = scope.selectedUserData.nationality_id;
         nationality_name = scope.selectedUserData.nationality_name;
         identity_type_name = scope.selectedUserData.identity_type_name;
@@ -372,6 +376,10 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.changeNationality =  function() {
         var nationalityId = scope.selectedUserData.nationality_id;
+        if (nationalityId === null)
+        {
+            scope.selectedUserData.nationality_name = "";
+        }
         var options = scope.nationalitiesOptions;
         var identityOptions = scope.identityTypeOptions;
         for (var i = 0; i < options.length; i++) {
@@ -391,6 +399,12 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.changeIdentityType =  function() {
         var identityType = scope.selectedUserData.identity_type_id;
+        if (identityType == null)
+        {
+            scope.selectedUserData.identity_type_id = '';
+            scope.selectedUserData.identity_number = '';
+            scope.selectedUserData.identity_type_name = '';
+        }
         var options = scope.identityTypeOptions;
         for (var i = 0; i < options.length; i++) {
             if (options[i].id == identityType) {
@@ -625,32 +639,47 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         });
     }
 
-    scope.validateDetails = function() {
+    scope.validateDetails = async function ()
+    {
+        scope.error = {};
+        if (!scope.selectedUserData.user_type_id)
+        {
+            scope.error.user_type_id = 'This field cannot be left empty';
+            return;
+        }
         if(scope.step === 'user_details') {
-            if(!scope.selectedUserData.user_type_id){
-                scope.error.user_type_id = 'This field cannot be left empty';
+            const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
+            if (blockName === 'General_Info' && hasError)
+            {
+                if (!scope.selectedUserData.user_type_id)
+                {
+                    scope.error.user_type_id = 'This field cannot be left empty';
+                }
+                if (!scope.selectedUserData.first_name)
+                {
+                    scope.error.first_name = 'This field cannot be left empty';
+                }
+                if (!scope.selectedUserData.last_name)
+                {
+                    scope.error.last_name = 'This field cannot be left empty';
+                }
+                if (!scope.selectedUserData.gender_id)
+                {
+                    scope.error.gender_id = 'This field cannot be left empty';
+                }
+                if (!scope.selectedUserData.date_of_birth)
+                {
+                    scope.error.date_of_birth = 'This field cannot be left empty';
+                } else
+                {
+                    scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
+                }
             }
-            if(!scope.selectedUserData.first_name){
-                scope.error.first_name = 'This field cannot be left empty';
-            }
-            if(!scope.selectedUserData.last_name){
-                scope.error.last_name = 'This field cannot be left empty';
-            }
-            if(!scope.selectedUserData.gender_id){
-                scope.error.gender_id = 'This field cannot be left empty';
-            }
-            if(!scope.selectedUserData.date_of_birth) {
-                scope.error.date_of_birth = 'This field cannot be left empty';
-            } else {
-                scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
-            }
-    
-            if(!scope.selectedUserData.user_type_id || !scope.selectedUserData.first_name || !scope.selectedUserData.last_name || !scope.selectedUserData.gender_id || !scope.selectedUserData.date_of_birth){
-                return;
-            }
+            if (hasError) return;
             scope.step = 'internal_search';
             scope.internalGridOptions = null;
             scope.goToInternalSearch();
+            await checkUserAlreadyExistByIdentity();
         }
         if(scope.step === 'confirmation') {
             let isCustomFieldNotValidated = false;
@@ -715,7 +744,6 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         } else {
             switch(scope.step){
                 case 'user_details': 
-                    await checkUserAlreadyExistByIdentity();
                     scope.internalGridOptions = null;
                     scope.validateDetails();
                     break;
@@ -958,12 +986,21 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             scope.message = '';
             scope.isIdentityUserExist = false;
         }
+
+        scope.disableFields = {
+            username: true,
+            password: true
+        }
     }
 
     scope.selectUserFromExternalSearch = function(id) {
         scope.selectedUser = id;
         scope.isInternalSearchSelected = false;
         scope.getUserData();
+        scope.disableFields = {
+            username: false,
+            password: false
+        }
     }
 
     scope.setUserData = function (selectedData)
@@ -1438,5 +1475,34 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             scope.isIdentityUserExist = false;
         }
         /*  return result.data.user_exist === 1; */
+    }
+
+    /**
+  * @desc 1)Identity Number is mandatory OR 
+  * @desc 2)OpenEMIS ID is mandatory OR
+  * @desc 3)First Name, Last Name, Date of Birth and Gender are mandatory
+  * @returns [ error block name | true or false]
+  */
+    function checkUserDetailValidationBlocksHasError()
+    {
+        const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no } = scope.selectedUserData;
+        const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
+        const isIdentityHasError = (identity_number !== "" && identity_number !== undefined && !identity_type_id !== "" && identity_type_id !== undefined)
+        const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
+
+        if (isOpenEmisNoHasError)
+        {
+            return ["OpenEMIS_ID", false];
+        }
+        if (isIdentityHasError)
+        {
+            return ['Identity', false]
+        }
+        if (isGeneralInfodHasError)
+        {
+            return ["General_Info", true];
+        }
+
+        return ["", false];
     }
 }
