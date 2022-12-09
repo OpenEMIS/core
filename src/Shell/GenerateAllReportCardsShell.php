@@ -24,6 +24,10 @@ class GenerateAllReportCardsShell extends Shell
 
     public function main()
     {
+        //POCOR-7067 Starts
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $timeZone= $ConfigItems->value("time_zone");
+        date_default_timezone_set($timeZone);//POCOR-7067 Ends
         if (!empty($this->args[0]) && !empty($this->args[1])) {
             $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllReportCards', getmypid(), $this->args[0], '', $this->args[1]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
