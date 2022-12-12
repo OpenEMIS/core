@@ -1,3 +1,10 @@
+### [3.76.4] - 2022-12-09
+- Implemented: When adding guardians to new students we need to be able to add multiple guardians
+- Bug Fixed: Institutions>Performance>Report Cards: Email is not sent
+- Bug Fixed: Institutions > Performances > Report Cards: Modified time shows incorrect timing
+- Bug Fixed: Add User : If user is added from Internal Search username and password should be read-only
+- Bug Fixed: Directory and Institutions>Students/Staff-When entering Identity Number or OpenEMIS ID, fields should not be mandatory
+
 ### [3.76.3] - 2022-12-07
 - Bug Fixed: Institutions>Academic>Classes: The system removes the count of students if the students are promoted/graduated/repeated
 - Bug Fixed: Administration>Report Card>Comments: Only the institution Inagua All Age is affected where any roles besides superadmin cannot comment
