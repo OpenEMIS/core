@@ -331,34 +331,41 @@ trait PdfReportTrait
         //POCOR-6916 start
         $reportCard = TableRegistry::get('report_cards');
         $configVal = $reportCard->find()->select(['pdf_no'=>$reportCard->aliasField('pdf_page_number')])->where([$reportCard->aliasField('id')=>$report_card_id])->first();
-        $configValue =  $configVal['pdf_no'];
-        if($configValue == -1){
-            $sheetCount = $objSpreadsheet->getSheetCount();
+        if(!empty($configValue)){ //POCOR-7096
+            $configValue =  $configVal['pdf_no'];
+            if($configValue == -1){
+                $sheetCount = $objSpreadsheet->getSheetCount();
+            }else{
+                $sheetCount = $configValue;
+            }
         }else{
-            $sheetCount = $configValue;
+            $sheetCount = $objSpreadsheet->getSheetCount();
         }
         //POCOR-6916 end
         for ($sheetIndex = 0; $sheetIndex < $sheetCount; $sheetIndex++) {
-            $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
-            $filepath = $basePath.'_'.$sheetIndex;
-            $writer->setSheetIndex($sheetIndex);
-            $writer->save($filepath);
+            $sheetStatus = $objSpreadsheet->getSheet($sheetIndex)->getSheetState(); //POCOR-7077
+            if($sheetStatus == 'visible'){ //POCOR-7077
+                $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
+                $filepath = $basePath.'_'.$sheetIndex;
+                $writer->setSheetIndex($sheetIndex);
+                $writer->save($filepath);
 
-            // Read the html file and convert them into a variable
-            $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
+                // Read the html file and convert them into a variable
+                $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
 
-            // Remove all the redundant rows and columns
-            $processedHtml = $this->processHtml($file, $sheetIndex);
+                // Remove all the redundant rows and columns
+                $processedHtml = $this->processHtml($file, $sheetIndex);
 
-            // Save the processed html into a temp pdf
-            $mpdf->AddPage('L');
+                // Save the processed html into a temp pdf
+                $mpdf->AddPage('L');
 
-            $mpdf->WriteHTML($processedHtml);
-            $filepath = $filepath.'.pdf';
+                $mpdf->WriteHTML($processedHtml);
+                $filepath = $filepath.'.pdf';
 
-            $mpdf->Output($filepath,'F');
-            $filePaths[] = $filepath;
-            unset($mdpf);
+                $mpdf->Output($filepath,'F');
+                $filePaths[] = $filepath;
+                unset($mdpf);
+            }
         }
         // Merge all the pdf that belongs to one report
         if(!empty($student_id)) {
