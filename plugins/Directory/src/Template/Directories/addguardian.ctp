@@ -64,6 +64,9 @@
                 type="button" class="btn close-btn" ng-click="cancelProcess()" style="font-size: 12px;">Close</button>
             <button  ng-disabled="isIdentityUserExist" type="button" class="btn btn-default btn-next"
                 ng-if="step!=='confirmation' && step!=='summary'" ng-click="goToNextStep()" style="font-size: 12px;">Next</button>
+             <button
+                ng-if="(step=='summary')"
+                type="button" class="btn btn-default" ng-click="addGuardian()" style="font-size: 12px;">Add Multiple Guardians</button>
         </div>
         <div class="step-content">
             <div class="step-pane sample-pane" ng-show="step === 'user_details'">
@@ -322,7 +325,7 @@
                     </div>
                     <div class="input string required">
                         <label><?= __('Username') ?></label>
-                        <input ng-model="selectedUserData.username" type="string">
+                        <input ng-model="selectedUserData.username" type="string" ng-disabled="disableFields.username">
                         <div ng-if="error.username" class="error-message">
                             <p>{{ error.relation_type_id }}</p>
                         </div>
@@ -331,7 +334,7 @@
                         <label><?=
                             __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
                         ?></label>
-                        <input ng-model="selectedUserData.password" type="string">
+                        <input ng-model="selectedUserData.password" type="string" ng-disabled="disableFields.password">
                         <div ng-if="error.password" class="error-message">
                             <p>{{ error.password }}</p>
                         </div>
