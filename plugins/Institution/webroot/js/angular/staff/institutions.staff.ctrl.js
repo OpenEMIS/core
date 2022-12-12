@@ -57,6 +57,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.isEnableBirthplaceArea = false;
     StaffController.isEnableAddressArea = false;
     StaffController.isIdentityUserExist = false;
+    StaffController.user_identity_type_id = 0;
 
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
@@ -166,9 +167,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             password: StaffController.isInternalSearchSelected ? '' : StaffController.selectedStaffData.password,
             postal_code: StaffController.selectedStaffData.postalCode,
             address: StaffController.selectedStaffData.address,
-            birthplace_area_id: InstitutionsStaffSvc.getBirthplaceAreaId(),
-            address_area_id: InstitutionsStaffSvc.getAddressAreaId(),
-            identity_type_id: StaffController.selectedStaffData.identity_type_id,
+            birthplace_area_id: InstitutionsStaffSvc.getBirthplaceAreaId() == null ? StaffController.selectedStaffData.birthplace_area_id : InstitutionsStaffSvc.getBirthplaceAreaId(),
+            address_area_id: InstitutionsStaffSvc.getAddressAreaId() == null ? StaffController.selectedStaffData.address_area_id : InstitutionsStaffSvc.getAddressAreaId(),
+            identity_type_id: StaffController.user_identity_type_id == "" ? StaffController.selectedStaffData.identity_type_id : StaffController.user_identity_type_id,
             identity_type_name: StaffController.selectedStaffData.identity_type_name,
             start_date: StaffController.selectedStaffData.startDate,
             end_date: StaffController.selectedStaffData.endDate ? $filter('date')(StaffController.selectedStaffData.endDate, 'yyyy-MM-dd') : '',
@@ -245,10 +246,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         });
         UtilsSvc.isAppendLoader(true);
 
-        if (StaffController.isExternalSearchSelected || StaffController.isInternalSearchSelected)
-        {
+        if (StaffController.user_identity_number){
             params = { ...params, identity_number: StaffController.user_identity_number }
             StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
+        }
+
+        if (StaffController.user_identity_type_id>0)
+        {
+            params = { ...params, identity_type_id: parseInt(StaffController.user_identity_type_id) }
+            StaffController.selectedStaffData.identity_type_id = parseInt(StaffController.user_identity_type_id);
         }
         InstitutionsStaffSvc.saveStaffDetails(params).then(function (resp)
         {
@@ -1161,7 +1167,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedUser = id;
         StaffController.isInternalSearchSelected = true;
         StaffController.isExternalSearchSelected = false;
-        StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         StaffController.getStaffData();
         StaffController.getStaffCustomFields();
 
@@ -1177,7 +1182,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedUser = id;
         StaffController.isInternalSearchSelected = false;
         StaffController.isExternalSearchSelected = true;
-        StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         StaffController.getStaffData();
         StaffController.getStaffCustomFields();
     }
@@ -1240,6 +1244,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.requestedBy = selectedData.institution_code + ' - ' + selectedData.institution_name;
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
         StaffController.user_identity_number = deepCopy.identity_number;
+        StaffController.user_identity_type_id = deepCopy.identity_type_id;
+        StaffController.selectedStaffData.birthplace_area_id = selectedData.birthplace_area_id;
+        StaffController.selectedStaffData.address_area_id = selectedData.address_area_id;
+        StaffController.selectedStaffData.birth_area_code = selectedData.birth_area_code;
+        StaffController.selectedStaffData.area_code = selectedData.area_code;
 
         if (selectedData.address_area_id > 0)
         {
@@ -1296,6 +1305,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.postalCode = selectedData.postal_code;
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
         StaffController.user_identity_number = deepCopy.identity_number;
+
+        StaffController.selectedStaffData.birthplace_area_id = selectedData.birthplace_area_id;
+        StaffController.selectedStaffData.address_area_id = selectedData.address_area_id;
+        StaffController.selectedStaffData.birth_area_code = selectedData.birth_area_code;
+        StaffController.selectedStaffData.area_code = selectedData.area_code;
 
         if (selectedData.address_area_id > 0)
         {
