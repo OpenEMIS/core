@@ -584,8 +584,13 @@ class ProfilesController extends AppController
                     $studentId = $session->read('Student.Students.id'); 
                 }
                 if (!empty($studentId)) {
-                    $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
-                    $query->where([$model->aliasField('student_id') => $sId]);
+                    if ($studentId['id']) {                        
+                        $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
+                        $query->where([$model->aliasField('student_id') => $sId]);
+                    }
+                    else{
+                        $query->where([$model->aliasField('student_id') => $studentId]);
+                    }
                 } else {
                     $query->where([$model->aliasField('student_id') => $loginUserId]);
                 }

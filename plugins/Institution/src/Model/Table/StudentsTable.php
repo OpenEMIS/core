@@ -1575,7 +1575,6 @@ class StudentsTable extends ControllerActionTable
             }
 
             $extra['elements'] = array_merge($extra['elements'], $indexElements);
-            //echo '<pre>';print_r($indexElements);die;
         }
     }
 
@@ -1632,74 +1631,71 @@ class StudentsTable extends ControllerActionTable
 						])->where([
 							$this->aliasField('student_id') => $entity->student_id
 						]);
-			if (!empty($bodyData)) {
-				foreach ($bodyData as $key => $value) {
-					$user_id = $value->user->id;
-					$openemis_no = $value->user->openemis_no;
-					$first_name = $value->user->first_name;
-					$middle_name = $value->user->middle_name;
-					$third_name = $value->user->third_name;
-					$last_name = $value->user->last_name;
-					$preferred_name = $value->user->preferred_name;
-					$gender = $value->user->gender->name;
-					$nationality = $value->user->main_nationality->name;
+            if (!empty($bodyData)) {
+                foreach ($bodyData as $key => $value) {
+                    $user_id = $value->user->id;
+                    $openemis_no = $value->user->openemis_no;
+                    $first_name = $value->user->first_name;
+                    $middle_name = $value->user->middle_name;
+                    $third_name = $value->user->third_name;
+                    $last_name = $value->user->last_name;
+                    $preferred_name = $value->user->preferred_name;
+                    $gender = $value->user->gender->name;
+                    $nationality = $value->user->main_nationality->name;
                     // POCOR-6283 start
-					$dateOfBirth = $value->user->date_of_birth; 
-
+                    $dateOfBirth = $value->user->date_of_birth; 
                     // commented because date can be converted directly no need to use loop
-					/* if(!empty($value->user->date_of_birth)) {
-						foreach ($value->user->date_of_birth as $key => $date) {
-							$dateOfBirth = $date;
-						}
-					} */
+                    /* if(!empty($value->user->date_of_birth)) {
+                        foreach ($value->user->date_of_birth as $key => $date) {
+                            $dateOfBirth = $date;
+                        }
+                    } */
                     // POCOR-6283 end
-
-					$address = $value->user->address;
-					$postalCode = $value->user->postal_code;
-					$addressArea = $value->user->address_area->name;
-					$birthplaceArea = $value->user->birthplace_area->name;
+                    $address = $value->user->address;
+                    $postalCode = $value->user->postal_code;
+                    $addressArea = $value->user->address_area->name;
+                    $birthplaceArea = $value->user->birthplace_area->name;
                     $role = $value->user->is_student;
 
-					$contactValue = [];
-					$contactType = [];
-					if(!empty($value->user['contacts'])) {
-						foreach ($value->user['contacts'] as $key => $contact) {
-							$contactValue[] = $contact->value;
-							$contactType[] = $contact->contact_type->name;
-						}
-					}
+                    $contactValue = [];
+                    $contactType = [];
+                    if(!empty($value->user['contacts'])) {
+                        foreach ($value->user['contacts'] as $key => $contact) {
+                            $contactValue[] = $contact->value;
+                            $contactType[] = $contact->contact_type->name;
+                        }
+                    }
 
-					$identityNumber = [];
-					$identityType = [];
-					if(!empty($value->user['identities'])) {
-						foreach ($value->user['identities'] as $key => $identity) {
-							$identityNumber[] = $identity->number;
-							$identityType[] = $identity->identity_type->name;
-						}
-					}
+                    $identityNumber = [];
+                    $identityType = [];
+                    if(!empty($value->user['identities'])) {
+                        foreach ($value->user['identities'] as $key => $identity) {
+                            $identityNumber[] = $identity->number;
+                            $identityType[] = $identity->identity_type->name;
+                        }
+                    }
 
-					$username = $value->user->username;
-					$institution_id = $value->institution->id;
-					$institutionName = $value->institution->name;
-					$institutionCode = $value->institution->code;
-					$educationGrade = $value->education_grade->name;
-					$academicCode = $value->academic_period->code;
-					$academicGrade = $value->academic_period->name;
-					$studentStatus = $value->student_status->name;
-
-					if(!empty($value->start_date)) {
+                    $username = $value->user->username;
+                    $institution_id = $value->institution->id;
+                    $institutionName = $value->institution->name;
+                    $institutionCode = $value->institution->code;
+                    $educationGrade = $value->education_grade->name;
+                    $academicCode = $value->academic_period->code;
+                    $academicGrade = $value->academic_period->name;
+                    $studentStatus = $value->student_status->name;
+                    if(!empty($value->start_date)) {
                         $i=0;
-
-						foreach ($value->start_date as $key => $date) {
+                        foreach ($value->start_date as $key => $date) {
                             if($i==0){
-        							$startDate = $date;
-                                }
-						$i++;}
-					}
+                                $startDate = $date;
+                            }
+                            $i++;
+                        }
+                    }
 
-					if(!empty($value->end_date)) {
+                    if(!empty($value->end_date)) {
                         $i=0;
-						foreach ($value->end_date as $key => $date) {
+                        foreach ($value->end_date as $key => $date) {
                             if($i==0){
 							  $endDate = $date;
                            $i++; }
@@ -1808,7 +1804,6 @@ class StudentsTable extends ControllerActionTable
 				$Webhooks->triggerShell('student_create', ['username' => ''], $body);
 			}
 		}
-
     }
 
     public function onGetStudentId(Event $event, Entity $entity)

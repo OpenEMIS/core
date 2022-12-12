@@ -290,7 +290,6 @@ class InstitutionStudentRisksTable extends ControllerActionTable
     public function afterSaveOrDelete(Event $mainEvent, Entity $afterSaveOrDeleteEntity)
     {
         $criteriaModel = $afterSaveOrDeleteEntity->source();
-
         // on student admission this will be updated (student gender, guardians, student repeated)
         $consolidatedModel = ['Institution.StudentUser', 'Student.Guardians', 'Institution.IndividualPromotion'];
 
@@ -354,8 +353,6 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                         }
 
                         $valueIndexData = $event->result;
-
-
                         // if the condition fulfilled then the value will be saved as its value, if not saved as null
                         switch ($operator) {
                             case 1: // '<='
@@ -423,9 +420,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                                     ->where([
                                         $this->StudentRisksCriterias->aliasField('institution_student_risk_id') => $entity->id,
                                         $this->StudentRisksCriterias->aliasField('risk_criteria_id') => $risksCriteriaData->id
-                                    ])
-                                    ->all();
-
+                                    ])->all();
                                 // find id from db
                                 if (!$studentRisksCriteriaResults->isEmpty()) {
                                     $criteriaEntity = $studentRisksCriteriaResults->first();
@@ -467,26 +462,24 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 		$eventAction = explode('.', $mainEvent->name);
 		
 		if(!empty($eventAction[2]) && ($eventAction[2] == 'afterSave')) {  
-		
 			$bodyData = $InstitutionStudents->find('all',
-									[ 'contain' => [
-										'Institutions',
-										'EducationGrades',
-										'AcademicPeriods',
-										'StudentStatuses',
-										'Users',
-										'Users.Genders',
-										'Users.MainNationalities',
-										'Users.Identities.IdentityTypes',
-										'Users.AddressAreas',
-										'Users.BirthplaceAreas',
-										'Users.Contacts.ContactTypes'
-									],
+							[ 'contain' => [
+								'Institutions',
+								'EducationGrades',
+								'AcademicPeriods',
+								'StudentStatuses',
+								'Users',
+								'Users.Genders',
+								'Users.MainNationalities',
+								'Users.Identities.IdentityTypes',
+								'Users.AddressAreas',
+								'Users.BirthplaceAreas',
+								'Users.Contacts.ContactTypes'
+							],
 						])->where([
 							$InstitutionStudents->aliasField('student_id') => $afterSaveOrDeleteEntity->id
 						]);
 
-			
 			if (!empty($bodyData)) { 
 				foreach ($bodyData as $key => $value) { 
 					$user_id = $value->user->id;
@@ -500,7 +493,6 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 					$nationality = $value->user->main_nationality->name;
                     // POCOR-6283 start
 					$dateOfBirth = $value->user->date_of_birth; 
-
                     // commented because date can be converted directly no need to use loop
 					/* if(!empty($value->user->date_of_birth)) {
 						foreach ($value->user->date_of_birth as $key => $date) {
@@ -508,7 +500,6 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 						}
 					} */
                     // POCOR-6283 end
-					
 					$address = $value->user->address;
 					$postalCode = $value->user->postal_code;
 					$addressArea = $value->user->address_area->name;
@@ -548,17 +539,14 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 							$startDate = $date;
 						}
 					}
-					
 					if(!empty($value->end_date)) {
 						foreach ($value->end_date as $key => $date) {
 							$endDate = $date;
 						}
 					}*/
-					
 				}
 			}
 			$bodys = array();
-				   
 			$bodys = [   
 				'security_users_id' => !empty($user_id) ? $user_id : NULL,
 				'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
@@ -662,8 +650,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 				}
 			}
 		}
-		
-    }
+	}
 
     // will update the total risk on the institution_student_risks
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
