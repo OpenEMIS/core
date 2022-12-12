@@ -30,6 +30,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.studentOpenEmisId;
     scope.isInternalSearchSelected = false;
     scope.isIdentityUserExist = false;
+    scope.disableFields = {
+        username: true,
+        password: true
+    }
 
     scope.datepickerOptions = {
         minDate: new Date('01/01/1900'),
@@ -887,12 +891,20 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             scope.message = '';
             scope.isIdentityUserExist = false;
         }
+        scope.disableFields = {
+            username: true,
+            password: true
+        }
     }
 
     scope.selectGuardianFromExternalSearch = function(id) {
         scope.selectedGuardian = id;
         scope.isInternalSearchSelected = false;
         scope.getGuardianData();
+        scope.disableFields = {
+            username: false,
+            password: false
+        }
     }
 
     scope.getGuardianData = function() {
@@ -1098,5 +1110,9 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             scope.isIdentityUserExist = false;
         }
         /*  return result.data.user_exist === 1; */
+    }
+    scope.addGuardian=function addGuardian()
+    {
+        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
     }
 }
