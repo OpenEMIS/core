@@ -47,6 +47,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
                 ]
             ]);
     }
+    
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -99,11 +100,11 @@ class CompetencyTemplatesTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        /*$this->field('academic_period_id', [
-            'type' => 'select',
+        $this->field('academic_period_id', [ 
+            'type' => 'hidden',
             'select' => false,
             'entity' => $entity
-        ]);*/
+        ]);
         $this->field('education_programme_id', [
             'type' => 'select',
             'entity' => $entity
@@ -122,10 +123,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
     {
         if ($action == 'add') {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-
-            $attr['options'] = $periodOptions;
-            $attr['default'] = $selectedPeriod;
-			$attr['onChangeReload'] = true;
+            $attr['value'] = $selectedPeriod; //POCOR-7066
         } else if ($action == 'edit') {
             $academicPeriodId = $attr['entity']->academic_period_id;
             $attr['type'] = 'readonly';
@@ -146,7 +144,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
 			if(!empty($this->request->query('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
 				$academicPeriodId = $this->request->query('period');
 			} else {
-				$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();					
+                $academicPeriodId = !empty($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();	//POCOR-7066				
 			}	
 			
 			$programmeOptions = $EducationProgrammes
@@ -210,8 +208,22 @@ class CompetencyTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    //Start:POCOR-7066
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        $RecordAlready = $this->find()->where(['education_grade_id'=> $entity->education_grade_id, 'academic_period_id'=>$entity->academic_period_id])->first();
+        if(!empty($RecordAlready)){
+            $entity->alreayexit = 1;
+            $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+            return false;
+        }else{
+            $entity->alreayexit = 0;
+        }
+    }
+    //End:POCOR-7066
+
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {  
         if (empty($entity->errors())) {
             $extra['redirect'] = [
                 'plugin' => 'Competency',
@@ -226,14 +238,22 @@ class CompetencyTemplatesTable extends ControllerActionTable
             $url = $this->url('view');
             $url[] = $pass;
             $extra['redirect'] = $this->setQueryString($url, ['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
-            $this->Alert->success('Templates.addSuccess', ['reset' => true]);
+            //Start:POCOR-7066
+            if($entity->alreayexit == 1){
+                $this->Alert->error('Templates.alreadyexist', ['reset' => true]);
+            }else{
+                $this->Alert->success('Templates.addSuccess', ['reset' => true]);
+            }
+            //End:POCOR-7066
+            
         }
+        
+        
     }
 
     public function getAcademicPeriodOptions($querystringPeriod)
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
-
         if ($querystringPeriod) {
             $selectedPeriod = $querystringPeriod;
         } else {
