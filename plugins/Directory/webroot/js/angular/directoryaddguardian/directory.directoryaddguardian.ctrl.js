@@ -341,6 +341,12 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     scope.changeIdentityType =  function() {
         var identityType = scope.selectedUserData.identity_type_id;
+        if (identityType == null)
+        {
+            scope.selectedUserData.identity_type_id = '';
+            scope.selectedUserData.identity_number = '';
+            scope.selectedUserData.identity_type_name = '';
+        }
         var options = scope.identityTypeOptions;
         for (var i = 0; i < options.length; i++) {
             if (options[i].id == identityType) {
