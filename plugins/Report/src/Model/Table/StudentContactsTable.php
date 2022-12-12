@@ -107,14 +107,14 @@ class StudentContactsTable extends AppTable  {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
-        $areaId = $requestData->area_education_id;
+        //$areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
         $conditions = [];
-        if ($areaId != -1) {
-            $conditions['Institution.area_id'] = $areaId;
-        }
+        // if ($areaId != -1) {
+        //     $conditions['Institution.area_id'] = $areaId;
+        // }
         if (!empty($academicPeriodId)) {
             $conditions['InstitutionStudent.academic_period_id'] = $academicPeriodId;
         }
