@@ -142,7 +142,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 'last' => true  
             ])  
             ;   
-        }else{  
+        }elseif($this->request->data['StaffPositionProfiles']['staff_change_type_id'] == 5){
+            return $validator 
+            ->allowEmpty('assignee_id')
+            ->remove('assignee_id'); 
+        } else{  
             return $validator   
             ->allowEmpty('end_date')        
             ->remove('start_date')  
@@ -350,7 +354,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //echo "<pre>"; print_r($entity);die;
-       
+      // $entity->assignee_id = -1;
         //POCOR-6979
         $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
         $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
@@ -400,6 +404,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 //POCOR-7006 
             if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT'){
                 //End of POCOR-7006
+                $entity->assignee_id = -1;
                 $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
@@ -413,7 +418,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     ->where([$ShiftOptions->aliasField('id IN') => $entity->new_shift['_ids']])
                     ->toArray();
                     if($entity->new_shift!=null){
-                        die('pkk');
+                       // die('pkk');
                      $shiftUpdate =   $InstitutionPositions->updateAll(
                                 ['shift_id' => $entity->new_shift,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
                                 [
@@ -421,7 +426,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                                 ] 
                             );
                     }
-die('pkkp');
+//die('pkkp');
 
                     //remove all shifts data of selected staff
                     /*$InstitutionStaffShifts->deleteAll([
@@ -527,6 +532,7 @@ die('pkkp');
 
     public function addAfterSave(Event $event, $entity, $requestData, ArrayObject $extra)
     {
+        
         if (!$entity->errors()) {
             $StaffTable = TableRegistry::get('Institution.Staff');
             $url = $this->url('view');
@@ -597,6 +603,7 @@ die('pkkp');
 
     private function rejectPendingTransfer(array $data)
     {
+
         // reject all pending transfers
         $staffId = $data['staff_id'];
 
@@ -668,6 +675,7 @@ die('pkkp');
 
         // If the record exists
         if (!empty($staffRecord)) {
+
             unset($data['created']);
             unset($data['created_user_id']);
             unset($data['modified']);
@@ -1219,6 +1227,7 @@ die('pkkp');
 
     public function addOnInitialize(Event $event, Entity $entity)
     {
+
         $addOperation = $this->initialiseVariable($entity);
         if ($addOperation) {
             $institutionStaffId = $this->request->query('institution_staff_id');
@@ -1340,14 +1349,13 @@ die('pkkp');
                                 $ShiftOptions->aliasField('id = ') . $InstitutionPositions->aliasField('shift_id')
                             ])
                             ->where([$InstitutionStaff->aliasField('staff_id') => $entity->staff_id])
-                            ->toArray();
+                            ->first();
+                    $shifts = '';
                     if (!empty($staffShifts)) {
-                        foreach ($staffShifts as $shift) {
-                            $shifts[] = $shift->shift_name;
-                        }
+                        $shifts= $staffShifts->shift_name;
                     }
-                    $allShift = implode(",",$shifts);
-                    $attr['attr']['value'] = $allShift;
+                   // $allShift = implode(",",$shifts);
+                    $attr['attr']['value'] = $shifts;
                 }
             } else {
                 $attr['visible'] = false;
@@ -1383,7 +1391,7 @@ die('pkkp');
             }else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_SHIFT'] || $request->data[$this->alias()]['staff_change_type_id'] == 5) {
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
-                $attr['select'] = false;
+                //$attr['select'] = false;
                 $attr['options'] = ['id' => '' . __('Select Shift') . ' --']+$optionList;//POCOR-7109
                 $attr['onChangeReload'] = 'changeStatus';
             } else {
@@ -1437,5 +1445,27 @@ die('pkkp');
             }
         }
         return $attr;
+    }
+    /*public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    {
+            //$attr['type'] = 'selected';
+           // $attr['select'] = false;
+            $attr['options'] = ['-1' => __('Auto Assign')];
+           // $attr['onChangeReload'] = 'changeStatus';
+            return $attr;
+    }*/
+
+    /*public function validationAllowEmptyAssigneeId(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator->remove('assignee_id');
+        return $validator;
+    }*/
+
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    {
+
+         $entity->assignee_id = -1;
+         return $entity->assignee_id;
     }
 }
