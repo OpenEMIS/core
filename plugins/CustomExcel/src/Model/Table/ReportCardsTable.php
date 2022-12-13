@@ -882,11 +882,11 @@ class ReportCardsTable extends AppTable
             $absenceType = $absenceTypes[$obj['absence_type_id']];
             if (in_array($absenceType, ['EXCUSED', 'UNEXCUSED'])) {
                 // add if else condition for count total absent based on configuration POCOR-7050
-                if($periodCount==2 && $configVal ==2 && !empty($checkdata)){
+                if($periodCount==2 && $configOption ==2 && !empty($checkdata)){
                     $results['TOTAL_ABSENCE']['number_of_days'] += 1;
-                }elseif($periodCount==1 && $configVal ==2 && !empty($checkdata)){
+                }elseif($periodCount==1 && $configOption ==2 && !empty($checkdata)){
                     $results['TOTAL_ABSENCE']['number_of_days'] += 0;
-                }elseif($periodCount==1 && $configVal ==2 && empty($checkdata)){
+                }elseif($periodCount==1 && $configOption ==2 && empty($checkdata)){
                     $results['TOTAL_ABSENCE']['number_of_days'] += 1;
                 }else{
                     $results['TOTAL_ABSENCE']['number_of_days'] += 1;
