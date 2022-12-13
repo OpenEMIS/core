@@ -1333,7 +1333,7 @@ class StudentsTable extends ControllerActionTable
                                 [$UserIdentities->alias() => $UserIdentities->table()],
                                 [
                                     $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('student_id'),
-                                    //$UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
+                                    $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id //POCOR-7115 uncomment line
                                 ]
                             )
                     ->leftJoin(

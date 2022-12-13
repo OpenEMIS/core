@@ -775,12 +775,12 @@ class StaffTable extends ControllerActionTable
                 return $q->where(['Positions.staff_position_title_id' => $selectedPosition]);
             });
         }
-
-        $search = $this->getSearchKey();
+        //PCOOR-7115 comment code starts
+        /*$search = $this->getSearchKey();
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
-        }
+        }*///PCOOR-7115 comment code ends
 
         $statusOptions = $this->StaffStatuses->find('list')->toArray();
 
@@ -834,6 +834,21 @@ class StaffTable extends ControllerActionTable
         if (!isset($request->query['sort'])) {
             $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
         }
+        //PCOOR-7115 starts
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            // Starts POCOR-6532
+            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'aliasidentity' => 'Identities', 'searchTerm' => $search]);
+            // Ends POCOR-6532
+            $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+        } else {
+            //POCOR-5690 remove check isAdvancedSearchEnabled for search data from list
+            //if (!$this->isAdvancedSearchEnabled() && $selectedStatus != -1) {
+            if ($selectedStatus != -1) {
+                $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+            }
+        }//PCOOR-7115 ends
         //POCOR-6248 starts
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $UserIdentities = TableRegistry::get('User.Identities');
@@ -895,7 +910,7 @@ class StaffTable extends ControllerActionTable
                         [$IdentityTypes->alias() => $IdentityTypes->table()],
                         [
                             $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
-                            $IdentityTypes->aliasField('id = ') . $typesIdentity->id
+                            //$IdentityTypes->aliasField('id = ') . $typesIdentity->id
                         ]
                     );
             }
