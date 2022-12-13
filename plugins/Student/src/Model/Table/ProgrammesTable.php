@@ -102,7 +102,9 @@ class ProgrammesTable extends ControllerActionTable
 				$sId = $session->read('Student.Students.id');
 			}
 			if (!empty($sId)) {
-				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+				if ($studentId['id']) {					
+					$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+				}
 			} else {
 				$studentId = $session->read('Auth.User.id');
 			}
