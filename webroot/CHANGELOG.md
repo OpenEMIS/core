@@ -1,3 +1,35 @@
+### [3.76.2] - 2022-12-01
+- Implemented: Develop a function to download Student Report Cards in Excel format
+- Bug Fixed: Administration>Performance>Competencies: Education programme becomes empty when selected
+- Bug Fixed: Institutions>Performance>Report Cards: Pdf configuration is set to one but it is printing two worksheets
+
+### [3.76.1] - 2022-11-29
+- Bug Fixed: Administration>System Setup>Configurations: Student webhook is not showing custom fields
+- Bug Fixed: Directory > Students > Academic > Report Cards tab: Report card is published but cannot see details
+- Bug Fixed: Institutions>Performance>Report Cards: Download button that disappears and then reappears
+- Bug Fixed: Institution>Performance>Report Cards: Download all is not working
+- Bug Fixed: Administration>Performance>Report Cards: Pages should change to sheets
+- Bug Fixed: API: Api should return education grade id and education subject id
+
+### [3.76.0] - 2022-11-24
+- Implemented: Record validation when adding guardians
+- Implemented: Implement database foreign keys for OpenEMIS Core
+
+### [3.75.38] - 2022-11-23
+- Implemented: Develop Summary Tables for WebGIS
+- Bug Fixed: API : Add validation if class_id does not match institution_id
+- Bug Fixed: Institutions>Performance>Report Cards: Report formatting for pdf and excel is different
+- Bug Fixed: Institutions > Subjects > Add page : System allows user to add subjects for the wrong grade and class
+- Bug Fixed: Institutions>Students>Overview: Student email should be able to be edited
+
+### [3.75.37] - 2022-11-16
+- Bug Fixed: Report>Institution>Institutions Summary Report: Report is not having correct format
+- Bug Fixed: Administration>Survey>Forms: Dropdown field for the 'survey form section' is not showing the list of the survey section.
+- Bug Fixed: Institutions>Survey>Forms: Survey form does not appear when a new institution is added
+- Bug Fixed: Identity the source of this query
+- Bug Fixed: Institutions>General>Map: Url is redirected to the wrong page
+- Bug Fixed: Institution_class_students:Retrieve 18013660 rows(Happening when session ends)
+
 ### [3.75.36] - 2022-11-09
 - Implemented: Create Placeholder for Student Report Card to display user that enters marks and comments
 - Implemented: Change to the OpenEMIS Core Special Needs feature

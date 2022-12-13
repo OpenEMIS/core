@@ -852,7 +852,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        echo "<pre>";print_r($data);die;
+        //echo "<pre>";print_r($data);die;
     }
     /*
      * PCOOR-6658 STARTS 
@@ -861,7 +861,6 @@ class StudentAttendancesTable extends ControllerActionTable
      */
     public function findClassStudentsWithAbsenceSave(Query $query, array $options)
     {
-        //echo json_encode($options, true);die;
         $institutionId = $options['institution_id'];
         $institutionClassId = $options['institution_class_id'];
         $educationGradeId = $options['education_grade_id'];
@@ -890,7 +889,8 @@ class StudentAttendancesTable extends ControllerActionTable
             $dbConfig = $connection->config();
             $dbname = $dbConfig['database']; 
             $results = $connection->execute("INSERT INTO `student_attendance_marked_records` (`institution_id`, `academic_period_id`, `institution_class_id`, `education_grade_id`, `date`, `period`, `subject_id`, `no_scheduled_class`) VALUES ('$institutionId', '$academicPeriodId', '$institutionClassId', '$educationGradeId', '$day', '$attendancePeriodId', '$subjectId', '0')");
-            return true;
+            return $query->find('list')->where(['institution_id'=>$institutionId,'academic_period_id'=>$academicPeriodId,'institution_class_id'=>$institutionClassId,'education_grade_id'=>$educationGradeId]); //POCOR-7051
+            //return true;
         }
     }
 }
