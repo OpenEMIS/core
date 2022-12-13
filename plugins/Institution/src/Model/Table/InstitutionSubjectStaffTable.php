@@ -510,7 +510,9 @@ class InstitutionSubjectStaffTable extends AppTable
                         'academic_periods_name'=> 'AcademicPeriods.name',
                         'institution_subjects_id'=> 'InstitutionSubjects.id',
                         'institution_subjects_name'=> 'InstitutionSubjects.name',
-                        'security_users_openemis_no_subject_teachers' => 'Users.openemis_no'
+                        'security_users_openemis_no_subject_teachers' => 'Users.openemis_no',
+                        'education_grades_id' => 'InstitutionSubjects.education_grade_id',//POCOR-7065
+                        'education_subjects_id' => 'InstitutionSubjects.education_subject_id',//POCOR-7065
                     ])
                     ->contain([
                         'Users',
