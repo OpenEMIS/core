@@ -408,19 +408,40 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         var outcomeCriteriaId = params.data.outcome_criteria_id;
         var institutionId = params.context.institution_id;
         var academicPeriodId = params.context.academic_period_id;
-
-        var saveObj = {
-            outcome_grading_option_id: parseInt(outcomeGradingOptionId),
-            student_id: studentId,
-            outcome_template_id: outcomeTemplateId,
-            outcome_period_id: outcomePeriodId,
-            education_grade_id: educationGradeId,
-            education_subject_id: educationSubjectId,
-            outcome_criteria_id: outcomeCriteriaId,
-            institution_id: institutionId,
-            academic_period_id: academicPeriodId
-        };
-        return InstitutionOutcomeResults.save(saveObj);
+        
+        //POCOR-7114[START]
+        if(parseInt(outcomeGradingOptionId) == 0 ){
+            var success = function(response, deferred) {
+                deferred.resolve(response.data.data);
+            };
+            return InstitutionOutcomeResults
+            .find('deleteRecords', {
+                student_id: studentId,
+                outcome_grading_option_id: parseInt(outcomeGradingOptionId),
+                outcome_period_id: outcomePeriodId,
+                education_grade_id: educationGradeId,
+                education_subject_id: educationSubjectId,
+                institution_id: institutionId,
+                academic_period_id: academicPeriodId,
+                outcome_criteria_id: outcomeCriteriaId,
+                outcome_template_id: outcomeTemplateId  
+            })
+            .ajax({success: success, defer:true});
+        }else{
+            var saveObj = {
+                outcome_grading_option_id: parseInt(outcomeGradingOptionId),
+                student_id: studentId,
+                outcome_template_id: outcomeTemplateId,
+                outcome_period_id: outcomePeriodId,
+                education_grade_id: educationGradeId,
+                education_subject_id: educationSubjectId,
+                outcome_criteria_id: outcomeCriteriaId,
+                institution_id: institutionId,
+                academic_period_id: academicPeriodId
+            };
+            return InstitutionOutcomeResults.save(saveObj);
+        }
+        //POCOR-7114[END]
     }
 
     function saveOutcomeComments(params) {
