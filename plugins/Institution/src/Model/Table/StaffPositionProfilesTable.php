@@ -142,18 +142,13 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 'last' => true  
             ])  
             ;   
-        }elseif($this->request->data['StaffPositionProfiles']['staff_change_type_id'] == 5){
-            return $validator 
-            ->allowEmpty('assignee_id')
-            ->remove('assignee_id'); 
-        } else{  
+        }else{  
             return $validator   
             ->allowEmpty('end_date')        
             ->remove('start_date')  
             ->requirePresence('FTE')    
             ->requirePresence('staff_change_type_id')   
             ->requirePresence('staff_type_id')  
-                
             ->add('start_date', 'customCompare', [  
                 'rule' => function ($value, $context) { 
                     $staffChangeTypes = $this->staffChangeTypesList;    
@@ -353,9 +348,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        //echo "<pre>"; print_r($entity);die;
-      // $entity->assignee_id = -1;
-        //POCOR-6979
+      //POCOR-6979
         $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
         $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
@@ -404,66 +397,24 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 //POCOR-7006 
             if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT'){
                 //End of POCOR-7006
-                $entity->assignee_id = -1;
                 $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
-               // $InstitutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
-                $InstitutionStaff = TableRegistry::get('institution_staff');
-                $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+                $InstitutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
                 $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+                $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
                 $periodId = $AcademicPeriods->getCurrent();
-                if(!empty( $entity->new_shift['_ids'])){
-                    $shiftime = $ShiftOptions->find()
-                    ->where([$ShiftOptions->aliasField('id IN') => $entity->new_shift['_ids']])
-                    ->toArray();
-                    if($entity->new_shift!=null){
-                       // die('pkk');
-                     $shiftUpdate =   $InstitutionPositions->updateAll(
+                if(!empty( $entity->new_shift)){ //POCOR-7109
+                    $shiftUpdate =   $InstitutionPositions->updateAll(
                                 ['shift_id' => $entity->new_shift,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
                                 [
-                                 'id' => $entity->institution_position_id, //condition
+                                 'id' => $entity->institution_position_id, //condition update
                                 ] 
                             );
-                    }
-//die('pkkp');
-
-                    //remove all shifts data of selected staff
-                    /*$InstitutionStaffShifts->deleteAll([
-                            $InstitutionStaffShifts->aliasField('staff_id') => $entity->staff_id
-                        ]);*/
-                    /*foreach ($shiftime as $value) {
-                        $startTime = date("H:i:s",strtotime($value->start_time));
-                        $endTime = date("H:i:s",strtotime($value->end_time));
-                        
-                        //insert record in institution_shifts table
-                        $institutionShiftData['start_time'] = $startTime;
-                        $institutionShiftData['end_time'] =  $endTime;
-                        $institutionShiftData['academic_period_id'] =  $periodId;
-                        $institutionShiftData['institution_id'] = $entity->institution_id;
-                        $institutionShiftData['location_institution_id'] = $entity->institution_id;
-                        $institutionShiftData['shift_option_id'] = $value->id;
-                        $institutionShiftData['created_user_id'] = 1;
-                        $institutionShiftData['created'] = date('Y-m-d H:i:s');
-                        $data = $InstitutionShifts->newEntity($institutionShiftData);
-                        //echo "<pre>"; print_r($data);die;
-                        $insertRecord = $InstitutionShifts->save($data);
-                       
-                       // echo "<pre>"; print_r($entity);die;
-                        if ($insertRecord) {
-                            $staffShiftData['staff_id'] = $entity->staff_id;
-                            $staffShiftData['shift_id'] =  $insertRecord->id;
-                            $record = $InstitutionStaffShifts->newEntity($staffShiftData);
-                            $InstitutionStaffShifts->save($record);
-                        }
-                        
-                    } */
+                    
                     $StaffChangeTypesData = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $this->request->data['StaffPositionProfiles']['staff_change_type_id']])
                         ->first();
-                        
-                       // echo "<pre>"; print_r($this->request->data());die;
-
                 if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
                     $event->stopPropagation();
                 }
@@ -476,12 +427,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 //POCOR-6979[START]   
             }
         }
-        /**POCOR-6928 ends*/ 
-    }
+        /**POCOR-6928 ends*/    }
 
     private function getAssociatedData($entity)
     {
-//        print_r($entity);die();
         $requestData = $this->request->data;
         $staffChangeTypes = $this->staffChangeTypesList;
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -1446,26 +1395,12 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
         return $attr;
     }
-    /*public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
-    {
-            //$attr['type'] = 'selected';
-           // $attr['select'] = false;
-            $attr['options'] = ['-1' => __('Auto Assign')];
-           // $attr['onChangeReload'] = 'changeStatus';
-            return $attr;
-    }*/
-
-    /*public function validationAllowEmptyAssigneeId(Validator $validator)
-    {
-        $validator = $this->validationDefault($validator);
-        $validator->remove('assignee_id');
-        return $validator;
-    }*/
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
-
-         $entity->assignee_id = -1;
-         return $entity->assignee_id;
+        if($requestData[$this->alias()]['staff_change_type_id']==5){
+            $entity->assignee_id = -1;
+            return $entity->assignee_id;
+        }
     }
 }
