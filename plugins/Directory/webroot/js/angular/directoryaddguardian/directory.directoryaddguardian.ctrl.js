@@ -167,6 +167,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             last_name: scope.selectedUserData.last_name,
             date_of_birth: scope.selectedUserData.date_of_birth,
             identity_number: scope.selectedUserData.identity_number,
+            openemis_no: scope.selectedUserData.openemis_no
         }
         var dataSource = {
             pageSize: scope.pageSize,
@@ -594,34 +595,46 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         });
     }
 
-    scope.validateDetails = function() {
+    scope.validateDetails = async function ()
+    {
+        scope.error = {}
+        if (!scope.selectedUserData.relation_type_id)
+        {
+            scope.error.relation_type_id = 'This field cannot be left empty';
+            return;
+        }
+
         if(scope.step === 'user_details') {
-            if(!scope.selectedUserData.relation_type_id){
-                scope.error.relation_type_id = 'This field cannot be left empty';
+            const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
+            if (blockName === 'General_Info' && hasError)
+            {
+                if (!scope.selectedUserData.first_name)
+                {
+                    scope.error.first_name = 'This field cannot be left empty';
+                }
+                if (!scope.selectedUserData.last_name)
+                {
+                    scope.error.last_name = 'This field cannot be left empty';
+                }
+                if (!scope.selectedUserData.gender_id)
+                {
+                    scope.error.gender_id = 'This field cannot be left empty';
+                }
+                if (!scope.selectedUserData.date_of_birth)
+                {
+                    scope.error.date_of_birth = 'This field cannot be left empty';
+                } else
+                {
+                    // let dob = scope.selectedUserData.date_of_birth.toLocaleDateString();
+                    // let dobArray = dob.split('/');
+                    scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
+                }
             }
-            if(!scope.selectedUserData.first_name){
-                scope.error.first_name = 'This field cannot be left empty';
-            }
-            if(!scope.selectedUserData.last_name){
-                scope.error.last_name = 'This field cannot be left empty';
-            }
-            if(!scope.selectedUserData.gender_id){
-                scope.error.gender_id = 'This field cannot be left empty';
-            }
-            if(!scope.selectedUserData.date_of_birth) {
-                scope.error.date_of_birth = 'This field cannot be left empty';
-            } else {
-                // let dob = scope.selectedUserData.date_of_birth.toLocaleDateString();
-                // let dobArray = dob.split('/');
-                scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
-            }
-    
-            if(!scope.selectedUserData.relation_type_id || !scope.selectedUserData.first_name || !scope.selectedUserData.last_name || !scope.selectedUserData.gender_id || !scope.selectedUserData.date_of_birth){
-                return;
-            }
+            if(hasError) return;
             scope.step = 'internal_search';
             scope.internalGridOptions = null;
             scope.goToInternalSearch();
+            await checkUserAlreadyExistByIdentity();
         }
         if(scope.step === 'confirmation') {
             if(!scope.selectedUserData.username){
@@ -668,7 +681,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         } else {
             switch(scope.step){
                 case 'user_details': 
-                    await checkUserAlreadyExistByIdentity()
                     scope.validateDetails();
                     break;
                 case 'internal_search': 
@@ -1120,5 +1132,34 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.addGuardian=function addGuardian()
     {
         $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
+    }
+
+    /**
+  * @desc 1)Identity Number is mandatory OR 
+  * @desc 2)OpenEMIS ID is mandatory OR
+  * @desc 3)First Name, Last Name, Date of Birth and Gender are mandatory
+  * @returns [ error block name | true or false]
+  */
+    function checkUserDetailValidationBlocksHasError()
+    {
+        const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no } = scope.selectedUserData;
+        const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
+        const isIdentityHasError = (identity_number !== "" && identity_number !== undefined && !identity_type_id !== "" && identity_type_id !== undefined)
+        const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
+
+        if (isOpenEmisNoHasError)
+        {
+            return ["OpenEMIS_ID", false];
+        }
+        if (isIdentityHasError)
+        {
+            return ['Identity', false]
+        }
+        if (isGeneralInfodHasError)
+        {
+            return ["General_Info", true];
+        }
+
+        return ["", false];
     }
 }
