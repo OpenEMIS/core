@@ -6800,7 +6800,7 @@ class InstitutionsController extends AppController
                                 $UserIdentities->aliasField('nationality_id') => $nationalityId
                             ])->count();
                 if($CheckUserExist > 0){
-                    echo json_encode(['user_exist' => 1, 'status_code' => 200 ,'message' => __('User already exist with this nationality, identity type & identity type. Kindly select user from below list.')]); 
+                    echo json_encode(['user_exist' => 1, 'status_code' => 200 ,'message' => __('User already exist with this nationality, identity type & identity number. Kindly select user from below list.')]); 
                 }else{
                     echo json_encode(['user_exist' => 0, 'status_code' => 200 , 'message' => '']); 
                 }
