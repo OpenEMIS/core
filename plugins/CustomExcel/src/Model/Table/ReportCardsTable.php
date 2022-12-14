@@ -928,7 +928,9 @@ class ReportCardsTable extends AppTable
                     ->where([
                         $InstitutionStudentAbsenceDetails->aliasField('institution_id') => $params['institution_id'],
                         $InstitutionStudentAbsenceDetails->aliasField('student_id') => $params['student_id'],
-                        $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $params['academic_period_id'] //POCOR-7128
+                        $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $params['academic_period_id'], //POCOR-7128
+                        $InstitutionStudentAbsenceDetails->aliasField('education_grade_id') => $params['education_grade_id'], //POCOR-7128
+                        $InstitutionStudentAbsenceDetails->aliasField('institution_class_id') => $params['institution_class_id'] //POCOR-7128
                     ])
                     ->group([$InstitutionStudentAbsenceDetails->aliasField('date')])
                     ->hydrate(false)
@@ -953,37 +955,40 @@ class ReportCardsTable extends AppTable
                 $totalCount = 0;
                 foreach ($studentAbsenceResults as $s_key => $s_value) {
                     $s_value['date'] = $s_value['date']->format('Y-m-d');
-                    //echo $s_value['date']; die;
-                    if($configOption == 2){
-                        //mark present
-                        $totalCount = [];
-                        foreach($period as $p_key => $p_val){
-                            $studentPresentResults = $InstitutionStudentAbsenceDetails
-                                ->find()
-                                ->where([
-                                    $InstitutionStudentAbsenceDetails->aliasField('institution_id') => $s_value['institution_id'],
-                                    $InstitutionStudentAbsenceDetails->aliasField('student_id') => $s_value['student_id'],
-                                    $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $s_value['academic_period_id'], 
-                                    $InstitutionStudentAbsenceDetails->aliasField('date') => $s_value['date'], 
-                                    $InstitutionStudentAbsenceDetails->aliasField('absence_type_id !=') => 3, 
-                                    $InstitutionStudentAbsenceDetails->aliasField('period') => $p_val
-                                ])
-                                ->hydrate(false)
-                                ->toArray()
-                                ;
-                            if(!empty($studentPresentResults)){
-                                $totalCount[] = $studentPresentResults;
-                            }
-                        }
-                        if(count($totalCount) == 2){
-                            $total_count_arr[] = "'".$s_value['date']."'";
-                        }else{
-                            $totalCount = [];
+                    $totalCount = [];
+                    foreach($period as $p_key => $p_val){
+                        $studentPresentResults = $InstitutionStudentAbsenceDetails
+                            ->find()
+                            ->where([
+                                $InstitutionStudentAbsenceDetails->aliasField('institution_id') => $s_value['institution_id'],
+                                $InstitutionStudentAbsenceDetails->aliasField('student_id') => $s_value['student_id'],
+                                $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $s_value['academic_period_id'], 
+                                $InstitutionStudentAbsenceDetails->aliasField('date') => $s_value['date'], 
+                                $InstitutionStudentAbsenceDetails->aliasField('absence_type_id !=') => 3, 
+                                $InstitutionStudentAbsenceDetails->aliasField('period') => $p_val
+                            ])
+                            ->hydrate(false)
+                            ->toArray()
+                            ;
+                        if(!empty($studentPresentResults)){
+                            $totalCount[] = $studentPresentResults;
                         }
                     }
-                    
+
+                    if($configOption == 2){
+                        //mark present
+                        if(count($totalCount) == 2){
+                            $total_count_arr[] = "'".$s_value['date']."'";
+                        }
+                    }else if($configOption == 1){
+                        //mark absent
+                        if(count($totalCount) >= 1){
+                            $total_count_arr[] = "'".$s_value['date']."'";
+                        }
+                    }
                 }
             }
+            
             $results['EXCUSED']['number_of_days'] = 0;
             $results['UNEXCUSED']['number_of_days'] = 0;
             $results['LATE']['number_of_days'] = 0;
