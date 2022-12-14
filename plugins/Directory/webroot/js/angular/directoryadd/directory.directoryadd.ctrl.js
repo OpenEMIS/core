@@ -190,6 +190,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             last_name: scope.selectedUserData.last_name,
             date_of_birth: scope.selectedUserData.date_of_birth,
             identity_number: scope.selectedUserData.identity_number,
+            openemis_no:scope.selectedUserData.openemis_no
         }
         var dataSource = {
             pageSize: scope.pageSize,

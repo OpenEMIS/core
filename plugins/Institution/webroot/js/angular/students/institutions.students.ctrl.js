@@ -234,6 +234,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             last_name: StudentController.selectedStudentData.last_name,
             date_of_birth: StudentController.selectedStudentData.date_of_birth,
             identity_number: StudentController.selectedStudentData.identity_number,
+            openemis_no: StudentController.selectedStudentData.openemis_no
         };
         var dataSource = {
             pageSize: StudentController.pageSize,
@@ -1390,6 +1391,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         {
             document.getElementById('birthplaceArea_textbox').style.display = 'none';
             document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+        }
+        StudentController.disableFields = {
+            username: false,
+            password: false,
         }
     }
 
