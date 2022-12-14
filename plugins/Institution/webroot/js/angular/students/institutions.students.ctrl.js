@@ -1070,8 +1070,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             password: StudentController.selectedStudentData.password,
             postal_code: StudentController.selectedStudentData.postalCode,
             address: StudentController.selectedStudentData.address,
-            birthplace_area_id: StudentController.studentData && StudentController.studentData.is_diff_school > 0 ? StudentController.studentData.birthplace_area_id : InstitutionsStudentsSvc.getBirthplaceAreaId(),
-            address_area_id: StudentController.studentData && StudentController.studentData.is_diff_school > 0 ? StudentController.studentData.address_area_id : InstitutionsStudentsSvc.getAddressAreaId(),
+            birthplace_area_id: InstitutionsStudentsSvc.getBirthplaceAreaId() === null ? StudentController.studentData.birthplace_area_id:InstitutionsStudentsSvc.getBirthplaceAreaId(),
+            address_area_id: InstitutionsStudentsSvc.getAddressAreaId() === null ? StudentController.studentData.address_area_id : InstitutionsStudentsSvc.getAddressAreaId(),
             identity_type_id: StudentController.selectedStudentData.identity_type_id,
             identity_type_name: StudentController.selectedStudentData.identity_type_name,
             education_grade_id: StudentController.selectedStudentData.education_grade_id,
@@ -1316,6 +1316,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.isSameSchool = selectedData.is_same_school > 0 ? true : false;
         StudentController.isDiffSchool = selectedData.is_diff_school > 0 ? true : false;
         StudentController.selectedStudentData.currentlyAllocatedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.current_enrol_institution_name;
+        debugger;
+        StudentController.selectedStudentData.birthplace_area_id = selectedData.birthplace_area_id;
+        StudentController.selectedStudentData.address_area_id = selectedData.address_area_id;
+        StudentController.selectedStudentData.birth_area_code = selectedData.birth_area_code;
+        StudentController.selectedStudentData.area_code = selectedData.area_code;
 
         if (selectedData.address_area_id > 0)
         {
@@ -1372,7 +1377,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
         var todayDate = new Date();
         StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
-
+    
+        StudentController.selectedStudentData.birthplace_area_id = selectedData.birthplace_area_id;
+        StudentController.selectedStudentData.address_area_id = selectedData.address_area_id;
+        StudentController.selectedStudentData.birth_area_code = selectedData.birth_area_code;
+        StudentController.selectedStudentData.area_code = selectedData.area_code;
         if (selectedData.address_area_id > 0)
         {
             document.getElementById('addressArea_textbox').style.visibility = 'visible';
