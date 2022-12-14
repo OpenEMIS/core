@@ -1256,7 +1256,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.third_name = selectedData.third_name;
         StaffController.selectedStaffData.last_name = selectedData.last_name;
         StaffController.selectedStaffData.preferred_name = selectedData.preferred_name;
-        StaffController.selectedStaffData.gender_id = selectedData.gender_id;
+        StaffController.selectedStaffData.gender_id = selectedData.gender_id;//POCOR-7125 add gender_id
         StaffController.selectedStaffData.gender = {
             name: selectedData.gender
         };
