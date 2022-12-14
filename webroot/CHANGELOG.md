@@ -1,3 +1,12 @@
+### [3.76.5] - 2022-12-13
+- Implemented: Develop a student report card absence configuration page
+- Bug Fixed: Institution>Academic>Subjects:Institution_subject_students and institution_subjects data do not match
+- Bug Fixed: API: Api should filter by the academic_period id that was passed and should show institution_classes _id
+- Bug Fixed: Institution > Performance > Outcomes: When the user selects the "-- Select --" to delete the record, the system is supposed to save.
+- Bug Fixed: Administrations > System Setup > System Configurations > Columns for Staff/Student/Directory List page : Identity Number Edit issue
+- Bug Fixed: Institutions>Staff>Add: Unable to add staff
+- Bug Fixed: Increasing the size of the Criteria Name column from 1,000 to 1,500
+
 ### [3.76.4] - 2022-12-09
 - Implemented: When adding guardians to new students we need to be able to add multiple guardians
 - Bug Fixed: Institutions>Performance>Report Cards: Email is not sent
