@@ -920,7 +920,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
     }
 
     .alert_warn{
-    color: #8a6d3b !important;
+    color: #FFF !important;
     border-color: #faebcc !important;
     background-color: #E6BA64 !important;
     border: 1px solid #E6BA64 !important;
