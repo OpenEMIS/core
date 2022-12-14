@@ -110,6 +110,29 @@ class InstitutionOutcomeResultsTable extends AppTable
             ]);
     }
 
+    /*
+    * Function is delete records from the table if oprtion is select as 0 
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-7114
+    */
+    public function findDeleteRecords(Query $query, array $options)
+    {
+        if($options['outcome_grading_option_id'] == 0 ){
+            $InstitutionOutcomeResults = TableRegistry::get('Institution.InstitutionOutcomeResults');
+            $InstitutionOutcomeResults->deleteAll([
+                                        'student_id' => $options['student_id'],
+                                        'outcome_period_id' => $options['outcome_period_id'],
+                                        'education_grade_id' => $options['education_grade_id'],
+                                        'education_subject_id' => $options['education_subject_id'],
+                                        'institution_id' => $options['institution_id'],
+                                        'academic_period_id' => $options['academic_period_id'],
+                                        'outcome_criteria_id' => $options['outcome_criteria_id'],
+                                        'outcome_template_id' => $options['outcome_template_id']
+                                        ]);
+        }
+    }
+
     private function getAllowedSubjectList()
     {
         $ImportOutcomeResults = TableRegistry::get('Institution.ImportOutcomeResults');

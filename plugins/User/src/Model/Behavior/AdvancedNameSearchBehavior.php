@@ -64,22 +64,36 @@ class AdvancedNameSearchBehavior extends Behavior
         $searchString = $search . '%';
         switch (count($searchParams)) {
             case 1:
+                //POCOR-7115 starts if-else condition
                 // 1 word - search by openemis id or 1st or middle or third or last
-
-                $conditions = [
-                    'OR' => [
-                        $alias . '.openemis_no LIKE' => $searchString,
-                        $alias . '.first_name LIKE' => $searchString,
-                        $alias . '.middle_name LIKE' => $searchString,
-                        $alias . '.third_name LIKE' => $searchString,
-                        $alias . '.last_name LIKE' => $searchString,
-                        $alias . '.identity_number LIKE' => $searchString, // Adding the search by identity.
-                        // Starts POCOR-6532
-                        //$aliasidentity . '.number LIKE' => $searchString //POCOR-6647 : commented code because it was throwing 404 while searching for student/Staff 
-                        // Ends POCOR-6532
-                        // Adding the search by user identity table number column 
-                    ]
-                ];
+                if(!empty($aliasidentity)){
+                    $conditions = [
+                        'OR' => [
+                            $alias . '.openemis_no LIKE' => $searchString,
+                            $alias . '.first_name LIKE' => $searchString,
+                            $alias . '.middle_name LIKE' => $searchString,
+                            $alias . '.third_name LIKE' => $searchString,
+                            $alias . '.last_name LIKE' => $searchString,
+                            $alias . '.identity_number LIKE' => $searchString, // Adding the search by identity.
+                            // Starts POCOR-6532
+                            $aliasidentity . '.number LIKE' => $searchString //POCOR-6647 : commented code because it was throwing 404 while searching for student/Staff 
+                            // Ends POCOR-6532
+                            // Adding the search by user identity table number column 
+                        ]
+                    ];
+                }else{
+                    $conditions = [
+                        'OR' => [
+                            $alias . '.openemis_no LIKE' => $searchString,
+                            $alias . '.first_name LIKE' => $searchString,
+                            $alias . '.middle_name LIKE' => $searchString,
+                            $alias . '.third_name LIKE' => $searchString,
+                            $alias . '.last_name LIKE' => $searchString,
+                            $alias . '.identity_number LIKE' => $searchString, // Adding the search by identity.
+                        ]
+                    ];
+                }//POCOR-7115 ends
+                
                 if ($searchByUserName) {
                     $conditions['OR'][$alias . '.`username` LIKE '] = $searchString;
                 }
