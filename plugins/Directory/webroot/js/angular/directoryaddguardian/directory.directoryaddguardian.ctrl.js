@@ -112,10 +112,20 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         var openemis_no = null;
         var date_of_birth = '';
         var identity_number = '';
+        var nationality_id = '';
+        var nationality_name = '';
+        var identity_type_name = '';
+        var identity_type_id = '';
         first_name = scope.selectedUserData.first_name;
         last_name = scope.selectedUserData.last_name;
         date_of_birth = scope.selectedUserData.date_of_birth;
         identity_number = scope.selectedUserData.identity_number;
+        openemis_no = scope.selectedUserData.openemis_no;
+        nationality_id = scope.selectedUserData.nationality_id;
+        nationality_name = scope.selectedUserData.nationality_name;
+        identity_type_name = scope.selectedUserData.identity_type_name;
+        identity_type_id = scope.selectedUserData.identity_type_id;
+
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
@@ -130,6 +140,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     identity_number: identity_number,
                     institution_id: null,
                     user_type_id: 3,
+                    nationality_id: nationality_id,
+                    nationality_name: nationality_name,
+                    identity_type_name: identity_type_name,
+                    identity_type_id: identity_type_id
                 }
                 DirectoryaddguardianSvc.getInternalSearchData(param)
                 .then(function(response) {
@@ -1118,7 +1132,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         });
         if (result.data.user_exist === 1)
         {
-            scope.messageClass = 'alert-warn';
+            scope.messageClass = 'alert_warn';
             scope.message = result.data.message;
             scope.isIdentityUserExist = true;
         } else
