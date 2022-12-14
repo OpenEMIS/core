@@ -5128,28 +5128,35 @@ class InstitutionsController extends AppController
                     if(!empty($nationalityId) || !empty($nationalityName)){
                         if(!empty($nationalities->id)){
                             $UserNationalities = TableRegistry::get('user_nationalities');
-                            $primaryKey = $UserNationalities->primaryKey();
-                            $hashString = [];
-                            foreach ($primaryKey as $key) {
-                                if($key == 'nationality_id'){
-                                    $hashString[] = $nationalities->id;
+                            $checkexistingNationalities = $UserNationalities->find()
+                                ->where([
+                                    $UserIdentities->aliasField('nationality_id') => $nationalities->id,
+                                    $UserIdentities->aliasField('security_user_id') => $user_record_id,
+                                ])->first();
+                            if(empty($checkexistingNationalities)){
+                                $primaryKey = $UserNationalities->primaryKey();
+                                $hashString = [];
+                                foreach ($primaryKey as $key) {
+                                    if($key == 'nationality_id'){
+                                        $hashString[] = $nationalities->id;
+                                    }
+                                    if($key == 'security_user_id'){
+                                        $hashString[] = $user_record_id;
+                                    }
                                 }
-                                if($key == 'security_user_id'){
-                                    $hashString[] = $user_record_id;
-                                }
+                     
+                                $entityNationalData = [
+                                    'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                                    'preferred' => 1,
+                                    'nationality_id' => $nationalities->id,
+                                    'security_user_id' => $user_record_id,
+                                    'created_user_id' => $userId,
+                                    'created' => date('Y-m-d H:i:s')
+                                ];
+                                //save in user_nationalities table
+                                $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                                $UserNationalitiesResult = $UserNationalities->save($entityNationalData);  
                             }
-                 
-                            $entityNationalData = [
-                                'id' => Security::hash(implode(',', $hashString), 'sha256'),
-                                'preferred' => 1,
-                                'nationality_id' => $nationalities->id,
-                                'security_user_id' => $user_record_id,
-                                'created_user_id' => $userId,
-                                'created' => date('Y-m-d H:i:s')
-                            ];
-                            //save in user_nationalities table
-                            $entityNationalData = $UserNationalities->newEntity($entityNationalData);
-                            $UserNationalitiesResult = $UserNationalities->save($entityNationalData); 
                         }
                     }
 
@@ -6345,28 +6352,35 @@ class InstitutionsController extends AppController
                 if(!empty($nationalityId) || !empty($nationalityName)){
                     if(!empty($nationalities->id)){
                         $UserNationalities = TableRegistry::get('user_nationalities');
-                        $primaryKey = $UserNationalities->primaryKey();
-                        $hashString = [];
-                        foreach ($primaryKey as $key) {
-                            if($key == 'nationality_id'){
-                                $hashString[] = $nationalities->id;
+                        $checkexistingNationalities = $UserNationalities->find()
+                            ->where([
+                                $UserIdentities->aliasField('nationality_id') => $nationalities->id,
+                                $UserIdentities->aliasField('security_user_id') => $user_record_id,
+                            ])->first();
+                        if(empty($checkexistingNationalities)){
+                            $primaryKey = $UserNationalities->primaryKey();
+                            $hashString = [];
+                            foreach ($primaryKey as $key) {
+                                if($key == 'nationality_id'){
+                                    $hashString[] = $nationalities->id;
+                                }
+                                if($key == 'security_user_id'){
+                                    $hashString[] = $user_record_id;
+                                }
                             }
-                            if($key == 'security_user_id'){
-                                $hashString[] = $user_record_id;
-                            }
+                 
+                            $entityNationalData = [
+                                'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                                'preferred' => 1,
+                                'nationality_id' => $nationalities->id,
+                                'security_user_id' => $user_record_id,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+                            //save in user_nationalities table
+                            $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                            $UserNationalitiesResult = $UserNationalities->save($entityNationalData);
                         }
-             
-                        $entityNationalData = [
-                            'id' => Security::hash(implode(',', $hashString), 'sha256'),
-                            'preferred' => 1,
-                            'nationality_id' => $nationalities->id,
-                            'security_user_id' => $user_record_id,
-                            'created_user_id' => $userId,
-                            'created' => date('Y-m-d H:i:s')
-                        ];
-                        //save in user_nationalities table
-                        $entityNationalData = $UserNationalities->newEntity($entityNationalData);
-                        $UserNationalitiesResult = $UserNationalities->save($entityNationalData);    
                     }
                 }
 
@@ -6609,29 +6623,38 @@ class InstitutionsController extends AppController
                 $user_record_id=$SecurityUserResult->id;
                 if(!empty($nationalityId) || !empty($nationalityName)){
                     if(!empty($nationalities->id)){
-                        $UserNationalities = TableRegistry::get('user_nationalities');
-                        $primaryKey = $UserNationalities->primaryKey();
-                        $hashString = [];
-                        foreach ($primaryKey as $key) {
-                            if($key == 'nationality_id'){
-                                $hashString[] = $nationalities->id;
-                            }
-                            if($key == 'security_user_id'){
-                                $hashString[] = $user_record_id;
+                        if(!empty($nationalities->id)){
+                            $UserNationalities = TableRegistry::get('user_nationalities');
+                            $checkexistingNationalities = $UserNationalities->find()
+                                ->where([
+                                    $UserIdentities->aliasField('nationality_id') => $nationalities->id,
+                                    $UserIdentities->aliasField('security_user_id') => $user_record_id,
+                                ])->first();
+                            if(empty($checkexistingNationalities)){
+                                $primaryKey = $UserNationalities->primaryKey();
+                                $hashString = [];
+                                foreach ($primaryKey as $key) {
+                                    if($key == 'nationality_id'){
+                                        $hashString[] = $nationalities->id;
+                                    }
+                                    if($key == 'security_user_id'){
+                                        $hashString[] = $user_record_id;
+                                    }
+                                }
+                     
+                                $entityNationalData = [
+                                    'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                                    'preferred' => 1,
+                                    'nationality_id' => $nationalities->id,
+                                    'security_user_id' => $user_record_id,
+                                    'created_user_id' => $userId,
+                                    'created' => date('Y-m-d H:i:s')
+                                ];
+                                //save in user_nationalities table
+                                $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                                $UserNationalitiesResult = $UserNationalities->save($entityNationalData);
                             }
                         }
-             
-                        $entityNationalData = [
-                            'id' => Security::hash(implode(',', $hashString), 'sha256'),
-                            'preferred' => 1,
-                            'nationality_id' => $nationalities->id,
-                            'security_user_id' => $user_record_id,
-                            'created_user_id' => $userId,
-                            'created' => date('Y-m-d H:i:s')
-                        ];
-                        //save in user_nationalities table
-                        $entityNationalData = $UserNationalities->newEntity($entityNationalData);
-                        $UserNationalitiesResult = $UserNationalities->save($entityNationalData);    
                     }
                 }
 
