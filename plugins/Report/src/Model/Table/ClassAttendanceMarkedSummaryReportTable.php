@@ -300,6 +300,20 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         }
         }
 
+        
+        $institutionCondition;
+        $educationCondition;
+
+        if ($institution_id != 0) {
+            $institutionCondition [] = 'AND report_student_attendance_summary.institution_id = '.$institution_id.'';   
+        }
+
+        if ($education_grade_id != -1) {
+            $educationCondition [] = 'report_student_attendance_summary.education_grade_id = '.$education_grade_id.' AND';
+        }
+
+
+
         // if ($periods != 0) {
         //     $where['StudentAttendanceMarkedRecords.period'] = $periods;
         // }
@@ -419,7 +433,10 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
 
         // POCOR-6967
         //if ($attendanceTypeCode == 'DAY') {
-            
+        !empty($institutionCondition[0]) ? $institutionCondition[0] : '';
+        !empty($educationCondition[0]) ? $educationCondition[0] : '';
+        // echo "<pre>"; print_r($institutionCondition[0]); die();
+             
         $query
             ->select([
                 'academic_period_name' => 'subq.academic_period_name',
@@ -459,7 +476,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                         report_student_attendance_summary.subject_name,
                         SUM(report_student_attendance_summary.marked_attendance) marked_attendance,
                         SUM(report_student_attendance_summary.unmarked_attendance) unmarked_attendance
-                        FROM report_student_attendance_summary  WHERE report_student_attendance_summary.institution_id = '.$institution_id.' AND report_student_attendance_summary.education_grade_id = '.$education_grade_id.' AND report_student_attendance_summary.attendance_date BETWEEN '."'$this->reportStartDate '".' AND '."'$this->reportEndDate '".' GROUP BY report_student_attendance_summary.class_id,report_student_attendance_summary.period_id,report_student_attendance_summary.subject_id)',
+                        FROM report_student_attendance_summary  WHERE '.$educationCondition[0].' report_student_attendance_summary.attendance_date BETWEEN '."'$this->reportStartDate '".' AND '."'$this->reportEndDate '".' '.$institutionCondition[0].' GROUP BY report_student_attendance_summary.class_id,report_student_attendance_summary.period_id,report_student_attendance_summary.subject_id)',
                         'conditions' => [
                            'subq.class_id = ' . $this->aliasField('id'),
                         ]
@@ -516,7 +533,6 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             ]);
     // End POCOR-7061
 
-    // echo "<pre>"; print_r($query->sql()); die();
         // end POCOR-6967
           
     }
