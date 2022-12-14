@@ -844,7 +844,7 @@ class ReportCardsTable extends AppTable
                     ->where([
                         $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
                         $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
-                        //$InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id']
+                        $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id'] //POCOR-7128
                     ])
                     ->hydrate(false)
                     ->all();
