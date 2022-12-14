@@ -977,7 +977,7 @@ class ReportCardsTable extends AppTable
 
                     if($configOption == 2){
                         //mark present
-                        if(count($totalCount) == 2){
+                        if(count($totalCount) >= 2){
                             $total_count_arr[] = "'".$s_value['date']."'";
                         }
                     }else if($configOption == 1){
