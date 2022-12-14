@@ -5655,6 +5655,120 @@ class InstitutionsController extends AppController
                 }
             }
             if($isSameSchool == 1){
+                $SecurityUsers = TableRegistry::get('security_users');
+                $CheckStaffExist = $SecurityUsers->find()
+                                ->where([
+                                    $SecurityUsers->aliasField('openemis_no') => $openemisNo
+                                ])->first();
+
+                $SecurityUsers = TableRegistry::get('security_users');
+                if(!empty($CheckStaffExist)){
+                    $existStaffId = $CheckStaffExist->id;
+                    $entityData = [
+                        'id'=> $existStaffId,
+                        'openemis_no' => $openemisNo,
+                        'first_name' => $firstName,
+                        'middle_name' => $middleName,
+                        'third_name' => $thirdName,
+                        'last_name' => $lastName,
+                        'preferred_name' => $preferredName,
+                        'gender_id' => $genderId,
+                        'date_of_birth' => $dateOfBirth,
+                        'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
+                        'preferred_language' => $pref_lang->value,
+                        'username' => $username,
+                        'password' => $password,
+                        'address' => $address,
+                        'address_area_id' => $addressAreaId,
+                        'birthplace_area_id' => $birthplaceAreaId,
+                        'postal_code' => $postalCode,
+                        'photo_name' => $photoName,
+                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                        'is_staff' => 1,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s'),
+                    ];
+
+                    //save in security_users table
+                    $entity = $SecurityUsers->newEntity($entityData);
+                    try{
+                        $SecurityUserResult = $SecurityUsers->save($entity);
+                        unset($entity);
+                    }catch (Exception $e) {
+                        return null;
+                    }
+
+                    if($SecurityUserResult){
+                        $user_record_id=$SecurityUserResult->id;
+                        if(!empty($nationalityId) || !empty($nationalityName)){
+                            if(!empty($nationalities->id)){
+                                $UserNationalities = TableRegistry::get('user_nationalities');
+                                $checkexistingNationalities = $UserNationalities->find()
+                                    ->where([
+                                        $UserIdentities->aliasField('nationality_id') => $nationalities->id,
+                                        $UserIdentities->aliasField('security_user_id') => $user_record_id,
+                                    ])->first();
+                                if(empty($checkexistingNationalities)){
+                                    $primaryKey = $UserNationalities->primaryKey();
+                                    $hashString = [];
+                                    foreach ($primaryKey as $key) {
+                                        if($key == 'nationality_id'){
+                                            $hashString[] = $nationalities->id;
+                                        }
+                                        if($key == 'security_user_id'){
+                                            $hashString[] = $user_record_id;
+                                        }
+                                    }
+                         
+                                    $entityNationalData = [
+                                        'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                                        'preferred' => 1,
+                                        'nationality_id' => $nationalities->id,
+                                        'security_user_id' => $user_record_id,
+                                        'created_user_id' => $userId,
+                                        'created' => date('Y-m-d H:i:s')
+                                    ];
+                                    //save in user_nationalities table
+                                    $entityNationalData = $UserNationalities->newEntity($entityNationalData);
+                                    $UserNationalitiesResult = $UserNationalities->save($entityNationalData);  
+                                }
+                            }
+                        }
+
+                        if(!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)){
+                            $identityTypesTbl = TableRegistry::get('identity_types');
+                            $identityTypes = $identityTypesTbl->find()
+                                ->where([
+                                    $identityTypesTbl->aliasField('name') => $identityTypeName,
+                                ])
+                                ->first();
+                            if(!empty($identityTypes)){
+                                $UserIdentities = TableRegistry::get('user_identities');
+                                $checkexistingIdentities = $UserIdentities->find()
+                                    ->where([
+                                        $UserIdentities->aliasField('nationality_id') => $nationalities->id,
+                                        $UserIdentities->aliasField('identity_type_id') => $identityTypeId,
+                                        $UserIdentities->aliasField('number') => $identityNumber,
+                                    ])->first();
+                                if(empty($checkexistingIdentities)){
+                                    $UserIdentities = TableRegistry::get('user_identities');
+                                    $entityIdentitiesData = [
+                                        'identity_type_id' => $identityTypes->id,
+                                        'number' => $identityNumber,
+                                        'nationality_id' => $nationalities->id,
+                                        'security_user_id' => $user_record_id,
+                                        'created_user_id' => $userId,
+                                        'created' => date('Y-m-d H:i:s')
+                                    ];
+                                    //save in user_identities table
+                                    $entityIdentitiesData = $UserIdentities->newEntity($entityIdentitiesData);
+                                    $UserIdentitiesResult = $UserIdentities->save($entityIdentitiesData);
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if(!empty($institutionId)){
                     //get id from `institution_positions` table
                     $InstitutionPositions = TableRegistry::get('institution_positions');
