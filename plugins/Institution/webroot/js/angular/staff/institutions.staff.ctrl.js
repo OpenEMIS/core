@@ -377,6 +377,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             last_name: StaffController.selectedStaffData.last_name,
             date_of_birth: StaffController.selectedStaffData.date_of_birth,
             identity_number: StaffController.selectedStaffData.identity_number,
+            openemis_no: StaffController.selectedStaffData.openemis_no
         };
         var dataSource = {
             pageSize: StaffController.pageSize,
@@ -411,7 +412,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function processExternalGridUserRecord(userRecords, params, totalRowCount) {
         console.log(userRecords);
-
         var lastRow = totalRowCount;
         StaffController.rowsThisPage = userRecords;
 
