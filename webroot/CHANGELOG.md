@@ -1,3 +1,6 @@
+### [3.76.6] - 2022-12-14
+- Bug Fixed: Develop a student report card absence configuration-Only show absences for the current academic period page
+
 ### [3.76.5] - 2022-12-13
 - Implemented: Develop a student report card absence configuration page
 - Bug Fixed: Institution>Academic>Subjects:Institution_subject_students and institution_subjects data do not match
