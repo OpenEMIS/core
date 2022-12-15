@@ -219,6 +219,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function processInternalGridUserRecord(userRecords, params, totalRowCount) {
         console.log(userRecords);
+        if (userRecords.length === 0)
+        {
+            params.failCallback([], totalRowCount);
+            UtilsSvc.isAppendLoader(false);
+            return;
+        }
 
         var lastRow = totalRowCount;
         StudentController.rowsThisPage = userRecords;
@@ -269,10 +275,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function processExternalGridUserRecord(userRecords, params, totalRowCount) {
         console.log(userRecords);
+        if (userRecords.length === 0)
+        {
+            params.failCallback([], totalRowCount);
+            UtilsSvc.isAppendLoader(false);
+            return;
+        }
 
         var lastRow = totalRowCount;
         StudentController.rowsThisPage = userRecords;
-
         params.successCallback(StudentController.rowsThisPage, lastRow);
         UtilsSvc.isAppendLoader(false);
         return userRecords;

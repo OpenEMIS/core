@@ -362,7 +362,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function processInternalGridUserRecord(userRecords, params, totalRowCount) {
         console.log(userRecords);
-
+        if (userRecords.length === 0)
+        {
+            params.failCallback([], totalRowCount);
+            UtilsSvc.isAppendLoader(false);
+            return;
+        }
         var lastRow = totalRowCount;
         StaffController.rowsThisPage = userRecords;
 
@@ -412,6 +417,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function processExternalGridUserRecord(userRecords, params, totalRowCount) {
         console.log(userRecords);
+        if (userRecords.length === 0)
+        {
+            params.failCallback([], totalRowCount);
+            UtilsSvc.isAppendLoader(false);
+            return;
+        }
         var lastRow = totalRowCount;
         StaffController.rowsThisPage = userRecords;
 
