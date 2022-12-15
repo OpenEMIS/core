@@ -4626,6 +4626,14 @@ class InstitutionsController extends AppController
         $studentCustomFieldOptions =  TableRegistry::get('student_custom_field_options');
         $studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
 
+        //POCOR-7123[START]
+        $custom_modules_table  = TableRegistry::get('custom_modules');
+        $custom_modules_data = $custom_modules_table
+            ->find()
+            ->where([$custom_modules_table->aliasField('code') => 'Student'])
+            ->first();
+        //POCOR-7123[END]
+
         $SectionData = $studentCustomForms->find()
                             ->select([
                                 'student_custom_form_id'=>$studentCustomFormsFields->aliasField('student_custom_form_id'),
@@ -4636,7 +4644,7 @@ class InstitutionsController extends AppController
                                 $studentCustomFormsFields->aliasField('student_custom_form_id =') . $studentCustomForms->aliasField('id'),
                             ])
                             ->where([
-                                $studentCustomForms->aliasField('name') => 'Student Custom Fields'
+                                $studentCustomForms->aliasField('custom_module_id') => $custom_modules_data->id //POCOR-7123
                             ])
                             ->group([$studentCustomFormsFields->aliasField('section')])
                             ->toArray();
@@ -4770,6 +4778,14 @@ class InstitutionsController extends AppController
         $staffCustomFieldOptions =  TableRegistry::get('staff_custom_field_options');
         $staffCustomFieldValues =  TableRegistry::get('staff_custom_field_values');
 
+        //POCOR-7123[START]
+        $custom_modules_table  = TableRegistry::get('custom_modules');
+        $custom_modules_data = $custom_modules_table
+            ->find()
+            ->where([$custom_modules_table->aliasField('code') => 'Staff'])
+            ->first();
+        //POCOR-7123[END]
+
         $SectionData = $staffCustomForms->find()
                             ->select([
                                 'staff_custom_form_id'=>$staffCustomFormsFields->aliasField('staff_custom_form_id'),
@@ -4780,7 +4796,7 @@ class InstitutionsController extends AppController
                                 $staffCustomFormsFields->aliasField('staff_custom_form_id =') . $staffCustomForms->aliasField('id'),
                             ])
                             ->where([
-                                $staffCustomForms->aliasField('name') => 'ID'
+                                $staffCustomForms->aliasField('custom_module_id') => $custom_modules_data->id
                             ])
                             ->group([$staffCustomFormsFields->aliasField('section')])
                             ->toArray();
