@@ -817,7 +817,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionStudentAbsencesOldOne(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
 
@@ -844,7 +844,7 @@ class ReportCardsTable extends AppTable
                     ->where([
                         $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
                         $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
-                        //$InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id']
+                        $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id'] //POCOR-7128
                     ])
                     ->hydrate(false)
                     ->all();
@@ -897,6 +897,103 @@ class ReportCardsTable extends AppTable
         }
         
         return $results;
+        }
+    }
+
+    public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+
+            //POCOR-7040
+            $startDate = $extra['report_card_start_date']->format('Y-m-d');
+            $endDate = $extra['report_card_end_date']->format('Y-m-d');
+            /**POCOR-6685 starts - modified main table as suggested by client*/ 
+            $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+            //POCOR-7050 start
+            $configVal = TableRegistry::get('config_items');
+            $configData = $configVal->find()->select(['val'=>$configVal->aliasField('value')])->where([$configVal->aliasField('code')=>'calculate_daily_attendance'])->first();
+            $configOption = $configData['val'];  
+
+            $InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
+            $studentAbsenceResults = $InstitutionStudentAbsenceDetails
+                    ->find()
+                    ->innerJoin(
+                    [$this->alias() => $this->table()],
+                        [
+                            $this->aliasField('institution_class_id') => $params['institution_class_id'],
+                            $this->aliasField('institution_id = ') . $InstitutionStudentAbsenceDetails->aliasField('institution_id'),
+                            $this->aliasField('student_id = ') . $InstitutionStudentAbsenceDetails->aliasField('student_id'),
+                        ]
+                    )
+                    ->where([
+                        $InstitutionStudentAbsenceDetails->aliasField('institution_id') => $params['institution_id'],
+                        $InstitutionStudentAbsenceDetails->aliasField('student_id') => $params['student_id'],
+                        $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $params['academic_period_id'], //POCOR-7128
+                        $InstitutionStudentAbsenceDetails->aliasField('education_grade_id') => $params['education_grade_id'], //POCOR-7128
+                        $InstitutionStudentAbsenceDetails->aliasField('institution_class_id') => $params['institution_class_id'] //POCOR-7128
+                    ])
+                    ->group([$InstitutionStudentAbsenceDetails->aliasField('date')])
+                    ->hydrate(false)
+                    ->all();
+                 //POCOR-7050 end
+            /**POCOR-6685 ends*/
+            /**POCOR-7040 ends*/
+            $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
+            $absenceTypes = $AbsenceTypes->getCodeList();
+            $studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
+
+            $results = [];
+            foreach ($absenceTypes as $key => $code) {
+                // initialize all types as 0
+                $results[$code]['number_of_days'] = 0;
+            }
+
+            $results['TOTAL_ABSENCE']['number_of_days'] = 0;
+            $period = array(1,2);
+            $total_count_arr = [];
+            if(!empty($studentAbsenceResults)){
+                $totalCount = 0;
+                foreach ($studentAbsenceResults as $s_key => $s_value) {
+                    $s_value['date'] = $s_value['date']->format('Y-m-d');
+                    $totalCount = [];
+                    foreach($period as $p_key => $p_val){
+                        $studentPresentResults = $InstitutionStudentAbsenceDetails
+                            ->find()
+                            ->where([
+                                $InstitutionStudentAbsenceDetails->aliasField('institution_id') => $s_value['institution_id'],
+                                $InstitutionStudentAbsenceDetails->aliasField('student_id') => $s_value['student_id'],
+                                $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $s_value['academic_period_id'], 
+                                $InstitutionStudentAbsenceDetails->aliasField('date') => $s_value['date'], 
+                                $InstitutionStudentAbsenceDetails->aliasField('absence_type_id !=') => 3, 
+                                $InstitutionStudentAbsenceDetails->aliasField('period') => $p_val
+                            ])
+                            ->hydrate(false)
+                            ->toArray()
+                            ;
+                        if(!empty($studentPresentResults)){
+                            $totalCount[] = $studentPresentResults;
+                        }
+                    }
+
+                    if($configOption == 2){
+                        //mark present
+                        if(count($totalCount) >= 2){
+                            $total_count_arr[] = "'".$s_value['date']."'";
+                        }
+                    }else if($configOption == 1){
+                        //mark absent
+                        if(count($totalCount) >= 1){
+                            $total_count_arr[] = "'".$s_value['date']."'";
+                        }
+                    }
+                }
+            }
+            
+            $results['EXCUSED']['number_of_days'] = 0;
+            $results['UNEXCUSED']['number_of_days'] = 0;
+            $results['LATE']['number_of_days'] = 0;
+            $results['TOTAL_ABSENCE']['number_of_days'] = count($total_count_arr);
+            return $results;
         }
     }
 
