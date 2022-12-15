@@ -164,6 +164,12 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     scope.processInternalGridUserRecord = function(userRecords, params, totalRowCount) {
         console.log(userRecords);
+        if (userRecords.length === 0)
+        {
+            params.failCallback([], totalRowCount);
+            UtilsSvc.isAppendLoader(false);
+            return;
+        }
 
         var lastRow = totalRowCount;
         scope.rowsThisPage = userRecords;
@@ -216,6 +222,12 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     scope.processExternalGridUserRecord = function(userRecords, params, totalRowCount) {
         console.log(userRecords);
+        if (userRecords.length === 0)
+        {
+            params.failCallback([], totalRowCount);
+            UtilsSvc.isAppendLoader(false);
+            return;
+        }
 
         var lastRow = totalRowCount;
         scope.rowsThisPage = userRecords;
