@@ -681,7 +681,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
             
         $ClassGrades = $this->InstitutionClassGrades;
         $query = $this->request->query;
-        $selectedClassId = isset($query['class_id']) && !empty($query['class_id']) ? $query['class_id'] : '';
+        
+        //POCOR-7099 start
+        $pageWasRefreshed = isset($_SERVER['HTTP_CACHE_CONTROL']) && $_SERVER['HTTP_CACHE_CONTROL'] === 'max-age=0';
+        if($pageWasRefreshed==1){
+            $selectedClassId = $this->postString('class_name', $classOptions);
+        }else{
+            $selectedClassId = isset($query['class_id']) && !empty($query['class_id']) ? $query['class_id'] : '';
+        }
+        //POCOR-7099 end
+
         $this->advancedSelectOptions($classOptions, $selectedClassId, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
             'callable' => function ($id) use ($ClassGrades) {
