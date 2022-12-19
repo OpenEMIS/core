@@ -875,7 +875,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     ])
                     ->where([
                         $this->SubjectStudents->aliasField('institution_class_id') . ' IN ' => $institutionClassIds,
-                        $this->SubjectStudents->aliasField('education_grade_id') => $educationGradeId,
+                        //$this->SubjectStudents->aliasField('education_grade_id') => $educationGradeId,//POCOR-7139 no need require of this conidition
                         $this->SubjectStudents->aliasField('education_subject_id') => $educationSubjectId,
                         $this->SubjectStudents->aliasField('institution_subject_id') => $institutionSubjectId
                     ])
