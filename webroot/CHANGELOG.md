@@ -1,3 +1,10 @@
+### [3.76.7] - 2022-12-19
+- Bug Fixed: Institutions>Staff>Staff1>Position: When approving end of assignment, user is getting 404 error
+- Bug Fixed: Institution > Student > Promote/Repeat individual page: The system gives a 404 error when promoting students individually
+- Bug Fixed: Administration > Performance > Assessment > Edit page: The subject is not showing in the database
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to generate all/download all for some roles
+- Bug Fixed: Institutions>Staff>Add: Unable to add staff
+
 ### [3.76.6] - 2022-12-14
 - Bug Fixed: Develop a student report card absence configuration-Only show absences for the current academic period page
 
