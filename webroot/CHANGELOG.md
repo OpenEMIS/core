@@ -1,3 +1,7 @@
+### [3.76.8] - 2022-12-19
+- Bug Fixed: Institution > List page AND Institutions > Students/Staff List pages: Thumbnails are not displaying
+- Bug Fixed: Institutions>Academic>Subjects: Unable to unassign students from multigrade class subjects
+
 ### [3.76.7] - 2022-12-19
 - Bug Fixed: Institutions>Staff>Staff1>Position: When approving end of assignment, user is getting 404 error
 - Bug Fixed: Institution > Student > Promote/Repeat individual page: The system gives a 404 error when promoting students individually
