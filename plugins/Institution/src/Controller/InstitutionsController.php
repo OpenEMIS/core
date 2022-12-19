@@ -6705,7 +6705,11 @@ class InstitutionsController extends AppController
             ->where(['code' => 'external_data_source_type', 'type' => 'External Data Source', 'name' => 'Type'])
             ->toArray();
         foreach($configItemsResult AS $result){
-            $result_array[] = array("id" => $result['id'], "value" => $result['value']);
+            if($result['value'] == "None"){
+                $result_array[] = array("value" => $result['value'], "showExternalSearch " => false);
+            }else{
+                $result_array[] = array("value" => $result['value'], "showExternalSearch " => true);
+            }
         }
         echo json_encode($result_array);die;
     }//POCOR-7123 ends
