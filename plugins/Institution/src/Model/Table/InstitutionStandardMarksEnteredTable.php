@@ -323,6 +323,13 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                 }
             }
         }
+        else{ //POCOR-7098
+           foreach ($entity->created_user->identities as $key => $identitiesValue) {
+                        if ($identitiesValue->identity_type->default == 1) {
+                            $return[] = $identitiesValue->number;
+                        }
+                    } 
+        }
         return implode(', ', array_values($return));
     }
 
