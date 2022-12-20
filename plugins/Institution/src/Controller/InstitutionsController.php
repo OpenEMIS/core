@@ -1748,6 +1748,9 @@ class InstitutionsController extends AppController
         if($this->request->params['action'] == 'checkUserAlreadyExistByIdentity'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkUserAlreadyExistByIdentity';
         }
+        if($this->request->params['action'] == 'checkConfigurationForExternalSearch'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkConfigurationForExternalSearch';
+        }
         //for api purpose POCOR-5672 ends
         return $events;
     }
@@ -4626,6 +4629,14 @@ class InstitutionsController extends AppController
         $studentCustomFieldOptions =  TableRegistry::get('student_custom_field_options');
         $studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
 
+        //POCOR-7123[START]
+        $custom_modules_table  = TableRegistry::get('custom_modules');
+        $custom_modules_data = $custom_modules_table
+            ->find()
+            ->where([$custom_modules_table->aliasField('code') => 'Student'])
+            ->first();
+        //POCOR-7123[END]
+
         $SectionData = $studentCustomForms->find()
                             ->select([
                                 'student_custom_form_id'=>$studentCustomFormsFields->aliasField('student_custom_form_id'),
@@ -4636,7 +4647,7 @@ class InstitutionsController extends AppController
                                 $studentCustomFormsFields->aliasField('student_custom_form_id =') . $studentCustomForms->aliasField('id'),
                             ])
                             ->where([
-                                $studentCustomForms->aliasField('name') => 'Student Custom Fields'
+                                $studentCustomForms->aliasField('custom_module_id') => $custom_modules_data->id //POCOR-7123
                             ])
                             ->group([$studentCustomFormsFields->aliasField('section')])
                             ->toArray();
@@ -4770,6 +4781,14 @@ class InstitutionsController extends AppController
         $staffCustomFieldOptions =  TableRegistry::get('staff_custom_field_options');
         $staffCustomFieldValues =  TableRegistry::get('staff_custom_field_values');
 
+        //POCOR-7123[START]
+        $custom_modules_table  = TableRegistry::get('custom_modules');
+        $custom_modules_data = $custom_modules_table
+            ->find()
+            ->where([$custom_modules_table->aliasField('code') => 'Staff'])
+            ->first();
+        //POCOR-7123[END]
+
         $SectionData = $staffCustomForms->find()
                             ->select([
                                 'staff_custom_form_id'=>$staffCustomFormsFields->aliasField('staff_custom_form_id'),
@@ -4780,7 +4799,7 @@ class InstitutionsController extends AppController
                                 $staffCustomFormsFields->aliasField('staff_custom_form_id =') . $staffCustomForms->aliasField('id'),
                             ])
                             ->where([
-                                $staffCustomForms->aliasField('name') => 'ID'
+                                $staffCustomForms->aliasField('custom_module_id') => $custom_modules_data->id
                             ])
                             ->group([$staffCustomFormsFields->aliasField('section')])
                             ->toArray();
@@ -6812,33 +6831,28 @@ class InstitutionsController extends AppController
         }
         die;
     }
+    //POCOR-7123 starts
+    public function checkConfigurationForExternalSearch()
+    {
+        $this->autoRender = false;
+        $configItems = TableRegistry::get('config_items');
+        $configItemsResult = $configItems
+            ->find()
+            ->select(['id','value'])
+            ->where(['code' => 'external_data_source_type', 'type' => 'External Data Source', 'name' => 'Type'])
+            ->toArray();
+        foreach($configItemsResult AS $result){
+            if($result['value'] == "None"){
+                $result_array[] = array("value" => $result['value'], "showExternalSearch" => false);
+            }else{
+                $result_array[] = array("value" => $result['value'], "showExternalSearch" => true);
+            }
+        }
+        echo json_encode($result_array);die;
+    }//POCOR-7123 ends
 
     public function customFieldsUseJustForExample()
     {
-        /*$studentCustomFieldValues =  TableRegistry::get('student_custom_field_values');
-        $SectionData = $studentCustomFieldValues->find()
-                            ->where([
-                                $studentCustomFieldValues->aliasField('student_id') => 13077
-                            ])
-                            ->toArray();
-        
-        $SectionArr = [];
-        foreach ($SectionData as $skey => $sval) {
-            $SectionArr[$skey]['student_custom_field_id'] = $sval->student_custom_field_id;
-            $SectionArr[$skey]['text_value'] = !empty($sval->text_value) ? $sval->text_value : '';
-            $SectionArr[$skey]['number_value'] = !empty($sval->number_value) ? $sval->number_value : '';
-            $SectionArr[$skey]['decimal_value'] = !empty($sval->decimal_value) ? $sval->decimal_value : '';
-            $SectionArr[$skey]['textarea_value'] = !empty($sval->textarea_value) ? $sval->textarea_value : '';
-            $SectionArr[$skey]['time_value'] = !empty($sval->time_value) ? $sval->time_value : '';
-            $SectionArr[$skey]['file'] = "";
-            $SectionArr[$skey]['created_user_id'] = 1;
-            $SectionArr[$skey]['created'] = date('y-m-d H:i:s');
-        }
-
-        $newarry['custom'] = $SectionArr;
-        //echo "<pre>"; print_r($SectionArr); die;
-        echo json_encode($newarry);die;*/
-
         $this->autoRender = false;
         $requestData = json_decode('{"login_user_id":"1","openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021","end_date":"31-12-2021","institution_class_id":"524","student_status_id":1,"custom":[{"student_custom_field_id":17,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":27,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":29,"text_value":"test.jpg","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":28,"text_value":"","number_value":2,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":3,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":26,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":4,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":8,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":9,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":30,"text_value":"{\"latitude\":\"11.1\",\"longitude\":\"2.22\"}","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":18,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"}]}', true);
         

@@ -47,6 +47,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.currentYear = new Date().getFullYear();
     StudentController.studentStatus = 'Pending Transfer';
     StudentController.StudentData = {};
+    StudentController.isExternalSearchEnable = false;
 
     StudentController.datepickerOptions = {
         showWeeks: false
@@ -108,6 +109,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.transferStudent = transferStudent;
     StudentController.setStudentDataFromExternalSearchData = setStudentDataFromExternalSearchData;
     StudentController.transferStudentNextStep = transferStudentNextStep;
+    StudentController.checkConfigForExternalSearch = checkConfigForExternalSearch;
     StudentController.isIdentityUserExist = false;
 
     angular.element(document).ready(function () {
@@ -329,6 +331,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             console.log(error);
             UtilsSvc.isAppendLoader(false);
         });
+        StudentController.checkConfigForExternalSearch()
     }
 
     function getAcademicPeriods() {
@@ -898,11 +901,20 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     StudentController.internalGridOptions = null;
                     StudentController.goToInternalSearch();
                     break;
-                case 'confirmation': 
-                    StudentController.step = 'external_search';
-                    StudentController.externalGridOptions = null;
-                    StudentController.goToExternalSearch();
-                    break;
+                case 'confirmation': {
+                    if (StudentController.isExternalSearchEnable)
+                    {
+                        StudentController.step = 'external_search';
+                        StudentController.externalGridOptions = null;
+                        StudentController.goToExternalSearch();
+                    } else
+                    {
+                        StudentController.step = 'internal_search';
+                        StudentController.internalGridOptions = null;
+                        StudentController.goToInternalSearch();
+                    }
+                    return;
+                }
                 case 'add_student': 
                     StudentController.step = 'confirmation';
                     break;
@@ -952,11 +964,22 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 case 'user_details': 
                     StudentController.validateDetails();
                     break;
-                case 'internal_search': 
-                    StudentController.step = 'external_search';
-                    StudentController.externalGridOptions = null;
-                    StudentController.goToExternalSearch();
-                    break;
+                case 'internal_search': {                    
+                    if (StudentController.isExternalSearchEnable)
+                    {     
+                        StudentController.step = 'external_search';
+                        StudentController.externalGridOptions = null;
+                        StudentController.goToExternalSearch();
+                    } else
+                    {
+                        StudentController.step = 'confirmation';
+                        if (!StudentController.selectedStudentData.openemis_no)
+                        {
+                            StudentController.getUniqueOpenEmisId();
+                        }
+                    }
+                    return;
+                }
                 case 'external_search': 
                     StudentController.step = 'confirmation';
                     if(!StudentController.selectedStudentData.openemis_no) {
@@ -1656,5 +1679,19 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
 
         return ["",false];
+    }
+
+    function checkConfigForExternalSearch()
+    {
+        InstitutionsStudentsSvc.checkConfigForExternalSearch().then(function (resp)
+        {
+            StudentController.isExternalSearchEnable = resp.showExternalSearch;
+            UtilsSvc.isAppendLoader(false);
+        }, function (error)
+        {
+            StudentController.isExternalSearchEnable = false;   
+            console.error(error);
+            UtilsSvc.isAppendLoader(false);
+        });
     }
 }

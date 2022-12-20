@@ -29,7 +29,7 @@
                         <span class="chevron"></span>
                     </div>
                 </li>
-                <li ng-class="{'active': step === 'external_search'}">
+                <li ng-if="isExternalSearchEnable" ng-class="{'active': step === 'external_search'}">
                     <div class="stepper-steps-wrapper">
                         External Search
                         <span class="chevron"></span>
