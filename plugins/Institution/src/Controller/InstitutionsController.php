@@ -6706,9 +6706,9 @@ class InstitutionsController extends AppController
             ->toArray();
         foreach($configItemsResult AS $result){
             if($result['value'] == "None"){
-                $result_array[] = array("value" => $result['value'], "showExternalSearch " => false);
+                $result_array[] = array("value" => $result['value'], "showExternalSearch" => false);
             }else{
-                $result_array[] = array("value" => $result['value'], "showExternalSearch " => true);
+                $result_array[] = array("value" => $result['value'], "showExternalSearch" => true);
             }
         }
         echo json_encode($result_array);die;
