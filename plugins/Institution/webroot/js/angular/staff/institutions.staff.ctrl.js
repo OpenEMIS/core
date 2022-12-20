@@ -57,6 +57,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.isEnableBirthplaceArea = false;
     StaffController.isEnableAddressArea = false;
     StaffController.isIdentityUserExist = false;
+    StaffController.isExternalSearchEnable = false;
     StaffController.disableFields = {
         username: false,
         pasword: false
@@ -106,6 +107,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.filterBySection= filterBySection;
     StaffController.mapBySection= mapBySection;
     StaffController.transferStaffNextStep = transferStaffNextStep;
+    StaffController.checkConfigForExternalSearch = checkConfigForExternalSearch;
   
     
     $window.savePhoto = function(event) {
@@ -468,6 +470,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function getIdentityTypes(){
         InstitutionsStaffSvc.getIdentityTypes().then(function(resp){
             StaffController.identityTypeOptions = resp.data;
+            StaffController.checkConfigForExternalSearch()
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
@@ -1023,11 +1026,20 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     StaffController.internalGridOptions = null;
                     StaffController.goToInternalSearch();
                     break;
-                case 'confirmation': 
-                    StaffController.step = 'external_search';
-                    StaffController.externalGridOptions = null;
-                    StaffController.goToExternalSearch();
-                    break;
+                case 'confirmation': {
+                    if (StaffController.isExternalSearchEnable)
+                    {
+                        StaffController.step = 'external_search';
+                        StaffController.externalGridOptions = null;
+                        StaffController.goToExternalSearch();
+                    } else
+                    {
+                        StaffController.step = 'internal_search';
+                        StaffController.internalGridOptions = null;
+                        StaffController.goToInternalSearch();
+                    }
+                    return;
+                }
                 case 'add_staff': 
                     StaffController.step = 'confirmation';
                     break;
@@ -1161,12 +1173,19 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     StaffController.validateDetails();
                    
                     break;
-                case 'internal_search': 
-                  
-                    StaffController.step = 'external_search';
-                    StaffController.externalGridOptions = null;
-                    StaffController.goToExternalSearch();
-                    break;
+                case 'internal_search': {
+                    if (StaffController.isExternalSearchEnable)
+                    {
+                        StaffController.step = 'external_search';
+                        StaffController.externalGridOptions = null;
+                        StaffController.goToExternalSearch();
+                    } else
+                    {
+                        StaffController.step = 'confirmation';
+                        StaffController.getUniqueOpenEmisId();
+                    }
+                    return;
+                }
                 case 'external_search': 
                     StaffController.step = 'confirmation';
                     StaffController.getUniqueOpenEmisId();
@@ -2343,5 +2362,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
 
         return ["", false];
+    }
+    function checkConfigForExternalSearch()
+    {
+        InstitutionsStaffSvc.checkConfigForExternalSearch().then(function (resp)
+        {
+            StaffController.isExternalSearchEnable = resp.showExternalSearch;
+            UtilsSvc.isAppendLoader(false);
+        }, function (error)
+        {
+            StaffController.isExternalSearchEnable = false;
+            console.error(error);
+            UtilsSvc.isAppendLoader(false);
+        });
     }
 }
