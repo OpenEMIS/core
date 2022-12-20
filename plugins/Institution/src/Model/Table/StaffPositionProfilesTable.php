@@ -69,151 +69,150 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
         $validator = $this->buildStaffValidation();
         //Start:POCOR-6913
-        if($this->request->data['StaffPositionProfiles']['staff_change_type_id'] == 1){	
-            return $validator	
-            ->notEmpty('end_date')		
-            ->remove('start_date')	
-            ->requirePresence('FTE')	
-            ->requirePresence('staff_change_type_id')	
-            ->requirePresence('staff_type_id')	
-            	
-            ->add('start_date', 'customCompare', [	
-                'rule' => function ($value, $context) {	
-                    $staffChangeTypes = $this->staffChangeTypesList;	
-                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {	
-                        $contextData = $context['data'];	
-                        if (!empty($contextData['end_date'])) {	
-                            $newStartDate = new Date($value);	
-                            $endDate = new Date($contextData['end_date']);	
-                            if ($newStartDate > $endDate) {	
-                                return vsprintf(__('Start Date cannot be later than %s'),[$endDate->format('d-m-Y')]);	
-                            } else {	
-                                return true;	
-                            }	
-                        } else {	
-                            return true;	
-                        }	
-                    } else {	
-                        return true;	
-                    }	
-                },	
-                'last' => true	
-            ])	
-            ->add('start_date', 'customFTE', [	
-                'rule' => function ($value, $context) {	
-                    $staffChangeTypes = $this->staffChangeTypesList;	
-                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {	
-                        $contextData = $context['data'];	
-                        $institutionId = $contextData['institution_id'];	
-                        $institutionStaffId = $contextData['institution_staff_id'];	
-                        $institutionPositionId = $contextData['institution_position_id'];	
-                        $FTE = $contextData['FTE'];	
-                        $newStartDate = new Date($value); // new start_date	
-                        $InstitutionStaff = TableRegistry::get('Institution.Staff');	
-                        $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date);	
-                        // get the records that have same institution_id, same position_id, other than the records itself	
-                        // with the start_date before the record_original_start_date and end_date is after the new_start_date	
-                        $records = $InstitutionStaff->find()	
-                            ->where([	
-                                $InstitutionStaff->aliasField('institution_id') => $institutionId,	
-                                $InstitutionStaff->aliasField('id <>') => $institutionStaffId,	
-                                $InstitutionStaff->aliasField('institution_position_id') => $institutionPositionId,	
-                                $InstitutionStaff->aliasField('start_date <= ') => $originalStartDate,	
-                                'OR' => [	
-                                    $InstitutionStaff->aliasField('end_date >= ') => $newStartDate,	
-                                    $InstitutionStaff->aliasField('end_date IS NULL '),	
-                                ]	
-                            ])	
-                            ->toArray();	
-                        if (!empty($records)) {	
-                            foreach ($records as $record) {	
-                                $FTE = $record->FTE + $FTE;	
-                            }	
-                        }	
-                        if ($FTE <= 1) {	
-                            return true;	
-                        }	
-                        return false;	
-                    } else {	
-                        return true;	
-                    }	
-                },	
-                'message' => __('FTE is more than 100%'),	
-                'last' => true	
-            ])	
-            ;	
-        }else{	
-            return $validator	
-            ->allowEmpty('end_date')		
-            ->remove('start_date')	
-            ->requirePresence('FTE')	
-            ->requirePresence('staff_change_type_id')	
-            ->requirePresence('staff_type_id')	
-            	
-            ->add('start_date', 'customCompare', [	
-                'rule' => function ($value, $context) {	
-                    $staffChangeTypes = $this->staffChangeTypesList;	
-                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {	
-                        $contextData = $context['data'];	
-                        if (!empty($contextData['end_date'])) {	
-                            $newStartDate = new Date($value);	
-                            $endDate = new Date($contextData['end_date']);	
-                            if ($newStartDate > $endDate) {	
-                                return vsprintf(__('Start Date cannot be later than %s'),[$endDate->format('d-m-Y')]);	
-                            } else {	
-                                return true;	
-                            }	
-                        } else {	
-                            return true;	
-                        }	
-                    } else {	
-                        return true;	
-                    }	
-                },	
-                'last' => true	
-            ])	
-            ->add('start_date', 'customFTE', [	
-                'rule' => function ($value, $context) {	
-                    $staffChangeTypes = $this->staffChangeTypesList;	
-                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {	
-                        $contextData = $context['data'];	
-                        $institutionId = $contextData['institution_id'];	
-                        $institutionStaffId = $contextData['institution_staff_id'];	
-                        $institutionPositionId = $contextData['institution_position_id'];	
-                        $FTE = $contextData['FTE'];	
-                        $newStartDate = new Date($value); // new start_date	
-                        $InstitutionStaff = TableRegistry::get('Institution.Staff');	
-                        $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date);	
-                        // get the records that have same institution_id, same position_id, other than the records itself	
-                        // with the start_date before the record_original_start_date and end_date is after the new_start_date	
-                        $records = $InstitutionStaff->find()	
-                            ->where([	
-                                $InstitutionStaff->aliasField('institution_id') => $institutionId,	
-                                $InstitutionStaff->aliasField('id <>') => $institutionStaffId,	
-                                $InstitutionStaff->aliasField('institution_position_id') => $institutionPositionId,	
-                                $InstitutionStaff->aliasField('start_date <= ') => $originalStartDate,	
-                                'OR' => [	
-                                    $InstitutionStaff->aliasField('end_date >= ') => $newStartDate,	
-                                    $InstitutionStaff->aliasField('end_date IS NULL '),	
-                                ]	
-                            ])	
-                            ->toArray();	
-                        if (!empty($records)) {	
-                            foreach ($records as $record) {	
-                                $FTE = $record->FTE + $FTE;	
-                            }	
-                        }	
-                        if ($FTE <= 1) {	
-                            return true;	
-                        }	
-                        return false;	
-                    } else {	
-                        return true;	
-                    }	
-                },	
-                'message' => __('FTE is more than 100%'),	
-                'last' => true	
-            ]);	
+        if($this->request->data['StaffPositionProfiles']['staff_change_type_id'] == 1){ 
+            return $validator   
+            ->notEmpty('end_date')      
+            ->remove('start_date')  
+            ->requirePresence('FTE')    
+            ->requirePresence('staff_change_type_id')   
+            ->requirePresence('staff_type_id')  
+                
+            ->add('start_date', 'customCompare', [  
+                'rule' => function ($value, $context) { 
+                    $staffChangeTypes = $this->staffChangeTypesList;    
+                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {    
+                        $contextData = $context['data'];    
+                        if (!empty($contextData['end_date'])) { 
+                            $newStartDate = new Date($value);   
+                            $endDate = new Date($contextData['end_date']);  
+                            if ($newStartDate > $endDate) { 
+                                return vsprintf(__('Start Date cannot be later than %s'),[$endDate->format('d-m-Y')]);  
+                            } else {    
+                                return true;    
+                            }   
+                        } else {    
+                            return true;    
+                        }   
+                    } else {    
+                        return true;    
+                    }   
+                },  
+                'last' => true  
+            ])  
+            ->add('start_date', 'customFTE', [  
+                'rule' => function ($value, $context) { 
+                    $staffChangeTypes = $this->staffChangeTypesList;    
+                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {    
+                        $contextData = $context['data'];    
+                        $institutionId = $contextData['institution_id'];    
+                        $institutionStaffId = $contextData['institution_staff_id']; 
+                        $institutionPositionId = $contextData['institution_position_id'];   
+                        $FTE = $contextData['FTE']; 
+                        $newStartDate = new Date($value); // new start_date 
+                        $InstitutionStaff = TableRegistry::get('Institution.Staff');    
+                        $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date); 
+                        // get the records that have same institution_id, same position_id, other than the records itself   
+                        // with the start_date before the record_original_start_date and end_date is after the new_start_date   
+                        $records = $InstitutionStaff->find()    
+                            ->where([   
+                                $InstitutionStaff->aliasField('institution_id') => $institutionId,  
+                                $InstitutionStaff->aliasField('id <>') => $institutionStaffId,  
+                                $InstitutionStaff->aliasField('institution_position_id') => $institutionPositionId, 
+                                $InstitutionStaff->aliasField('start_date <= ') => $originalStartDate,  
+                                'OR' => [   
+                                    $InstitutionStaff->aliasField('end_date >= ') => $newStartDate, 
+                                    $InstitutionStaff->aliasField('end_date IS NULL '), 
+                                ]   
+                            ])  
+                            ->toArray();    
+                        if (!empty($records)) { 
+                            foreach ($records as $record) { 
+                                $FTE = $record->FTE + $FTE; 
+                            }   
+                        }   
+                        if ($FTE <= 1) {    
+                            return true;    
+                        }   
+                        return false;   
+                    } else {    
+                        return true;    
+                    }   
+                },  
+                'message' => __('FTE is more than 100%'),   
+                'last' => true  
+            ])  
+            ;   
+        }else{  
+            return $validator   
+            ->allowEmpty('end_date')        
+            ->remove('start_date')  
+            ->requirePresence('FTE')    
+            ->requirePresence('staff_change_type_id')   
+            ->requirePresence('staff_type_id')  
+            ->add('start_date', 'customCompare', [  
+                'rule' => function ($value, $context) { 
+                    $staffChangeTypes = $this->staffChangeTypesList;    
+                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {    
+                        $contextData = $context['data'];    
+                        if (!empty($contextData['end_date'])) { 
+                            $newStartDate = new Date($value);   
+                            $endDate = new Date($contextData['end_date']);  
+                            if ($newStartDate > $endDate) { 
+                                return vsprintf(__('Start Date cannot be later than %s'),[$endDate->format('d-m-Y')]);  
+                            } else {    
+                                return true;    
+                            }   
+                        } else {    
+                            return true;    
+                        }   
+                    } else {    
+                        return true;    
+                    }   
+                },  
+                'last' => true  
+            ])  
+            ->add('start_date', 'customFTE', [  
+                'rule' => function ($value, $context) { 
+                    $staffChangeTypes = $this->staffChangeTypesList;    
+                    if ($context['data']['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {    
+                        $contextData = $context['data'];    
+                        $institutionId = $contextData['institution_id'];    
+                        $institutionStaffId = $contextData['institution_staff_id']; 
+                        $institutionPositionId = $contextData['institution_position_id'];   
+                        $FTE = $contextData['FTE']; 
+                        $newStartDate = new Date($value); // new start_date 
+                        $InstitutionStaff = TableRegistry::get('Institution.Staff');    
+                        $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date); 
+                        // get the records that have same institution_id, same position_id, other than the records itself   
+                        // with the start_date before the record_original_start_date and end_date is after the new_start_date   
+                        $records = $InstitutionStaff->find()    
+                            ->where([   
+                                $InstitutionStaff->aliasField('institution_id') => $institutionId,  
+                                $InstitutionStaff->aliasField('id <>') => $institutionStaffId,  
+                                $InstitutionStaff->aliasField('institution_position_id') => $institutionPositionId, 
+                                $InstitutionStaff->aliasField('start_date <= ') => $originalStartDate,  
+                                'OR' => [   
+                                    $InstitutionStaff->aliasField('end_date >= ') => $newStartDate, 
+                                    $InstitutionStaff->aliasField('end_date IS NULL '), 
+                                ]   
+                            ])  
+                            ->toArray();    
+                        if (!empty($records)) { 
+                            foreach ($records as $record) { 
+                                $FTE = $record->FTE + $FTE; 
+                            }   
+                        }   
+                        if ($FTE <= 1) {    
+                            return true;    
+                        }   
+                        return false;   
+                    } else {    
+                        return true;    
+                    }   
+                },  
+                'message' => __('FTE is more than 100%'),   
+                'last' => true  
+            ]); 
         }
         //END:POCOR-6913
     }
@@ -349,7 +348,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        //POCOR-6979
+      //POCOR-6979
         $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
         $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
@@ -403,48 +402,19 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
                 $InstitutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
                 $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+                $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
                 $periodId = $AcademicPeriods->getCurrent();
-                if(!empty( $entity->new_shift['_ids'])){
-                    $shiftime = $ShiftOptions->find()
-                    ->where([$ShiftOptions->aliasField('id IN') => $entity->new_shift['_ids']])
-                    ->toArray();
-
-                    //remove all shifts data of selected staff
-                    $InstitutionStaffShifts->deleteAll([
-                            $InstitutionStaffShifts->aliasField('staff_id') => $entity->staff_id
-                        ]);
-                    foreach ($shiftime as $value) {
-                        $startTime = date("H:i:s",strtotime($value->start_time));
-                        $endTime = date("H:i:s",strtotime($value->end_time));
-                        
-                        //insert record in institution_shifts table
-                        $institutionShiftData['start_time'] = $startTime;
-                        $institutionShiftData['end_time'] =  $endTime;
-                        $institutionShiftData['academic_period_id'] =  $periodId;
-                        $institutionShiftData['institution_id'] = $entity->institution_id;
-                        $institutionShiftData['location_institution_id'] = $entity->institution_id;
-                        $institutionShiftData['shift_option_id'] = $value->id;
-                        $institutionShiftData['created_user_id'] = 1;
-                        $institutionShiftData['created'] = date('Y-m-d H:i:s');
-                        $data = $InstitutionShifts->newEntity($institutionShiftData);
-                        //echo "<pre>"; print_r($data);die;
-                        $insertRecord = $InstitutionShifts->save($data);
-                       
-                       // echo "<pre>"; print_r($entity);die;
-                        if ($insertRecord) {
-                            $staffShiftData['staff_id'] = $entity->staff_id;
-                            $staffShiftData['shift_id'] =  $insertRecord->id;
-                            $record = $InstitutionStaffShifts->newEntity($staffShiftData);
-                            $InstitutionStaffShifts->save($record);
-                        }
-                        
-                    } 
+                if(!empty( $entity->new_shift)){ //POCOR-7109
+                    $shiftUpdate =   $InstitutionPositions->updateAll(
+                                ['shift_id' => $entity->new_shift,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
+                                [
+                                 'id' => $entity->institution_position_id, //condition update
+                                ] 
+                            );
+                    
                     $StaffChangeTypesData = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $this->request->data['StaffPositionProfiles']['staff_change_type_id']])
                         ->first();
-                        
-                       // echo "<pre>"; print_r($this->request->data());die;
-
                 if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
                     $event->stopPropagation();
                 }
@@ -457,12 +427,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 //POCOR-6979[START]   
             }
         }
-        /**POCOR-6928 ends*/ 
-    }
+        /**POCOR-6928 ends*/    }
 
     private function getAssociatedData($entity)
     {
-//        print_r($entity);die();
         $requestData = $this->request->data;
         $staffChangeTypes = $this->staffChangeTypesList;
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -513,6 +481,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, $entity, $requestData, ArrayObject $extra)
     {
+        
         if (!$entity->errors()) {
             $StaffTable = TableRegistry::get('Institution.Staff');
             $url = $this->url('view');
@@ -583,6 +552,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     private function rejectPendingTransfer(array $data)
     {
+
         // reject all pending transfers
         $staffId = $data['staff_id'];
 
@@ -654,6 +624,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
         // If the record exists
         if (!empty($staffRecord)) {
+
             unset($data['created']);
             unset($data['created_user_id']);
             unset($data['modified']);
@@ -1205,6 +1176,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function addOnInitialize(Event $event, Entity $entity)
     {
+
         $addOperation = $this->initialiseVariable($entity);
         if ($addOperation) {
             $institutionStaffId = $this->request->query('institution_staff_id');
@@ -1313,24 +1285,26 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 $attr['type'] = 'readOnly';
                 if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-                    $staffShifts  = $InstitutionStaffShifts
+                    $InstitutionStaff = TableRegistry::get('institution_staff');
+                    $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+                    $staffId = $entity->staff_id;
+                    $staffShifts  = $InstitutionStaff
                             ->find()
                             ->select(['shift_name' =>  $ShiftOptions->aliasField('name')])
-                            ->leftJoin([$InstitutionShifts->alias() => $InstitutionShifts->table()],[
-                                    $InstitutionShifts->aliasField('id = ') . $InstitutionStaffShifts->aliasField('shift_id')
+                            ->leftJoin([$InstitutionPositions->alias() => $InstitutionPositions->table()],[
+                                    $InstitutionPositions->aliasField('id = ') . $InstitutionStaff->aliasField('institution_position_id')
                             ])
                             ->leftJoin([$ShiftOptions->alias() => $ShiftOptions->table()],[
-                                $ShiftOptions->aliasField('id = ') . $InstitutionShifts->aliasField('shift_option_id')
+                                $ShiftOptions->aliasField('id = ') . $InstitutionPositions->aliasField('shift_id')
                             ])
-                            ->where([$InstitutionStaffShifts->aliasField('staff_id') => $entity->staff_id])
-                            ->toArray();
+                            ->where([$InstitutionStaff->aliasField('staff_id') => $entity->staff_id])
+                            ->first();
+                    $shifts = '';
                     if (!empty($staffShifts)) {
-                        foreach ($staffShifts as $shift) {
-                            $shifts[] = $shift->shift_name;
-                        }
+                        $shifts= $staffShifts->shift_name;
                     }
-                    $allShift = implode(",",$shifts);
-                    $attr['attr']['value'] = $allShift;
+                   // $allShift = implode(",",$shifts);
+                    $attr['attr']['value'] = $shifts;
                 }
             } else {
                 $attr['visible'] = false;
@@ -1347,16 +1321,28 @@ class StaffPositionProfilesTable extends ControllerActionTable
     */
     public function onUpdateFieldNewShift(Event $event, array $attr, $action, Request $request)
     {
+        //POCOR-7109 start
+        $institutionId = $request->data[$this->alias()]['institution_id'];
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $periodId = $AcademicPeriods->getCurrent();
+        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
         $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+        $optionList = $ShiftOptions->find('list')
+                        ->leftJoin([$InstitutionShifts->alias() => $InstitutionShifts->table()],
+                        [$InstitutionShifts->aliasField('shift_option_id = ') . $ShiftOptions->aliasField('id')])
+                        ->where([$InstitutionShifts->aliasField('institution_id')=>$institutionId,$InstitutionShifts->aliasField('academic_period_id')=>$periodId])
+                        ->toArray();
+        //POCOR-7109 end
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
             if($request->data[$this->alias()]['staff_change_type_id'] == ''){
                 $attr['visible'] = false;
             }else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_SHIFT'] || $request->data[$this->alias()]['staff_change_type_id'] == 5) {
                 $attr['type'] = 'chosenSelect';
-                $attr['attr']['multiple'] = true;
-                $options = $ShiftOptions->getList()->toArray();
-                $attr['options'] = $options;
+                $attr['attr']['multiple'] = false;
+                //$attr['select'] = false;
+                $attr['options'] = ['id' => '' . __('Select Shift') . ' --']+$optionList;//POCOR-7109
+                $attr['onChangeReload'] = 'changeStatus';
             } else {
                 $attr['type'] = 'hidden';
                 if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
@@ -1408,5 +1394,13 @@ class StaffPositionProfilesTable extends ControllerActionTable
             }
         }
         return $attr;
+    }
+
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    {
+        if($requestData[$this->alias()]['staff_change_type_id']==5){
+            $entity->assignee_id = -1;
+            return $entity->assignee_id;
+        }
     }
 }
