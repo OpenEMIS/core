@@ -30,6 +30,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.studentOpenEmisId;
     scope.isInternalSearchSelected = false;
     scope.isIdentityUserExist = false;
+    scope.isExternalSearchEnable = false;
     scope.disableFields = {
         username: true,
         password: true
@@ -250,9 +251,11 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         DirectoryaddguardianSvc.getIdentityTypes()
         .then(function(response) {
             scope.identityTypeOptions = response.data;
+            scope.checkConfigForExternalSearch()
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
+            scope.checkConfigForExternalSearch()
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -646,11 +649,20 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     scope.internalGridOptions = null;
                     scope.goToInternalSearch();
                     break;
-                case 'confirmation': 
-                    scope.step = 'external_search';
-                    scope.externalGridOptions = null;
-                    scope.goToExternalSearch();
-                    break;
+                case 'confirmation': {
+                    if (scope.isExternalSearchEnable)
+                    {
+                        scope.step = 'external_search';
+                        scope.externalGridOptions = null;
+                        scope.goToExternalSearch();
+                    } else
+                    {
+                        scope.step = 'internal_search';
+                        scope.internalGridOptions = null;
+                        scope.goToInternalSearch();
+                    }
+                    return;
+                }
             }
         }
     }
@@ -665,12 +677,20 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     await checkUserAlreadyExistByIdentity()
                     scope.validateDetails();
                     break;
-                case 'internal_search': 
-                    scope.step = 'external_search';
-                    scope.externalGridOptions = null;
-                    UtilsSvc.isAppendLoader(true);
-                    scope.goToExternalSearch();
-                    break;
+                case 'internal_search': {
+                    if (scope.isExternalSearchEnable)
+                    {
+                        scope.step = 'external_search';
+                        scope.externalGridOptions = null;
+                        UtilsSvc.isAppendLoader(true);
+                        scope.goToExternalSearch();
+                    } else
+                    {
+                        scope.step = 'confirmation';
+                        scope.getUniqueOpenEmisId();
+                    }
+                    return;
+                }
                 case 'external_search': 
                     scope.step = 'confirmation';
                     scope.getUniqueOpenEmisId();
@@ -1114,5 +1134,18 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.addGuardian=function addGuardian()
     {
         $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
+    }
+    scope.checkConfigForExternalSearch= function checkConfigForExternalSearch()
+    {
+        DirectoryaddguardianSvc.checkConfigForExternalSearch().then(function (resp)
+        {
+            scope.isExternalSearchEnable = resp.showExternalSearch;
+            UtilsSvc.isAppendLoader(false);
+        }, function (error)
+        {
+            scope.isExternalSearchEnable = false;
+            console.error(error);
+            UtilsSvc.isAppendLoader(false);
+        });
     }
 }
