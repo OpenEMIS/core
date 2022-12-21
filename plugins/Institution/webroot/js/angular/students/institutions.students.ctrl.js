@@ -1085,8 +1085,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function saveStudentDetails() {
         let startDate = StudentController.studentData && StudentController.studentData.is_diff_school > 0 ? $filter('date')(StudentController.selectedStudentData.transferStartDate, 'yyyy-MM-dd') : $filter('date')(StudentController.selectedStudentData.startDate, 'yyyy-MM-dd');
-        StudentController.selectedStudentData.addressArea = InstitutionsStudentsSvc.getAddressArea();
-        StudentController.selectedStudentData.birthplaceArea = InstitutionsStudentsSvc.getBirthplaceArea();
+        const addressAreaRef = InstitutionsStudentsSvc.getAddressArea();
+        addressAreaRef && (StudentController.selectedStudentData.addressArea = addressAreaRef);
+        const birthplaceAreaRef = InstitutionsStudentsSvc.getBirthplaceArea();
+        birthplaceAreaRef && (StudentController.selectedStudentData.birthplaceArea = birthplaceAreaRef)
         var params = {
             institution_id: StudentController.institutionId,
             openemis_no: StudentController.selectedStudentData.openemis_no,
@@ -1341,7 +1343,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.nationality_name = selectedData.nationality;
         StudentController.selectedStudentData.address = selectedData.address;
         StudentController.selectedStudentData.postalCode = selectedData.postal_code;
-        StudentController.selectedStudentData.addressArea.name = selectedData.area_n=== undefined ? 0 : selectedData.birthplace_area_idame;
+        StudentController.selectedStudentData.addressArea.name = selectedData.area_name;
         StudentController.selectedStudentData.birthplaceArea.name = selectedData.birth_area_name;
         StudentController.selectedStudentData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
         StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
