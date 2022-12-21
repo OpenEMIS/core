@@ -414,6 +414,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function createCustomFieldsArray() {
         var selectedCustomField = StudentController.customFields;
+        if (selectedCustomField === "null") return;
         var filteredSections = Array.from(new Set(StudentController.customFields.map((item)=> mapBySection(item))));
         filteredSections.forEach((section)=>{
             let filteredArray = selectedCustomField.filter((item) => StudentController.filterBySection(item, section));
