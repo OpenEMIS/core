@@ -1,3 +1,16 @@
+### [3.76.9] - 2022-12-21
+- Implemented: Add a shift filter to the staff attendance page
+- Bug Fixed: Institutions > Academic > Subjects > Edit Page : All fields are blank in Edit page eventhough there are values
+- Bug Fixed: Institutions>Students>External Search/Internal Search: Multiple table lines are found
+- Bug Fixed: Institutions>Academic>Subjects: User is able to add Subjects that do not point to the Education Grade
+- Bug Fixed: Institution>Students/Staff: Birthplace area and address area are not saved when internal search from directory
+- Bug Fixed: Institutions>Staff>Career>Position: Change of shift assignment is creating duplicate shifts
+- Bug Fixed: Institution > Add page: There is an error in adding a new institution
+- Bug Fixed: Institutions > Student > Add page: Page keeps loading
+- Bug Fixed: Directory>Student: Email should be editable
+- Bug Fixed: Institutions>Performance>Report Cards: User is getting 404 error when opening report cards
+- Bug Fixed: Administration > Security > Groups > User Group > Add: Cannot find user when searching
+
 ### [3.76.8] - 2022-12-19
 - Bug Fixed: Institution > List page AND Institutions > Students/Staff List pages: Thumbnails are not displaying
 - Bug Fixed: Institutions>Academic>Subjects: Unable to unassign students from multigrade class subjects
