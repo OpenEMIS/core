@@ -3355,5 +3355,24 @@ class ValidationBehavior extends Behavior
         }
         return true;
     }
-    /*POCOR-6348 ends*/
+
+    /*POCOR-6971 */
+
+    public static function checkShiftPresent($field, array $globalData)
+    {
+        $data = $globalData['data'];
+        $shift = $data['shift_id'];
+        $shiftOptions = TableRegistry::get('shift_options');
+        $query = $shiftOptions->find()
+                ->where([
+                    'id' => $globalData['data']['id']
+                ])
+                ->count();
+
+        if ($query < 0) {
+            return false;
+        }
+
+        return true;
+    }
 }

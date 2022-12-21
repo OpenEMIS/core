@@ -616,7 +616,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         foreach ($securityRoles as $key => $value) {
             $securityRoleIds[] = $value->security_role_id;
         }//POCOR-7131 ends
-        if (!is_null($reportCardId) && !is_null($classId)) {
+        if (!is_null($reportCardId) && !is_null($classId) && !empty($securityRoleIds)) { //POCOR-7148 check empty condition for securityRoleIds
             $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
             $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->primaryKey() => $classId]);
             // only show toolbar buttons if request for report card and class is valid

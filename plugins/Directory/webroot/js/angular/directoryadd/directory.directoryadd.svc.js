@@ -31,6 +31,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
         getBirthplaceArea: getBirthplaceArea,
         saveDirectoryData: saveDirectoryData,
         checkUserAlreadyExistByIdentity: checkUserAlreadyExistByIdentity,
+        checkConfigForExternalSearch: checkConfigForExternalSearch,
     };
     return service;
     
@@ -241,6 +242,26 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
             .then(function (response)
             {
                 deferred.resolve(response);
+            }, function (error)
+            {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    }
+
+    /**
+    * Based on showExternalSearch property need to hide external search step in form wizard
+    * @returns {Case 1: for None  [{"value":"None","showExternalSearch ":false}]}
+   *  @returns {Case 2: for rest values [{"value":"OpenEMIS Identity","showExternalSearch ":true}]}
+    */
+    function checkConfigForExternalSearch()
+    {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/checkConfigurationForExternalSearch';
+        $http.get(url)
+            .then(function (response)
+            {
+                deferred.resolve(response.data[0]);
             }, function (error)
             {
                 deferred.reject(error);
