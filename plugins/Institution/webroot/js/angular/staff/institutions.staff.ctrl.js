@@ -57,11 +57,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.isEnableBirthplaceArea = false;
     StaffController.isEnableAddressArea = false;
     StaffController.isIdentityUserExist = false;
+    StaffController.isExternalSearchEnable = false;
     StaffController.disableFields = {
         username: false,
         pasword: false
     }
-
+    StaffController.user_identity_type_id = 0;
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
     StaffController.generatePassword = generatePassword;
@@ -106,6 +107,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.filterBySection= filterBySection;
     StaffController.mapBySection= mapBySection;
     StaffController.transferStaffNextStep = transferStaffNextStep;
+    StaffController.checkConfigForExternalSearch = checkConfigForExternalSearch;
   
     
     $window.savePhoto = function(event) {
@@ -170,9 +172,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             password: StaffController.isInternalSearchSelected ? '' : StaffController.selectedStaffData.password,
             postal_code: StaffController.selectedStaffData.postalCode,
             address: StaffController.selectedStaffData.address,
-            birthplace_area_id: InstitutionsStaffSvc.getBirthplaceAreaId(),
-            address_area_id: InstitutionsStaffSvc.getAddressAreaId(),
-            identity_type_id: StaffController.selectedStaffData.identity_type_id,
+            birthplace_area_id: InstitutionsStaffSvc.getBirthplaceAreaId() == null ? StaffController.selectedStaffData.birthplace_area_id : InstitutionsStaffSvc.getBirthplaceAreaId(),
+            address_area_id: InstitutionsStaffSvc.getAddressAreaId() == null ? StaffController.selectedStaffData.address_area_id : InstitutionsStaffSvc.getAddressAreaId(),
+            identity_type_id: StaffController.user_identity_type_id == "" ? StaffController.selectedStaffData.identity_type_id : StaffController.user_identity_type_id,
             identity_type_name: StaffController.selectedStaffData.identity_type_name,
             start_date: StaffController.selectedStaffData.startDate,
             end_date: StaffController.selectedStaffData.endDate ? $filter('date')(StaffController.selectedStaffData.endDate, 'yyyy-MM-dd') : '',
@@ -249,10 +251,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         });
         UtilsSvc.isAppendLoader(true);
 
-        if (StaffController.isExternalSearchSelected || StaffController.isInternalSearchSelected)
-        {
+        if (StaffController.user_identity_number){
             params = { ...params, identity_number: StaffController.user_identity_number }
             StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
+        }
+
+        if (StaffController.user_identity_type_id>0)
+        {
+            params = { ...params, identity_type_id: parseInt(StaffController.user_identity_type_id) }
+            StaffController.selectedStaffData.identity_type_id = parseInt(StaffController.user_identity_type_id);
         }
         InstitutionsStaffSvc.saveStaffDetails(params).then(function (resp)
         {
@@ -357,7 +364,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function processInternalGridUserRecord(userRecords, params, totalRowCount) {
         console.log(userRecords);
-
+        if (userRecords.length === 0)
+        {
+            params.failCallback([], totalRowCount);
+            UtilsSvc.isAppendLoader(false);
+            return;
+        }
         var lastRow = totalRowCount;
         StaffController.rowsThisPage = userRecords;
 
@@ -372,6 +384,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             last_name: StaffController.selectedStaffData.last_name,
             date_of_birth: StaffController.selectedStaffData.date_of_birth,
             identity_number: StaffController.selectedStaffData.identity_number,
+            openemis_no: StaffController.selectedStaffData.openemis_no
         };
         var dataSource = {
             pageSize: StaffController.pageSize,
@@ -406,7 +419,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function processExternalGridUserRecord(userRecords, params, totalRowCount) {
         console.log(userRecords);
-
+        if (userRecords.length === 0)
+        {
+            params.failCallback([], totalRowCount);
+            UtilsSvc.isAppendLoader(false);
+            return;
+        }
         var lastRow = totalRowCount;
         StaffController.rowsThisPage = userRecords;
 
@@ -452,6 +470,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function getIdentityTypes(){
         InstitutionsStaffSvc.getIdentityTypes().then(function(resp){
             StaffController.identityTypeOptions = resp.data;
+            StaffController.checkConfigForExternalSearch()
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.log(error);
@@ -1007,11 +1026,20 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     StaffController.internalGridOptions = null;
                     StaffController.goToInternalSearch();
                     break;
-                case 'confirmation': 
-                    StaffController.step = 'external_search';
-                    StaffController.externalGridOptions = null;
-                    StaffController.goToExternalSearch();
-                    break;
+                case 'confirmation': {
+                    if (StaffController.isExternalSearchEnable)
+                    {
+                        StaffController.step = 'external_search';
+                        StaffController.externalGridOptions = null;
+                        StaffController.goToExternalSearch();
+                    } else
+                    {
+                        StaffController.step = 'internal_search';
+                        StaffController.internalGridOptions = null;
+                        StaffController.goToInternalSearch();
+                    }
+                    return;
+                }
                 case 'add_staff': 
                     StaffController.step = 'confirmation';
                     break;
@@ -1145,12 +1173,19 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     StaffController.validateDetails();
                    
                     break;
-                case 'internal_search': 
-                  
-                    StaffController.step = 'external_search';
-                    StaffController.externalGridOptions = null;
-                    StaffController.goToExternalSearch();
-                    break;
+                case 'internal_search': {
+                    if (StaffController.isExternalSearchEnable)
+                    {
+                        StaffController.step = 'external_search';
+                        StaffController.externalGridOptions = null;
+                        StaffController.goToExternalSearch();
+                    } else
+                    {
+                        StaffController.step = 'confirmation';
+                        StaffController.getUniqueOpenEmisId();
+                    }
+                    return;
+                }
                 case 'external_search': 
                     StaffController.step = 'confirmation';
                     StaffController.getUniqueOpenEmisId();
@@ -1184,7 +1219,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedUser = id;
         StaffController.isInternalSearchSelected = true;
         StaffController.isExternalSearchSelected = false;
-        StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         StaffController.getStaffData();
         StaffController.getStaffCustomFields();
         if (StaffController.isIdentityUserExist)
@@ -1203,7 +1237,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedUser = id;
         StaffController.isInternalSearchSelected = false;
         StaffController.isExternalSearchSelected = true;
-        StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         StaffController.getStaffData();
         StaffController.getStaffCustomFields();
         StaffController.disableFields = {
@@ -1270,6 +1303,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.requestedBy = selectedData.institution_code + ' - ' + selectedData.institution_name;
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
         StaffController.user_identity_number = deepCopy.identity_number;
+        StaffController.user_identity_type_id = deepCopy.identity_type_id;
+        StaffController.selectedStaffData.birthplace_area_id = selectedData.birthplace_area_id;
+        StaffController.selectedStaffData.address_area_id = selectedData.address_area_id;
+        StaffController.selectedStaffData.birth_area_code = selectedData.birth_area_code;
+        StaffController.selectedStaffData.area_code = selectedData.area_code;
 
         if (selectedData.address_area_id > 0)
         {
@@ -1326,6 +1364,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.postalCode = selectedData.postal_code;
         StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
         StaffController.user_identity_number = deepCopy.identity_number;
+        StaffController.user_identity_type_id = deepCopy.identity_type_id;
+        StaffController.selectedStaffData.birthplace_area_id = selectedData.birthplace_area_id;
+        StaffController.selectedStaffData.address_area_id = selectedData.address_area_id;
+        StaffController.selectedStaffData.birth_area_code = selectedData.birth_area_code;
+        StaffController.selectedStaffData.area_code = selectedData.area_code;
 
         if (selectedData.address_area_id > 0)
         {
@@ -2319,5 +2362,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
 
         return ["", false];
+    }
+    function checkConfigForExternalSearch()
+    {
+        InstitutionsStaffSvc.checkConfigForExternalSearch().then(function (resp)
+        {
+            StaffController.isExternalSearchEnable = resp.showExternalSearch;
+            UtilsSvc.isAppendLoader(false);
+        }, function (error)
+        {
+            StaffController.isExternalSearchEnable = false;
+            console.error(error);
+            UtilsSvc.isAppendLoader(false);
+        });
     }
 }

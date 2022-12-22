@@ -716,6 +716,57 @@ class InstitutionShiftsTable extends ControllerActionTable
             });
     }
 
+    /*
+    * Function to get staff shift option
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return array
+    * @ticket POCOR-6971
+    */
+
+    public function findStaffShiftOptions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+
+        return $query
+            ->innerJoinWith('ShiftOptions')
+            ->innerJoinWith('Institutions')
+            ->select([
+                    'institutionShiftId' => 'InstitutionShifts.id',
+                    'institutionShiftStartTime' => 'InstitutionShifts.start_time',
+                    'institutionShiftEndTime' => 'InstitutionShifts.end_time',
+                    'institutionShiftsId' => 'InstitutionShifts.shift_option_id',
+                    'institutionId' => 'Institutions.id',
+                    'institutionCode' => 'Institutions.code',
+                    'institutionName' => 'Institutions.name',
+                    'shiftOptionName' => 'ShiftOptions.name'
+                ])
+            ->where([
+                'location_institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId
+            ])
+            ->formatResults(function ($results) use ($institutionId) {
+                $returnArr = [];
+                foreach ($results as $result) {
+                    if ($result->institutionId == $institutionId) { //if the shift owned by itself, then no need to show the shift owner
+                        $shiftName = __($result->shiftOptionName);
+                    } else {
+                        $shiftName = $result->institutionCode . " - " . $result->institutionName . " - " . __($result->shiftOptionName);
+                    }
+                    $returnArr[] = [
+                        'id' => intval($result->institutionShiftsId),
+                        'name' => $shiftName.': '.$result->institutionShiftStartTime. ' - '.$result->institutionShiftEndTime,
+                        'start_time' => $result->institutionShiftStartTime,
+                        'end_time' => $result->institutionShiftEndTime
+                    ];
+                }
+                $defaultSelect = ['id' => '-1', 'name' => __('-- All --')];
+                $defaultSelect['selected'] = true;
+                array_unshift($returnArr, $defaultSelect);
+                return $returnArr;
+            });
+    }
+
     //this is to be called by institution class to get the available shift.
     public function getShiftOptions($institutionsId, $periodId)
     {
@@ -922,15 +973,29 @@ class InstitutionShiftsTable extends ControllerActionTable
         return $query;
     }
 
-    public function findStaffShiftsAttendance(Query $query, array $options)
+    public function findStaffShiftsAttendancedata(Query $query, array $options)
     {
         $staffId = $options['staff_id'];
         $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
+        $institutionStaff = TableRegistry::get('institution_staff');
+        $positions = TableRegistry::get('Institution.InstitutionPositions');
+        $shiftOption = TableRegistry::get('shift_options');
         $staffShiftsData   = $query
                            ->leftJoin(
                                 [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
                                 [
                                     $institutionStaffShifts->aliasField('shift_id = ') . $this->aliasField('id')
+                                ]
+                            )->
+                           leftJoin(
+                                [$positions->alias() => $positions->table()],
+                                [
+                                    $positions->aliasField('id = ') . $institutionStaff->aliasField('institution_position_id')
+                                ])
+                           ->leftJoin(
+                                [$shiftOption->alias() => $shiftOption->table()],
+                                [
+                                    $shiftOption->aliasField('id = ') . $positions->aliasField('shift_id')
                                 ]
                             )
                            ->select([
