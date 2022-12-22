@@ -49,7 +49,8 @@ class AdvancedNameSearchBehavior extends Behavior
         if (array_key_exists('aliasidentity', $options)) {
             $aliasidentity = $options['aliasidentity'];
         }
-        $aliasidentity = '`'.$aliasidentity.'`';
+        //POCOR-7149 starts
+        if(!empty($aliasidentity)){ $aliasidentity = '`'.$aliasidentity.'`'; }//POCOR-7149 ends
         // Starts POCOR-6532
         $searchParams = explode(' ', trim($search));
         foreach ($searchParams as $key => $value) {

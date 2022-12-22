@@ -47,6 +47,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.currentYear = new Date().getFullYear();
     StudentController.studentStatus = 'Pending Transfer';
     StudentController.StudentData = {};
+    StudentController.isExternalSearchEnable = false;
 
     StudentController.datepickerOptions = {
         showWeeks: false
@@ -108,6 +109,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.transferStudent = transferStudent;
     StudentController.setStudentDataFromExternalSearchData = setStudentDataFromExternalSearchData;
     StudentController.transferStudentNextStep = transferStudentNextStep;
+    StudentController.checkConfigForExternalSearch = checkConfigForExternalSearch;
     StudentController.isIdentityUserExist = false;
 
     angular.element(document).ready(function () {
@@ -219,6 +221,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function processInternalGridUserRecord(userRecords, params, totalRowCount) {
         console.log(userRecords);
+        if (userRecords.length === 0)
+        {
+            params.failCallback([], totalRowCount);
+            UtilsSvc.isAppendLoader(false);
+            return;
+        }
 
         var lastRow = totalRowCount;
         StudentController.rowsThisPage = userRecords;
@@ -234,6 +242,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             last_name: StudentController.selectedStudentData.last_name,
             date_of_birth: StudentController.selectedStudentData.date_of_birth,
             identity_number: StudentController.selectedStudentData.identity_number,
+            openemis_no: StudentController.selectedStudentData.openemis_no
         };
         var dataSource = {
             pageSize: StudentController.pageSize,
@@ -268,10 +277,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function processExternalGridUserRecord(userRecords, params, totalRowCount) {
         console.log(userRecords);
+        if (userRecords.length === 0)
+        {
+            params.failCallback([], totalRowCount);
+            UtilsSvc.isAppendLoader(false);
+            return;
+        }
 
         var lastRow = totalRowCount;
         StudentController.rowsThisPage = userRecords;
-
         params.successCallback(StudentController.rowsThisPage, lastRow);
         UtilsSvc.isAppendLoader(false);
         return userRecords;
@@ -317,6 +331,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             console.log(error);
             UtilsSvc.isAppendLoader(false);
         });
+        StudentController.checkConfigForExternalSearch()
     }
 
     function getAcademicPeriods() {
@@ -886,11 +901,20 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     StudentController.internalGridOptions = null;
                     StudentController.goToInternalSearch();
                     break;
-                case 'confirmation': 
-                    StudentController.step = 'external_search';
-                    StudentController.externalGridOptions = null;
-                    StudentController.goToExternalSearch();
-                    break;
+                case 'confirmation': {
+                    if (StudentController.isExternalSearchEnable)
+                    {
+                        StudentController.step = 'external_search';
+                        StudentController.externalGridOptions = null;
+                        StudentController.goToExternalSearch();
+                    } else
+                    {
+                        StudentController.step = 'internal_search';
+                        StudentController.internalGridOptions = null;
+                        StudentController.goToInternalSearch();
+                    }
+                    return;
+                }
                 case 'add_student': 
                     StudentController.step = 'confirmation';
                     break;
@@ -940,11 +964,22 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 case 'user_details': 
                     StudentController.validateDetails();
                     break;
-                case 'internal_search': 
-                    StudentController.step = 'external_search';
-                    StudentController.externalGridOptions = null;
-                    StudentController.goToExternalSearch();
-                    break;
+                case 'internal_search': {                    
+                    if (StudentController.isExternalSearchEnable)
+                    {     
+                        StudentController.step = 'external_search';
+                        StudentController.externalGridOptions = null;
+                        StudentController.goToExternalSearch();
+                    } else
+                    {
+                        StudentController.step = 'confirmation';
+                        if (!StudentController.selectedStudentData.openemis_no)
+                        {
+                            StudentController.getUniqueOpenEmisId();
+                        }
+                    }
+                    return;
+                }
                 case 'external_search': 
                     StudentController.step = 'confirmation';
                     if(!StudentController.selectedStudentData.openemis_no) {
@@ -1069,8 +1104,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             password: StudentController.selectedStudentData.password,
             postal_code: StudentController.selectedStudentData.postalCode,
             address: StudentController.selectedStudentData.address,
-            birthplace_area_id: StudentController.studentData && StudentController.studentData.is_diff_school > 0 ? StudentController.studentData.birthplace_area_id : InstitutionsStudentsSvc.getBirthplaceAreaId(),
-            address_area_id: StudentController.studentData && StudentController.studentData.is_diff_school > 0 ? StudentController.studentData.address_area_id : InstitutionsStudentsSvc.getAddressAreaId(),
+            birthplace_area_id: InstitutionsStudentsSvc.getBirthplaceAreaId() === null ? StudentController.selectedStudentData.birthplace_area_id:InstitutionsStudentsSvc.getBirthplaceAreaId(),
+            address_area_id: InstitutionsStudentsSvc.getAddressAreaId() === null ? StudentController.selectedStudentData.address_area_id : InstitutionsStudentsSvc.getAddressAreaId(),
             identity_type_id: StudentController.selectedStudentData.identity_type_id,
             identity_type_name: StudentController.selectedStudentData.identity_type_name,
             education_grade_id: StudentController.selectedStudentData.education_grade_id,
@@ -1306,7 +1341,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.nationality_name = selectedData.nationality;
         StudentController.selectedStudentData.address = selectedData.address;
         StudentController.selectedStudentData.postalCode = selectedData.postal_code;
-        StudentController.selectedStudentData.addressArea.name = selectedData.area_name;
+        StudentController.selectedStudentData.addressArea.name = selectedData.area_n=== undefined ? 0 : selectedData.birthplace_area_idame;
         StudentController.selectedStudentData.birthplaceArea.name = selectedData.birth_area_name;
         StudentController.selectedStudentData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
         StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
@@ -1315,6 +1350,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.isSameSchool = selectedData.is_same_school > 0 ? true : false;
         StudentController.isDiffSchool = selectedData.is_diff_school > 0 ? true : false;
         StudentController.selectedStudentData.currentlyAllocatedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.current_enrol_institution_name;
+        
+        StudentController.selectedStudentData.birthplace_area_id = selectedData.birthplace_area_id === undefined ? null : selectedData.birthplace_area_id;
+        StudentController.selectedStudentData.address_area_id = selectedData.address_area_id === undefined ? null : selectedData.address_area_id;
+        StudentController.selectedStudentData.birth_area_code = selectedData.birth_area_code === undefined ? '' : selectedData.birth_area_code;
+        StudentController.selectedStudentData.area_code = selectedData.area_code === undefined ? '' : selectedData.area_code;
 
         if (selectedData.address_area_id > 0)
         {
@@ -1371,7 +1411,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
         var todayDate = new Date();
         StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
-
+    
+        StudentController.selectedStudentData.birthplace_area_id = selectedData.birthplace_area_id;
+        StudentController.selectedStudentData.address_area_id = selectedData.address_area_id;
+        StudentController.selectedStudentData.birth_area_code = selectedData.birth_area_code;
+        StudentController.selectedStudentData.area_code = selectedData.area_code;
         if (selectedData.address_area_id > 0)
         {
             document.getElementById('addressArea_textbox').style.visibility = 'visible';
@@ -1390,6 +1434,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         {
             document.getElementById('birthplaceArea_textbox').style.display = 'none';
             document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+        }
+        StudentController.disableFields = {
+            username: false,
+            password: false,
         }
     }
 
@@ -1631,5 +1679,19 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
 
         return ["",false];
+    }
+
+    function checkConfigForExternalSearch()
+    {
+        InstitutionsStudentsSvc.checkConfigForExternalSearch().then(function (resp)
+        {
+            StudentController.isExternalSearchEnable = resp.showExternalSearch;
+            UtilsSvc.isAppendLoader(false);
+        }, function (error)
+        {
+            StudentController.isExternalSearchEnable = false;   
+            console.error(error);
+            UtilsSvc.isAppendLoader(false);
+        });
     }
 }
