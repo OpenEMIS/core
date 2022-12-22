@@ -212,7 +212,11 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                 [$Users->aliasField('id = ') . $this->aliasField('created_user_id')]
             )
         ->Where($where)
-        ->group([$this->aliasField('created_user_id')]);
+        ->group([$this->aliasField('created_user_id'),
+            $this->aliasField('institution_classes_id')
+        ]);
+
+        
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
             {
                 return $results->map(function ($row)
