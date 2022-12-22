@@ -70,6 +70,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         getBirthplaceArea: getBirthplaceArea,
         getStaffCustomFields: getStaffCustomFields,
         checkUserAlreadyExistByIdentity: checkUserAlreadyExistByIdentity,
+        checkConfigForExternalSearch: checkConfigForExternalSearch,
     };
 
     var models = {
@@ -1056,6 +1057,26 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
             .then(function (response)
             {
                 deferred.resolve(response);
+            }, function (error)
+            {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    }
+
+    /**
+        * Based on showExternalSearch property need to hide external search step in form wizard
+        * @returns {Case 1: for None  [{"value":"None","showExternalSearch ":false}]}
+       *  @returns {Case 2: for rest values [{"value":"OpenEMIS Identity","showExternalSearch ":true}]}
+        */
+    function checkConfigForExternalSearch()
+    {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/checkConfigurationForExternalSearch';
+        $http.get(url)
+            .then(function (response)
+            {
+                deferred.resolve(response.data[0]);
             }, function (error)
             {
                 deferred.reject(error);

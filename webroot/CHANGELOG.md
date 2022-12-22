@@ -1,3 +1,27 @@
+### [3.76.9] - 2022-12-21
+- Implemented: Add a shift filter to the staff attendance page
+- Bug Fixed: Institutions > Academic > Subjects > Edit Page : All fields are blank in Edit page eventhough there are values
+- Bug Fixed: Institutions>Students>External Search/Internal Search: Multiple table lines are found
+- Bug Fixed: Institutions>Academic>Subjects: User is able to add Subjects that do not point to the Education Grade
+- Bug Fixed: Institution>Students/Staff: Birthplace area and address area are not saved when internal search from directory
+- Bug Fixed: Institutions>Staff>Career>Position: Change of shift assignment is creating duplicate shifts
+- Bug Fixed: Institution > Add page: There is an error in adding a new institution
+- Bug Fixed: Institutions > Student > Add page: Page keeps loading
+- Bug Fixed: Directory>Student: Email should be editable
+- Bug Fixed: Institutions>Performance>Report Cards: User is getting 404 error when opening report cards
+- Bug Fixed: Administration > Security > Groups > User Group > Add: Cannot find user when searching
+
+### [3.76.8] - 2022-12-19
+- Bug Fixed: Institution > List page AND Institutions > Students/Staff List pages: Thumbnails are not displaying
+- Bug Fixed: Institutions>Academic>Subjects: Unable to unassign students from multigrade class subjects
+
+### [3.76.7] - 2022-12-19
+- Bug Fixed: Institutions>Staff>Staff1>Position: When approving end of assignment, user is getting 404 error
+- Bug Fixed: Institution > Student > Promote/Repeat individual page: The system gives a 404 error when promoting students individually
+- Bug Fixed: Administration > Performance > Assessment > Edit page: The subject is not showing in the database
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to generate all/download all for some roles
+- Bug Fixed: Institutions>Staff>Add: Unable to add staff
+
 ### [3.76.6] - 2022-12-14
 - Bug Fixed: Develop a student report card absence configuration-Only show absences for the current academic period page
 
