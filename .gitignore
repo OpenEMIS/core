@@ -46,3 +46,23 @@ Icon?
 ehthumbs.db
 Thumbs.db
 
+
+
+
+# For Backend API (Laravel 8)
+api/node_modules
+api/public/hot
+api/public/storage
+api/storage/*.key
+api/vendor
+api/.env
+api/.env.backup
+api/.phpunit.result.cache
+api/Homestead.json
+api/Homestead.yaml
+api/npm-debug.log
+api/yarn-error.log
+api/.DS_Store
+api/public/uploads
+api/.editorconfig
+api/.idea
