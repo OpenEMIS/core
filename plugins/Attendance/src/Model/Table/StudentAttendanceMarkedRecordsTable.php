@@ -11,6 +11,11 @@ use Cake\Datasource\ResultSetInterface;
 
 class StudentAttendanceMarkedRecordsTable extends AppTable
 {
+    const NOT_VALID = -1;
+    const NOT_MARKED = 0;
+    const MARKED = 1;
+    const PARTIAL_MARKED = 2;
+    const DAY_COLUMN_PREFIX = 'day_';
     public function initialize(array $config)
     {
         $this->table('student_attendance_marked_records');
@@ -34,6 +39,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $day = $options['day_id'];
         $period = $options['attendance_period_id'];
         $subjectId = $options['subject_id'];
+        $data = $this->markedRecordAfterSave($options); //POCOR-7143
 
         return $query
             ->where([
@@ -47,6 +53,54 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
             ]);
             
     }
+
+    //POCOR-7143[START]
+    public function markedRecordAfterSave($options)
+    {
+        $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
+        $institutionClassId = $options['institution_class_id'];
+        $educationGradeId = $options['education_grade_id'];
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $date = $options['day_id'];
+        $explodedData = explode("-", $date);
+
+        $year = (int) $explodedData[0];
+        $month = (int) $explodedData[1];
+        $day = (int) $explodedData[2];
+
+        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+        $totalMarkedCount = $StudentAttendanceMarkedRecords
+            ->find()
+            ->where([
+                $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
+                $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
+                $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
+                $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
+                $StudentAttendanceMarkedRecords->aliasField('date') => $date 
+            ])
+            ->count();
+        
+        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $attendancePerDay = $StudentAttendanceMarkTypes->getAttendancePerDayByClass($institutionClassId, $academicPeriodId);
+        if ($totalMarkedCount >= count($attendancePerDay)) {
+            $markedType = self::MARKED;
+        } else {
+            $markedType = self::PARTIAL_MARKED;
+        }
+
+        $entityData = [
+            'institution_class_id' => $institutionClassId,
+            'academic_period_id' => $academicPeriodId,
+            'year' => $year,
+            'month' => $month,
+            self::DAY_COLUMN_PREFIX . $day => $markedType
+        ];
+
+        $entity = $ClassAttendanceRecords->newEntity($entityData);
+        $ClassAttendanceRecords->save($entity);
+    }
+    //POCOR-7143[END]
 
     public function afterSaveCommit(Event $event, Entity $entity)
     {
@@ -63,6 +117,8 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $institutionClassId = $options['institution_class_id'];
         $educationGradeId = $options['education_grade_id'];        
         $day = $options['day_id'];
+
+
         $row = [];
         
         return $query
@@ -101,6 +157,39 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                                             ]);
                                         $this->save($newRecord);
                                     }
+
+
+                                    //POCOR-7143[START]
+                                    $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+                                    $totalMarkedCount = $StudentAttendanceMarkedRecords
+                                        ->find()
+                                        ->where([
+                                            $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
+                                            $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
+                                            $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
+                                            $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
+                                            $StudentAttendanceMarkedRecords->aliasField('date') => $day 
+                                        ])
+                                        ->first();
+                                        if(!empty($totalMarkedCount)){
+                                            $explodedData = explode("-", $day);
+                                            $year = (int) $explodedData[0];
+                                            $month = (int) $explodedData[1];
+                                            $daydata = (int) $explodedData[2];
+                                            $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
+                                            $ClassAttendanceRecords->updateAll(
+                                                [self::DAY_COLUMN_PREFIX . $daydata => self::PARTIAL_MARKED],
+                                                [
+                                                    $ClassAttendanceRecords->aliasField('academic_period_id') => $academicPeriodId,
+                                                    $ClassAttendanceRecords->aliasField('institution_class_id') => $institutionClassId,
+                                                    $ClassAttendanceRecords->aliasField('year') => $year,
+                                                    $ClassAttendanceRecords->aliasField('month') => $month
+                                                ]
+                                            );
+                                        }
+                                        //POCOR-7143[END]
+
+
                                     $row->is_Scheduled = 1;
                                     return $row;
                             });
