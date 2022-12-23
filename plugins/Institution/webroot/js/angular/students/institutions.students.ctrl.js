@@ -1694,4 +1694,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             UtilsSvc.isAppendLoader(false);
         });
     }
+
+    console.log("FOR POCOR-7093")
 }
