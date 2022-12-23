@@ -187,18 +187,18 @@ class GuardiansTable extends ControllerActionTable
                 $security_user_id = $this->Session->read('Directory.Directories.id');
                 $securityUserData = $SecurityUsers->find()
                     ->where([
-                        $SecurityUsers->aliasField('id') => $security_user_id,
+                        $SecurityUsers->aliasField('id') => $security_user_id])
                     ->hydrate(false)
-                    ->toArray();
-                $dataArray = ['institution_id' => 0, 'student_id'=> $security_user_id, 'openemis_no'=> $securityUserData->openemis_no];
+                    ->first();
+                $dataArray = ['institution_id' => 0, 'student_id'=> $security_user_id, 'openemis_no'=> $securityUserData['openemis_no']];
             }else{
                 $security_user_id = $this->ControllerAction->paramsDecode($this->request->query['queryString'])['security_user_id'];
                 $securityUserData = $SecurityUsers->find()
                     ->where([
-                        $SecurityUsers->aliasField('id') => $security_user_id,
+                        $SecurityUsers->aliasField('id') => $security_user_id])
                     ->hydrate(false)
-                    ->toArray();
-                $dataArray = ['institution_id' => $this->Session->read('Institution.Institutions.id'), 'student_id'=> $security_user_id', openemis_no'=> $securityUserData->openemis_no];
+                    ->first();
+                $dataArray = ['institution_id' => $this->Session->read('Institution.Institutions.id'), 'student_id'=> $security_user_id ,' openemis_no'=> $securityUserData['openemis_no']];
             }
             $queryString = base64_encode(json_encode($dataArray));
             $event->stopPropagation();
