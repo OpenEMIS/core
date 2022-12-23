@@ -189,7 +189,7 @@ class GuardiansTable extends ControllerActionTable
                 $security_user_id = $this->ControllerAction->paramsDecode($this->request->query['queryString'])['security_user_id'];
                 $dataArray = ['institution_id' => $this->Session->read('Institution.Institutions.id'), 'student_id'=> $security_user_id];
             }
-            $queryString = base64_encode(json_encode($dataArray));
+            $queryString = urlencode(base64_encode(json_encode($dataArray)));
             $event->stopPropagation();
             return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Addguardian', 'queryString'=>$queryString]);
             /*
