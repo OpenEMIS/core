@@ -181,6 +181,19 @@ class GuardiansTable extends ControllerActionTable
     public function onUpdateFieldGuardianId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
+            //POCOR-7093 starts
+            if($this->controller->name == 'Directories'){
+                $security_user_id = $this->Session->read('Directory.Directories.id');
+                $dataArray = ['institution_id' => 0, 'student_id'=> $security_user_id];
+            }else{
+                $security_user_id = $this->ControllerAction->paramsDecode($this->request->query['queryString'])['security_user_id'];
+                $dataArray = ['institution_id' => $this->Session->read('Institution.Institutions.id'), 'student_id'=> $security_user_id];
+            }
+            $queryString = base64_encode(json_encode($dataArray));
+            $event->stopPropagation();
+            return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Addguardian', 'queryString'=>$queryString]);
+            /*
+            Note:- Don't uncomment this, becuase client's wants to redirect the page on directory add gaurdian page. Kindly connect with Anubhav/Ehteram.  
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
             $attr['noResults'] = __('No Guardian found.');
@@ -203,7 +216,7 @@ class GuardiansTable extends ControllerActionTable
             $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
             $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
             $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
-            $attr['onSelect'] = "$('#reload').click();";
+            $attr['onSelect'] = "$('#reload').click();";*///POCOR-7093 ends
         } elseif ($action == 'index') {
             $attr['sort'] = ['field' => 'Guardians.first_name'];
         }
