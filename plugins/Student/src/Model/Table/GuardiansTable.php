@@ -189,9 +189,9 @@ class GuardiansTable extends ControllerActionTable
                 $security_user_id = $this->ControllerAction->paramsDecode($this->request->query['queryString'])['security_user_id'];
                 $dataArray = ['institution_id' => $this->Session->read('Institution.Institutions.id'), 'student_id'=> $security_user_id];
             }
-            $queryString = urlencode(base64_encode(json_encode($dataArray)));
+            $queryString = base64_encode(json_encode($dataArray));
             $event->stopPropagation();
-            return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Addguardian', 'queryString'=>$queryString]);
+            return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Addguardian', 'queryString'=> trim($queryString)]);
             /*
             Note:- Don't uncomment this, becuase client's wants to redirect the page on directory add gaurdian page. Kindly connect with Anubhav/Ehteram.  
             $attr['type'] = 'autocomplete';
