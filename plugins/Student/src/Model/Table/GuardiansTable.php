@@ -198,7 +198,7 @@ class GuardiansTable extends ControllerActionTable
                         $SecurityUsers->aliasField('id') => $security_user_id])
                     ->hydrate(false)
                     ->first();
-                $dataArray = ['institution_id' => $this->Session->read('Institution.Institutions.id'), 'student_id'=> $security_user_id ,' openemis_no'=> $securityUserData['openemis_no']];
+                $dataArray = ['institution_id' => $this->Session->read('Institution.Institutions.id'), 'student_id'=> $security_user_id ,    'openemis_no'=> $securityUserData['openemis_no']];
             }
             $queryString = base64_encode(json_encode($dataArray));
             $event->stopPropagation();
