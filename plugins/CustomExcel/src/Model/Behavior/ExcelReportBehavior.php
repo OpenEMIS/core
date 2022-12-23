@@ -785,7 +785,13 @@ class ExcelReportBehavior extends Behavior
     private function string($objSpreadsheet, $objWorksheet, $objCell, $search, $extra)
     {
         $format = '${%s}';
-        $vars = $extra->offsetExists('vars') ? $extra['vars'] : [];
+        //POCOR-7106[START] 
+        //This is fix for Cake\Utility\Hash::get() Cannot use object of type stdClass as array
+        //Can be removed if report stuck in progress for any environment.
+        
+        // $vars = $extra->offsetExists('vars') ? $extra['vars'] : [];
+        $vars = $extra->offsetExists->vars ? $extra->vars : [];
+        //POCOR-7106[END]
         $placeHolderAttr = $this->convertPlaceHolderToArray($search);
 
         if (empty($placeHolderAttr)) {
