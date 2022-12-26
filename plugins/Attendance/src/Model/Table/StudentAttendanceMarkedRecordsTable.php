@@ -64,6 +64,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $academicPeriodId = $options['academic_period_id'];
         $date = $options['day_id'];
         $explodedData = explode("-", $date);
+        $numberOfperiodByClass = $this->numberOfperiodByClass($options);
 
         $year = (int) $explodedData[0];
         $month = (int) $explodedData[1];
@@ -83,10 +84,25 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
         $attendancePerDay = $StudentAttendanceMarkTypes->getAttendancePerDayByClass($institutionClassId, $academicPeriodId);
-        if ($totalMarkedCount >= count($attendancePerDay)) {
+
+        $ClassAttendanceRecordsData = $ClassAttendanceRecords
+            ->find()
+            ->where([$ClassAttendanceRecords->aliasField('institution_class_id') => $institutionClassId,
+                    $ClassAttendanceRecords->aliasField('academic_period_id') => $academicPeriodId,
+                    $ClassAttendanceRecords->aliasField('year') => $year,
+                    $ClassAttendanceRecords->aliasField('month') => $month
+                    ])
+            ->first();
+        if(empty($ClassAttendanceRecordsData)){
+            $markedType = self::NOT_MARKED;
+        }
+        else if ($totalMarkedCount >= count($attendancePerDay)) {
             $markedType = self::MARKED;
         } else {
             $markedType = self::PARTIAL_MARKED;
+        }
+        if(count($numberOfperiodByClass) == $totalMarkedCount){
+            $markedType = self::MARKED;
         }
 
         $entityData = [
@@ -101,6 +117,22 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $ClassAttendanceRecords->save($entity);
     }
     //POCOR-7143[END]
+
+    public function numberOfperiodByClass($options)
+    {
+        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $institionClassId = $options['institution_class_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $dayId = $options['day_id'];
+        $educationGradeId = $options['education_grade_id'];
+        // return "Hi";
+        // $attendanceOptions = $this->getAttendancePerDayOptionsByClass($institionClassId, $academicPeriodId, $dayId, $educationGradeId);
+        $attendanceOptions = $StudentAttendanceMarkTypes->getAttendancePerDayOptionsByClass($institionClassId, $academicPeriodId, $dayId, $educationGradeId);
+        return $attendanceOptions;
+            // ->formatResults(function (ResultSetInterface $results) use ($attendanceOptions) {
+            //     return $attendanceOptions;
+            // });
+    }
 
     public function afterSaveCommit(Event $event, Entity $entity)
     {
@@ -133,17 +165,26 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                                                 $this->aliasField('date') => $day
                                         ])->toArray();
                                     if (!empty($getRecord)) {
-                                        $query = $this->query();
-                                        $query ->update()
-                                                ->set(['period' => 0, 'subject_id' => 0, 'no_scheduled_class' => 1])
-                                                ->where([
-                                                    $this->aliasField('institution_class_id') => $institutionClassId,
-                                                    $this->aliasField('education_grade_id') => $educationGradeId,
-                                                    $this->aliasField('institution_id') => $institutionId,
-                                                    $this->aliasField('academic_period_id') => $academicPeriodId,
-                                                    $this->aliasField('date') => $day
-                                                ])
-                                                ->execute();
+                                        $this->deleteAll([
+                                            $this->aliasField('institution_class_id') => $institutionClassId,
+                                            $this->aliasField('education_grade_id') => $educationGradeId,
+                                            $this->aliasField('institution_id') => $institutionId,
+                                            $this->aliasField('academic_period_id') => $academicPeriodId,
+                                            $this->aliasField('date') => $day,
+                                            $this->aliasField('no_scheduled_class') => 0,
+                                        ]);
+                                            $query = $this->query();
+                                            $query ->update()
+                                                    ->set(['period' => 0, 'subject_id' => 0, 'no_scheduled_class' => 1])
+                                                    ->where([
+                                                        $this->aliasField('institution_class_id') => $institutionClassId,
+                                                        $this->aliasField('education_grade_id') => $educationGradeId,
+                                                        $this->aliasField('institution_id') => $institutionId,
+                                                        $this->aliasField('academic_period_id') => $academicPeriodId,
+                                                        $this->aliasField('date') => $day
+                                                    ])
+                                                    ->execute();
+                                                
                                     } else {
                                         $newRecord = $this->newEntity([
                                                 'institution_class_id' => $institutionClassId,
