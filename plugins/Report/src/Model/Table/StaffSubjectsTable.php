@@ -82,7 +82,7 @@ class StaffSubjectsTable extends AppTable  {
         }
         $query
             ->select([
-                'academic_period_id' => 'InstitutionSubjects.id',
+                // 'academic_period_id' => 'InstitutionSubjects.id',
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',  
                 'nationality_id' => 'Users.nationality_id',             
