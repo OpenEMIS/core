@@ -1045,7 +1045,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->AcademicPeriods->alias(), $this->SurveyForms->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->AcademicPeriods->alias(), $this->SurveyForms->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
@@ -1057,7 +1057,8 @@ class InstitutionSurveysTable extends ControllerActionTable
             )
             ->where([
                 $this->aliasField('assignee_id') => $userId,
-                $workflowStepsRoles->aliasField('security_role_id') => $roleId
+                $workflowStepsRoles->aliasField('security_role_id') => $roleId,
+                'Assignees.super_admin IS NOT' => 1, //POCOR-7102
             ])
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
