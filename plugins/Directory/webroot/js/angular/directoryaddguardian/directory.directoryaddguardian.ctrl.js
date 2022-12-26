@@ -78,10 +78,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         const queryString = window.location.href.split('?')[1].split('=')[1].replace(/%3D/g, '')
         const queryData = JSON.parse(window.atob(queryString))
         if (Object.keys(queryData)) {
-            const { student_id, institution_id } = queryData;
+            const { institution_id, openemis_no } = queryData;
             scope.selectedUserData.institution_id = institution_id;
-            scope.studentOpenEmisId = student_id;
-            $window.localStorage.setItem('studentOpenEmisId', student_id)
+            scope.studentOpenEmisId = openemis_no;
+            $window.localStorage.setItem('studentOpenEmisId', openemis_no)
         }
     });
 
