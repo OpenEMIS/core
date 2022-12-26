@@ -57,42 +57,13 @@ class StaffAttendancesTable extends ControllerActionTable
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {   
-        $requestData = json_decode($settings['process']['params']);
-        $academicPeriodId = $requestData->academic_period_id;
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $institutionId = $requestData->institution_id;
-        $startDate = $AcademicPeriodTable->get($academicPeriodId)->start_date->format('Y-m-d');
-        $endDate = $AcademicPeriodTable->get($academicPeriodId)->end_date->format('Y-m-d');
-        $months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
-        
-        foreach ($months as $month) {
-            $year = $month['year'];
-            $sheetName = $month['month']['inString'].' '.$year;
-            $monthInNumber = $month['month']['inNumber'];
-            $days = $AcademicPeriodTable->generateDaysOfMonth($year, $monthInNumber, $startDate, $endDate);
-            $dates = [];
-            foreach ($days as $item) {
-                $dates[] = $item['date'];
-            }
-            $monthStartDay = $dates[0];
-            $monthEndDay = $dates[count($dates) - 1];
+        $sheets[] = [
+            'name' => $this->alias(),
+            'table' => $this,
+            'query' => $this->find(),
+            'orientation' => 'landscape'
+        ];
 
-            $sheets[] = [
-                'name' => $sheetName,
-                'table' => $this,
-                'query' => $this
-                    ->find()
-                    ->select(['openemis_no' => 'Users.openemis_no'])
-                    ->find('InDateRange', ['start_date' => $monthStartDay, 'end_date' => $monthEndDay])
-                    ,
-                'month' => $monthInNumber,
-                'year' => $year,
-                'startDate' => $monthStartDay,
-                'endDate' => $monthEndDay,
-                'institutionId' => $institutionId,
-                'orientation' => 'landscape'
-            ];
-        }
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -200,6 +171,7 @@ class StaffAttendancesTable extends ControllerActionTable
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $newArray = [];
+        $i_max = 31; //POCOR-5181
         $newArray[] = [
             'key' => '',
             'field' => 'institution_code',
@@ -230,34 +202,23 @@ class StaffAttendancesTable extends ControllerActionTable
             'type' => 'string',
             'label' => __('Position Title')
         ];
-        $StaffCustomFields = TableRegistry::get('staff_custom_fields');
-                    
-        $customFieldData = $StaffCustomFields->find()
-            ->select([
-                'custom_field_id' => 'staff_custom_fields.id',
-                'custom_field' => 'staff_custom_fields.name'
-            ])
-            ->toArray();
-        
-        foreach($customFieldData as $data) {
-            $custom_field_id = $data->custom_field_id;
-            $custom_field = $data->custom_field;
-            $newArray[] = [
-                'key' => '',
-                'field' => $custom_field_id,
-                'type' => 'string',
-                'label' => __($custom_field)
-            ];
-        }
         $newArray[] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
             'label' => ''
         ];
-        $newFields = array_merge($newArray, $fields->getArrayCopy());
-        $fields->exchangeArray($newFields);
-        $sheet = $settings['sheet'];
+        for( $i=1; $i<=$i_max; $i++ ) //POCOR-5181
+        { 
+            $newArray[]=[
+            'key'   => '',
+            'field' => 'Day'.$i,
+            'type'  => 'integer',
+            'label' => __($i),
+            ];
+        }
+        $fields->exchangeArray($newArray);
+        /*$sheet = $settings['sheet'];
         $year = $sheet['year'];
         $month = $sheet['month'];
         $startDate = $sheet['startDate'];
@@ -281,7 +242,7 @@ class StaffAttendancesTable extends ControllerActionTable
         
         // Set the data into the temporary variable
         $this->_leaveData = $this->getLeaveData($startDate, $endDate, $sheet['institutionId']);
-        $this->_attendanceData = $this->getAttendanceData($startDate, $endDate, $sheet['institutionId']);
+        $this->_attendanceData = $this->getAttendanceData($startDate, $endDate, $sheet['institutionId']);*/
     }
 
     public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr)
