@@ -255,6 +255,9 @@ class CalendarsTable extends ControllerActionTable
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        
+        $InstitutionShiftsTable = TableRegistry::get('shift_options');
+        $shiftOptions = $InstitutionShiftsTable->find('list',['keyField' => 'id', 'valueField' => 'name']);
 
         $this->field('name', ['attr' => ['label' => __('Name')]]);
 
@@ -265,9 +268,22 @@ class CalendarsTable extends ControllerActionTable
         $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
         $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
 
+
+        
+
+
         $this->field('start_date', ['type' => 'date','attr' => ['label' => __('Start Date')]]);
 
         $this->field('end_date', ['type' => 'date','attr' => ['label' => __('End Date')]]);
+        //POCOR-5280 : Start
+        $this->field('start_time', ['type' => 'time','attr' => ['label' => __('Start Time')]]);
+
+        $this->field('end_time', ['type' => 'time','attr' => ['label' => __('End Time')]]);
+
+        $this->fields['institution_shift_id']['type'] = 'select';
+        $this->fields['institution_shift_id']['options'] = $shiftOptions;
+        $this->field('institution_shift_id', ['attr' => ['label' => __('Shift')]]);
+        //POCOR-5280 : End
     }
 
    
