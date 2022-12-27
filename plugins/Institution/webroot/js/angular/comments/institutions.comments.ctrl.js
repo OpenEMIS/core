@@ -103,6 +103,9 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             if((userData.super_admin != 1) && (allCommentViewPermissionData.data.result == 1)){
                 vm.allCommentsViewRequired = 1;
                 vm.principalCommentsRequired = (vm.principalCommentsRequired == 0) ? 0 : 1;//POCOR-6800 ends //POCOR-6814
+                if(vm.principalCommentsRequired == 1){//POCOR-7137
+                   $scope.checkEditAction = 1; 
+                }
             }else if((userData.super_admin != 1) && ((vm.principalCommentsRequired == 0) || (principalPermissionData.data <= 0))){
                 vm.principalCommentsRequired = 0;
             }else{
@@ -125,6 +128,9 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             if((userData.super_admin != 1) && (allCommentViewPermissionData.data.result == 1)){
                 vm.allCommentsViewRequired = 1;
                 vm.homeroomTeacherCommentsRequired = (vm.homeroomTeacherCommentsRequired == 0) ? 0 : 1;//POCOR-6800 ends //POCOR-6814
+                if(vm.homeroomTeacherCommentsRequired == 1){//POCOR-7137
+                   $scope.checkEditAction = 1; 
+                }
             }else if((userData.super_admin != 1) && ((vm.homeroomTeacherCommentsRequired == 0) || (homeroomTeacherPermissionData.data <= 0))){
                 vm.homeroomTeacherCommentsRequired = 0;
             }else{
@@ -165,6 +171,9 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             if((userData.super_admin != 1) && (allCommentViewPermissionData.data.result == 1)){ 
                 vm.allCommentsViewRequired = 1;
                 vm.teacherCommentsRequired = (vm.teacherCommentsRequired == 0) ? 0 : 1;//POCOR-6800 ends // POCOR-6814
+                if(vm.teacherCommentsRequired == 1){//POCOR-7137
+                   $scope.checkEditAction = 1; 
+                }
             }else if((userData.super_admin != 1) && ((vm.teacherCommentsRequired == 0) || (allSubjectTeacherPermissionData.data.result <= 0))){
                 vm.teacherCommentsRequired = 0;
             }else{
