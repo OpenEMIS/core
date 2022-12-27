@@ -509,7 +509,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->NewInstitutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->Users->alias(), $this->NewInstitutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias(),'Assignees'])
             ->matching($Statuses->alias().'.'.$StepsParams->alias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $outgoingInstitution) {
                 return $q->where([
                     $Statuses->aliasField('category <> ') => $doneStatus,
@@ -517,7 +517,8 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
                     $StepsParams->aliasField('value') => $outgoingInstitution
                 ]);
             })
-            ->where([$this->aliasField('assignee_id') => $userId])
+            ->where([$this->aliasField('assignee_id') => $userId,
+                'Assignees.super_admin IS NOT' => 1]) //POCOR-7102
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
