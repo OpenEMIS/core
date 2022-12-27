@@ -96,7 +96,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         if(empty($ClassAttendanceRecordsData)){
             $markedType = self::NOT_MARKED;
         }
-        else if ($totalMarkedCount >= count($attendancePerDay)) {
+        else if ($totalMarkedCount > count($attendancePerDay)) {
             $markedType = self::MARKED;
         } else {
             $markedType = self::PARTIAL_MARKED;
