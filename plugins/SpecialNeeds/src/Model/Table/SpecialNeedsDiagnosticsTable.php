@@ -30,14 +30,14 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
         $this->belongsTo('SpecialNeedsDiagnosticsDegree', ['className' => 'SpecialNeeds.SpecialNeedsDiagnosticsDegree']);
 
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
-        $this->addBehavior('ControllerAction.FileUpload', [
+        /*$this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
             'size' => '10MB',
             'contentEditable' => true,
             'allowable_file_types' => 'all',
             'useDefaultName' => true
-        ]);
+        ]);*/
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
@@ -123,7 +123,7 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
         $this->field('special_needs_diagnostics_degree_id', ['type' => 'select']);
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-        $this->field('file_content', ['null' => false, 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('file_content', ['null' => true, 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]); //Modify for POCOR-7147
 
         $this->setFieldOrder(['date', 'special_needs_diagnostics_type_id','special_needs_diagnostics_degree_id', 'file_name', 'file_content', 'comment']);
     }
