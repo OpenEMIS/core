@@ -1110,8 +1110,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.saveGuardianDetails = function() {
-        scope.selectedUserData.addressArea = DirectoryaddguardianSvc.getAddressArea();
-        scope.selectedUserData.birthplaceArea = DirectoryaddguardianSvc.getBirthplaceArea();
+        const addressAreaRef = DirectoryaddguardianSvc.getAddressArea()
+        addressAreaRef && (scope.selectedUserData.addressArea = addressAreaRef);
+        const birthplaceAreaRef = DirectoryaddguardianSvc.getBirthplaceArea();
+        birthplaceAreaRef && (scope.selectedUserData.birthplaceArea = birthplaceAreaRef);
         var params = {
             guardian_relation_id: scope.selectedUserData.relation_type_id,
             student_openemis_no: scope.studentOpenEmisId,

@@ -1345,8 +1345,10 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.saveDetails = function() {
-        scope.selectedUserData.addressArea = DirectoryaddSvc.getAddressArea();
-        scope.selectedUserData.birthplaceArea = DirectoryaddSvc.getBirthplaceArea();
+        const addressAreaRef = DirectoryaddSvc.getAddressArea();
+        addressAreaRef && (scope.selectedUserData.addressArea = addressAreaRef);
+        const birthplaceAreaRef = DirectoryaddSvc.getBirthplaceArea();
+        birthplaceAreaRef && (scope.selectedUserData.birthplaceArea = birthplaceAreaRef);
         let param = {
             user_type: scope.selectedUserData.user_type_id,
             openemis_no: scope.selectedUserData.openemis_no,
