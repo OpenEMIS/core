@@ -205,6 +205,8 @@ class StudentSubjectsTable extends ControllerActionTable
         }
         $InstitutionClassStudents = TableRegistry::get('institution_class_students');
         //POCOR-6468
+        $where[$this->aliasField('student_status_id')] = $enrolledStatus; //POCOR-7111
+        
         $query
             ->matching('InstitutionClasses.ClassGrades')
             ->innerJoin(//POCOR-6468
