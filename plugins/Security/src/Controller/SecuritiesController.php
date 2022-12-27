@@ -68,6 +68,11 @@ class SecuritiesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.UserGroups']);
     }
 
+    public function UserGroupsList()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.UserGroupsList']);    
+    }
+
     public function RefreshToken()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.RefreshTokens']);

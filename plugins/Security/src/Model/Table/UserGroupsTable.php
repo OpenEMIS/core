@@ -467,4 +467,30 @@ class UserGroupsTable extends ControllerActionTable
         
         return $attr;
     }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $toolbarAttr = [
+                    'class' => 'btn btn-xs btn-default',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false
+                ];
+
+        $listUrl = [
+            'plugin' => 'Security',
+            'controller' => 'Securities',
+            'action' => 'UserGroupsList',
+            'userGroupId' => $entity->id,
+            'index'
+        ];
+        // echo "<pre>"; print_r($listUrl); die();
+                        
+        $listButton['url'] = $listUrl;
+        $listButton['type'] = 'button';
+        $listButton['attr'] = $toolbarAttr;
+        $listButton['label'] = '<i class="fa kd-lists"></i>';
+        $listButton ['attr']['title'] = __('List');
+        $extra['toolbarButtons']['list'] = $listButton;
+    }
 }
