@@ -1212,6 +1212,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.createCustomFieldsArray = function() {
+        if (scope.customFields === "null") return;
         if(scope.customFields && scope.customFields.length > 0) {
             var selectedCustomField = scope.customFields;
             var filteredSections = Array.from(new Set(scope.customFields.map((item)=> scope.mapBySection(item))));

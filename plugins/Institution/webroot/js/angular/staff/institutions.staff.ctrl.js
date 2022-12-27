@@ -565,6 +565,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function createCustomFieldsArray() {
         var selectedCustomField = StaffController.customFields;
+        if (selectedCustomField === "null") return;
         var filteredSections = Array.from(new Set(StaffController.customFields.map((item)=> mapBySection(item))));
         filteredSections.forEach((section)=>{
             let filteredArray = selectedCustomField.filter((item) => StaffController.filterBySection(item, section));
