@@ -1,3 +1,51 @@
+### [3.76.10] - 2022-12-28
+- Bug Fixed: Report>Institution>Class Attendance Marked Summary:Creation of new summary table and update existing query
+- Bug Fixed: Homepage > Workbench : System does not display workflows that are not assigned to user
+- Bug Fixed: Institutions > Academic > Subjects > Add: Creative Arts subject is not supposed to be shown
+- Bug Fixed: Institutions>Student>Academic>Subject: Student is actually assigned to the following subjects even when withdrawn
+- Bug Fixed: Administration > Survey > Forms > Status > Edit page: The system gives a 404 error upon editing survey form dates
+- Bug Fixed: Institution > Report Cards > Comment: Homeroom teachers users in general are unable to see the edit button
+- Bug Fixed: Institutions>Students>Pending transfer in/Pending transfer out>Search-Getting 404 error
+- Bug Fixed: Institutions>Academic>Students>Special Needs>Diagnostics: Attachments field should be optional and not mandatory
+- Bug Fixed: Institutions>Students/Staff>Add: Birthplace area and address area are not displayed properly when doing internal search from directory
+- Bug Fixed: Institutions>Students: User should be able to add students even when custom fields are not set up in page
+
+### [3.76.9] - 2022-12-21
+- Implemented: Add a shift filter to the staff attendance page
+- Bug Fixed: Institutions > Academic > Subjects > Edit Page : All fields are blank in Edit page eventhough there are values
+- Bug Fixed: Institutions>Students>External Search/Internal Search: Multiple table lines are found
+- Bug Fixed: Institutions>Academic>Subjects: User is able to add Subjects that do not point to the Education Grade
+- Bug Fixed: Institution>Students/Staff: Birthplace area and address area are not saved when internal search from directory
+- Bug Fixed: Institutions>Staff>Career>Position: Change of shift assignment is creating duplicate shifts
+- Bug Fixed: Institution > Add page: There is an error in adding a new institution
+- Bug Fixed: Institutions > Student > Add page: Page keeps loading
+- Bug Fixed: Directory>Student: Email should be editable
+- Bug Fixed: Institutions>Performance>Report Cards: User is getting 404 error when opening report cards
+- Bug Fixed: Administration > Security > Groups > User Group > Add: Cannot find user when searching
+
+### [3.76.8] - 2022-12-19
+- Bug Fixed: Institution > List page AND Institutions > Students/Staff List pages: Thumbnails are not displaying
+- Bug Fixed: Institutions>Academic>Subjects: Unable to unassign students from multigrade class subjects
+
+### [3.76.7] - 2022-12-19
+- Bug Fixed: Institutions>Staff>Staff1>Position: When approving end of assignment, user is getting 404 error
+- Bug Fixed: Institution > Student > Promote/Repeat individual page: The system gives a 404 error when promoting students individually
+- Bug Fixed: Administration > Performance > Assessment > Edit page: The subject is not showing in the database
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to generate all/download all for some roles
+- Bug Fixed: Institutions>Staff>Add: Unable to add staff
+
+### [3.76.6] - 2022-12-14
+- Bug Fixed: Develop a student report card absence configuration-Only show absences for the current academic period page
+
+### [3.76.5] - 2022-12-13
+- Implemented: Develop a student report card absence configuration page
+- Bug Fixed: Institution>Academic>Subjects:Institution_subject_students and institution_subjects data do not match
+- Bug Fixed: API: Api should filter by the academic_period id that was passed and should show institution_classes _id
+- Bug Fixed: Institution > Performance > Outcomes: When the user selects the "-- Select --" to delete the record, the system is supposed to save.
+- Bug Fixed: Administrations > System Setup > System Configurations > Columns for Staff/Student/Directory List page : Identity Number Edit issue
+- Bug Fixed: Institutions>Staff>Add: Unable to add staff
+- Bug Fixed: Increasing the size of the Criteria Name column from 1,000 to 1,500
+
 ### [3.76.4] - 2022-12-09
 - Implemented: When adding guardians to new students we need to be able to add multiple guardians
 - Bug Fixed: Institutions>Performance>Report Cards: Email is not sent

@@ -197,7 +197,7 @@ class AssessmentsTable extends ControllerActionTable {
                             'code'=>'EducationSubjects.code'])
                         ->contain(['EducationSubjects'])
                         ->where([$EducationSubjects->aliasField('education_grade_id')=> $gradeIds])
-                        ->toArray();
+                        ->order([$EducationSubjects->aliasField('created')])->toArray();//POCOR-7122
             
             foreach($subjectname as $value) {
                 $subejctid[]= $value['id'];

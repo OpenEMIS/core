@@ -48,6 +48,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.addressAreaId = null;
     scope.birthplaceAreaId = null;
     scope.isIdentityUserExist = false;
+    scope.isExternalSearchEnable = false;
     scope.disableFields = {
         username: false,
         password: false
@@ -175,7 +176,12 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.processInternalGridUserRecord = function(userRecords, params, totalRowCount) {
         console.log(userRecords);
-
+        if (userRecords.length === 0)
+        {
+            params.failCallback([], totalRowCount);
+            UtilsSvc.isAppendLoader(false);
+            return;
+        }
         var lastRow = totalRowCount;
         scope.rowsThisPage = userRecords;
 
@@ -190,6 +196,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             last_name: scope.selectedUserData.last_name,
             date_of_birth: scope.selectedUserData.date_of_birth,
             identity_number: scope.selectedUserData.identity_number,
+            openemis_no:scope.selectedUserData.openemis_no
         }
         var dataSource = {
             pageSize: scope.pageSize,
@@ -224,6 +231,12 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.processExternalGridUserRecord = function(userRecords, params, totalRowCount) {
         console.log(userRecords);
+        if (userRecords.length === 0)
+        {
+            params.failCallback([], totalRowCount);
+            UtilsSvc.isAppendLoader(false);
+            return;
+        }
 
         var lastRow = totalRowCount;
         scope.rowsThisPage = userRecords;
@@ -274,6 +287,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         .then(function(response) {
             scope.nationalitiesOptions = response.data;
             scope.getIdentityTypes();
+
         }, function(error) {
             console.log(error);
             scope.getIdentityTypes();
@@ -284,6 +298,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         DirectoryaddSvc.getIdentityTypes()
         .then(function(response) {
             scope.identityTypeOptions = response.data;
+            scope.checkConfigForExternalSearch()
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -728,11 +743,21 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     scope.internalGridOptions = null;
                     scope.goToInternalSearch();
                     break;
-                case 'confirmation': 
-                    scope.step = 'external_search';
-                    scope.externalGridOptions = null;
-                    scope.goToExternalSearch();
-                    break;
+                case 'confirmation': {
+                    if (scope.isExternalSearchEnable)
+                    {
+                        scope.step = 'external_search';
+                        scope.externalGridOptions = null;
+                        scope.goToExternalSearch();
+                     }
+                    else
+                    {
+                        scope.step = 'internal_search';
+                        scope.internalGridOptions = null;
+                        scope.goToInternalSearch();
+                    }
+                    return;
+                }
             }
         }
     }
@@ -747,12 +772,20 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     scope.internalGridOptions = null;
                     scope.validateDetails();
                     break;
-                case 'internal_search': 
-                    scope.step = 'external_search';
-                    scope.externalGridOptions = null;
-                    UtilsSvc.isAppendLoader(true);
-                    scope.goToExternalSearch();
-                    break;
+                case 'internal_search': {
+                    if (scope.isExternalSearchEnable)
+                    {
+                        scope.step = 'external_search';
+                        scope.externalGridOptions = null;
+                        UtilsSvc.isAppendLoader(true);
+                        scope.goToExternalSearch();
+                    } else
+                    {
+                        scope.step = 'confirmation';
+                        scope.getUniqueOpenEmisId();
+                    }
+                    return;
+                }
                 case 'external_search': 
                     scope.step = 'confirmation';
                     scope.getUniqueOpenEmisId();
@@ -1179,6 +1212,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.createCustomFieldsArray = function() {
+        if (scope.customFields === "null") return;
         if(scope.customFields && scope.customFields.length > 0) {
             var selectedCustomField = scope.customFields;
             var filteredSections = Array.from(new Set(scope.customFields.map((item)=> scope.mapBySection(item))));
@@ -1311,8 +1345,10 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.saveDetails = function() {
-        scope.selectedUserData.addressArea = DirectoryaddSvc.getAddressArea();
-        scope.selectedUserData.birthplaceArea = DirectoryaddSvc.getBirthplaceArea();
+        const addressAreaRef = DirectoryaddSvc.getAddressArea();
+        addressAreaRef && (scope.selectedUserData.addressArea = addressAreaRef);
+        const birthplaceAreaRef = DirectoryaddSvc.getBirthplaceArea();
+        birthplaceAreaRef && (scope.selectedUserData.birthplaceArea = birthplaceAreaRef);
         let param = {
             user_type: scope.selectedUserData.user_type_id,
             openemis_no: scope.selectedUserData.openemis_no,
@@ -1505,4 +1541,18 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
         return ["", false];
     }
+    scope.checkConfigForExternalSearch=function checkConfigForExternalSearch()
+    {
+        DirectoryaddSvc.checkConfigForExternalSearch().then(function (resp)
+        {
+            scope.isExternalSearchEnable = resp.showExternalSearch;
+            UtilsSvc.isAppendLoader(false);
+        }, function (error)
+        {
+            scope.isExternalSearchEnable = false;
+            console.error(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
 }

@@ -883,6 +883,21 @@ class InstitutionsTable extends ControllerActionTable
         if ($entity->isNew()) {
             $entity->shift_type = 0;
         }
+        //POCOR-7116 :Start
+        $insName = $entity->code. " - ". $entity->name;
+        $SecurityGroupsTable = TableRegistry::get('security_groups');
+        $SecurityGroupsEntity = [
+            'name' =>$insName,
+            'modified_user_id' => $entity->userId,
+            'modified'=> NULL,
+            'created_user_id' =>$entity->userId,
+            'created' => date('Y-m-d h:i:s')
+        ];
+        $SecurityGroups = $SecurityGroupsTable->newEntity($SecurityGroupsEntity);
+        if($SecurityGroupResult = $SecurityGroupsTable->save($SecurityGroups)){
+            $entity->security_group_id = $SecurityGroupResult->id;
+        }
+        //POCOR-7116 :End
 
         // adding debug log to monitor when there was a different between date_opened's year and year_opened
         $this->debugMonitorYearOpened($entity, $options);
