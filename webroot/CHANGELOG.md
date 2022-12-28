@@ -1,3 +1,15 @@
+### [3.76.10] - 2022-12-28
+- Bug Fixed: Report>Institution>Class Attendance Marked Summary:Creation of new summary table and update existing query
+- Bug Fixed: Homepage > Workbench : System does not display workflows that are not assigned to user
+- Bug Fixed: Institutions > Academic > Subjects > Add: Creative Arts subject is not supposed to be shown
+- Bug Fixed: Institutions>Student>Academic>Subject: Student is actually assigned to the following subjects even when withdrawn
+- Bug Fixed: Administration > Survey > Forms > Status > Edit page: The system gives a 404 error upon editing survey form dates
+- Bug Fixed: Institution > Report Cards > Comment: Homeroom teachers users in general are unable to see the edit button
+- Bug Fixed: Institutions>Students>Pending transfer in/Pending transfer out>Search-Getting 404 error
+- Bug Fixed: Institutions>Academic>Students>Special Needs>Diagnostics: Attachments field should be optional and not mandatory
+- Bug Fixed: Institutions>Students/Staff>Add: Birthplace area and address area are not displayed properly when doing internal search from directory
+- Bug Fixed: Institutions>Students: User should be able to add students even when custom fields are not set up in page
+
 ### [3.76.9] - 2022-12-21
 - Implemented: Add a shift filter to the staff attendance page
 - Bug Fixed: Institutions > Academic > Subjects > Edit Page : All fields are blank in Edit page eventhough there are values
