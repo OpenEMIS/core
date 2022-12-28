@@ -642,10 +642,12 @@ class ReportCardsTable extends AppTable
                 ])
                 ->first();
                 // POCOR-7033[START]
-                if($entity->user->gender_id == '1'){
-                    $entity->user->gender_id = "Male";
-                }else{
-                    $entity->user->gender_id = "Female";
+                if(!empty($entity)){
+                    if($entity->user->gender_id == '1'){
+                        $entity->user->gender_id = "Male";
+                    }else{
+                        $entity->user->gender_id = "Female";
+                    }
                 }
                 // POCOR-7033[END]
             return $entity;
@@ -734,10 +736,12 @@ class ReportCardsTable extends AppTable
                 ]
             ]);
             //POCOR-7033[START]
-            if($entity->staff->gender_id == '1'){
-                $entity->staff->gender_id = "Male";
-            }else{
-                $entity->staff->gender_id = "Female";
+            if(!empty($entity)){
+                if($entity->staff->gender_id == '1'){
+                    $entity->staff->gender_id = "Male";
+                }else{
+                    $entity->staff->gender_id = "Female";
+                }
             }
             //POCOR-7033[END]
             return $entity;
