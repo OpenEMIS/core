@@ -188,11 +188,12 @@ class TrainingApplicationsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Staff->alias(), 'Sessions.Courses', $this->Institutions->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->Staff->alias(), 'Sessions.Courses', $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
-            ->where([$this->aliasField('assignee_id') => $userId])
+            ->where([$this->aliasField('assignee_id') => $userId,
+                    'Assignees.super_admin IS NOT'=>1]) //POCOR-7102
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) use ($userId, $AccessControl, $InstitutionsTable) {
 

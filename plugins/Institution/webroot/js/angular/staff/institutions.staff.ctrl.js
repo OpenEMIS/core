@@ -154,8 +154,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     });
 
     function saveStaffDetails() {
-        StaffController.selectedStaffData.addressArea = InstitutionsStaffSvc.getAddressArea();
-        StaffController.selectedStaffData.birthplaceArea = InstitutionsStaffSvc.getBirthplaceArea();
+        const addressAreaRef = InstitutionsStaffSvc.getAddressArea();
+        addressAreaRef && (StaffController.selectedStaffData.addressArea = addressAreaRef)
+        const birthplaceAreaRef =InstitutionsStaffSvc.getBirthplaceArea()
+        birthplaceAreaRef && (StaffController.selectedStaffData.birthplaceArea = birthplaceAreaRef)
         var params = {
             openemis_no: StaffController.selectedStaffData.openemis_no,
             first_name: StaffController.selectedStaffData.first_name,
@@ -565,6 +567,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function createCustomFieldsArray() {
         var selectedCustomField = StaffController.customFields;
+        if (selectedCustomField === "null") return;
         var filteredSections = Array.from(new Set(StaffController.customFields.map((item)=> mapBySection(item))));
         filteredSections.forEach((section)=>{
             let filteredArray = selectedCustomField.filter((item) => StaffController.filterBySection(item, section));
