@@ -178,10 +178,10 @@ class UserBehavior extends Behavior
                 }
             }
 
-            // edit page, email = readonly
+            // edit page, email = editable - POCOR-7124
             if ($this->_table->action == 'edit') {
                 if ($this->isCAv4()) {
-                    $this->_table->field('email', ['type' => 'readonly', 'after' => 'identity_number']);
+                    $this->_table->field('email', ['type' => 'string', 'after' => 'identity_number']);
                 } else {
                     $this->_table->ControllerAction->field('email', ['type' => 'string', 'after' => 'identity_number']);  //POCOR-6833
                 }
