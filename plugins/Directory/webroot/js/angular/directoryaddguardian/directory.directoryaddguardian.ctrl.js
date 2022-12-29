@@ -75,14 +75,22 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         }
         scope.initGrid();
         scope.getRelationType();
-        const queryString = window.location.href.split('?')[1].split('=')[1].replace(/%3D/g, '')
-        const queryData = JSON.parse(window.atob(queryString))
-        if (Object.keys(queryData)) {
-            const { institution_id, openemis_no } = queryData;
-            scope.selectedUserData.institution_id = institution_id;
-            scope.studentOpenEmisId = openemis_no;
-            $window.localStorage.setItem('studentOpenEmisId', openemis_no)
+        try
+        {
+            const queryString = window.location.href.split('?')[1].split('=')[1].replace(/%3D/g, '')
+            const queryData = JSON.parse(window.atob(queryString))
+            if (Object.keys(queryData))
+            {
+                const { institution_id, openemis_no } = queryData;
+                scope.selectedUserData.institution_id = institution_id;
+                scope.studentOpenEmisId = openemis_no;
+                $window.localStorage.setItem('studentOpenEmisId', openemis_no)
+            }
+        } catch (err)
+        {
+            console.warn(err)
         }
+        
     });
 
     $window.savePhoto = function(event) {
