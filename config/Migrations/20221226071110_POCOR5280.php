@@ -16,7 +16,7 @@ class POCOR5280 extends AbstractMigration
         $this->execute('CREATE TABLE `z_5280_calendar_events` LIKE `calendar_events`');
         $this->execute('INSERT INTO `z_5280_calendar_events` SELECT * FROM `calendar_events`');
         // End
-        $this->execute("ALTER TABLE `calendar_events` ADD `start_time` TIME NOT NULL AFTER `name`, ADD `end_time` TIME NOT NULL AFTER `start_time`, ADD `instituon_shift_id` INT(11) NOT NULL COMMENT 'shift option id' AFTER `end_time`");
+        $this->execute("ALTER TABLE `calendar_events` ADD `start_time` TIME NOT NULL AFTER `name`, ADD `end_time` TIME NOT NULL AFTER `start_time`, ADD `institution_shift_id` INT(11) NOT NULL COMMENT 'shift option id' AFTER `end_time`");
     }
 
     public function down()
