@@ -52,7 +52,7 @@ class TransferConnectionsTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->table('transfer_connections');
+        $this->table('data_management_connections');
         $this->displayField('id');
         $this->primaryKey('id');
 
