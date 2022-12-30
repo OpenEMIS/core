@@ -84,10 +84,12 @@ class StaffAttendancesTable extends ControllerActionTable
         if ($areaId != -1) {
             $query->where(['Institutions.area_id' => $areaId]);
         }
+        
         $query
             ->select([
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
+                'institution_id' => 'Institutions.id',
                 'position_title' =>  $query->func()->concat([
                     'InstitutionPositions.position_no' => 'literal',
                     " - ",
@@ -132,33 +134,35 @@ class StaffAttendancesTable extends ControllerActionTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($academicPeriodId, $startDate, $endDate) {
                 return $results->map(function ($row) use ($academicPeriodId, $startDate, $endDate) {
                     $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
+                    //POCOR-5181 start
                     $StaffAttendances = TableRegistry::get('Institution.InstitutionStaffAttendances');
                     $attendanceData = $StaffAttendances->find('all')
-                                    ->where([$StaffAttendances->aliasField('institution_id') => $row->institution,
+                                    ->where([$StaffAttendances->aliasField('institution_id') => $row->institution_id,
                                     $StaffAttendances->aliasField('staff_id') => $row->staff_id,
                                     $StaffAttendances->aliasField('academic_period_id') =>
                                     $academicPeriodId,
                                     $StaffAttendances->aliasField('date').' >= ' => $startDate,
                                     $StaffAttendances->aliasField('date').' <= ' => $endDate,
-                                    ])->first();
-                    /*$attendanceData = $StaffAttendances->find('all')
-                                    ->where([$StaffAttendances->aliasField('institution_id') => 6,
-                                    $StaffAttendances->aliasField('staff_id') => 8815,
-                                    $StaffAttendances->aliasField('academic_period_id') =>
-                                    31,
-                                    $StaffAttendances->aliasField('date').' >= ' => $startDate,
-                                    $StaffAttendances->aliasField('date').' <= ' => $endDate,
-                                    ])->toArray();*/
+                                    ])->toArray();
                                     
-                    $lastVal = array_key_last($attendanceData);
-                    foreach($attendanceData as $key=>$value)
+                    
+                    if(!empty($attendanceData))
                     {
-                        //if ($key == $lastVal) {
-                            $dateValue = $value['date']->format('Y-m-d');
-                            $timeIn = $value['time_in']->format('H:i:s');
-                            $timeOut = $value['time_out']->format('H:i:s');
-                            $time = $timeIn.'-'.$timeOut;
-                        //}
+                        $lastVal = array_key_last($attendanceData);
+                        foreach($attendanceData as $key=>$value)
+                        {
+                            if ($key == $lastVal && !empty($value->date) && !empty($value->time_in) && !empty($value->time_out)) {
+                                $getDate = $value->date;
+                                $getTimeIn = $value->time_in;
+                                $getTimeOut = $value->time_out;
+                                $dateValue = $getDate->format('Y-m-d');
+                                $timeIn = $getTimeIn->format('H:i:s');
+                                $timeOut = $getTimeOut->format('H:i:s');
+                                $time = $timeIn.'-'.$timeOut;
+
+                                
+                            }
+                        }
                     }
                         
                     $i_max = 31;
@@ -175,9 +179,6 @@ class StaffAttendancesTable extends ControllerActionTable
                         $day  = ltrim($daytrim, '0');
                         $row['month']  = ltrim($monthtrim, '0');
                         $row['year']  = ltrim($yeartrim, '0');
-                        /*print_r($row['month']);
-                        print_r($time);
-                        print_r($row['year']); */
                         $i_max=31;
                         for( $i=1; $i<=$i_max; $i++ )
                             { 
@@ -187,6 +188,7 @@ class StaffAttendancesTable extends ControllerActionTable
                                 }
                             }
                     }
+                    //POCOR-5181 End
 
                     /*$StaffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
                     
@@ -294,6 +296,15 @@ class StaffAttendancesTable extends ControllerActionTable
             'type' => 'integer',
             'label' => __('Month')
         ];
+        for( $i=1; $i<=$i_max; $i++ ) //POCOR-5181 
+        { 
+            $newArray[]=[
+            'key'   => '',
+            'field' => 'Day'.$i,
+            'type'  => 'integer',
+            'label' => __('Day'.$i),
+            ];
+        }
 
         /*$StaffCustomFields = TableRegistry::get('staff_custom_fields');
                     
@@ -313,46 +324,11 @@ class StaffAttendancesTable extends ControllerActionTable
                 'type' => 'string',
                 'label' => __($custom_field)
             ];
-        }*/
-
-        for( $i=1; $i<=$i_max; $i++ )
-        { 
-            $newArray[]=[
-            'key'   => '',
-            'field' => 'Day'.$i,
-            'type'  => 'integer',
-            'label' => __('Day'.$i),
-            ];
         }
 
-        /*$newFields = array_merge($newArray, $fields->getArrayCopy());
+        $newFields = array_merge($newArray, $fields->getArrayCopy());
         $fields->exchangeArray($newFields);*/
         $fields->exchangeArray($newArray);
-        /*$sheet = $settings['sheet'];
-        $year = $sheet['year'];
-        $month = $sheet['month'];
-        $startDate = $sheet['startDate'];
-        $endDate = $sheet['endDate'];
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $days = $AcademicPeriodTable->generateDaysOfMonth($year, $month, $startDate, $endDate);
-        $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
-        $dayIndex = [];
-        foreach ($days as $item) {
-            $dayIndex[] = $item['date'];
-            if (in_array($item['weekDay'], $workingDays)) {
-                $fields[] = [
-                    'key' => 'AcademicPeriod.days',
-                    'field' => 'attendance_field',
-                    'type' => 'attendance',
-                    'label' => sprintf('%s (%s)', $item['day'], __($item['weekDay'])),
-                    'date' => $item['date']
-                ];
-            }
-        }
-        
-        // Set the data into the temporary variable
-        $this->_leaveData = $this->getLeaveData($startDate, $endDate, $sheet['institutionId']);
-        $this->_attendanceData = $this->getAttendanceData($startDate, $endDate, $sheet['institutionId']);*/
     }
 
     /*public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr)
