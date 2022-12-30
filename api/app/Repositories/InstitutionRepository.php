@@ -1110,6 +1110,33 @@ class InstitutionRepository extends Controller
 
 
 
+    public function getInstitutionPositionsData(int $institutionId, int $positionId)
+    {
+        try {
+            $positions = InstitutionPositions::with(
+                    'staffPositionTitle:id,name as staff_position_title_name', 
+                    'staffPositionGrades:id,name as staff_position_grade_name', 
+                    'status:id,name as status_name'
+                )
+                ->where('institution_id', $institutionId)
+                ->where('id', $positionId)
+                ->first();
+            
+            
+            return $positions;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions Positions List Not Found');
+        }
+    }
+
+
+
     public function localeContentsList($request)
     {
         try {

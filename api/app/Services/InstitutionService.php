@@ -620,7 +620,7 @@ class InstitutionService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
-                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['position_id'] = $d['id'];
                     $list[$k]['status_id'] = $d['status_id'];
                     $list[$k]['status_name'] = $d['status']['status_name'];
                     $list[$k]['position_no'] = $d['position_no'];
@@ -662,7 +662,7 @@ class InstitutionService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
-                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['position_id'] = $d['id'];
                     $list[$k]['status_id'] = $d['status_id'];
                     $list[$k]['status_name'] = $d['status']['status_name'];
                     $list[$k]['position_no'] = $d['position_no'];
@@ -691,6 +691,44 @@ class InstitutionService extends Controller
             );
 
             return $this->sendErrorResponse('Institutions Positions List Not Found');
+        }
+    }
+
+
+
+    public function getInstitutionPositionsData(int $institutionId, int $positionId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionPositionsData($institutionId, $positionId);
+            
+            $list = [];
+            if($data){
+                $list['position_id'] = $data['id'];
+                $list['status_id'] = $data['status_id'];
+                $list['status_name'] = $data['status']['status_name'];
+                $list['position_no'] = $data['position_no'];
+                $list['staff_position_title_id'] = $data['staff_position_title_id'];
+                $list['staff_position_title_name'] = $data['staffPositionTitle']['staff_position_title_name']??"";
+                $list['staff_position_grade_id'] = $data['staff_position_grade_id'];
+                $list['staff_position_grade_name'] = $data['staffPositionGrades']['staff_position_grade_name']??"";
+                $list['institution_id'] = $data['institution_id'];
+                $list['assignee_id'] = $data['assignee_id'];
+                $list['is_homeroom'] = $data['is_homeroom'];
+                $list['modified_user_id'] = $data['modified_user_id'];
+                $list['modified'] = $data['modified'];
+                $list['created_user_id'] = $data['created_user_id'];
+                $list['created'] = $data['created'];
+            }
+
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions Positions Data Not Found');
         }
     }
 
