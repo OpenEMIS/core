@@ -18,7 +18,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('login', 'Authentication\LoginController@login');
+Route::post('login', 'Authentication\LoginController@login');
 
 
 Route::group(
@@ -87,6 +87,7 @@ Route::group(
 
 
         Route::get('institutions/{id}/positions', 'InstitutionController@getInstitutionPositionsList');
+        Route::get('institutions/{id}/positions/{positionId}', 'InstitutionController@getInstitutionPositionsData');
 
 
         Route::get('locale-contents', 'InstitutionController@localeContentsList');

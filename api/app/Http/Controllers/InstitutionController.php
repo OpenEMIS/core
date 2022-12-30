@@ -570,6 +570,24 @@ class InstitutionController extends Controller
     }
 
 
+    public function getInstitutionPositionsData(int $institutionId, int $positionId)
+    {
+        try {
+            $data = $this->institutionService->getInstitutionPositionsData($institutionId, $positionId);
+            
+            return $this->sendSuccessResponse("Institutions Positions Data Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions Positions Data Not Found');
+        }
+    }
+
+
     public function localeContentsList(Request $request)
     {
         try {
