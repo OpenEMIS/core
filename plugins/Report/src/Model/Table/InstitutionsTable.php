@@ -183,7 +183,8 @@ class InstitutionsTable extends AppTable
     {
         $validator = $this->validationDefault($validator);
         $validator = $validator
-            //->notEmpty('institution_type_id')
+           // ->notEmpty('area_level_id')
+            //->notEmpty('area_education_id')
             ->notEmpty('institution_id');
         return $validator;
     }
