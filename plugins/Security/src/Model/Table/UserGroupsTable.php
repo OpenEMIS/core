@@ -12,6 +12,7 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
+use Cake\I18n\Time;
 
 class UserGroupsTable extends ControllerActionTable
 {
@@ -49,6 +50,7 @@ class UserGroupsTable extends ControllerActionTable
             'through' => 'Security.SecurityGroupInstitutions',
             'dependent' => true
         ]);
+        
 
         $this->belongsToMany('Roles', [
             'className' => 'Security.SecurityRoles',
@@ -58,19 +60,18 @@ class UserGroupsTable extends ControllerActionTable
             'through' => 'Security.SecurityGroupUsers',
             'dependent' => true
         ]);
+        
 
-        $this->setDeleteStrategy('restrict');
+        // $this->setDeleteStrategy('restrict');
     }
 
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $newEvent = [
-            $events['ControllerAction.Model.ajaxAreaAutocomplete'] = 'ajaxAreaAutocomplete',
-            $events['ControllerAction.Model.ajaxInstitutionAutocomplete'] = 'ajaxInstitutionAutocomplete',
-            $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete',
-            //$events['ControllerAction.Model.getAssociatedRecordConditions'] = 'getAssociatedRecordConditions'
+            'Model.SecurityGroupInstitutions.afterSave' => 'institutionAfterSave'
         ];
+
         $events = array_merge($events, $newEvent);
         return $events;
     }
@@ -147,7 +148,6 @@ class UserGroupsTable extends ControllerActionTable
     public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
     {
         $areaId = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : 0;
-        
         $flag = 1;
         if(!isset($areaId[1])){
             $flag = 0;
@@ -172,12 +172,12 @@ class UserGroupsTable extends ControllerActionTable
             $areaOptionsList = $areaOptions->toArray();
             if (count($areaOptionsList) > 1) {
                 if($flag == 0){
-                    $attr['options'] = ['-1' => __('All Areas')] + $areaOptions->toArray();
+                    $attr['options'] = $areaOptions->toArray();
                 }else{
                     $attr['options'] = $areaOptions->toArray();
                 }
             }else{
-                $attr['options'] = ['-1' => __('All Areas')] + $areaOptions->toArray();
+                $attr['options'] = $areaOptions->toArray();
             }
             $attr['onChangeReload'] = true;
         } else {
@@ -448,21 +448,11 @@ class UserGroupsTable extends ControllerActionTable
                 ]);
             }
             $institutionList = $institutionQuery->toArray();
-            //START: POCOR-6608
-            if (count($institutionList) > 1) {
-                if($flag == 0){
-                    $institutionOptions = ['' => __('All Institutions')] + $institutionList;
-                }else{
-                    $institutionOptions = $institutionList;
-                }
-            } else {
-                $institutionOptions =  $institutionList;
-            }
-
+            
         $attr['type'] = 'chosenSelect';
         $attr['onChangeReload'] = true;
         $attr['attr']['multiple'] = true;
-        $attr['options'] = $institutionOptions;
+        $attr['options'] = $institutionList;
         $attr['attr']['required'] = true;
         
         return $attr;
@@ -470,6 +460,7 @@ class UserGroupsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->setupFields($entity);
         $toolbarAttr = [
                     'class' => 'btn btn-xs btn-default',
                     'data-toggle' => 'tooltip',
@@ -484,7 +475,6 @@ class UserGroupsTable extends ControllerActionTable
             'userGroupId' => $entity->id,
             'index'
         ];
-        // echo "<pre>"; print_r($listUrl); die();
                         
         $listButton['url'] = $listUrl;
         $listButton['type'] = 'button';
@@ -492,5 +482,87 @@ class UserGroupsTable extends ControllerActionTable
         $listButton['label'] = '<i class="fa kd-lists"></i>';
         $listButton ['attr']['title'] = __('List');
         $extra['toolbarButtons']['list'] = $listButton;
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
+        $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        
+
+        $dispatchTable = [];
+        $dispatchTable[] = $SecurityGroupInstitutions;
+
+        foreach ($dispatchTable as $model) {
+            $model->dispatchEvent('Model.SecurityGroupInstitutions.afterSave', [$entity], $this);
+        }
+    }
+
+    private function setupFields(Entity $entity = null) {
+      
+        $this->field('area_administrative_id', [    
+            'attr' => [ 
+                'label' => __('Area Education') 
+            ],  
+            'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true] 
+        ]);
+        $this->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
+        $this->field('institution_id', [
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+        ]);
+       
+     
+    }
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        $SecurityGroupId = $this->paramsDecode($this->request->params['pass'][1]);
+        $institutions = TableRegistry::get('institutions');
+        $SecurityGroupInstitutionsData = $SecurityGroupInstitutions->find()
+            ->select([
+                 $institutions->aliasField('name')
+             ])
+            ->leftJoin([$institutions->alias() => $institutions->table()],[
+                $SecurityGroupInstitutions->aliasField('institution_id = ').$institutions->aliasField('id')
+            ])
+            ->where([$SecurityGroupInstitutions->aliasField('security_group_id')=>$SecurityGroupId['id']])
+            ->toArray();
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($SecurityGroupInstitutionsData) {
+                return $results->map(function ($row) use($SecurityGroupInstitutionsData){
+                    $item = [];
+                    foreach ($SecurityGroupInstitutionsData as $key => $InstitutionsData) {
+                         $item[] = $InstitutionsData->institutions['name'];
+                        
+                    }
+                    $row['institution_id'] = implode(",",$item);
+                    $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+                    $areas = TableRegistry::get('areas');
+
+                    $SecurityGroupAreasData = $SecurityGroupAreas->find()
+                    ->select([
+                         $areas->aliasField('name')
+                     ])
+                    ->leftJoin([$areas->alias() => $areas->table()],[
+                        $SecurityGroupAreas->aliasField('area_id = ').$areas->aliasField('id')
+                    ])
+                    ->where([$SecurityGroupAreas->aliasField('security_group_id')=>$row->id])
+                    ->toArray();
+
+                    $areasData = [];
+                    foreach ($SecurityGroupAreasData as $key => $AreasData) {
+                         $areasData[] = $AreasData->areas['name'];
+                        
+                    }
+                    $row['area_administrative_id'] = implode(",",$areasData);
+
+            // echo "<pre>"; print_r($row); die();
+                    return $row ;
+
+                });
+            });
+
+    
+       // $query->contain(['Institutions']);
     }
 }
