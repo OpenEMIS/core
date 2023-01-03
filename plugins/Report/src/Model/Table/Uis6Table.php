@@ -14,7 +14,7 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\ResultSet;
 use LDAP\Result;
 
-class Uis5Table extends AppTable
+class Uis6Table extends AppTable
 {
     private $uisTabsData = [0 => "UIS-A3", 1 => "UIS-A5", 2 => "UIS-A6"];
     public function initialize(array $config)       
@@ -48,23 +48,23 @@ class Uis5Table extends AppTable
         $UISType = $sheetData['uis_tabs_type'];
 
         $newFields = [];
-        
-        if ($UISType == 'UIS-A5')
+
+        if ($UISType == 'UIS-A6')
         {
-            $extraField[] = ["key" => "", "field" => "academic_period_name2", "type" => "string", "label" => "Academic Period"];
-            $extraField[] = ["key" => "", "field" => "education_system_name2", "type" => "string", "label" => "Education System"];
-            $extraField[] = ["key" => "", "field" => "education_level_isced_level2", "type" => "integer", "label" => "ISCED Level"];
-            $extraField[] = ["key" => "", "field" => "education_level_isced_name2", "type" => "integer", "label" => "ISCED Name"];
-            $extraField[] = ["key" => "", "field" => "education_level_name2", "type" => "integer", "label" => "Education Level"];
-            $extraField[] = ["key" => "", "field" => "education_cycle_name2", "type" => "string", "label" => "Education Cycle"];
-            $extraField[] = ["key" => "", "field" => "education_programme_code2", "type" => "integer", "label" => "Education Programme Code"];
-            $extraField[] = ["key" => "", "field" => "education_programme_name2", "type" => "integer", "label" => "Education Programme Name"];
-            $extraField[] = ["key" => "", "field" => "education_grade_code2", "type" => "integer", "label" => "Education Grade Code"];
-            $extraField[] = ["key" => "", "field" => "education_grade_name2", "type" => "integer", "label" => "Education Grade Name"];
-            $extraField[] = ["key" => "", "field" => "student_gender_name2", "type" => "integer", "label" => "Gender"];
-            $extraField[] = ["key" => "", "field" => "student_age2", "type" => "integer", "label" => "Age"];
-            $extraField[] = ["key" => "", "field" => "total_students2", "type" => "integer", "label" => "Number of Students"];
-            $extraField[] = ["key" => "", "field" => "repeater_Student", "type" => "integer", "label" => "Repeater Stuents"];
+            $extraField[] = ["key" => "", "field" => "academic_period_name3", "type" => "string", "label" => "Academic Period"];
+            $extraField[] = ["key" => "", "field" => "education_system_name3", "type" => "string", "label" => "Education System"];
+            $extraField[] = ["key" => "", "field" => "education_level_isced_level3", "type" => "integer", "label" => "ISCED Level"];
+            $extraField[] = ["key" => "", "field" => "education_level_isced_name3", "type" => "integer", "label" => "ISCED Name"];
+            $extraField[] = ["key" => "", "field" => "education_level_name3", "type" => "integer", "label" => "Education Level"];
+            $extraField[] = ["key" => "", "field" => "education_cycle_name3", "type" => "string", "label" => "Education Cycle"];
+            $extraField[] = ["key" => "", "field" => "education_programme_code3", "type" => "integer", "label" => "Education Programme Code"];
+            $extraField[] = ["key" => "", "field" => "education_programme_name3", "type" => "integer", "label" => "Education Programme Name"];
+            $extraField[] = ["key" => "", "field" => "education_grade_code3", "type" => "integer", "label" => "Education Grade Code"];
+            $extraField[] = ["key" => "", "field" => "education_grade_name3", "type" => "integer", "label" => "Education Grade Name"];
+            $extraField[] = ["key" => "", "field" => "student_gender_name3", "type" => "integer", "label" => "Gender"];
+            $extraField[] = ["key" => "", "field" => "student_age3", "type" => "integer", "label" => "Age"];
+            $extraField[] = ["key" => "", "field" => "total_students3", "type" => "integer", "label" => "Number of Students"];
+            $extraField[] = ["key" => "", "field" => "repeater_Student1", "type" => "integer", "label" => "Repeater Stuents"];
 
         }
         
@@ -81,33 +81,36 @@ class Uis5Table extends AppTable
         $area = TableRegistry::get('areas');
         $reqData = json_decode($settings['process']['params'], true);
         $academic_period_id = $reqData['academic_period_id'];
+        
+     
 
         
-        if ($uisType == 'UIS-A5')
+        if ($uisType == 'UIS-A6')
         {
+            
             $SummaryGradeStatusGenders = TableRegistry::get('summary_grade_status_genders');
             $res = $query->select([
-                'academic_period_id2' => $this->aliasField('academic_period_id'),
-                'academic_period_name2' => $this->aliasField('academic_period_name'),
+                'academic_period_id3' => $this->aliasField('academic_period_id'),
+                'academic_period_name3' => $this->aliasField('academic_period_name'),
                 'education_system_id' => $this->aliasField('education_system_id'),
-                'education_system_name2' => $this->aliasField('education_system_name'),
+                'education_system_name3' => $this->aliasField('education_system_name'),
                 'education_level_isced_id' => $this->aliasField('education_level_isced_id'),
-                'education_level_isced_level2' => $this->aliasField('education_level_isced_level'),
-                'education_level_isced_name2' => $this->aliasField('education_level_isced_name'),
+                'education_level_isced_level3' => $this->aliasField('education_level_isced_level'),
+                'education_level_isced_name3' => $this->aliasField('education_level_isced_name'),
                 'education_level_id' => $this->aliasField('education_level_id'),
-                'education_level_name2' => $this->aliasField('education_level_name'),
+                'education_level_name3' => $this->aliasField('education_level_name'),
                 'education_cycle_id' => $this->aliasField('education_cycle_id'),
-                'education_cycle_name2' => $this->aliasField('education_cycle_name'),
+                'education_cycle_name3' => $this->aliasField('education_cycle_name'),
                 'education_programme_id' => $this->aliasField('education_programme_id'),
-                'education_programme_code2' => $this->aliasField('education_programme_code'),
-                'education_programme_name2' => $this->aliasField('education_programme_name'),
+                'education_programme_code3' => $this->aliasField('education_programme_code'),
+                'education_programme_name3' => $this->aliasField('education_programme_name'),
                 'education_grade_id' => $this->aliasField('education_grade_id'),
-                'education_grade_code2' => $this->aliasField('education_grade_code'),
-                'education_grade_name2' => $this->aliasField('education_grade_name'),
+                'education_grade_code3' => $this->aliasField('education_grade_code'),
+                'education_grade_name3' => $this->aliasField('education_grade_name'),
                 'student_gender_id' => $this->aliasField('student_gender_id'),
-                'student_gender_name2' => $this->aliasField('student_gender_name'),
-                'student_age2' => $this->aliasField('student_age'),
-                'total_students2' => $this->aliasField('total_students'),
+                'student_gender_name3' => $this->aliasField('student_gender_name'),
+                'student_age3' => $this->aliasField('student_age'),
+                'total_students3' => $this->aliasField('total_students'),
                 //'repeater_Student' => 'summary_grade_gender_ages.total_students', //should change
             ])
             
@@ -141,12 +144,14 @@ class Uis5Table extends AppTable
                         'student_gender_id' => $row->student_gender_id,
                         ]
                     ])->count();
-                    $row['repeater_Student'] = $sumGradeData;
+                    $row['repeater_Student1'] = $sumGradeData;
                     return $row;
                 });
             });
             
+       
         }
+        
        
     }
 }
