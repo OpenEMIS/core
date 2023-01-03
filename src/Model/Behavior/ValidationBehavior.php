@@ -2638,11 +2638,16 @@ class ValidationBehavior extends Behavior
 
     public static function checkLocalLogin($field, array $globalData)
     {
-        if ($field == 1) {
+        //echo "<pre>"; print_r($globalData); die;
+        if($globalData['data']['label'] == 'Two Factor Authentication'){
             return true;
-        } else {
-            $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
-            return count($authentications) > 0;
+        }else{
+            if ($field == 1) {
+                return true;
+            } else {
+                $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
+                return count($authentications) > 0;
+            }
         }
     }
 
