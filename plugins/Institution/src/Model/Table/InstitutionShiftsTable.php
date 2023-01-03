@@ -29,7 +29,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->belongsTo('LocationInstitutions', ['className' => 'Institution.LocationInstitutions']);
         $this->belongsTo('PreviousShifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'previous_shift_id']);
 
-        $this->hasMany('PeriodShiftRecords', ['className' => 'PeriodShiftRecords', 'foreignKey' => 'institution_shift_id']); //POCOR-5281
+        $this->hasMany('InstitutionShiftPeriods', ['className' => 'InstitutionShiftPeriods', 'foreignKey' => 'institution_shift_period_id']); //POCOR-5281
         $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_shift_id']);
         $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
         $this->addBehavior('OpenEmis.Autocomplete');
@@ -205,11 +205,11 @@ class InstitutionShiftsTable extends ControllerActionTable
     //Start:POCOR-5281
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['PeriodShiftRecords']);
+        $query->contain(['InstitutionShiftPeriods']);
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 $arr =[];
-                foreach($row->period_shift_records as $key=> $period){
+                foreach($row->institution_shift_periods as $key=> $period){
                     $arr[$key] = ['id'=>$period['period_id']];
                 }
                 $row['period'] = $arr;
@@ -586,16 +586,16 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
        //Start:POCOR-5281
-        $PeriodShiftTable = TableRegistry::get('period_shift_records');
+        $PeriodShiftTable = TableRegistry::get('institution_shift_periods');
         if($this->request->params['pass'][0] == 'edit'){
-            $PeriodShiftData = $PeriodShiftTable->find()->where(['institution_shift_id'=>$entity->id])->toArray();
+            $PeriodShiftData = $PeriodShiftTable->find()->where(['institution_shift_period_id'=>$entity->id])->toArray();
             foreach($PeriodShiftData as $PeriodShiftDataEntity){
                 $deleteEntity = $PeriodShiftTable->delete($PeriodShiftDataEntity);
             }
         }
         foreach($entity->period['_ids'] as $one){
             $PeriodShiftEntity = [
-                'institution_shift_id' => $entity->id,
+                'institution_shift_period_id' => $entity->id,
                 'period_id'=> $one
             ];
             $PeriodShift = $PeriodShiftTable->newEntity($PeriodShiftEntity);
