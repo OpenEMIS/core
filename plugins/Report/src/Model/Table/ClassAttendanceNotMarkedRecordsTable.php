@@ -175,8 +175,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             ->formatResults(function (ResultSetInterface $results) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
                 return $results->map(function ($row) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
                     $institutionId = $row->institution_id;
-                    $mark= 0;
-                    $unmark= 0;
+                    // $mark= 0;
+                    // $unmark= 0;
                     if (!empty($row->class_attendance_records)) {
                         $attendanceRecord = $row->class_attendance_records[0];
                     }
@@ -194,10 +194,10 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                             } elseif (isset($attendanceRecord)) {
                                 if ($attendanceRecord[$dayColumn] == MarkedType::MARKED) {
                                     $status = __('Marked');
-                                    $mark++;
+                                    //$mark++;
                                 } elseif ($attendanceRecord[$dayColumn] == MarkedType::PARTIAL_MARKED) {
                                     $status = __('Partial Marked');
-                                    $unmark++;
+                                    //$unmark++;
                                 } else { // MarkedType::NOT_MARKED
                                     $status = __('Not Marked');
                                     $unmark++;
@@ -207,16 +207,19 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                                 $status = __('Not Marked');
                             }
                         }
-
-                        $row->total_mark = $mark;
-                        $row->total_unmark = $unmark;
+                        // $row->total_mark = $mark;
+                        // $row->total_unmark = $unmark;
                         $row->{$dayColumn} = $status;
                     }
                     return $row;
                 });
             })
         ;
+         
     }
+
+
+    
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
@@ -351,21 +354,23 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             'type' => 'string',
             'label' => ''
         ];
+        //POCOR-7039
 
-        $newFields[] = [
-            'key' => 'InstitutionClasses.Marked',
-            'field' => 'total_mark',
-            'type' => 'string',
-            'label' => 'Marked'
-        ];
+        // $newFields[] = [
+        //     'key' => '',
+        //     'field' => 'total_mark',
+        //     'type' => 'string',
+        //     'label' => 'Marked'
+        // ];
 
-        $newFields[] = [
-            'key' => 'InstitutionClasses.Unmarked',
-            'field' => 'total_unmark',
-            'type' => 'string',
-            'label' => 'Unmarked'
-        ];                
-
+        // $newFields[] = [
+        //     'key' => '',
+        //     'field' => 'total_unmark',
+        //     'type' => 'string',
+        //     'label' => 'Unmarked'
+        // ]; 
+                     
+        //End of POCOR-7039
         $newFields[] = [
             'key' => 'InstitutionClasses.staff_id',
             'field' => 'staff_id',
