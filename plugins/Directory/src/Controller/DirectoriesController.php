@@ -1156,9 +1156,12 @@ class DirectoriesController extends AppController
                 $conditions[$security_users->aliasField('is_student')] = 1;
             }else if($userTypeId ==2){
                 $conditions[$security_users->aliasField('is_staff')] = 1;
-            }else if($userTypeId ==3){
-                $conditions[$security_users->aliasField('is_guardian')] = 1;
             }
+            //POCOR-7093[START] : Commenting this line as its not working for add guardian, also everthing working as it is
+            // else if($userTypeId ==3){
+            //     $conditions[$security_users->aliasField('is_guardian')] = 1;
+            // }
+            //POCOR-7093[END]
         }
 
         //it is user for getting single user data
