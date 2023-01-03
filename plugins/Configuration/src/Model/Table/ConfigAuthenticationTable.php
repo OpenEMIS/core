@@ -24,6 +24,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
         $this->addBehavior('Configuration.Authentication');
         $this->toggle('remove', false);
         $this->toggle('add', false);
+        $this->toggle('search', false);
 
         /*$authenticationRecord = $this
             ->find()
@@ -85,11 +86,27 @@ class ConfigAuthenticationTable extends ControllerActionTable
     public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
     {
         if (in_array($action, ['edit', 'add'])) {
-            $id = $this->id;
-            //echo "<pre>"; print_r($url); die;
+            $id= $this->paramsDecode($request->params['pass'][1]);
+            //$id = $this->id;
             if (!empty($id)) {
                 $entity = $this->get($id);
-                if ($entity->field_type == 'Dropdown') {
+                $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+                if ($entity->field_type == 'Dropdown' && $entity->option_type == 'yes_no') {
+                    $this->options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
+                        ->where([
+                            'ConfigItemOptions.option_type' => 'yes_no',
+                            'ConfigItemOptions.visible' => 1
+                        ])
+                        ->toArray();
+                    $attr['options'] = $this->options;
+                    $attr['onChangeReload'] = true;
+                }elseif($entity->field_type == 'Dropdown' && $entity->option_type == 'completeness'){
+                    $this->options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
+                        ->where([
+                            'ConfigItemOptions.option_type' => 'completeness',
+                            'ConfigItemOptions.visible' => 1
+                        ])
+                        ->toArray();
                     $attr['options'] = $this->options;
                     $attr['onChangeReload'] = true;
                 }
