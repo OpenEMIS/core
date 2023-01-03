@@ -2638,10 +2638,10 @@ class ValidationBehavior extends Behavior
 
     public static function checkLocalLogin($field, array $globalData)
     {
-        //echo "<pre>"; print_r($globalData); die;
+        //POCOR-7156 Starts
         if($globalData['data']['label'] == 'Two Factor Authentication'){
             return true;
-        }else{
+        }else{//POCOR-7156 Ends
             if ($field == 1) {
                 return true;
             } else {
