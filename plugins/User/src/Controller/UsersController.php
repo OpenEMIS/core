@@ -31,7 +31,7 @@ class UsersController extends AppController
     {
         parent::beforeFilter($event);
 
-        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'forgotPassword', 'forgotUsername', 'resetPassword', 'postForgotPassword', 'postForgotUsername', 'postResetPassword']);
+        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'forgotPassword', 'forgotUsername', 'resetPassword', 'postForgotPassword', 'postForgotUsername', 'postResetPassword', 'twoFactorAuthentication', 'sendOtp', 'verifyOtp']);
 
         $action = $this->request->params['action'];
         if ($action == 'login_remote' || ($action == 'login' && $this->request->is('put'))) {
@@ -407,6 +407,17 @@ class UsersController extends AppController
         $this->viewBuilder()->layout(false);
     }
 
+    public function twoFactorAuthentication()
+    {
+        $this->viewBuilder()->layout(false);
+    }
+
+    public function verifyOtp()
+    {
+        $this->viewBuilder()->layout(false);
+        $this->SSO->doAuthentication($authenticationType, $code);
+    }
+
     public function forgotUsername()
     {
         $this->viewBuilder()->layout(false);
@@ -433,7 +444,22 @@ class UsersController extends AppController
         } elseif (is_null($code)) {
             $authenticationType = 'Local';
         }
-        $this->SSO->doAuthentication($authenticationType, $code);
+        // if('two factor authentication enabled'){
+            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'twoFactorAuthentication']);
+        // }else{
+        //     $this->SSO->doAuthentication($authenticationType, $code);
+        // }
+    }
+
+    public function sendOtp($authenticationType = 'Local', $code = null)
+    {
+        echo "<pre>";print_r($this->request);die;
+        // Write email fuction to send email
+        if('send mail true'){
+            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp']);
+        }else{
+            // show erro message
+        }
     }
 
     public function logout($username = null)
