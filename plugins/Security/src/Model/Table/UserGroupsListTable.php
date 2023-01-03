@@ -50,6 +50,7 @@ class UserGroupsListTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
+        $events['Model.SecurityGroupUsers.afterSave'] = 'institutionAfterSave';
         return $events;
     }
 
@@ -120,9 +121,7 @@ class UserGroupsListTable extends ControllerActionTable
             $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
             $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
             $attr['onSelect'] = "$('#reload').click();";
-        } elseif ($action == 'index') {
-            $attr['sort'] = ['field' => 'Guardians.first_name'];
-        }
+        } 
         return $attr;
     }
 
@@ -175,42 +174,40 @@ class UserGroupsListTable extends ControllerActionTable
             die;
         }
     }
-   
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-        // echo "<pre>"; print_r($data); die();
-        // if(isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['REQUEST_URI'])){
-        //     $url = $_SERVER['REQUEST_URI'];
-        //     $url_components = parse_url($url);
-        //     parse_str($url_components['query'], $params);
-        //     $action = array_key_exists('userGroupId', $params);
-            $userGroupId = $this->request->query['userGroupId'];
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $userGroupId = $this->request->query['userGroupId'];    
+        $entity->security_group_id = $userGroupId;
 
-            try{
-                $SecurityUsers= TableRegistry::get('security_group_users');
+        $dispatchTable = [];
+        $dispatchTable[] = $SecurityGroupUsers;
 
-                $data = $SecurityUsers->newEntity([
-                            // 'id' => Text::uuid(),
-                            'security_group_id' => 1214930,
-                            'security_user_id' => $entity->security_user_id,
-                            'security_role_id' => $entity->security_role_id,
-                            'created_user_id' => 2,
-                            'created' => new Time('NOW')
-                        ]);
-
-                     $SecurityUsers->save($data);
-                     //$event->stopPropagation();
-                         return;
-                }
-                catch (PDOException $e) {
-                    echo "<pre>";print_r($e);die;
-                }
-                // echo "<pre>"; print_r($userGroupId); die();
-            // }
-
-
-        // }
+        foreach ($dispatchTable as $model) {
+            $model->dispatchEvent('Model.SecurityGroupUsers.afterSave', [$entity,$userGroupId], $this);
+        }
     }
+    
+
+    // public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    // {
+        
+    //             $SecurityUsers= TableRegistry::get('security_group_users');
+
+    //             $data = $SecurityUsers->newEntity([
+    //                         // 'id' => Text::uuid(),
+    //                         'security_group_id' => 13,
+    //                         'security_user_id' => $entity->security_user_id,
+    //                         'security_role_id' => $entity->security_role_id,
+    //                         'created_user_id' => $entity->created_user_id,
+    //                         'created' => new Time('NOW')
+    //                     ]);
+
+    //                    $aa =$SecurityUsers->save($data);
+    //             // echo "<pre>"; print_r($aa); die();
+         
+    // }
 
     
 
