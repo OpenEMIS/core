@@ -12,16 +12,19 @@ class POCOR5281 extends AbstractMigration
      */
     public function up()
     {
-        $this->execute("CREATE TABLE IF NOT EXISTS `period_shift_records` (
+        $this->execute("CREATE TABLE IF NOT EXISTS `institution_shift_periods` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
-            `institution_shift_id` int(11),
+            `institution_shift_period_id` int(11),
             `period_id` int(11),
-            PRIMARY KEY (`id`)
-          )");
+            PRIMARY KEY (`id`),
+            FOREIGN KEY (`institution_shift_period_id`) REFERENCES `institution_shifts` (`id`),
+            FOREIGN KEY (`period_id`) REFERENCES `student_attendance_per_day_periods` (`id`)
+          )ENGINE=InnoDB DEFAULT CHARSET=utf8"
+          );
     }
 
     public function down()
     {
-        $this->execute('DROP TABLE IF EXISTS `period_shift_records`');
+        $this->execute('DROP TABLE IF EXISTS `institution_shift_periods`');
     }
 }
