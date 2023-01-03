@@ -8,6 +8,8 @@ use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
+use Cake\ORM\Query;
+use App\Model\Traits\OptionsTrait;
 
 class ConfigAuthenticationTable extends ControllerActionTable
 {
@@ -21,15 +23,18 @@ class ConfigAuthenticationTable extends ControllerActionTable
         parent::initialize($config);
         $this->addBehavior('Configuration.Authentication');
         $this->toggle('remove', false);
+        $this->toggle('add', false);
 
-        $authenticationRecord = $this
+        /*$authenticationRecord = $this
             ->find()
             ->where([$this->aliasField('type') => 'Authentication'])
             ->first();
+        
         $id = $authenticationRecord->id;
         $this->id = $id;
         $this->authenticationType = $authenticationRecord->value;
 
+        */
         $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
         $this->options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
             ->where([
@@ -48,7 +53,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $extra['elements']['controls'] = $this->buildSystemConfigFilters();
+        $extra['elements']['controls'] = $this->buildSystemConfigFilters($this->action);
         $extra['config']['selectedLink'] = ['controller' => 'Configurations', 'action' => 'index'];
         $this->field('visible', ['visible' => false]);
         $this->field('editable', ['visible' => false]);
@@ -59,17 +64,19 @@ class ConfigAuthenticationTable extends ControllerActionTable
         $this->field('type', ['visible' => ['view'=>true, 'edit'=>true], 'type' => 'readonly']);
         $this->field('label', ['visible' => ['view'=>true, 'edit'=>true], 'type' => 'readonly']);
         $this->field('value', ['visible' => true]);
+        $this->field('value_selection', ['visible' => ['index'=>false, 'view'=>true, 'edit'=>true]]);
         $this->field('default_value', ['visible' => ['view'=>true]]);
 
-        if ($this->action == 'index') {
+        /*if ($this->action == 'index') {
             $url = $this->url('view');
             $url[1] = $this->paramsEncode(['id' => $this->id]);
             $this->controller->redirect($url);
-        } elseif ($this->action == 'view') {
+        } else*/if ($this->action == 'view') {
+            //echo "<pre>"; print_r($event); die;
             if (isset($extra['toolbarButtons']['back'])) {
                 unset($extra['toolbarButtons']['back']);
             }
-            $extra['elements']['controls'] = $this->buildSystemConfigFilters();
+            $extra['elements']['controls'] = $this->buildSystemConfigFilters($this->action);
             $this->checkController();
         }
         $this->checkController();
@@ -79,6 +86,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
     {
         if (in_array($action, ['edit', 'add'])) {
             $id = $this->id;
+            //echo "<pre>"; print_r($url); die;
             if (!empty($id)) {
                 $entity = $this->get($id);
                 if ($entity->field_type == 'Dropdown') {
@@ -106,13 +114,39 @@ class ConfigAuthenticationTable extends ControllerActionTable
         return __($entity->label);
     }
 
+    public function onGetName(Event $event, Entity $entity)
+    {
+        if($entity->code == 'enable_local_login'){
+            return __('Authentication Provider');
+        }
+    }
+
     public function onGetValue(Event $event, Entity $entity)
     {
-        return __($this->options[$entity->value]);
+        if($entity->code == 'enable_local_login'){
+            return __('Local');
+        }elseif($entity->code == 'two_factor_authentication'){
+            if($entity->value == 1){
+                return __('Enable');
+            }else{
+                return __('Disable');
+            }
+        }else{
+            return __($this->options[$entity->value]);
+        }
     }
 
     public function onGetDefaultValue(Event $event, Entity $entity)
     {
         return __($this->options[$entity->default_value]);
     }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query
+            ->find('visible')
+            ->where([$this->aliasField('type') => 'Authentication', $this->aliasField('visible') => 1]);
+        //echo "<pre>"; print_r($query); die;
+    }
+
 }

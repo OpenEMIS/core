@@ -58,7 +58,7 @@ class AuthenticationBehavior extends Behavior
         }
     }
 
-    public function buildSystemConfigFilters()
+    public function buildSystemConfigFilters($action = null)
     {
         $toolbarElements = [
             ['name' => 'Configuration.idp_controls', 'data' => [], 'options' => []]
@@ -84,15 +84,18 @@ class AuthenticationBehavior extends Behavior
         $this->model->request->query['type_value'] = $typeOptions[$selectedType];
         $this->model->advancedSelectOptions($typeOptions, $selectedType);
         $this->model->controller->set('typeOptions', $typeOptions);
-
-        $authenticationTypeOptions = [0 => 'Local', 'SystemAuthentications' => __('Other Identity Providers')];
-
-        foreach ($authenticationTypeOptions as &$options) {
-            $options = __($options);
-        }
-        $authenticationType = $this->model->queryString('authentication_type', $authenticationTypeOptions);
-        $this->model->advancedSelectOptions($authenticationTypeOptions, $authenticationType);
-        $authenticationTypeOptions = array_values($authenticationTypeOptions);
+        $authenticationTypeOptions = [];
+        //POCOR-7156 Starts add condition $action == 'view' || $action == 'edit'
+        if($action == 'view' || $action == 'edit'){
+            $authenticationTypeOptions = [0 => 'Local', 'SystemAuthentications' => __('Other Identity Providers')];
+            foreach ($authenticationTypeOptions as &$options) {
+                $options = __($options);
+            }
+            $authenticationType = $this->model->queryString('authentication_type', $authenticationTypeOptions);
+            $this->model->advancedSelectOptions($authenticationTypeOptions, $authenticationType);
+            $authenticationTypeOptions = array_values($authenticationTypeOptions);
+        }//POCOR-7156 Ends
+        
         $this->model->controller->set('authenticationTypeOptions', $authenticationTypeOptions);
         $controlElement = $toolbarElements[0];
         $controlElement['data'] = ['typeOptions' => $typeOptions];
