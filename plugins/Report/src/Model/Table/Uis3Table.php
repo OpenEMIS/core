@@ -16,7 +16,7 @@ use LDAP\Result;
 
 class Uis3Table extends AppTable
 {
-    private $uisTabsData = [0 => "UIS-A3", 1 => "UIS-A5", 2 => "UIS-A6"];
+    private $uisTabsData = [0 => "UIS-A3"];
     public function initialize(array $config)       
     {
         $this->table('summary_grade_gender_ages');
@@ -81,7 +81,7 @@ class Uis3Table extends AppTable
         $reqData = json_decode($settings['process']['params'], true);
         $academic_period_id = $reqData['academic_period_id'];
         
-     
+        
 
         if ($uisType == 'UIS-A3')
         {   
@@ -102,6 +102,7 @@ class Uis3Table extends AppTable
                 'total_students1' => 'total_students',
             ])
             ->where(['academic_period_id' => $academic_period_id]);
+            //echo "<pre>"; print_r($query->toArray());die;
         }
         
        
