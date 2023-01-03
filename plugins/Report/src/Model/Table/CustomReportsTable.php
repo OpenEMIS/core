@@ -69,7 +69,7 @@ class CustomReportsTable extends AppTable
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['type' => 'select', 'select' => false]);
-        $this->ControllerAction->field('format');
+       // $this->ControllerAction->field('format');
 
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $id = $this->request->data[$this->alias()]['feature'];
@@ -89,6 +89,40 @@ class CustomReportsTable extends AppTable
                     $this->ControllerAction->field('academic_period_id');
                     unset($filters['academic_period_id']);
                 }
+
+                //START: POCOR-7069
+                // Institution Type filter
+                if (array_key_exists('institution_type_id', $filters)) {
+                    // add validation
+                    $validator->notEmpty('institution_type_id');
+                    $this->ControllerAction->field('institution_type_id');
+                    unset($filters['institution_type_id']);
+                }
+                // Institution  filter
+                if (array_key_exists('institution_id', $filters)) {
+                    // add validation
+                    $validator->notEmpty('institution_id');
+                    $this->ControllerAction->field('institution_id');
+                    unset($filters['institution_id']);
+                }
+                // edication grade filter
+                if (array_key_exists('education_grade_id', $filters)) {
+                    // add validation
+                    $validator->notEmpty('education_grade_id');
+                    $this->ControllerAction->field('education_grade_id');
+                    unset($filters['education_grade_id']);
+                }
+                
+                // education subject filter
+                if (array_key_exists('education_subject_id', $filters)) {
+                    // add validation
+                    $validator->notEmpty('education_subject_id');
+                    $this->ControllerAction->field('education_subject_id');
+                    unset($filters['education_subject_id']);
+                }
+                //END: POCOR-7069
+
+                $this->ControllerAction->field('format');
 
                 if (isset($this->request->data["submit"]) && $this->request->data["submit"] == "academic_period_id") {
                     $toReset = true;
@@ -293,11 +327,13 @@ class CustomReportsTable extends AppTable
     {
         if ($action == 'add') {
             $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $institutionTypeId = $request->data['CustomReports']['institution_type_id'];
             $institutionQuery = $InstitutionsTable
                                 ->find('list', [
                                     'keyField' => 'id',
                                     'valueField' => 'code_name'
                                 ])
+                                ->where([$InstitutionsTable->aliasField('institution_type_id')=>$institutionTypeId])
                                 ->order([$InstitutionsTable->aliasField('name') => 'ASC']);
 
             $superAdmin = $this->Auth->user('super_admin');
@@ -308,18 +344,111 @@ class CustomReportsTable extends AppTable
 
             $institutionList = $institutionQuery->toArray();
            
-            $attr['onChangeReload'] = "institution_id";
+            $attr['onChangeReload'] = true;
             if (count($institutionList) > 1) {
-                $attr['options'] = [0 => __('All Institutions')] + $institutionList;
+                //$attr['options'] = [0 => __('All Institutions')] + $institutionList;
+                $attr['options'] =  $institutionList;
             } else {
                 $attr['options'] = $institutionList;
             }
             
             $attr['type'] = 'select';
-            $attr['select'] = false;
+            $attr['select'] = true;
             $attr['required'] = true;
             return $attr;
         }
     }
     /*POCOR-6451 ends*/
+
+    // Institution Type filter POCOR-7069
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $TypesTable = TableRegistry::get('Institution.Types');
+            $typeOptions = $TypesTable
+                    ->find('list')
+                    ->find('visible')
+                    ->find('order')
+                    ->toArray();
+            $attr['onChangeReload'] = true;
+            $attr['options'] = $typeOptions;
+            $attr['type'] = 'select';
+            $attr['select'] = true;
+            $attr['required'] = true;
+            return $attr;
+        }
+    }
+
+    // POCOR-7096 education grade filter
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $periodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
+            $selectedPeriod = $AcademicPeriods->getCurrent();
+
+            $selectedPeriod = $request->data['CustomReports']['academic_period_id'];
+            $institutionId = $request->data['CustomReports']['institution_id'];
+            $institutionTypeId = $request->data['CustomReports']['institution_type_id'];
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $grades = TableRegistry::get('Institution.InstitutionGrades');
+            $institutions = TableRegistry::get('Institution.Institutions');
+
+            $periodGrades = $EducationGrades->find('list', ['keyField' => 'id', 
+                                'valueField' => 'programme_grade_name'])
+                            ->find('visible')
+                            ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                            ->LeftJoin([$grades->alias() => $grades->table()],[
+                                $grades->aliasField('education_grade_id').' = ' . $EducationGrades->aliasField('id')
+                            ])
+                            ->LeftJoin([$institutions->alias() => $institutions->table()],[
+                                $institutions->aliasField('id').' = ' . $grades->aliasField('institution_id')
+                            ])
+                            ->where([
+                                'EducationSystems.academic_period_id' => $selectedPeriod,
+                                $grades->aliasField('institution_id') => $institutionId,
+                                $institutions->aliasField('institution_type_id') => $institutionTypeId,
+                            ])
+                            ->order([$EducationGrades->aliasField('id')])
+                            ->toArray();
+
+            $attr['onChangeReload'] = true;
+            $attr['options'] = $periodGrades;
+            $attr['type'] = 'select';
+            $attr['select'] = true;
+            $attr['required'] = true;
+            return $attr;
+        }
+    }
+
+    // POCOR-7069 education sujbect filter 
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $selectedPeriod = $request->data['CustomReports']['academic_period_id'];
+            $institutionId = $request->data['CustomReports']['institution_id'];
+            $institutionTypeId = $request->data['CustomReports']['institution_type_id'];
+            $educationGradeId = $request->data['CustomReports']['education_grade_id'];
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $grades = TableRegistry::get('Institution.InstitutionGrades');
+            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+
+            $subjects = $EducationSubjects->find()
+                    ->find('list')
+                    ->find('visible')
+                    ->innerJoinWith('EducationGrades')
+                    ->where(['EducationGrades.id' => $educationGradeId])
+                    ->order([$EducationSubjects->aliasField('order')])
+                    ->toArray();
+
+            $attr['onChangeReload'] = true;
+            $attr['options'] = $subjects;
+            $attr['type'] = 'select';
+            $attr['select'] = true;
+            $attr['required'] = true;
+            return $attr;
+        }
+    }
 }
