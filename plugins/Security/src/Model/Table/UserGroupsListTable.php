@@ -50,7 +50,6 @@ class UserGroupsListTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
-        $events['Model.SecurityGroupUsers.afterSave'] = 'institutionAfterSave';
         return $events;
     }
 
@@ -76,7 +75,7 @@ class UserGroupsListTable extends ControllerActionTable
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['Users','SecurityRoles']);
+        $query->contain(['Users','SecurityRoles'])->order([$this->aliasField('created DESC')]);
 
     }
 
@@ -180,36 +179,6 @@ class UserGroupsListTable extends ControllerActionTable
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $userGroupId = $this->request->query['userGroupId'];    
         $entity->security_group_id = $userGroupId;
-
-        $dispatchTable = [];
-        $dispatchTable[] = $SecurityGroupUsers;
-
-        foreach ($dispatchTable as $model) {
-            $model->dispatchEvent('Model.SecurityGroupUsers.afterSave', [$entity,$userGroupId], $this);
-        }
     }
-    
-
-    // public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    // {
-        
-    //             $SecurityUsers= TableRegistry::get('security_group_users');
-
-    //             $data = $SecurityUsers->newEntity([
-    //                         // 'id' => Text::uuid(),
-    //                         'security_group_id' => 13,
-    //                         'security_user_id' => $entity->security_user_id,
-    //                         'security_role_id' => $entity->security_role_id,
-    //                         'created_user_id' => $entity->created_user_id,
-    //                         'created' => new Time('NOW')
-    //                     ]);
-
-    //                    $aa =$SecurityUsers->save($data);
-    //             // echo "<pre>"; print_r($aa); die();
-         
-    // }
-
-    
-
     
 }
