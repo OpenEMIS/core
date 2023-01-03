@@ -435,6 +435,30 @@ class UsersController extends AppController
         if ($this->request->is('post') && $this->request->data('submit') == 'reload') {
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
         }
+        //POCOR-7156 starts
+        if ($this->request->is('post') && $this->request->data('submit') == 'login') {
+            $userEntity = $this->Users
+                ->find()
+                ->select([
+                    $this->Users->aliasField('id'),
+                    $this->Users->aliasField('email'),
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('middle_name'),
+                    $this->Users->aliasField('third_name'),
+                    $this->Users->aliasField('last_name'),
+                    $this->Users->aliasField('preferred_name')
+                ])
+                ->where([
+                    $this->Users->aliasField('username') => $this->request->data['username']
+                ])
+                ->first();
+            if (is_null($userEntity) || is_null($userEntity->email)) {
+                $message = __('Sorry, your email id is not registered in our database.');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            }
+        }//POCOR-7156 ends
+        
         $this->autoRender = false;
         $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
         $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
@@ -444,11 +468,17 @@ class UsersController extends AppController
         } elseif (is_null($code)) {
             $authenticationType = 'Local';
         }
-        // if('two factor authentication enabled'){
+
+        $ConfigItems = TableRegistry::get('config_items');
+        $ConfigItemsEntity = $ConfigItems
+            ->find()
+            ->where([$ConfigItems->aliasField('code') => 'two_factor_authentication'])
+            ->first();
+        if($ConfigItemsEntity->value == 1){
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'twoFactorAuthentication']);
-        // }else{
-        //     $this->SSO->doAuthentication($authenticationType, $code);
-        // }
+        }else{
+             $this->SSO->doAuthentication($authenticationType, $code);
+        }
     }
 
     public function sendOtp($authenticationType = 'Local', $code = null)
