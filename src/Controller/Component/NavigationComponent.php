@@ -1620,8 +1620,8 @@ class NavigationComponent extends Component
                 'title' => 'Guardians',
                 'parent' => 'Directories.Student',
                 'params' => ['plugin' => 'Directory'],
-                'selected' => ['Directories.StudentGuardians', 'Directories.StudentGuardianUser']
-            ],
+                'selected' => ['Directories.StudentGuardians', 'Directories.StudentGuardianUser', 'Directories.Addguardian']
+            ],//POCOR-7093 Addguardian condition
             'Directories.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Directories.Student',
