@@ -351,7 +351,6 @@ class CustomReportsTable extends AppTable
             } else {
                 $attr['options'] = $institutionList;
             }
-            
             $attr['type'] = 'select';
             $attr['select'] = true;
             $attr['required'] = true;
