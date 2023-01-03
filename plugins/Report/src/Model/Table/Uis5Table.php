@@ -16,7 +16,7 @@ use LDAP\Result;
 
 class Uis5Table extends AppTable
 {
-    private $uisTabsData = [0 => "UIS-A3", 1 => "UIS-A5", 2 => "UIS-A6"];
+    private $uisTabsData = [0 =>  "UIS-A5"];
     public function initialize(array $config)       
     {
         $this->table('summary_grade_gender_ages');
