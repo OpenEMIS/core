@@ -1,3 +1,11 @@
+### [3.77.0] - 2023-01-03
+- Implemented: Develop APIs for WebGIS
+- Implemented: When adding guardians to existing students we need to be able to be able to initiate the new workflow to conduct an internal and external search
+- Bug Fixed: Report>Institution>Class attendance marked: Report generated is showing that there is no marked attendance
+- Bug Fixed: Institutions>Performance>Report Cards: Report is stuck in progress
+- Bug Fixed: Institutions>Attendance>Students:Students are marked but the attendance are not recorded in institution_class_attendance_records
+- Bug Fixed: Institutions>Performance>Report Cards: Past teachers are shown in the student report cards assessment tab
+
 ### [3.76.10] - 2022-12-28
 - Bug Fixed: Report>Institution>Class Attendance Marked Summary:Creation of new summary table and update existing query
 - Bug Fixed: Homepage > Workbench : System does not display workflows that are not assigned to user
