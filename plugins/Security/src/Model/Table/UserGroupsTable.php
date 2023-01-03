@@ -110,6 +110,16 @@ class UserGroupsTable extends ControllerActionTable
         $this->setFieldOrder(['name', 'no_of_users','institutions']);
     }
 
+    public function onGetNoOfUsers(Event $event, Entity $entity)
+    {
+        $id = $entity->id;
+
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $count = $GroupUsers->findAllBySecurityGroupId($id)->count();
+
+        return $count;
+    }
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->query;
