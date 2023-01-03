@@ -14,7 +14,7 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\ResultSet;
 use LDAP\Result;
 
-class Uis2Table extends AppTable
+class Uis9Table extends AppTable
 {
     private $uisTabsData = [0 => "UIS-A2", 2 => "UIS-A9"];
     public function initialize(array $config)       
@@ -48,7 +48,8 @@ class Uis2Table extends AppTable
         $UISType = $sheetData['uis_tabs_type'];
 
         $newFields = [];
-        if ($UISType == 'UIS-A2')
+       
+        if ($UISType == 'UIS-A9')
         {
             $extraField[] = ["key" => "", "field" => "academic_period_name", "type" => "integer", "label" => "Academic Period"];
             $extraField[] = ["key" => "", "field" => "institution_sector_name", "type" => "integer", "label" => "Sector"];
@@ -60,7 +61,10 @@ class Uis2Table extends AppTable
             $extraField[] = ["key" => "", "field" => "education_programme_code", "type" => "integer", "label" => "Education Programme Code"];
             $extraField[] = ["key" => "", "field" => "education_programme_name", "type" => "integer", "label" => "Education Programme Name"];
             $extraField[] = ["key" => "", "field" => "gender_name", "type" => "integer", "label" => "Gender"];
-            $extraField[] = ["key" => "", "field" => "total_students", "type" => "integer", "label" => "Number of Students"];
+            $extraField[] = ["key" => "", "field" => "total_staff_teaching", "type" => "integer", "label" => "Number of Staff"];
+            $extraField[] = ["key" => "", "field" => "total_staff_teaching_newly_recruited", "type" => "integer", "label" => "Number of Newly Recruited Staff"];
+
+            
         }
         
         $fields->exchangeArray($extraField);
@@ -77,9 +81,10 @@ class Uis2Table extends AppTable
         $reqData = json_decode($settings['process']['params'], true);
         $academic_period_id = $reqData['academic_period_id'];
         
-        if ($uisType == 'UIS-A2')
+        
+
+        if ($uisType == 'UIS-A9')
         {
-            $summaryProgrammeSectorGendersTypes = TableRegistry::get('summary_programme_sector_genders');
             $res = $query->select([
                 'academic_period_name' => 'academic_period_name',
                 'institution_sector_name' => 'institution_sector_name',
@@ -92,11 +97,12 @@ class Uis2Table extends AppTable
                 'education_programme_name' => 'education_programme_name',
                 'gender_name' => 'gender_name',
                 'total_students' => 'total_students',
+                'total_staff_teaching_newly_recruited' => 'total_staff_teaching_newly_recruited'
             ])
             ->where(['academic_period_id' => $academic_period_id]);
-        }   
+            
+        }
 
-       
        
     }
 }
