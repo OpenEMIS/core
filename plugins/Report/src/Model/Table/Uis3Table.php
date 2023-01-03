@@ -62,7 +62,7 @@ class Uis3Table extends AppTable
             $extraField[] = ["key" => "", "field" => "education_grade_code1", "type" => "integer", "label" => "Education Grade Code"];
             $extraField[] = ["key" => "", "field" => "education_grade_name1", "type" => "integer", "label" => "Education Grade Name"];
             $extraField[] = ["key" => "", "field" => "student_gender_name1", "type" => "integer", "label" => "Gender"];
-            $extraField[] = ["key" => "", "field" => "student_age", "type1" => "integer", "label" => "Age"];
+            $extraField[] = ["key" => "", "field" => "student_age1", "type" => "integer", "label" => "Age"];
             $extraField[] = ["key" => "", "field" => "total_students1", "type" => "integer", "label" => "Number of Students"];
 
         }
@@ -80,7 +80,6 @@ class Uis3Table extends AppTable
         $area = TableRegistry::get('areas');
         $reqData = json_decode($settings['process']['params'], true);
         $academic_period_id = $reqData['academic_period_id'];
-        
         
 
         if ($uisType == 'UIS-A3')
@@ -102,7 +101,6 @@ class Uis3Table extends AppTable
                 'total_students1' => 'total_students',
             ])
             ->where(['academic_period_id' => $academic_period_id]);
-            //echo "<pre>"; print_r($query->toArray());die;
         }
         
        
