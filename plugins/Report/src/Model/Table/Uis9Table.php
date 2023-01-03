@@ -16,7 +16,7 @@ use LDAP\Result;
 
 class Uis9Table extends AppTable
 {
-    private $uisTabsData = [0 => "UIS-A2", 2 => "UIS-A9"];
+    private $uisTabsData = [0 => "UIS-A9"];
     public function initialize(array $config)       
     {
         $this->table('summary_programme_sector_genders');
