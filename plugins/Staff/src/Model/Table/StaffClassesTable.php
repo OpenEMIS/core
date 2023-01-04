@@ -27,6 +27,32 @@ class StaffClassesTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
         $this->hasMany('ClassesSecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'saveStrategy' => 'replace', 'foreignKey' => 'institution_class_id']);
+        $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
+        $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'saveStrategy' => 'replace', 'cascadeCallbacks' => true]);
+        $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'saveStrategy' => 'replace']);
+        $this->hasMany('ClassAttendanceRecords', ['className' => 'Institution.ClassAttendanceRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsToMany('EducationGrades', [
+            'className' => 'Education.EducationGrades',
+            'through' => 'Institution.InstitutionClassGrades',
+            'foreignKey' => 'institution_class_id',
+            'targetForeignKey' => 'education_grade_id',
+            'dependent' => true
+        ]);
+
+        $this->belongsToMany('Students', [
+            'className' => 'User.Users',
+            'through' => 'Institution.InstitutionClassStudents',
+            'foreignKey' => 'institution_class_id',
+            'targetForeignKey' => 'student_id',
+        ]);
+
+        $this->belongsToMany('InstitutionSubjects', [
+            'className' => 'Institution.InstitutionSubjects',
+            'through' => 'Institution.InstitutionClassSubjects',
+            'foreignKey' => 'institution_class_id',
+            'targetForeignKey' => 'institution_subject_id'
+        ]);
 
         /*
             note that in DirectoriesController
@@ -35,6 +61,18 @@ class StaffClassesTable extends ControllerActionTable
          */
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+
+        //POCOR-6995
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index', 'add'],
+            'ClassStudents' => ['view', 'edit'],
+            'StudentCompetencies' => ['view'],
+            'StudentCompetencyComments' => ['view'],
+            'OpenEMIS_Classroom' => ['index', 'view'],
+            'StudentOutcomes' => ['view'],
+            'SubjectStudents' => ['index'],
+            'Results'=> ['index']
+        ]);
     }
 
     // Academic Period	Institution	Grade	Class	Male Students	Female Students
@@ -54,6 +92,7 @@ class StaffClassesTable extends ControllerActionTable
             'total_female_students',
             'total_students'
         ]);
+
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -211,6 +250,97 @@ class StaffClassesTable extends ControllerActionTable
         // this 'save' does not redirect, need to re-extract the $classOptions after saving is done
         $this->fields['classes']['data']['classes'] = $classOptions;
         $extra['classOptions'] = $classOptions;
+
+        //Webhook Feature class (update) -- start POCOR-6995
+        $ids = array(566,570);
+        $bodyData = $this->find('all',
+                    [ 'contain' => [
+                        'Institutions',
+                        'EducationGrades',
+                        'Staff',
+                        'AcademicPeriods',
+                        'InstitutionShifts',
+                        'InstitutionShifts.ShiftOptions',
+                        'ClassesSecondaryStaff.SecondaryStaff',
+                        'Students',
+                        'Students.Genders'
+                    ],
+                    ])->where([
+                        $this->aliasField('id IN') => $ids
+                    ])->toArray();
+
+        $grades = $gradeId = $secondaryTeachers = $students = [];
+        /*echo "<pre>";print_r($bodyData);die;*/
+        $dataVal = [];
+        if (!empty($bodyData)) {
+            foreach ($bodyData as $key => $value) {
+                $dataVal[$key]['capacity'] = $value->capacity;
+                $dataVal[$key]['shift'] = $value->institution_shift->shift_option->name;
+                $dataVal[$key]['academicPeriod'] = $value->academic_period->name;
+                $dataVal[$key]['homeRoomteacher'] = $value->staff->openemis_no;
+                $dataVal[$key]['institutionId'] = $value->institution->id;
+                $dataVal[$key]['institutionName'] = $value->institution->name;
+                $dataVal[$key]['institutionCode'] = $value->institution->code;
+                $dataVal[$key]['className'] = $value->name;
+                $dataVal[$key]['classId'] = $value->id;
+
+                if(!empty($value->education_grades)) {
+                    foreach ($value->education_grades as $i => $gradeOptions) {
+                       $dataVal[$key]['Grades'][$i]['gradeName'] = $gradeOptions->name;
+                        $dataVal[$key]['Grades'][$i]['gradeId'] = $gradeOptions->id;
+                    }
+                }
+
+                if(!empty($value->classes_secondary_staff)) {
+                    foreach ($value->classes_secondary_staff as $j => $secondaryStaffs) {
+                        $dataVal[$key]['secondaryTeachers'][$j]['teachers'] = !empty($secondaryStaffs->secondary_staff->openemis_no) ? $secondaryStaffs->secondary_staff->openemis_no : NULL;
+                    }
+                }
+
+                $maleStudents = 0;
+                $femaleStudents = 0;
+                if(!empty($value->students)) {
+                    foreach ($value->students as $k => $studentsData) {
+                        $dataVal[$key]['students'][$k]['studentsOpenemis'] = !empty($studentsData->openemis_no) ? $studentsData->openemis_no : NULL;
+                        if($studentsData->gender->code == 'M') {
+                            $dataVal[$key]['maleStudents'][$k]['male'] = $maleStudents + 1;
+                        }
+                        if($studentsData->gender->code == 'F') {
+                            $dataVal[$key]['femaleStudents'][$k]['female'] = $femaleStudents + 1;
+                        }
+                    }
+                }
+                
+
+            }
+        }
+        //print_r($gg);die;
+
+        $body = array();
+
+        $body = [
+            /*'institutions_id' => !empty($institutionId) ? $institutionId : NULL,
+            'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+            'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+            'institutions_classes_id' => $classId,
+            'institutions_classes_name' => $className,
+            'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
+            'shift_options_name' => !empty($shift) ? $shift : NULL,*/
+            'institutions_classes_capacity' => !empty($dataVal) ? $dataVal : NULL,
+            /*'education_grades_id' => !empty($gradeId) ? $gradeId :NULL,
+            'education_grades_name' => !empty($grades) ? $grades : NULL,
+            'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
+            'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
+            'total_students' => !empty($students) ? count($students) : 0,
+            'institution_classes_staff_openemis_no' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
+            'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
+            'institution_class_students_openemis_no' => !empty($students) ? $students : NULL*/
+        ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            $Webhooks->triggerShell('class_update', ['username' => ''], $body);
+            
+        
+            
     }
 
 
