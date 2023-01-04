@@ -68,7 +68,11 @@ class DirectoriesController extends AppController
         if($action == 'add'){
             $this->attachAngularModulesForDirectory();
             $this->set('ngController', 'DirectoryAddCtrl as $ctrl');
-        }else{
+        } elseif($action == 'remove') { //POCOR-7083
+            if(!$this->checkUsersChildRecords()) {
+                $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Directories']);
+            }
+        } else{
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Directories']);
         }
     }
@@ -506,7 +510,139 @@ class DirectoriesController extends AppController
 
         $this->set('contentHeader', $header);
     }
+//Start:POCOR-7083
+    private function checkUsersChildRecords()
+    {
+        $result = false;
+        $securityUserId = $this->ControllerAction->paramsDecode($this->request->data['primaryKey'])['id'] ?? null;
 
+        // First delete child records and after that delete main record
+        // Records to delete from tables-
+        // institution_class_students (student_id),
+        // user_activities (security_user_id),
+        // student_custom_field_values (student_id),
+        // institution_competency_results (student_id)
+        // institution_student_absences (student_id),
+        // institution_student_absence_days (student_id)
+        // institution_student_absence_details (student_id),
+        // institution_students (student_id)
+        // student_risks_criterias
+        // institution_student_risks (student_id)
+        // institution_subject_students (student_id)
+        // user_special_needs_devices (security_user_id)
+        // user_special_needs_referrals (security_user_id)
+        // user_special_needs_services (security_user_id)
+        // institution_cases (assignee_id)
+        // institution_staff_shifts (staff_id)
+
+        if($securityUserId) {
+            // count all institution_class_students
+            $institutionClassStudents = TableRegistry::get('institution_class_students')
+                    ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all user activities
+            $userActivities = TableRegistry::get('user_activities')
+                ->find()->where(['security_user_id' => $securityUserId])->count();
+
+            // count all student_custom_field_values
+            $studentCustomFieldValues = TableRegistry::get('student_custom_field_values')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all institution_competency_results
+            $institutionCompetencyResults = TableRegistry::get('institution_competency_results')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all institution_student_absences
+            $institutionStudentAbsences = TableRegistry::get('institution_student_absences')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all institution_student_absence_days
+            $institutionStudentAbsenceDays = TableRegistry::get('institution_student_absence_days')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all institution_student_absence_details
+            $institutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all institution_students
+            $institutionStudents = TableRegistry::get('institution_students')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // student_risks_criterias
+            $students = TableRegistry::get('institution_student_risks');
+            $query = $students->find()->select(['id'])->where(['student_id =' => $securityUserId]);
+
+            $studentRiskIds = [];
+            foreach ($query as $s) {
+                $studentRiskIds[] = $s->id;
+            }
+
+            $studentRisksCriterias = 0;
+            if(count($studentRiskIds)) {
+                $studentRisksCriterias = TableRegistry::get('student_risks_criterias')
+                    ->find()->where(['institution_student_risk_id IN' => $securityUserId])->count();
+            }
+
+            // count all institution_student_risks
+            $institutionStudentRisks = TableRegistry::get('institution_student_risks')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all institution_subject_students
+            $institutionSubjectStudents = TableRegistry::get('institution_subject_students')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all user_special_needs_devices
+            $userSpecialNeedsDevices = TableRegistry::get('user_special_needs_devices')
+                ->find()->where(['security_user_id' => $securityUserId])->count();
+
+            // count all user_special_needs_referrals
+            $userSpecialNeedsReferrals = TableRegistry::get('user_special_needs_referrals')
+                ->find()->where(['security_user_id' => $securityUserId])->count();
+
+            // count all user_special_needs_services
+            $userSpecialNeedsServices = TableRegistry::get('user_special_needs_services')
+                ->find()->where(['security_user_id' => $securityUserId])->count();
+
+            // count all institution_cases
+            $institutionCases = TableRegistry::get('institution_cases')
+                ->find()->where(['assignee_id' => $securityUserId])->count();
+
+            // count all institution_staff_shifts
+            $institutionStaffShifts = TableRegistry::get('institution_staff_shifts')
+                ->find()->where(['staff_id' => $securityUserId])->count();
+
+            if($institutionClassStudents ||
+                $userActivities ||
+                $studentCustomFieldValues ||
+                $institutionCompetencyResults ||
+                $institutionStudentAbsences ||
+                $institutionStudentAbsenceDays ||
+                $institutionStudentAbsenceDetails ||
+                $institutionStudents ||
+                count($studentRiskIds) ||
+                $studentRisksCriterias ||
+                $institutionStudentRisks ||
+                $institutionSubjectStudents ||
+                $userSpecialNeedsDevices ||
+                $userSpecialNeedsReferrals ||
+                $userSpecialNeedsServices ||
+                $institutionCases ||
+                $institutionStaffShifts) {
+                $result = true;
+                $this->Alert->error('general.delete.restrictDeleteBecauseAssociation');
+                return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'index']);
+            }else{
+                $user = TableRegistry::get('security_users')
+                ->find()->where(['id' => $securityUserId])->first();
+                TableRegistry::get('security_users')->delete($user);
+                $this->Alert->success('general.delete.success');
+                return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'index']);
+            }
+        }
+
+        return $result;
+    }
+//End:POCOR-7083
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
@@ -1156,12 +1292,9 @@ class DirectoriesController extends AppController
                 $conditions[$security_users->aliasField('is_student')] = 1;
             }else if($userTypeId ==2){
                 $conditions[$security_users->aliasField('is_staff')] = 1;
+            }else if($userTypeId ==3){
+                $conditions[$security_users->aliasField('is_guardian')] = 1;
             }
-            //POCOR-7093[START] : Commenting this line as its not working for add guardian, also everthing working as it is
-            // else if($userTypeId ==3){
-            //     $conditions[$security_users->aliasField('is_guardian')] = 1;
-            // }
-            //POCOR-7093[END]
         }
 
         //it is user for getting single user data
