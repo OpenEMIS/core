@@ -252,7 +252,13 @@ class StaffClassesTable extends ControllerActionTable
         $extra['classOptions'] = $classOptions;
 
         //Webhook Feature class (update) -- start POCOR-6995
-        $ids = array(566,570);
+
+        $classIds = [];
+        foreach($entity['Classes'] as $keys=>$val){
+           if($val['class_id'] != 0){
+                $classIds[] = $val['class_id'];
+           }
+        }
         $bodyData = $this->find('all',
                     [ 'contain' => [
                         'Institutions',
@@ -266,81 +272,75 @@ class StaffClassesTable extends ControllerActionTable
                         'Students.Genders'
                     ],
                     ])->where([
-                        $this->aliasField('id IN') => $ids
-                    ])->toArray();
-
+                        $this->aliasField('id IN') => $classIds
+                    ]);
         $grades = $gradeId = $secondaryTeachers = $students = [];
-        /*echo "<pre>";print_r($bodyData);die;*/
         $dataVal = [];
         if (!empty($bodyData)) {
             foreach ($bodyData as $key => $value) {
-                $dataVal[$key]['capacity'] = $value->capacity;
-                $dataVal[$key]['shift'] = $value->institution_shift->shift_option->name;
-                $dataVal[$key]['academicPeriod'] = $value->academic_period->name;
-                $dataVal[$key]['homeRoomteacher'] = $value->staff->openemis_no;
-                $dataVal[$key]['institutionId'] = $value->institution->id;
-                $dataVal[$key]['institutionName'] = $value->institution->name;
-                $dataVal[$key]['institutionCode'] = $value->institution->code;
-                $dataVal[$key]['className'] = $value->name;
-                $dataVal[$key]['classId'] = $value->id;
+                $dataVal[$key]['institutions_id'] = $value->institution->id;
+                $dataVal[$key]['institutions_name'] = $value->institution->name;
+                $dataVal[$key]['institutions_code'] = $value->institution->code;
+                $dataVal[$key]['institutions_classes_name'] = $value->name;
+                $dataVal[$key]['institutions_classes_id'] = $value->id;
+                $dataVal[$key]['shift_options_name'] = $value->institution_shift->shift_option->name;
+                $dataVal[$key]['academic_periods_name'] = $value->academic_period->name;
+                $dataVal[$key]['institutions_classes_capacity'] = $value->capacity;
+                $dataVal[$key]['institution_classes_staff_openemis_no'] = $value->staff->openemis_no; // for home room teacher
 
                 if(!empty($value->education_grades)) {
                     foreach ($value->education_grades as $i => $gradeOptions) {
-                       $dataVal[$key]['Grades'][$i]['gradeName'] = $gradeOptions->name;
-                        $dataVal[$key]['Grades'][$i]['gradeId'] = $gradeOptions->id;
+                        $dataVal[$key]['Grades'][$i]['education_grades_name'] = $gradeOptions->name;
+                        $dataVal[$key]['Grades'][$i]['education_grades_id'] = $gradeOptions->id;
                     }
+                }else{
+                    $dataVal[$key]['Grades']['education_grades_name'] = NULL;
+                    $dataVal[$key]['Grades']['education_grades_name'] = NULL;
                 }
 
                 if(!empty($value->classes_secondary_staff)) {
                     foreach ($value->classes_secondary_staff as $j => $secondaryStaffs) {
-                        $dataVal[$key]['secondaryTeachers'][$j]['teachers'] = !empty($secondaryStaffs->secondary_staff->openemis_no) ? $secondaryStaffs->secondary_staff->openemis_no : NULL;
+                       $dataVal[$key]['secondaryTeachers'][$j]['institution_classes_secondary_staff_openemis_no'] = $secondaryStaffs->secondary_staff->openemis_no;
                     }
-                }
 
+                }else{
+                   $dataVal[$key]['secondaryTeachers']['institution_classes_secondary_staff_openemis_no'] = NULL;
+                }
                 $maleStudents = 0;
                 $femaleStudents = 0;
                 if(!empty($value->students)) {
                     foreach ($value->students as $k => $studentsData) {
-                        $dataVal[$key]['students'][$k]['studentsOpenemis'] = !empty($studentsData->openemis_no) ? $studentsData->openemis_no : NULL;
+                        $dataVal[$key]['students'][$k]['institution_class_students_openemis_no'] = $studentsData->openemis_no;
                         if($studentsData->gender->code == 'M') {
-                            $dataVal[$key]['maleStudents'][$k]['male'] = $maleStudents + 1;
+                            $maleStudents = $maleStudents + 1;
+                            $dataVal[$key]['maleStudents']['institution_classes_total_male_students'] = $maleStudents;
                         }
                         if($studentsData->gender->code == 'F') {
-                            $dataVal[$key]['femaleStudents'][$k]['female'] = $femaleStudents + 1;
+                            $femaleStudents = $femaleStudents + 1;
+                            $dataVal[$key]['femaleStudents']['institution_classes_total_female_studentss'] = $femaleStudents;
                         }
+
                     }
+                    $totalStudent = $maleStudents + $femaleStudents ;
+                    $dataVal[$key]['total_students'] = $totalStudent;  
+                }else{
+                    $dataVal[$key]['total_students'] = NULL;
+                    $dataVal[$key]['students']['institution_class_students_openemis_no'] = NULL;
+                    $dataVal[$key]['maleStudents']['institution_classes_total_male_students'] = NULL;
+                    $dataVal[$key]['femaleStudents']['institution_classes_total_female_studentss'] = NULL;
                 }
                 
 
             }
         }
-        //print_r($gg);die;
 
         $body = array();
-
         $body = [
-            /*'institutions_id' => !empty($institutionId) ? $institutionId : NULL,
-            'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-            'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
-            'institutions_classes_id' => $classId,
-            'institutions_classes_name' => $className,
-            'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
-            'shift_options_name' => !empty($shift) ? $shift : NULL,*/
-            'institutions_classes_capacity' => !empty($dataVal) ? $dataVal : NULL,
-            /*'education_grades_id' => !empty($gradeId) ? $gradeId :NULL,
-            'education_grades_name' => !empty($grades) ? $grades : NULL,
-            'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
-            'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
-            'total_students' => !empty($students) ? count($students) : 0,
-            'institution_classes_staff_openemis_no' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
-            'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
-            'institution_class_students_openemis_no' => !empty($students) ? $students : NULL*/
+            'institutions_classes' => !empty($dataVal) ? $dataVal : NULL,
         ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            $Webhooks->triggerShell('class_update', ['username' => ''], $body);
-            
-        
-            
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        $Webhooks->triggerShell('class_update', ['username' => ''], $body);
+        // end POCOR-6995     
     }
 
 
