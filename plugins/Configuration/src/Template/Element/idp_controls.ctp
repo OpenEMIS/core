@@ -10,7 +10,6 @@
 			]);
 			$template = $this->ControllerAction->getFormTemplate();
 			$this->Form->templates($template);
-			//echo"<pre>"; print_r($this->request); die;
 			echo $this->Form->input('field_option', array(
 				'class' => 'form-control',
 				'label' => false,
@@ -19,7 +18,7 @@
 				'data-named-key' => 'type'
 			));
 			//POCOR-7156 Starts add if condition
-			if(!empty($authenticationTypeOptions)){
+			if(!empty($authenticationTypeOptions) && $field_type != 'two_factor_authentication'){
 				echo $this->Form->input('authentication_type', array(
 					'class' => 'form-control',
 					'label' => false,
