@@ -5550,8 +5550,8 @@ class InstitutionsController extends AppController
                                 $count++;
                             }
                         }
-                        $getStudentClassData = $this->institutionClassStudentData($institutionClassId);
-                        $body = array_merge($bodys, $custom_field, $getStudentClassData);//POCOR-7078 end
+                        $getClassData = $this->institutionClassStudentData($institutionClassId);//POCOR-6995
+                        $body = array_merge($bodys, $custom_field, $getClassData);//POCOR-7078 end
                         if (!empty($body)) {
                             $Webhooks = TableRegistry::get('Webhook.Webhooks');
                             if (!empty($studentId)) {
@@ -7016,7 +7016,10 @@ class InstitutionsController extends AppController
         return $options;
     }
 
-    //POCOR-6995 webhook 
+    /**
+     * POCOR-6995 
+     * show Institution Class data in webhook
+    **/ 
     public function institutionClassStudentData($institutionClassId) 
     {
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
@@ -7047,6 +7050,8 @@ class InstitutionsController extends AppController
                     $institutionId = $value->institution->id;
                     $institutionName = $value->institution->name;
                     $institutionCode = $value->institution->code;
+                    $institutionClassId = $institutionClassId;
+                    $institutionClassName = $value->name;
 
                     if(!empty($value->education_grades)) {
                         foreach ($value->education_grades as $key => $gradeOptions) {
@@ -7086,8 +7091,8 @@ class InstitutionsController extends AppController
                     'institutions_id' => !empty($institutionId) ? $institutionId : NULL,
                     'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
                     'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
-                    'institutions_classes_id' => $entity->id,
-                    'institutions_classes_name' => $entity->name,
+                    'institutions_classes_id' => $institutionClassId,
+                    'institutions_classes_name' => $institutionClassName,
                     'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
                     'shift_options_name' => !empty($shift) ? $shift : NULL,
                     'institutions_classes_capacity' => !empty($capacity) ? $capacity : NULL,
@@ -7101,6 +7106,8 @@ class InstitutionsController extends AppController
                     'institution_class_students_openemis_no' => !empty($students) ? $students : NULL
                 ],
             ];
+
+            return $body;
 
     }
 }
