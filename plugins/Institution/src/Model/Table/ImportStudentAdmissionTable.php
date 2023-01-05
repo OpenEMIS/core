@@ -576,6 +576,7 @@ class ImportStudentAdmissionTable extends AppTable {
     }
 
     public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {
+       // echo "<pre>" ;print_r($clonedEntity);die('wow');
         $flipped = array_flip($columns);
         $key = $flipped['student_id'];
         $tempPassedRecord['data'][$key] = $originalRow[$key];
