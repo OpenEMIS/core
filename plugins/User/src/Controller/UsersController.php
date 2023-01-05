@@ -450,7 +450,7 @@ class UsersController extends AppController
                     $this->Users->aliasField('username') => $this->request->data['username']
                 ])->first();
             if ($userEntity->email == "") {
-                $message = __('Sorry, your email id is not registered in our database.');
+                $message = __('An email address is not registered for this account. Please contact your system administrator.');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             }
@@ -498,7 +498,7 @@ class UsersController extends AppController
                 ->to($userEmail)
                 ->subject($emailSubject)
                 ->send($emailMessage);
-            $message = __('A verification code has been sent to your mail.');
+            $message = __('A verification code has been sent to your registered email address.');
             $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
             $encodedUserData = $this->paramsEncode(['username' => $userEntity->username, 'email'=>$userEntity->email, 'password' => $this->request->data['password']]);
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $encodedUserData]);
@@ -530,7 +530,7 @@ class UsersController extends AppController
                     ])
                     ->first(); 
             if(empty($userEntity)){
-                $message = __('Sorry, your email id or username is not registered in our database.');
+                $message = __('An email address is not registered for this account. Please contact your system administrator.');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             }else{
@@ -549,7 +549,7 @@ class UsersController extends AppController
                             $code = null;
                             $this->SSO->doAuthentication($authenticationType, $code);
                         }else{
-                            $message = __('Please enter correct OTP.');
+                            $message = __('Incorrect OTP code entered. Please try again.');
                             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $this->request->params['pass'][0]]);
                         }
