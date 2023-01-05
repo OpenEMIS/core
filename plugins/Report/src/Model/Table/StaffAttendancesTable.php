@@ -148,10 +148,16 @@ class StaffAttendancesTable extends ControllerActionTable
                     
                     if(!empty($attendanceData))
                     {
-                        $lastVal = array_key_last($attendanceData);
+                        $i_max = 31;
+                        for( $i=1; $i<=$i_max; $i++ )
+                        { 
+                            
+                            $row['Day'.$i] = '';
+                            
+                        }
                         foreach($attendanceData as $key=>$value)
                         {
-                            if ($key == $lastVal && !empty($value->date) && !empty($value->time_in) && !empty($value->time_out)) {
+                            if (!empty($value->date) && !empty($value->time_in) && !empty($value->time_out)) {
                                 $getDate = $value->date;
                                 $getTimeIn = $value->time_in;
                                 $getTimeOut = $value->time_out;
@@ -159,35 +165,26 @@ class StaffAttendancesTable extends ControllerActionTable
                                 $timeIn = $getTimeIn->format('H:i:s');
                                 $timeOut = $getTimeOut->format('H:i:s');
                                 $time = $timeIn.'-'.$timeOut;
-
-                                
                             }
-                        }
-                    }
                         
-                    $i_max = 31;
-                    for( $i=1; $i<=$i_max; $i++ )
-                        { 
-                            
-                            $row['Day'.$i] = '';
-                            
-                        }
-                    if(!empty($dateValue)){
-                        $daytrim = date('d', strtotime($dateValue));
-                        $monthtrim = date('M', strtotime($dateValue));
-                        $yeartrim = date('Y', strtotime($dateValue));
-                        $day  = ltrim($daytrim, '0');
-                        $row['month']  = ltrim($monthtrim, '0');
-                        $row['year']  = ltrim($yeartrim, '0');
-                        $i_max=31;
-                        for( $i=1; $i<=$i_max; $i++ )
-                            { 
-                                if ($i == $day)
-                                {
-                                    $row['Day'.$i] = $time;
+                        if(!empty($dateValue)){
+                            $daytrim = date('d', strtotime($dateValue));
+                            $monthtrim = date('M', strtotime($dateValue));
+                            $yeartrim = date('Y', strtotime($dateValue));
+                            $day  = ltrim($daytrim, '0');
+                            $row['month']  = ltrim($monthtrim, '0');
+                            $row['year']  = ltrim($yeartrim, '0');
+                            $i_max=31;
+                            for( $i=1; $i<=$i_max; $i++ )
+                                { 
+                                    if ($i == $day)
+                                    {
+                                        $row['Day'.$i] = $time;
+                                    }
                                 }
-                            }
+                        }
                     }
+                }
                     //POCOR-5181 End
 
                     /*$StaffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
