@@ -34,14 +34,18 @@ class AuthenticationBehavior extends Behavior
     {
         $authenticationType = $event->subject()->request->query('authentication_type');
         $type = $event->subject()->request->query('type');
-        //echo"<pre>"; print_r($this->_table->action); die; 
         $typeValue = 'Authentication';
         $model = $this->_table;
         $alias = str_replace('Config', '', $model->alias());
-        $getData =  $event->data[0];
-        $arrayData = (array)$getData['entity'];
-        $unset_val = array_shift($arrayData);
-        $fieldType = $unset_val['code'];
+        //POCOR-7156 Starts
+        $fieldType = '';
+        if($this->_table->action == 'view' || $this->_table->action == 'edit'){
+            $getData =  $event->data[0];
+            $arrayData = (array)$getData['entity'];
+            $unset_val = array_shift($arrayData);
+            $fieldType = $unset_val['code'];
+        }
+        $this->model->controller->set('field_type', $fieldType);//POCOR-7156 Ends
         if ($authenticationType && $authenticationType != $alias) {
             return $model->controller->redirect([
                 'plugin' => 'Configuration',
@@ -49,8 +53,7 @@ class AuthenticationBehavior extends Behavior
                 'action' => 'Auth'.$authenticationType,
                 'authentication_type' => $authenticationType,
                 'type_value' => 'Authentication',
-                'type' => $type, 
-                'field_type' => $fieldType
+                'type' => $type
             ]);
         } elseif ($model->table() != 'config_items' && !$authenticationType) {
             return $model->controller->redirect([
@@ -59,36 +62,13 @@ class AuthenticationBehavior extends Behavior
                 'action' => 'Authentication',
                 'view',
                 'type_value' => 'Authentication',
-                'type' => $type, 
-                'field_type' => $fieldType
+                'type' => $type
             ]);
         }
-       
-        /*if($this->_table->action == 'view' || $this->_table->action == 'edit'){
-            $authenticationType = $event->subject()->request->query('authentication_type');
-            $type = $event->subject()->request->query('type');
-            //echo"<pre>"; print_r($this->_table->action); die; 
-            $typeValue = 'Authentication';
-            $model = $this->_table;
-            $alias = str_replace('Config', '', $model->alias());
-            $getData =  $event->data[0];
-            $arrayData = (array)$getData['entity'];
-            $unset_val = array_shift($arrayData);
-            $fieldType = $unset_val['code'];
-            return $model->controller->redirect([
-                'plugin' => 'Configuration',
-                'controller' => 'Configurations',
-                'action' => 'Authentication',
-                'view',
-                'type_value' => 'Authentication',
-                'type' => $type//, 
-                //'field_type' => $fieldType
-            ]);
-        }*/
     }
 
     public function buildSystemConfigFilters($action = null)
-    {
+    { 
         $toolbarElements = [
             ['name' => 'Configuration.idp_controls', 'data' => [], 'options' => []]
         ];
@@ -116,7 +96,6 @@ class AuthenticationBehavior extends Behavior
         $authenticationTypeOptions = [];
         //POCOR-7156 Starts add condition $action == 'view' || $action == 'edit'
         if($action == 'view' || $action == 'edit'){
-        //echo"<pre>"; print_r($this->model->request); die;
             $authenticationTypeOptions = [0 => 'Local', 'SystemAuthentications' => __('Other Identity Providers')];
             foreach ($authenticationTypeOptions as &$options) {
                 $options = __($options);
@@ -125,7 +104,6 @@ class AuthenticationBehavior extends Behavior
             $this->model->advancedSelectOptions($authenticationTypeOptions, $authenticationType);
             $authenticationTypeOptions = array_values($authenticationTypeOptions);
         }//POCOR-7156 Ends
-        
         $this->model->controller->set('authenticationTypeOptions', $authenticationTypeOptions);
         $controlElement = $toolbarElements[0];
         $controlElement['data'] = ['typeOptions' => $typeOptions];
