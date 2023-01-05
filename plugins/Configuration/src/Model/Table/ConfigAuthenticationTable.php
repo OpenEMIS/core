@@ -26,16 +26,6 @@ class ConfigAuthenticationTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('search', false);
 
-        /*$authenticationRecord = $this
-            ->find()
-            ->where([$this->aliasField('type') => 'Authentication'])
-            ->first();
-        
-        $id = $authenticationRecord->id;
-        $this->id = $id;
-        $this->authenticationType = $authenticationRecord->value;
-
-        */
         $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
         $this->options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
             ->where([
@@ -68,12 +58,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
         $this->field('value_selection', ['visible' => ['index'=>false, 'view'=>true, 'edit'=>true]]);
         $this->field('default_value', ['visible' => ['view'=>true]]);
 
-        /*if ($this->action == 'index') {
-            $url = $this->url('view');
-            $url[1] = $this->paramsEncode(['id' => $this->id]);
-            $this->controller->redirect($url);
-        } else*/if ($this->action == 'view') {
-            //echo "<pre>"; print_r($event); die;
+        if($this->action == 'view') {
             if (isset($extra['toolbarButtons']['back'])) {
                 unset($extra['toolbarButtons']['back']);
             }
@@ -84,10 +69,9 @@ class ConfigAuthenticationTable extends ControllerActionTable
     }
 
     public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
-    {
+    { //POCOR-7156 starts
         if (in_array($action, ['edit', 'add'])) {
             $id= $this->paramsDecode($request->params['pass'][1]);
-            //$id = $this->id;
             if (!empty($id)) {
                 $entity = $this->get($id);
                 $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
@@ -111,7 +95,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
                     $attr['onChangeReload'] = true;
                 }
             }
-        }
+        }//POCOR-7156 ends
         return $attr;
     }
 
@@ -132,14 +116,14 @@ class ConfigAuthenticationTable extends ControllerActionTable
     }
 
     public function onGetName(Event $event, Entity $entity)
-    {
+    {   //POCOR-7156 starts
         if($entity->code == 'enable_local_login'){
             return __('Authentication Provider');
-        }
+        }//POCOR-7156 ends
     }
 
     public function onGetValue(Event $event, Entity $entity)
-    {
+    {   //POCOR-7156 starts
         if($entity->code == 'enable_local_login'){
             return __('Local');
         }elseif($entity->code == 'two_factor_authentication'){
@@ -148,22 +132,29 @@ class ConfigAuthenticationTable extends ControllerActionTable
             }else{
                 return __('Disable');
             }
-        }else{
+        }else{//POCOR-7156 ends
             return __($this->options[$entity->value]);
         }
     }
 
     public function onGetDefaultValue(Event $event, Entity $entity)
     {
-        return __($this->options[$entity->default_value]);
+        if($entity->code == 'enable_local_login'){
+            return __($this->options[$entity->default_value]);
+        }elseif($entity->code == 'two_factor_authentication'){
+            if($entity->default_value == 1){
+                return __('Enable');
+            }else{
+                return __('Disable');
+            }
+        }
     }
-
+    //POCOR-7156 starts
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
             ->find('visible')
             ->where([$this->aliasField('type') => 'Authentication', $this->aliasField('visible') => 1]);
-        //echo "<pre>"; print_r($query); die;
-    }
+    }//POCOR-7156 ends
 
 }

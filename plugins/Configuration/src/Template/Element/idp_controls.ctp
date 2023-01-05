@@ -10,7 +10,7 @@
 			]);
 			$template = $this->ControllerAction->getFormTemplate();
 			$this->Form->templates($template);
-
+			//echo"<pre>"; print_r($this->request); die;
 			echo $this->Form->input('field_option', array(
 				'class' => 'form-control',
 				'label' => false,

@@ -63,46 +63,20 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 			echo $this->element('OpenEmis.alert');
 
 			echo $this->Form->create('Users', [
-				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'sendOtp'],
+				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp',$encryptdata],
 				'class' => 'form-horizontal'
 			]);
 			if ($enableLocalLogin) {
-				echo $this->Form->input('email', ['placeholder' => __('OTP'), 'label' => false, 'value' => '']);
-				// echo $this->Form->input('password', ['placeholder' => __('Password'), 'label' => false, 'value' => $password]);
+				echo $this->Form->input('otp', ['placeholder' => __('OTP'), 'label' => false, 'minLength' => 6, 'maxLength'=> 6, 'required'=>'required']);
+				echo $this->Form->hidden('username', ['placeholder' => __('Username'), 'label' => false, 'value' => $username]);
+				echo $this->Form->hidden('password', ['placeholder' => __('Password'), 'label' => false, 'value' => $password]);
 			}
 			?>
 			<div class="form-group">
 				<?php if ($enableLocalLogin) : ?>
-				<?= $this->Form->button(__('Login'), ['type' => 'submit', 'name' => 'submit', 'value' => 'login', 'class' => 'btn btn-primary btn-login']) ?>
+				<?= $this->Form->button(__('Submit'), ['type' => 'submit', 'name' => 'submit', 'value' => 'login', 'class' => 'btn btn-primary btn-login']) ?>
 				<?php endif; ?>
-				<button class="hidden" value="reload" name="submit" type="submit" id="reload">reload</button>
 			<?= $this->Form->end() ?>
-
-			<div class="links-wrapper">
-				<a target="_self" href="./ForgotUsername"><?php echo __('Forgot username?') ?></a>
-				<a target="_self" href="./ForgotPassword"><?php echo __('Forgot password?') ?></a>
-			</div>
-
-
-			<?php
-				if ($authentications) :
-			?>
-
-			<?php if ($authentications && $enableLocalLogin) : ?>
-			<hr />
-				<?= '<center>'.__('OR').'</center>'?>
-			<hr />
-			<?php endif;?>
-				<div class="input-select-wrapper sso-options">
-				<?php
-					echo $this->Form->input('idp', [
-						'options' => $authentications,
-						'label' => false,
-						'onchange' => 'window.document.location.href=this.options[this.selectedIndex].value;'
-					]);
-				?>
-				</div>
-			<?php endif; ?>
 
 			</div>
 		</div>
