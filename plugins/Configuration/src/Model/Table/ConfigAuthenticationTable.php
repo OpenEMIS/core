@@ -69,7 +69,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
     }
 
     public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
-    { //POCOR-7156 starts
+    {   //POCOR-7156 starts
         if (in_array($action, ['edit', 'add'])) {
             $id= $this->paramsDecode($request->params['pass'][1]);
             if (!empty($id)) {
@@ -114,13 +114,13 @@ class ConfigAuthenticationTable extends ControllerActionTable
     {
         return __($entity->label);
     }
-
+    //POCOR-7156 starts
     public function onGetName(Event $event, Entity $entity)
-    {   //POCOR-7156 starts
+    {   
         if($entity->code == 'enable_local_login'){
             return __('Authentication Provider');
-        }//POCOR-7156 ends
-    }
+        }
+    }//POCOR-7156 ends
 
     public function onGetValue(Event $event, Entity $entity)
     {   //POCOR-7156 starts
@@ -156,5 +156,4 @@ class ConfigAuthenticationTable extends ControllerActionTable
             ->find('visible')
             ->where([$this->aliasField('type') => 'Authentication', $this->aliasField('visible') => 1]);
     }//POCOR-7156 ends
-
 }
