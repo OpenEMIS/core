@@ -577,8 +577,6 @@ class ImportStudentAdmissionTable extends AppTable {
 
     public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) 
     {
-        //echo "<pre>" ;print_r($clonedEntity->institution_class_id);die('wow');
-
         //POCOR-6995 Start
         $institutionClass =  TableRegistry::get('Institution.InstitutionClasses');
         /*$classIds = [];
