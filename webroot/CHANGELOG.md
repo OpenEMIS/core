@@ -1,4 +1,4 @@
-### [3.77.0] - 2023-01-06
+### [3.77.1] - 2023-01-06
 - Implemented: Add School Type, Grade, and Subject filters to Custom Reports
 - Implemented: Develop a function for two factor authentication (email)
 - Bug Fixed: Institutions>Attendance>Students: Unable to change absence>excused/unexcused to other types of attendances
