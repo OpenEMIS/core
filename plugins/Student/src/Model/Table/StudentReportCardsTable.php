@@ -55,8 +55,30 @@ class StudentReportCardsTable extends ControllerActionTable
        
         $InstitutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
         $StudentGuardians = TableRegistry::get('student_guardians');
+
+        //Start POCOR-7055
+        if ($user['is_student'] == 1 && $user['is_guardian'] == 1 && $user['is_staff'] == 1) {
+            if ($this->controller->name == 'Profiles') {
+                $query
+                ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
+                ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED,
+                    $this->aliasField('student_id') => $user['id'] 
+                ])
+                ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
+            }
+            $session = $this->request->session();
+            $session = $this->request->session();//POCOR-6267
+            $student_id = $session->read('Student.Students.id');
+
+            $query
+            ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
+            ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED,
+                $this->aliasField('student_id') => $student_id 
+            ])
+            ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
+        }//End POCOR-7055
         
-        if ($user['is_student'] == 1) {
+        else if ($user['is_student'] == 1) {
             $query
             ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
             ->where([$this->aliasField('student_id') => $user['id']])   //  POCOR-5910
@@ -96,21 +118,29 @@ class StudentReportCardsTable extends ControllerActionTable
     {
         $this->setFieldOrder(['academic_period_id', 'report_card_id', 'institution_id', 'institution_class_id', 'education_grade_id']);
     }
-
+        
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-   
+          
         $downloadAccess = false;
         if ($this->controller->name == 'Students') {
             $downloadAccess = $this->AccessControl->check(['Students', 'ReportCards', 'download']);
+            $downloadExcel = $this->AccessControl->check(['Students', 'ReportCard', 'download']);
         } else if ($this->controller->name == 'Directories') {
             $downloadAccess = $this->AccessControl->check(['Directories', 'StudentReportCards', 'download']);
+            $downloadExcel = $this->AccessControl->check(['Directories', 'StudentReportCard', 'download']);
         } else if ($this->controller->name == 'Profiles') {
             $downloadAccess = $this->AccessControl->check(['Profiles', 'StudentReportCards', 'download']);
-            unset($buttons['view']);
+            $downloadExcel = $this->AccessControl->check(['Profiles', 'StudentReportCard', 'download']);
+            // unset($buttons['view']);
         }
-    
+        /**POCOR-6845 starts - Added condition to get download button when logged in as Guardian*/  
+        else if ($this->controller->name == 'GuardianNavs') {
+            $downloadAccess = $this->AccessControl->check(['GuardianNavs', 'StudentReportCards', 'download']);
+            $downloadExcel = $this->AccessControl->check(['GuardianNavs', 'StudentReportCard', 'download']);
+        }
+        /**POCOR-6845 ends*/
         if ($downloadAccess) {
             $params = [
                 'report_card_id' => $entity->report_card_id,
@@ -122,12 +152,33 @@ class StudentReportCardsTable extends ControllerActionTable
 
             $url = $this->url('downloadPdf');
             $url[1] = $this->paramsEncode($params);
+
             $buttons['downloadPdf'] = [
-                'label' => '<i class="fa kd-download"></i>'.__('Download'),
+                'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
                 'attr' => ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false],
                 'url' => $url
             ];
         }
+
+        if ($downloadExcel) {
+            $params = [
+                'report_card_id' => $entity->report_card_id,
+                'student_id' => $entity->student_id,
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'education_grade_id' => $entity->education_grade_id
+            ];
+
+            $url = $this->url('download');
+            $url[1] = $this->paramsEncode($params);
+
+            $buttons['download'] = [
+                'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+                'attr' => ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false],
+                'url' => $url
+            ];
+        }
+
         return $buttons;
     }
 
@@ -143,4 +194,5 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'ReportCards');
     }
+
 }

@@ -283,7 +283,7 @@ class ProfilesTable extends ControllerActionTable
 			->toArray();
        
 
-        $reportCardOptions = ['-1' => '-- '.__('Select Report Card').' --'] + $reportCardOptions;
+        $reportCardOptions = ['-1' => '-- '.__('Select Profile').' --'] + $reportCardOptions; //POCOR-6856
         $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//$where[$this->InstitutionReportCards->aliasField('report_card_id')] = $selectedReportCard;
@@ -671,7 +671,7 @@ class ProfilesTable extends ControllerActionTable
         if ($hasTemplate) {
             $this->addReportCardsToProcesses($params['academic_period_id'], $params['report_card_id'], $params['institution_id']);
             $this->triggerGenerateAllReportCardsShell($params['academic_period_id'], $params['report_card_id'], $params['institution_id']);
-            $this->Alert->warning('ReportCardStatuses.generate');
+            $this->Alert->warning('ReportCardStatuses.generateProfile');  //POCOR-6856
         } else {
             $url = $this->url('index');
             $this->Alert->warning('ReportCardStatuses.noTemplate');

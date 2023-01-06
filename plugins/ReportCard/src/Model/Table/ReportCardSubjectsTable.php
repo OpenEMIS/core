@@ -36,10 +36,9 @@ class ReportCardSubjectsTable extends ControllerActionTable
         $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-        //echo "<pre>";print_r($options);die();
         if ($options['user']['super_admin'] != 1) {
            $orWhere[$staffSubject->aliasField('staff_id')] = $staffId;
-           $orWhere[$InstitutionClasses->aliasField('staff_id')] = $staffId;
+           //$orWhere[$InstitutionClasses->aliasField('staff_id')] = $staffId;//POCOR-6809 - commented condition as it's not compulsory to have same staff for class and subject
         }
         return $query
                 ->select([
@@ -47,7 +46,8 @@ class ReportCardSubjectsTable extends ControllerActionTable
                     'code' => $this->EducationSubjects->aliasField('code'),
                     'name' => $InstitutionSubjects->aliasField('name'),
                     'id' => $InstitutionSubjects->aliasField('id'),
-                    $this->EducationSubjects->aliasField('order')
+                    $this->EducationSubjects->aliasField('order'),
+                    'staff_id' => $staffSubject->aliasField('staff_id'),//POCOR-6734
                 ])
                 ->innerJoinWith('EducationSubjects')
                 ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
@@ -64,7 +64,7 @@ class ReportCardSubjectsTable extends ControllerActionTable
                     $InstitutionClasses->aliasField('id = ') . $InstitutionClassSubjects->aliasField('institution_class_id'),
                 ])
                 ->where([
-                    $this->aliasField('report_card_id') => $reportCardId
+                    $this->aliasField('report_card_id') => $reportCardId,
                 ])
                 ->orWhere([$orWhere])
                 ->group([$InstitutionSubjects->alias('name')])

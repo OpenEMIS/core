@@ -100,11 +100,12 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $academic_period = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $getyear = $academic_period->find('all')
-                   ->select(['name'=>$academic_period->aliasField('start_year')])
+                   ->select(['end_year','name'=>$academic_period->aliasField('start_year')]) //POCOR-6854
                    ->where(['id'=>$academicPeriodId])
                    ->limit(1);
         foreach($getyear->toArray() as $val) {
             $year  = $val['name'];
+            $yearSecond  = $val['end_year']; //POCOR-6854
         }
         $institutionId = $requestData->institution_id;
         $gradeId = $requestData->education_grade_id;
@@ -122,6 +123,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $where[$this->aliasField('institution_id')] = $institutionId;
         
         $date =  '"'.$year.'-'.$month.'%"';
+        $dateSecond =  '"'.$yearSecond.'-'.$month.'%"';  //POCOR-6854
         $query
             ->select([
                 $this->aliasField('student_id'),
@@ -179,17 +181,19 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             ->InnerJoin([$absentDays->alias() => $absentDays->table()],
                 [$absentDays->aliasField('student_id = ') . $this->aliasField('student_id')]
             )
-            ->Where($where)
             ->andWhere([$absentDays->aliasField('start_date LIKE '.$date)])
+            ->orWhere([$absentDays->aliasField('start_date LIKE '.$dateSecond)])  //POCOR-6854
+            ->Where($where)
             ->group([$this->aliasField('student_id'),
                 $absentDays->aliasField('student_id')]);
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
-                use($date)
+                use($date,$dateSecond)
             {
-                return $results->map(function ($row) use($date)
+                return $results->map(function ($row) use($date,$dateSecond)
                 { 
                     $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
                     $row['Absent_Date'] = $date;
+                    $row['Absent_Date_Second'] = $dateSecond;  //POCOR-6854
                     $alldate = $row['absent_start'];
                     $split = explode(',', $alldate);
                     $i_max = 31;
@@ -328,14 +332,16 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $userid =  $entity->student_id;
         $institutionId =  $entity->institution_id;
         $Absent_Date =  $entity->Absent_Date;
+        $Absent_Date_Second =  $entity->Absent_Date_Second; //POCOR-6854
         $Institutionstudent = TableRegistry::get('Institution.InstitutionStudentAbsences');
         $studentleave = TableRegistry::get('Institution.InstitutionStudentAbsenceDays');
         $absenceDays = $studentleave->find()
             ->select([
                 'days' => "SUM(".$studentleave->aliasField('absent_days').")"
             ])
-            ->where([$studentleave->aliasField('student_id') => $userid])
-            ->andWhere([$studentleave->aliasField('start_date LIKE '.$Absent_Date)]);
+            ->andWhere([$studentleave->aliasField('start_date LIKE '.$Absent_Date)])
+            ->orWhere([$studentleave->aliasField('start_date LIKE '.$Absent_Date_Second)])  //POCOR-6854
+            ->where([$studentleave->aliasField('student_id') => $userid]);
             if($absenceDays!=null){
                 $data = $absenceDays->toArray();
                 $entity->total_absence_days = '';

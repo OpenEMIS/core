@@ -128,6 +128,13 @@ class InstitutionsProfileTable extends ControllerActionTable
                     'attr' => $indexAttr,
                     'url' => $downloadPdfUrl
                 ];
+                //START:POCOR-6793
+                $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
+                $buttons['download'] = [
+                    'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+                    'attr' => $indexAttr,
+                    'url' => $downloadUrl
+                ];
             }
 
             // Generate button, all statuses
@@ -462,7 +469,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         if ($hasTemplate) {
             $this->addReportCardsToProcesses($params['academic_period_id'], $params['report_card_id'], $params['institution_id']);
             $this->triggerGenerateAllReportCardsShell($params['academic_period_id'], $params['report_card_id'], $params['institution_id']);
-            $this->Alert->warning('ReportCardStatuses.generate');
+            $this->Alert->warning('ReportCardStatuses.generateProfile');
         }
 
         $event->stopPropagation();

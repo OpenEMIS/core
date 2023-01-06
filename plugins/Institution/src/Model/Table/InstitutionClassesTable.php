@@ -270,24 +270,28 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         $action = $this->action;
         //Start:POCOR-6644
-    	if(!isset($extra['entity']->institution_shift_id) || empty($extra['entity']->institution_shift_id) || ($extra['entity']->institution_shift_id == "")){
-    		
-    	}else{ 
+        if(!isset($extra['entity']->institution_shift_id) || empty($extra['entity']->institution_shift_id) || ($extra['entity']->institution_shift_id == "")){
+            
+        }else{ 
             $institutionShiftId = $extra['entity']->institution_shift_id;
             if ($action != 'add') {
                 $staffOptions = [];
                 $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
                 $institutionId = $extra['institution_id'];
-                if ($selectedAcademicPeriodId > -1) {	
+                if ($selectedAcademicPeriodId > -1) {   
                     if ($action == 'index') {
                         $action = 'view';
-                    }
-                    $staffOptions = $this->getStaffOptions($institutionId, $action, $selectedAcademicPeriodId);
+                    }                
                 }
-                $this->fields['staff_id']['options'] = $staffOptions;
-                $this->fields['staff_id']['select'] = false;
+                /** POCOR-6721 starts - due to getStaffOptions function Institutions>Academic>Classes page was loding long while viewing class */
+                if ($action == 'edit') {
+                    $staffOptions = $this->getStaffOptions($institutionId, $action, $selectedAcademicPeriodId);
+                    $this->fields['staff_id']['options'] = $staffOptions;
+                    $this->fields['staff_id']['select'] = false;
+                }
+                /** POCOR-6721 ends */
             }
-    	}
+        }
         //End:POCOR-6644
     }
 
@@ -411,7 +415,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     $newStudents[$student['student_id']] = $student;
                 }
                 $institutionClassId = $entity->id;
-
+                $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');//POCOR-6768
                 $existingStudents = $this->ClassStudents
                     ->find('all')
                     ->select([
@@ -428,17 +432,35 @@ class InstitutionClassesTable extends ControllerActionTable
                 foreach ($existingStudents as $key => $classStudentEntity) {
                     if (!array_key_exists($classStudentEntity->student_id, $newStudents)) { // if current student does not exists in the new list of students
                         $this->ClassStudents->delete($classStudentEntity);
+                        /** POCOR-6768 starts - removing student from institution_subject_students which is unassigned from class*/ 
+                        $SubjectStudents->deleteAll([
+                            $SubjectStudents->aliasField('institution_class_id') => $institutionClassId,
+                            $SubjectStudents->aliasField('student_id') => $classStudentEntity->student_id,
+                        ]);
+                        /**POCOR-6768 ends*/
                     } else { // if student exists, then remove from the array to get the new student records to be added
-                        unset($newStudents[$classStudentEntity->student_id]);
+                        unset($newStudents[$classStudentEntity->student_id]); 
                     }
                 }
 
                 foreach ($newStudents as $key => $student) {
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
-                    $this->ClassStudents->save($newClassStudentEntity);
+                    $store = $this->ClassStudents->save($newClassStudentEntity);
+                    if ($store) {
+                        /** POCOR-6768 starts- updating student's class in institution_subject_students table which is reassigning into a class*/ 
+                        $SubjectStudents->updateAll(['institution_class_id' => $newClassStudentEntity->institution_class_id], ['id' => $newClassStudentEntity->id]);
+                        /**POCOR-6768 ends*/
+                    }
                 }
             }
-
+            /**POCOR-6940 starts - modified condition when bulk student unassigned*/ 
+            else {
+                $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+                $SubjectStudents->deleteAll([
+                    $SubjectStudents->aliasField('institution_class_id') => $entity->id
+                ]);
+            }
+            /**POCOR-6940 ends*/ 
             // POCOR-5436 ->Webhook Feature class (update) -- start
             $bodyData = $this->find('all',
                         [ 'contain' => [
@@ -1284,6 +1306,8 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         /*POCOR-6566 starts*/
         $classId = $entity->id;
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
         $institutionId = $entity->institution_id;
         $periodId = $entity->academic_period_id;
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
@@ -1311,7 +1335,8 @@ class InstitutionClassesTable extends ControllerActionTable
                                     $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
                                     $InstitutionClassStudents->aliasField('institution_id') => $institutionId,
                                     $InstitutionClassStudents->aliasField('academic_period_id') => $periodId,
-                                    $InstitutionClassStudents->aliasField('education_grade_id IN') => $grades
+                                    $InstitutionClassStudents->aliasField('education_grade_id IN') => $grades,
+                                    $InstitutionClassStudents->aliasField('student_status_id IN') => [$statuses['GRADUATED'], $statuses['PROMOTED'],$statuses['CURRENT'], $statuses['REPEATED']]  //POCOR-6733
                                 ]);
         $count = 0;
         if (!empty($totalStudentRecord)) {
@@ -1352,7 +1377,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $totalMaleStudentRecord = $InstitutionClassStudents->find()
                                 ->contain('Users')
                                 ->matching('StudentStatuses', function ($q) {
-                                    return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                                    return $q->where(['StudentStatuses.code IN' => ['CURRENT','REPEATED','PROMOTED','GRADUATED']]);
                                 })
                                 ->where([
                                     $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
@@ -1400,7 +1425,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $totalFemaleStudentRecord = $InstitutionClassStudents->find()
                                 ->contain('Users')
                                 ->matching('StudentStatuses', function ($q) {
-                                    return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                                    return $q->where(['StudentStatuses.code IN' => ['CURRENT','REPEATED','PROMOTED','GRADUATED']]);
                                 })
                                 ->where([
                                     $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
@@ -1636,15 +1661,15 @@ class InstitutionClassesTable extends ControllerActionTable
                                     [$Staff->aliasField('end_date IS NULL')]
                                 ]
                             ])
-
+                            ->group([$Staff->Users->aliasField('id')]) //POCOR-6735
                             ->order([
                                 $Staff->Users->aliasField('first_name')
                             ]);
-                            if($homeTeacher) {
+                            //if($homeTeacher) {
                                 $query  ->matching('Positions', function ($q) {
                                     return $q->where(['Positions.is_homeroom' => 1]);
                                 });
-                            }
+                            //}   //POCOR-7014
                             $query->formatResults(function ($results) {
                                 $returnArr = [];
                                 foreach ($results as $result) {

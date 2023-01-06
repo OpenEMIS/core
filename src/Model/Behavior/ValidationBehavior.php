@@ -2638,11 +2638,16 @@ class ValidationBehavior extends Behavior
 
     public static function checkLocalLogin($field, array $globalData)
     {
-        if ($field == 1) {
+        //POCOR-7156 Starts
+        if($globalData['data']['label'] == 'Two Factor Authentication'){
             return true;
-        } else {
-            $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
-            return count($authentications) > 0;
+        }else{//POCOR-7156 Ends
+            if ($field == 1) {
+                return true;
+            } else {
+                $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
+                return count($authentications) > 0;
+            }
         }
     }
 
@@ -3355,5 +3360,24 @@ class ValidationBehavior extends Behavior
         }
         return true;
     }
-    /*POCOR-6348 ends*/
+
+    /*POCOR-6971 */
+
+    public static function checkShiftPresent($field, array $globalData)
+    {
+        $data = $globalData['data'];
+        $shift = $data['shift_id'];
+        $shiftOptions = TableRegistry::get('shift_options');
+        $query = $shiftOptions->find()
+                ->where([
+                    'id' => $globalData['data']['id']
+                ])
+                ->count();
+
+        if ($query < 0) {
+            return false;
+        }
+
+        return true;
+    }
 }

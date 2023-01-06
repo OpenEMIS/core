@@ -28,7 +28,7 @@ class PerformanceTable extends AppTable
          * Initializing the dependencies
          * @param array $config
          */
-        $this->table('report_assessment_missing_mark_entry');
+        $this->table('summary_assessment_item_results');//POCOR-6848-changed main table as suggest by client
         parent::initialize($config);
 
         //associations
@@ -60,6 +60,7 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('assessment_period_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('academic_term', ['type' => 'hidden', 'attr' => ['required' => true]]);
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
@@ -100,6 +101,7 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('count_students', ['type' => 'hidden']);
         $this->ControllerAction->field('count_marked_students', ['type' => 'hidden']);
         $this->ControllerAction->field('missing_marks', ['type' => 'hidden']);
+        $this->ControllerAction->field('academic_term', ['type' => 'hidden', 'attr' => ['required' => true]]);
     }
 
     /**
@@ -335,6 +337,44 @@ class PerformanceTable extends AppTable
     }
 
     /**
+     * Fetching Academic Term's options list based on grade id.
+     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+     * @param  \Cake\Network\Request  $request
+     * @return attr
+     */
+    public function onUpdateFieldAcademicTerm(Event $event, array $attr, $action, Request $request)
+    {
+        $assessmentPeriodId = $request->data[$this->alias()]['assessment_period_id'];
+        if ($assessmentPeriodId > 0) {
+            $condition[$this->AssessmentPeriods->aliasField('academic_term')] = $assessmentPeriodId;
+        }
+        
+        $academicTermList = $this->AssessmentPeriods
+                        ->find('list', [
+                            'keyField' => 'academic_term',
+                            'valueField' => 'academic_term'
+                        ])
+                        ->where([
+                            $condition, 
+                            $this->AssessmentPeriods->aliasField('academic_term !=') => 'NULL'
+                        ])
+                        ->toArray();
+     
+        $attr['type'] = 'select';
+        $attr['select'] = false;
+        if (count($academicTermList) > 1) {
+            $assessmentTermOption = ['' => '-- ' . _('Select') . ' --', 0 => _('All Terms')] + $academicTermList;
+        } else {
+            $assessmentTermOption = ['' => '-- ' . __('Select') . ' --'] + $academicTermList;
+        }
+        $attr['options'] = $assessmentTermOption;
+        $attr['onChangeReload'] = true;
+
+        return $attr;
+
+    }
+
+    /**
      * Fetching Assessment Period's report content
      *
      * @param  \ArrayObject  $settings
@@ -351,6 +391,7 @@ class PerformanceTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $superAdmin = $requestData->super_admin;
         $userId = $requestData->user_id;
+        $academicTerm = $requestData->academic_term;//POCOR-6848
         $institutionIds = [];
         $conditions = [];
         if ($areaId > 0) {
@@ -379,8 +420,12 @@ class PerformanceTable extends AppTable
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
-
-         $query
+        /**POCOR-6848 starts - added condition to fetch data on the basis of selected academic term*/ 
+        if (!empty($academicTerm)) {
+            $conditions[$this->aliasField('academic_term')] = $academicTerm;
+        }
+        /**POCOR-6848 ends*/
+        $query
             ->select([
                 'academic_period_name' => $this->aliasField('academic_period_name'),
                 'institution_code' => $this->aliasField('institution_code'),
@@ -390,12 +435,14 @@ class PerformanceTable extends AppTable
                 'academic_term' => 'AssessmentPeriods.academic_term',
                 'assessment_name' => $this->aliasField('assessment_name'),
                 'assessment_period_name' => $this->aliasField('assessment_period_name'),
+                'class_name' => $this->aliasField('institution_class_name'),//POCOR-6848
                 'subject_name' => $this->aliasField('subject_name'),
                 'total_students' =>  $this->aliasField('count_students'),
-                'marks_entered' => $this->aliasField('count_marked_students')
+                'marks_entered' => $this->aliasField('count_marked_students'),
+                'missing_marks' => $this->aliasField('missing_marks'),//POCOR-6848
             ])
             ->contain(['AssessmentPeriods'])
-            ->where([$conditions]);
+            ->where([$conditions,]);
     }
 
     /**
@@ -463,7 +510,14 @@ class PerformanceTable extends AppTable
             'type' => 'string',
             'label' => 'Assessment Period Name',
         ];
-
+        /**POCOR-6848 starts - added class name column into the report*/ 
+        $newFields[] = [
+            'key' => 'class_name',
+            'field' => 'class_name',
+            'type' => 'string',
+            'label' => 'Class Name',
+        ];
+        /**POCOR-6848 ends*/ 
         $newFields[] = [
             'key' => 'EducationSubjects.name',
             'field' => 'subject_name',
@@ -484,7 +538,14 @@ class PerformanceTable extends AppTable
             'type' => 'string',
             'label' => 'Marks Entered',
         ];
-
+        /**POCOR-6848 starts - added missing marks column into the report*/
+        $newFields[] = [
+            'key' => 'missing_marks',
+            'field' => 'missing_marks',
+            'type' => 'string',
+            'label' => 'Missing Marks',
+        ];
+        /**POCOR-6848 ends*/
         $fields->exchangeArray($newFields);
     }
 }

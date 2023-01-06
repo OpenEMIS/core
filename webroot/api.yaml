@@ -1828,6 +1828,46 @@ paths:
             $ref: ""
         "405":
           description: "Invalid Input"
+    # author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    # POCOR-6870 - modified 6806 ticket's api desciprtion in this ticket
+    get:
+      tags:
+      - "Assessments"
+      summary: "Get Assessment Item Results"
+      description: "Get Assessment Item Results"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "controllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom OR Results" # POCOR-6912:modified controllerAction description 
+        type: string
+        required: true
+      - name: "_finder"
+        in: "query"
+        description: "eg: assessmentGradesOptions[academic_period_id:31;education_grade_id:104;education_subject_id:60;student_id:11005]" # POCOR-6912:removed assessment_grading_option_id from mandatory field as suggested by client
+        type: string
+        required: true
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
           
   /restful/v2/Institution-InstitutionClassStudents.json:
     get:
@@ -2085,8 +2125,46 @@ paths:
         "404":
           description: "404 Not Found"
           
-  
-
+  /restful/v2/Institution-InstitutionSubjectStaff.json:
+    get:
+      tags:
+      - "Institution"
+      summary: "Get Staff's Subjects detail"
+      description: "Get staff's subjects details on the bases of institution"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "controllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - name: "_finder"
+        in: "query"
+        description: "eg: staffInstitutionSubjects[staff_id:578;institution_id:6]"
+        type: string
+        required: true
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
 definitions:
   login:
     type: "object"
@@ -2521,8 +2599,8 @@ definitions:
         example: 6
       institution_position_id:
         example: 220
-      security_group_user_id:
-       example: "1ec69383-7703-43fb-a568-d87bb1da2949"
+      #security_group_user_id:
+       #example: "1ec69383-7703-43fb-a568-d87bb1da2949"
       modified_user_id:
        example: 
       modified:
@@ -3363,6 +3441,8 @@ definitions:
         example: "69"
       student_id: 
         example: 11025
+      institution_classes_id: 
+        example: 550
         
   Institution-StudentBehaviours:
     type: "object"

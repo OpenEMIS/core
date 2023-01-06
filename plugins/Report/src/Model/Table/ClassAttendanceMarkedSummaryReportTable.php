@@ -267,19 +267,20 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $subjects = $requestData->subjects;
         $education_grade_id = $requestData->education_grade_id;
         $attendance_type = $requestData->attendance_type; 
-        $periods = $requestData->periods; 
+        //$periods = $requestData->periods; 
         $areaId = $requestData->area_education_id;
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
-        $attendanceTypeCode = '';
-        if (!empty($attendance_type)) {
-                $attendanceTypeData = $StudentAttendanceTypes
-                                        ->find()
-                                        ->where([
-                                            $StudentAttendanceTypes->aliasField('id') => $attendance_type
-                                        ])
-                                        ->toArray();
-                $attendanceTypeCode = $attendanceTypeData[0]->code;
-            }
+        // POCOR-6967
+        // $attendanceTypeCode = '';
+        // if (!empty($attendance_type)) {
+        //         $attendanceTypeData = $StudentAttendanceTypes
+        //                                 ->find()
+        //                                 ->where([
+        //                                     $StudentAttendanceTypes->aliasField('id') => $attendance_type
+        //                                 ])
+        //                                 ->toArray();
+        //         $attendanceTypeCode = $attendanceTypeData[0]->code;
+        //     }
         $this->reportStartDate = (new Date($requestData->report_start_date))->format('Y-m-d');
         $this->reportEndDate = (new Date($requestData->report_end_date))->format('Y-m-d');
 
@@ -299,9 +300,23 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         }
         }
 
-        if ($periods != 0) {
-            $where['StudentAttendanceMarkedRecords.period'] = $periods;
+        
+        $institutionCondition;
+        $educationCondition;
+
+        if ($institution_id != 0) {
+            $institutionCondition [] = 'AND report_student_attendance_summary.institution_id = '.$institution_id.'';   
         }
+
+        if ($education_grade_id != -1) {
+            $educationCondition [] = 'report_student_attendance_summary.education_grade_id = '.$education_grade_id.' AND';
+        }
+
+
+
+        // if ($periods != 0) {
+        //     $where['StudentAttendanceMarkedRecords.period'] = $periods;
+        // }
         if ($areaId != -1) {
             $where['Institutions.area_id'] = $areaId;
         }
@@ -312,10 +327,10 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
         $Institutions = TableRegistry::get('Institution.Institutions');
         $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
-        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');       
+        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords'); 
 
-        if ($attendanceTypeCode == 'DAY') {
-            $query
+        // Start POCOR-7061 query updated client requirement 
+        /*$query
             ->select([
                 $this->aliasField('id'),
                 'academic_period_id' => 'ClassAttendanceMarkedSummaryReport.academic_period_id',
@@ -339,6 +354,8 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 'total_female_students' => 'ClassAttendanceMarkedSummaryReport.total_female_students',
                 'total_students' => $query->newExpr('ClassAttendanceMarkedSummaryReport.total_male_students + ClassAttendanceMarkedSummaryReport.total_female_students'),
                 'period' => 'StudentAttendanceMarkedRecords.period',
+                'subject_id' => 'InstitutionSubjects.id',
+                'subject_name' => 'InstitutionSubjects.name',
                 'total_marked' => $query->func()->count('StudentAttendanceMarkedRecords.period')
             ])
             ->contain([
@@ -361,6 +378,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 ],
                 'Staff' => [
                     'fields' => [
+                        'Staff.id',
                         'Staff.openemis_no',
                         'Staff.first_name',
                         'Staff.middle_name',
@@ -373,7 +391,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             ['StudentAttendanceMarkedRecords' => 'student_attendance_marked_records'],
             [
                 'StudentAttendanceMarkedRecords.institution_class_id = '. $this->aliasField('id'),
-                'StudentAttendanceMarkedRecords.subject_id' => 0
+                'StudentAttendanceMarkedRecords.period'
             ]
             )
             ->leftJoin(
@@ -382,79 +400,6 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 'InstitutionClassGrades.institution_class_id = '. $this->aliasField('id')
             ]
             )
-            ->where([
-                'ClassAttendanceMarkedSummaryReport.academic_period_id' => $academic_period_id,
-                $StudentAttendanceMarkedRecords->aliasField('date >= "') . $this->reportStartDate . '"',
-                $StudentAttendanceMarkedRecords->aliasField('date <= "') . $this->reportEndDate . '"',
-                $where
-            ])
-            ->group([
-                'ClassAttendanceMarkedSummaryReport.id',
-                'StudentAttendanceMarkedRecords.period'
-            ])
-            ->order([
-                'AcademicPeriods.order',
-                'Institutions.code',
-                'ClassAttendanceMarkedSummaryReport.id',
-                'StudentAttendanceMarkedRecords.period'
-            ]);
-        } else {
-        $query
-            ->select([
-                $this->aliasField('id'),
-                'academic_period_id' => 'ClassAttendanceMarkedSummaryReport.academic_period_id',
-                'institution_code' => 'Institutions.code',
-                'institution_name' => 'Institutions.name',
-                'institution_type' => 'Types.name',
-                'area_name' => 'Areas.name',
-                'area_code' => 'Areas.code',
-                'area_administrative_code' => 'AreaAdministratives.code',
-                'area_administrative_name' => 'AreaAdministratives.name',
-                'shift_name' => 'ShiftOptions.name',
-                'name' => 'ClassAttendanceMarkedSummaryReport.name',
-                'staff_name' => $query->func()->concat([
-                    'Staff.openemis_no' => 'literal',
-                    " - ",
-                    'Staff.first_name' => 'literal',
-                    " ",
-                    'Staff.last_name' => 'literal'
-                ]),
-                'total_male_students' => 'ClassAttendanceMarkedSummaryReport.total_male_students',
-                'total_female_students' => 'ClassAttendanceMarkedSummaryReport.total_female_students',
-                'total_students' => $query->newExpr('ClassAttendanceMarkedSummaryReport.total_male_students + ClassAttendanceMarkedSummaryReport.total_female_students'),
-                'subject_id' => 'InstitutionSubjects.id',
-                'subject_name' => 'InstitutionSubjects.name',
-                'total_marked' => $query->func()->count('StudentAttendanceMarkedRecords.subject_id')
-            ])
-            ->contain([
-                'AcademicPeriods' => [
-                    'fields' => [
-                        'AcademicPeriods.name'
-                    ]
-                ],
-                'Institutions.Types',
-                'Institutions.Areas',
-                'Institutions.AreaAdministratives',
-                'InstitutionShifts.ShiftOptions',
-                'EducationGrades' => [
-                    'fields' => [
-                        'InstitutionClassGrades.institution_class_id',
-                        'EducationGrades.id',
-                        'EducationGrades.code',
-                        'EducationGrades.name'
-                    ]
-                ],
-                'Staff' => [
-                    'fields' => [
-                        'Staff.id',
-                        'Staff.openemis_no',
-                        'Staff.first_name',
-                        'Staff.middle_name',
-                        'Staff.third_name',
-                        'Staff.last_name'
-                    ]
-                ]
-            ])
             ->leftJoin(
             ['InstitutionClassSubjects' => 'institution_class_subjects'],
             [
@@ -467,12 +412,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 'InstitutionSubjects.id = InstitutionClassSubjects.institution_subject_id'
             ]
             )
-            ->innerJoin(
-            ['StudentAttendanceMarkedRecords' => 'student_attendance_marked_records'],
-            [
-                'StudentAttendanceMarkedRecords.subject_id = InstitutionClassSubjects.institution_subject_id'
-            ]
-            )
+
             ->where([
                 'ClassAttendanceMarkedSummaryReport.academic_period_id' => $academic_period_id,
                 $StudentAttendanceMarkedRecords->aliasField('date >= "') . $this->reportStartDate . '"',
@@ -480,112 +420,347 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 $where
             ])
             ->group([
-                'InstitutionSubjects.id'
+                'ClassAttendanceMarkedSummaryReport.id',
+                'StudentAttendanceMarkedRecords.period',
+                //'InstitutionSubjects.id'
             ])
             ->order([
                 'AcademicPeriods.order',
                 'Institutions.code',
-                'ClassAttendanceMarkedSummaryReport.id'
+                'ClassAttendanceMarkedSummaryReport.id',
+                'StudentAttendanceMarkedRecords.period'
+            ]);*/      
+
+        // POCOR-6967
+        //if ($attendanceTypeCode == 'DAY') {
+        !empty($institutionCondition[0]) ? $institutionCondition[0] : '';
+        !empty($educationCondition[0]) ? $educationCondition[0] : '';
+        // echo "<pre>"; print_r($institutionCondition[0]); die();
+             
+        $query
+            ->select([
+                'academic_period_name' => 'subq.academic_period_name',
+                'area_code' => 'InstitutionArea.code',
+                'area_name' => 'InstitutionArea.name',
+                'institution_code' => 'subq.institution_code',
+                'institution_name' => 'subq.institution_name',
+                'education_grade_code' => 'subq.education_grade_code',
+                'education_grade_name' => 'subq.education_grade_name',
+                'class_name' => 'subq.class_name',
+                'shift_name' => 'ShiftOptions.name',
+                'period_name' => 'subq.period_name',
+                'subject_name' => 'subq.subject_name',
+                'marked_attendance' => 'subq.marked_attendance',
+                'unmarked_attendance' => 'subq.unmarked_attendance',
+                'secondary_staff_name' => 'secondary_staff.staff_name',
+                'subject_staff_name' => 'subject_staff.staff_name',
+                'HomeroomStaffName' => 'HomeroomStaff.first_name',
+                'HomeroomStaff_middle_name' => 'HomeroomStaff.middle_name',
+                'HomeroomStaff_third_name' => 'HomeroomStaff.third_name',
+                'HomeroomStaff_last_name' => 'HomeroomStaff.last_name',
+            ])
+            ->join([
+                'subq' => [
+                        'type' => 'INNER',
+                        'table' => '( SELECT report_student_attendance_summary.academic_period_name,
+                        report_student_attendance_summary.institution_id,
+                        report_student_attendance_summary.institution_code,
+                        report_student_attendance_summary.institution_name,
+                        report_student_attendance_summary.education_grade_code,
+                        report_student_attendance_summary.education_grade_name,
+                        report_student_attendance_summary.class_id,
+                        report_student_attendance_summary.class_name,
+                        report_student_attendance_summary.period_id,
+                        report_student_attendance_summary.period_name,
+                        report_student_attendance_summary.subject_id,
+                        report_student_attendance_summary.subject_name,
+                        SUM(report_student_attendance_summary.marked_attendance) marked_attendance,
+                        SUM(report_student_attendance_summary.unmarked_attendance) unmarked_attendance
+                        FROM report_student_attendance_summary  WHERE '.$educationCondition[0].' report_student_attendance_summary.attendance_date BETWEEN '."'$this->reportStartDate '".' AND '."'$this->reportEndDate '".' '.$institutionCondition[0].' GROUP BY report_student_attendance_summary.class_id,report_student_attendance_summary.period_id,report_student_attendance_summary.subject_id)',
+                        'conditions' => [
+                           'subq.class_id = ' . $this->aliasField('id'),
+                        ]
+                    ],
+                'Institution' => [
+                        'type' => 'INNER',
+                        'table' => 'institutions',
+                        'conditions' => [
+                            'Institution.id = subq.institution_id'
+                        ]
+                    ],
+                'InstitutionArea' => [
+                        'type' => 'INNER',
+                        'table' => 'areas',
+                        'conditions' => [
+                            'InstitutionArea.id = Institution.area_id'
+                        ]
+                    ],
+                'InstitutionShifts' => [
+                        'type' => 'INNER',
+                        'table' => 'institution_shifts',
+                        'conditions' => [
+                            'InstitutionShifts.id = ' . $this->aliasField('institution_shift_id')
+                        ]
+                    ],
+                'ShiftOptions' => [
+                        'type' => 'INNER',
+                        'table' => 'shift_options',
+                        'conditions' => [
+                            'ShiftOptions.id = InstitutionShifts.shift_option_id'
+                        ]
+                    ],
+                'HomeroomStaff' => [
+                        'type' => 'LEFT',
+                        'table' => 'security_users',
+                        'conditions' => [
+                            'HomeroomStaff.id = ' . $this->aliasField('staff_id')
+                        ]
+                    ],
+                'secondary_staff' => [
+                        'type' => 'LEFT',
+                        'table' => '( SELECT institution_classes_secondary_staff.institution_class_id,GROUP_CONCAT(CONCAT_WS(" ",security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name)) staff_name FROM institution_classes_secondary_staff INNER JOIN security_users ON security_users.id = institution_classes_secondary_staff.secondary_staff_id GROUP BY institution_classes_secondary_staff.institution_class_id )',
+                        'conditions' => [
+                            'secondary_staff.institution_class_id = ' . $this->aliasField('id')
+                        ]
+                    ],
+                'subject_staff' => [
+                        'type' => 'LEFT',
+                        'table' => '( SELECT institution_subject_staff.institution_subject_id,GROUP_CONCAT(CONCAT_WS(" ",security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name)) staff_name FROM institution_subject_staff INNER JOIN security_users ON security_users.id = institution_subject_staff.staff_id GROUP BY institution_subject_staff.institution_subject_id )',
+                        'conditions' => [
+                            'subject_staff.institution_subject_id = subq.subject_id'
+                        ]
+                    ],          
             ]);
-        }            
+    // End POCOR-7061
+
+        // end POCOR-6967
+          
     }
+    
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
+        // Start POCOR-7061 query updated client requirement 
         $newFields[] = [
-            'key' => 'Institutions.institution_code',
+            'key' => 'subq.institution_code',
             'field' => 'institution_code',
             'type' => 'string',
             'label' => __('Institution Code')
         ];
 
         $newFields[] = [
-            'key' => 'Areas.name',
-            'field' => 'area_name',
-            'type' => 'string',
-            'label' => __('Area')
-        ];
-
-        $newFields[] = [
-            'key' => 'Institutions.institution_name',
+            'key' => 'subq.institution_name',
             'field' => 'institution_name',
             'type' => 'string',
             'label' => __('Institution Name')
         ];
+
         $newFields[] = [
-            'key' => 'ClassAttendanceMarkedSummaryReport.institution_shift_id',
-            'field' => 'institution_shift_id',
-            'type' => 'integer',
-            'label' => __('Shift')
-        ];
-        $newFields[] = [
-            'key' => 'Education.education_grades',
-            'field' => 'education_grades',
+            'key' => 'subq.academic_period_name',
+            'field' => 'academic_period_name',
             'type' => 'string',
-            'label' => __('Education Grade')
+            'label' => __('academic_period_name')
         ];
+
         $newFields[] = [
-            'key' => 'ClassAttendanceMarkedSummaryReport.name',
-            'field' => 'name',
+            'key' => 'InstitutionArea.code',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => __('Area Code')
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionArea.name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __('Area Name')
+        ];
+
+        $newFields[] = [
+            'key' => 'subq.education_grade_code',
+            'field' => 'education_grade_code',
+            'type' => 'string',
+            'label' => __('Education Grade Code')
+        ];
+
+        $newFields[] = [
+            'key' => 'subq.education_grade_name',
+            'field' => 'education_grade_name',
+            'type' => 'string',
+            'label' => __('Education Grade Name')
+        ];
+
+        $newFields[] = [
+            'key' => 'subq.class_name',
+            'field' => 'class_name',
             'type' => 'string',
             'label' => __('Class Name')
         ];
+
         $newFields[] = [
-            'key' => '',
-            'field' => 'staff_name',
+            'key' => 'ShiftOptions.name',
+            'field' => 'shift_name',
             'type' => 'string',
-            'label' => __('HomeRoom Teacher')
+            'label' => __('Shift Name')
         ];
 
         $newFields[] = [
-            'key' => 'secondary_staff_name',
-            'field' => 'secondary_staff_name',
+            'key' => 'subq.period_name',
+            'field' => 'period_name',
             'type' => 'string',
-            'label' => __('Secondary Teacher')
+            'label' => __('Period Name')
         ];
 
         $newFields[] = [
-            'key' => 'subject_staff',
-            'field' => 'subject_staff',
-            'type' => 'subject_staff',
-            'label' => __('Subject Teacher')
-        ];
-
-        $newFields[] = [
-            'key' => 'InstitutionSubjects.name',
+            'key' => 'subq.subject_name',
             'field' => 'subject_name',
             'type' => 'string',
-            'label' => __('Subject')
+            'label' => __('Subject Name')
         ];
 
         $newFields[] = [
-            'key' => 'period_name',
-            'field' => 'period_name',
-            'type' => 'period_name',
-            'label' => __('Period')
+            'key' => 'subq.marked_attendance',
+            'field' => 'marked_attendance',
+            'type' => 'string',
+            'label' => __('Marked Attendance')
         ];
 
         $newFields[] = [
-            'key' => '',
-            'field' => 'total_marked',
-            'type' => 'integer',
-            'label' => __('Total No. of days Marked')
+            'key' => 'subq.unmarked_attendance',
+            'field' => 'unmarked_attendance',
+            'type' => 'string',
+            'label' => __('Unmarked Attendance')
         ];
 
         $newFields[] = [
-            'key' => 'total_unmarked',
-            'field' => 'total_unmarked',
-            'type' => 'integer',
-            'label' => __('Total No. of days Unmarked')
+            'key' => 'secondary_staff.staff_name',
+            'field' => 'secondary_staff_name',
+            'type' => 'string',
+            'label' => __('Secondary Staff Name')
         ];
 
         $newFields[] = [
-            'key' => 'total_days_to_be_marked',
-            'field' => 'total_days_to_be_marked',
-            'type' => 'integer',
-            'label' => __('Total No. of days to be marked')
+            'key' => 'HomeroomStaff.first_name',
+            'field' => 'HomeroomStaffName',
+            'type' => 'string',
+            'label' => __('Homeroom Staff Name')
         ];
+
+        $newFields[] = [
+            'key' => 'subject_staff.staff_name',
+            'field' => 'subject_staff_name',
+            'type' => 'string',
+            'label' => __('Subject Staff Name')
+        ];
+
+        
+
+        // $newFields[] = [
+        //     'key' => 'Areas.name',
+        //     'field' => 'area_name',
+        //     'type' => 'string',
+        //     'label' => __('Area')
+        // ];
+
+        // $newFields[] = [
+        //     'key' => 'Institutions.institution_name',
+        //     'field' => 'institution_name',
+        //     'type' => 'string',
+        //     'label' => __('Institution Name')
+        // ];
+        // $newFields[] = [
+        //     'key' => 'ClassAttendanceMarkedSummaryReport.institution_shift_id',
+        //     'field' => 'institution_shift_id',
+        //     'type' => 'integer',
+        //     'label' => __('Shift')
+        // ];
+        // $newFields[] = [
+        //     'key' => 'Education.education_grades',
+        //     'field' => 'education_grades',
+        //     'type' => 'string',
+        //     'label' => __('Education Grade')
+        // ];
+        // $newFields[] = [
+        //     'key' => 'ClassAttendanceMarkedSummaryReport.name',
+        //     'field' => 'name',
+        //     'type' => 'string',
+        //     'label' => __('Class Name')
+        // ];
+        // $newFields[] = [
+        //     'key' => '',
+        //     'field' => 'staff_name',
+        //     'type' => 'string',
+        //     'label' => __('HomeRoom Teacher')
+        // ];
+
+        // $newFields[] = [
+        //     'key' => 'secondary_staff_name',
+        //     'field' => 'secondary_staff_name',
+        //     'type' => 'string',
+        //     'label' => __('Secondary Teacher')
+        // ];
+
+        // $newFields[] = [
+        //     'key' => 'subject_staff',
+        //     'field' => 'subject_staff',
+        //     'type' => 'subject_staff',
+        //     'label' => __('Subject Teacher')
+        // ];
+
+        // $newFields[] = [
+        //     'key' => 'InstitutionSubjects.name',
+        //     'field' => 'subject_name',
+        //     'type' => 'string',
+        //     'label' => __('Subject')
+        // ];
+
+        // $newFields[] = [
+        //     'key' => 'period_name',
+        //     'field' => 'period_name',
+        //     'type' => 'period_name',
+        //     'label' => __('Period')
+        // ];
+
+        // $newFields[] = [
+        //     'key' => '',
+        //     'field' => 'total_marked',
+        //     'type' => 'integer',
+        //     'label' => __('Total No. of days Marked')
+        // ];
+
+        // $newFields[] = [
+        //     'key' => 'total_unmarked',
+        //     'field' => 'total_unmarked',
+        //     'type' => 'integer',
+        //     'label' => __('Total No. of days Unmarked')
+        // ];
+
+        // $newFields[] = [
+        //     'key' => 'total_days_to_be_marked',
+        //     'field' => 'total_days_to_be_marked',
+        //     'type' => 'integer',
+        //     'label' => __('Total No. of days to be marked')
+        // ];
         $fields->exchangeArray($newFields);
+
+        // End POCOR-7061
+    }
+
+    /** Get the feature of value of HomeroomStaffName
+        * @author Rahul Singh <rahul.singh@mail.valuecoder.com>
+        *return array
+        *POCOR-7061
+    */
+
+    public function onExcelGetHomeroomStaffName(Event $event, Entity $entity)
+    {
+        $studentName = [];
+        ($entity->HomeroomStaffName) ? $studentName[] = $entity->HomeroomStaffName : '';
+        ($entity->HomeroomStaff_middle_name) ? $studentName[] = $entity->HomeroomStaff_middle_name : '';
+        ($entity->HomeroomStaff_third_name) ? $studentName[] = $entity->HomeroomStaff_third_name : '';
+        ($entity->HomeroomStaff_last_name) ? $studentName[] = $entity->HomeroomStaff_last_name : '';
+
+        return implode(' ', $studentName);
     }
 
     private function getSchoolClosedDate($requestData)

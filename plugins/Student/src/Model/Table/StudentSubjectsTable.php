@@ -205,6 +205,8 @@ class StudentSubjectsTable extends ControllerActionTable
         }
         $InstitutionClassStudents = TableRegistry::get('institution_class_students');
         //POCOR-6468
+        $where[$this->aliasField('student_status_id')] = $enrolledStatus; //POCOR-7111
+        
         $query
             ->matching('InstitutionClasses.ClassGrades')
             ->innerJoin(//POCOR-6468
@@ -222,6 +224,27 @@ class StudentSubjectsTable extends ControllerActionTable
                 $this->aliasField('education_grade_id'), 
                 $this->aliasField('institution_id')
             ]);  
+    }
+
+    /*
+    * Function is get the total mark of the subject
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-6776
+    */
+
+    public function onGetTotalMark(Event $event, Entity $entity)
+    {
+        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $studentId = $entity->student_id;
+        $academicPeriodId =  $entity->academic_period_id;
+        $educationSubjectId =  $entity->education_subject_id;
+        $educationGradeId =  $entity->education_grade_id;
+        $institutionClassesId =  $entity->institution_class_id;
+        $assessmentPeriodId =  '';
+        $institutionId = $entity->institution_id;
+        $totalMark = $ItemResults->getTotalMarksForSubject($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId );//POCOR-6479
+        return round($totalMark->calculated_total, 2);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)

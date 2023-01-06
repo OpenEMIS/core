@@ -499,7 +499,7 @@ class StudentMealsTable extends ControllerActionTable
             'key' => 'StudentMeals.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => 'Name'
+            'label' => 'OpenEMIS ID'
         ];
 
         $newArray[] = [
