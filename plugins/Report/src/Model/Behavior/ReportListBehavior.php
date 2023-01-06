@@ -241,12 +241,16 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {
-		
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$setTime= $ConfigItems->value("time_zone");
+		$timeZone= !empty($setTime) ? $setTime : 'UTC'; //POCOR-6732
+		date_default_timezone_set($timeZone);
+		$currentTimeZone = date("Y-m-d H:i:s");
 		$process = $settings['process'];
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
-			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate, 'modified' => new Time()],
+			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate, 'modified' => $currentTimeZone],
 			['id' => $process->id]
 		);
 		$settings['purge'] = false; //for report, dont purge after download.

@@ -467,135 +467,14 @@ class AssessmentResultsTable extends AppTable
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 
             $query = $AssessmentItemResults->find()
+            ->where([
+                $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
+                $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
+                $AssessmentItemResults->aliasField('institution_classes_id') => $params['class_id'],
+                $AssessmentItemResults->aliasField('education_grade_id') => $params['grade_id']
+            ])
             ->group([$AssessmentItemResults->aliasField('assessment_period_id')]);
-
-            $withoutTerm = $AssessmentItemResults->find()
-                ->select([
-                    $AssessmentItemResults->aliasField('institution_id'),
-                    $AssessmentItemResults->aliasField('academic_period_id'),
-                    $AssessmentItemResults->aliasField('education_subject_id'),//POCOR-6479
-                    $AssessmentItemResults->aliasField('education_grade_id'),//POCOR-6479
-                    $AssessmentItemResults->aliasField('assessment_period_id'),//POCOR-6479
-                    $AssessmentItemResults->aliasField('assessment_id'),
-                    $AssessmentItemResults->aliasField('student_id'),
-                    $AssessmentItemResults->aliasField('marks'),
-                    $AssessmentPeriods->aliasField('weight'),
-                    'subject_classification' => '(
-                        CASE
-                        WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
-                            ELSE '.$EducationSubjects->aliasField('name').'
-                            END
-                    )',
-                    'academic_term_value' => $AssessmentPeriods->aliasField('name'),
-                    'academic_term_total_weighted_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight')),
-                ])
-                ->innerJoin(
-                    [$this->alias() => $this->table()],
-                    [
-                        $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
-                        $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id'),
-                        $this->aliasField('institution_class_id') => $params['class_id']
-                    ]
-                )
-                ->leftJoin(
-                    [$AssessmentItems->alias() => $AssessmentItems->table()],
-                    [
-                        $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemResults->aliasField('assessment_id'),
-                        $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemResults->aliasField('education_subject_id')
-                    ]
-                )
-                ->contain([$AssessmentGradingOptions->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
-                ->where([
-                    $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id']
-                ])
-                ->group([
-                    $AssessmentItemResults->aliasField('academic_period_id'),
-                    $AssessmentItemResults->aliasField('assessment_id'),
-                    $AssessmentItemResults->aliasField('student_id'),
-                    $AssessmentItemResults->aliasField('assessment_period_id'),
-                    'subject_classification',
-                    'academic_term_value'
-                ])
-                ->hydrate(false)
-                ->toArray();
-               
-                foreach($withoutTerm AS $key => $value){
-                    //POCOR-6586 starts
-                    $assessmentItemResults = TableRegistry::get('assessment_item_results');
-                    $assessmentItem = TableRegistry::get('Assessment.AssessmentItems');
-                    $assessmentItemResultsData = $assessmentItemResults->find()
-                            ->select([
-                                $assessmentItemResults->aliasField('institution_id'),
-                                $assessmentItemResults->aliasField('academic_period_id'),
-                                $assessmentItemResults->aliasField('education_subject_id'),
-                                $assessmentItemResults->aliasField('education_grade_id'),
-                                $assessmentItemResults->aliasField('assessment_period_id'),
-                                $assessmentItemResults->aliasField('assessment_id'),
-                                $assessmentItemResults->aliasField('student_id'),
-                                $assessmentItemResults->aliasField('marks'),
-                            ])
-                            ->leftJoin(
-                                [$assessmentItem->alias() => $assessmentItem->table()],
-                                [
-                                    $assessmentItem->aliasField('assessment_id = ') . $assessmentItemResults->aliasField('assessment_id'),
-                                    $assessmentItem->aliasField('education_subject_id = ') . $assessmentItemResults->aliasField('education_subject_id')
-                                ]
-                            )
-                            ->order([
-                                $assessmentItemResults->aliasField('created') => 'DESC',
-                                $assessmentItemResults->aliasField('modified') => 'DESC',
-                                
-                            ])
-                            ->where([
-                                $assessmentItemResults->aliasField('student_id') => $value['student_id'],
-                                $assessmentItemResults->aliasField('academic_period_id') => $value['academic_period_id'],
-                                $assessmentItemResults->aliasField('education_grade_id') => $value['education_grade_id'],
-                                $assessmentItemResults->aliasField('assessment_period_id') => $value['assessment_period_id'],
-                                $assessmentItem->aliasField('classification') => $value['subject_classification']
-                            ])
-                            ->group([
-                                $assessmentItem->aliasField('education_subject_id'),
-                            ])
-                            ->toArray();
-                    if(!empty($assessmentItemResultsData)){
-                        $withoutTerm_sum_marks = [];
-                        $withoutTerm_sum_assesment_weight = [];
-                        foreach ($assessmentItemResultsData as $item_key => $item_val) {
-                            $assessmentItemResultsArr = $assessmentItemResults->find()
-                                    ->select([
-                                        $assessmentItemResults->aliasField('marks')
-                                    ])
-                                    ->leftJoin(
-                                        [$assessmentItem->alias() => $assessmentItem->table()],
-                                        [
-                                            $assessmentItem->aliasField('assessment_id = ') . $assessmentItemResults->aliasField('assessment_id'),
-                                            $assessmentItem->aliasField('education_subject_id = ') . $assessmentItemResults->aliasField('education_subject_id')
-                                        ]
-                                    )
-                                    ->order([
-                                        $assessmentItemResults->aliasField('modified') => 'DESC',
-                                        $assessmentItemResults->aliasField('created') => 'DESC',
-                                    ])
-                                    ->where([
-                                        $assessmentItemResults->aliasField('student_id') => $item_val['student_id'],
-                                        $assessmentItemResults->aliasField('academic_period_id') => $item_val['academic_period_id'],
-                                        $assessmentItemResults->aliasField('education_grade_id') => $item_val['education_grade_id'],
-                                        $assessmentItemResults->aliasField('assessment_period_id') => $item_val['assessment_period_id'],
-                                        $assessmentItemResults->aliasField('education_subject_id') => $item_val['education_subject_id'],
-                                    ])
-                                    ->first();
-                                
-                                $withoutTerm_sum_marks[] = $assessmentItemResultsArr->marks;   
-                                $withoutTerm_sum_assesment_weight[] = $assessmentItemResultsArr->marks*$value['assessment_period']['weight'];
-                        }
-                        //$withoutTerm[$key]['marks'] = $assessmentItemResultsData->marks;
-                        //$withoutTerm[$key]['academic_term_total_weighted_marks'] += $assessmentItemResultsArr->marks*$value['assessment_period']['weight'];
-                        $withoutTerm[$key]['marks'] = array_sum($withoutTerm_sum_marks); 
-                        $withoutTerm[$key]['academic_term_total_weighted_marks'] = array_sum($withoutTerm_sum_assesment_weight);
-                    } 
-                    //POCOR-6586 ends
-                }
-            
+            //With Term
             $withTerm = $AssessmentItemResults->find()
                 ->select([
                     $AssessmentItemResults->aliasField('institution_id'),
@@ -728,9 +607,138 @@ class AssessmentResultsTable extends AppTable
             if (!empty($withTerm)) { // If academic_term is setup, to use the academic_term to calculate the average
                 // $recordsToUse = $withTerm->toArray();
                 $recordsToUse = $withTerm;
+                $withoutTerm = []; //POCOR-6911
             } else { // else, to calculate the average by subject_classification
+                //Without Term
+                $withoutTerm = $AssessmentItemResults->find()
+                    ->select([
+                        $AssessmentItemResults->aliasField('institution_id'),
+                        $AssessmentItemResults->aliasField('academic_period_id'),
+                        $AssessmentItemResults->aliasField('education_subject_id'),//POCOR-6479
+                        $AssessmentItemResults->aliasField('education_grade_id'),//POCOR-6479
+                        $AssessmentItemResults->aliasField('assessment_period_id'),//POCOR-6479
+                        $AssessmentItemResults->aliasField('assessment_id'),
+                        $AssessmentItemResults->aliasField('student_id'),
+                        $AssessmentItemResults->aliasField('marks'),
+                        $AssessmentPeriods->aliasField('weight'),
+                        'subject_classification' => '(
+                            CASE
+                            WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
+                                ELSE '.$EducationSubjects->aliasField('name').'
+                                END
+                        )',
+                        'academic_term_value' => $AssessmentPeriods->aliasField('name'),
+                        'academic_term_total_weighted_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight')),
+                    ])
+                    ->innerJoin(
+                        [$this->alias() => $this->table()],
+                        [
+                            $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
+                            $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id'),
+                            $this->aliasField('institution_class_id') => $params['class_id']
+                        ]
+                    )
+                    ->leftJoin(
+                        [$AssessmentItems->alias() => $AssessmentItems->table()],
+                        [
+                            $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemResults->aliasField('assessment_id'),
+                            $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemResults->aliasField('education_subject_id')
+                        ]
+                    )
+                    ->contain([$AssessmentGradingOptions->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
+                    ->where([
+                        $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id']
+                    ])
+                    ->group([
+                        $AssessmentItemResults->aliasField('academic_period_id'),
+                        $AssessmentItemResults->aliasField('assessment_id'),
+                        $AssessmentItemResults->aliasField('student_id'),
+                        $AssessmentItemResults->aliasField('assessment_period_id'),
+                        'subject_classification',
+                        'academic_term_value'
+                    ])
+                    ->hydrate(false)
+                    ->toArray();
+                   
+                    foreach($withoutTerm AS $key => $value){
+                        //POCOR-6586 starts
+                        $assessmentItemResults = TableRegistry::get('assessment_item_results');
+                        $assessmentItem = TableRegistry::get('Assessment.AssessmentItems');
+                        $assessmentItemResultsData = $assessmentItemResults->find()
+                                ->select([
+                                    $assessmentItemResults->aliasField('institution_id'),
+                                    $assessmentItemResults->aliasField('academic_period_id'),
+                                    $assessmentItemResults->aliasField('education_subject_id'),
+                                    $assessmentItemResults->aliasField('education_grade_id'),
+                                    $assessmentItemResults->aliasField('assessment_period_id'),
+                                    $assessmentItemResults->aliasField('assessment_id'),
+                                    $assessmentItemResults->aliasField('student_id'),
+                                    $assessmentItemResults->aliasField('marks'),
+                                ])
+                                ->leftJoin(
+                                    [$assessmentItem->alias() => $assessmentItem->table()],
+                                    [
+                                        $assessmentItem->aliasField('assessment_id = ') . $assessmentItemResults->aliasField('assessment_id'),
+                                        $assessmentItem->aliasField('education_subject_id = ') . $assessmentItemResults->aliasField('education_subject_id')
+                                    ]
+                                )
+                                ->order([
+                                    $assessmentItemResults->aliasField('created') => 'DESC',
+                                    $assessmentItemResults->aliasField('modified') => 'DESC',
+                                    
+                                ])
+                                ->where([
+                                    $assessmentItemResults->aliasField('student_id') => $value['student_id'],
+                                    $assessmentItemResults->aliasField('academic_period_id') => $value['academic_period_id'],
+                                    $assessmentItemResults->aliasField('education_grade_id') => $value['education_grade_id'],
+                                    $assessmentItemResults->aliasField('assessment_period_id') => $value['assessment_period_id'],
+                                    $assessmentItem->aliasField('classification') => $value['subject_classification']
+                                ])
+                                ->group([
+                                    $assessmentItem->aliasField('education_subject_id'),
+                                ])
+                                ->toArray();
+                        if(!empty($assessmentItemResultsData)){
+                            $withoutTerm_sum_marks = [];
+                            $withoutTerm_sum_assesment_weight = [];
+                            foreach ($assessmentItemResultsData as $item_key => $item_val) {
+                                $assessmentItemResultsArr = $assessmentItemResults->find()
+                                        ->select([
+                                            $assessmentItemResults->aliasField('marks')
+                                        ])
+                                        ->leftJoin(
+                                            [$assessmentItem->alias() => $assessmentItem->table()],
+                                            [
+                                                $assessmentItem->aliasField('assessment_id = ') . $assessmentItemResults->aliasField('assessment_id'),
+                                                $assessmentItem->aliasField('education_subject_id = ') . $assessmentItemResults->aliasField('education_subject_id')
+                                            ]
+                                        )
+                                        ->order([
+                                            $assessmentItemResults->aliasField('modified') => 'DESC',
+                                            $assessmentItemResults->aliasField('created') => 'DESC',
+                                        ])
+                                        ->where([
+                                            $assessmentItemResults->aliasField('student_id') => $item_val['student_id'],
+                                            $assessmentItemResults->aliasField('academic_period_id') => $item_val['academic_period_id'],
+                                            $assessmentItemResults->aliasField('education_grade_id') => $item_val['education_grade_id'],
+                                            $assessmentItemResults->aliasField('assessment_period_id') => $item_val['assessment_period_id'],
+                                            $assessmentItemResults->aliasField('education_subject_id') => $item_val['education_subject_id'],
+                                        ])
+                                        ->first();
+                                    
+                                    $withoutTerm_sum_marks[] = $assessmentItemResultsArr->marks;   
+                                    $withoutTerm_sum_assesment_weight[] = $assessmentItemResultsArr->marks*$value['assessment_period']['weight'];
+                            }
+                            //$withoutTerm[$key]['marks'] = $assessmentItemResultsData->marks;
+                            //$withoutTerm[$key]['academic_term_total_weighted_marks'] += $assessmentItemResultsArr->marks*$value['assessment_period']['weight'];
+                            $withoutTerm[$key]['marks'] = array_sum($withoutTerm_sum_marks); 
+                            $withoutTerm[$key]['academic_term_total_weighted_marks'] = array_sum($withoutTerm_sum_assesment_weight);
+                        } 
+                        //POCOR-6586 ends
+                    }
                 // $recordsToUse = $withoutTerm->toArray();
                 $recordsToUse = $withoutTerm; 
+                $withTerm = []; //POCOR-6911
             }
             //POCOR-6506[START]
             foreach ($recordsToUse as $record) {
@@ -742,27 +750,29 @@ class AssessmentResultsTable extends AppTable
  
             $mainArray = [];
             $i = 0;
-            foreach ($totalSum as $tkey => $tval) {
-                $subjectArr = [];
-                foreach ($tval as $subkey => $subval) {
-                    $mainArray[$i][$tkey][$subkey] = $subval; 
-                    $halfArr = [];
-                    foreach ($subval as $halfkey => $halfval) {
-                        $mainArray[$i][$tkey][$subkey][$halfkey] = $halfval; 
-                        $sum = 0;
-                        $weighted_marks = 0;
-                        foreach ($halfval as $markkey => $markval) {
-                            $sum = $sum + $markval['marks'];
-                            $weighted_marks = $weighted_marks + $markval['marks'] * $markval['assessment_period']['weight'];
-                            $mainArray[$i] = $markval;
-                        } 
-                        $mainArray[$i]['marks'] = $sum;
-                        $mainArray[$i]['academic_term_total_weighted_marks'] = $weighted_marks;
-                        $i++; 
-                    }  
+            if(!empty($totalSum)){
+                foreach ($totalSum as $tkey => $tval) {
+                    $subjectArr = [];
+                    foreach ($tval as $subkey => $subval) {
+                        $mainArray[$i][$tkey][$subkey] = $subval; 
+                        $halfArr = [];
+                        foreach ($subval as $halfkey => $halfval) {
+                            $mainArray[$i][$tkey][$subkey][$halfkey] = $halfval; 
+                            $sum = 0;
+                            $weighted_marks = 0;
+                            foreach ($halfval as $markkey => $markval) {
+                                $sum = $sum + $markval['marks'];
+                                $weighted_marks = $weighted_marks + $markval['marks'] * $markval['assessment_period']['weight'];
+                                $mainArray[$i] = $markval;
+                            } 
+                            $mainArray[$i]['marks'] = $sum;
+                            $mainArray[$i]['academic_term_total_weighted_marks'] = $weighted_marks;
+                            $i++; 
+                        }  
+                    }
                 }
             }
-
+            
             $withTerm = $mainArray;
             //POCOR-6506[END]
             $averageStudentSubjectResults = [];

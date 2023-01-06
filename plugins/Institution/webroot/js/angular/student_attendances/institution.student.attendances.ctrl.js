@@ -766,7 +766,10 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         vm.gridOptions.context.mode = vm.action;
         vm.setColumnDef();
         AlertSvc.info($scope, 'Attendances will be automatically saved.');
-        InstitutionStudentAttendancesSvc.savePeriodMarked(vm.getPeriodMarkedParams(), $scope);
+        //ticket POCOR-6658 Starts=> comment savePeriodMarked function becuase it is not working for multigrade class 
+        //InstitutionStudentAttendancesSvc.savePeriodMarked(vm.getPeriodMarkedParams(), $scope);
+        InstitutionStudentAttendancesSvc.getsavePeriodMarked(vm.getPeriodMarkedParams(), $scope);
+        //ticket POCOR-6658 Ends
     };
 
     vm.onBackClick = function() {

@@ -111,7 +111,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
                     
                                 ])
                              ->toArray();
-                if (isset($modelData)) {
+                if (empty($modelData)) {
                     $data[] = [
                     'id' => 1,
                     'name' => 'Period 1'

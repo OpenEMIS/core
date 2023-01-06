@@ -368,16 +368,32 @@ class PositionsTable extends ControllerActionTable {
 
     public function onGetShift(Event $event, Entity $entity)
     {
-        //echo "<pre>";
-       ////print_r($entity); exit;
        $institutionStaff = TableRegistry::get('institution_staff');
        $staffId=$institutionStaff->find()->select(['staff_id'])->where(['id' =>$entity->id])->first();
        $staff_id=$staffId['staff_id']; 
 
        $institutionShifts = TableRegistry::get('institution_shifts');
-       $shiftOptions = TableRegistry::get('shift_options'); 
+       $InstitutionStaff = TableRegistry::get('institution_staff');
+       $ShiftOptions = TableRegistry::get('shift_options'); 
        $institutionStaffShifts = TableRegistry::get('institution_staff_shifts');
-        $res=$institutionShifts->find()->select(['name'=> 'shift_options.name' ])
+       $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+       //POCOR-7109
+       $res = $InstitutionStaff->find()
+                ->select(['name' =>  $ShiftOptions->aliasField('name')])
+                ->leftJoin([$InstitutionPositions->alias() => $InstitutionPositions->table()],[
+                        $InstitutionPositions->aliasField('id = ') . $InstitutionStaff->aliasField('institution_position_id')
+                ])
+                ->leftJoin([$ShiftOptions->alias() => $ShiftOptions->table()],[
+                    $ShiftOptions->aliasField('id = ') . $InstitutionPositions->aliasField('shift_id')
+                ])
+                ->where([$InstitutionStaff->aliasField('staff_id') => $staff_id])
+                ->first();
+       $shift = $res->name;
+       return $shift; 
+       //POCOR-7109, POCOR-6917 code change due to change column name
+
+       //POCOR-7109,6917 code change due to change column name
+        /*$res=$institutionShifts->find()->select(['name'=> 'shift_options.name' ])
                                 ->leftJoin(
                                         [$shiftOptions->alias() => $shiftOptions->table()],
                                         [
@@ -397,6 +413,6 @@ class PositionsTable extends ControllerActionTable {
                                 foreach ($res as $key => $value) {
                                     $shift.=$value['name'].','; 
                                 }
-                               return  rtrim($shift,',');        
+                               return  rtrim($shift,',');  */      
     }
 }

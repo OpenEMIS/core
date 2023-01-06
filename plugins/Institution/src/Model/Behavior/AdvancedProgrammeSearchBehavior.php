@@ -82,6 +82,8 @@ class AdvancedProgrammeSearchBehavior extends Behavior
     public function getProgrammesOptions()
     {
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId = $AcademicPeriod->getCurrent();
         $programmeOptions = [];
 
         $query = $InstitutionGrades
@@ -90,6 +92,7 @@ class AdvancedProgrammeSearchBehavior extends Behavior
                     'id' => 'EducationProgrammes.id',
                     'name' => 'EducationProgrammes.name'
                 ])
+                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])//POCOR-6803 
                 ->join([
                     'EducationGrades' => [
                         'table' => 'education_grades',
@@ -104,6 +107,7 @@ class AdvancedProgrammeSearchBehavior extends Behavior
                         ]
                     ]
                 ])
+                ->where(['EducationSystems.academic_period_id' => $academicPeriodId]) //POCOR-6803 
                 ->group('EducationProgrammes.id')
                 ->toArray();
 

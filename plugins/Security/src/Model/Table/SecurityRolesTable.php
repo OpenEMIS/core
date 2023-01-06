@@ -55,7 +55,7 @@ class SecurityRolesTable extends ControllerActionTable
                 'filter' => 'security_group_id'
             ]);
         }
-
+        $this->SecurityRolesTable = TableRegistry::get('Security.SecurityRolesTable');//POCOR-6878
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Permissions' => ['view', 'edit']
         ]);
@@ -75,9 +75,9 @@ class SecurityRolesTable extends ControllerActionTable
             ];
           
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
+            //if ($this->Auth->user()) { // creating issue while adding new permission //POCOR-6878
                 $Webhooks->triggerShell('role_create', [], $createRole);
-            }
+            //}
         }
 
         // webhook create role ends
@@ -753,4 +753,47 @@ class SecurityRolesTable extends ControllerActionTable
 
         return (!empty($deputyPrincipalData))? $deputyPrincipalData->id: null;
     }
+    //POCOR-6734 starts
+    public function getTeacherRoleId()
+    {
+        $teacherData = $this->find()
+            ->select([$this->primaryKey()])
+            ->where([$this->aliasField('code') => 'TEACHER'])
+            ->first();
+
+        return (!empty($teacherData))? $teacherData->id: null;
+    }//POCOR-6734 ends
+
+    /**
+     * POCOR-6878,add defult order value
+    */
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
+        if ($entity->isNew()) {
+            $entity->order = 1;
+        }
+    }
+
+    /*
+    * Function to get logged in user's role list
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * return @array
+    * @ticket POCOR-6800
+    */
+    public function getLoggedInUserRoles($userId = null)
+    {
+        $roles = [];
+        $usersGroup = TableRegistry::get('Security.SecurityGroupUsers');
+        $userRoles = $usersGroup
+                    ->find()
+                    ->where([$usersGroup->aliasField('security_user_id') => $userId ])
+                    ->toArray();
+        if (!empty($userRoles)) {
+            foreach ($userRoles as $role) {
+                $roles[] = $role->security_role_id;
+            }
+        }
+        return (!empty($roles))? $roles: null;
+    }
+
 }

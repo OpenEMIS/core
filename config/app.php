@@ -306,7 +306,7 @@ return [
             'file' => 'error',
             'levels' => ['warning', 'error', 'critical', 'alert', 'emergency'],
             'url' => env('LOG_ERROR_URL', null),
-        ],
+        ],  
     ],
 
     /**

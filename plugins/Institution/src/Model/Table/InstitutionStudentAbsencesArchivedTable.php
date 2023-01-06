@@ -95,8 +95,11 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
                 $archived_academic_period_arr[] = $academic_period_data['academic_period_id'];
             }
         }
-
-        $periodOptions = $AcademicPeriod->getArchivedYearList($archived_academic_period_arr);
+        //POCOR-6799[START]
+        if(!empty($archived_academic_period_arr)){
+            $periodOptions = $AcademicPeriod->getArchivedYearList($archived_academic_period_arr);
+        }
+        //POCOR-6799[END]
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
         }
@@ -315,5 +318,18 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
         }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    // POCOR-6938
+    public function onGetDate(Event $event, Entity $entity)
+    {
+        $student_id = $entity->student_id;
+
+        $studentAbsenceDays = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        $result = $studentAbsenceDays->find()->select(['selectdate'=>$studentAbsenceDays->aliasField('date')])
+        ->where([$studentAbsenceDays->aliasField('student_id')=>$student_id])->first();
+        $getdate = date_create($result->selectdate);
+        $formatDate  =  date_format($getdate, 'M d, Y');
+        return $formatDate;
     }
 }

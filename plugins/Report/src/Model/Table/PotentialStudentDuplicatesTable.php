@@ -13,7 +13,7 @@ class PotentialStudentDuplicatesTable extends AppTable
 {
     public function initialize(array $config)
     {
-        $this->table('security_users');
+        $this->table('security_users'); 
         parent::initialize($config);
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
@@ -68,6 +68,7 @@ class PotentialStudentDuplicatesTable extends AppTable
 
         $query
             ->select([
+                $this->aliasField('id'), //POCOR-6069
                 $this->aliasField('username'),
                 $this->aliasField('openemis_no'),
                 $this->aliasField('first_name'),
@@ -88,7 +89,8 @@ class PotentialStudentDuplicatesTable extends AppTable
                 $this->aliasField('identity_number'),
                 'institution_code' => $Institutions->aliasField('code'),
                 'institution_name' => $Institutions->aliasField('name'),
-                'education_grade' => $EducationGrades->aliasField('name')
+                'education_grade' => $EducationGrades->aliasField('name'),
+                'education_programme_id' => $EducationGrades->aliasField('education_programme_id') //POCOR-6069
             ])
             ->innerJoin(['DuplicateStudents' => $duplicateStudentSubquery], [
                 'DuplicateStudents.first_name = ' . $this->aliasField('first_name'),
@@ -108,12 +110,34 @@ class PotentialStudentDuplicatesTable extends AppTable
             ])
             ->where([$this->aliasField('is_student') => 1])
             ->group([$this->aliasField('id')]);
+
+            //Start:POCOR-6069
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
+                return $results->map(function ($row) { 
+                    //For Education Programme
+                    $EducationProgramTable = TableRegistry::get('education_programmes');
+                    $EducationProgram = $EducationProgramTable->find()->where(['id'=> $row->education_programme_id])->first();
+                    $row['education_programme'] = $EducationProgram->name;
+                    //For Student Status
+                    $InstitutionStudentsTable = TableRegistry::get('institution_students');
+                    $InstitutionStudent = $InstitutionStudentsTable->find()->where(['student_id'=> $row->id])->order(['id'=>'ASC'])->first();
+                    $student_status_id = $InstitutionStudent->student_status_id;
+                    $StudentStatusTable = TableRegistry::get('student_statuses');
+                    $StudentStatus = $StudentStatusTable->find()->where(['id'=> $student_status_id])->first();
+                    $row['student_status'] = $StudentStatus->name;
+
+                    return $row;
+                });
+            });
+            //End:POCOR-6069
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         // set formatting to string for certain columns
         $cloneFields = $fields->getArrayCopy();
+
+        $cloneFields[1]['label'] = 'OpenEMIS ID'; //POCOR-6069
         $stringFormatColumns = ['username', 'openemis_no', 'email', 'postal_code', 'identity_number'];
         foreach ($cloneFields as $key => $value) {
             if (in_array($value['field'], $stringFormatColumns)) {
@@ -122,6 +146,7 @@ class PotentialStudentDuplicatesTable extends AppTable
         }
 
         $extraFields = [];
+
         $extraFields[] = [
             'key' => 'Institutions.code',
             'field' => 'institution_code',
@@ -135,14 +160,28 @@ class PotentialStudentDuplicatesTable extends AppTable
             'type' => 'string',
             'label' => __('Institution')
         ];
-
+        //Start:POCOR-6069
+        $extraFields[] = [
+            'key' => '',
+            'field' => 'education_programme',
+            'type' => 'string',
+            'label' => __('Education Programme')
+        ];
+        //End:POCOR-6069
         $extraFields[] = [
             'key' => 'EducationGrades.name',
             'field' => 'education_grade',
             'type' => 'string',
             'label' => __('Education Grade')
         ];
-
+        //Start:POCOR-6069
+        $extraFields[] = [
+            'key' => '',
+            'field' => 'student_status',
+            'type' => 'string',
+            'label' => __('Student Status')
+        ];
+        //End:POCOR-6069
         $newFields = array_merge($cloneFields, $extraFields);
         $fields->exchangeArray($newFields);
     }

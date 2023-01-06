@@ -119,7 +119,8 @@ trait MessagesTrait
             'validationRules' => 'Validation Rules',
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
             'custom_validation_pattern' => 'Please enter a valid format',
-            'bulk_student_transfer_in' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution.',
+            //'bulk_student_transfer_in' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution.',
+            'bulk_student_transfer_in' => 'Bulk Student is updated.', //POCOR-7007 change message
             'bulk_student_transfer_out' => 'Students Transferred Successful.',
             'inactive_message' => 'This institution is inactive, all data entry operation are disabled.',
             'status_update' => 'You are about to update the status of the Institution. This action will affect the availability of the Institution in the system.',
@@ -737,7 +738,8 @@ trait MessagesTrait
             'noRecords' => 'No Records'
         ],
         'Templates' => [
-            'addSuccess' => 'Competency Template was added successfully, please set up the Competency Items'
+            'addSuccess' => 'Competency Template was added successfully, please set up the Competency Items',
+            'alreadyexist' => 'The competency for the education grade has been added.',
         ],
         'Items' => [
             'addSuccess' => 'Competency Item was added successfully, please set up the Competency Criterias'
@@ -780,6 +782,7 @@ trait MessagesTrait
             'noFilesToUnpublish' => 'There are no published Report Cards to unpublish',
             'inProgress' => 'There is already a process running for this Report Card',
             'generate' => 'The Report Card will be generated in the background',
+            'generateProfile' => 'The Profile will be generated in the background', //POCOR-6856
             'generateAll' => 'All Report Cards will be generated in the background',
             'checkReportCardTemplatePeriod' => 'The Report Card period is not active. Please contact the System Administrator.',
             'publish' => 'The Report Card has been successfully published',

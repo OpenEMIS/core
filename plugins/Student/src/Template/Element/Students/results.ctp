@@ -31,7 +31,8 @@ $this->start('panelBody');
 	<div class="row section-header" ng-repeat-start="section in StudentResultsController.sections | orderBy:'order'" ng-show={{section.visible}}>
 		{{section.name}}
 	</div>
-	<div ng-repeat-end class="table-wrapper" id="student-result-table_{{section.id}}">
+	<!--- POCOR-6963 Here Style is added to show the Assesments of individual student in Instituions > Students > Academic > Assessment tab -->
+	<div ng-repeat-end class="table-wrapper" id="student-result-table_{{section.id}}" style="margin-bottom:0px !important; margin-top:0px !important">
 		<div ng-if="StudentResultsController.gridOptions[section.id]" kd-ag-grid="StudentResultsController.gridOptions[section.id]" class="ag-height-fixed"></div>
 	</div>
 <?php

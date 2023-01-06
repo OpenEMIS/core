@@ -58,7 +58,7 @@ class AcademicPeriodsTable extends AppTable
         $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('RubricStatusPeriods', ['className' => 'Rubric.RubricStatusPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffExtracurriculars', ['className' => 'Staff.Extracurriculars', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentExtracurriculars', ['className' => 'Student.Extracurriculars', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentExtracurriculars', ['className' => 'Student.Extracurriculars', 'dependent' => true, 'cascadeCallbacks' => false]);//POCOR-6762
         $this->hasMany('SurveyStatusPeriods', ['className' => 'Survey.SurveyStatusPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'dependent' => true]);
@@ -1270,6 +1270,7 @@ class AcademicPeriodsTable extends AppTable
     public function findDaysForPeriodWeek(Query $query, array $options)
     {
         $academicPeriodId = $options['academic_period_id'];
+        $current_week_number_selected = $options['current_week_number_selected']; // POCOR-6723
         $weekId = $options['week_id'];
         $institutionId = $options['institution_id'];
 
@@ -1321,6 +1322,8 @@ class AcademicPeriodsTable extends AppTable
                     'day' => __($firstDayOfWeek->format('l')),
                     'name' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ') ' . $suffix,
                     'date' => $firstDayOfWeek->format('Y-m-d'),
+                    'current_week_number_selected' => $current_week_number_selected, //POCOR-6723
+                    'day_number' => $firstDayOfWeek->isToday() //POCOR-6723
                 ];
 
                 if ($schoolClosed) {
@@ -1339,6 +1342,8 @@ class AcademicPeriodsTable extends AppTable
 
         if (!is_null($today)) {
             $dayOptions[$today]['selected'] = true;
+            $dayOptions[$today]['current_week_number_selected'] = $current_week_number_selected; //POCOR-6723
+            $dayOptions[$today]['day_number'] = __($firstDayOfWeek->format('N')); //POCOR-6723
         }
 
         return $query

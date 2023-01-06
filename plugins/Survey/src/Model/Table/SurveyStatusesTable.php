@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\I18n\Time;
 
 class SurveyStatusesTable extends ControllerActionTable
 {
@@ -66,12 +67,24 @@ class SurveyStatusesTable extends ControllerActionTable
         $query->contain($this->_contain);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    //Change in POCOR-7021
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         //Setup fields
         list(, , $formOptions) = array_values($this->getSelectOptions());
 
         $this->fields['survey_form_id']['type'] = 'select';
+        $this->fields['survey_form_id']['options'] = $formOptions;
+    }
+    /**
+       / POCOR-7021 readonly in edit page
+    */
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
+        //Setup fields
+        list(, , $formOptions) = array_values($this->getSelectOptions());
+
+        $this->fields['survey_form_id']['type'] = 'readonly';
         $this->fields['survey_form_id']['options'] = $formOptions;
     }
 
@@ -138,4 +151,72 @@ class SurveyStatusesTable extends ControllerActionTable
 
         return compact('moduleOptions', 'selectedModule', 'formOptions', 'selectedForm');
     }
+
+    /**POCOR-6676 starts - modified conditions to save record before add*/ 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
+        $surveyFormId = $entity->survey_form_id;
+        $SurveyFormsFilterObj = $SurveyFormsFilters->find()
+                            ->where([$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId])
+                            ->toArray();
+        $institutionTypeIds = [];
+        if (!empty($SurveyFormsFilterObj)) {
+            foreach ($SurveyFormsFilterObj as $value) {
+                $institutionTypeIds[] = $value->survey_filter_id;
+            }
+        }
+        if($institutionTypeIds[0]!=0) //POCOR-6976
+        {
+            $getInstitutionObj = $Institutions->find()
+                            ->select([$Institutions->aliasField('id')])
+                            ->where([$Institutions->aliasField('institution_type_id IN') => $institutionTypeIds])
+                            ->toArray();
+        }else{ // if institution type is 0 means its for all custom filter.//POCOR-6976
+            $getInstitutionObj = $Institutions->find()
+                            ->select([$Institutions->aliasField('id')])
+                            ->toArray();
+        }
+        $institutionIds = [];
+        if (!empty($getInstitutionObj)) {
+            foreach ($getInstitutionObj as $val) {
+                $institutionIds[] = $val->id;
+            }
+        }
+        if (!empty($entity->academic_periods)) {
+            foreach ($entity->academic_periods as $periodObj) {
+                foreach ($institutionIds as $instId) {
+                   // $InstitutionSurveys->deleteAll(['institution_id' => $instId, 'academic_period_id' => $periodObj->id, 'survey_form_id' => $surveyFormId]);
+                    $surveyDataVal = $InstitutionSurveys->find()->where(['institution_id' => $instId, 'academic_period_id' => $periodObj->id, 'survey_form_id' => $surveyFormId])->first();
+                    //POCOR-7005 start conditon change for update record
+                    if(!empty($surveyDataVal)){
+                        $update =   $InstitutionSurveys->updateAll(
+                                ['status_id' => 1,'academic_period_id'=>$periodObj->id,'survey_form_id' => $surveyFormId,'institution_id' => $instId,'assignee_id' => 0,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
+                                [
+                                 'id' => $surveyDataVal['id'], //condition
+                                ] 
+                            );
+                    }else{
+                        $surveyData = [
+                            'status_id' => 1,
+                            'academic_period_id' => $periodObj->id,
+                            'survey_form_id' => $surveyFormId,
+                            'institution_id' => $instId,
+                            'assignee_id' => 0,
+                            'created_user_id' => 1,
+                            'created' => new Time('NOW')
+                        ];
+                    
+    
+                        $surveyEntity = $InstitutionSurveys->newEntity($surveyData);
+                        $InstitutionSurveys->save($surveyEntity);
+                    }
+                    //POCOR-7005 end conditon change for update record
+                }
+            }
+        }
+    }
+    /**POCOR-6676 ends*/ 
 }

@@ -124,10 +124,14 @@ class InstitutionClassStudentsTable extends AppTable
                 ])->first();
 
                 //POCOR-6500 starts 
-                if(!empty($results)){
-                   $results->student_status_id = 1;
+                if(!empty($results) && $student->student_status_id==4){ //POCOR-6958
+                   $results->student_status_id = 4;
                    $this->save($results);     
-                }//POCOR-6500 ends
+                }elseif(!empty($results)){
+                   $results->student_status_id = 1;
+                   $this->save($results);
+                }
+                //POCOR-6500 ends
             }
         }
     }
@@ -205,6 +209,22 @@ class InstitutionClassStudentsTable extends AppTable
             'type' => 'string',
             'label' => '',
         ];
+
+        // Start:POCOR-6854
+        $fields[] = [
+            'key' => 'Institutions.code',
+            'field' => 'code',
+            'type' => 'string',
+            'label' => '',
+        ];
+
+        $fields[] = [
+            'key' => 'Institutions.name',
+            'field' => 'institution_id',
+            'type' => 'string',
+            'label' => '',
+        ];
+        // End:POCOR-6854
 
         $fields[] = [
             'key' => 'InstitutionClassStudents.student_id',
@@ -319,6 +339,15 @@ class InstitutionClassStudentsTable extends AppTable
         $assessmentId = $sheet['assessmentId'];
         $staffId = $sheet['staffId'];
         $StudentStatuses = $this->StudentStatuses;
+        // POCOR-6837 start
+        $where = [];
+        $getUrl = $settings['path'];
+        $url = substr(strrchr(rtrim($getUrl, '/'), '/'), 1);
+        $where[$this->aliasField('institution_id')] = $institutionId;
+        if($url =='export'){
+            $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED','WITHDRAWN'];
+        }
+       // POCOR-6837 end
         
         $query
             ->contain([
@@ -337,8 +366,7 @@ class InstitutionClassStudentsTable extends AppTable
                 'StudentStatuses.id = '.$this->aliasField('student_status_id')
             ])
             ->select(['code' => 'Institutions.code', 'institution_id' => 'Institutions.name', 'openemis_number' => 'Users.openemis_no', 'birth_place_area' => 'BirthplaceAreas.name', 'dob' => 'Users.date_of_birth', 'class_name' => 'InstitutionClasses.name'])
-            ->where([$this->aliasField('institution_id') => $institutionId/*,
-                $StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']*/])
+            ->where($where)
             ->order(['class_name']);
 
         if (isset($sheet['classId'])) {
@@ -827,9 +855,9 @@ class InstitutionClassStudentsTable extends AppTable
         if ($type == 'PRINCIPAL') {
             $query
                 ->select(['comments' => $StudentReportCards->aliasfield('principal_comments')])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId) {//add $educationGradeId in params POCOR-6501
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data 
 
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId) {//add $educationGradeId in params POCOR-6501
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data 
 
                         $studentId = $row->student_id;
                         if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
@@ -914,6 +942,7 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->aliasField('education_grade_id'),
                                         $AssessmentItemResults->aliasField('academic_period_id'),
                                         $AssessmentItemResults->aliasField('institution_id'),
+                                        $AssessmentItemResults->aliasField('institution_classes_id'), // POCOR-6750
                                         'weightage' => $AssessmentItemResults->AssessmentPeriods->aliasField('weight')
 
                                     ])
@@ -924,6 +953,7 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
                                         $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
                                         $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
                                         /*POCOR-6443 starts - commented code was hiding overall marks*/
                                         //$AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
                                         //$AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
@@ -970,9 +1000,9 @@ class InstitutionClassStudentsTable extends AppTable
         } elseif ($type == 'HOMEROOM_TEACHER') {
             $query
                 ->select(['comments' => $StudentReportCards->aliasfield('homeroom_teacher_comments')])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId) {//add $educationGradeId in params POCOR-6501
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data 
 
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId) {//add $educationGradeId in params POCOR-6501
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data 
 
                         $studentId = $row->student_id;
                         if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
@@ -1057,6 +1087,7 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->aliasField('education_grade_id'),
                                         $AssessmentItemResults->aliasField('academic_period_id'),
                                         $AssessmentItemResults->aliasField('institution_id'),
+                                        $AssessmentItemResults->aliasField('institution_classes_id'), // POCOR-6750
                                         'weightage' => $AssessmentItemResults->AssessmentPeriods->aliasField('weight')
                                     ])
                                     ->contain([
@@ -1066,6 +1097,7 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
                                         $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
                                         $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
                                         /*POCOR-6443 starts - commented code was hiding overall marks*/
                                         //$AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
                                         //$AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
@@ -1134,8 +1166,8 @@ class InstitutionClassStudentsTable extends AppTable
                     $Staff->aliasField('id = ') . $ReportCardsComments->aliasField('staff_id')
                 ])
                 ->where([$SubjectStudents->aliasField('institution_subject_id') => $institutionSubjectId])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId,$institutionSubjectId, $educationGradeId) {//add $educationGradeId in params POCOR-6501
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId,$institutionSubjectId, $educationGradeId) {//add $educationGradeId in params POCOR-6501
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId,$institutionSubjectId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data 
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId,$institutionSubjectId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data 
 
                         $studentId = $row->student_id;
                         if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
@@ -1208,6 +1240,7 @@ class InstitutionClassStudentsTable extends AppTable
                                     $AssessmentItemResults->aliasField('education_grade_id'),
                                     $AssessmentItemResults->aliasField('academic_period_id'),
                                     $AssessmentItemResults->aliasField('institution_id'),
+                                    $AssessmentItemResults->aliasField('institution_classes_id'), // POCOR-6750
                                     'weightage' => $AssessmentItemResults->AssessmentPeriods->aliasField('weight')
 
                                 ])
@@ -1218,6 +1251,7 @@ class InstitutionClassStudentsTable extends AppTable
                                     $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
                                     $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
                                     $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                    $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
                                     /*POCOR-6443 starts - commented code was hiding overall marks*/
                                     //$AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
                                     //$AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
