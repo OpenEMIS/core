@@ -1,3 +1,10 @@
+### [3.77.0] - 2023-01-06
+- Implemented: Add School Type, Grade, and Subject filters to Custom Reports
+- Implemented: Develop a function for two factor authentication (email)
+- Bug Fixed: Institutions>Attendance>Students: Unable to change absence>excused/unexcused to other types of attendances
+- Bug Fixed: Institutions > Students > Pending Transfer Out: 404 error when approving cancellation
+- Bug Fixed: OpenEMIS Core 404 page is showing the header bar
+
 ### [3.77.0] - 2023-01-03
 - Implemented: Develop APIs for WebGIS
 - Implemented: When adding guardians to existing students we need to be able to be able to initiate the new workflow to conduct an internal and external search
