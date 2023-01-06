@@ -61,18 +61,6 @@ class StaffClassesTable extends ControllerActionTable
          */
         $this->toggle('edit', false);
         $this->toggle('remove', false);
-
-        //POCOR-6995
-        $this->addBehavior('Restful.RestfulAccessControl', [
-            'Students' => ['index', 'add'],
-            'ClassStudents' => ['view', 'edit'],
-            'StudentCompetencies' => ['view'],
-            'StudentCompetencyComments' => ['view'],
-            'OpenEMIS_Classroom' => ['index', 'view'],
-            'StudentOutcomes' => ['view'],
-            'SubjectStudents' => ['index'],
-            'Results'=> ['index']
-        ]);
     }
 
     // Academic Period	Institution	Grade	Class	Male Students	Female Students
@@ -251,7 +239,7 @@ class StaffClassesTable extends ControllerActionTable
         $this->fields['classes']['data']['classes'] = $classOptions;
         $extra['classOptions'] = $classOptions;
 
-        //Webhook Feature class (update) -- start POCOR-6995
+        //Webhook Feature class update -- start POCOR-6995
 
         $classIds = [];
         foreach($entity['Classes'] as $keys=>$val){

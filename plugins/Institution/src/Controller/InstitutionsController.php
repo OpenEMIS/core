@@ -7020,7 +7020,7 @@ class InstitutionsController extends AppController
      * POCOR-6995 
      * show Institution Class data in webhook
     **/ 
-    public function institutionClassStudentData($institutionClassId) 
+    private function institutionClassStudentData($institutionClassId) 
     {
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $bodyData = $InstitutionClasses->find('all',
