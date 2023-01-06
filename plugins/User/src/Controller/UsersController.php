@@ -31,7 +31,7 @@ class UsersController extends AppController
     {
         parent::beforeFilter($event);
 
-        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'forgotPassword', 'forgotUsername', 'resetPassword', 'postForgotPassword', 'postForgotUsername', 'postResetPassword']);
+        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'forgotPassword', 'forgotUsername', 'resetPassword', 'postForgotPassword', 'postForgotUsername', 'postResetPassword', 'twoFactorAuthentication', 'sendOtp', 'verifyOtp']);
 
         $action = $this->request->params['action'];
         if ($action == 'login_remote' || ($action == 'login' && $this->request->is('put'))) {
@@ -424,6 +424,37 @@ class UsersController extends AppController
         if ($this->request->is('post') && $this->request->data('submit') == 'reload') {
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
         }
+        //POCOR-7156 starts
+        $ConfigItems = TableRegistry::get('config_items');
+        $ConfigItemsEntity = $ConfigItems
+            ->find()
+            ->where([$ConfigItems->aliasField('code') => 'two_factor_authentication'])
+            ->first();
+        if ($this->request->is('post') && $this->request->data('submit') == 'login' && $ConfigItemsEntity->value == 1) {
+            if($this->request->data['username'] == '' || $this->request->data['password'] == ''){
+                $this->Alert->error('security.login.fail', ['reset' => true]);
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            }
+            $userEntity = $this->Users
+                ->find()
+                ->select([
+                    $this->Users->aliasField('id'),
+                    $this->Users->aliasField('username'),
+                    $this->Users->aliasField('email'),
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('middle_name'),
+                    $this->Users->aliasField('third_name'),
+                    $this->Users->aliasField('last_name'),
+                    $this->Users->aliasField('preferred_name')
+                ])->where([
+                    $this->Users->aliasField('username') => $this->request->data['username']
+                ])->first();
+            if ($userEntity->email == "") {
+                $message = __('An email address is not registered for this account. Please contact your system administrator.');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            }
+        }//POCOR-7156 ends
         $this->autoRender = false;
         $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
         $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
@@ -433,8 +464,105 @@ class UsersController extends AppController
         } elseif (is_null($code)) {
             $authenticationType = 'Local';
         }
-        $this->SSO->doAuthentication($authenticationType, $code);
+        //POCOR-7156 starts
+        if($ConfigItemsEntity->value == 1){
+            $six_digit_random_number = random_int(100000, 999999);
+            $encrypt_otp = base64_encode($six_digit_random_number);
+            $SystemUserOtpTbl = TableRegistry::get('security_user_codes');
+            $SystemUserOtpEntity = $SystemUserOtpTbl
+                        ->find()
+                        ->where([$SystemUserOtpTbl->aliasField('security_user_id') => $userEntity->id])
+                        ->first();
+            $now = new DateTime();
+            $create_date = $now->format('Y-m-d H:i:s');
+            if(!empty($SystemUserOtpEntity)){
+                $SystemUserOtpTbl->updateAll(
+                    ['verification_otp' => $encrypt_otp, 'created' => $create_date], 
+                    ['id' => $SystemUserOtpEntity->id]
+                );
+            }else{
+                $data = [
+                    'security_user_id' => $userEntity->id,
+                    'verification_otp' => $encrypt_otp,
+                    'created' => $create_date
+                ];
+                $newEntity = $SystemUserOtpTbl->newEntity($data);
+                $SystemUserOtpTbl->save($newEntity);
+            }
+            $userEmail = $userEntity->email;
+            $name = $userEntity->name;
+            $email = new Email('openemis');
+            $emailSubject = __('OpenEMIS - One-time Password (OTP)');
+            $emailMessage = "Dear " . $name . ",\n\nOne-time Password (OTP) is ". $six_digit_random_number ." . This OTP expires in 1 hour. \n\nBest regards,\nOpenEMIS Support\n\nThis is a system - generated email. Please do not reply to this email address.";
+            $email
+                ->to($userEmail)
+                ->subject($emailSubject)
+                ->send($emailMessage);
+            $message = __('A verification code has been sent to your registered email address.');
+            $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
+            $encodedUserData = $this->paramsEncode(['username' => $userEntity->username, 'email'=>$userEntity->email, 'password' => $this->request->data['password']]);
+            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $encodedUserData]);
+        }else{//POCOR-7156 ends
+            $this->SSO->doAuthentication($authenticationType, $code);
+        }
     }
+    //POCOR-7156 starts
+    public function verifyOtp()
+    {
+        if(isset($this->request->params['pass'][0]) && !empty($this->request->params['pass'][0])){
+            $userData = $this->paramsDecode($this->request->params['pass'][0]);
+            $userEntity = $this->Users
+                    ->find()
+                    ->select([
+                        $this->Users->aliasField('id'),
+                        $this->Users->aliasField('username'),
+                        $this->Users->aliasField('password'),
+                        $this->Users->aliasField('email'),
+                        $this->Users->aliasField('first_name'),
+                        $this->Users->aliasField('middle_name'),
+                        $this->Users->aliasField('third_name'),
+                        $this->Users->aliasField('last_name'),
+                        $this->Users->aliasField('preferred_name')
+                    ])
+                    ->where([
+                        $this->Users->aliasField('username') => $userData['username'],
+                        $this->Users->aliasField('email') => $userData['email']
+                    ])
+                    ->first(); 
+            if(empty($userEntity)){
+                $message = __('An email address is not registered for this account. Please contact your system administrator.');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            }else{
+                $this->set('encryptdata', $this->request->params['pass'][0]);
+                $this->set('username', $userData['username']);
+                $this->set('password', $userData['password']);
+                if ($this->request->is('post') && $this->request->data('submit') == 'login') {
+                    $SystemUserOtpTbl = TableRegistry::get('security_user_codes');
+                    $SystemUserOtpEntity = $SystemUserOtpTbl
+                                ->find()
+                                ->where([$SystemUserOtpTbl->aliasField('security_user_id') => $userEntity->id])
+                                ->first();
+                    if(!empty($SystemUserOtpEntity) && !empty($SystemUserOtpEntity->verification_otp)){
+                        if(base64_decode($SystemUserOtpEntity->verification_otp) == trim($this->request->data['otp'])){
+                            $authenticationType = 'Local';
+                            $code = null;
+                            $this->SSO->doAuthentication($authenticationType, $code);
+                        }else{
+                            $message = __('Incorrect OTP code entered. Please try again.');
+                            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $this->request->params['pass'][0]]);
+                        }
+                    }
+                }
+            }  
+        }else{
+            $message = __('There was an error in sending the OTP. Please enter a valid email id or username.');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        }
+        $this->viewBuilder()->layout(false);
+    }//POCOR-7156 ends
 
     public function logout($username = null)
     {
