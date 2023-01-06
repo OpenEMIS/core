@@ -75,7 +75,10 @@ class UserGroupsListTable extends ControllerActionTable
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['Users','SecurityRoles'])->order([$this->aliasField('created DESC')]);
+        $userGroupId = $this->request->query['userGroupId']; 
+        $query->contain(['Users','SecurityRoles'])
+        ->where([$this->aliasField('security_group_id')=>$userGroupId])
+        ->order([$this->aliasField('created DESC')]);
 
     }
 

@@ -100,14 +100,14 @@ class UserGroupsTable extends ControllerActionTable
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);      
 
         $this->setFieldOrder([
-            'name','institutions','area_id'
+            'name','institution_id','area_id'
         ]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('no_of_users', ['visible' => ['index' => true]]);
-        $this->setFieldOrder(['name', 'no_of_users','institutions']);
+        $this->setFieldOrder(['name', 'no_of_users','institution_id']);
     }
 
     public function onGetNoOfUsers(Event $event, Entity $entity)
@@ -197,108 +197,35 @@ class UserGroupsTable extends ControllerActionTable
         return $attr;
 
     }
-
-    public function onGetAreaId(Event $event, Entity $entity)
+    public function onGetAreaAdministrativeId(Event $event, Entity $entity)
     {
-        if ($this->action == 'index') {
-            $areaName = $entity->Areas['name'];
-            // Getting the system value for the area
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-            $areaLevel = $ConfigItems->value('institution_area_level_id');
-
-            // Getting the current area id
-            $areaId = $entity->area_id;
-            try {
-                if ($areaId > 0) {
-                    $path = $this->Areas
-                    ->find('path', ['for' => $areaId])
-                    ->contain('AreaLevels')
-                    ->toArray();
-
-                    foreach ($path as $value) {
-                        if ($value['area_level']['level'] == $areaLevel) {
-                            $areaName = $value['name'];
-                        }
-                    }
-                }
-            } catch (InvalidPrimaryKeyException $ex) {
-                $this->log($ex->getMessage(), 'error');
-            }
-            return $areaName;
+        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+        $result = $SecurityGroupAreas
+            ->find()
+            ->select([$SecurityGroupAreas->aliasField('area_id')])
+            ->where(['security_group_id' => $entity->id])
+            ->all();
+        
+        foreach($result AS $AreaData){
+            $areaArr[] = $AreaData->area_id;
         }
-        return $areaName;
-        // return $entity->area_id;;
+
+        $Areas = TableRegistry::get('Area.Areas');
+        if(!empty($areaArr)){
+            $AreasResult = $Areas
+            ->find('list')
+            ->where(['id IN' => $areaArr])
+            ->toArray();
+            foreach($AreasResult AS $AreaResultData){
+                $AreaDataVal[] =  $AreaResultData;
+            }
+        }
+        return (!empty($AreaDataVal))? implode(', ', $AreaDataVal): 'All area';
     }
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
-            if($action == 'edit'){
-                $MealsProgrammeId = $this->paramsDecode($request->params['pass']['1']);
-
-                $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
-                $result = $MealInstitutionProgrammes
-                    ->find()
-                    ->select([$MealInstitutionProgrammes->aliasField('area_id')])
-                    ->where(['meal_programme_id' => $MealsProgrammeId['id']])
-                    ->all();
-                
-                foreach($result AS $AreaData){
-                    $AreaDataArr[] = $AreaData->area_id;
-                }
-                if(!empty($request->data)){
-                    $areaId = array_unique($request->data['UserGroups']['area_id']['_ids']);
-                    //POCOR-6903: Start
-                    $AreaLevelsTable = TableRegistry::get('Area.AreaLevels');
-                    $AreaLevelsTableResult = $AreaLevelsTable
-                                    ->find('list')
-                                    ->toArray();
-                    $string_version = implode(',', $areaId);
-                    $AreaT = TableRegistry::get('areas');                    
-                    //Level-1
-                    $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
-                    $childArea =[];
-                    $childAreaMain = [];
-                    $childArea3 = [];
-                    $childArea4 = [];
-                    foreach($AreaData as $kkk =>$AreaData11 ){
-                        $childArea[$kkk] = $AreaData11->id;
-                    }
-                    //level-2
-                    foreach($childArea as $kyy =>$AreaDatal2 ){ 
-                        $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
-                        foreach($AreaDatas as $ky =>$AreaDatal22 ){
-                            $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
-                        }
-                    }
-                    //level-3
-                    if(!empty($childAreaMain)){
-                        foreach($childAreaMain as $kyy =>$AreaDatal3 ){ 
-                            $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
-                            foreach($AreaDatass as $ky =>$AreaDatal222 ){
-                                $childArea3[$kyy.$ky] = $AreaDatal222->id;
-                            }
-                        }
-                    }
-                    
-                    //level-4
-                    if(!empty($childAreaMain)){
-                        foreach($childArea3 as $kyy =>$AreaDatal4 ){
-                            $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
-                            foreach($AreaDatasss as $ky =>$AreaDatal44 ){
-                                $childArea4[$kyy.$ky] = $AreaDatal44->id;
-                            }
-                        }
-                    }
-                    
-                    $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
-                    array_push($mergeArr,$string_version);
-                    $mergeArr = array_unique($mergeArr);
-                    $finalIds = implode(',',$mergeArr);
-                    $areaId = explode(',',$finalIds);
-                }else{
-                    $areaId = array_unique($AreaDataArr);
-                }
-            }elseif($action == 'add'){
+            if($action == 'add'){
                 $areaId = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : 0;
                 $string_version = implode(',', $areaId);
                 $AreaT = TableRegistry::get('areas');                    
@@ -494,6 +421,11 @@ class UserGroupsTable extends ControllerActionTable
         $extra['toolbarButtons']['list'] = $listButton;
     }
 
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity);
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
     {
         $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
@@ -508,6 +440,10 @@ class UserGroupsTable extends ControllerActionTable
     }
 
     private function setupFields(Entity $entity = null) {
+        $attr = [];
+        if (!is_null($entity)) {
+            $attr['attr'] = ['entity' => $entity];
+        }
       
         $this->field('area_administrative_id', [    
             'attr' => [ 
@@ -525,54 +461,112 @@ class UserGroupsTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
         $SecurityGroupId = $this->paramsDecode($this->request->params['pass'][1]);
-        $institutions = TableRegistry::get('institutions');
-        $SecurityGroupInstitutionsData = $SecurityGroupInstitutions->find()
-            ->select([
-                 $institutions->aliasField('name')
-             ])
-            ->leftJoin([$institutions->alias() => $institutions->table()],[
-                $SecurityGroupInstitutions->aliasField('institution_id = ').$institutions->aliasField('id')
-            ])
-            ->where([$SecurityGroupInstitutions->aliasField('security_group_id')=>$SecurityGroupId['id']])
-            ->toArray();
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row){
+                    $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
 
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($SecurityGroupInstitutionsData) {
-                return $results->map(function ($row) use($SecurityGroupInstitutionsData){
-                    $item = [];
-                    foreach ($SecurityGroupInstitutionsData as $key => $InstitutionsData) {
-                         $item[] = $InstitutionsData->institutions['name'];
-                        
-                    }
-                    $row['institution_id'] = implode(",",$item);
+                    $institution = TableRegistry::get('institutions');
+                    $SecurityGroupInstitutionsData = $SecurityGroupInstitutions->find()
+                    // ->contain(['Institutions'])
+                    ->select([
+                         $institution->aliasField('id')
+                     ])
+                    ->leftJoin([$institution->alias() => $institution->table()],[
+                        $SecurityGroupInstitutions->aliasField('institution_id = ').$institution->aliasField('id')
+                    ])
+                    ->where([$SecurityGroupInstitutions->aliasField('security_group_id')=>$row->id])
+                    ->toArray();
+
+
+                    if(!empty($SecurityGroupInstitutionsData)){
+                        foreach($SecurityGroupInstitutionsData AS $institutionData){
+                            $institutionArr[] = $institutionData->institutions['id'];
+                        }
+
+                        $Institutions = TableRegistry::get('Institution.Institutions');
+                        $InstitutionsResult = $Institutions
+                            ->find()
+                            ->where(['id IN' => $institutionArr])
+                            ->all();
+
+                        foreach($InstitutionsResult AS $InstitutionsResultData){
+                            $InstitutionsData[] =  $InstitutionsResultData;
+                        }
+                    $row['institution_id'] = $InstitutionsData;
+                    
                     $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
                     $areas = TableRegistry::get('areas');
 
                     $SecurityGroupAreasData = $SecurityGroupAreas->find()
                     ->select([
-                         $areas->aliasField('name')
+                         $areas->aliasField('id')
                      ])
                     ->leftJoin([$areas->alias() => $areas->table()],[
                         $SecurityGroupAreas->aliasField('area_id = ').$areas->aliasField('id')
                     ])
                     ->where([$SecurityGroupAreas->aliasField('security_group_id')=>$row->id])
                     ->toArray();
+                    if ($SecurityGroupAreasData) {
+                    foreach($SecurityGroupAreasData AS $AreaData){
+                                $areaArr[] = $AreaData->areas['id'];
+                            }
+                    $Areas = TableRegistry::get('Area.Areas');
 
-                    $areasData = [];
-                    foreach ($SecurityGroupAreasData as $key => $AreasData) {
-                         $areasData[] = $AreasData->areas['name'];
-                        
+                    $AreasResult = $Areas
+                                ->find()
+                                ->where(['id IN' => $areaArr])
+                                ->all();
+
+                    foreach($AreasResult AS $AreaResultData){
+                                $AreaDataVal[] =  $AreaResultData;
+                            }
+
+                            $row['area_id'] = $AreaDataVal;
                     }
-                    $row['area_administrative_id'] = implode(",",$areasData);
-
-            // echo "<pre>"; print_r($row); die();
                     return $row ;
+                }
 
                 });
-            });
+            });    
+    }
 
-    
-       // $query->contain(['Institutions']);
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+
+        $conditions1 = [
+            $SecurityInstitutions->aliasField('security_group_id') => $entity->id
+        ];    
+
+        $SecurityInstitutions->deleteAll($conditions1);
+
+        $conditions2 = [
+            $SecurityGroupAreas->aliasField('security_group_id') => $entity->id
+        ];
+        $SecurityGroupAreas->deleteAll($conditions2);
+
+        $SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+        if ($entity->institution_id['_ids']) {
+            foreach ($entity->institution_id['_ids'] as $key => $value) {
+                $securityInstitution = $SecurityInstitutions->newEntity([
+                    'security_group_id' => $entity->id,
+                    'institution_id' => $value
+                ]);
+                $SecurityInstitutions->save($securityInstitution);
+            }
+        }
+        if ($entity->area_id['_ids']) {
+            foreach ($entity->area_id['_ids'] as $key => $value) {
+                $securityArea = $SecurityGroupAreas->newEntity([
+                    'security_group_id' => $entity->id,
+                    'area_id' => $value
+                ]);
+                $SecurityGroupAreas->save($securityArea);
+            }
+        }
+        
     }
 }
