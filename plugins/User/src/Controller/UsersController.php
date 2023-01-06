@@ -468,7 +468,7 @@ class UsersController extends AppController
         if($ConfigItemsEntity->value == 1){
             $six_digit_random_number = random_int(100000, 999999);
             $encrypt_otp = base64_encode($six_digit_random_number);
-            $SystemUserOtpTbl = TableRegistry::get('security_user_otp');
+            $SystemUserOtpTbl = TableRegistry::get('security_user_codes');
             $SystemUserOtpEntity = $SystemUserOtpTbl
                         ->find()
                         ->where([$SystemUserOtpTbl->aliasField('security_user_id') => $userEntity->id])
@@ -538,7 +538,7 @@ class UsersController extends AppController
                 $this->set('username', $userData['username']);
                 $this->set('password', $userData['password']);
                 if ($this->request->is('post') && $this->request->data('submit') == 'login') {
-                    $SystemUserOtpTbl = TableRegistry::get('security_user_otp');
+                    $SystemUserOtpTbl = TableRegistry::get('security_user_codes');
                     $SystemUserOtpEntity = $SystemUserOtpTbl
                                 ->find()
                                 ->where([$SystemUserOtpTbl->aliasField('security_user_id') => $userEntity->id])
