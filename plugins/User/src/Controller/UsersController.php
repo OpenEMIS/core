@@ -492,8 +492,8 @@ class UsersController extends AppController
             $userEmail = $userEntity->email;
             $name = $userEntity->name;
             $email = new Email('openemis');
-            $emailSubject = 'OTP from OpenEmis';
-            $emailMessage = "Dear " . $name . ",\n\nWe received a One Time Password (OTP) for your account.\nYour OTP is: " . $six_digit_random_number . "\n\nThank you.";
+            $emailSubject = __('OpenEMIS - One-time Password (OTP)');
+            $emailMessage = "Dear " . $name . ",\n\nOne-time Password (OTP) is ". $six_digit_random_number ." . This OTP expires in 1 hour. \n\nBest regards,\nOpenEMIS Support\n\nThis is a system - generated email. Please do not reply to this email address.";
             $email
                 ->to($userEmail)
                 ->subject($emailSubject)
