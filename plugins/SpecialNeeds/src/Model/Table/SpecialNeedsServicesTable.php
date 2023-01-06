@@ -22,6 +22,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('SpecialNeedsServiceTypes', ['className' => 'SpecialNeeds.SpecialNeedsServiceTypes']);
+        $this->belongsTo('SpecialNeedsServiceClassification', ['className' => 'SpecialNeeds.SpecialNeedsServiceClassification']);
 
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -40,14 +41,14 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-                ->add('description', 'length', [
-                'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-                'message' => __('Description must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-                ])
-                ->add('comment', 'length', [
-                'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-                ])
+                // ->add('description', 'length', [
+                // 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
+                // 'message' => __('Description must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
+                // ])
+                // ->add('comment', 'length', [
+                // 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
+                // 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
+                // ])
                 ->allowEmpty('file_content');
     }
 
@@ -56,6 +57,10 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         switch ($field) {
             case 'special_needs_service_type_id':
                 return __('Service Name');
+            case 'organization':
+                return __('Service Provider');
+            case 'special_needs_service_classification_id':
+                return __('Classification');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -150,12 +155,13 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('special_needs_service_type_id', ['type' => 'select']);
         $this->field('description', ['type' => 'text']);
+        $this->field('special_needs_service_classification_id', ['type' => 'select']);
         $this->field('organization');
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('comment', ['type' => 'text']);
 
-        $this->setFieldOrder(['academic_period_id', 'special_needs_service_type_id', 'description', 'organization', 'file_name', 'file_content', 'comment']);
+        $this->setFieldOrder(['academic_period_id', 'special_needs_service_type_id', 'description', 'special_needs_service_classification_id', 'organization', 'file_name', 'file_content', 'comment']);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -164,10 +170,17 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
         $academicPeriodId = $this->request->query['academic_period_id'];
 
-        $query
-        ->where([
-            'academic_period_id =' .$academicPeriodId,
-            'security_user_id =' .$studentUserId,
-        ]);
+        if($academicPeriodId == '-1'){
+            $query
+            ->where([
+                'security_user_id =' .$studentUserId,
+            ]);
+        }else{
+            $query
+            ->where([
+                'academic_period_id =' .$academicPeriodId,
+                'security_user_id =' .$studentUserId,
+            ]);
+        }
     }
 }

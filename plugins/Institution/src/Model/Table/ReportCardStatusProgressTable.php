@@ -19,6 +19,7 @@ use Cake\Routing\Router;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
+use Cake\Datasource\ResultSetInterface;
 
 class ReportCardStatusProgressTable extends ControllerActionTable
 {
@@ -136,28 +137,43 @@ class ReportCardStatusProgressTable extends ControllerActionTable
             $classIds = array_keys($classLists);
         }
         
-        
         $query
                 ->select([
                     'id','name','institution_id',
-                    
+                    //POCOR-6692
                     'inProcess' => $reportCardProcesses->find()->where([
                                 'report_card_id' => $reportCardId,
                                 'academic_period_id' => $academicPeriodId,
                                 'institution_id' => $institutionId,
                             ])->count(),
-                    'inCompleted' => $institutionStudentsReportCards->find()->where([
+                    /*'inCompleted' => $institutionStudentsReportCards->find()->where([
                                 'report_card_id' => $reportCardId,
                                 'academic_period_id' => $academicPeriodId,
                                 'institution_id' => $institutionId,
                                 'status' => 3
-                            ])->count()
+                            ])->count()*/
                 ])
                 ->where([
                     $this->aliasField('academic_period_id') => $academicPeriodId,
                     $this->aliasField('institution_id') => $institutionId,
                     $this->aliasField('id IN') => $classIds
-                    ]);
+                    ])
+                ->formatResults(function (ResultSetInterface $results) use ($reportCardId, $institutionId, $academicPeriodId) {
+                    return $results->map(function ($row) use ($reportCardId, $institutionId, $academicPeriodId) {
+                        $institutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+                        $inCompleted = $institutionStudentsReportCards->find()->where([
+                            $institutionStudentsReportCards->aliasField('report_card_id') => $reportCardId,
+                            $institutionStudentsReportCards->aliasField('academic_period_id') => $academicPeriodId,
+                            $institutionStudentsReportCards->aliasField('institution_id') => $institutionId,
+                            $institutionStudentsReportCards->aliasField('institution_class_id') => $row['id'],
+                            $institutionStudentsReportCards->aliasField('status') => 3
+                        ])->count();
+                        $row['inCompleted'] = $inCompleted;
+                       //echo "<pre>"; print_r($row);echo "</pre>";
+                        return $row;
+                    });
+                
+            });
        
     }
 

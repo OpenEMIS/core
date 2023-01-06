@@ -61,13 +61,15 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
             ->add('name', 'ruleUnique', [
                 'rule' => ['validateUnique'],
                 'provider' => 'table'
-            ])
-            ->add('mapped_first_name', 'ruleMaxLength', [
-                'rule' => ['maxLength', 100]
-            ])
-            ->add('mapped_last_name', 'ruleMaxLength', [
-                'rule' => ['maxLength', 100]
             ]);
+            //Start POCOR-6697
+            // ->add('mapped_first_name', 'ruleMaxLength', [
+            //     'rule' => ['maxLength', 100]
+            // ])
+            // ->add('mapped_last_name', 'ruleMaxLength', [
+            //     'rule' => ['maxLength', 100]
+            // ]);
+            //End POCOR-6697
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)

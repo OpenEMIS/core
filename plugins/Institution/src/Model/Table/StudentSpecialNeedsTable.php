@@ -107,6 +107,7 @@ class StudentSpecialNeedsTable extends AppTable
             'SpecialNeedsServices',
             'SpecialNeedsDevices',
             'SpecialNeedsPlans',
+            'Diagnostics',
         ];
         foreach($sheet_tabs as $sheet_tab_name) {  
             $sheets[] = [
@@ -131,6 +132,10 @@ class StudentSpecialNeedsTable extends AppTable
         $group_by              = [];
         $group_by[]            = $this->aliasField('openemis_no');
         $group_by[]            = 'InstitutionStudent.student_status_id';
+        // START:POCOR-6819
+        $ClassStudents         = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Classes               = TableRegistry::get('Institution.InstitutionClasses');
+        // End:POCOR-6819
 
         // START: JOINs
         $join = [
@@ -154,7 +159,12 @@ class StudentSpecialNeedsTable extends AppTable
                 'conditions' => [
                     'AcademicPeriod.id = InstitutionStudent.academic_period_id'
                 ]
-            ],
+            ],// START:POCOR-6819
+            'EducationGrades' => [
+                'type' => 'inner',
+                'table' => 'education_grades',
+                'conditions' => ['EducationGrades.id = InstitutionStudent.education_grade_id']
+            ],// End:POCOR-6819
         ];
 
         if ( $sheet_tab_name == 'SpecialNeedsReferrals' ) {
@@ -280,9 +290,54 @@ class StudentSpecialNeedsTable extends AppTable
                     'SpecialNeedsPlans.security_user_id = ' . $this->aliasField('id')
                 ],
             ];
+        } 
+        //POCOR-6873[START]
+        else if ( $sheet_tab_name == 'Diagnostics' ) {
+            $group_by[] = 'SpecialNeedsDiagnostics.id';
+            $selectable['date'] = 'SpecialNeedsDiagnostics.date';
+            $selectable['comment'] = 'SpecialNeedsDiagnostics.comment';
+            $selectable['diagnostics_type'] = 'SpecialNeedsDiagnosticsTypes.name';
+            $selectable['diagnostics_degree'] = 'SpecialNeedsDiagnosticsDegree.name';
+            $join['SpecialNeedsDiagnostics'] = [
+                'type' => 'inner',
+                'table' => 'user_special_needs_diagnostics',
+                'conditions' => [
+                    'SpecialNeedsDiagnostics.security_user_id = ' . $this->aliasField('id')
+                ],
+            ];
+            $join['SpecialNeedsDiagnosticsDegree'] = [
+                'type' => 'left',
+                'table' => 'special_needs_diagnostics_degree',
+                'conditions' => [
+                    'SpecialNeedsDiagnosticsDegree.id = SpecialNeedsDiagnostics.special_needs_diagnostics_degree_id',
+                ],
+            ];
+            $join['SpecialNeedsDiagnosticsTypes'] = [
+                'type' => 'left',
+                'table' => 'special_needs_diagnostics_types',
+                'conditions' => [
+                    'SpecialNeedsDiagnosticsTypes.id = SpecialNeedsDiagnostics.special_needs_diagnostics_type_id',
+                ],
+            ];
         }
+        //POCOR-6873[END]
 
         $query->join($join);
+
+        // START:POCOR-6819
+        $query->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+            $ClassStudents->aliasField('student_id = ') . 'InstitutionStudent.student_id',
+            $ClassStudents->aliasField('institution_id = ') . 'InstitutionStudent.institution_id',
+            $ClassStudents->aliasField('education_grade_id = ') . 'InstitutionStudent.education_grade_id',
+            $ClassStudents->aliasField('student_status_id = ') . 'InstitutionStudent.student_status_id',
+            $ClassStudents->aliasField('academic_period_id = ') . 'InstitutionStudent.academic_period_id'
+        ]);
+
+        $query->leftJoin([$Classes->alias() => $Classes->table()], [
+            $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
+        ]);
+        // End:POCOR-6819
+
         // END: JOINs
         
         // START : Selectable fields
@@ -292,6 +347,8 @@ class StudentSpecialNeedsTable extends AppTable
         $selectable['student_id']          = $this->aliasField('id');
         $selectable['first_name']          = $this->aliasField('first_name');
         $selectable['last_name']           = $this->aliasField('last_name');
+        $selectable['education_grade']     = 'EducationGrades.name';   // POCOR-6819
+        $selectable['class_name']          = 'InstitutionClasses.name';  // POCOR-6819
         $selectable['academic_year_name']  = 'AcademicPeriod.name';
         $query->select($selectable);
         // END : Selectable fields
@@ -343,10 +400,45 @@ class StudentSpecialNeedsTable extends AppTable
         } else if ( $sheet_tab_name == 'SpecialNeedsPlans' ) {
             $extraField = $this->getPlanTabFields($extraField);
 
+        } else if ( $sheet_tab_name == 'Diagnostics' ) {  //POCOR-6873
+            $extraField = $this->getDiagnosticsTabFields($extraField);
+
         }
 
         $fields->exchangeArray($extraField);
     }
+    //POCOR-6873[START]
+    private function getDiagnosticsTabFields($extraField)
+    {
+        $extraField = $this->commonFields($extraField);
+        $extraField[] = [
+            'key'   => 'SpecialNeedsDiagnostics.date',
+            'field' => 'date',
+            'type'  => 'string',
+            'label' => __('Date'),
+        ];
+        $extraField[] = [
+            'key'   => 'SpecialNeedsDiagnostics.comment',
+            'field' => 'comment',
+            'type'  => 'string',
+            'label' => __('Comment'),
+        ];
+        $extraField[] = [
+            'key'   => 'SpecialNeedsDiagnostics.special_needs_diagnostics_type_id',
+            'field' => 'diagnostics_type',
+            'type'  => 'string',
+            'label' => __('Diagnostics Types'),
+        ];
+        $extraField[] = [
+            'key'   => 'SpecialNeedsDiagnostics.special_needs_diagnostics_degree_id',
+            'field' => 'diagnostics_degree',
+            'type'  => 'string',
+            'label' => __('Diagnostics Degree'),
+        ];
+        
+        return $extraField;
+    }
+    //POCOR-6873[END]
 
     private function getPlanTabFields($extraField)
     {
@@ -530,6 +622,20 @@ class StudentSpecialNeedsTable extends AppTable
             'type'  => 'string',
             'label' => __('Student'),
         ];
+        // START:POCOR-6819
+        $extraField[] = [
+            'key'   => 'EducationGrades.name',
+            'field' => 'education_grade',
+            'type'  => 'string',
+            'label' => __('Education Grades'),
+        ];
+        $extraField[] = [
+            'key'   => 'InstitutionClasses.name',
+            'field' => 'class_name',
+            'type'  => 'string',
+            'label' => __('Class'),
+        ];
+        // End:POCOR-6819
         return $extraField;
     }
 }

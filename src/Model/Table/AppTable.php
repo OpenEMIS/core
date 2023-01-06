@@ -380,14 +380,30 @@ class AppTable extends Table
                 $toolbarButtons['add']['attr'] = $toolbarAttr;
                 $toolbarButtons['add']['attr']['title'] = __('Add');
             }
-            if ($buttons->offsetExists('search')) {
+            //POCOR-6922 Starts add else condition and in `if condition` add url check condition
+            if (($this->request->url != 'Securities/Users') && $buttons->offsetExists('search')) {
                 $toolbarButtons['search'] = [
                     'type' => 'element',
                     'element' => 'OpenEmis.search',
                     'data' => ['url' => $buttons['index']['url']],
                     'options' => []
                 ];
-            }
+            }else if(($this->request->params['plugin'] == 'Security' && $this->request->params['controller'] == 'Securities' && $this->request->url == 'Securities/Users')){
+                $toolbarButtons['advance_search'] = [
+                    'type' => 'button',
+                    'attr' => [
+                        'class' => 'btn btn-default btn-xs',
+                        'data-toggle' => 'tooltip',
+                        'data-placement' => 'bottom',
+                        'title' => __('Advanced Search'),
+                        'id' => 'search-toggle',
+                        'escape' => false,
+                        'ng-click'=> 'toggleAdvancedSearch()'
+                    ],
+                    'url' => '#',
+                    'label' => '<i class="fa fa-search-plus"></i>',
+                ];
+            }//POCOR-6922 Ends
         } elseif ($action == 'add' || $action == 'edit') {
             if ($action == 'edit' && $buttons->offsetExists('index')) {
                 $toolbarButtons['list'] = $buttons['index'];

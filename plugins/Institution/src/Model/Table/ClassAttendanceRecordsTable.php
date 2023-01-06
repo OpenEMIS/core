@@ -56,7 +56,6 @@ class ClassAttendanceRecordsTable extends AppTable
 
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
         $attendancePerDay = $StudentAttendanceMarkTypes->getAttendancePerDayByClass($institutionClassId, $academicPeriodId);
-
         if ($totalMarkedCount >= $attendancePerDay) {
             $markedType = self::MARKED;
         } else {

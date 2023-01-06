@@ -146,7 +146,7 @@ class Log
         'warning',
         'notice',
         'info',
-        'debug'
+        'debug',
     ];
 
     /**

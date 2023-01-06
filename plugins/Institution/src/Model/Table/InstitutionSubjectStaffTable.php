@@ -12,6 +12,9 @@ use App\Model\Traits\OptionsTrait;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use ArrayObject;
+use Cake\ORM\Table;
+use Cake\Datasource\ResultSetInterface;
+use Firebase\JWT\JWT;
 
 class InstitutionSubjectStaffTable extends AppTable
 {
@@ -22,7 +25,7 @@ class InstitutionSubjectStaffTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
-
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Results' => ['index']
         ]);
@@ -476,5 +479,134 @@ class InstitutionSubjectStaffTable extends AppTable
           
         return false;
     }
+
+    /**
+    * API to fetch staff's subject records
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * @return json
+    * @ticket - POCOR-6807 
+    */
+    public function findStaffInstitutionSubjects(Query $query, array $options)
+    {
+        $staffId = $options['staff_id'];
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $classes = $students = [];
+        if (!empty($staffId) && !empty($institutionId)) {
+            $getRecord = $this->find()
+                    ->select([
+                        'education_systems_name' => 'EducationSystems.name',
+                        'education_levels_name' => 'EducationLevels.name',
+                        'education_cycles_name' =>  'EducationCycles.name',
+                        'education_programmes_code' => 'EducationProgrammes.code',
+                        'education_programmes_name' =>  'EducationProgrammes.name',
+                        'education_grades_code' => 'EducationGrades.code',
+                        'education_grades_name' => 'EducationGrades.name',
+                        'education_subjects_code' => 'EducationSubjects.code',
+                        'education_subjects_name' => 'EducationSubjects.name',
+                        'institutions_id'=>  'Institutions.id',
+                        'institutions_code' => 'Institutions.code',
+                        'institutions_name' => 'Institutions.name',
+                        'academic_periods_code' => 'AcademicPeriods.code',
+                        'academic_periods_name'=> 'AcademicPeriods.name',
+                        'academic_periods_id'=> 'AcademicPeriods.id',
+                        'institution_subjects_id'=> 'InstitutionSubjects.id',
+                        'institution_subjects_name'=> 'InstitutionSubjects.name',
+                        'security_users_openemis_no_subject_teachers' => 'Users.openemis_no'
+                    ])
+                    ->contain([
+                        'Users',
+                        'Institutions',
+                        'InstitutionSubjects',
+                        'InstitutionSubjects.EducationSubjects', 
+                        'InstitutionSubjects.EducationGrades',
+                        'InstitutionSubjects.EducationGrades.EducationProgrammes',
+                        'InstitutionSubjects.EducationGrades.EducationProgrammes.EducationCycles',
+                        'InstitutionSubjects.EducationGrades.EducationProgrammes.EducationCycles.EducationLevels',
+                        'InstitutionSubjects.EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems',
+                        'InstitutionSubjects.AcademicPeriods',
+                        'InstitutionSubjects.Students',
+                        'InstitutionSubjects.Classes'
+                    ])
+                    ->where([
+                        $this->aliasField('staff_id') => $staffId,
+                        $this->aliasField('institution_id') => $institutionId,
+                       'AcademicPeriods.id' => $academicPeriodId,//POCOR-7087
+                    ])
+                       ->hydrate(false)
+                        ->formatResults(function (ResultSetInterface $results) {
+                        return $results->map(function ($row) {
+                            $classSubject = TableRegistry::get('Institution.InstitutionClassSubjects');
+                            $subjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+                            /**fetching institution subject's classed data*/
+                            $classObj = $classSubject->find()
+                                    ->select(['InstitutionClasses.name','InstitutionClasses.id'])
+                                    ->contain('InstitutionClasses')
+                                    ->where([
+                                        $classSubject->aliasField('institution_subject_id') => $row['institution_subjects_id']
+                                    ])
+                                    ->hydrate(false);
+                            if(!empty($classObj)) {
+                                foreach ($classObj as $class) {
+                                    $classes['name'] = $class['InstitutionClasses']['name'];
+                                    $classes['id'] = $class['InstitutionClasses']['id'];//POCOR-7087
+                                }
+                            }
+                            /**fetching institution subject's students data*/
+                            $studentObj = $subjectStudents->find()
+                                    ->select(['Users.openemis_no'])
+                                    ->contain('Users')
+                                    ->where([
+                                        $subjectStudents->aliasField('institution_subject_id') => $row['institution_subjects_id']
+                                    ])
+                                    ->hydrate(false);
+                            if(!empty($studentObj)) {
+                                foreach ($studentObj as $student) {
+                                    $students[] = $student['Users']['openemis_no'];
+                                }
+                            }
+                            $row['institution_classes_name'] = $classes;
+                            $row['security_users_openemis_no_students'] = $students;
+                            return $row;
+                        });
+                    });
+            $response['result'] = $getRecord;
+            $response['message'] = 'Successful Operation';
+            $dataArr = array("data" => $response);
+            echo json_encode($dataArr);exit;
+        } else {
+            $response['result'] = [];
+            $response['message'] = "Mandatory field can't empty";
+            $dataArr = array("data" => $response);
+            echo json_encode($dataArr);exit;
+        }
+    }
+
+    /**
+    * Custom validation
+    * This function will validate whether the mandatory fields has exist or not
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * @return json
+    * @ticket - POCOR-6807 
+    */
+    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    {
+        $url = $_SERVER['REQUEST_URI'];
+        $url_components = parse_url($url);
+        parse_str($url_components['query'], $params);
+        $action = array_key_exists('_finder', $params);
+        if ($primary && $action) {
+            $param = preg_match_all('/\\[(.*?)\\]/', $params['_finder'], $matches);
+            $paramsString = $matches[1];
+            $paramsArray = explode(';', $paramsString[0]);
+            if (empty($paramsArray[0]) || empty($paramsArray[1])) {
+                $response['result'] = [];
+                $response['message'] = "Mandatory field can't empty";
+                $dataArr = array("data" => $response);
+                echo json_encode($dataArr);exit;
+            }
+        }    
+    }
+    /**POCOR-6807 ends*/ 
     
 }
