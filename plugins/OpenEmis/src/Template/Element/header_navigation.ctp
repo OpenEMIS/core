@@ -1,9 +1,12 @@
 <?php
 $session = $this->request->session();
-$firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User.first_name') : 'System';
-$middleName = $session->check('Auth.User.middle_name') ? $session->read('Auth.User.middle_name') : '';
-$thirdName = $session->check('Auth.User.third_name') ? $session->read('Auth.User.third_name') : '';
-$lastName = $session->check('Auth.User.last_name') ? $session->read('Auth.User.last_name') : 'Administrator';
+if($session->check('Auth.User.first_name')){ //POCOR-7164
+	$firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User.first_name') : 'System';
+	$middleName = $session->check('Auth.User.middle_name') ? $session->read('Auth.User.middle_name') : '';
+	$thirdName = $session->check('Auth.User.third_name') ? $session->read('Auth.User.third_name') : '';
+	$lastName = $session->check('Auth.User.last_name') ? $session->read('Auth.User.last_name') : 'Administrator';
+}
+//POCOR-7164
 
 if (!isset($headerMenu)) {
 	$headerMenu = [];
@@ -15,6 +18,7 @@ if ($session->check('System.User.roles')) {
 }
 ?>
 <div class="header-navigation">
+	<?php if($session->check('Auth.User.first_name')){ ?> <!--POCOR-7164-->
 	<div class="username">
 		<span><?= sprintf('%s %s %s %s', $firstName, $middleName,$thirdName,$lastName) ?></span>
 		<a class="btn" data-toggle="tooltip" data-placement="bottom" data-html="true" title="<?= $roles ?>"><i class="kd-role"></i></a>
@@ -25,7 +29,7 @@ if ($session->check('System.User.roles')) {
             <i class="fa fa-home"></i>
         </a>
     </div>
-
+	
     <?php
 	if (isset($showProductList) && $showProductList) {
 		echo $this->element('OpenEmis.product_list');
@@ -55,4 +59,5 @@ if ($session->check('System.User.roles')) {
 			</div>
 		</ul>
 	</div>
+	<?php  }?> <!--POCOR-7164-->
 </div>
