@@ -165,39 +165,47 @@ class StudentContactsTable extends AppTable  {
             ->where([$institutionStudents->aliasField('student_status_id') => 1, $conditions])
             ->group(['InstitutionStudents.student_id']);
 
-            $query
-                ->select([
-                    'security_user_id' => $userIdentity->aliasField('security_user_id'),
-                    $query->func()->concat([
-                    $this->aliasField('IdentityTypes.name') => 'literal',
-                    " ",
-                     $this->aliasField('Identities.number') => 'literal',
-                    " "
-                    ]),
-                ])
-                ->innerJoin([$userIdentity->alias() => $userIdentity->table()],
-                [
-                    $userIdentity->aliasField('security_user_id') . ' = '. $this->aliasField('id')
-                ])
-                ->innerJoin([$identityType->alias() => $identityType->table()],
-                [
-                    $identityType->aliasField('id') . ' = '. $userIdentity->aliasField('identity_type_id')
-                ])
-                ->where([$identityType->aliasField('default') => 1, $conditions])
-                ->group(['Identities.security_user_id']);
+            // $query
+            //     ->select([
+            //         'security_user_id' => $userIdentity->aliasField('security_user_id'),
+            //         $query->func()->concat([
+            //         $this->aliasField('IdentityTypes.name') => 'literal',
+            //         " ",
+            //          $this->aliasField('Identities.number') => 'literal',
+            //         " "
+            //         ]),
+            //     ])
+            //     ->innerJoin([$userIdentity->alias() => $userIdentity->table()],
+            //     [
+            //         $userIdentity->aliasField('security_user_id') . ' = '. $this->aliasField('id')
+            //     ])
+            //     ->innerJoin([$identityType->alias() => $identityType->table()],
+            //     [
+            //         $identityType->aliasField('id') . ' = '. $userIdentity->aliasField('identity_type_id')
+            //     ])
+            //     ->where([$identityType->aliasField('default') => 1, $conditions])
+            //     ->group(['Identities.security_user_id']);
 
             $query
-                ->select([
-                    'contacts' => $userContacts->aliasField('security_user_id'),
-                    $query->func()->concat([
-                    $this->aliasField('ContactOptions.name') => 'literal',
-                    " ",
-                    $this->aliasField('ContactTypes.name') => 'literal',
-                    " ",
-                    $this->aliasField('Contacts.value') => 'literal',
-                    " "
-                    ]),
-                ])
+            ->select([
+
+                      'contact_option_id' => $contactsType->aliasfield('contact_option_id'),
+
+                      'contact_type' => $contactsType->aliasfield('name'),
+                      'value' => 'Contacts.value',
+                      'preferred' => $userContacts->aliasField('preferred')
+                   ])
+                // ->select([
+                //     'contacts' => $userContacts->aliasField('security_user_id'),
+                //     'contact_name' => $query->func()->concat([
+                //     // $this->aliasField('ContactOptions.name') => 'literal',
+                //     // " ",
+                //     $this->aliasField('Contacts.value') => 'literal',
+                //     " "
+                //     ]),
+                //    'description' => $contactsType->aliasField('name'),
+                //    'preferred' => $userContacts->aliasField('preferred'),
+                // ])
                 ->innerJoin([$userContacts->alias() => $userContacts->table()],
                 [
                     $userContacts->aliasField('security_user_id') . ' = '. $this->aliasField('id')
@@ -212,6 +220,7 @@ class StudentContactsTable extends AppTable  {
                 ])
                 ->where([$userContacts->aliasField('preferred') => 1, $conditions])
                 ->group(['Contacts.security_user_id']);
+                //print_r($query->sql()); die;
     }
 
 	public function onExcelGetPreferred(Event $event, Entity $entity) {
@@ -255,6 +264,26 @@ class StudentContactsTable extends AppTable  {
             'type' => 'string',
             'label' => __('Identity Number')
         ];
+
+        // $extraFields[] = [
+        //     'key' => 'contact_name',
+        //     'field' => 'contact_name',
+        //     'type' => 'string',
+        //     'label' => __('Mobile')
+        // ];
+
+        // $extraFields[] = [
+        //     'key' => 'preferred',
+        //     'field' => 'preferred',
+        //     'type' => 'string',
+        //     'label' => __('Preferred')
+        // ];
+        // $extraFields[] = [
+        //     'key' => 'description',
+        //     'field' => 'description',
+        //     'type' => 'string',
+        //     'label' => __('Description')
+        // ];
 		
 		$ContactOptions = TableRegistry::get('contact_options');
                     
