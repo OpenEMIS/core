@@ -17,7 +17,7 @@ class POCOR7156 extends AbstractMigration
         //Create table `security_user_codes`
         $table = $this->table('security_user_codes', [
                 'collation' => 'utf8_general_ci',
-                'comment' =>  'This table will contain the OTP of the security users when login by two-factor authentication is enabled'•
+                'comment' =>  'This table will contain the OTP of the security users when login by two-factor authentication is enabled'
             ]);
         $table->addColumn('security_user_id', 'integer', [
                 'default' => null,
