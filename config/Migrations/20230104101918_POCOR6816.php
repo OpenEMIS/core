@@ -20,10 +20,10 @@ class POCOR6816 extends AbstractMigration
         //Create tables
         $this->execute("CREATE TABLE IF NOT EXISTS `data_management_logs` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
-            `type` varchar(200) COLLATE utf8mb4_unicode_ci,
-            `name` varchar(200) COLLATE utf8mb4_unicode_ci ,
-            `path` varchar(200) COLLATE utf8mb4_unicode_ci ,
-            `feature` varchar(200) COLLATE utf8mb4_unicode_ci,
+            `type` varchar(200) COLLATE utf8_general_ci,
+            `name` varchar(200) COLLATE utf8_general_ci ,
+            `path` varchar(200) COLLATE utf8_general_ci ,
+            `feature` varchar(200) COLLATE utf8_general_ci,
             `from_academic_period_id` int(11),
             `to_academic_period_id` int(11),
             `created_user_id` int(11),
