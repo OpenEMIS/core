@@ -465,7 +465,7 @@ class UsersController extends AppController
             $authenticationType = 'Local';
         }
         //POCOR-7156 starts
-        if($ConfigItemsEntity->value == 1){
+        if($this->request->is('post') && $this->request->data('submit') == 'login' && $ConfigItemsEntity->value == 1){
             $six_digit_random_number = random_int(100000, 999999);
             $encrypt_otp = base64_encode($six_digit_random_number);
             $SystemUserOtpTbl = TableRegistry::get('security_user_codes');
