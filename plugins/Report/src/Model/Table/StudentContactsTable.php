@@ -51,9 +51,9 @@ class StudentContactsTable extends AppTable  {
         if(!empty($result)) {
             foreach ($result as $single) {
                 if ($single->IdentityNumber == end($result)->IdentityNumber) {
-                    $IdentityNumber .= $single->IdentityTypes .' - '. $single->IdentityNumber;
+                    $IdentityNumber .= $single->IdentityNumber;
                 } else {
-                    $IdentityNumber .= $single->IdentityTypes .' - '. $single->IdentityNumber . ', ';
+                    $IdentityNumber .= $single->IdentityNumber;
                 }
             }
         }
@@ -104,7 +104,9 @@ class StudentContactsTable extends AppTable  {
         return $institutionName;
     }
 
+    //POCOR-7108
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+        
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
@@ -165,47 +167,21 @@ class StudentContactsTable extends AppTable  {
             ->where([$institutionStudents->aliasField('student_status_id') => 1, $conditions])
             ->group(['InstitutionStudents.student_id']);
 
-            // $query
-            //     ->select([
-            //         'security_user_id' => $userIdentity->aliasField('security_user_id'),
-            //         $query->func()->concat([
-            //         $this->aliasField('IdentityTypes.name') => 'literal',
-            //         " ",
-            //          $this->aliasField('Identities.number') => 'literal',
-            //         " "
-            //         ]),
-            //     ])
-            //     ->innerJoin([$userIdentity->alias() => $userIdentity->table()],
-            //     [
-            //         $userIdentity->aliasField('security_user_id') . ' = '. $this->aliasField('id')
-            //     ])
-            //     ->innerJoin([$identityType->alias() => $identityType->table()],
-            //     [
-            //         $identityType->aliasField('id') . ' = '. $userIdentity->aliasField('identity_type_id')
-            //     ])
-            //     ->where([$identityType->aliasField('default') => 1, $conditions])
-            //     ->group(['Identities.security_user_id']);
-
             $query
-            ->select([
-
-                      'contact_option_id' => $contactsType->aliasfield('contact_option_id'),
-
-                      'contact_type' => $contactsType->aliasfield('name'),
-                      'value' => 'Contacts.value',
-                      'preferred' => $userContacts->aliasField('preferred')
-                   ])
-                // ->select([
-                //     'contacts' => $userContacts->aliasField('security_user_id'),
-                //     'contact_name' => $query->func()->concat([
-                //     // $this->aliasField('ContactOptions.name') => 'literal',
-                //     // " ",
-                //     $this->aliasField('Contacts.value') => 'literal',
-                //     " "
-                //     ]),
-                //    'description' => $contactsType->aliasField('name'),
-                //    'preferred' => $userContacts->aliasField('preferred'),
-                // ])
+                ->select([
+                    'contacts' => $userContacts->aliasField('security_user_id'),
+                    'contact_name' => $query->func()->group_concat([
+                    $this->aliasField('ContactOptions.name') => 'literal',
+                    " ",
+                    '(',
+                    $this->aliasField('ContactTypes.name') => 'literal',
+                    " ", '): ',
+                    $this->aliasField('Contacts.value') => 'literal',
+                    " "
+                    ]),
+                   'description' => $contactsType->aliasField('name'),
+                   'preferred' => $userContacts->aliasField('preferred'),
+                ])
                 ->innerJoin([$userContacts->alias() => $userContacts->table()],
                 [
                     $userContacts->aliasField('security_user_id') . ' = '. $this->aliasField('id')
@@ -220,8 +196,9 @@ class StudentContactsTable extends AppTable  {
                 ])
                 ->where([$userContacts->aliasField('preferred') => 1, $conditions])
                 ->group(['Contacts.security_user_id']);
-                //print_r($query->sql()); die;
     }
+
+    //End of POCOR-7108
 
 	public function onExcelGetPreferred(Event $event, Entity $entity) {
 		$options = [0 => __('No'), 1 => __('Yes')];
@@ -230,6 +207,13 @@ class StudentContactsTable extends AppTable  {
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+        $extraFields[] = [
+            'key' => 'institution_code',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution Code')
+        ];
+
 		$extraFields[] = [
             'key' => 'institution_name',
             'field' => 'institution_name',
@@ -237,11 +221,18 @@ class StudentContactsTable extends AppTable  {
             'label' => __('Institution Name')
         ];
 		
+        $extraFields[] = [
+            'key' => 'education_code',
+            'field' => 'education_code',
+            'type' => 'string',
+            'label' => __('Education Code')
+        ];
+
 		$extraFields[] = [
             'key' => 'education_name',
             'field' => 'education_name',
             'type' => 'string',
-            'label' => __('Education Grade')
+            'label' => __('Education Name')
         ];
 		
         $extraFields[] = [
@@ -255,74 +246,62 @@ class StudentContactsTable extends AppTable  {
             'key' => 'user_name',
             'field' => 'user_name',
             'type' => 'string',
-            'label' => __('Student')
+            'label' => __('Student Name')
         ];    
+
+        $extraFields[] = [
+            'key' => 'identity_type',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Identity Type') //POCOR-7108
+        ]; 
 
         $extraFields[] = [
             'key' => 'identity_number',
             'field' => 'identity_number',
             'type' => 'string',
-            'label' => __('Identity Number')
+            'label' => __('Identity Number') 
         ];
 
-        // $extraFields[] = [
-        //     'key' => 'contact_name',
-        //     'field' => 'contact_name',
-        //     'type' => 'string',
-        //     'label' => __('Mobile')
-        // ];
-
-        // $extraFields[] = [
-        //     'key' => 'preferred',
-        //     'field' => 'preferred',
-        //     'type' => 'string',
-        //     'label' => __('Preferred')
-        // ];
-        // $extraFields[] = [
-        //     'key' => 'description',
-        //     'field' => 'description',
-        //     'type' => 'string',
-        //     'label' => __('Description')
-        // ];
-		
-		$ContactOptions = TableRegistry::get('contact_options');
-                    
-        $contactOptionsData = $ContactOptions->find()
-            ->select([
-                'contact_option_id' => $ContactOptions->aliasfield('id'),
-                'contact_option' => $ContactOptions->aliasfield('name')
-            ])
-            ->toArray();
-       
-		if(!empty($contactOptionsData)) {
-			foreach($contactOptionsData as $data) {
-				$contact_option_id = $data->contact_option_id;
-				$contact_option = $data->contact_option;
-				$extraFields[] = [
-					'key' => '',
-					'field' => 'value_'.$contact_option_id,
-					'type' => 'string',
-					'label' => __($contact_option)
-				];
-				
-				$extraFields[] = [
-					'key' => '',
-					'field' => 'description_'.$contact_option_id,
-					'type' => 'string',
-					'label' => __('Description')
-				];
-				
-				$extraFields[] = [
-					'key' => '',
-					'field' => 'preferred_'.$contact_option_id,
-					'type' => 'string',
-					'label' => __('Preferred')
-				];
-
-			}
-		}
+        $extraFields[] = [
+            'key' => 'contact_name',
+            'field' => 'contact_name',
+            'type' => 'string',
+            'label' => __('Contact') //POCOR-7108
+        ];
 
         $fields->exchangeArray($extraFields);
     }
+
+    //POCOR-7108
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        $IdentityType = '';
+        $userIdentities = TableRegistry::get('User.Identities');
+        $result = $userIdentities
+                    ->find()
+                    ->where([
+                        $userIdentities->aliasField('security_user_id') => $entity->security_user_id,
+                    ])
+                    ->contain(['IdentityTypes'])
+                    ->select([
+                    'IdentityTypes' => $userIdentities->IdentityTypes->aliasField('name'),
+                    'IdentityNumber' => $userIdentities->aliasField('number'),
+                        ])
+                    ->toArray();
+
+        if(!empty($result)) {
+            foreach ($result as $single) {
+                if ($single->IdentityNumber == end($result)->IdentityNumber) {
+                    $IdentityType .= $single->IdentityTypes;
+                } else {
+                    $IdentityType .= $single->IdentityTypes;
+                }
+            }
+        }
+        return $IdentityType;
+    }
+    //End of POCOR-7108
+
 
 }
