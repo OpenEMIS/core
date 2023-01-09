@@ -77,6 +77,7 @@ class StaffAttendancesTable extends ControllerActionTable
         $startDate = date("Y-m-d", strtotime($start_report_Date));
         $endDate = date("Y-m-d", strtotime($end_report_Date));
         $conditions = [];
+        $StaffAttendances = TableRegistry::get('Institution.InstitutionStaffAttendances');
         
         if (!empty($institutionId) && $institutionId != 0) {
             $query->where([$this->aliasField('institution_id') => $institutionId]);
@@ -129,7 +130,12 @@ class StaffAttendancesTable extends ControllerActionTable
             ])
             ->leftJoin(['UserIdentity' => 'user_identities'], [
                 'UserIdentity.security_user_id = ' . $this->aliasfield('staff_id'),
-            ])->distinct([$this->aliasField('staff_id')]);
+            ])
+            ->leftJoin(['InstitutionStaffAttendances' => 'institution_staff_attendances'], [
+                'InstitutionStaffAttendances.staff_id = ' . $this->aliasfield('staff_id'),
+            ])//->group(['InstitutionStaffAttendances.date','Users.openemis_no']);
+            ->distinct([$this->aliasField('staff_id')]);
+           // print_r($query->Sql());die;
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($academicPeriodId, $startDate, $endDate) {
                 return $results->map(function ($row) use ($academicPeriodId, $startDate, $endDate) {
@@ -138,13 +144,13 @@ class StaffAttendancesTable extends ControllerActionTable
                     $StaffAttendances = TableRegistry::get('Institution.InstitutionStaffAttendances');
                     $attendanceData = $StaffAttendances->find('all')
                                     ->where([$StaffAttendances->aliasField('institution_id') => $row->institution_id,
-                                    $StaffAttendances->aliasField('staff_id') => $row->staff_id,
+                                    $StaffAttendances->aliasField('staff_id') =>  $row->staff_id,
                                     $StaffAttendances->aliasField('academic_period_id') =>
                                     $academicPeriodId,
                                     $StaffAttendances->aliasField('date').' >= ' => $startDate,
                                     $StaffAttendances->aliasField('date').' <= ' => $endDate,
-                                    ])->toArray();
-                                    
+                                    ])->group(['InstitutionStaffAttendances.date','InstitutionStaffAttendances.staff_id'])->toArray();
+                                    //print_r($attendanceData);die;
                     
                     if(!empty($attendanceData))
                     {
@@ -226,9 +232,11 @@ class StaffAttendancesTable extends ControllerActionTable
                         }
                         
                     }*/
+                  //  print_r($row);die;
                     return $row;
                 });
             });
+
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
