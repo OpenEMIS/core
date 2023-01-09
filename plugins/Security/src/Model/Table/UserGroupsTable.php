@@ -637,6 +637,7 @@ class UserGroupsTable extends ControllerActionTable
         }
     }
 
+    //POCOR-7168
     public function findByInstitutionAreaNameCode(Query $query, array $options)
     {
         if (array_key_exists('search', $options)) {
