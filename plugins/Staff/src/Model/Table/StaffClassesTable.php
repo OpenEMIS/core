@@ -27,6 +27,32 @@ class StaffClassesTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
         $this->hasMany('ClassesSecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'saveStrategy' => 'replace', 'foreignKey' => 'institution_class_id']);
+        $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
+        $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'saveStrategy' => 'replace', 'cascadeCallbacks' => true]);
+        $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'saveStrategy' => 'replace']);
+        $this->hasMany('ClassAttendanceRecords', ['className' => 'Institution.ClassAttendanceRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsToMany('EducationGrades', [
+            'className' => 'Education.EducationGrades',
+            'through' => 'Institution.InstitutionClassGrades',
+            'foreignKey' => 'institution_class_id',
+            'targetForeignKey' => 'education_grade_id',
+            'dependent' => true
+        ]);
+
+        $this->belongsToMany('Students', [
+            'className' => 'User.Users',
+            'through' => 'Institution.InstitutionClassStudents',
+            'foreignKey' => 'institution_class_id',
+            'targetForeignKey' => 'student_id',
+        ]);
+
+        $this->belongsToMany('InstitutionSubjects', [
+            'className' => 'Institution.InstitutionSubjects',
+            'through' => 'Institution.InstitutionClassSubjects',
+            'foreignKey' => 'institution_class_id',
+            'targetForeignKey' => 'institution_subject_id'
+        ]);
 
         /*
             note that in DirectoriesController
@@ -54,6 +80,7 @@ class StaffClassesTable extends ControllerActionTable
             'total_female_students',
             'total_students'
         ]);
+
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -211,6 +238,97 @@ class StaffClassesTable extends ControllerActionTable
         // this 'save' does not redirect, need to re-extract the $classOptions after saving is done
         $this->fields['classes']['data']['classes'] = $classOptions;
         $extra['classOptions'] = $classOptions;
+
+        //Webhook Feature class update -- start POCOR-6995
+
+        $classIds = [];
+        foreach($entity['Classes'] as $keys=>$val){
+           if($val['class_id'] != 0){
+                $classIds[] = $val['class_id'];
+           }
+        }
+        $bodyData = $this->find('all',
+                    [ 'contain' => [
+                        'Institutions',
+                        'EducationGrades',
+                        'Staff',
+                        'AcademicPeriods',
+                        'InstitutionShifts',
+                        'InstitutionShifts.ShiftOptions',
+                        'ClassesSecondaryStaff.SecondaryStaff',
+                        'Students',
+                        'Students.Genders'
+                    ],
+                    ])->where([
+                        $this->aliasField('id IN') => $classIds
+                    ]);
+        $grades = $gradeId = $secondaryTeachers = $students = [];
+        $dataVal = [];
+        if (!empty($bodyData)) {
+            foreach ($bodyData as $key => $value) {
+                $dataVal[$key]['institutions_id'] = $value->institution->id;
+                $dataVal[$key]['institutions_name'] = $value->institution->name;
+                $dataVal[$key]['institutions_code'] = $value->institution->code;
+                $dataVal[$key]['institutions_classes_name'] = $value->name;
+                $dataVal[$key]['institutions_classes_id'] = $value->id;
+                $dataVal[$key]['shift_options_name'] = $value->institution_shift->shift_option->name;
+                $dataVal[$key]['academic_periods_name'] = $value->academic_period->name;
+                $dataVal[$key]['institutions_classes_capacity'] = $value->capacity;
+                $dataVal[$key]['institution_classes_staff_openemis_no'] = $value->staff->openemis_no; // for home room teacher
+
+                if(!empty($value->education_grades)) {
+                    foreach ($value->education_grades as $i => $gradeOptions) {
+                        $dataVal[$key]['Grades'][$i]['education_grades_name'] = $gradeOptions->name;
+                        $dataVal[$key]['Grades'][$i]['education_grades_id'] = $gradeOptions->id;
+                    }
+                }else{
+                    $dataVal[$key]['Grades']['education_grades_name'] = NULL;
+                    $dataVal[$key]['Grades']['education_grades_name'] = NULL;
+                }
+
+                if(!empty($value->classes_secondary_staff)) {
+                    foreach ($value->classes_secondary_staff as $j => $secondaryStaffs) {
+                       $dataVal[$key]['secondaryTeachers'][$j]['institution_classes_secondary_staff_openemis_no'] = $secondaryStaffs->secondary_staff->openemis_no;
+                    }
+
+                }else{
+                   $dataVal[$key]['secondaryTeachers']['institution_classes_secondary_staff_openemis_no'] = NULL;
+                }
+                $maleStudents = 0;
+                $femaleStudents = 0;
+                if(!empty($value->students)) {
+                    foreach ($value->students as $k => $studentsData) {
+                        $dataVal[$key]['students'][$k]['institution_class_students_openemis_no'] = $studentsData->openemis_no;
+                        if($studentsData->gender->code == 'M') {
+                            $maleStudents = $maleStudents + 1;
+                            $dataVal[$key]['maleStudents']['institution_classes_total_male_students'] = $maleStudents;
+                        }
+                        if($studentsData->gender->code == 'F') {
+                            $femaleStudents = $femaleStudents + 1;
+                            $dataVal[$key]['femaleStudents']['institution_classes_total_female_studentss'] = $femaleStudents;
+                        }
+
+                    }
+                    $totalStudent = $maleStudents + $femaleStudents ;
+                    $dataVal[$key]['total_students'] = $totalStudent;  
+                }else{
+                    $dataVal[$key]['total_students'] = NULL;
+                    $dataVal[$key]['students']['institution_class_students_openemis_no'] = NULL;
+                    $dataVal[$key]['maleStudents']['institution_classes_total_male_students'] = NULL;
+                    $dataVal[$key]['femaleStudents']['institution_classes_total_female_studentss'] = NULL;
+                }
+                
+
+            }
+        }
+
+        $body = array();
+        $body = [
+            'institutions_classes' => !empty($dataVal) ? $dataVal : NULL,
+        ];
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        $Webhooks->triggerShell('class_update', ['username' => ''], $body);
+        // end POCOR-6995     
     }
 
 
