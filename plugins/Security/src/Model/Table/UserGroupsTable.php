@@ -147,6 +147,51 @@ class UserGroupsTable extends ControllerActionTable
         }
     }
 
+    //POCOR-7168
+    public function findByInstitutionAreaNameCode(Query $query, array $options)
+    {
+        if (array_key_exists('search', $options)) {
+            $search = $options['search'];
+            $query
+            ->join([
+                [
+                    'table' => 'security_group_institutions', 'alias' => 'SecurityGroupInstitutions', 'type' => 'LEFT',
+                    'conditions' => ['SecurityGroupInstitutions.security_group_id = ' . $this->aliasField('id')]
+                ],
+                [
+                    'table' => 'institutions', 'alias' => 'Institutions', 'type' => 'LEFT',
+                    'conditions' => [
+                        'Institutions.id = ' . 'SecurityGroupInstitutions.institution_id',
+                    ]
+                ],
+                [
+                    'table' => 'security_group_areas', 'alias' => 'SecurityGroupAreas', 'type' => 'LEFT',
+                    'conditions' => ['SecurityGroupAreas.security_group_id = ' . $this->aliasField('id')]
+                ],
+                [
+                    'table' => 'areas', 'alias' => 'Areas', 'type' => 'LEFT',
+                    'conditions' => [
+                        'Areas.id = ' . 'SecurityGroupAreas.area_id',
+                    ]
+                ],
+            ])
+            ->where([
+                    'OR' => [
+                        ['Institutions.code LIKE' => '%' . $search . '%'],
+                        ['Institutions.name LIKE' => '%' . $search . '%'],
+                        ['Areas.code LIKE' => '%' . $search . '%'],
+                        ['Areas.name LIKE' => '%' . $search . '%'],
+                        [$this->aliasField('name').' LIKE' => '%'.$search.'%']
+                    ]
+                ]
+            )
+            ->group($this->aliasField('id'))
+            ;
+        }
+
+        return $query;
+    }
+
     public function findNotInInstitutions(Query $query, array $options)
     {
         $query->where([
