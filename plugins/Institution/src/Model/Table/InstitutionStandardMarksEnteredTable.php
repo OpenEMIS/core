@@ -377,7 +377,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                         ->order([$Assessments->aliasField('id'),
                                 $AssessmentPeriods->aliasField('id'),
                                 $institutions->aliasField('id')]);
-                        
+
                 if(!empty($total)){
                     $studentData = $total->toArray();
                     foreach($studentData as $value){
@@ -387,42 +387,45 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                 $entity->marks_not_entered ='';
                 $entity->marks_entered ='';
                 $entity->marks_entery_per = '';
+
         $totalMarksVal = $assessmentType->find()
             ->select([
                 'total_marks' => "COUNT(".$assessmentType->aliasField('id').")"
             ])
             ->where([
-                    $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
+                $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
                 $assessmentType->aliasField('institution_id')=>$entity->institution_id,
                 $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id,
                 $assessmentType->aliasField('created_user_id')=>$entity->created_user_id,
+                $assessmentType->aliasField('institution_classes_id')=>$entity->institution_classes_id,
             ]);
-            $totalMarksAdd = $assessmentType->find()
+        $totalMarksAdd = $assessmentType->find()
             ->select([
                 'total_marks_sum' => "COUNT(".$assessmentType->aliasField('id').")"
             ])
             ->where([
-                    $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
+                $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
                 $assessmentType->aliasField('institution_id')=>$entity->institution_id,
                 $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id,
+                $assessmentType->aliasField('institution_classes_id')=>$entity->institution_classes_id,
             ]);
-            if(!empty($totalMarksAdd)){
-                    $totalMarks_val = $totalMarksAdd->toArray();
-                    foreach($totalMarks_val as $value){
-                        $sum = $value['total_marks_sum'];
-                    }
+        if(!empty($totalMarksAdd)){
+            $totalMarks_val = $totalMarksAdd->toArray();
+            foreach($totalMarks_val as $value){
+                $sum = $value['total_marks_sum'];
             }
-                if(!empty($totalMarksVal) && $total_student>0 && $sum>0){ // POCOR-6745
-                    $totalMarks = $totalMarksVal->toArray();
-                    foreach($totalMarks as $value){
-                        $total_student_mark_entry = $value['total_marks'];
-                    }
-                    $entity->marks_entered = $total_student_mark_entry;
-                    $entity->marks_not_entered = abs($total_student-$sum);
-                    $entity->marks_entery_per = ($total_student_mark_entry/$total_student)*100;
-                }
+        }
+        if(!empty($totalMarksVal) && $total_student>0 && $sum>0){ // POCOR-6745
+            $totalMarks = $totalMarksVal->toArray();
+            foreach($totalMarks as $value){
+                $total_student_mark_entry = $value['total_marks'];
+            }
+            $entity->marks_entered = $total_student_mark_entry;
+            $entity->marks_not_entered = abs($total_student-$sum);
+            $entity->marks_entery_per = round((($total_student_mark_entry/$total_student)*100), 2);
+        }
         return $entity->marks_entery_per;
-        
+
     }
 
 
