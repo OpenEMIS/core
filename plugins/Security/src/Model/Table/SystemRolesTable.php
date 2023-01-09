@@ -19,6 +19,9 @@ class SystemRolesTable extends AppTable
 
         $this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
 
+        $this->belongsTo('UserGroupsList', ['className' => 'Security.UserGroupsList']);
+
+
         $this->belongsToMany('SecurityFunctions', [
             'className' => 'Security.SecurityFunctions',
             'through' => 'Security.SecurityRoleFunctions'
