@@ -1,3 +1,11 @@
+### [3.77.2] - 2023-01-09
+- Implemented: Institutions > Calendar : For half day school closure, include start/end time and Shift
+- Implemented: Add additional triggers for the Add Class and Update Class Webhooks
+- Bug Fixed: Administrations > Security > Groups > Edit/Save : Redesign page
+- Bug Fixed: Directory: Unable to delete records and getting 404 error
+- Bug Fixed: Administration>Security>Users: Getting 404 error when creating user in user group
+- Bug Fixed:Administration>Security>Users: Getting 404 error when searching user in user group
+
 ### [3.77.1] - 2023-01-06
 - Implemented: Add School Type, Grade, and Subject filters to Custom Reports
 - Implemented: Develop a function for two factor authentication (email)
