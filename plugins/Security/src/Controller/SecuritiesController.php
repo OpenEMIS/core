@@ -16,7 +16,7 @@ class SecuritiesController extends AppController
         $this->ControllerAction->models = [
             'Accounts'      => ['className' => 'Security.Accounts', 'actions' => ['view', 'edit']],
             'Users'             => ['className' => 'Security.Users'],
-            'SystemGroups'  => ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!edit', '!remove']]
+           // 'SystemGroups'  => ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!edit', '!remove']]
         ];
         $this->attachAngularModules();
     }
@@ -66,6 +66,21 @@ class SecuritiesController extends AppController
     public function UserGroups()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.UserGroups']);
+    }
+
+    public function SystemGroups()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.SystemGroups']);
+    }
+
+    public function UserGroupsList()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.UserGroupsList']);    
+    }
+
+    public function SystemGroupsList()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.SystemGroupsList']);
     }
 
     public function RefreshToken()

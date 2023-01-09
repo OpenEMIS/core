@@ -1912,7 +1912,7 @@ class NavigationComponent extends Component
                 'title' => 'Groups',
                 'parent' => 'Security',
                 'params' => ['plugin' => 'Security'],
-                'selected' => ['Securities.UserGroups', 'Securities.SystemGroups']
+                'selected' => ['Securities.UserGroups','Securities.SystemGroups','Securities.UserGroupsList','Securities.SystemGroupsList']
             ],
 
             'Securities.Roles' => [

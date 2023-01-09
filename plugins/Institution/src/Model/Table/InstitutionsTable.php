@@ -151,6 +151,14 @@ class InstitutionsTable extends ControllerActionTable
             'through' => 'Security.SecurityGroupInstitutions',
             'dependent' => true
         ]);
+        $this->belongsToMany('UserGroups', [
+            'className' => 'Security.UserGroups',
+            'joinTable' => 'security_group_institutions',
+            'foreignKey' => 'institution_id',
+            'targetForeignKey' => 'security_group_id',
+            'through' => 'Security.SecurityGroupInstitutions',
+            'dependent' => true
+        ]);
         //POCOR-6520 starts: add isset condition only
        if(isset(Router::getRequest()->params['pass'][0]) && Router::getRequest()->params['pass'][0]!='excel'){ //POCOR-6520 ends
 
