@@ -883,14 +883,16 @@ class InstitutionsTable extends ControllerActionTable
         if ($entity->isNew()) {
             $entity->shift_type = 0;
         }
+
+        $userId = $_SESSION['Auth']['User']['id']; //POCOR-7166
         //POCOR-7116 :Start
         $insName = $entity->code. " - ". $entity->name;
         $SecurityGroupsTable = TableRegistry::get('security_groups');
         $SecurityGroupsEntity = [
             'name' =>$insName,
-            'modified_user_id' => $entity->userId,
+            'modified_user_id' => $userId, //POCOR-7166
             'modified'=> NULL,
-            'created_user_id' =>$entity->userId,
+            'created_user_id' =>$userId, //POCOR-7166
             'created' => date('Y-m-d h:i:s')
         ];
         $SecurityGroups = $SecurityGroupsTable->newEntity($SecurityGroupsEntity);
