@@ -106,7 +106,7 @@ class ArchivesController extends AppController
 
     public function Connection(){
 
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.TransferConnections']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.DataManagementConnections']);
     }
 
 }
