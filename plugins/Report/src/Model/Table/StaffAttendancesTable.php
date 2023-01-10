@@ -78,12 +78,49 @@ class StaffAttendancesTable extends ControllerActionTable
         $endDate = date("Y-m-d", strtotime($end_report_Date));
         $conditions = [];
         $StaffAttendances = TableRegistry::get('Institution.InstitutionStaffAttendances');
-        
+
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $periodEntity = $AcademicPeriods->get($academicPeriodId);
+        $startDate = $periodEntity->start_date->format('Y-m-d');
+        $endDate = $periodEntity->end_date->format('Y-m-d');
+        $getyear = $AcademicPeriods->find('all')
+                   ->select(['name'=>$AcademicPeriods->aliasField('name')])
+                   ->where(['id'=>$academicPeriodId])
+                   ->limit(1);
+        foreach($getyear->toArray() as $val) {
+            $year  = $val['name'];
+        }
+
+        if (!empty($academicPeriodId)) {
+                $conditions['OR'] = [
+                    'OR' => [
+                        [
+                            $this->aliasField('end_date') . ' IS NOT NULL',
+                            $this->aliasField('start_date') . ' <=' => $startDate,
+                            $this->aliasField('end_date') . ' >=' => $startDate
+                        ],
+                        [
+                            $this->aliasField('end_date') . ' IS NOT NULL',
+                            $this->aliasField('start_date') . ' <=' => $endDate,
+                            $this->aliasField('end_date') . ' >=' => $endDate
+                        ],
+                        [
+                            $this->aliasField('end_date') . ' IS NOT NULL',
+                            $this->aliasField('start_date') . ' >=' => $startDate,
+                            $this->aliasField('end_date') . ' <=' => $endDate
+                        ]
+                    ],
+                    [
+                        $this->aliasField('end_date') . ' IS NULL',
+                        $this->aliasField('start_date') . ' <=' => $endDate
+                    ]
+                ];
+        }
         if (!empty($institutionId) && $institutionId != 0) {
-            $query->where([$this->aliasField('institution_id') => $institutionId]);
+            $conditions[$this->aliasField('institution_id')]=$institutionId;
         }
         if ($areaId != -1) {
-            $query->where(['Institutions.area_id' => $areaId]);
+            $conditions[$this->aliasField('Institutions.area_id')]=$areaId;
         }
         
         $query
@@ -103,8 +140,6 @@ class StaffAttendancesTable extends ControllerActionTable
                 'middle_name' => 'Users.middle_name',
                 'third_name' => 'Users.third_name',
                 'last_name' => 'Users.last_name',
-                //'month' => 'Jan',
-                //'year' => '2022',
             ])
             ->contain(['Users'])
             ->leftJoin(['Institutions' => 'institutions'], [
@@ -133,13 +168,13 @@ class StaffAttendancesTable extends ControllerActionTable
             ])
             ->leftJoin(['InstitutionStaffAttendances' => 'institution_staff_attendances'], [
                 'InstitutionStaffAttendances.staff_id = ' . $this->aliasfield('staff_id'),
-            ])//->group(['InstitutionStaffAttendances.date','Users.openemis_no']);
+            ])->where($conditions)
             ->distinct([$this->aliasField('staff_id')]);
-           // print_r($query->Sql());die;
 
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($academicPeriodId, $startDate, $endDate) {
-                return $results->map(function ($row) use ($academicPeriodId, $startDate, $endDate) {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($academicPeriodId, $startDate, $endDate, $year) {
+                return $results->map(function ($row) use ($academicPeriodId, $startDate, $endDate, $year) {
                     $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
+                     $row['year']  = $year;
                     //POCOR-5181 start
                     $StaffAttendances = TableRegistry::get('Institution.InstitutionStaffAttendances');
                     $attendanceData = $StaffAttendances->find('all')
@@ -150,7 +185,6 @@ class StaffAttendancesTable extends ControllerActionTable
                                     $StaffAttendances->aliasField('date').' >= ' => $startDate,
                                     $StaffAttendances->aliasField('date').' <= ' => $endDate,
                                     ])->group(['InstitutionStaffAttendances.date','InstitutionStaffAttendances.staff_id'])->toArray();
-                                    //print_r($attendanceData);die;
                     
                     if(!empty($attendanceData))
                     {
@@ -179,7 +213,7 @@ class StaffAttendancesTable extends ControllerActionTable
                             $yeartrim = date('Y', strtotime($dateValue));
                             $day  = ltrim($daytrim, '0');
                             $row['month']  = ltrim($monthtrim, '0');
-                            $row['year']  = ltrim($yeartrim, '0');
+                           // $row['year']  = ltrim($yeartrim, '0');
                             $i_max=31;
                             for( $i=1; $i<=$i_max; $i++ )
                                 { 
