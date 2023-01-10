@@ -1,3 +1,7 @@
+### [3.77.3] - 2023-01-10
+- Bug Fixed: Login Page : 404 error in login page (Login with 2FA enabled and SSO Enabled)
+- Bug Fixed: Administrations > Authentications: When the user enters their username and password, the OTP page URL has a base64 string which contains their username and password.
+
 ### [3.77.2] - 2023-01-09
 - Implemented: Institutions > Calendar : For half day school closure, include start/end time and Shift
 - Implemented: Add additional triggers for the Add Class and Update Class Webhooks
