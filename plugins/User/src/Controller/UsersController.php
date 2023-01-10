@@ -465,7 +465,7 @@ class UsersController extends AppController
             $authenticationType = 'Local';
         }
         //POCOR-7156 starts
-        if($ConfigItemsEntity->value == 1){
+        if($this->request->is('post') && $this->request->data('submit') == 'login' && $ConfigItemsEntity->value == 1){
             $six_digit_random_number = random_int(100000, 999999);
             $encrypt_otp = base64_encode($six_digit_random_number);
             $SystemUserOtpTbl = TableRegistry::get('security_user_codes');
@@ -500,17 +500,43 @@ class UsersController extends AppController
                 ->send($emailMessage);
             $message = __('A verification code has been sent to your registered email address.');
             $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
-            $encodedUserData = $this->paramsEncode(['username' => $userEntity->username, 'email'=>$userEntity->email, 'password' => $this->request->data['password']]);
+            $userName = $this->encrypt($userEntity->username, Security::salt());
+            $userEmail = $this->encrypt($userEntity->email, Security::salt());
+            $userPass = $this->encrypt($this->request->data['password'], Security::salt());
+            $encodedUserData = $this->paramsEncode(['username' => $userName, 'email'=>$userEmail, 'password' => $userPass]);
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $encodedUserData]);
         }else{//POCOR-7156 ends
             $this->SSO->doAuthentication($authenticationType, $code);
         }
     }
     //POCOR-7156 starts
+    public  function encrypt($pure_string, $secretHash) {
+        $iv = substr($secretHash, 0, 16);
+        $encryptedMessage = openssl_encrypt($pure_string, "AES-256-CBC", $secretHash, $raw_input = false, $iv);
+        $encrypted = base64_encode(
+            $encryptedMessage
+        );
+        return $encrypted;
+    }
+
+    public function decrypt($encrypted_string, $secretHash) {
+        $iv = substr($secretHash, 0, 16);
+        $data = base64_decode($encrypted_string);
+        $decryptedMessage = openssl_decrypt($data, "AES-256-CBC", $secretHash, $raw_input = false, $iv);
+        $decrypted = rtrim(
+            $decryptedMessage
+        );
+        return $decrypted;
+    }
+
     public function verifyOtp()
     {
         if(isset($this->request->params['pass'][0]) && !empty($this->request->params['pass'][0])){
             $userData = $this->paramsDecode($this->request->params['pass'][0]);
+
+            $userData['username'] = $this->decrypt($userData['username'], Security::salt());
+            $userData['email'] = $this->decrypt($userData['email'], Security::salt());
+            $userData['password'] = $this->decrypt($userData['password'], Security::salt());
             $userEntity = $this->Users
                     ->find()
                     ->select([
