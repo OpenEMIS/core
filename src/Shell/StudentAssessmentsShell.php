@@ -208,7 +208,7 @@ class StudentAssessmentsShell extends Shell
         }
         $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW assessment_item_results_archived AS SELECT * FROM assessment_item_results");
         $stmt1->execute();
-        // $assessmentItemResultsData->deleteAll(['academic_period_id' => $academicPeriodId]);
+        $assessmentItemResultsData->deleteAll(['academic_period_id' => $academicPeriodId]);
         //assessment_item_results[END]
         return true;
     }
