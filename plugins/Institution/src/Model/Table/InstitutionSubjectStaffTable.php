@@ -490,6 +490,7 @@ class InstitutionSubjectStaffTable extends AppTable
     {
         $staffId = $options['staff_id'];
         $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
         $classes = $students = [];
         if (!empty($staffId) && !empty($institutionId)) {
             $getRecord = $this->find()
@@ -508,6 +509,7 @@ class InstitutionSubjectStaffTable extends AppTable
                         'institutions_name' => 'Institutions.name',
                         'academic_periods_code' => 'AcademicPeriods.code',
                         'academic_periods_name'=> 'AcademicPeriods.name',
+                        'academic_periods_id'=> 'AcademicPeriods.id',
                         'institution_subjects_id'=> 'InstitutionSubjects.id',
                         'institution_subjects_name'=> 'InstitutionSubjects.name',
                         'security_users_openemis_no_subject_teachers' => 'Users.openemis_no'
@@ -528,16 +530,17 @@ class InstitutionSubjectStaffTable extends AppTable
                     ])
                     ->where([
                         $this->aliasField('staff_id') => $staffId,
-                        $this->aliasField('institution_id') => $institutionId
+                        $this->aliasField('institution_id') => $institutionId,
+                       'AcademicPeriods.id' => $academicPeriodId,//POCOR-7087
                     ])
-                    ->hydrate(false)
-                    ->formatResults(function (ResultSetInterface $results) {
+                       ->hydrate(false)
+                        ->formatResults(function (ResultSetInterface $results) {
                         return $results->map(function ($row) {
                             $classSubject = TableRegistry::get('Institution.InstitutionClassSubjects');
                             $subjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
                             /**fetching institution subject's classed data*/
                             $classObj = $classSubject->find()
-                                    ->select(['InstitutionClasses.name'])
+                                    ->select(['InstitutionClasses.name','InstitutionClasses.id'])
                                     ->contain('InstitutionClasses')
                                     ->where([
                                         $classSubject->aliasField('institution_subject_id') => $row['institution_subjects_id']
@@ -545,7 +548,8 @@ class InstitutionSubjectStaffTable extends AppTable
                                     ->hydrate(false);
                             if(!empty($classObj)) {
                                 foreach ($classObj as $class) {
-                                    $classes[] = $class['InstitutionClasses']['name'];
+                                    $classes['name'] = $class['InstitutionClasses']['name'];
+                                    $classes['id'] = $class['InstitutionClasses']['id'];//POCOR-7087
                                 }
                             }
                             /**fetching institution subject's students data*/

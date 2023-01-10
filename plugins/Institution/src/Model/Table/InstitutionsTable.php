@@ -18,9 +18,9 @@ use Cake\Network\Session;
 use Cake\Log\Log;
 use Cake\Routing\Router;
 use Cake\Datasource\ResultSetInterface;
-
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\I18n\Time;
 use Institution\Model\Behavior\LatLongBehavior as LatLongOptions;
 
 class InstitutionsTable extends ControllerActionTable
@@ -145,6 +145,14 @@ class InstitutionsTable extends ControllerActionTable
         ]);
         $this->belongsToMany('SecurityGroups', [
             'className' => 'Security.SystemGroups',
+            'joinTable' => 'security_group_institutions',
+            'foreignKey' => 'institution_id',
+            'targetForeignKey' => 'security_group_id',
+            'through' => 'Security.SecurityGroupInstitutions',
+            'dependent' => true
+        ]);
+        $this->belongsToMany('UserGroups', [
+            'className' => 'Security.UserGroups',
             'joinTable' => 'security_group_institutions',
             'foreignKey' => 'institution_id',
             'targetForeignKey' => 'security_group_id',
@@ -621,7 +629,7 @@ class InstitutionsTable extends ControllerActionTable
         $instituteType = $sheetData['institute_tabs_type'];
         $academicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        if($instituteType!='Contact People' && $instituteType!='Shifts'){
+        if($instituteType!='Contact People' && $instituteType!='Shifts' && $instituteType!='Overview'){ //POCOR-6880
         $query
         ->select(['area_code' => 'Areas.code','shift_name' => 'ShiftOptions.name','Owner' => 'Institutions.name','Occupier' => 'Institutions.name','shift_start_time' => 'InstitutionShifts.start_time','shift_end_time' => 'InstitutionShifts.end_time'])
         ->LeftJoin([$this->Areas->alias() => $this->Areas->table()],[
@@ -655,6 +663,12 @@ class InstitutionsTable extends ControllerActionTable
         ]);
        
       }
+      //Start:POCOR-6880
+      if($instituteType=='Overview'){
+
+      }
+      //END:POCOR-6880
+
         if($instituteType=='Contact People'){
 
              $institutionContactPersons = TableRegistry::get('institution_contact_persons');
@@ -878,6 +892,23 @@ class InstitutionsTable extends ControllerActionTable
             $entity->shift_type = 0;
         }
 
+        $userId = $_SESSION['Auth']['User']['id']; //POCOR-7166
+        //POCOR-7116 :Start
+        $insName = $entity->code. " - ". $entity->name;
+        $SecurityGroupsTable = TableRegistry::get('security_groups');
+        $SecurityGroupsEntity = [
+            'name' =>$insName,
+            'modified_user_id' => $userId, //POCOR-7166
+            'modified'=> NULL,
+            'created_user_id' =>$userId, //POCOR-7166
+            'created' => date('Y-m-d h:i:s')
+        ];
+        $SecurityGroups = $SecurityGroupsTable->newEntity($SecurityGroupsEntity);
+        if($SecurityGroupResult = $SecurityGroupsTable->save($SecurityGroups)){
+            $entity->security_group_id = $SecurityGroupResult->id;
+        }
+        //POCOR-7116 :End
+
         // adding debug log to monitor when there was a different between date_opened's year and year_opened
         $this->debugMonitorYearOpened($entity, $options);
     }
@@ -980,6 +1011,105 @@ class InstitutionsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        //Start POCOR-7029
+        $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $todayDate = date("Y-m-d");
+        $SurveyFormsFilterObj = $SurveyFormsFilters->find()
+        ->where([
+            $SurveyFormsFilters->aliasField('survey_filter_id') => $entity->institution_type_id
+        ])
+        ->toArray();
+
+        $institutionFormIds = [];
+        if (!empty($SurveyFormsFilterObj)) {
+            foreach ($SurveyFormsFilterObj as $value) {
+                $institutionFormIds[] = $value->survey_form_id;
+            }
+        }
+        if($institutionFormIds[0]!=0) //POCOR-6976
+        {
+            $SurveyStatusesFilters = TableRegistry::get('Survey.SurveyStatuses');
+            $SurveyStatusPeriodsFilters = TableRegistry::get('Survey.SurveyStatusPeriods');
+            $SurveyStatusesFiltersObj = $SurveyStatusesFilters->find()
+            ->where([
+                $SurveyStatusesFilters->aliasField('date_enabled <=') => $todayDate,
+                $SurveyStatusesFilters->aliasField('date_disabled >=') => $todayDate,
+                $SurveyStatusesFilters->aliasField('survey_form_id IN') => $institutionFormIds
+            ])
+            ->toArray();
+
+            $SurveyStatusesIds = [];
+            $SurveyFormIds = [];
+            $multipleFormIds = [];
+            if (!empty($SurveyStatusesFiltersObj)) {
+                // $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                $SurveyFormsFilters = TableRegistry::get('Survey.SurveyForms');
+                foreach ($SurveyStatusesFiltersObj as $statusID => $value) {
+                    $surveyFormCount = $SurveyFormsFilters->find()
+                    ->select([
+                        'id' => $SurveyFormsFilters->aliasField('id'),
+                        // 'SurveyForms.id',
+                        'SurveyStatusPeriods.academic_period_id',
+                    ])
+
+                    ->LeftJoin(['SurveyStatuses' => 'survey_statuses'],[
+                        $SurveyFormsFilters->aliasField('id').' = SurveyStatuses.survey_form_id',
+                    ])
+
+                    ->leftJoin(['SurveyStatusPeriods' => 'survey_status_periods'], [
+                        'SurveyStatusPeriods.survey_status_id = SurveyStatuses.id'
+                    ])
+                    ->where([
+                            $SurveyFormsFilters->aliasField('id = ').$institutionFormIds[$statusID],
+                            'SurveyStatuses.id' => $value->id                       
+                        ])
+                    ->toArray();
+                    foreach ($surveyFormCount as $mlp => $multipleForm) {
+                     $SurveyStatusesIds[] = $multipleForm->SurveyStatusPeriods['academic_period_id'] . ',' . $multipleForm->id;
+                     $SurveyFormIds[] = $multipleForm->id;
+                     $multipleFormIds[] = $multipleForm->SurveyStatusPeriods['academic_period_id'];
+                    }
+                    
+                }
+                $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
+                $institutionSurveysDelete = $InstitutionSurveys->find()
+                ->where([
+                    $InstitutionSurveys->aliasField('institution_id = ').$entity->id,
+                    $InstitutionSurveys->aliasField('survey_form_id IN') => $SurveyFormIds,
+                    $InstitutionSurveys->aliasField('academic_period_id IN') => $multipleFormIds,
+                ])
+                ->toArray();
+                if (empty($institutionSurveysDelete)) {
+                    
+                    foreach ($SurveyStatusesIds as $key => $periodObj) {
+                        $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
+
+                        $value = explode(",",$periodObj);
+
+                        $surveyData = [
+                            'status_id' => 1,
+                            'academic_period_id' => $value[0],
+                            'survey_form_id' => $value[1],
+                            'institution_id' => $entity->id,
+                            'assignee_id' => 0,
+                            'created_user_id' => $key,
+                            'created' => new Time('NOW')
+                        ];
+
+
+                        $surveyEntity = $InstitutionSurveys->newEntity($surveyData);
+                        $InstitutionSurveys->save($surveyEntity);
+
+                    }
+                }
+
+
+            }
+
+        }       
+
+        //End POCOR-7029
+
         $SecurityGroup = TableRegistry::get('Security.SystemGroups');
         $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 
@@ -1124,6 +1254,7 @@ class InstitutionsTable extends ControllerActionTable
         foreach ($dispatchTable as $model) {
             $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
         }
+
     }
 
 
@@ -1183,6 +1314,7 @@ class InstitutionsTable extends ControllerActionTable
             }
         }
         $extra['formButtons'] = false;
+        
     }
 
     public function getNumberOfInstitutionsByModel($params = [])
@@ -1362,7 +1494,38 @@ class InstitutionsTable extends ControllerActionTable
         $search = $this->getSearchKey();
         if (empty($search) && !$this->isAdvancedSearchEnabled()) {
             // redirect to school dashboard if it is only one record and no add access
-            $addAccess = $this->AccessControl->check(['Institutions', 'add']);
+            
+            //POCOR-6866[START]
+            $securityFunctions = TableRegistry::get('SecurityFunctions');
+            $securityFunctionsData = $securityFunctions
+            ->find()
+            ->select([
+                'SecurityFunctions.id'
+            ])
+            ->where([
+                'SecurityFunctions.name' => 'Institution',
+                'SecurityFunctions.controller' => 'Institutions',
+                'SecurityFunctions.module' => 'Institutions',
+                'SecurityFunctions.category' => 'General'
+            ])
+            ->first();
+            $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
+
+            $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+
+            $securityRoleFunctionsData = $securityRoleFunctions
+            ->find()
+            ->select([
+                'SecurityRoleFunctions._add'
+            ])
+            ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id' => $permission_id,
+            ])
+            ->first();
+            $addAccess = $securityRoleFunctionsData->_add;
+            // $addAccess = $this->AccessControl->check(['Institutions', 'add']);
+            //POCOR-6866[END]
             if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
                 $entity = $data->first();
                 $event->stopPropagation();

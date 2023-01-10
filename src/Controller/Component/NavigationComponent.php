@@ -332,6 +332,11 @@ class NavigationComponent extends Component
                     $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
                     $userInfo = TableRegistry::get('Security.Users')->get($userId);
                 } 
+                //Start POCOR-7055
+                elseif ($action == 'StudentReportCards') {
+                    $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
+                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
+                }//End POCOR-7055
                 /*POCOR-6286 ends*/
                 else{
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
@@ -357,6 +362,7 @@ class NavigationComponent extends Component
                    $userType = 7;
                 }/*POCOR-6332 ends*/
             }
+
 
 			$userType = '';
 			if(!empty($userInfo)) {
@@ -607,6 +613,13 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.InstitutionProfiles'],
                 'params' => ['plugin' => 'Institution'],
             ],
+            /*POCOR-6966 starts*/
+            'Institutions.ClassesProfiles' => [
+                'title' => 'Classes',
+                'parent' => 'Profile',
+                'selected' => ['Institutions.ClassesProfiles'],
+                'params' => ['plugin' => 'Institution'],
+            ],/*POCOR-6966 ends*/
 		    //POCOR-6654 modified staff menu
             'Institutions.StaffProfiles' => [
                 'title' => 'Staff',
@@ -1245,7 +1258,7 @@ class NavigationComponent extends Component
                 'title' => 'Special Needs',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.SpecialNeedsReferrals', 'Students.SpecialNeedsAssessments', 'Students.SpecialNeedsServices', 'Students.SpecialNeedsDevices', 'Students.SpecialNeedsPlans']
+                'selected' => ['Students.SpecialNeedsReferrals', 'Students.SpecialNeedsAssessments', 'Students.SpecialNeedsServices', 'Students.SpecialNeedsDevices', 'Students.SpecialNeedsPlans', 'Students.SpecialNeedsDiagnostics']
             ],
             'Students.StudentVisitRequests' => [
                 'title' => 'Visits',
@@ -1607,8 +1620,8 @@ class NavigationComponent extends Component
                 'title' => 'Guardians',
                 'parent' => 'Directories.Student',
                 'params' => ['plugin' => 'Directory'],
-                'selected' => ['Directories.StudentGuardians', 'Directories.StudentGuardianUser']
-            ],
+                'selected' => ['Directories.StudentGuardians', 'Directories.StudentGuardianUser', 'Directories.Addguardian']
+            ],//POCOR-7093 Addguardian condition
             'Directories.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Directories.Student',
@@ -1904,7 +1917,7 @@ class NavigationComponent extends Component
                 'title' => 'Groups',
                 'parent' => 'Security',
                 'params' => ['plugin' => 'Security'],
-                'selected' => ['Securities.UserGroups', 'Securities.SystemGroups']
+                'selected' => ['Securities.UserGroups','Securities.SystemGroups','Securities.UserGroupsList','Securities.SystemGroupsList']
             ],
 
             'Securities.Roles' => [
@@ -1923,7 +1936,12 @@ class NavigationComponent extends Component
                 'title' => 'Institutions',
                 'parent' => 'ProfileTemplates',
                 'selected' => ['ProfileTemplates.InstitutionProfiles', 'ProfileTemplates.view', 'ProfileTemplates.add', 'ProfileTemplates.edit', 'ProfileTemplates.delete']
-            ],
+            ],//POCOR-6822 Starts Add menu classes
+            'ProfileTemplates.Classes' => [
+                'title' => 'Classes',
+                'parent' => 'ProfileTemplates',
+                'selected' => ['ProfileTemplates.ClassesProfiles', 'Class.view', 'Class.add', 'Class.edit', 'Class.delete']
+            ],//POCOR-6822 Ends
             'ProfileTemplates.Staff' => [
                 'title' => 'Staff',
                 'parent' => 'ProfileTemplates',

@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Institution\Model\Table\InstitutionStaffTransfersTable;
+use Cake\Log\Log;
 
 class StaffTransferInTable extends InstitutionStaffTransfersTable
 {
@@ -47,7 +48,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                     return array_key_exists('new_end_date', $context['data']) && !empty($context['data']['new_end_date']);
                 }
             ])
-            ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date', 'workflow_assignee_id']);
+            ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date', 'workflow_assignee_id','assignee_id']);
     }
 
     public function implementedEvents()
@@ -66,6 +67,12 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        //POCOR-7034 start
+        $url = $_SERVER['REQUEST_URI'];
+        if(strpos($url, "StaffTransferIn/approve")!==false){
+            $this->field('assignee_id', ['type' => 'hidden']);
+        }
+        //POCOR-7034 end
         parent::beforeAction($event, $extra);
 
         $this->field('previous_institution_staff_id', ['type' => 'hidden']);
@@ -366,7 +373,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->NewInstitutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->Users->alias(), $this->NewInstitutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias(),'Assignees'])
             ->matching($Statuses->alias().'.'.$StepsParams->alias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $incomingInstitution) {
                 return $q->where([
                     $Statuses->aliasField('category <> ') => $doneStatus,
@@ -374,7 +381,8 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                     $StepsParams->aliasField('value') => $incomingInstitution
                 ]);
             })
-            ->where([$this->aliasField('assignee_id') => $userId])
+            ->where([$this->aliasField('assignee_id') => $userId,
+                'Assignees.super_admin IS NOT' => 1]) //POCOR-7102
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
@@ -406,4 +414,17 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
         return $query;
     }
+
+    //POCOR-6925
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    {
+        if(in_array($action, ['add','edit'])) { 
+            $assigneeOptions = [-1 => __('Auto Assign')]; 
+            $attr['options'] = $assigneeOptions;
+            $attr['onChangeReload'] = 'changeStatus';
+            return $attr;
+        }
+        
+    }
+    
 }

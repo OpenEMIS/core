@@ -12,6 +12,8 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
+use Cake\Network\Session;
+use Cake\Log\Log;
 
 // This file serves as an abstract class for StudentTransferIn and StudentTransferOut
 class InstitutionStudentTransfersTable extends ControllerActionTable
@@ -99,7 +101,6 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $Students = TableRegistry::get('Institution.Students');
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
-
         // find previous student record (could be enrolled/promoted/graduated status)
         $previousStudentRecord = $Students->find()
             ->where([
@@ -110,8 +111,25 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                 $Students->aliasField('student_status_id IN ') => [$statuses['CURRENT'], $statuses['PROMOTED'], $statuses['GRADUATED']]
             ])
             ->first();
-
         if (!empty($previousStudentRecord)) {
+            //POCOR-6230 Starts
+            $session = new Session();
+            $userId = $session->read('Auth.User.id');
+            //first check the student has already enrolled in same/other institution in any academic period
+            $enrolledStudentRecord = $Students->find()
+                ->where([
+                    $Students->aliasField('student_id') => $entity->student_id,
+                    $Students->aliasField('student_status_id') => $statuses['CURRENT']
+                ])
+                ->first();
+            if(!empty($enrolledStudentRecord)){
+                //change existing record enrolled student status into transfered
+                $Students->updateAll(
+                    ['student_status_id' => $statuses['TRANSFERRED'], 'modified_user_id'=> $userId, 'modified'=> Time::now()],
+                    ['id' => $enrolledStudentRecord->id]
+                );
+            } //POCOR-6230 Ends
+            
             //POCOR-6362 starts
             if($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']){
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -155,7 +173,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                     $Students->save($previousStudentRecord);
                 } /*POCOR-6542 ends*/
             }
-        }
+        } 
     }
 
     public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
@@ -373,6 +391,98 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         else{
             $this->updateAll(['all_visible' => 1], ['id' => $entity->id]);            
         }
+
+        //POCOR-6995 start
+        $classId = $entity->institution_class_id;
+        $institutionClass =  TableRegistry::get('Institution.InstitutionClasses');
+        if(!empty($classId)){
+            $bodyData = $institutionClass->find('all',
+                            [ 'contain' => [
+                                'Institutions',
+                                'EducationGrades',
+                                'Staff',
+                                'AcademicPeriods',
+                                'InstitutionShifts',
+                                'InstitutionShifts.ShiftOptions',
+                                'ClassesSecondaryStaff.SecondaryStaff',
+                                'Students'
+                            ],
+                    ])->where([
+                        $institutionClass->aliasField('id') => $classId
+                    ]);
+
+                $grades = $gradeId = $secondaryTeachers = $students = [];
+
+                if (!empty($bodyData)) {
+                    foreach ($bodyData as $key => $value) {
+                        $capacity = $value->capacity;
+                        $shift = $value->institution_shift->shift_option->name;
+                        $academicPeriod = $value->academic_period->name;
+                        $homeRoomteacher = $value->staff->openemis_no;
+                        $institutionId = $value->institution->id;
+                        $institutionName = $value->institution->name;
+                        $institutionCode = $value->institution->code;
+                        $institutionClassId = $value->id;
+                        $institutionClassName = $value->name;
+
+                        if(!empty($value->education_grades)) {
+                            foreach ($value->education_grades as $key => $gradeOptions) {
+                                $grades[] = $gradeOptions->name;
+                                $gradeId[] = $gradeOptions->id;
+                            }
+                        }
+
+                        if(!empty($value->classes_secondary_staff)) {
+                            foreach ($value->classes_secondary_staff as $key => $secondaryStaffs) {
+                                $secondaryTeachers[] = $secondaryStaffs->secondary_staff->openemis_no;
+                            }
+                        }
+
+                        $maleStudents = 0;
+                        $femaleStudents = 0;
+                        if(!empty($value->students)) {
+                            foreach ($value->students as $key => $studentsData) {
+                                $students[] = $studentsData->openemis_no;
+                                if($studentsData->gender->code == 'M') {
+                                    $maleStudents = $maleStudents + 1;
+                                }
+                                if($studentsData->gender->code == 'F') {
+                                    $femaleStudents = $femaleStudents + 1;
+                                }
+                            }
+                        }
+
+                    }
+                }
+
+                $body = array();
+
+                $body = [
+                    'institutions_id' => !empty($institutionId) ? $institutionId : NULL,
+                    'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+                    'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+                    'institutions_classes_id' => $institutionClassId,
+                    'institutions_classes_name' => $institutionClassName,
+                    'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
+                    'shift_options_name' => !empty($shift) ? $shift : NULL,
+                    'institutions_classes_capacity' => !empty($capacity) ? $capacity : NULL,
+                    'education_grades_id' => !empty($gradeId) ? $gradeId :NULL,
+                    'education_grades_name' => !empty($grades) ? $grades : NULL,
+                    'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
+                    'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
+                    'total_students' => !empty($students) ? count($students) : 0,
+                    'institution_classes_staff_openemis_no' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
+                    'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
+                    'institution_class_students_openemis_no' => !empty($students) ? $students : NULL
+                ];
+                    $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                    if ($this->Auth->user()) {
+                        $Webhooks->triggerShell('class_update', ['username' => $username], $body);
+                    }
+            }
+
+            //POCOR-6995 end
+
     }
 
     public function addSections()
@@ -499,5 +609,5 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             $query->where(['Statuses.category <> ' => self::DONE]);
         }
         return $query;
-    }
+    } 
 }
