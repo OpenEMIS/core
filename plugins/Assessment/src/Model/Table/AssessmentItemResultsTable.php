@@ -64,11 +64,38 @@ class AssessmentItemResultsTable extends AppTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew()) {
-            $entity->id = Text::uuid();
-        }
+        //POCOR-6824 start
+        $institutionId = $entity->institution_id;
+        $InstitutionClassId = $entity->institution_classes_id;
+        $institutionClass = TableRegistry::get('institution_classes');
+        $findclass = $institutionClass->find()->select(['id'=>$institutionClass->aliasField('id')])->where([$institutionClass->aliasField('institution_id')=>$institutionId,$institutionClass->aliasField('id')=>$InstitutionClassId])->first();
+        if($findclass==null && $findclass['id']!=$InstitutionClassId){
+            $response[] ="No Institution class Id record Exist";
+            $entity->errors($response);
+            return false; 
+        }else{ //POCOR-6824 end add if else condition
+            //POCOR-6947
+            $institutionStudents = TableRegistry::get('institution_students');
+            $institutionStudentsData = $institutionStudents
+                                                ->find()
+                                                ->where([
+                                                    $institutionStudents->aliasField('student_id') => $entity->student_id,
+                                                    $institutionStudents->aliasField('education_grade_id') => $entity->education_grade_id,
+                                                    $institutionStudents->aliasField('institution_id') => $entity->institution_id,
+                                                    $institutionStudents->aliasField('academic_period_id') => $entity->academic_period_id
+                                                ])->toArray();
+            if(empty($institutionStudentsData)){
+                $response[] ="No academic records for this student";
+                $entity->errors($response);
+                return false;
+            }else{
+                if ($entity->isNew()) {
+                    $entity->id = Text::uuid();
+                }
 
-        $this->getAssessmentGrading($entity);
+                $this->getAssessmentGrading($entity);
+            }
+        }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -158,13 +185,14 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('student_id') => $studentId,
                 // $this->aliasField('institution_classes_id ') => $className,  // POCOR-6823
-                $this->aliasField('institution_id') => $institutionId    //POCOR-6823
+                // $this->aliasField('institution_id') => $institutionId    //POCOR-6823
+                // $this->aliasField('institution_id') => $institutionId    //POCOR-6989 : Commented to show data for all instituion 
             ])
             ->order([
                 $this->aliasField('created') => 'DESC', //POCOR-6823
                 $this->aliasField('modified') => 'DESC', //POCOR-6823
                 $this->Assessments->aliasField('code'), $this->Assessments->aliasField('name')
-            ])->first();
+            ])->all(); //->first(); //POCOR-6948 Comment Reason: taking one record of assessment instead of all records for student. 
     }
 
     /**
@@ -498,21 +526,24 @@ class AssessmentItemResultsTable extends AppTable
     */
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
     {
-        $url = $_SERVER['REQUEST_URI'];
-        $url_components = parse_url($url);
-        parse_str($url_components['query'], $params);
-        $action = array_key_exists('_finder', $params);
-        if ($primary && $action) {
-            $param = preg_match_all('/\\[(.*?)\\]/', $params['_finder'], $matches);
-            $paramsString = $matches[1];
-            $paramsArray = explode(';', $paramsString[0]);
-            if (empty($paramsArray[0]) || empty($paramsArray[1]) || empty($paramsArray[2]) || empty($paramsArray[3])) {
-                $response['result'] = [];
-                $response['message'] = "Mandatory field can't empty";
-                $dataArr = array("data" => $response);
-                echo json_encode($dataArr);exit;
+        if(isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['REQUEST_URI'])){//POCOR-5227 only `if` condition use for this issue, not affected poonam's work on POCOR-6912
+            $url = $_SERVER['REQUEST_URI'];
+            $url_components = parse_url($url);
+            parse_str($url_components['query'], $params);
+            $action = array_key_exists('_finder', $params);
+            $actionName = strtok($params['_finder'], '[');//POCOR-6921- updated exact action name condition
+            if ($primary && $actionName == 'AssessmentGradesOptions') {
+                $param = preg_match_all('/\\[(.*?)\\]/', $params['_finder'], $matches);
+                $paramsString = $matches[1];
+                $paramsArray = explode(';', $paramsString[0]);
+                if (empty($paramsArray[0]) || empty($paramsArray[1]) || empty($paramsArray[2]) || empty($paramsArray[3])) {
+                    $response['result'] = [];
+                    $response['message'] = "Mandatory field can't empty";
+                    $dataArr = array("data" => $response);
+                    echo json_encode($dataArr);exit;
+                }
             }
-        }   
+        }
     }
     /**POCOR-6912 ends*/ 
 }

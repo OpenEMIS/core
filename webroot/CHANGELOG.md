@@ -1,3 +1,259 @@
+### [3.77.2] - 2023-01-09
+- Implemented: Institutions > Calendar : For half day school closure, include start/end time and Shift
+- Implemented: Add additional triggers for the Add Class and Update Class Webhooks
+- Bug Fixed: Administrations > Security > Groups > Edit/Save : Redesign page
+- Bug Fixed: Directory: Unable to delete records and getting 404 error
+- Bug Fixed: Administration>Security>Users: Getting 404 error when creating user in user group
+- Bug Fixed:Administration>Security>Users: Getting 404 error when searching user in user group
+
+### [3.77.1] - 2023-01-06
+- Implemented: Add School Type, Grade, and Subject filters to Custom Reports
+- Implemented: Develop a function for two factor authentication (email)
+- Bug Fixed: Institutions>Attendance>Students: Unable to change absence>excused/unexcused to other types of attendances
+- Bug Fixed: Institutions > Students > Pending Transfer Out: 404 error when approving cancellation
+- Bug Fixed: OpenEMIS Core 404 page is showing the header bar
+
+### [3.77.0] - 2023-01-03
+- Implemented: Develop APIs for WebGIS
+- Implemented: When adding guardians to existing students we need to be able to be able to initiate the new workflow to conduct an internal and external search
+- Bug Fixed: Report>Institution>Class attendance marked: Report generated is showing that there is no marked attendance
+- Bug Fixed: Institutions>Performance>Report Cards: Report is stuck in progress
+- Bug Fixed: Institutions>Attendance>Students:Students are marked but the attendance are not recorded in institution_class_attendance_records
+- Bug Fixed: Institutions>Performance>Report Cards: Past teachers are shown in the student report cards assessment tab
+
+### [3.76.10] - 2022-12-28
+- Bug Fixed: Report>Institution>Class Attendance Marked Summary:Creation of new summary table and update existing query
+- Bug Fixed: Homepage > Workbench : System does not display workflows that are not assigned to user
+- Bug Fixed: Institutions > Academic > Subjects > Add: Creative Arts subject is not supposed to be shown
+- Bug Fixed: Institutions>Student>Academic>Subject: Student is actually assigned to the following subjects even when withdrawn
+- Bug Fixed: Administration > Survey > Forms > Status > Edit page: The system gives a 404 error upon editing survey form dates
+- Bug Fixed: Institution > Report Cards > Comment: Homeroom teachers users in general are unable to see the edit button
+- Bug Fixed: Institutions>Students>Pending transfer in/Pending transfer out>Search-Getting 404 error
+- Bug Fixed: Institutions>Academic>Students>Special Needs>Diagnostics: Attachments field should be optional and not mandatory
+- Bug Fixed: Institutions>Students/Staff>Add: Birthplace area and address area are not displayed properly when doing internal search from directory
+- Bug Fixed: Institutions>Students: User should be able to add students even when custom fields are not set up in page
+
+### [3.76.9] - 2022-12-21
+- Implemented: Add a shift filter to the staff attendance page
+- Bug Fixed: Institutions > Academic > Subjects > Edit Page : All fields are blank in Edit page eventhough there are values
+- Bug Fixed: Institutions>Students>External Search/Internal Search: Multiple table lines are found
+- Bug Fixed: Institutions>Academic>Subjects: User is able to add Subjects that do not point to the Education Grade
+- Bug Fixed: Institution>Students/Staff: Birthplace area and address area are not saved when internal search from directory
+- Bug Fixed: Institutions>Staff>Career>Position: Change of shift assignment is creating duplicate shifts
+- Bug Fixed: Institution > Add page: There is an error in adding a new institution
+- Bug Fixed: Institutions > Student > Add page: Page keeps loading
+- Bug Fixed: Directory>Student: Email should be editable
+- Bug Fixed: Institutions>Performance>Report Cards: User is getting 404 error when opening report cards
+- Bug Fixed: Administration > Security > Groups > User Group > Add: Cannot find user when searching
+
+### [3.76.8] - 2022-12-19
+- Bug Fixed: Institution > List page AND Institutions > Students/Staff List pages: Thumbnails are not displaying
+- Bug Fixed: Institutions>Academic>Subjects: Unable to unassign students from multigrade class subjects
+
+### [3.76.7] - 2022-12-19
+- Bug Fixed: Institutions>Staff>Staff1>Position: When approving end of assignment, user is getting 404 error
+- Bug Fixed: Institution > Student > Promote/Repeat individual page: The system gives a 404 error when promoting students individually
+- Bug Fixed: Administration > Performance > Assessment > Edit page: The subject is not showing in the database
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to generate all/download all for some roles
+- Bug Fixed: Institutions>Staff>Add: Unable to add staff
+
+### [3.76.6] - 2022-12-14
+- Bug Fixed: Develop a student report card absence configuration-Only show absences for the current academic period page
+
+### [3.76.5] - 2022-12-13
+- Implemented: Develop a student report card absence configuration page
+- Bug Fixed: Institution>Academic>Subjects:Institution_subject_students and institution_subjects data do not match
+- Bug Fixed: API: Api should filter by the academic_period id that was passed and should show institution_classes _id
+- Bug Fixed: Institution > Performance > Outcomes: When the user selects the "-- Select --" to delete the record, the system is supposed to save.
+- Bug Fixed: Administrations > System Setup > System Configurations > Columns for Staff/Student/Directory List page : Identity Number Edit issue
+- Bug Fixed: Institutions>Staff>Add: Unable to add staff
+- Bug Fixed: Increasing the size of the Criteria Name column from 1,000 to 1,500
+
+### [3.76.4] - 2022-12-09
+- Implemented: When adding guardians to new students we need to be able to add multiple guardians
+- Bug Fixed: Institutions>Performance>Report Cards: Email is not sent
+- Bug Fixed: Institutions > Performances > Report Cards: Modified time shows incorrect timing
+- Bug Fixed: Add User : If user is added from Internal Search username and password should be read-only
+- Bug Fixed: Directory and Institutions>Students/Staff-When entering Identity Number or OpenEMIS ID, fields should not be mandatory
+
+### [3.76.3] - 2022-12-07
+- Bug Fixed: Institutions>Academic>Classes: The system removes the count of students if the students are promoted/graduated/repeated
+- Bug Fixed: Administration>Report Card>Comments: Only the institution Inagua All Age is affected where any roles besides superadmin cannot comment
+- Bug Fixed: Directory/Institution>Students/Staff:Followups for POCOR-5672
+- Bug Fixed: Develop a function to download Student Report Cards in Excel format
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to generate or download even when permission is given
+- Bug Fixed: Migration Script: Import bypass the existing outcome_criterias.name column's limit size of 500 to 1000
+
+### [3.76.2] - 2022-12-01
+- Implemented: Develop a function to download Student Report Cards in Excel format
+- Bug Fixed: Administration>Performance>Competencies: Education programme becomes empty when selected
+- Bug Fixed: Institutions>Performance>Report Cards: Pdf configuration is set to one but it is printing two worksheets
+
+### [3.76.1] - 2022-11-29
+- Bug Fixed: Administration>System Setup>Configurations: Student webhook is not showing custom fields
+- Bug Fixed: Directory > Students > Academic > Report Cards tab: Report card is published but cannot see details
+- Bug Fixed: Institutions>Performance>Report Cards: Download button that disappears and then reappears
+- Bug Fixed: Institution>Performance>Report Cards: Download all is not working
+- Bug Fixed: Administration>Performance>Report Cards: Pages should change to sheets
+- Bug Fixed: API: Api should return education grade id and education subject id
+
+### [3.76.0] - 2022-11-24
+- Implemented: Record validation when adding guardians
+- Implemented: Implement database foreign keys for OpenEMIS Core
+
+### [3.75.38] - 2022-11-23
+- Implemented: Develop Summary Tables for WebGIS
+- Bug Fixed: API : Add validation if class_id does not match institution_id
+- Bug Fixed: Institutions>Performance>Report Cards: Report formatting for pdf and excel is different
+- Bug Fixed: Institutions > Subjects > Add page : System allows user to add subjects for the wrong grade and class
+- Bug Fixed: Institutions>Students>Overview: Student email should be able to be edited
+
+### [3.75.37] - 2022-11-16
+- Bug Fixed: Report>Institution>Institutions Summary Report: Report is not having correct format
+- Bug Fixed: Administration>Survey>Forms: Dropdown field for the 'survey form section' is not showing the list of the survey section.
+- Bug Fixed: Institutions>Survey>Forms: Survey form does not appear when a new institution is added
+- Bug Fixed: Identity the source of this query
+- Bug Fixed: Institutions>General>Map: Url is redirected to the wrong page
+- Bug Fixed: Institution_class_students:Retrieve 18013660 rows(Happening when session ends)
+
+### [3.75.36] - 2022-11-09
+- Implemented: Create Placeholder for Student Report Card to display user that enters marks and comments
+- Implemented: Change to the OpenEMIS Core Special Needs feature
+- Implemented: Update an existing Report: Institution Positions
+- Implemented: Develop gender placeholder in student report card
+- Implemented: Change to the OpenEMIS Core Special Needs feature(Plan)
+- Bug Fixed: Institution>Performance>Report Card: User should be allow to email all pdf or email all excels
+- Bug Fixed: Institutions>Appointment>Positions: User is able to add positions that is inactive
+- Bug Fixed: Institutions>Dashboard: Dashboard are not reflecting Student Attendance correctly
+- Bug Fixed: Institutions>Staff>Transfer: Assignee is not showing during Pending transfer step
+- Bug Fixed: Institutions>Attendance>Student: System should update the record in institution_student_absence_days AND institution_student_absence_details correctly
+- Bug Fixed: Institutions>Performance>Report Cards: Report card generated is showing the wrong number for attendance
+- Bug Fixed: Institutions>Students>Transfer: Assignee option is not accurate
+- Bug Fixed: Administration>System Setup>Configurations>Coordination: Mandatory fields set to false but it is still mandatory
+- Bug Fixed: Institutions>Survey>Forms>Export: Report is showing double records
+
+### [3.75.35] - 2022-11-02
+- Bug Fixed: Institution_class_students:Retrieve 18013660 rows
+
+### [3.75.34] - 2022-11-01
+- Implemented: Develop a "preferred name" student report card placeholder
+- Bug Fixed: Institutions>Student>Transfer: Assignee is not showing during Pending transfer step
+- Bug Fixed: Institutions>Staff>Career>Attendance: End of assignment staff cannot view attendances
+- Bug Fixed: Reports > Students > Students: Report get stuck in progress
+- Bug Fixed: Institutions>Student>Bulk Transfer: Changes to bulk transfer
+- Bug Fixed: Institutions>Profile>Classes:Missing linkage in the existing query for populating report_student_assessment_summary table
+- Implemented: Develop a new Report: Institution Positions Summaries
+- Implemented: Update an existing Page: Field Option - Staff Position Titles
+- Bug Fixed: Institution > Attendance > Students: Archive is getting 404 error
+
+### [3.75.33] - 2022-10-20
+- Implemented: Enhance the usability of the Admin > Security > Users
+- Bug Fixed: Institutions>Report Cards>Comments: Sees error message
+- Bug Fixed: Institutions > Statistics > Standard Report : Marks Entered by Staff: Missing grades and showing minus signs
+- Bug Fixed: Institutions>Staff>Career>Positions>Change of shift: Getting 404 error
+- Bug Fixed: Institution>Academic>Classes: Staff list is showing non academic staffs
+- Bug Fixed: Administration>Survey>Status tab > Update page: System should UPDATE instead of DELETE records
+- Bug Fixed: Report>Survey>Forms: An option to generate a report for surveys that are closed
+- Bug Fixed: Administration > Performance > Assessment: Template cannot be open
+
+### [3.75.32] - 2022-10-13
+- Implemented: Develop a new Field Option - Staff Position Categories
+- Bug Fixed: Report>Institution>Infrastructure: Changes to the Infrastructure Report
+- Bug Fixed: Institutions: Validation for single institution
+- Bug Fixed: Institutions>Dashboard: Dashboard are not reflecting Staff Attendance
+- Bug Fixed: API : Validation to add student should be the same as Interface
+- Bug Fixed: Institutions>Survey>Forms:Unable to import non mandatory survey questions
+- Bug Fixed: Institution > Survey > Form: Unable to save
+- Bug Fixed: Report>Institution: Student Attendance Summary Report is Empty
+- Bug Fixed: Administration>Survey>Forms: System removes old records from the institution_surveys
+
+### [3.75.31.2] - 2022-10-11
+- Bug Fixed: Institutions>Students>Export: Students that are Repeated last year and Enrolled this year should show Enrolled (Repeater) in the report
+
+### [3.75.31.1] - 2022-10-11
+- Bug Fixed: Administrations > Workflow > Actions tab : Institution > Pending Student Transfer: Changes in workflow
+- Bug Fixed: Institutions>Students>Student1>Academic>Assessment: It should show the current and past assessment marks even from other institutions
+- Bug Fixed: Institutions > Students : Bulk Transfer for Enrolled students are showing the wrong results for "Next Grade" field
+
+### [3.75.31] - 2022-09-29
+- Bug Fixed: Reports > Institution > Class Attendance Marked Summary Report: Report is empty
+- Bug Fixed: Institutions > Academic > Programmes > Delete Grades: When the system restricts the delete, the system counts Institution Students that are holding Enrolled status only
+
+### [3.75.30] - 2022-09-27
+- Bug Fixed: System Performance for queries-Assessment page that is generating thousands of database queries per click
+- Bug Fixed: Ensure that Assignee field is added to all Add page that has workflows
+- Bug Fixed: Develop a class profile feature for Institution>Profile
+- Bug Fixed: Administration>Profile>Classes: 404 error when trying to generate this profile for previous academic period
+- Bug Fixed: Institutions>Student>Transfer: Unable to add Institution Positions
+- Bug Fixed: Institutions>Students>Bulk Transfer: Issues in Bulk transfer page
+
+### [3.75.29] - 2022-09-22
+- Bug Fixed: Report>Students>Subject and Book List: Education grade is not filtering by Institution
+- Bug Fixed: Institution > Student > Academic: Assessments should show all past and current Assessment records
+- Bug Fixed: Reports>Students>Students: Students are not reflecting correctly
+- Bug Fixed: Institution > Academic > Programmes: Able to delete programmes when classes for the programmes still exist
+- Bug Fixed: Institution>Survey:Surveys are not appearing
+- Bug Fixed: Institutions > Staff List page > Edit : System does not trigger any workflow for editing staff
+- Bug Fixed: Institutions>Students>Add: When trying to add a new student from the Institution tab, the system assigns a small integer that does not follow the OpenEMIS id logic
+- Bug Fixed: Institutions>Performance>Report Cards: Create placeholders for both education subjects and institution subjects
+
+### [3.75.28] - 2022-09-15
+- Bug Fixed: Institution > Students > Transfer: Education Grade is Empty Even Though There are Students in that specific year
+- Bug Fixed: Implement database foreign keys for OpenEMIS Core-Issues raised
+- Bug Fixed: API: User with OpenEMIS ID 2488140537 has no academic history records, but he has marks in 7 different grades.
+- Bug Fixed: Institutions>Student>Bulk Transfer: Assignee is assigned wrongly
+
+### [3.75.27] - 2022-09-14
+- Bug Fixed: Report>Institution>Wash Report: Changes to the Wash Report
+- Bug Fixed: Institution > Students: User is able to create students with the same OpenEMIS ID at the same time as another user
+
+### [3.75.26] - 2022-09-10
+- Implemented: Develop a class profile feature
+- Bug Fixed: Administration>Security>Roles: 404 error when creating new security user
+- Bug Fixed: Administration>Meals: Area education is not filtering the institutions properly
+- Bug Fixed: Institutions>Staff>Career>Positions: User should be able to edit staff shift and filter staff attendance by shift 
+- Bug Fixed: Institution>Meals: Correction to Meals
+- Bug Fixed: Report>Institution>Student Body Masses: Filter for Governorate is not working
+- Bug Fixed: Institutions>Staff>Staff1>Transfer: Getting 404 error when clicking transfer button
+- Bug Fixed: Institution > Academic > Classes: Student status does not show correctly
+- Bug Fixed: Institutions>Meals>Distribution/Students: Distributed meals should be linked to the number of students who received the meal
+- Bug Fixed: Institutions>Academic>Programmes: Allow users to delete because there is no more student enrolled in the grade
+
+### [3.75.25] - 2022-09-02
+- Bug Fixed: Institutions>Performance>Assessments>Reports:Getting 404 error when generating
+- Bug Fixed: Report>Institution>Positions: Changes to Positions Report
+- Bug Fixed: Institution>Academic>Programmes/Shift: Getting network error when downloading
+- Bug Fixed: Institutions>Attendance>Students-Data shown under the date column is showing the academic year instead of the date.
+- Bug Fixed: Institution > Student > Academic: Assessments are not showing fully
+- Bug Fixed: Administration>System Setup>Configurations: Logout webhook is not working
+
+### [3.75.24] - 2022-08-30
+- Bug Fixed: Implement database foreign keys for OpenEMIS Core-Issues raised 2
+- Bug Fixed: Directory>Student: Student is showing the wrong institution
+- Bug Fixed: Institutions>Students>Transfer: Assignee option is not accurate
+- Bug Fixed: Institution > General > Map: Back button should be removed
+- Bug Fixed: Institutions>Students>Bulk Transfer: Students are not showing
+
+### [3.75.23] - 2022-08-25
+- Bug Fixed: Report>Students>Enrolment Summary: Changes to Enrolment Summary Report
+- Bug Fixed: Institutions > Performances > Assessments > Class > Reports : Timeout Gateway error
+- Bug Fixed: Report>Institution>Student: Data does not match
+- Bug Fixed: Institutions>Students>Student1: Assessment tab keeps loading
+- Bug Fixed: Report>Institution/Student/Staff: Report is stuck in progress(PHP 7.4)
+- Bug Fixed: Institution>Performance>Report Card: Report card is stuck in progress(PHP 7.4)
+- Bug Fixed: Administration>Profile: Report is stuck in progress(PHP 7.4)
+- Bug Fixed: Institutions>Academic>Classes: Student is unassigned to class but he or she is still assigned to the class subjects
+
+### [3.75.22] - 2022-08-20
+- Bug Fixed: Administration>Scholarships>Details: Changes to Scholarship
+- Bug Fixed: Institutions > General > Overview: Excel export is empty
+- Bug Fixed: Institutions>General>Contact>People: Unable to export
+- Bug Fixed: Administration>Data Management>Copy: User is unable to copy
+- Bug Fixed: Administration>Archive>Connection: Getting 404 error when click test
+- Bug Fixed: Report>Institution: Area education is not filtering
+- Bug Fixed: Report>Institution>Student Body Masses: Data is not showing correctly
+- Bug Fixed: Institutions>Statistics>Standard: Staff career does not tally with the staff leaves on the system
+
 ### [3.75.21] - 2022-08-09
 - Developed: Create a migration script to insert a row in the report_queries table to truncate the system_errors table every week
 - Bug Fixed: Institutions > Staff > Edit > End of Assignment : End date should be mandatory when user wants to end the assignment

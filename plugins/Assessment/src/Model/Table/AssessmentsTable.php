@@ -197,7 +197,7 @@ class AssessmentsTable extends ControllerActionTable {
                             'code'=>'EducationSubjects.code'])
                         ->contain(['EducationSubjects'])
                         ->where([$EducationSubjects->aliasField('education_grade_id')=> $gradeIds])
-                        ->toArray();
+                        ->order([$EducationSubjects->aliasField('created')])->toArray();//POCOR-7122
             
             foreach($subjectname as $value) {
                 $subejctid[]= $value['id'];
@@ -544,6 +544,7 @@ class AssessmentsTable extends ControllerActionTable {
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($filepath));
         echo file_get_contents($filepath);
+        exit(); //POCOR-7027
     }  
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)

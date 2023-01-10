@@ -12,7 +12,8 @@ class SpecialNeedsBehavior extends Behavior
         'SpecialNeedsAssessments' => 'Assessments',
         'SpecialNeedsServices' => 'Services',
         'SpecialNeedsDevices' => 'Devices',
-        'SpecialNeedsPlans' => 'Plans'
+        'SpecialNeedsPlans' => 'Plans',
+        'SpecialNeedsDiagnostics' => 'Diagnostics' //POCOR-6873
     ];
 
     private $_sessionReadKeys = [

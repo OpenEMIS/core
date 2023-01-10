@@ -55,39 +55,18 @@ class SecurityRolesTable extends ControllerActionTable
                 'filter' => 'security_group_id'
             ]);
         }
-
+        $this->SecurityRolesTable = TableRegistry::get('Security.SecurityRolesTable');//POCOR-6878
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Permissions' => ['view', 'edit']
         ]);
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
-    {      
+    {
+      
         // webhook create role starts
          if($entity->isNew()) {
           
-          /*POCOR-6844 starts*/
-            if ($entity->security_group_id > 0) {
-                $roles = $this->find('all')->select('order')->where(['security_group_id' => $entity->security_group_id])->max('order')->toArray();
-                 $order = $roles['order'] + 1;
-                if ($entity->has('id') && $entity->submit == 'save') {
-                    $this->updateAll(
-                        ['order' => $order],
-                        ['id' => $entity->id]
-                    );
-                }
-            }
-            else{
-                $roles = $this->find('all')->select('order')->max('order')->toArray();
-                $order = $roles['order'] + 1;
-                if ($entity->has('id') && $entity->submit == 'save') {
-                    $this->updateAll(
-                        ['order' => $order],
-                        ['id' => $entity->id]
-                    );
-                }
-            }
-            /*POCOR-6844 End*/
             $body = array();
             $createRole = [
                 'role_id' =>$entity->id,
@@ -96,9 +75,9 @@ class SecurityRolesTable extends ControllerActionTable
             ];
           
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
+            //if ($this->Auth->user()) { // creating issue while adding new permission //POCOR-6878
                 $Webhooks->triggerShell('role_create', [], $createRole);
-            }
+            //}
         }
 
         // webhook create role ends
@@ -785,6 +764,16 @@ class SecurityRolesTable extends ControllerActionTable
         return (!empty($teacherData))? $teacherData->id: null;
     }//POCOR-6734 ends
 
+    /**
+     * POCOR-6878,add defult order value
+    */
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
+        if ($entity->isNew()) {
+            $entity->order = 1;
+        }
+    }
+
     /*
     * Function to get logged in user's role list
     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
@@ -806,4 +795,5 @@ class SecurityRolesTable extends ControllerActionTable
         }
         return (!empty($roles))? $roles: null;
     }
+
 }

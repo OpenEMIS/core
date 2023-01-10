@@ -14,9 +14,9 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Collection\Collection;
 use Cake\Datasource\ResultSetInterface;
-
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Log\Log;
 
 class InstitutionPositionsTable extends ControllerActionTable
 {
@@ -92,6 +92,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'rule' => 'checkNoSpaces',
                 'provider' => 'custom'
             ])
+           // ->requirePresence('shift_id')
             ->add('staff_position_grade_id', 'custom', [
                 'rule' => function ($value, $context) {
                     $StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
@@ -167,6 +168,17 @@ class InstitutionPositionsTable extends ControllerActionTable
                     return false;
                 }
             ])
+            ->add('shift_id', 'rulecheckShiftPresent', [ //POCOR-6971
+                'rule' => function ($value, $context) {
+                    if($value == 0){
+                            return 'This field cannot be left empty';
+                    }else{
+                        return true;
+                    }
+
+                }
+            ])
+            
             ->add('status_id', 'ruleCheckStatusIdValid', [
                 'rule' => ['checkStatusIdValid'],
                 'provider' => 'table',
@@ -341,6 +353,12 @@ class InstitutionPositionsTable extends ControllerActionTable
             'type' => 'select',
             'entity' => $entity
         ]);
+
+        //POCOR-6971
+        $this->field('shift_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
         $this->field('is_homeroom', ['entity' => $entity]);
 
         // POCOR-3003 - [...] decision is to make Position Title not editable on the position edit page
@@ -476,6 +494,7 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
+        $this->fields['shift_id']['visible'] = false; //POCOR-6971
 
         $this->fields['staff_position_title_id']['sort'] = ['field' => 'StaffPositionTitles.order'];
         $this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];
@@ -589,7 +608,7 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         $this->setFieldOrder([
             'position_no', 'staff_position_title_id',
-            'staff_position_grade_id',
+            'staff_position_grade_id','shift_id',
         ]);
     }
 
@@ -600,6 +619,11 @@ class InstitutionPositionsTable extends ControllerActionTable
             'entity' => $entity
         ]);
         $this->field('is_homeroom');
+        //POCOR-6971
+        $this->field('shift_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
     }
 
 /******************************************************************************************************************
@@ -618,7 +642,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             'staff_position_title_id',
             'is_homeroom',
             'modified_user_id', 'modified', 'created_user_id', 'created',
-            'current_staff_list', 'past_staff_list'
+            'current_staff_list', 'past_staff_list','shift_id'
         ]);
 
         $session = $this->Session;
@@ -682,6 +706,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity)
     {
         $this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
+        
         if (!empty($entity->modified_user_id)) {
             $this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
         }
@@ -821,11 +846,12 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->StaffPositionTitles->alias(), $this->StaffPositionGrades->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->StaffPositionTitles->alias(), $this->StaffPositionGrades->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
-            ->where([$this->aliasField('assignee_id') => $userId])
+            ->where([$this->aliasField('assignee_id') => $userId,
+                'Assignees.super_admin IS NOT' => 1]) //POCOR-7102
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
@@ -1181,5 +1207,114 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function onExcelGetidentityNumber(Event $event, Entity $entity)
     {
         return $entity->identity_number ;
+    }
+
+    //POCOR-6925
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $workflowModel = 'Institutions > Positions';
+            $workflowModelsTable = TableRegistry::get('workflow_models');
+            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workModelId = $Workflows
+                            ->find()
+                            ->select(['id'=>$workflowModelsTable->aliasField('id'),
+                            'workflow_id'=>$Workflows->aliasField('id'),
+                            'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
+                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                                [
+                                    $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
+                                ])
+                            ->where([$workflowModelsTable->aliasField('name')=>$workflowModel])->first();
+            $workflowId = $workModelId->workflow_id;
+            $isSchoolBased = $workModelId->is_school_based;
+            $workflowStepsOptions = $workflowStepsTable
+                            ->find()
+                            ->select([
+                                'stepId'=>$workflowStepsTable->aliasField('id'),
+                            ])
+                            ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
+                            ->first();
+            $stepId = $workflowStepsOptions->stepId;
+            $session = $request->session();
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+            $institutionId = $institutionId;
+            $assigneeOptions = [];
+            if (!is_null($stepId)) {
+                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
+                if (!empty($stepRoles)) {
+                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::get('Area.Areas');
+                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    if ($isSchoolBased) {
+                        if (is_null($institutionId)) {                        
+                            Log::write('debug', 'Institution Id not found.');
+                        } else {
+                            $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
+                            $securityGroupId = $institutionObj->security_group_id;
+                            $areaObj = $institutionObj->area;
+                            // School based assignee
+                            $where = [
+                                'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
+                                        ['Institutions.id' => $institutionId]],
+                                $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
+                            ];
+                            $schoolBasedAssigneeQuery = $SecurityGroupUsers
+                                    ->find('userList', ['where' => $where])
+                                    ->leftJoinWith('SecurityGroups.Institutions');
+                            $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
+                            
+                            // Region based assignee
+                            $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                            $regionBasedAssigneeQuery = $SecurityGroupUsers
+                                        ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+                            
+                            $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
+                            // End
+                            $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
+                        }
+                    } else {
+                        $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                        $assigneeQuery = $SecurityGroupUsers
+                                ->find('userList', ['where' => $where])
+                                ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                        $assigneeOptions = $assigneeQuery->toArray();
+                    }
+                }
+            }
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
+            $attr['onChangeReload'] = 'changeStatus';
+            return $attr;
+        }
+    }
+
+    /**
+     * POCOR-6971
+     * add shift dropdown
+    */
+    public function onUpdateFieldShiftId(Event $event, array $attr, $action, Request $request)
+    {   $shiftOptions = TableRegistry::get('shift_options'); 
+        $option = $shiftOptions->find('list')->toArray();
+        foreach($option as $key=>$result) {
+            $optionAll = $shiftOptions->find('all')->select(['stime'=>$shiftOptions->aliasField('start_time'),'etime'=>$shiftOptions->aliasField('end_time'),'name'=>$shiftOptions->aliasField('name')])->where([$shiftOptions->aliasField('id')=>$key])->first();
+            $option[$key] = $optionAll->name.': '.$optionAll->stime. ' - '.$optionAll->etime;
+        }
+        if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = ['id' => '-- ' . __('Select Shift') . ' --']+$option;
+            $attr['onChangeReload'] = 'changeStatus';
+
+            return $attr;
+        }
+
     }
 }

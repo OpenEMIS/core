@@ -515,6 +515,8 @@ class HtmlFieldHelper extends Helper
                 $imageUrl = '';
                 if (array_key_exists('imageUrl', $attr) && $attr['imageUrl']) {
                     $imageUrl = $this->Url->build($attr['imageUrl'], true);
+                    $imageUrl = str_replace('http','https',$imageUrl); //POCOR-7041 change http request to https..
+                    
                 }
                 $imageDefault = (array_key_exists('imageDefault', $attr) && $attr['imageDefault'])? '<i class='.$attr['imageDefault'].'></i>': '';
                 $value= '<div class="table-thumb"

@@ -55,6 +55,7 @@ class InstitutionStudentsTable extends AppTable  {
         $academicPeriodId = $requestData->academic_period_id;
         $educationProgrammeId = $requestData->education_programme_id;
         $statusId = $requestData->status;
+        $educationlevelId = $requestData->education_level_id;
 
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
@@ -64,14 +65,25 @@ class InstitutionStudentsTable extends AppTable  {
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $grades = [];
         if ($academicPeriodId != 0) {
             $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
         }
-
+        /**POCOR-6919 starts - modified query to fetch result on the basis of selected education programme*/ 
         if ($educationProgrammeId != 0) {
-            $query->where(['EducationProgrammes.id' => $educationProgrammeId]);
+            $gradesObj = $this->EducationGrades
+                        ->find()
+                        ->select(['grade_id' => $this->EducationGrades->aliasField('id')])
+                        ->where([$this->EducationGrades->aliasField('education_programme_id') => $educationProgrammeId])
+                        ->toArray();
+            if (!empty($gradesObj)) {
+               foreach ($gradesObj as $grade) {
+                $grades[] = $grade->grade_id;
+               }
+            }
+            $query->where([$this->aliasField('education_grade_id IN') => $grades]);
         }
-
+        /**POCOR-6919 ends*/ 
         if ($statusId != 0) {
             $query->where([$this->aliasField('student_status_id') => $statusId]);
         }
@@ -81,7 +93,22 @@ class InstitutionStudentsTable extends AppTable  {
         if ($areaId > 1) { //POCOR-6571
             $query->where(['Institutions.area_id' => $areaId]);
         }
-
+        /**POCOR-6919 starts - modified query to fetch result on the basis of selected education level*/
+        if ($educationlevelId > 0) {
+            $gradesArr = $this->EducationGrades
+                        ->find()
+                        ->contain(['EducationProgrammes.EducationCycles.EducationLevels'])
+                        ->select(['grade_id' => $this->EducationGrades->aliasField('id')])
+                        ->where(['EducationLevels.id' => $educationlevelId])
+                        ->toArray();
+            if (!empty($gradesArr)) {
+               foreach ($gradesArr as $grade) {
+                $grades[] = $grade->grade_id;
+               }
+            }
+            $query->where([$this->aliasField('education_grade_id IN') => $grades]);
+        }
+        /**POCOR-6919 ends*/
         $statusOptions = $this->StudentStatuses
             ->find('list', ['keyField' => 'id', 'valueField' => 'code'])
             ->toArray();
