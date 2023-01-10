@@ -132,10 +132,10 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                 var assignedStudents = [];
                 angular.forEach(response.subject_students, function(value, key) {
                     var toPush = {
-                        openemis_no: value.user.openemis_no,
-                        name: value.user.name,
+                        openemis_no: value ?.user ?.openemis_no, //POCOR-7073
+                        name: value ?.user ?.name, //POCOR-7073
                         student_status_name: value.student_status.name,
-                        gender_name: value.user.gender.name,
+                        gender_name: value ?.user ?.gender ?.name, //POCOR-7073
                         student_id: value.student_id,
                         institution_class: value.institution_class.name,
                         institution_class_id: value.institution_class_id,
@@ -149,7 +149,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                                 academic_period_id: value.academic_period_id,
                                 institution_id: value.institution_id,
                                 student_status_id: value.student_status_id,
-                                gender_id: value.user.gender.id
+                                gender_id: value ?.user ?.gender.id //POCOR-7073
                             }
                         ))
                     };

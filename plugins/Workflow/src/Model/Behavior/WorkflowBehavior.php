@@ -68,7 +68,26 @@ class WorkflowBehavior extends Behavior
             'text' => 'Assign back to Scholarship Applicant',
             'description' => 'Performing this action will assign the current record back to scholarship applicant.',
             'method' => 'onAssignBackToScholarshipApplicant'
-        ]
+        ],
+        [
+            'value' => 'Workflow.onApprovalofStudentTransfer',
+            'text' => 'Approval of Student Transfer',
+            'description' => 'Performing this action students will be transferred.',
+            'method' => 'onApprovalofStudentTransfer'
+        ],
+
+        [
+            'value' => 'Workflow.onApprovalofEnableStaffAssignment',
+            'text' => 'Enable Staff Assignment',
+            'description' => 'Performing this action position will appear in the list ',
+            'method' => 'onApprovalofEnableStaffAssignment'
+        ],  //POCOR-7016
+        [
+            'value' => 'Workflow.onApprovalofDisableStaffAssignment',
+            'text' => 'Disable Staff Assignment',
+            'description' => 'Performing this action position will not appear in the list ',
+            'method' => 'onApprovalofDisableStaffAssignment'
+        ]  //POCOR-7016
     ];
 
     private $controller;
@@ -235,6 +254,37 @@ class WorkflowBehavior extends Behavior
         }
     }
 
+    /*
+    * Function is set the post event in workflow
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-6987
+    */
+
+    public function onApprovalofStudentTransfer(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $model = $this->_table;
+
+        $result = $model
+                ->find()
+                ->where([$model->aliasField('id') => $id])
+                ->all();
+
+        if (!$result->isEmpty()) {
+            $entity = $result->first();
+            $this->setStudentTransferStudent($entity);
+            $model->save($entity);
+
+        } else {
+            // exception
+            Log::write('error', '---------------------------------------------------------');
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : $result is empty');
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : model : '.$model);
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : model alias : '.$model->alias());
+            Log::write('error', '---------------------------------------------------------');
+        }
+    }
+
     private function triggerUpdateAssigneeShell($registryAlias, $id = null, $statusId = null, $groupId = null, $userId = null, $roleId = null)
     {
         $args = '';
@@ -285,7 +335,8 @@ class WorkflowBehavior extends Behavior
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN) {
+        /** POCOR-6928 - added staff_change_type_id condition to skip Change-of-shift from workflow steps*/
+        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN && $entity->staff_change_type_id != 5) {
             $this->setStatusAsOpen($entity);
         }
 
@@ -318,6 +369,8 @@ class WorkflowBehavior extends Behavior
         $value = '';
         if (empty($entity->assignee_id)) {
             $value = '<span>&lt;'.$model->getMessage('general.unassigned').'&gt;</span>';
+        }elseif($entity->assignee_id == -1){ //POCOR-7025
+            $value = _('Auto Assign');
         }
 
         return $value;
@@ -2037,6 +2090,20 @@ class WorkflowBehavior extends Behavior
         }
     }
 
+    /*
+    * Function is set applicant_id in workflow
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-6987
+    */
+
+    public function setStudentTransferStudent(Entity $entity)
+    {
+        if ($entity->has('applicant_id')) {
+            $entity->assignee_id = $entity->created_user_id;
+        }
+    }
+
     public function setStatusAsOpen(Entity $entity)
     {
         $model = $this->_table;
@@ -2093,7 +2160,11 @@ class WorkflowBehavior extends Behavior
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $assigneeId = $SecurityGroupUsers->getFirstAssignee($params);
 
-        $entity->assignee_id = $assigneeId;
+        if($entity->assignee_id == -1){ //POCOR-7025
+            $entity->assignee_id = -1;
+        }else{
+            $entity->assignee_id = $assigneeId;
+        }
     }
 
     public function setAssigneeId(Entity $entity, $requestData)
@@ -2192,6 +2263,8 @@ class WorkflowBehavior extends Behavior
 
     public function processWorkflow()
     {
+        ini_set('memory_limit', '-1');
+        ini_set('max_execution_time', 360);
         $request = $this->_table->controller->request;
         if ($request->is(['post', 'put'])) {
             $requestData = $request->data;
@@ -2460,5 +2533,63 @@ class WorkflowBehavior extends Behavior
             ->extract('value')
             ->first();
         return $value;
+    }
+
+    /*
+    * Function is set the post event in workflow
+    * return data
+    * @ticket POCOR-7016
+    */
+    public function onApprovalofEnableStaffAssignment(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $model = $this->_table;
+
+        $result = $model
+                ->find()
+                ->where([$model->aliasField('id') => $id])
+                ->all();
+
+        if (!$result->isEmpty()) {
+            $entity = $result->first();
+            $this->setStudentTransferStudent($entity);
+            $model->save($entity);
+
+        } else {
+            // exception
+            Log::write('error', '---------------------------------------------------------');
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : $result is empty');
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : model : '.$model);
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : model alias : '.$model->alias());
+            Log::write('error', '---------------------------------------------------------');
+        }
+    }
+
+    /*
+    * Function is set the post event in workflow
+    * return data
+    * @ticket POCOR-7016
+    */
+    public function onApprovalofDisableStaffAssignment(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $model = $this->_table;
+
+        $result = $model
+                ->find()
+                ->where([$model->aliasField('id') => $id])
+                ->all();
+
+        if (!$result->isEmpty()) {
+            $entity = $result->first();
+            $this->setStudentTransferStudent($entity);
+            $model->save($entity);
+
+        } else {
+            // exception
+            Log::write('error', '---------------------------------------------------------');
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : $result is empty');
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : model : '.$model);
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : model alias : '.$model->alias());
+            Log::write('error', '---------------------------------------------------------');
+        }
     }
 }

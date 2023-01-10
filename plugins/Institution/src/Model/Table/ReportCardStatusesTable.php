@@ -75,8 +75,12 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events['ControllerAction.Model.unpublish'] = 'unpublish';
         $events['ControllerAction.Model.unpublishAll'] = 'unpublishAll';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
-        $events['ControllerAction.Model.email'] = 'email';
-        $events['ControllerAction.Model.emailAll'] = 'emailAll';
+        /**POCOR-6836 starts - modified existing functions and added new functions*/ 
+        $events['ControllerAction.Model.emailPdf'] = 'emailPdf';
+        $events['ControllerAction.Model.emailAllPdf'] = 'emailAllPdf';
+        $events['ControllerAction.Model.emailExcel'] = 'emailExcel';
+        $events['ControllerAction.Model.emailAllExcel'] = 'emailAllExcel';
+        /**POCOR-6836 ends*/ 
         return $events;
     }
 
@@ -106,6 +110,44 @@ class ReportCardStatusesTable extends ControllerActionTable
                     '0' => 'download',
                     '1' => $this->paramsEncode($params)
                 ];
+
+                //Start POCOR-7060
+
+                $loginUserIdUser = $this->Auth->user('id');
+
+                $securityGroupInstitutions = TableRegistry::get('Security.securityGroupInstitutions');
+
+                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+
+                $SecurityGroupInstitutionsData = $securityGroupInstitutions
+                ->find()        
+                ->where([
+                    $securityGroupInstitutions->aliasField('institution_id') => $entity->institution_id])
+                ->toArray();
+
+                $securityGroupIds = [];
+                if (!empty($SecurityGroupInstitutionsData)) {
+                    foreach ($SecurityGroupInstitutionsData as $value) {
+                        $securityGroupIds[] = $value->security_group_id;
+                    }
+                }
+
+                $SecurityGroupUsersData = $SecurityGroupUsers
+                ->find()        
+                ->innerJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
+                    $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
+                ])
+                ->where([
+                    $SecurityGroupUsers->aliasField('security_group_id IN') => $securityGroupIds,
+                    $SecurityGroupUsers->aliasField('security_user_id IN') => $loginUserIdUser
+                ])
+                ->group([$SecurityGroupUsers->aliasField('security_role_id')])
+                ->order([$SecurityRoles->aliasField('order') => 'ASC'])
+                ->first();
+                //End POCOR-7060
+
+
                 //POCOR:6838 START
                 $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
                 $SecurityFunctionsDownloadExcelData = $SecurityFunctions
@@ -116,11 +158,27 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableDownloadExcelData = $SecurityRoleFunctionsTable
-                                    ->find()
-                                    ->where([
-                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id])
-                                    ->first();
-                
+                ->find()
+                ->where([
+                    $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id,
+                    $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
+                    $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id //POCOR-7060
+                    ])->first();
+
+                //POCOR-7096 start
+                if(empty($SecurityRoleFunctionsTableDownloadExcelData)){
+                    $SecurityRoleFunctionsTableDownloadExcelData = $SecurityRoleFunctionsTable
+                    ->find()
+                    ->where([
+                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id,
+                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
+                        ])
+                    ->orWhere([
+                        $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id 
+                    ])->first();
+                }
+                //POCOR-7096 end
+
                 if ($this->AccessControl->isAdmin()) {
                     $buttons['download'] = [
                         'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
@@ -136,7 +194,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ];
                     }
                 }
-				$downloadPdfUrl = [
+                $downloadPdfUrl = [
                     'plugin' => 'Institution',
                     'controller' => 'Institutions',
                     'action' => 'InstitutionStudentsReportCards',
@@ -153,11 +211,26 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableDownloadPdfData = $SecurityRoleFunctionsTable
-                                    ->find()
-                                    ->where([
-                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadPdfData->id])
-                                    ->first();
+                ->find()
+                ->where([
+                    $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadPdfData->id,
+                    $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
+                    $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id //POCOR-7060
+                    ])->first();
+                //POCOR-7096 start
+                if(empty($SecurityRoleFunctionsTableDownloadPdfData)) {
+                    $SecurityRoleFunctionsTableDownloadPdfData = $SecurityRoleFunctionsTable
+                    ->find()
+                    ->where([
+                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadPdfData->id,
+                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
+                        ])
+                    ->orWhere([
+                        $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id
+                    ])->first();
+                }
 
+                //POCOR-7096 end
                 if ($this->AccessControl->isAdmin()) {
                     $buttons['downloadPdf'] = [
                         'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
@@ -207,10 +280,12 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableGenerateData = $SecurityRoleFunctionsTable
-                                    ->find()
-                                    ->where([
-                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateData->id])
-                                    ->first();
+                ->find()
+                ->where([
+                    $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateData->id,
+                   // $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id  //POCOR-7060
+                ])
+                ->first();
                 //POCOR-6838: End
                 
                 if ($this->AccessControl->isAdmin()) {
@@ -278,7 +353,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
 
             // Single email button, status must be published
-            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'email']) 
+            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'emailPdf']) 
                     && $entity->has('report_card_status')
                     && ( $entity->report_card_status == self::PUBLISHED 
                             || $entity->report_card_status == '16' 
@@ -286,14 +361,33 @@ class ReportCardStatusesTable extends ControllerActionTable
                )
                {
                 if (empty($entity->email_status_id) || ($entity->has('email_status_id') && $entity->email_status_id != $this->ReportCardEmailProcesses::SENDING)) {
-                    $emailUrl = $this->setQueryString($this->url('email'), $params);
-                    $buttons['email'] = [
-                        'label' => '<i class="fa fa-envelope"></i>'.__('Email'),
+                    $emailUrl = $this->setQueryString($this->url('emailPdf'), $params);
+                    $buttons['emailPdf'] = [
+                        'label' => '<i class="fa fa-envelope"></i>'.__('Email Pdf'),
                         'attr' => $indexAttr,
                         'url' => $emailUrl
                     ];
                 }
             }
+
+            /** POCOR-6836 starts - Single email excel button, status must be published */ 
+            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'emailExcel']) 
+                    && $entity->has('report_card_status')
+                    && ( $entity->report_card_status == self::PUBLISHED 
+                            || $entity->report_card_status == '16' 
+                        )
+               )
+               {
+                if (empty($entity->email_status_id) || ($entity->has('email_status_id') && $entity->email_status_id != $this->ReportCardEmailProcesses::SENDING)) {
+                    $emailUrl = $this->setQueryString($this->url('emailExcel'), $params);
+                    $buttons['emailExcel'] = [
+                        'label' => '<i class="fa fa-envelope"></i>'.__('Email Excel'),
+                        'attr' => $indexAttr,
+                        'url' => $emailUrl
+                    ];
+                }
+            }
+            /** POCOR-6836 ends*/
         }
         return $buttons;
     }
@@ -314,6 +408,10 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        //POCOR-7067 Starts
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $timeZone= $ConfigItems->value("time_zone");
+        date_default_timezone_set($timeZone);//POCOR-7067 Ends
         //Start:POCOR-6785 need to convert this custom query to cake query
         $conn = ConnectionManager::get('default');
         $institutionId = $this->Session->read('Institution.Institutions.id');
@@ -324,14 +422,13 @@ class ReportCardStatusesTable extends ControllerActionTable
         ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();
        
         foreach($entitydata as $keyy =>$entity ){ 
+            //POCOR-7067 Starts
             $now = new DateTime();
-            $c_timestap = $now->getTimestamp();
+            $currentDateTime = $now->format('Y-m-d H:i:s');
+            $c_timestap = strtotime($currentDateTime);
             $modifiedDate = $entity->modified;
             //POCOR-6841 starts
             if($entity->status == 2){
-                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-                $timeZone= $ConfigItems->value("time_zone");
-                date_default_timezone_set($timeZone);
                 //POCOR-6895: START
                 if($timeZone == 'Asia/Kuwait'){
                     $date = new DateTime("now", new DateTimeZone('Asia/Kuwait') );
@@ -341,16 +438,17 @@ class ReportCardStatusesTable extends ControllerActionTable
                 //POCOR-6895: END
                 $currentTimeZone = new DateTime();
                 $modifiedDate = ($modifiedDate === null) ? $currentTimeZone : $modifiedDate;
-                $m_timestap =$modifiedDate->getTimestamp();
-                $diff_mins = abs($c_timestap - $m_timestap) / 60;
+                $m_timestap = strtotime($modifiedDate);
+                $interval  = abs($c_timestap - $m_timestap);
+                $diff_mins   = round($interval / 60);
                 if($diff_mins > 5 && $diff_mins < 30){
                     $entity->status = 1;
                     $ReportCardProcessesTable->save($entity);
                 }elseif($diff_mins > 30){
-                    $entity->status = -1;
+                    $entity->status = self::ERROR; //(-1)
                     $entity->modified = $currentTimeZone;//POCOR-6841
                     $ReportCardProcessesTable->save($entity);
-                }
+                }//POCOR-7067 Ends
             }//POCOR-6841 ends
         }
         $stmtNew = $conn->query("UPDATE institution_students_report_cards INNER JOIN report_card_processes ON institution_students_report_cards.report_card_id = report_card_processes.report_card_id AND institution_students_report_cards.student_id = report_card_processes.student_id AND institution_students_report_cards.institution_id = report_card_processes.institution_id AND institution_students_report_cards.academic_period_id = report_card_processes.academic_period_id AND institution_students_report_cards.education_grade_id = report_card_processes.education_grade_id AND institution_students_report_cards.institution_class_id = report_card_processes.institution_class_id SET institution_students_report_cards.status = report_card_processes.status");
@@ -398,6 +496,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
             ->extract('education_grade_id')
             ->toArray();
+            //print_r($availableGrades);die;
 
         // Report Cards filter
         $reportCardOptions = [];
@@ -510,16 +609,20 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $reportCardId = $this->request->query('report_card_id');
         $classId = $this->request->query('class_id');
-
-        if (!is_null($reportCardId) && !is_null($classId)) {
+        //POCOR-7131 starts
+        $loginUserIdUser = $this->Session->read('Auth.User.id');
+        $securityRoles = $this->AccessControl->getRolesByUser($loginUserIdUser)->toArray();
+        $securityRoleIds = [];
+        foreach ($securityRoles as $key => $value) {
+            $securityRoleIds[] = $value->security_role_id;
+        }//POCOR-7131 ends
+        if (!is_null($reportCardId) && !is_null($classId) && !empty($securityRoleIds)) { //POCOR-7148 check empty condition for securityRoleIds
             $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
             $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->primaryKey() => $classId]);
-
             // only show toolbar buttons if request for report card and class is valid
             if ($existingReportCard && $existingClass) {
                 $generatedCount = 0;
                 $publishedCount = 0;
-
                 // count statuses to determine which buttons are shown
                 foreach($data as $student) {
                     if ($student->has('report_card_status')) {
@@ -545,7 +648,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ];
 
                 //POCOR-6838: Start
-
                 $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
                 $SecurityFunctionsAllExcelData = $SecurityFunctions
                                     ->find()
@@ -557,8 +659,11 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $SecurityRoleFunctionsTableAllExcelData = $SecurityRoleFunctionsTable
                                     ->find()
                                     ->where([
-                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsAllExcelData->id])
-                                    ->first();
+                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsAllExcelData->id,
+                                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,//POCOR-7131
+                                        $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds//POCOR-7131
+                                    ])
+                                    ->count();//POCOR-7131
 
                 $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
                 $SecurityFunctionsAllPdfData = $SecurityFunctions
@@ -571,8 +676,10 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $SecurityRoleFunctionsTableAllPdfData = $SecurityRoleFunctionsTable
                                     ->find()
                                     ->where([
-                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsAllPdfData->id])
-                                    ->first();
+                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsAllPdfData->id,
+                                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,//POCOR-7131
+                                        $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])//POCOR-7131
+                                    ->count();//POCOR-7131
 
                 $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
                 $SecurityFunctionsGenerateAllData = $SecurityFunctions
@@ -580,16 +687,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                                     ->where([
                                         $SecurityFunctions->aliasField('name') => 'Generate All'])
                                     ->first();
-
+                
                 $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableGenerateAllData = $SecurityRoleFunctionsTable
                                     ->find()
                                     ->where([
-                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateAllData->id])
-                                    ->first();
-
+                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateAllData->id,
+                                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,//POCOR-7131
+                                        $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])//POCOR-7131
+                                    ->count();//POCOR-7131
                 //POCOR-6838: End
-
                 // Download all button
                  if ($generatedCount > 0 || $publishedCount > 0) {
                     if ($this->AccessControl->isAdmin()) {
@@ -600,7 +707,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                         $downloadButtonPdf['attr']['title'] = __('Download All PDF');
                         $extra['toolbarButtons']['downloadAllPdf'] = $downloadButtonPdf;
                     }else{
-                        if($SecurityRoleFunctionsTableAllPdfData->_execute == 1){
+                        if($SecurityRoleFunctionsTableAllPdfData >= 1){//POCOR-7131 change in if condition
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
                             $downloadButtonPdf['type'] = 'button';
                             $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
@@ -619,7 +726,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                         $downloadButton['attr']['title'] = __('Download All Excel');
                         $extra['toolbarButtons']['downloadAll'] = $downloadButton;
                     }else{
-                        if($SecurityRoleFunctionsTableAllExcelData->_execute == 1){
+                        if($SecurityRoleFunctionsTableAllExcelData >= 1){//POCOR-7131 change in if condition
                             $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
                             $downloadButton['type'] = 'button';
                             $downloadButton['label'] = '<i class="fa kd-download"></i>';
@@ -649,19 +756,17 @@ class ReportCardStatusesTable extends ControllerActionTable
 
 
                 if (!empty($ReportCardsData->generate_start_date)) {
-                $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
+                    $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
                 }
 
                 if (!empty($ReportCardsData->generate_end_date)) {
-                $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
+                    $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
                 }
                 $date = Time::now()->format('Y-m-d');
 
                 if ($this->AccessControl->isAdmin()) {
                     if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
-                    
                         $extra['toolbarButtons']['generateAll'] = $generateButton;
-                        
                     } else { 
                         $generateButton['attr']['data-html'] = true;
                         $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('ReportCardStatuses.date_closed'));
@@ -669,11 +774,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                         $extra['toolbarButtons']['generateAll'] = $generateButton;
                     }
                 }else{
-                    if($SecurityRoleFunctionsTableGenerateAllData->_execute == 1){
+                    if($SecurityRoleFunctionsTableGenerateAllData >= 1){//POCOR-7131 change in if condition
                         if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
-                    
                             $extra['toolbarButtons']['generateAll'] = $generateButton;
-                            
                         } else { 
                             $generateButton['attr']['data-html'] = true;
                             $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('ReportCardStatuses.date_closed'));
@@ -692,7 +795,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $publishButton['attr']['title'] = __('Publish All');
                     $extra['toolbarButtons']['publishAll'] = $publishButton;
                 }
-
                 // Unpublish all button
                 if ($publishedCount > 0) {
                     $unpublishButton['url'] = $this->setQueryString($this->url('unpublishAll'), $params);
@@ -702,15 +804,23 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $unpublishButton['attr']['title'] = __('Unpublish All');
                     $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
                 }
-
-                // Email all button is published
+                // Email all pdf button is published
                 if ($publishedCount > 0) {
-                    $emailButton['url'] = $this->setQueryString($this->url('emailAll'), $params);
+                    $emailButton['url'] = $this->setQueryString($this->url('emailAllPdf'), $params);
                     $emailButton['type'] = 'button';
                     $emailButton['label'] = '<i class="fa fa-envelope"></i>';
                     $emailButton['attr'] = $toolbarAttr;
-                    $emailButton['attr']['title'] = __('Email All');
-                    $extra['toolbarButtons']['emailAll'] = $emailButton;
+                    $emailButton['attr']['title'] = __('Email All PDF');
+                    $extra['toolbarButtons']['emailAllPdf'] = $emailButton;
+                }
+                // Email all excel button is published
+                if ($publishedCount > 0) {
+                    $emailExcelButton['url'] = $this->setQueryString($this->url('emailAllExcel'), $params);
+                    $emailExcelButton['type'] = 'button';
+                    $emailExcelButton['label'] = '<i class="fa fa-envelope"></i>';
+                    $emailExcelButton['attr'] = $toolbarAttr;
+                    $emailExcelButton['attr']['title'] = __('Email All Excel');
+                    $extra['toolbarButtons']['emailAllExcel'] = $emailExcelButton;
                 }
             }
         }
@@ -986,6 +1096,9 @@ class ReportCardStatusesTable extends ControllerActionTable
             header("Content-Length: ".filesize($filepath));
             header("Content-Disposition: attachment; filename=".$zipName);
             readfile($filepath);
+            ob_clean();
+            flush();
+            sleep(10);
 
             // delete file after download
             unlink($filepath);
@@ -1112,7 +1225,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function email(Event $event, ArrayObject $extra)
+    public function emailPdf(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $this->addReportCardsToEmailProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
@@ -1123,7 +1236,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function emailAll(Event $event, ArrayObject $extra)
+    public function emailAllPdf(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
@@ -1150,6 +1263,10 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     private function addReportCardsToProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
+        //POCOR-7067 Starts
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $timeZone= $ConfigItems->value("time_zone");
+        date_default_timezone_set($timeZone);//POCOR-7067 Ends
         Log::write('debug', 'Initialize Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
 
         $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
@@ -1291,6 +1408,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards '.$args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
+           // print_r($shellCmd);die('ok');
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);
@@ -1302,6 +1420,10 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     private function addReportCardsToEmailProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
+        //POCOR-7067 Starts
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $timeZone= $ConfigItems->value("time_zone");
+        date_default_timezone_set($timeZone);//POCOR-7067 Ends
         Log::write('debug', 'Initialize Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.Time::now().')');
 
         $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
@@ -1472,4 +1594,97 @@ class ReportCardStatusesTable extends ControllerActionTable
          return false;
         
     }
+
+    /**
+     * send email of single student in excel format
+     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+     * @ticket POCOR-6836
+     */
+    public function emailExcel(Event $event, ArrayObject $extra)
+    {
+        $params = $this->getQueryString();
+        $this->addReportCardsToEmailProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
+        $this->triggerEmailAllExcelReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
+        $this->Alert->warning('ReportCardStatuses.email');
+
+        $event->stopPropagation();
+        return $this->controller->redirect($this->url('index'));
+    }
+
+    /**
+     * send email of all students in excel format
+     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+     * @ticket POCOR-6836
+     */
+    public function emailAllExcel(Event $event, ArrayObject $extra)
+    {
+        $params = $this->getQueryString();
+
+        $inProgress = $this->ReportCardEmailProcesses->find()
+            ->where([
+                $this->ReportCardEmailProcesses->aliasField('report_card_id') => $params['report_card_id'],
+                $this->ReportCardEmailProcesses->aliasField('institution_class_id') => $params['institution_class_id'],
+                $this->ReportCardEmailProcesses->aliasField('status') => $this->ReportCardEmailProcesses::SENDING
+            ])
+            ->count();
+
+        if (!$inProgress) {
+            $this->addReportCardsToEmailProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
+            $this->triggerEmailAllExcelReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
+
+            $this->Alert->warning('ReportCardStatuses.emailAll');
+        } else {
+            $this->Alert->warning('ReportCardStatuses.emailInProgress');
+        }
+
+        $event->stopPropagation();
+        return $this->controller->redirect($this->url('index'));
+    }
+
+    /**
+     * trigger event to sent studnet's email in excel format
+     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+     * @ticket POCOR-6836
+     */
+    private function triggerEmailAllExcelReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
+    {
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->ReportCardEmailProcesses->registryAlias());
+
+        // to-do: add logic to purge shell which is 30 minutes old
+
+        if (count($runningProcess) <= self::MAX_PROCESSES) {
+            $name = 'EmailAllReportExcelCards';
+            $pid = '';
+            $processModel = $this->ReportCardEmailProcesses->registryAlias();
+            $eventName = '';
+            $passArray = [
+                'institution_id' => $institutionId,
+                'institution_class_id' => $institutionClassId,
+                'report_card_id' => $reportCardId
+            ];
+            if (!is_null($studentId)) {
+                $name = 'EmailReportCardsExcel';
+                $passArray['student_id'] = $studentId;
+            }
+            $params = json_encode($passArray);
+            $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
+            $SystemProcesses->updateProcess($systemProcessId, null, $SystemProcesses::RUNNING, 0);
+
+            $args = '';
+            $args .= !is_null($systemProcessId) ? ' '.$systemProcessId : '';
+
+            $cmd = ROOT . DS . 'bin' . DS . 'cake EmailAllExcelReportCards'.$args;
+            $logs = ROOT . DS . 'logs' . DS . 'EmailAllExcelReportCardsExcel.log & echo $!';
+            $shellCmd = $cmd . ' >> ' . $logs;
+
+            try {
+                $pid = exec($shellCmd);
+                Log::write('debug', $shellCmd);
+            } catch(\Exception $ex) {
+                Log::write('error', __METHOD__ . ' exception when email all report cards : '. $ex);
+            }
+        }
+    }
+    /**POCOR-6836 ends*/  
 }
