@@ -270,8 +270,10 @@ class StudentAttendanceShell extends Shell
         if (in_array('institution_class_attendance_records', $tableSchema)) {
             $table_name = 'institution_class_attendance_records';
         }
-        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_class_attendance_records_archive AS SELECT * FROM institution_class_attendance_records");
+        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_class_attendance_records_archived AS SELECT * FROM institution_class_attendance_records");
         $stmt1->execute();
+
+        // $classAttendanceRecordsData->deleteAll(['academic_period_id' => $academicPeriodId]);
         //institution_class_attendance_records[END]
 
         //institution_student_absences[START]
@@ -379,8 +381,10 @@ class StudentAttendanceShell extends Shell
         if (in_array('institution_student_absences', $tableSchema)) {
             $table_name = 'institution_student_absences';
         }
-        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_student_absences_archive AS SELECT * FROM institution_student_absences");
+        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_student_absences_archived AS SELECT * FROM institution_student_absences");
         $stmt1->execute();
+
+        // $studentAbsencesData->deleteAll(['academic_period_id' => $academicPeriodId]);
         //institution_student_absences[END]
 
         //institution_student_absence_details[START]
@@ -504,8 +508,10 @@ class StudentAttendanceShell extends Shell
         if (in_array('institution_student_absence_details', $tableSchema)) {
             $table_name = 'institution_student_absence_details';
         }
-        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_student_absence_details_archive AS SELECT * FROM institution_student_absence_details");
+        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_student_absence_details_archived AS SELECT * FROM institution_student_absence_details");
         $stmt1->execute();
+
+        // $institutionStudentAbsenceDetailsData->deleteAll(['academic_period_id' => $academicPeriodId]);
         //institution_student_absence_details[END]
 
         //student_attendance_marked_records[START]
@@ -580,8 +586,9 @@ class StudentAttendanceShell extends Shell
         if (in_array('student_attendance_marked_records', $tableSchema)) {
             $table_name = 'student_attendance_marked_records';
         }
-        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW student_attendance_marked_records_archive AS SELECT * FROM student_attendance_marked_records");
+        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW student_attendance_marked_records_archived AS SELECT * FROM student_attendance_marked_records");
         $stmt1->execute();
+        // $StudentAttendanceMarkedRecordsData->deleteAll(['academic_period_id' => $academicPeriodId]);
 
         //student_attendance_marked_records[END]
 
@@ -683,8 +690,9 @@ class StudentAttendanceShell extends Shell
         if (in_array('student_attendance_mark_types', $tableSchema)) {
             $table_name = 'student_attendance_mark_types';
         }
-        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW student_attendance_mark_types_archive AS SELECT * FROM student_attendance_mark_types");
+        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW student_attendance_mark_types_archived AS SELECT * FROM student_attendance_mark_types");
         $stmt1->execute();
+        // $StudentAttendanceMarkTypesData->deleteAll(['academic_period_id' => $academicPeriodId]);
         //student_attendance_mark_types[END]
         return true;
     }

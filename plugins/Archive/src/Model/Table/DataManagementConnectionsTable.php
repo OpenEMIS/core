@@ -138,21 +138,21 @@ class DataManagementConnectionsTable extends ControllerActionTable
     public function EditOnTestConnection(){
         $post_data= $this->request->data;
         if(isset($post_data)){
-            $connection = ConnectionManager::config($post_data['TransferConnections']['name'], [
+            $connection = ConnectionManager::config($post_data['DataManagementConnections']['name'], [
                 'className' => 'Cake\Database\Connection',
                 'driver' => 'Cake\Database\Driver\Mysql',
                 'persistent' => false,
-                'host' => $post_data['TransferConnections']['host'],
-                'username' => $post_data['TransferConnections']['username'],
-                'password' => $post_data['TransferConnections']['password'],
-                'database' => $post_data['TransferConnections']['db_name'],
+                'host' => $post_data['DataManagementConnections']['host'],
+                'username' => $post_data['DataManagementConnections']['username'],
+                'password' => $post_data['DataManagementConnections']['password'],
+                'database' => $post_data['DataManagementConnections']['db_name'],
                 'encoding' => 'utf8mb4',
                 'timezone' => 'UTC',
                 'cacheMetadata' => true,
             ]);
     
             try {
-                $connection = ConnectionManager::get($post_data['TransferConnections']['name']);
+                $connection = ConnectionManager::get($post_data['DataManagementConnections']['name']);
                 $connected = $connection->connect();
                 $this->Alert->success('Connection.testConnectionSuccess', ['reset' => true]);
                 // $this->Session->write('is_connection_stablished', "1");
@@ -269,21 +269,21 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
         $post_data= $this->request->data;
         if(isset($post_data)){
-            $connection = ConnectionManager::config($post_data['TransferConnections']['name'], [
+            $connection = ConnectionManager::config($post_data['DataManagementConnections']['name'], [
                 'className' => 'Cake\Database\Connection',
                 'driver' => 'Cake\Database\Driver\Mysql',
                 'persistent' => false,
-                'host' => $post_data['TransferConnections']['host'],
-                'username' => $post_data['TransferConnections']['username'],
-                'password' => $post_data['TransferConnections']['password'],
-                'database' => $post_data['TransferConnections']['db_name'],
+                'host' => $post_data['DataManagementConnections']['host'],
+                'username' => $post_data['DataManagementConnections']['username'],
+                'password' => $post_data['DataManagementConnections']['password'],
+                'database' => $post_data['DataManagementConnections']['db_name'],
                 'encoding' => 'utf8mb4',
                 'timezone' => 'UTC',
                 'cacheMetadata' => true,
             ]);
     
             try {
-                $connection = ConnectionManager::get($post_data['TransferConnections']['name']);
+                $connection = ConnectionManager::get($post_data['DataManagementConnections']['name']);
                 $connected = $connection->connect();
                 $this->Alert->success('Connection.testConnectionSuccess', ['reset' => true]);
                 $this->Session->write('is_connection_stablished', "1");
@@ -291,9 +291,9 @@ class DataManagementConnectionsTable extends ControllerActionTable
                 $this->updateAll(
                     ['conn_status_id' => 1],    //field
                     [
-                     'host' => $post_data['TransferConnections']['host'], 
-                     'db_name'=> $post_data['TransferConnections']['db_name'],
-                     'username' => $post_data['TransferConnections']['username']
+                     'host' => $post_data['DataManagementConnections']['host'], 
+                     'db_name'=> $post_data['DataManagementConnections']['db_name'],
+                     'username' => $post_data['DataManagementConnections']['username']
                      ] //condition
                 );
                 //END: POCOR-6770
@@ -305,9 +305,9 @@ class DataManagementConnectionsTable extends ControllerActionTable
                 $this->updateAll(
                     ['conn_status_id' => 0],    //field
                     [
-                     'host' => $post_data['TransferConnections']['host'], 
-                     'db_name'=> $post_data['TransferConnections']['db_name'],
-                     'username' => $post_data['TransferConnections']['username']
+                     'host' => $post_data['DataManagementConnections']['host'], 
+                     'db_name'=> $post_data['DataManagementConnections']['db_name'],
+                     'username' => $post_data['DataManagementConnections']['username']
                      ] //condition
                 );
                 //END: POCOR-6770
