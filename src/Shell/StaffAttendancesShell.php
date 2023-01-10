@@ -224,7 +224,7 @@ class StaffAttendancesShell extends Shell
         }
         $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_attendances_archived AS SELECT * FROM institution_staff_attendances");
         $stmt1->execute();
-        // $InstitutionStaffAttendancesData->deleteAll(['academic_period_id' => $academicPeriodId]);
+        $InstitutionStaffAttendancesData->deleteAll(['academic_period_id' => $academicPeriodId]);
         //institution_staff_attendances[END]
 
         //institution_staff_leave[START]
@@ -380,7 +380,7 @@ class StaffAttendancesShell extends Shell
         }
         $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_leave_archived AS SELECT * FROM institution_staff_leave");
         $stmt1->execute();
-        // $InstitutionStaffLeaveData->deleteAll(['academic_period_id' => $academicPeriodId]);
+        $InstitutionStaffLeaveData->deleteAll(['academic_period_id' => $academicPeriodId]);
         //institution_staff_leave[END]
         return true;
     }
