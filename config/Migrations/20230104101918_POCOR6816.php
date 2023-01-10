@@ -16,7 +16,7 @@ class POCOR6816 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_6816_transfer_connections` LIKE `transfer_connections`');
         $this->execute('INSERT INTO `zz_6816_transfer_connections` SELECT * FROM `transfer_connections`');
 
-        // $this->execute('RENAME TABLE `transfer_connections` TO `data_management_connections`');
+        $this->execute('RENAME TABLE `transfer_connections` TO `data_management_connections`');
         //Create tables
         $this->execute("CREATE TABLE IF NOT EXISTS `data_management_logs` (
             `id` int(11) NOT NULL AUTO_INCREMENT,

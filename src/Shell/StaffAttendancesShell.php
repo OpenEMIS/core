@@ -222,8 +222,9 @@ class StaffAttendancesShell extends Shell
         if (in_array('institution_staff_attendances', $tableSchema)) {
             $table_name = 'institution_staff_attendances';
         }
-        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_attendances_archive AS SELECT * FROM institution_staff_attendances");
+        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_attendances_archived AS SELECT * FROM institution_staff_attendances");
         $stmt1->execute();
+        // $InstitutionStaffAttendancesData->deleteAll(['academic_period_id' => $academicPeriodId]);
         //institution_staff_attendances[END]
 
         //institution_staff_leave[START]
@@ -377,8 +378,9 @@ class StaffAttendancesShell extends Shell
         if (in_array('institution_staff_leave', $tableSchema)) {
             $table_name = 'institution_staff_leave';
         }
-        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_leave_archive AS SELECT * FROM institution_staff_leave");
+        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_leave_archived AS SELECT * FROM institution_staff_leave");
         $stmt1->execute();
+        // $InstitutionStaffLeaveData->deleteAll(['academic_period_id' => $academicPeriodId]);
         //institution_staff_leave[END]
         return true;
     }
