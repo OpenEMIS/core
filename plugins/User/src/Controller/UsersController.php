@@ -199,12 +199,15 @@ class UsersController extends AppController
                     
                     $userEmail = $userEntity->email;
                     $name = $userEntity->name;
+                    $userId = $userEntity->id;
                     $url = Router::url([
                         'plugin' => 'User',
                         'controller' => 'Users',
                         'action' => 'resetPassword',
                         'token' => $checksum
                     ], true);
+                    $setdata =  $this->updateUserPassword($userId); //POCOR-7159 
+
                     /*POCOR-5284 Starts*/
                     $Themes = TableRegistry::get('Theme.Themes');
                     $getData = $Themes->find()
@@ -257,17 +260,19 @@ class UsersController extends AppController
                         $this->Users->aliasField('middle_name'),
                         $this->Users->aliasField('third_name'),
                         $this->Users->aliasField('last_name'),
-                        $this->Users->aliasField('preferred_name')
+                        $this->Users->aliasField('preferred_name'),
+                        $this->Users->aliasField('password'),
                     ])
                     ->where([
                         $this->Users->aliasField('email') => $userEmail
                     ])
                     ->first();
-
+                    $userId = $userEntity->id;
                 if (!is_null($userEntity) && !is_null($userEntity->email)) {
                     $userEmail = $userEntity->email;
                     $username = $userEntity->username;
                     $name = $userEntity->name;
+                    $updateUserName = $this->updateUserName($userEmail, $username ,$userId); //POCOR-7159
 
                     try {
                         /*
@@ -731,5 +736,54 @@ class UsersController extends AppController
                 $event = $modelTable->dispatchEvent('Shell.'.$eventName, [$id, $executedCount, $params]);
             }
         }
+    }
+
+    /**
+     * POCOR-7159
+     * add data in user_activities table while updating password
+    */
+    public function updateUserPassword($userId) 
+    {
+        $userActivities = TableRegistry::get('user_activities');
+        $currentTimeZone = date("Y-m-d H:i:s");
+        $data = [
+                    'model' => 'Users',
+                    'model_reference' => $userId,
+                    'field' => 'password',
+                    'field_type' => 'string',
+                    'old_value' => '',
+                    'new_value' => '',
+                    'operation' => 'resetPassword',
+                    'security_user_id' => $userId,
+                    'created_user_id' => $userId,
+                    'created' => $currentTimeZone,
+                ];
+        $entity = $userActivities->newEntity($data);
+        $save =  $userActivities->save($entity);
+    }
+
+
+    /**
+     * POCOR-7159
+     * add data in user_activities table while updating password
+    */
+    public function updateUserName($userEmail, $username ,$userId) 
+    {
+        $userActivities = TableRegistry::get('user_activities');
+        $currentTimeZone = date("Y-m-d H:i:s");
+        $data = [
+                    'model' => 'Users',
+                    'model_reference' => $userId,
+                    'field' => 'username',
+                    'field_type' => 'string',
+                    'old_value' => $username,
+                    'new_value' => $userEmail,
+                    'operation' => 'resetUserName',
+                    'security_user_id' => $userId,
+                    'created_user_id' => $userId,
+                    'created' => $currentTimeZone,
+                ];
+        $entity = $userActivities->newEntity($data);
+        $save =  $userActivities->save($entity);
     }
 }
