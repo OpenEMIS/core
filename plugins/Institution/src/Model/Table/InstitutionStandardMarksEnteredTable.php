@@ -368,10 +368,13 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                     ->select([
                             'total_students' => "COUNT(".$studentSubject->aliasField('id').")"
                         ])
-                        ->where([$studentSubject->aliasField('academic_period_id')=>$entity->academic_period_id,
+                        ->where([
+                            $studentSubject->aliasField('academic_period_id')=>$entity->academic_period_id,
                             $studentSubject->aliasField('institution_id')=>$entity->institution_id,
-                       $studentSubject->aliasField('student_status_id')=>1,
-                       $AssessmentPeriods->aliasField('id')=>$entity->assessment_period_id, ])
+                            $studentSubject->aliasField('student_status_id')=>1,
+                            $AssessmentPeriods->aliasField('id')=>$entity->assessment_period_id,
+                            $studentSubject->aliasField('institution_class_id')=>$entity->institution_classes_id,
+                            ])
                         ->group([$studentSubject->aliasField('institution_id'),
                         $AssessmentPeriods->aliasField('id'),$AssessmentPeriods->aliasField('academic_term')])
                         ->order([$Assessments->aliasField('id'),
@@ -421,7 +424,8 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                 $total_student_mark_entry = $value['total_marks'];
             }
             $entity->marks_entered = $total_student_mark_entry;
-            $entity->marks_not_entered = abs($total_student-$sum);
+            //$entity->marks_not_entered = abs($total_student-$sum);
+            $entity->marks_not_entered = abs($total_student - $total_student_mark_entry);
             $entity->marks_entery_per = round((($total_student_mark_entry/$total_student)*100), 2);
         }
         return $entity->marks_entery_per;
