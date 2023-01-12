@@ -3,7 +3,8 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use ZipArchive;
-use DateTime;//POCOR-6785
+use DateTime;
+use DateTimeZone;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -13,7 +14,6 @@ use Cake\I18n\Time;
 use Cake\I18n\Date;//POCOR-6841
 use Cake\Log\Log;
 use Cake\Datasource\ConnectionManager; //POCOR-6785
-use DateTimeZone;
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardStatusesTable extends ControllerActionTable
@@ -887,26 +887,56 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function onGetStartedOn(Event $event, Entity $entity)
     {
+        //START: POCOR-6716
+        // if ($entity->has('report_card_started_on')) {
+        //     $startedOnValue = new Time($entity->report_card_started_on);
+        //     $value = $this->formatDateTime($startedOnValue);
+        // }
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemTable
+                            ->find()
+                            ->select(['zonevalue' => 'ConfigItems.value'])
+                            ->where([
+                                $ConfigItemTable->aliasField('name') => 'Time Zone'
+                                   ])
+                            ->first();
+        $timZone = $ConfigItem->zonevalue;
         $value = '';
-
         if ($entity->has('report_card_started_on')) {
-            $startedOnValue = new Time($entity->report_card_started_on);
-            $value = $this->formatDateTime($startedOnValue);
+            $date = new DateTime($entity->report_card_started_on, new DateTimeZone($timZone));
+            $date->setTimezone(new DateTimeZone($timZone));
+            $value = $date->format('F d, Y h:i:s');
         }
 
         return $value;
+        //END: POCOR-6716
     }
 
     public function onGetCompletedOn(Event $event, Entity $entity)
     {
+        //START: POCOR-6716
+        // if ($entity->has('report_card_completed_on')) {
+        //     $completedOnValue = new Time($entity->report_card_completed_on);
+        //     $value = $this->formatDateTime($completedOnValue);
+        // }
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemTable
+                            ->find()
+                            ->select(['zonevalue' => 'ConfigItems.value'])
+                            ->where([
+                                $ConfigItemTable->aliasField('name') => 'Time Zone'
+                                   ])
+                            ->first();
+        $timZone = $ConfigItem->zonevalue;
         $value = '';
-
         if ($entity->has('report_card_completed_on')) {
-            $completedOnValue = new Time($entity->report_card_completed_on);
-            $value = $this->formatDateTime($completedOnValue);
+            $date = new DateTime($entity->report_card_completed_on, new DateTimeZone($timZone));
+            $date->setTimezone(new DateTimeZone($timZone));
+            $value = $date->format('F d, Y h:i:s');
         }
 
         return $value;
+        //END: POCOR-6716
     }
 
     public function onGetReportQueue(Event $event, Entity $entity)
