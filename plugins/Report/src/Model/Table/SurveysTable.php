@@ -54,9 +54,8 @@ class SurveysTable extends AppTable
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('survey_form', ['type' => 'hidden']);
-        $this->ControllerAction->field('survey_section', ['type' => 'hidden']);
-        
-        $this->ControllerAction->field('table_question', ['type' => 'hidden']);
+        $this->ControllerAction->field('survey_section', ['type' => 'hidden']); //POCOR-6695
+        $this->ControllerAction->field('table_question', ['type' => 'hidden']); //POCOR-6695
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_id', ['attr' => ['label' => __('Area Education')]]);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
@@ -820,16 +819,15 @@ class SurveysTable extends AppTable
         return $attr;
     }
 
+    //POCOR-6695
     public function onUpdateFieldSurveySection(Event $event, array $attr, $action, Request $request)
     {
         $surveyForm = $this->request->data[$this->alias()]['survey_form'];
-       // echo "<pre>"; print_r($surveyForm); die;
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
                 $academicPeriodId = $this->request->data['Surveys']['academic_period_id'];
                 $surveyFormId = $this->request->data['Surveys']['survey_form_id'];
-                //echo "<pre>"; print_r($surveyFormId); die;
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == 'Report.SurveysReport') {
@@ -837,19 +835,14 @@ class SurveysTable extends AppTable
                     $surveyQuestions = TableRegistry::get('FieldOption.IdentityTypes');
                     $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
 
-                   
+
                     $surveyFormOptions = $surveySection
-                        //->find('list')
                         
                         ->find('list', ['keyField' => 'id', 'valueField' => 'section'])
-                        // ->where([
-                        //     $surveySection->aliasField('section') => $surveyForm
-                        // ])
-                       // ->where()
-                        //->distinct(['section'])
+                        ->where([
+                            $surveySection->aliasField('survey_form_id') => $surveyForm
+                        ])
                         ->toArray();
-                        
-                        // echo "<pre>";print_r($surveyFormOptions); die;
                     if (!empty($surveyFormOptions)) {
                         $attr['options'] = $surveyFormOptions;
                         $attr['onChangeReload'] = true;
@@ -871,9 +864,11 @@ class SurveysTable extends AppTable
             }
         }
     }
-
+     //End of POCOR-6695
+     //POCOR-6695
     public function onUpdateFieldTableQuestion(Event $event, array $attr, $action, Request $request)
     {
+        $surveyQuestionId = $this->request->data[$this->alias()]['table_question'];
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
@@ -884,23 +879,16 @@ class SurveysTable extends AppTable
                     $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
                     $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
                     $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
-                  // echo "<pre>"; print_r($SurveyStatusTable); die;
-                    $surveyFormOptions = $surveyQuestion
-                                        ->find('list')
-                                        ->innerJoin([$surveySection->alias() => $surveySection->table()], [
-                                            $surveySection->aliasField('survey_question_id = ') . $surveyQuestion->aliasField('id'),
-                                        ])
+                    $surveyFormOptions = $surveySection
+                                        //->find('list')
+                                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                                        // ->innerJoin([$surveySection->alias() => $surveySection->table()], [
+                                        //     $surveySection->aliasField('survey_question_id = ') . $surveyQuestion->aliasField('id'),
+                                        // ])
                                         // ->where([
-                                        //     $surveySection->aliasField('') => $surveyQuestion->aliasField('name'),
+                                        //     $surveySection->aliasField('survey_question_id') => $surveyQuestionId
                                         // ])
                                         ->toArray();
-                                        // echo "<pre>";print_r($surveyFormOptions); die;
-                    // $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
-                    // $surveyFormOptions = $surveyQuestion
-                    //     ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                    //     ->distinct(['name'])
-                    //     ->toArray();
-                       // print_r($surveyFormOptions); die;
                     if (!empty($surveyFormOptions)) {
                         $attr['options'] = $surveyFormOptions;
                         $attr['onChangeReload'] = true;
@@ -922,6 +910,7 @@ class SurveysTable extends AppTable
             }
         }
     }
+    //End of POCOR-6695
 
 
 }
