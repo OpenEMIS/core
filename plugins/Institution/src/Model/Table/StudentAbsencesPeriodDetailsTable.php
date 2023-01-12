@@ -75,7 +75,28 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 $StudentAttendanceMarkedRecords->save($markRecord);
             }
         }
+        //POCOR-7165[START] Reason for commenting this is becouse its deleteting the data from parent table before the child table
+        //which is creting foreign key constrain issue so its moved to before save.
 
+        // if ($entity->absence_type_id == 0) {
+        //     $this->delete($entity);
+        //     $this->deleteStudentAbsence($entity);
+        // }
+
+        // if ($entity->isNew() || $entity->dirty('absence_type_id')) {
+        //     $this->updateStudentAbsencesRecord($entity);
+        // }
+        //POCOR-7165[END]
+    }
+
+    /*
+    * This Function is to update and delete data from child table bofore parent table
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-7165
+    */
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
         if ($entity->absence_type_id == 0) {
             $this->delete($entity);
             $this->deleteStudentAbsence($entity);
