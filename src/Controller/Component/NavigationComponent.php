@@ -1770,7 +1770,7 @@ class NavigationComponent extends Component
     public function getAdministrationNavigation()
     {
         //for POCOR-5674 requirement
-        $connectionTable = TableRegistry::get('Archive.TransferConnections');
+        $connectionTable = TableRegistry::get('Archive.DataManagementConnections');
         $connectionData = $connectionTable->find()->select(['id'])->first()->toArray();
         $connectionId = $this->controller->paramsEncode(['id' => $connectionData['id']]);
         /*for POCOR-5674 */
