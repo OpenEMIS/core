@@ -38,21 +38,30 @@ class ArchivesController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 
-		$header = 'Archive';    
-        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
+		/*$header = 'Archive';    
+        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);*/
 
         
         //Customize header because model name created was different and POCOR-5674 requirement was modified.
+        // POCOR-6816  change breadcrumb for every url action.
         if($this->request->action == 'BackupLog'){
-            $header = __('Archive') . ' - ' . __('Backup');
+            $headers = 'Data Management';    
+            $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
+            $header = __('Data Management') . ' - ' . __('Backup');
             $this->Navigation->addCrumb('Backup');
         }elseif($this->request->action == 'Transfer'){
-            $header = __('Archive') . ' - ' . __('Transfer');
-            $this->Navigation->addCrumb('Transfer');
+            $headers = 'Data Management';    
+            $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
+            $header = __('Data Management') . ' - ' . __('Archive');
+            $this->Navigation->addCrumb('Archive');
         }elseif($this->request->action == 'Connection'){
-            $header = __('Archive') . ' - ' . __('Connection');
+            $headers = 'Data Management';    
+            $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
+            $header = __('Data Management') . ' - ' . __('Connection');
             $this->Navigation->addCrumb('Connection');
         }elseif($this->request->action == 'CopyData'){
+            $headers = 'Data Management';    
+            $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
             $header = __('Data Management') . ' - ' . __('Copy');
             $this->Navigation->addCrumb('Copy');
         }
@@ -97,7 +106,7 @@ class ArchivesController extends AppController
 
     public function Connection(){
 
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.TransferConnections']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.DataManagementConnections']);
     }
 
 }

@@ -30,36 +30,36 @@ class StudentArchiveTable extends ControllerActionTable
     {
         $connectionone = ConnectionManager::get('default');
         $db1 = $connectionone->config()['database'];
-        $transferConnections = TableRegistry::get('TransferConnections.TransferConnections');
-        $transferConnectionsData = $transferConnections->find('all')
+        $DataManagementConnections = TableRegistry::get('Archive.DataManagementConnections');
+        $DataManagementConnectionsData = $DataManagementConnections->find('all')
             ->select([
-                'TransferConnections.host','TransferConnections.db_name','TransferConnections.host','TransferConnections.username','TransferConnections.password','TransferConnections.db_name'
+                'DataManagementConnections.host','DataManagementConnections.db_name','DataManagementConnections.host','DataManagementConnections.username','DataManagementConnections.password','DataManagementConnections.db_name'
             ])
             ->first();
-        if ( base64_encode(base64_decode($transferConnectionsData['password'], true)) === $transferConnectionsData['password']){
-        $db_password = $this->decrypt($transferConnectionsData['password'], Security::salt());
+        if ( base64_encode(base64_decode($DataManagementConnectionsData['password'], true)) === $DataManagementConnectionsData['password']){
+        $db_password = $this->decrypt($DataManagementConnectionsData['password'], Security::salt());
         }
         else {
         $db_password = $dbConnection['db_password'];
         }
-        $connectiontwo = ConnectionManager::config($transferConnectionsData['db_name'], [
+        $connectiontwo = ConnectionManager::config($DataManagementConnectionsData['db_name'], [
             'className' => 'Cake\Database\Connection',
             'driver' => 'Cake\Database\Driver\Mysql',
             'persistent' => false,
-            'host' => $transferConnectionsData['host'],
-            'username' => $transferConnectionsData['username'],
+            'host' => $DataManagementConnectionsData['host'],
+            'username' => $DataManagementConnectionsData['username'],
             'password' => $db_password,
-            'database' => $transferConnectionsData['db_name'],
+            'database' => $DataManagementConnectionsData['db_name'],
             'encoding' => 'utf8mb4',
             'timezone' => 'UTC',
             'cacheMetadata' => true,
         ]);
-        $checkconnection = ConnectionManager::get($transferConnectionsData['db_name']);
+        $checkconnection = ConnectionManager::get($DataManagementConnectionsData['db_name']);
         $collection = $checkconnection->schemaCollection();
         $tableSchema = $collection->listTables();
         $getconnected = $checkconnection->connect();
         if($getconnected == "1"){
-            $db2 = $transferConnectionsData['db_name'];
+            $db2 = $DataManagementConnectionsData['db_name'];
         }
         $table1 = $tableSchema[7];
         $table2 = $tableSchema[6];
