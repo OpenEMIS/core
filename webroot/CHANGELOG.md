@@ -1,3 +1,20 @@
+### [3.77.4] - 2023-01-12
+- Implemented: Generate UIS Report from OpenEMIS Core
+- Implemented: Institutions > Shifts : Include multi select box for period
+- Implemented: Update design to select feature for Data Archiving in OpenEMIS Core
+- Bug Fixed: Institutions>Performance>Report Cards: Report card is not reflecting the timezone set in System Configuration
+- Bug Fixed: Dependancy POCOR-7023 : Attendance query is causing huge server load and eventually timeout.
+- Bug Fixed: Reports > Student > Contacts: Report is stuck in progress
+- Bug Fixed: Personal/Institutions/Directory > Accounts : System should Insert into user_activities table when there is an update on the username and password fields
+- Bug Fixed: Institutions>Performance>Report Cards: Generate all button missing for superadmin
+- Bug Fixed: Institutions>Attendance>Student: the system was setting absence_type_id column to 0 and student_absence_reason_id to NULL in the institution_student_absence_details
+- Bug Fixed: Institution > Students > Academic > Absences: Student Absences showing record when the student is not marked as absent
+- Bug Fixed: Followup to Add additional triggers for the Add Class and Update Class Webhooks
+- Bug Fixed: Institutions>Survey>Forms: Assignee field should be below status field
+- Bug Fixed: Institutions>Students>Add: User is unable to add students
+- Bug Fixed: Institution>Survey: Survey uploaded does not display the changes in newer version of OpenEMIS Core
+- Bug Fixed: Reports>Custom: Getting No Options for both Education Grade and Education Subject
+
 ### [3.77.3] - 2023-01-10
 - Bug Fixed: Login Page : 404 error in login page (Login with 2FA enabled and SSO Enabled)
 - Bug Fixed: Administrations > Authentications: When the user enters their username and password, the OTP page URL has a base64 string which contains their username and password.
