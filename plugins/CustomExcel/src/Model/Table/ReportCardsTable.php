@@ -201,11 +201,18 @@ class ReportCardsTable extends AppTable
         $filepath = $extra['file_path'];
         $fileContent = file_get_contents($filepath);
         $status = $StudentsReportCards::GENERATED;
+        
+        //POCOR-6716[START]
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$timeZone= $ConfigItems->value("time_zone");
+		date_default_timezone_set($timeZone);
+		$currentTimeZone = date("Y-m-d H:i:s");
+        //POCOR-6716[END]
 
         // save file
         $StudentsReportCards->updateAll([
             'status' => $status,
-            'completed_on' => date('Y-m-d H:i:s'),
+            'completed_on' => $currentTimeZone, //POCOR-6716
             'file_name' => $fileName,
             'file_content' => $fileContent
         ], $params);
