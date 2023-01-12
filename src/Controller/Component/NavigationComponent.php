@@ -1753,6 +1753,11 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+            'Reports.UisStatistics' => [
+                'title' => 'UIS Statistics',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
             'Map.index' => [
                 'title' => 'Map',
                 'parent' => 'Reports',
