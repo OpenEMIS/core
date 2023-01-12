@@ -21,7 +21,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 {
     use OptionsTrait;
     use MessagesTrait;
-
+    private $fieldsOrder = ['status_id','assignee_id']; //POCOR-7171
     // Default Status
     const EXPIRED = -1;
     const IS_MANDATORY = 1;
@@ -193,7 +193,17 @@ class InstitutionSurveysTable extends ControllerActionTable
             }
         }
     }
+    //POCOR-7171:Start
+    public function beforeAction(Event $event, ArrayObject $extra) {
+		$this->field('assignee_id');
+		$this->setFieldOrder(['assignee_id']);
+	}
 
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        $this->setfieldOrder($this->fieldsOrder);
+    }
+    //POCOR-7171:End
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $broadcaster = $this;
