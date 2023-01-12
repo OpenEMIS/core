@@ -51,9 +51,9 @@ class StudentContactsTable extends AppTable  {
         if(!empty($result)) {
             foreach ($result as $single) {
                 if ($single->IdentityNumber == end($result)->IdentityNumber) {
-                    $IdentityNumber .= $single->IdentityTypes .' - '. $single->IdentityNumber;
+                    $IdentityNumber .= $single->IdentityNumber;
                 } else {
-                    $IdentityNumber .= $single->IdentityTypes .' - '. $single->IdentityNumber . ', ';
+                    $IdentityNumber .= $single->IdentityNumber;
                 }
             }
         }
@@ -104,87 +104,101 @@ class StudentContactsTable extends AppTable  {
         return $institutionName;
     }
 
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    //POCOR-7108
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+        
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
-        $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
+        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $institutionIds = TableRegistry::get('Institution.Institutions');
+        $educationGrades = TableRegistry::get('Education.EducationGrades');
+        $userIdentity = TableRegistry::get('User.Identities');
+        $identityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $userContacts = TableRegistry::get('User.Contacts');
+        $contactsOptions = TableRegistry::get('User.ContactOptions');
+        $contactsType = TableRegistry::get('User.ContactTypes');
+        $academicPeriods = TableRegistry::get('academic_periods');
+
         $conditions = [];
-        if ($areaId != -1) {
-            $conditions['Institution.area_id'] = $areaId;
-        }
         if (!empty($academicPeriodId)) {
-            $conditions['InstitutionStudent.academic_period_id'] = $academicPeriodId;
+            $conditions['InstitutionStudents.academic_period_id'] = $academicPeriodId;
         }
         if (!empty($institutionId) && $institutionId > 0) {
-            $conditions['InstitutionStudent.institution_id'] = $institutionId;
+            $conditions['InstitutionStudents.institution_id'] = $institutionId;
         }
         if (!empty($enrolled)) {
-            $conditions['InstitutionStudent.student_status_id'] = $enrolled;
+            $conditions['InstitutionStudents.student_status_id'] = $enrolled;
         }
-        $query->join([
-            'InstitutionStudent' => [
-                'type' => 'inner',
-                'table' => 'institution_students', 
-                'conditions' => [
-                    'InstitutionStudent.student_id = '.$this->aliasField('id')
-                ],
-            ],
-            'Institution' => [
-                'type' => 'inner',
-                'table' => 'institutions',
-                'conditions' => [
-                    'Institution.id = InstitutionStudent.institution_id'
-                ]
-            ]
-        ]);
         $query
-			->select([
+            ->select([
+                'institution_code' => 'Institutions.code',
+                'institution_name' => 'Institutions.name',
+                'student_id' => $institutionStudents->aliasField('student_id'),
+                'education_grade_id' => $institutionStudents->aliasField('education_grade_id'),
+                'education_name' => 'EducationGrades.name',
+                'education_code' => 'EducationGrades.code',
+                'openemis_no' => $this->aliasField('openemis_no'),
                 'security_user_id' => $this->aliasField('id'),
-				'user_name' => $query->func()->concat([
-					$this->aliasField('first_name') => 'literal',
-					" ",
-					$this->aliasField('last_name') => 'literal'
-				]),
+                'user_name' => $query->func()->concat([
+                    $this->aliasField('first_name') => 'literal',
+                    " ",
+                    $this->aliasField('last_name') => 'literal'
+                ]),
             ])
-            ->order([$this->aliasField('id') => 'DESC'])
-            ->where([$this->aliasField('is_student') => 1, $conditions]);
-		    $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
-				
-				$ContactTypes = TableRegistry::get('User.ContactTypes');
-                    
-				$contactTypesData = $ContactTypes->find()
-					->select([
-						'contact_option_id' => $ContactTypes->aliasfield('contact_option_id'),
-						'contact_type' => $ContactTypes->aliasfield('name'),
-						'value' => 'UserContacts.value',
-						'preferred' => 'UserContacts.preferred'
-					])
-					->innerJoin(['UserContacts' => 'user_contacts' ], [
-						'UserContacts.contact_type_id = ' . $ContactTypes->aliasField('id'),
-					])
-					->where(['UserContacts.security_user_id' => $row->security_user_id])
-					->toArray();
-			
-					if(!empty($contactTypesData)) {
-						foreach($contactTypesData as $data) {
-							$row['value_'.$data->contact_option_id] = $data->value;
-							$row['description_'.$data->contact_option_id] = $data->contact_type;
-							if($data->preferred == 1) {
-								$row['preferred_'.$data->contact_option_id] = 'Yes';								
-							} else {
-								$row['preferred_'.$data->contact_option_id] = 'No';
-							}
-						}
-					}
-                return $row;
-            });
-        });
-    	
-	}
+           ->leftJoin([$institutionStudents->alias() => $institutionStudents->table()],
+                [
+                $institutionStudents->aliasField('student_id') . ' = '. $this->aliasField('id')
+                ])
+            ->innerJoin([$institutionIds->alias() => $institutionIds->table()],
+                [
+                $institutionIds->aliasField('id') . ' = '. $institutionStudents->aliasField('institution_id')
+                ])
+            ->innerJoin([$educationGrades->alias() => $educationGrades->table()],
+                [
+                $educationGrades->aliasField('id') . ' = '. $institutionStudents->aliasField('education_grade_id')
+                ])
+            ->leftJoin([$academicPeriods->alias() => $academicPeriods->table()],
+                [
+                $academicPeriods->aliasField('id') . ' = '. $institutionStudents->aliasField('academic_period_id')
+                ])
+            ->where([$institutionStudents->aliasField('student_status_id') => 1, $conditions])
+            ->group(['InstitutionStudents.student_id']);
+
+            $query
+                ->select([
+                    'contacts' => $userContacts->aliasField('security_user_id'),
+                    'contact_name' => $query->func()->group_concat([
+                    $this->aliasField('ContactOptions.name') => 'literal',
+                    " ",
+                    '(',
+                    $this->aliasField('ContactTypes.name') => 'literal',
+                    " ", '): ',
+                    $this->aliasField('Contacts.value') => 'literal',
+                    " "
+                    ]),
+                   'description' => $contactsType->aliasField('name'),
+                   'preferred' => $userContacts->aliasField('preferred'),
+                ])
+                ->innerJoin([$userContacts->alias() => $userContacts->table()],
+                [
+                    $userContacts->aliasField('security_user_id') . ' = '. $this->aliasField('id')
+                ])
+                ->innerJoin([$contactsType->alias() => $contactsType->table()],
+                [
+                    $contactsType->aliasField('id') . ' = '. $userContacts->aliasField('contact_type_id')
+                ])
+                ->innerJoin([$contactsOptions->alias() => $contactsOptions->table()],
+                [
+                    $contactsOptions->aliasField('id') . ' = '. $contactsType->aliasField('contact_option_id')
+                ])
+                ->where([$userContacts->aliasField('preferred') => 1, $conditions])
+                ->group(['Contacts.security_user_id']);
+    }
+
+    //End of POCOR-7108
 
 	public function onExcelGetPreferred(Event $event, Entity $entity) {
 		$options = [0 => __('No'), 1 => __('Yes')];
@@ -193,6 +207,13 @@ class StudentContactsTable extends AppTable  {
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+        $extraFields[] = [
+            'key' => 'institution_code',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution Code')
+        ];
+
 		$extraFields[] = [
             'key' => 'institution_name',
             'field' => 'institution_name',
@@ -200,11 +221,18 @@ class StudentContactsTable extends AppTable  {
             'label' => __('Institution Name')
         ];
 		
+        $extraFields[] = [
+            'key' => 'education_code',
+            'field' => 'education_code',
+            'type' => 'string',
+            'label' => __('Education Code')
+        ];
+
 		$extraFields[] = [
             'key' => 'education_name',
             'field' => 'education_name',
             'type' => 'string',
-            'label' => __('Education Grade')
+            'label' => __('Education Name')
         ];
 		
         $extraFields[] = [
@@ -218,54 +246,62 @@ class StudentContactsTable extends AppTable  {
             'key' => 'user_name',
             'field' => 'user_name',
             'type' => 'string',
-            'label' => __('Student')
+            'label' => __('Student Name')
         ];    
+
+        $extraFields[] = [
+            'key' => 'identity_type',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Identity Type') //POCOR-7108
+        ]; 
 
         $extraFields[] = [
             'key' => 'identity_number',
             'field' => 'identity_number',
             'type' => 'string',
-            'label' => __('Identity Number')
+            'label' => __('Identity Number') 
         ];
-		
-		$ContactOptions = TableRegistry::get('contact_options');
-                    
-        $contactOptionsData = $ContactOptions->find()
-            ->select([
-                'contact_option_id' => $ContactOptions->aliasfield('id'),
-                'contact_option' => $ContactOptions->aliasfield('name')
-            ])
-            ->toArray();
-       
-		if(!empty($contactOptionsData)) {
-			foreach($contactOptionsData as $data) {
-				$contact_option_id = $data->contact_option_id;
-				$contact_option = $data->contact_option;
-				$extraFields[] = [
-					'key' => '',
-					'field' => 'value_'.$contact_option_id,
-					'type' => 'string',
-					'label' => __($contact_option)
-				];
-				
-				$extraFields[] = [
-					'key' => '',
-					'field' => 'description_'.$contact_option_id,
-					'type' => 'string',
-					'label' => __('Description')
-				];
-				
-				$extraFields[] = [
-					'key' => '',
-					'field' => 'preferred_'.$contact_option_id,
-					'type' => 'string',
-					'label' => __('Preferred')
-				];
 
-			}
-		}
+        $extraFields[] = [
+            'key' => 'contact_name',
+            'field' => 'contact_name',
+            'type' => 'string',
+            'label' => __('Contact') //POCOR-7108
+        ];
 
         $fields->exchangeArray($extraFields);
     }
+
+    //POCOR-7108
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        $IdentityType = '';
+        $userIdentities = TableRegistry::get('User.Identities');
+        $result = $userIdentities
+                    ->find()
+                    ->where([
+                        $userIdentities->aliasField('security_user_id') => $entity->security_user_id,
+                    ])
+                    ->contain(['IdentityTypes'])
+                    ->select([
+                    'IdentityTypes' => $userIdentities->IdentityTypes->aliasField('name'),
+                    'IdentityNumber' => $userIdentities->aliasField('number'),
+                        ])
+                    ->toArray();
+
+        if(!empty($result)) {
+            foreach ($result as $single) {
+                if ($single->IdentityNumber == end($result)->IdentityNumber) {
+                    $IdentityType .= $single->IdentityTypes;
+                } else {
+                    $IdentityType .= $single->IdentityTypes;
+                }
+            }
+        }
+        return $IdentityType;
+    }
+    //End of POCOR-7108
+
 
 }
