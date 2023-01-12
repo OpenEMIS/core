@@ -265,7 +265,7 @@ class CustomReportsTable extends AppTable
             $periodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
             $selectedPeriod = $AcademicPeriods->getCurrent();
 
-            $attr['onChangeReload'] = "academic_period_id";
+            $attr['onChangeReload'] = true;
             $attr['options'] = $periodOptions;
             $attr['default'] = $selectedPeriod;
             $attr['type'] = 'select';
@@ -393,6 +393,19 @@ class CustomReportsTable extends AppTable
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $grades = TableRegistry::get('Institution.InstitutionGrades');
             $institutions = TableRegistry::get('Institution.Institutions');
+            
+            //POCOR-7178 start
+            $conditions = [];
+            if (!empty($selectedPeriod)) {
+            $conditions['EducationSystems.academic_period_id'] = $selectedPeriod;
+            }
+            if (!empty($institutionId) && $institutionId > 0) {
+                $conditions[$grades->aliasField('institution_id')] = $institutionId;
+            }
+            if (!empty($institutionTypeId)) {
+                $conditions[$institutions->aliasField('institution_type_id')] = $institutionTypeId;
+            }
+            //POCOR-7178 end
 
             $periodGrades = $EducationGrades->find('list', ['keyField' => 'id', 
                                 'valueField' => 'programme_grade_name'])
@@ -404,11 +417,7 @@ class CustomReportsTable extends AppTable
                             ->LeftJoin([$institutions->alias() => $institutions->table()],[
                                 $institutions->aliasField('id').' = ' . $grades->aliasField('institution_id')
                             ])
-                            ->where([
-                                'EducationSystems.academic_period_id' => $selectedPeriod,
-                                $grades->aliasField('institution_id') => $institutionId,
-                                $institutions->aliasField('institution_type_id') => $institutionTypeId,
-                            ])
+                            ->where($conditions)
                             ->order([$EducationGrades->aliasField('id')])
                             ->toArray();
 
