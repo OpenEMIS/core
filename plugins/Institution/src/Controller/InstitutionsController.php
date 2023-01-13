@@ -5817,12 +5817,17 @@ class InstitutionsController extends AppController
                                             ->where([
                                                 $SecurityRoles->aliasField('code IN') => $roleArr
                                             ])->toArray();
-
+                        //POCOR-7182
+                        $institutionsTbl = TableRegistry::get('institutions');
+                        $institutionsSecurityGroupId = $institutionsTbl->find()
+                        ->where([$institutionsTbl->aliasField('id') => $institutionId])
+                        ->first();  
+                        //POCOR-7182                         
                         if(!empty($SecurityRolesTbl)){
                             foreach ($SecurityRolesTbl as $rolekey => $roleval) {
                                 $entityGroupData = [
                                     'id' => Text::uuid(),
-                                    'security_group_id' => $institutionId,
+                                    'security_group_id' =>$institutionsSecurityGroupId->security_group_id, // $institutionId POCOR-7182
                                     'security_user_id' => $staffId,
                                     'security_role_id' => $roleval->id,
                                     'created_user_id' => $userId,
@@ -6122,12 +6127,17 @@ class InstitutionsController extends AppController
                                                         ->where([
                                                             $SecurityRoles->aliasField('code IN') => $roleArr
                                                         ])->toArray();
-
+                            //POCOR-7182
+                            $institutionsTbl = TableRegistry::get('institutions');
+                            $institutionsSecurityGroupId = $institutionsTbl->find()
+                            ->where([$institutionsTbl->aliasField('id') => $institutionId])
+                            ->first(); 
+                            //POCOR-7182                                
                             if(!empty($SecurityRolesTbl)){
                                 foreach ($SecurityRolesTbl as $rolekey => $roleval) {
                                     $entityGroupData = [
                                         'id' => Text::uuid(),
-                                        'security_group_id' => $institutionId,
+                                        'security_group_id' => $institutionsSecurityGroupId->security_group_id,// $institutionId POCOR-7182
                                         'security_user_id' => $user_record_id,
                                         'security_role_id' => $roleval->id,
                                         'created_user_id' => $userId,
