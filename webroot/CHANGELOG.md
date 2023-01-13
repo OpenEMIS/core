@@ -1,3 +1,6 @@
+### [3.77.5] - 2023-01-13
+- Bug Fixed : Institutions>Staff>Add: User added in the wrong security group
+
 ### [3.77.4] - 2023-01-12
 - Implemented: Generate UIS Report from OpenEMIS Core
 - Implemented: Institutions > Shifts : Include multi select box for period
