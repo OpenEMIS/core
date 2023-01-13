@@ -155,75 +155,89 @@ class StaffSubjectsTable extends AppTable  {
             ->where([$conditions])
             ->order(['institution_name']);
 
-            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
-                return $results->map(function ($row) { 
-                        //for identity type *********
-                        $IdentityTypesss = TableRegistry::get('identity_types');
-                        //Dynamic fields*******identity_types*****
-                        $user_identities_table = TableRegistry::get('user_identities');
-                        $userIdTypes = $user_identities_table->find()->where(['security_user_id'=>$row->staff_id])->all();
-                        //Start:POCOR-6779
-                        $defaultIdType = $IdentityTypesss->find()->where(['default' =>1 ])->first();
-                        $row['userIdentityTypes'] =[];
-                        foreach($userIdTypes as $ss =>$userIDType){
-                            if($userIDType->identity_type_id == $defaultIdType->id){   
-                                $row[str_replace(' ', '_',$defaultIdType->name)] = $userIDType->number;
-                            }else{
-                                $idTypeData = $IdentityTypesss->find()->where(['id'=>$userIDType->identity_type_id])->first();
-                                $row['other_ids'] .=  '(['.$idTypeData->name.'] - '.$userIDType->number.'),';
-                            }
+        $pageSize = 100;
+        $pages = intval(floor($query->count() / $pageSize));
+        $page = 1;
+
+        $query->limit($pageSize)->page($page);
+
+        while ($query->count() > 0) {
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+                    //for identity type *********
+                    $IdentityTypesss = TableRegistry::get('identity_types');
+                    //Dynamic fields*******identity_types*****
+                    $user_identities_table = TableRegistry::get('user_identities');
+                    $userIdTypes = $user_identities_table->find()->where(['security_user_id' => $row->staff_id])->all();
+                    //Start:POCOR-6779
+                    $defaultIdType = $IdentityTypesss->find()->where(['default' => 1])->first();
+                    $row['userIdentityTypes'] = [];
+                    foreach ($userIdTypes as $ss => $userIDType) {
+                        if ($userIDType->identity_type_id == $defaultIdType->id) {
+                            $row[str_replace(' ', '_', $defaultIdType->name)] = $userIDType->number;
+                        } else {
+                            $idTypeData = $IdentityTypesss->find()->where(['id' => $userIDType->identity_type_id])->first();
+                            $row['other_ids'] .= '([' . $idTypeData->name . '] - ' . $userIDType->number . '),';
                         }
-                        $row['other_ids'] = rtrim( $row['other_ids'],',');
-                        //End:POCOR-6779
-                        //assign value in column
-                        foreach($row['userIdentityTypes'] as $sss =>$useroneIDType){
-                            $row[str_replace(" ","_",$useroneIDType->name)] = $useroneIDType->number;
-                        }
-                        //staff qulification staff_qualifications************
-                        $staffQualificationss = TableRegistry::get('staff_qualifications');
-                        $Qualificationss = TableRegistry::get('qualification_titles');
-                        $sQu= $staffQualificationss->find()->where(['staff_id'=>$row->staff_id])->order(['qualification_title_id'=>'DESC'])->first(); //POCOR-6779
+                    }
+                    $row['other_ids'] = rtrim($row['other_ids'], ',');
+                    //End:POCOR-6779
 
-                        $qulifi = $Qualificationss->find()->where(['id'=>$sQu->qualification_title_id])->first();
-                        $row['qualification'] = $qulifi->name;
+                    //assign value in column
+                    foreach ($row['userIdentityTypes'] as $sss => $useroneIDType) {
+                        $row[str_replace(" ", "_", $useroneIDType->name)] = $useroneIDType->number;
+                    }
+                    //staff qulification staff_qualifications************
+                    $staffQualificationss = TableRegistry::get('staff_qualifications');
+                    $Qualificationss = TableRegistry::get('qualification_titles');
+                    $sQu = $staffQualificationss->find()->where(['staff_id' => $row->staff_id])->order(['qualification_title_id' => 'DESC'])->first(); //POCOR-6779
 
-                        //Field of stydy****************
-                        $sfieldofStydyT = TableRegistry::get('education_field_of_studies');
-                        $sfieldofStydy = $sfieldofStydyT->find()->where(['id'=>$sQu->education_field_of_study_id])->first();
-                        $row['field_of_study'] = $sfieldofStydy->name;
+                    $qulifi = $Qualificationss->find()->where(['id' => $sQu->qualification_title_id])->first();
+                    $row['qualification'] = $qulifi->name;
 
-                        
-                       //grade
-                       $InstitutionSubjectT = TableRegistry::get('institution_subjects');
-                       $GradeT = TableRegistry::get('education_grades');
-                       $InstitutionSubjectDta = $InstitutionSubjectT->find()->where(['id' => $row->institution_subject_id])->first();
-                       $Grade = $GradeT->find()->where(['id'=>$InstitutionSubjectDta->education_grade_id])->first();
-                       $row['grades'] = $Grade->name;
+                    //Field of stydy****************
+                    $sfieldofStydyT = TableRegistry::get('education_field_of_studies');
+                    $sfieldofStydy = $sfieldofStydyT->find()->where(['id' => $sQu->education_field_of_study_id])->first();
+                    $row['field_of_study'] = $sfieldofStydy->name;
 
-                       //class***********
-                       $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-                       $Classes = TableRegistry::get('Institution.InstitutionClasses');
-                       $GradesClassData = $InstitutionClassSubjects->find()->where(['institution_subject_id'=>$row->institution_subject_id])->first();
-                       $classData = $Classes->find()->where(['id'=>$GradesClassData->institution_class_id])->first();
-                       $row['classes'] = $classData->name;
-                        
-                       //Start:POCOR-6779
-                       //Staff Area Name**
-                       $AreaT = TableRegistry::get('areas');
-                       $AreaData = $AreaT->find()->where(['id' => $row->institution->area_id])->first();
-                       $row['area_name'] = $AreaData->name;
+                    //grade
+                    $InstitutionSubjectT = TableRegistry::get('institution_subjects');
+                    $GradeT = TableRegistry::get('education_grades');
+                    $InstitutionSubjectDta = $InstitutionSubjectT->find()->where(['id' => $row->institution_subject_id])->first();
+                    $Grade = $GradeT->find()->where(['id' => $InstitutionSubjectDta->education_grade_id])->first();
+                    $row['grades'] = $Grade->name;
 
-                       //Staff Status Name**
-                       $institution_staffT = TableRegistry::get('institution_staff');
-                       $StaffStatusT = TableRegistry::get('staff_statuses');
-                       $insStaff = $institution_staffT->find()->where(['staff_id' => $row->staff_id,'institution_id'=>$row->institution->id])->first();
-                       $staffStatusss = $StaffStatusT->find()->where(['id' => $insStaff->staff_status_id])->first();
-                       
-                       $row['staff_status'] = $staffStatusss->name;
-                       //End:POCOR-6779
+                    //class***********
+                    $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+                    $Classes = TableRegistry::get('Institution.InstitutionClasses');
+                    $GradesClassData = $InstitutionClassSubjects->find()->where(['institution_subject_id' => $row->institution_subject_id])->first();
+                    $classData = $Classes->find()->where(['id' => $GradesClassData->institution_class_id])->first();
+                    $row['classes'] = $classData->name;
+
+                    //Start:POCOR-6779
+                    //Staff Area Name**
+                    $AreaT = TableRegistry::get('areas');
+                    $AreaData = $AreaT->find()->where(['id' => $row->institution->area_id])->first();
+                    $row['area_name'] = $AreaData->name;
+
+                    //Staff Status Name**
+                    $institution_staffT = TableRegistry::get('institution_staff');
+                    $StaffStatusT = TableRegistry::get('staff_statuses');
+                    $insStaff = $institution_staffT->find()->where(['staff_id' => $row->staff_id, 'institution_id' => $row->institution->id])->first();
+                    $staffStatusss = $StaffStatusT->find()->where(['id' => $insStaff->staff_status_id])->first();
+
+                    $row['staff_status'] = $staffStatusss->name;
+                    //End:POCOR-6779
                     return $row;
                 });
             });
+
+            if ($page > $pages) {
+                break;
+            }
+
+            $query->cleanCopy()->page($page++);
+        }
 	}
 
 
