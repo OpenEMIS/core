@@ -77,6 +77,7 @@ class StaffAttendancesTable extends ControllerActionTable
         $startDate = date("Y-m-d", strtotime($start_report_Date));
         $endDate = date("Y-m-d", strtotime($end_report_Date));
         $conditions = [];
+        $join = [];
         $StaffAttendances = TableRegistry::get('Institution.InstitutionStaffAttendances');
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -90,37 +91,16 @@ class StaffAttendancesTable extends ControllerActionTable
         foreach($getyear->toArray() as $val) {
             $year  = $val['name'];
         }
-
-        if (!empty($academicPeriodId)) {
-                $conditions['OR'] = [
-                    'OR' => [
-                        [
-                            $this->aliasField('end_date') . ' IS NOT NULL',
-                            $this->aliasField('start_date') . ' <=' => $startDate,
-                            $this->aliasField('end_date') . ' >=' => $startDate
-                        ],
-                        [
-                            $this->aliasField('end_date') . ' IS NOT NULL',
-                            $this->aliasField('start_date') . ' <=' => $endDate,
-                            $this->aliasField('end_date') . ' >=' => $endDate
-                        ],
-                        [
-                            $this->aliasField('end_date') . ' IS NOT NULL',
-                            $this->aliasField('start_date') . ' >=' => $startDate,
-                            $this->aliasField('end_date') . ' <=' => $endDate
-                        ]
-                    ],
-                    [
-                        $this->aliasField('end_date') . ' IS NULL',
-                        $this->aliasField('start_date') . ' <=' => $endDate
-                    ]
-                ];
-        }
         if (!empty($institutionId) && $institutionId != 0) {
             $conditions[$this->aliasField('institution_id')]=$institutionId;
         }
-        if ($areaId != -1) {
+
+        if ($areaId != -1 && !empty($areaId)) {
             $conditions[$this->aliasField('Institutions.area_id')]=$areaId;
+        }
+
+        if (!empty($academicPeriodId)) {
+            $conditions['academic_periods.id']=$academicPeriodId;
         }
         
         $query
@@ -140,15 +120,48 @@ class StaffAttendancesTable extends ControllerActionTable
                 'middle_name' => 'Users.middle_name',
                 'third_name' => 'Users.third_name',
                 'last_name' => 'Users.last_name',
-            ])
+                'month_generator'=>'year_name',
+                'month_generator'=>'month_name',
+               'day_1'=> "(SELECT IFNULL(staff_attendance_info.day_1, ''))",                                         
+               'day_2'=> "(SELECT IFNULL(staff_attendance_info.day_2, ''))",                                         
+               'day_3'=> "(SELECT IFNULL(staff_attendance_info.day_3, ''))",                                          
+               'day_4'=> "(SELECT IFNULL(staff_attendance_info.day_4, ''))",                                         
+               'day_5'=> "(SELECT IFNULL(staff_attendance_info.day_5, ''))",                                          
+               'day_6'=> "(SELECT IFNULL(staff_attendance_info.day_6, ''))",                                         
+               'day_7'=> "(SELECT IFNULL(staff_attendance_info.day_7, ''))",                                          
+               'day_8'=> "(SELECT IFNULL(staff_attendance_info.day_8, ''))",                                          
+               'day_9'=> "(SELECT IFNULL(staff_attendance_info.day_9, ''))",                                         
+               'day_10'=> "(SELECT IFNULL(staff_attendance_info.day_10, ''))",                                 
+               'day_11'=> "(SELECT IFNULL(staff_attendance_info.day_11, ''))",                                        
+               'day_12'=> "(SELECT IFNULL(staff_attendance_info.day_12, ''))",                                        
+               'day_13'=> "(SELECT IFNULL(staff_attendance_info.day_13, ''))",                                        
+               'day_14'=> "(SELECT IFNULL(staff_attendance_info.day_14, ''))",                                        
+               'day_15'=> "(SELECT IFNULL(staff_attendance_info.day_15, ''))",                                        
+               'day_16'=> "(SELECT IFNULL(staff_attendance_info.day_16, ''))",                                        
+               'day_17'=> "(SELECT IFNULL(staff_attendance_info.day_17, ''))",                                        
+               'day_18'=> "(SELECT IFNULL(staff_attendance_info.day_18, ''))",                                        
+               'day_19'=> "(SELECT IFNULL(staff_attendance_info.day_19, ''))",                                        
+               'day_20'=> "(SELECT IFNULL(staff_attendance_info.day_20, ''))",                                        
+               'day_21'=> "(SELECT IFNULL(staff_attendance_info.day_21, ''))",                                        
+               'day_22'=> "(SELECT IFNULL(staff_attendance_info.day_22, ''))",
+               'day_23'=> "(SELECT IFNULL(staff_attendance_info.day_23, ''))",  
+                'day_24'=> "(SELECT IFNULL(staff_attendance_info.day_24, ''))",  
+                'day_25'=> "(SELECT IFNULL(staff_attendance_info.day_25, ''))",  
+                'day_26'=> "(SELECT IFNULL(staff_attendance_info.day_26, ''))",  
+                'day_27'=> "(SELECT IFNULL(staff_attendance_info.day_27, ''))",  
+                'day_28'=> "(SELECT IFNULL(staff_attendance_info.day_28, ''))",  
+                'day_29'=> "(SELECT IFNULL(staff_attendance_info.day_29, ''))",  
+                'day_30'=> "(SELECT IFNULL(staff_attendance_info.day_30, ''))",  
+                'day_31'=> "(SELECT IFNULL(staff_attendance_info.day_31, ''))",  
+               ])
             ->contain(['Users'])
-            ->leftJoin(['Institutions' => 'institutions'], [
+            ->innerJoin(['Institutions' => 'institutions'], [
                 'Institutions.id = ' . $this->aliasfield('institution_id'),
             ])
-            ->leftJoin(['InstitutionPositions' => 'institution_positions'], [
+            ->innerJoin(['InstitutionPositions' => 'institution_positions'], [
                 'InstitutionPositions.id = ' . $this->aliasfield('institution_position_id'),
             ])
-            ->leftJoin(['StaffPositionTitles' => 'staff_position_titles'], [
+            ->innerJoin(['StaffPositionTitles' => 'staff_position_titles'], [
                 'StaffPositionTitles.id = InstitutionPositions.staff_position_title_id',
             ])
             ->leftJoin(['UserNationalities' => 'user_nationalities'], [
@@ -165,12 +178,195 @@ class StaffAttendancesTable extends ControllerActionTable
             ])
             ->leftJoin(['UserIdentity' => 'user_identities'], [
                 'UserIdentity.security_user_id = ' . $this->aliasfield('staff_id'),
-            ])
-            ->leftJoin(['InstitutionStaffAttendances' => 'institution_staff_attendances'], [
+            ]);
+            /*->leftJoin(['InstitutionStaffAttendances' => 'institution_staff_attendances'], [
                 'InstitutionStaffAttendances.staff_id = ' . $this->aliasfield('staff_id'),
-            ])->where($conditions)
-            ->distinct([$this->aliasField('staff_id')]);
+            ]);*/
+            //->where($conditions)
+            //->distinct([$this->aliasField('staff_id')]);
 
+            $join['AcademicPeriods'] = [
+                'type' => 'inner',
+                'table' => 'academic_periods',
+                'conditions' => [
+                    'OR' => [
+                        [
+                            $this->aliasField('end_date') . ' IS NOT NULL',
+                            $this->aliasField('start_date') . ' <=' => 'academic_periods.start_date',
+                            $this->aliasField('end_date') . ' >=' => 'academic_periods.start_date',
+                        ],
+                        [
+                            $this->aliasField('end_date') . ' IS NOT NULL',
+                            $this->aliasField('start_date') . ' <=' => 'academic_periods.end_date',
+                            $this->aliasField('end_date') . ' >=' => 'academic_periods.end_date',
+                        ],
+                        [
+                            $this->aliasField('end_date') . ' IS NOT NULL',
+                            $this->aliasField('start_date') . ' >=' => 'academic_periods.end_date',
+                            $this->aliasField('end_date') . ' <=' => 'academic_periods.end_date',
+                        ]
+                    ],
+                    [
+                        $this->aliasField('end_date') . ' IS NULL',
+                        $this->aliasField('start_date') . ' <=' => 'academic_periods.end_date',
+                    ]
+                ],      
+            ];
+
+            $join[' '] = [
+                'type' => 'inner',
+                'table' => "(SELECT  academic_period_id
+        ,YEAR(m1) year_name
+        ,MONTH(m1) month_id
+        ,MONTHNAME(m1) month_name
+    FROM
+    (
+        SELECT  (academic_periods.start_date - INTERVAL DAYOFMONTH(academic_periods.start_date)-1 DAY) +INTERVAL m MONTH AS m1
+            ,academic_periods.end_date
+            ,academic_periods.id academic_period_id
+        FROM academic_periods
+        CROSS JOIN
+        (
+            SELECT  @rownum:= @rownum+1 AS m
+            FROM
+            (
+                SELECT  1
+                UNION
+                SELECT  2
+                UNION
+                SELECT  3
+                UNION
+                SELECT  4
+            ) t1, (
+            SELECT  1
+            UNION
+            SELECT  2
+            UNION
+            SELECT  3
+            UNION
+            SELECT  4) t2
+                ,(
+            SELECT  1
+            UNION
+            SELECT  2
+            UNION
+            SELECT  3
+            UNION
+            SELECT  4) t3
+                ,(
+            SELECT  1
+            UNION
+            SELECT  2
+            UNION
+            SELECT  3
+            UNION
+            SELECT  4) t4,(SELECT  @rownum:= -1) t0
+        ) d1
+        WHERE academic_periods.id = 31
+    ) d2
+    WHERE m1 <= d2.end_date
+    ORDER BY m1
+ ) AS month_generator",
+ 'conditions' => ['month_generator.academic_period_id = academic_periods.id'],
+];
+ $join[' '] = [
+                'type' => 'left',
+                'table' => "(SELECT subq.academic_period_id
+        ,subq.staff_id
+        ,YEAR(subq.date) year_name
+        ,MONTH(subq.date) month_id
+        ,MAX(subq.day_1) day_1
+        ,MAX(subq.day_2) day_2
+        ,MAX(subq.day_3) day_3
+        ,MAX(subq.day_4) day_4
+        ,MAX(subq.day_5) day_5
+        ,MAX(subq.day_6) day_6
+        ,MAX(subq.day_7) day_7
+        ,MAX(subq.day_8) day_8
+        ,MAX(subq.day_9) day_9
+        ,MAX(subq.day_10) day_10
+        ,MAX(subq.day_11) day_11
+        ,MAX(subq.day_12) day_12
+        ,MAX(subq.day_13) day_13
+        ,MAX(subq.day_14) day_14
+        ,MAX(subq.day_15) day_15
+        ,MAX(subq.day_16) day_16
+        ,MAX(subq.day_17) day_17
+        ,MAX(subq.day_18) day_18
+        ,MAX(subq.day_19) day_19
+        ,MAX(subq.day_20) day_20
+        ,MAX(subq.day_21) day_21
+        ,MAX(subq.day_22) day_22
+        ,MAX(subq.day_23) day_23
+        ,MAX(subq.day_24) day_24
+        ,MAX(subq.day_25) day_25
+        ,MAX(subq.day_26) day_26
+        ,MAX(subq.day_27) day_27
+        ,MAX(subq.day_28) day_28
+        ,MAX(subq.day_29) day_29
+        ,MAX(subq.day_30) day_30
+        ,MAX(subq.day_31) day_31
+    FROM 
+    (
+        (SELECT institution_staff_attendances.academic_period_id
+            ,institution_staff_attendances.staff_id
+            ,institution_staff_attendances.date
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 1 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_1
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 2 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_2
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 3 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_3
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 4 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_4
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 5 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_5
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 6 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_6
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 7 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_7
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 8 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_8
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 9 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_9
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 10 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_10
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 11 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_11
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 12 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_12
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 13 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_13
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 14 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_14
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 15 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_15
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 16 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_16
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 17 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_17
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 18 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_18
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 19 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_19
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 20 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_20
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 21 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_21
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 22 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_22
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 23 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_23
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 24 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_24
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 25 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_25
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 26 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_26
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 27 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_27
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 28 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_28
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 29 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_29
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 30 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_30
+
+            ,CASE WHEN DAY(institution_staff_attendances.date) = 31 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_31
+        FROM institution_staff_attendances
+        WHERE institution_staff_attendances.academic_period_id = $academicPeriodId
+        AND institution_staff_attendances.institution_id = 6
+        GROUP BY institution_staff_attendances.staff_id
+            ,institution_staff_attendances.date
+    ) subq 
+    GROUP BY subq.academic_period_id
+        ,subq.staff_id
+        ,YEAR(subq.date)
+        ,MONTH(subq.date)
+) staff_attendance_info)"
+]; 
+$join[' '] = [
+            'conditions' => [
+                'staff_attendance_info.academic_period_id = month_generator.academic_period_id',
+                'staff_attendance_info.staff_id = security_users.id',
+                'staff_attendance_info.year_name = month_generator.year_name',
+                'staff_attendance_info.month_id  = month_generator.month_id'
+            ],
+        ];         
+ $query->where($conditions)->group(['security_users.id','month_generator.year_name','month_generator.month_id'])
+ ->order(['institutions.code','security_users.openemis_no','month_generator.year_name','month_generator.month_id']);
+  $query->join($join);
+print_r($query->sql());die('pkk');
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($academicPeriodId, $startDate, $endDate, $year) {
                 return $results->map(function ($row) use ($academicPeriodId, $startDate, $endDate, $year) {
                     $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
