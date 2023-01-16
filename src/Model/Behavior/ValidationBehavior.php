@@ -2638,11 +2638,16 @@ class ValidationBehavior extends Behavior
 
     public static function checkLocalLogin($field, array $globalData)
     {
-        if ($field == 1) {
+        //POCOR-7156 Starts
+        if($globalData['data']['label'] == 'Two Factor Authentication'){
             return true;
-        } else {
-            $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
-            return count($authentications) > 0;
+        }else{//POCOR-7156 Ends
+            if ($field == 1) {
+                return true;
+            } else {
+                $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
+                return count($authentications) > 0;
+            }
         }
     }
 

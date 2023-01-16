@@ -1584,7 +1584,7 @@ class StaffTable extends ControllerActionTable
             'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
         ];
 
-        if ($this->action == 'remove') {
+        if (isset($this->action) && $this->action == 'remove') { //POCOR-7083
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $username = $this->Auth->user()['username'];
