@@ -207,10 +207,12 @@ class AbsencesTable extends ControllerActionTable
                 $conditions = [
                     $this->aliasField('academic_period_id') => $selectedPeriod,
                     $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('absence_type_id !=') => 0//POCOR-7167
                 ];
             } else {
                 $conditions = [
-                    $this->aliasField('academic_period_id') => $selectedPeriod
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('absence_type_id !=') => 0//POCOR-7167
                 ];
             }
             /*POCOR-6267 ends*/
@@ -252,10 +254,12 @@ class AbsencesTable extends ControllerActionTable
                     $conditions = [
                         $this->aliasField('academic_period_id') => $selectedPeriod,
                         $this->aliasField('institution_id') => $institutionId,
+                        $this->aliasField('absence_type_id !=') => 0//POCOR-7167
                     ];
                 } else {
                     $conditions = [
-                        $this->aliasField('academic_period_id') => $selectedPeriod
+                        $this->aliasField('academic_period_id') => $selectedPeriod,
+                        $this->aliasField('absence_type_id !=') => 0//POCOR-7167
                     ];
                 }
                 /*POCOR-6267 ends*/
@@ -377,7 +381,8 @@ class AbsencesTable extends ControllerActionTable
                 $InstitutionStudentAbsenceDetails->aliasField('date = ') . $this->aliasField('date'),
                 $InstitutionStudentAbsenceDetails->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                 $InstitutionStudentAbsenceDetails->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                $InstitutionStudentAbsenceDetails->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
+                $InstitutionStudentAbsenceDetails->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                $InstitutionStudentAbsenceDetails->aliasField('period = ') . $this->aliasField('period')//POCOR-7167
             ]
         )->where($where);
     }

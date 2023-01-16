@@ -2263,6 +2263,8 @@ class WorkflowBehavior extends Behavior
 
     public function processWorkflow()
     {
+        ini_set('memory_limit', '-1');
+        ini_set('max_execution_time', 360);
         $request = $this->_table->controller->request;
         if ($request->is(['post', 'put'])) {
             $requestData = $request->data;

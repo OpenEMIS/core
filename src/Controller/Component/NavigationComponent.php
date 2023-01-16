@@ -1753,6 +1753,11 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+            'Reports.UisStatistics' => [
+                'title' => 'UIS Statistics',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
             'Map.index' => [
                 'title' => 'Map',
                 'parent' => 'Reports',
@@ -1770,7 +1775,7 @@ class NavigationComponent extends Component
     public function getAdministrationNavigation()
     {
         //for POCOR-5674 requirement
-        $connectionTable = TableRegistry::get('Archive.TransferConnections');
+        $connectionTable = TableRegistry::get('Archive.DataManagementConnections');
         $connectionData = $connectionTable->find()->select(['id'])->first()->toArray();
         $connectionId = $this->controller->paramsEncode(['id' => $connectionData['id']]);
         /*for POCOR-5674 */
@@ -1912,7 +1917,7 @@ class NavigationComponent extends Component
                 'title' => 'Groups',
                 'parent' => 'Security',
                 'params' => ['plugin' => 'Security'],
-                'selected' => ['Securities.UserGroups', 'Securities.SystemGroups']
+                'selected' => ['Securities.UserGroups','Securities.SystemGroups','Securities.UserGroupsList','Securities.SystemGroupsList']
             ],
 
             'Securities.Roles' => [

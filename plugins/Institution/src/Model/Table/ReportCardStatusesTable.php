@@ -3,7 +3,8 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use ZipArchive;
-use DateTime;//POCOR-6785
+use DateTime;
+use DateTimeZone;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -13,7 +14,6 @@ use Cake\I18n\Time;
 use Cake\I18n\Date;//POCOR-6841
 use Cake\Log\Log;
 use Cake\Datasource\ConnectionManager; //POCOR-6785
-use DateTimeZone;
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardStatusesTable extends ControllerActionTable
@@ -616,165 +616,157 @@ class ReportCardStatusesTable extends ControllerActionTable
         foreach ($securityRoles as $key => $value) {
             $securityRoleIds[] = $value->security_role_id;
         }//POCOR-7131 ends
-        if (!is_null($reportCardId) && !is_null($classId) && !empty($securityRoleIds)) { //POCOR-7148 check empty condition for securityRoleIds
-            $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
-            $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->primaryKey() => $classId]);
-            // only show toolbar buttons if request for report card and class is valid
-            if ($existingReportCard && $existingClass) {
-                $generatedCount = 0;
-                $publishedCount = 0;
-                // count statuses to determine which buttons are shown
-                foreach($data as $student) {
-                    if ($student->has('report_card_status')) {
-                        if ($student->report_card_status == self::GENERATED) {
-                            $generatedCount += 1;
-                        } else if ($student->report_card_status == self::PUBLISHED) {
-                            $publishedCount += 1;
+        $userSuperAddmin = $this->Session->read('Auth.User.super_admin'); //POCOR-7163 :: Start
+        if($userSuperAddmin == 1 ){
+            if (!is_null($reportCardId) && !is_null($classId) ) { 
+                $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
+                $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->primaryKey() => $classId]);
+                // only show toolbar buttons if request for report card and class is valid
+                if ($existingReportCard && $existingClass) {
+                    $generatedCount = 0;
+                    $publishedCount = 0;
+                    // count statuses to determine which buttons are shown
+                    foreach($data as $student) {
+                        if ($student->has('report_card_status')) {
+                            if ($student->report_card_status == self::GENERATED) {
+                                $generatedCount += 1;
+                            } else if ($student->report_card_status == self::PUBLISHED) {
+                                $publishedCount += 1;
+                            }
                         }
                     }
-                }
-
-                $toolbarAttr = [
-                    'class' => 'btn btn-xs btn-default',
-                    'data-toggle' => 'tooltip',
-                    'data-placement' => 'bottom',
-                    'escape' => false
-                ];
-
-                $params = [
-                    'institution_id' => $this->Session->read('Institution.Institutions.id'),
-                    'institution_class_id' => $classId,
-                    'report_card_id' => $reportCardId
-                ];
-
-                //POCOR-6838: Start
-                $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
-                $SecurityFunctionsAllExcelData = $SecurityFunctions
-                                    ->find()
-                                    ->where([
-                                        $SecurityFunctions->aliasField('name') => 'Download All Excel'])
-                                    ->first();
-
-                $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
-                $SecurityRoleFunctionsTableAllExcelData = $SecurityRoleFunctionsTable
-                                    ->find()
-                                    ->where([
-                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsAllExcelData->id,
-                                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,//POCOR-7131
-                                        $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds//POCOR-7131
-                                    ])
-                                    ->count();//POCOR-7131
-
-                $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
-                $SecurityFunctionsAllPdfData = $SecurityFunctions
-                                    ->find()
-                                    ->where([
-                                        $SecurityFunctions->aliasField('name') => 'Download All Pdf'])
-                                    ->first();
-
-                $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
-                $SecurityRoleFunctionsTableAllPdfData = $SecurityRoleFunctionsTable
-                                    ->find()
-                                    ->where([
-                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsAllPdfData->id,
-                                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,//POCOR-7131
-                                        $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])//POCOR-7131
-                                    ->count();//POCOR-7131
-
-                $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
-                $SecurityFunctionsGenerateAllData = $SecurityFunctions
-                                    ->find()
-                                    ->where([
-                                        $SecurityFunctions->aliasField('name') => 'Generate All'])
-                                    ->first();
-                
-                $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
-                $SecurityRoleFunctionsTableGenerateAllData = $SecurityRoleFunctionsTable
-                                    ->find()
-                                    ->where([
-                                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateAllData->id,
-                                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,//POCOR-7131
-                                        $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])//POCOR-7131
-                                    ->count();//POCOR-7131
-                //POCOR-6838: End
-                // Download all button
-                 if ($generatedCount > 0 || $publishedCount > 0) {
-                    if ($this->AccessControl->isAdmin()) {
-                        $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
-                        $downloadButtonPdf['type'] = 'button';
-                        $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
-                        $downloadButtonPdf['attr'] = $toolbarAttr;
-                        $downloadButtonPdf['attr']['title'] = __('Download All PDF');
-                        $extra['toolbarButtons']['downloadAllPdf'] = $downloadButtonPdf;
-                    }else{
-                        if($SecurityRoleFunctionsTableAllPdfData >= 1){//POCOR-7131 change in if condition
+    
+                    $toolbarAttr = [
+                        'class' => 'btn btn-xs btn-default',
+                        'data-toggle' => 'tooltip',
+                        'data-placement' => 'bottom',
+                        'escape' => false
+                    ];
+    
+                    $params = [
+                        'institution_id' => $this->Session->read('Institution.Institutions.id'),
+                        'institution_class_id' => $classId,
+                        'report_card_id' => $reportCardId
+                    ];
+    
+                   
+                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                    $SecurityFunctionsAllExcelData = $SecurityFunctions
+                                        ->find()
+                                        ->where([
+                                            $SecurityFunctions->aliasField('name') => 'Download All Excel'])
+                                        ->first();
+    
+                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                    $SecurityRoleFunctionsTableAllExcelData = $SecurityRoleFunctionsTable
+                                        ->find()
+                                        ->where([
+                                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsAllExcelData->id,
+                                           
+                                            
+                                        ])
+                                        ->count();
+    
+                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                    $SecurityFunctionsAllPdfData = $SecurityFunctions
+                                        ->find()
+                                        ->where([
+                                            $SecurityFunctions->aliasField('name') => 'Download All Pdf'])
+                                        ->first();
+    
+                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                    $SecurityRoleFunctionsTableAllPdfData = $SecurityRoleFunctionsTable
+                                        ->find()
+                                        ->where([
+                                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsAllPdfData->id,
+                                            //$SecurityRoleFunctionsTable->aliasField('_execute') => 1
+                                            ])
+                                        ->count();
+    
+                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                    $SecurityFunctionsGenerateAllData = $SecurityFunctions
+                                        ->find()
+                                        ->where([
+                                            $SecurityFunctions->aliasField('name') => 'Generate All'])
+                                        ->first();
+                    
+                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                    $SecurityRoleFunctionsTableGenerateAllData = $SecurityRoleFunctionsTable
+                                        ->find()
+                                        ->where([
+                                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateAllData->id,
+                                            //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
+                                            ])
+                                        ->count();
+                    
+                    // Download all button
+                     if ($generatedCount > 0 || $publishedCount > 0) {
+                        if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
                             $downloadButtonPdf['type'] = 'button';
                             $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
                             $downloadButtonPdf['attr'] = $toolbarAttr;
                             $downloadButtonPdf['attr']['title'] = __('Download All PDF');
                             $extra['toolbarButtons']['downloadAllPdf'] = $downloadButtonPdf;
+                        }else{
+                            if($SecurityRoleFunctionsTableAllPdfData >= 1){
+                                $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
+                                $downloadButtonPdf['type'] = 'button';
+                                $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                                $downloadButtonPdf['attr'] = $toolbarAttr;
+                                $downloadButtonPdf['attr']['title'] = __('Download All PDF');
+                                $extra['toolbarButtons']['downloadAllPdf'] = $downloadButtonPdf;
+                            }
                         }
                     }
-                }
-                if ($generatedCount > 0 || $publishedCount > 0) {
-                    if ($this->AccessControl->isAdmin()) {
-                        $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
-                        $downloadButton['type'] = 'button';
-                        $downloadButton['label'] = '<i class="fa kd-download"></i>';
-                        $downloadButton['attr'] = $toolbarAttr;
-                        $downloadButton['attr']['title'] = __('Download All Excel');
-                        $extra['toolbarButtons']['downloadAll'] = $downloadButton;
-                    }else{
-                        if($SecurityRoleFunctionsTableAllExcelData >= 1){//POCOR-7131 change in if condition
+                    if ($generatedCount > 0 || $publishedCount > 0) {
+                        if ($this->AccessControl->isAdmin()) {
                             $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
                             $downloadButton['type'] = 'button';
                             $downloadButton['label'] = '<i class="fa kd-download"></i>';
                             $downloadButton['attr'] = $toolbarAttr;
                             $downloadButton['attr']['title'] = __('Download All Excel');
                             $extra['toolbarButtons']['downloadAll'] = $downloadButton;
+                        }else{
+                            if($SecurityRoleFunctionsTableAllExcelData >= 1){
+                                $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
+                                $downloadButton['type'] = 'button';
+                                $downloadButton['label'] = '<i class="fa kd-download"></i>';
+                                $downloadButton['attr'] = $toolbarAttr;
+                                $downloadButton['attr']['title'] = __('Download All Excel');
+                                $extra['toolbarButtons']['downloadAll'] = $downloadButton;
+                            }
                         }
                     }
-                }
-
-                // Generate all button
-                $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
-                $generateButton['type'] = 'button';
-                $generateButton['label'] = '<i class="fa fa-refresh"></i>';
-                $generateButton['attr'] = $toolbarAttr;
-                $generateButton['attr']['title'] = __('Generate All');
-                //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
-                if (!is_null($this->request->query('report_card_id'))) {
-                    $reportCardId = $this->request->query('report_card_id');
-                }
-
-                $ReportCardsData = $this->ReportCards
-                                    ->find()
-                                    ->where([
-                                        $this->ReportCards->aliasField('id') => $reportCardId])
-                                    ->first();
-
-
-                if (!empty($ReportCardsData->generate_start_date)) {
-                    $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
-                }
-
-                if (!empty($ReportCardsData->generate_end_date)) {
-                    $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
-                }
-                $date = Time::now()->format('Y-m-d');
-
-                if ($this->AccessControl->isAdmin()) {
-                    if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
-                        $extra['toolbarButtons']['generateAll'] = $generateButton;
-                    } else { 
-                        $generateButton['attr']['data-html'] = true;
-                        $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('ReportCardStatuses.date_closed'));
-                        $generateButton['url'] = 'javascript:void(0)';
-                        $extra['toolbarButtons']['generateAll'] = $generateButton;
+    
+                    // Generate all button
+                    $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
+                    $generateButton['type'] = 'button';
+                    $generateButton['label'] = '<i class="fa fa-refresh"></i>';
+                    $generateButton['attr'] = $toolbarAttr;
+                    $generateButton['attr']['title'] = __('Generate All');
+                    //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
+                    if (!is_null($this->request->query('report_card_id'))) {
+                        $reportCardId = $this->request->query('report_card_id');
                     }
-                }else{
-                    if($SecurityRoleFunctionsTableGenerateAllData >= 1){//POCOR-7131 change in if condition
+    
+                    $ReportCardsData = $this->ReportCards
+                                        ->find()
+                                        ->where([
+                                            $this->ReportCards->aliasField('id') => $reportCardId])
+                                        ->first();
+    
+    
+                    if (!empty($ReportCardsData->generate_start_date)) {
+                        $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
+                    }
+    
+                    if (!empty($ReportCardsData->generate_end_date)) {
+                        $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
+                    }
+                    $date = Time::now()->format('Y-m-d');
+    
+                    if ($this->AccessControl->isAdmin()) {
                         if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
                             $extra['toolbarButtons']['generateAll'] = $generateButton;
                         } else { 
@@ -783,47 +775,269 @@ class ReportCardStatusesTable extends ControllerActionTable
                             $generateButton['url'] = 'javascript:void(0)';
                             $extra['toolbarButtons']['generateAll'] = $generateButton;
                         }
-                    }   
+                    }else{
+                        if($SecurityRoleFunctionsTableGenerateAllData >= 1){
+                            if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
+                                $extra['toolbarButtons']['generateAll'] = $generateButton;
+                            } else { 
+                                $generateButton['attr']['data-html'] = true;
+                                $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('ReportCardStatuses.date_closed'));
+                                $generateButton['url'] = 'javascript:void(0)';
+                                $extra['toolbarButtons']['generateAll'] = $generateButton;
+                            }
+                        }   
+                    }
+    
+                    // Publish all button
+                    if ($generatedCount > 0) {
+                        $publishButton['url'] = $this->setQueryString($this->url('publishAll'), $params);
+                        $publishButton['type'] = 'button';
+                        $publishButton['label'] = '<i class="fa kd-publish"></i>';
+                        $publishButton['attr'] = $toolbarAttr;
+                        $publishButton['attr']['title'] = __('Publish All');
+                        $extra['toolbarButtons']['publishAll'] = $publishButton;
+                    }
+                    // Unpublish all button
+                    if ($publishedCount > 0) {
+                        $unpublishButton['url'] = $this->setQueryString($this->url('unpublishAll'), $params);
+                        $unpublishButton['type'] = 'button';
+                        $unpublishButton['label'] = '<i class="fa kd-unpublish"></i>';
+                        $unpublishButton['attr'] = $toolbarAttr;
+                        $unpublishButton['attr']['title'] = __('Unpublish All');
+                        $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
+                    }
+                    // Email all pdf button is published
+                    if ($publishedCount > 0) {
+                        $emailButton['url'] = $this->setQueryString($this->url('emailAllPdf'), $params);
+                        $emailButton['type'] = 'button';
+                        $emailButton['label'] = '<i class="fa fa-envelope"></i>';
+                        $emailButton['attr'] = $toolbarAttr;
+                        $emailButton['attr']['title'] = __('Email All PDF');
+                        $extra['toolbarButtons']['emailAllPdf'] = $emailButton;
+                    }
+                    // Email all excel button is published
+                    if ($publishedCount > 0) {
+                        $emailExcelButton['url'] = $this->setQueryString($this->url('emailAllExcel'), $params);
+                        $emailExcelButton['type'] = 'button';
+                        $emailExcelButton['label'] = '<i class="fa fa-envelope"></i>';
+                        $emailExcelButton['attr'] = $toolbarAttr;
+                        $emailExcelButton['attr']['title'] = __('Email All Excel');
+                        $extra['toolbarButtons']['emailAllExcel'] = $emailExcelButton;
+                    }
                 }
-
-                // Publish all button
-                if ($generatedCount > 0) {
-                    $publishButton['url'] = $this->setQueryString($this->url('publishAll'), $params);
-                    $publishButton['type'] = 'button';
-                    $publishButton['label'] = '<i class="fa kd-publish"></i>';
-                    $publishButton['attr'] = $toolbarAttr;
-                    $publishButton['attr']['title'] = __('Publish All');
-                    $extra['toolbarButtons']['publishAll'] = $publishButton;
-                }
-                // Unpublish all button
-                if ($publishedCount > 0) {
-                    $unpublishButton['url'] = $this->setQueryString($this->url('unpublishAll'), $params);
-                    $unpublishButton['type'] = 'button';
-                    $unpublishButton['label'] = '<i class="fa kd-unpublish"></i>';
-                    $unpublishButton['attr'] = $toolbarAttr;
-                    $unpublishButton['attr']['title'] = __('Unpublish All');
-                    $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
-                }
-                // Email all pdf button is published
-                if ($publishedCount > 0) {
-                    $emailButton['url'] = $this->setQueryString($this->url('emailAllPdf'), $params);
-                    $emailButton['type'] = 'button';
-                    $emailButton['label'] = '<i class="fa fa-envelope"></i>';
-                    $emailButton['attr'] = $toolbarAttr;
-                    $emailButton['attr']['title'] = __('Email All PDF');
-                    $extra['toolbarButtons']['emailAllPdf'] = $emailButton;
-                }
-                // Email all excel button is published
-                if ($publishedCount > 0) {
-                    $emailExcelButton['url'] = $this->setQueryString($this->url('emailAllExcel'), $params);
-                    $emailExcelButton['type'] = 'button';
-                    $emailExcelButton['label'] = '<i class="fa fa-envelope"></i>';
-                    $emailExcelButton['attr'] = $toolbarAttr;
-                    $emailExcelButton['attr']['title'] = __('Email All Excel');
-                    $extra['toolbarButtons']['emailAllExcel'] = $emailExcelButton;
+            }
+        }else{ //POCOR-7163 :: End here and condition same for other users 
+            if (!is_null($reportCardId) && !is_null($classId) && !empty($securityRoleIds)) { //POCOR-7148 check empty condition for securityRoleIds
+                $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
+                $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->primaryKey() => $classId]);
+                // only show toolbar buttons if request for report card and class is valid
+                if ($existingReportCard && $existingClass) {
+                    $generatedCount = 0;
+                    $publishedCount = 0;
+                    // count statuses to determine which buttons are shown
+                    foreach($data as $student) {
+                        if ($student->has('report_card_status')) {
+                            if ($student->report_card_status == self::GENERATED) {
+                                $generatedCount += 1;
+                            } else if ($student->report_card_status == self::PUBLISHED) {
+                                $publishedCount += 1;
+                            }
+                        }
+                    }
+    
+                    $toolbarAttr = [
+                        'class' => 'btn btn-xs btn-default',
+                        'data-toggle' => 'tooltip',
+                        'data-placement' => 'bottom',
+                        'escape' => false
+                    ];
+    
+                    $params = [
+                        'institution_id' => $this->Session->read('Institution.Institutions.id'),
+                        'institution_class_id' => $classId,
+                        'report_card_id' => $reportCardId
+                    ];
+    
+                    //POCOR-6838: Start
+                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                    $SecurityFunctionsAllExcelData = $SecurityFunctions
+                                        ->find()
+                                        ->where([
+                                            $SecurityFunctions->aliasField('name') => 'Download All Excel'])
+                                        ->first();
+    
+                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                    $SecurityRoleFunctionsTableAllExcelData = $SecurityRoleFunctionsTable
+                                        ->find()
+                                        ->where([
+                                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsAllExcelData->id,
+                                            $SecurityRoleFunctionsTable->aliasField('_execute') => 1,//POCOR-7131
+                                            $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds//POCOR-7131
+                                        ])
+                                        ->count();//POCOR-7131
+    
+                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                    $SecurityFunctionsAllPdfData = $SecurityFunctions
+                                        ->find()
+                                        ->where([
+                                            $SecurityFunctions->aliasField('name') => 'Download All Pdf'])
+                                        ->first();
+    
+                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                    $SecurityRoleFunctionsTableAllPdfData = $SecurityRoleFunctionsTable
+                                        ->find()
+                                        ->where([
+                                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsAllPdfData->id,
+                                            $SecurityRoleFunctionsTable->aliasField('_execute') => 1,//POCOR-7131
+                                            $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])//POCOR-7131
+                                        ->count();//POCOR-7131
+    
+                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                    $SecurityFunctionsGenerateAllData = $SecurityFunctions
+                                        ->find()
+                                        ->where([
+                                            $SecurityFunctions->aliasField('name') => 'Generate All'])
+                                        ->first();
+                    
+                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                    $SecurityRoleFunctionsTableGenerateAllData = $SecurityRoleFunctionsTable
+                                        ->find()
+                                        ->where([
+                                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateAllData->id,
+                                            $SecurityRoleFunctionsTable->aliasField('_execute') => 1,//POCOR-7131
+                                            $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])//POCOR-7131
+                                        ->count();//POCOR-7131
+                    //POCOR-6838: End
+                    // Download all button
+                     if ($generatedCount > 0 || $publishedCount > 0) {
+                        if ($this->AccessControl->isAdmin()) {
+                            $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
+                            $downloadButtonPdf['type'] = 'button';
+                            $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                            $downloadButtonPdf['attr'] = $toolbarAttr;
+                            $downloadButtonPdf['attr']['title'] = __('Download All PDF');
+                            $extra['toolbarButtons']['downloadAllPdf'] = $downloadButtonPdf;
+                        }else{
+                            if($SecurityRoleFunctionsTableAllPdfData >= 1){//POCOR-7131 change in if condition
+                                $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
+                                $downloadButtonPdf['type'] = 'button';
+                                $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                                $downloadButtonPdf['attr'] = $toolbarAttr;
+                                $downloadButtonPdf['attr']['title'] = __('Download All PDF');
+                                $extra['toolbarButtons']['downloadAllPdf'] = $downloadButtonPdf;
+                            }
+                        }
+                    }
+                    if ($generatedCount > 0 || $publishedCount > 0) {
+                        if ($this->AccessControl->isAdmin()) {
+                            $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
+                            $downloadButton['type'] = 'button';
+                            $downloadButton['label'] = '<i class="fa kd-download"></i>';
+                            $downloadButton['attr'] = $toolbarAttr;
+                            $downloadButton['attr']['title'] = __('Download All Excel');
+                            $extra['toolbarButtons']['downloadAll'] = $downloadButton;
+                        }else{
+                            if($SecurityRoleFunctionsTableAllExcelData >= 1){//POCOR-7131 change in if condition
+                                $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
+                                $downloadButton['type'] = 'button';
+                                $downloadButton['label'] = '<i class="fa kd-download"></i>';
+                                $downloadButton['attr'] = $toolbarAttr;
+                                $downloadButton['attr']['title'] = __('Download All Excel');
+                                $extra['toolbarButtons']['downloadAll'] = $downloadButton;
+                            }
+                        }
+                    }
+    
+                    // Generate all button
+                    $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
+                    $generateButton['type'] = 'button';
+                    $generateButton['label'] = '<i class="fa fa-refresh"></i>';
+                    $generateButton['attr'] = $toolbarAttr;
+                    $generateButton['attr']['title'] = __('Generate All');
+                    //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
+                    if (!is_null($this->request->query('report_card_id'))) {
+                        $reportCardId = $this->request->query('report_card_id');
+                    }
+    
+                    $ReportCardsData = $this->ReportCards
+                                        ->find()
+                                        ->where([
+                                            $this->ReportCards->aliasField('id') => $reportCardId])
+                                        ->first();
+    
+    
+                    if (!empty($ReportCardsData->generate_start_date)) {
+                        $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
+                    }
+    
+                    if (!empty($ReportCardsData->generate_end_date)) {
+                        $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
+                    }
+                    $date = Time::now()->format('Y-m-d');
+    
+                    if ($this->AccessControl->isAdmin()) {
+                        if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
+                            $extra['toolbarButtons']['generateAll'] = $generateButton;
+                        } else { 
+                            $generateButton['attr']['data-html'] = true;
+                            $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('ReportCardStatuses.date_closed'));
+                            $generateButton['url'] = 'javascript:void(0)';
+                            $extra['toolbarButtons']['generateAll'] = $generateButton;
+                        }
+                    }else{
+                        if($SecurityRoleFunctionsTableGenerateAllData >= 1){//POCOR-7131 change in if condition
+                            if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
+                                $extra['toolbarButtons']['generateAll'] = $generateButton;
+                            } else { 
+                                $generateButton['attr']['data-html'] = true;
+                                $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('ReportCardStatuses.date_closed'));
+                                $generateButton['url'] = 'javascript:void(0)';
+                                $extra['toolbarButtons']['generateAll'] = $generateButton;
+                            }
+                        }   
+                    }
+    
+                    // Publish all button
+                    if ($generatedCount > 0) {
+                        $publishButton['url'] = $this->setQueryString($this->url('publishAll'), $params);
+                        $publishButton['type'] = 'button';
+                        $publishButton['label'] = '<i class="fa kd-publish"></i>';
+                        $publishButton['attr'] = $toolbarAttr;
+                        $publishButton['attr']['title'] = __('Publish All');
+                        $extra['toolbarButtons']['publishAll'] = $publishButton;
+                    }
+                    // Unpublish all button
+                    if ($publishedCount > 0) {
+                        $unpublishButton['url'] = $this->setQueryString($this->url('unpublishAll'), $params);
+                        $unpublishButton['type'] = 'button';
+                        $unpublishButton['label'] = '<i class="fa kd-unpublish"></i>';
+                        $unpublishButton['attr'] = $toolbarAttr;
+                        $unpublishButton['attr']['title'] = __('Unpublish All');
+                        $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
+                    }
+                    // Email all pdf button is published
+                    if ($publishedCount > 0) {
+                        $emailButton['url'] = $this->setQueryString($this->url('emailAllPdf'), $params);
+                        $emailButton['type'] = 'button';
+                        $emailButton['label'] = '<i class="fa fa-envelope"></i>';
+                        $emailButton['attr'] = $toolbarAttr;
+                        $emailButton['attr']['title'] = __('Email All PDF');
+                        $extra['toolbarButtons']['emailAllPdf'] = $emailButton;
+                    }
+                    // Email all excel button is published
+                    if ($publishedCount > 0) {
+                        $emailExcelButton['url'] = $this->setQueryString($this->url('emailAllExcel'), $params);
+                        $emailExcelButton['type'] = 'button';
+                        $emailExcelButton['label'] = '<i class="fa fa-envelope"></i>';
+                        $emailExcelButton['attr'] = $toolbarAttr;
+                        $emailExcelButton['attr']['title'] = __('Email All Excel');
+                        $extra['toolbarButtons']['emailAllExcel'] = $emailExcelButton;
+                    }
                 }
             }
         }
+        
+        
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
@@ -887,26 +1101,56 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function onGetStartedOn(Event $event, Entity $entity)
     {
+        //START: POCOR-6716
+        // if ($entity->has('report_card_started_on')) {
+        //     $startedOnValue = new Time($entity->report_card_started_on);
+        //     $value = $this->formatDateTime($startedOnValue);
+        // }
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemTable
+                            ->find()
+                            ->select(['zonevalue' => 'ConfigItems.value'])
+                            ->where([
+                                $ConfigItemTable->aliasField('name') => 'Time Zone'
+                                   ])
+                            ->first();
+        $timZone = $ConfigItem->zonevalue;
         $value = '';
-
         if ($entity->has('report_card_started_on')) {
-            $startedOnValue = new Time($entity->report_card_started_on);
-            $value = $this->formatDateTime($startedOnValue);
+            $date = new DateTime($entity->report_card_started_on, new DateTimeZone($timZone));
+            $date->setTimezone(new DateTimeZone($timZone));
+            $value = $date->format('F d, Y h:i:s');
         }
 
         return $value;
+        //END: POCOR-6716
     }
 
     public function onGetCompletedOn(Event $event, Entity $entity)
     {
+        //START: POCOR-6716
+        // if ($entity->has('report_card_completed_on')) {
+        //     $completedOnValue = new Time($entity->report_card_completed_on);
+        //     $value = $this->formatDateTime($completedOnValue);
+        // }
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem =   $ConfigItemTable
+                            ->find()
+                            ->select(['zonevalue' => 'ConfigItems.value'])
+                            ->where([
+                                $ConfigItemTable->aliasField('name') => 'Time Zone'
+                                   ])
+                            ->first();
+        $timZone = $ConfigItem->zonevalue;
         $value = '';
-
         if ($entity->has('report_card_completed_on')) {
-            $completedOnValue = new Time($entity->report_card_completed_on);
-            $value = $this->formatDateTime($completedOnValue);
+            $date = new DateTime($entity->report_card_completed_on, new DateTimeZone($timZone));
+            $date->setTimezone(new DateTimeZone($timZone));
+            $value = $date->format('F d, Y h:i:s');
         }
 
         return $value;
+        //END: POCOR-6716
     }
 
     public function onGetReportQueue(Event $event, Entity $entity)

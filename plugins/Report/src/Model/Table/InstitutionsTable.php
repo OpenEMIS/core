@@ -328,6 +328,23 @@ class InstitutionsTable extends AppTable
                 case 'Report.StaffTransfers':
                 case 'Report.SpecialNeedsFacilities':
                 case 'Report.InstitutionCommittees':
+            //Start:POCOR-4570
+                case 'Report.Uis':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'format';
+                case 'Report.Uis2':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'format';
+                case 'Report.Uis3':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'format';
+                case 'Report.Uis4':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'format';
+                case 'Report.Uis5':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'format';    
+                    //END:POCOR-4570
 
                 case 'Report.InstitutionPositionsSummaries': //POCOR-6952
                     $fieldsOrder[] = 'academic_period_id';
@@ -852,6 +869,13 @@ class InstitutionsTable extends AppTable
                              'Report.Guardians',
                              'Report.SpecialNeedsFacilities',
                              'Report.InfrastructureNeeds',
+                             //Start:POCOR-4570
+                             'Report.Uis',
+                             'Report.Uis2',
+                             'Report.Uis3',
+                             'Report.Uis4',
+                             'Report.Uis5',
+                             //END:POCOR-4570
                              'Report.InstitutionPositionsSummaries'
 
 
