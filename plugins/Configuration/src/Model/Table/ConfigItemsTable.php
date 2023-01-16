@@ -239,12 +239,15 @@ class ConfigItemsTable extends AppTable
 
     public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
     {
-        if (in_array($action, ['edit', 'add'])) {
+
+        if (in_array($action, ['edit', 'add','index'])) {
             $pass = $request->param('pass');
-            if (!empty($pass)) {
-                $ids = $this->paramsDecode($pass[0]);
-                $entity = $this->get($ids);
+           // echo "<pre>";print_r($pass); die;
+            // if (!empty($pass)) {
+            //     $ids = $this->paramsDecode($pass[0]);
+            //     $entity = $this->get($ids);
                 if ($entity->field_type == 'Dropdown') {
+                    echo "<pre>";print_r('huuuu'); die;
                     $exp = explode(':', $entity->option_type);
                     /**
                      * if options list is from a specific table
@@ -290,7 +293,15 @@ class ConfigItemsTable extends AppTable
                     if (isset($this->request->data[$this->alias()]['value'])) {
                         $attr['onChangeReload'] = true;
                     }
+                    $tooltipMessage  = "Ehteram";
+                    $attr['attr']['label']['text'] = __('Decimal Place') .
+                        ' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' .
+                        $tooltipMessage .
+                        '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+                    $attr['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
+                    $attr['attr']['label']['class'] = 'tooltip-desc'; //css class for label
                 } else {
+                    //echo "<pre>";print_r('hfeewfuuuu'); die;
                     if ($entity->code == 'start_time') {
                         $attr['type'] = 'time';
                     } else if ($entity->code == 'hours_per_day' || $entity->code == 'days_per_week') {
@@ -336,8 +347,23 @@ class ConfigItemsTable extends AppTable
                     else if ($entity->code == 'date_time_format') {
                         $attr['type'] = 'date';
                     }
+                        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+                        $typeList = $ConfigItem
+                        ->find('all', [
+                        ])
+                        ->order('label')
+                        ->where([$ConfigItem->aliasField('visible') => 1])
+                        ->toArray();
+                        //echo "<pre>";print_r($typeList); die;
+                    $tooltipMessage  = "adfad";
+                    $attr['attr']['label']['text'] = __('Decimal Place') .
+                        ' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' .
+                        $tooltipMessage .
+                        '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+                    $attr['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
+                    $attr['attr']['label']['class'] = 'tooltip-desc'; //css class for label
                 }
-            }
+            //}
         }
         return $attr;
     }
