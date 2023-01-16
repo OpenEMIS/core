@@ -371,7 +371,7 @@ class PositionsTable extends ControllerActionTable {
        $institutionStaff = TableRegistry::get('institution_staff');
        $staffId=$institutionStaff->find()->select(['staff_id'])->where(['id' =>$entity->id])->first();
        $staff_id=$staffId['staff_id']; 
-
+       $institutaionStaffid = $entity->id; //POCOR-7185
        $institutionShifts = TableRegistry::get('institution_shifts');
        $InstitutionStaff = TableRegistry::get('institution_staff');
        $ShiftOptions = TableRegistry::get('shift_options'); 
@@ -386,10 +386,16 @@ class PositionsTable extends ControllerActionTable {
                 ->leftJoin([$ShiftOptions->alias() => $ShiftOptions->table()],[
                     $ShiftOptions->aliasField('id = ') . $InstitutionPositions->aliasField('shift_id')
                 ])
-                ->where([$InstitutionStaff->aliasField('staff_id') => $staff_id])
+                ->where([$InstitutionStaff->aliasField('staff_id')=> $staff_id,$InstitutionStaff->aliasField('id')=> $institutaionStaffid])
+                ->group([$InstitutionPositions->aliasField('shift_id')])
                 ->first();
-       $shift = $res->name;
-       return $shift; 
+        $shift = ''; 
+        if(empty($res->name)){ //POCOR-7185
+            $shift = 'NA';
+        }else{
+            $shift = $res->name;
+        }
+        return $shift; 
        //POCOR-7109, POCOR-6917 code change due to change column name
 
        //POCOR-7109,6917 code change due to change column name
