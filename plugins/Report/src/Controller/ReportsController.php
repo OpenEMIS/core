@@ -30,6 +30,7 @@ class ReportsController extends AppController
             'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
             'Audits' => ['className' => 'Report.Audits', 'actions' => ['index', 'add']],
             'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
+            'UisStatistics'	=> ['className' => 'Report.UisStatistics', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']],
             'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']]
         ];
@@ -102,7 +103,14 @@ class ReportsController extends AppController
                 'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report'),
                 'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
                 'Report.Income' => __('Income Report'),
-                'Report.Expenditure' => __('Expenditure Report')
+                'Report.Expenditure' => __('Expenditure Report'),
+                //Start:POCOR-4570
+                'Report.Uis' => __('UIS-A2&A9'),
+                'Report.Uis2' => __('UIS-A3,A5&A6'),
+                'Report.Uis3' => __('UIS-A10(1)'),
+                'Report.Uis4' => __('UIS-A10(2)'),
+                'Report.Uis5' => __('UIS-A13'),
+                //END:POCOR-4570
             ];
         } elseif ($module == 'Students') {
             $options = [
@@ -202,11 +210,27 @@ class ReportsController extends AppController
                 'Report.NotRegisteredStudents' => __('Not Registered Students'),
                 'Report.ExaminationResults' => __('Examination Results'),
             ];
-        } elseif ($module == 'Workflows') {
+        } elseif ($module == 'UisStatistics') {
             $options = [
-                'Report.WorkflowRecords' => __('Workflow Records')
+                'Report.Uis2' => __('UIS-A2'),
+                'Report.Uis3' => __('UIS-A3'),
+                
+                
+                
+                'Report.Uis5' => __('UIS-A5'),
+                'Report.Uis6' => __('UIS-A6'),
+
+                'Report.Uis9' => __('UIS-A9'),
+                'Report.Uis10' => __('UIS-A10(1)'),
+
+                'Report.Uis102' => __('UIS-A10(2)'),
+                'Report.Uis13' => __('UIS-A13'),
             ];
-        } /*POCOR-6513 starts - added feature's option for Performance report*/
+        } elseif ($module == 'Workflows') {
+        $options = [
+            'Report.WorkflowRecords' => __('Workflow Records')
+        ];
+    } /*POCOR-6513 starts - added feature's option for Performance report*/
         elseif ($module == 'Performance') {
             $options = [
                 'Report.Performance' => __('Assessment Missing Mark Entry')
