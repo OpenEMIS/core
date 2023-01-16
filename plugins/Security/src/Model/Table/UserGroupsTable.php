@@ -506,74 +506,82 @@ class UserGroupsTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $SecurityGroupId = $this->paramsDecode($this->request->params['pass'][1]);
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-                return $results->map(function ($row){
-                    $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-
-                    $institution = TableRegistry::get('institutions');
-                    $SecurityGroupInstitutionsData = $SecurityGroupInstitutions->find()
-                    // ->contain(['Institutions'])
-                    ->select([
-                         $institution->aliasField('id')
-                     ])
-                    ->leftJoin([$institution->alias() => $institution->table()],[
-                        $SecurityGroupInstitutions->aliasField('institution_id = ').$institution->aliasField('id')
-                    ])
-                    ->where([$SecurityGroupInstitutions->aliasField('security_group_id')=>$row->id])
-                    ->toArray();
-
-
-                    if(!empty($SecurityGroupInstitutionsData)){
-                        foreach($SecurityGroupInstitutionsData AS $institutionData){
-                            $institutionArr[] = $institutionData->institutions['id'];
-                        }
-
-                        $Institutions = TableRegistry::get('Institution.Institutions');
-                        $InstitutionsResult = $Institutions
+        //POCOR-7187[START]
+        $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        $SecurityGroupInstitutionsData = $SecurityGroupInstitutions
                             ->find()
-                            ->where(['id IN' => $institutionArr])
-                            ->all();
+                            ->where(['security_group_id' => $query->toArray()[0]->id])
+                            ->first();
+        if(!empty($SecurityGroupInstitutionsData)){ //POCOR-7187[END]
+            $SecurityGroupId = $this->paramsDecode($this->request->params['pass'][1]);
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                    return $results->map(function ($row){
+                        $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
 
-                        foreach($InstitutionsResult AS $InstitutionsResultData){
-                            $InstitutionsData[] =  $InstitutionsResultData;
-                        }
-                    $row['institution_id'] = $InstitutionsData;
-                    
-                    $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-                    $areas = TableRegistry::get('areas');
+                        $institution = TableRegistry::get('institutions');
+                        $SecurityGroupInstitutionsData = $SecurityGroupInstitutions->find()
+                        // ->contain(['Institutions'])
+                        ->select([
+                            $institution->aliasField('id')
+                        ])
+                        ->leftJoin([$institution->alias() => $institution->table()],[
+                            $SecurityGroupInstitutions->aliasField('institution_id = ').$institution->aliasField('id')
+                        ])
+                        ->where([$SecurityGroupInstitutions->aliasField('security_group_id')=>$row->id])
+                        ->toArray();
 
-                    $SecurityGroupAreasData = $SecurityGroupAreas->find()
-                    ->select([
-                         $areas->aliasField('id')
-                     ])
-                    ->leftJoin([$areas->alias() => $areas->table()],[
-                        $SecurityGroupAreas->aliasField('area_id = ').$areas->aliasField('id')
-                    ])
-                    ->where([$SecurityGroupAreas->aliasField('security_group_id')=>$row->id])
-                    ->toArray();
-                    if ($SecurityGroupAreasData) {
-                    foreach($SecurityGroupAreasData AS $AreaData){
-                                $areaArr[] = $AreaData->areas['id'];
+
+                        if(!empty($SecurityGroupInstitutionsData)){
+                            foreach($SecurityGroupInstitutionsData AS $institutionData){
+                                $institutionArr[] = $institutionData->institutions['id'];
                             }
-                    $Areas = TableRegistry::get('Area.Areas');
 
-                    $AreasResult = $Areas
+                            $Institutions = TableRegistry::get('Institution.Institutions');
+                            $InstitutionsResult = $Institutions
                                 ->find()
-                                ->where(['id IN' => $areaArr])
+                                ->where(['id IN' => $institutionArr])
                                 ->all();
 
-                    foreach($AreasResult AS $AreaResultData){
-                                $AreaDataVal[] =  $AreaResultData;
+                            foreach($InstitutionsResult AS $InstitutionsResultData){
+                                $InstitutionsData[] =  $InstitutionsResultData;
                             }
+                        $row['institution_id'] = $InstitutionsData;
+                        
+                        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+                        $areas = TableRegistry::get('areas');
 
-                            $row['area_id'] = $AreaDataVal;
+                        $SecurityGroupAreasData = $SecurityGroupAreas->find()
+                        ->select([
+                            $areas->aliasField('id')
+                        ])
+                        ->leftJoin([$areas->alias() => $areas->table()],[
+                            $SecurityGroupAreas->aliasField('area_id = ').$areas->aliasField('id')
+                        ])
+                        ->where([$SecurityGroupAreas->aliasField('security_group_id')=>$row->id])
+                        ->toArray();
+                        if ($SecurityGroupAreasData) {
+                        foreach($SecurityGroupAreasData AS $AreaData){
+                                    $areaArr[] = $AreaData->areas['id'];
+                                }
+                        $Areas = TableRegistry::get('Area.Areas');
+
+                        $AreasResult = $Areas
+                                    ->find()
+                                    ->where(['id IN' => $areaArr])
+                                    ->all();
+
+                        foreach($AreasResult AS $AreaResultData){
+                                    $AreaDataVal[] =  $AreaResultData;
+                                }
+
+                                $row['area_id'] = $AreaDataVal;
+                        }
+                        return $row ;
                     }
-                    return $row ;
-                }
 
-                });
-            });    
+                    });
+                });  
+        }  
     }
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $extra)
