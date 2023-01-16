@@ -1298,7 +1298,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
                             ->leftJoin([$ShiftOptions->alias() => $ShiftOptions->table()],[
                                 $ShiftOptions->aliasField('id = ') . $InstitutionPositions->aliasField('shift_id')
                             ])
-                            ->where([$InstitutionStaff->aliasField('staff_id') => $entity->staff_id])
+                            ->where([$InstitutionStaff->aliasField('staff_id') => $entity->staff_id,
+                                    $InstitutionPositions->aliasField('id') => $entity->institution_position_id])
                             ->first();
                     $shifts = '';
                     if (!empty($staffShifts)) {
