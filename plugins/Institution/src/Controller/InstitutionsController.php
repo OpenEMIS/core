@@ -5804,15 +5804,6 @@ class InstitutionsController extends AppController
                                                 $InstitutionPositions->aliasField('id') => $institutionPositionId,
                                             ])
                                             ->first();
-                    //POCOR-7188[START]
-                    $staffPositionTitles = TableRegistry::get('staff_position_titles');
-                    $staffPositionTitlesTbl = $staffPositionTitles->find()
-                                            ->where([
-                                                $staffPositionTitles->aliasField('id') => $InstitutionPositionsTbl->staff_position_title_id,
-                                            ])
-                                            ->first();
-                    //POCOR-7188[END]
-
 
                     $SecurityGroupUsers = TableRegistry::get('security_group_users');
                     if(!empty($InstitutionPositionsTbl)){
@@ -5838,7 +5829,7 @@ class InstitutionsController extends AppController
                                     'id' => Text::uuid(),
                                     'security_group_id' =>$institutionsSecurityGroupId->security_group_id, // $institutionId POCOR-7182
                                     'security_user_id' => $staffId,
-                                    'security_role_id' => $staffPositionTitlesTbl->security_role_id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
+                                    'security_role_id' => $roleval->id,
                                     'created_user_id' => $userId,
                                     'created' => date('Y-m-d H:i:s')
                                 ];
@@ -6123,15 +6114,6 @@ class InstitutionsController extends AppController
                                                     $InstitutionPositions->aliasField('id') => $institutionPositionId,
                                                 ])
                                                 ->first();
-                        
-                        //POCOR-7188[START]
-                        $staffPositionTitles = TableRegistry::get('staff_position_titles');
-                        $staffPositionTitlesTbl = $staffPositionTitles->find()
-                                                ->where([
-                                                    $staffPositionTitles->aliasField('id') => $InstitutionPositionsTbl->staff_position_title_id,
-                                                ])
-                                                ->first();
-                        //POCOR-7188[END]
 
                         $SecurityGroupUsers = TableRegistry::get('security_group_users');
                         if(!empty($InstitutionPositionsTbl)){
@@ -6157,7 +6139,7 @@ class InstitutionsController extends AppController
                                         'id' => Text::uuid(),
                                         'security_group_id' => $institutionsSecurityGroupId->security_group_id,// $institutionId POCOR-7182
                                         'security_user_id' => $user_record_id,
-                                        'security_role_id' => $staffPositionTitlesTbl->security_role_id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
+                                        'security_role_id' => $roleval->id,
                                         'created_user_id' => $userId,
                                         'created' => date('Y-m-d H:i:s')
                                     ];
