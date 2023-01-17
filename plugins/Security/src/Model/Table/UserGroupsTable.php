@@ -268,6 +268,29 @@ class UserGroupsTable extends ControllerActionTable
         return (!empty($AreaDataVal))? implode(', ', $AreaDataVal): 'All area';
     }
 
+    /*
+    * Function to show institution name on view page
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return string
+    * @ticket POCOR-7187
+    */
+
+    public function onGetInstitutionId(Event $event, Entity $entity)
+    {
+        $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $SecurityGroupInstitutionsData = $SecurityGroupInstitutions
+                            ->find()
+                            ->where(['security_group_id' => $entity->id])
+                            ->first();
+        $InstitutionsTableData = $InstitutionsTable
+                            ->find()
+                            ->where(['id' => $SecurityGroupInstitutionsData->institution_id])
+                            ->first();
+        return isset($InstitutionsTableData->name) ? $InstitutionsTableData->name : '';
+    }
+
+
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
             if($action == 'add'){
