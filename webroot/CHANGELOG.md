@@ -1,7 +1,8 @@
 ### [3.77.6] - 2023-01-17
-- Bug Fixed : Institutions > Performance > Student Report Cards: Report card are still showing
-- Bug Fixed : Institution > Attendance > Staff page: All users are not showing in the Institution > Attendance > Staff page list even though there are shifts assigned to them.
-- Bug Fixed : Administration > Security > Group > User Groups page: A 404 error is showing when clicking/editing some users groups
+- Bug Fixed: Institutions > Performance > Student Report Cards: Report card are still showing
+- Bug Fixed: Institution > Attendance > Staff page: All users are not showing in the Institution > Attendance > Staff page list even though there are shifts assigned to them.
+- Bug Fixed: Administration > Security > Group > User Groups page: A 404 error is showing when clicking/editing some users groups
+- Bug Fixed: Institutions>Staff>Add: When adding staff as Principal, the security role of Principal is not given
 
 ### [3.77.5] - 2023-01-13
 - Bug Fixed : Institutions>Staff>Add: User added in the wrong security group
