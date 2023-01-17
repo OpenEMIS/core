@@ -480,11 +480,25 @@ class StaffUserTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity)
     {
+        //POCOR-5070:Start
+        if($entity->id){
+            $staff = TableRegistry::get('Institution.Staff');
+            $staffIsHomeroom = $staff->find('all',['conditions'=>['staff_id'=>$entity->id]])->first();
+            $entity->is_homeroom =$staffIsHomeroom->is_homeroom;
+        }
+        //POCOR-5070:end
         $this->Session->write('Staff.Staff.id', $entity->id);
         $this->Session->write('Staff.Staff.name', $entity->name);
         $this->setupTabElements($entity);
 
         $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
+        //POCOR-5070:start
+        $this->field('is_homeroom',[
+            'type'=>'select'
+        ]);
+        $this->fields['is_homeroom']['options'] = [0=>'No',1=>'Yes'];
+        $this->fields['is_homeroom']['value'] = $entity->is_homeroom;
+        //POCOR-5070:end
 
         $this->fields['nationality_id']['type'] = 'readonly';
         $this->fields['nationality_id']['attr']['value'] = $entity->has('main_nationality') ? $entity->main_nationality->name : '';
@@ -492,9 +506,27 @@ class StaffUserTable extends ControllerActionTable
         $this->fields['identity_type_id']['type'] = 'readonly';
         $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
     }
-
+    //POCOR-5070:Start
+    public function onGetIsHomeroom(Event $event, Entity $entity)
+    {
+        return ($entity->is_homeroom) ? __('Yes') : __('No');
+    }
+    public function addAfterAction(Event $event, Entity $entity)
+    {
+        $this->field('is_homeroom',[
+            'type'=>'select'
+        ]);
+        $this->fields['is_homeroom']['options'] = [0=>'No',1=>'Yes'];
+    }
+    //POCOR-5070:end
     public function editAfterSave(Event $event, Entity $entity)
     {
+        //POCOR-5070:start
+        $staffT = TableRegistry::get('institution_staff');
+        $entityData = $staffT->find('all',['conditions'=>['staff_id'=>$entity->id]])->first();
+        $entityData->is_homeroom = $entity->is_homeroom;
+        $saveData = $staffT->save($entityData);
+        //POCOR-5070:end
         if ($this->action == 'edit') {
             $staff = TableRegistry::get('Institution.Staff');
             $bodyData = $staff->find('all',
