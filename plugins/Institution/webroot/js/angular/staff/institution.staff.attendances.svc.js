@@ -339,9 +339,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             deferred.resolve(response.data.data);
         };
         
-        var shiftsAttendance =  Staff.find('StaffShiftsAttendance', 
+        /*var shiftsAttendance =  Staff.find('StaffShiftsAttendance', // comment in POCOR-7180
          {staff_id: staffId})
-                .ajax({success: successInstitutionShifts, defer: true});
+                .ajax({success: successInstitutionShifts, defer: true});*/
         
 		var ownEdit = params.context.ownEdit;
         var otherEdit = params.context.otherEdit;
