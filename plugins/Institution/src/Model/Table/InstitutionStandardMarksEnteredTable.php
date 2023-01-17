@@ -216,7 +216,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
             $this->aliasField('institution_classes_id')
         ]);
 
-        
+
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
             {
                 return $results->map(function ($row)
@@ -350,6 +350,41 @@ class InstitutionStandardMarksEnteredTable extends AppTable
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $institutions = TableRegistry::get('Institution.Institutions');
         $institutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+
+        // get subject id
+        $subject = $studentSubject->find()
+            ->innerJoin(
+                [$academicPeriod->alias() => $academicPeriod->table()],
+                [$academicPeriod->aliasField('id = ') . $studentSubject->aliasField('academic_period_id')])
+            ->innerJoin(
+                [$Assessments->alias() => $Assessments->table()],
+                [$Assessments->aliasField('education_grade_id = ') . $studentSubject->aliasField('education_grade_id'),
+                    $Assessments->aliasField('academic_period_id = ') . $academicPeriod->aliasField('id')
+                ])
+            ->innerJoin(
+                [$AssessmentPeriods->alias() => $AssessmentPeriods->table()],
+                [$AssessmentPeriods->aliasField('assessment_id = ') . $Assessments->aliasField('id')])
+            ->innerJoin(
+                [$institutions->alias() => $institutions->table()],
+                [$institutions->aliasField('id = ') . $studentSubject->aliasField('institution_id')])
+            ->select([
+                'subject_id' => $studentSubject->aliasField('education_subject_id')
+            ])
+            ->where([
+                $studentSubject->aliasField('academic_period_id') => $entity->academic_period_id,
+                $studentSubject->aliasField('institution_id') => $entity->institution_id,
+                $AssessmentPeriods->aliasField('id') => $entity->assessment_period_id,
+                $studentSubject->aliasField('student_status_id') => 1,
+                $studentSubject->aliasField('institution_class_id') => $entity->institution_classes_id,
+            ])->group([$studentSubject->aliasField('institution_class_id')]);
+
+        $subject_id = null;
+        if ($subject) {
+            foreach ($subject as $value) {
+                $subject_id = $value['subject_id'];
+            }
+        }
+
         $total = $studentSubject->find()
                 ->innerJoin(
                     [$academicPeriod->alias() => $academicPeriod->table()],
@@ -374,6 +409,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                             $studentSubject->aliasField('student_status_id')=>1,
                             $AssessmentPeriods->aliasField('id')=>$entity->assessment_period_id,
                             $studentSubject->aliasField('institution_class_id')=>$entity->institution_classes_id,
+                            $studentSubject->aliasField('education_subject_id')=>$subject_id,
                             ])
                         ->group([$studentSubject->aliasField('institution_id'),
                         $AssessmentPeriods->aliasField('id'),$AssessmentPeriods->aliasField('academic_term')])
@@ -401,6 +437,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                 $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id,
                 $assessmentType->aliasField('created_user_id')=>$entity->created_user_id,
                 $assessmentType->aliasField('institution_classes_id')=>$entity->institution_classes_id,
+                $assessmentType->aliasField('education_subject_id')=>$subject_id,
             ]);
         $totalMarksAdd = $assessmentType->find()
             ->select([
