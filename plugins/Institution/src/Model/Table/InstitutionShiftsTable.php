@@ -29,6 +29,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->belongsTo('LocationInstitutions', ['className' => 'Institution.LocationInstitutions']);
         $this->belongsTo('PreviousShifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'previous_shift_id']);
 
+        $this->hasMany('InstitutionShiftPeriods', ['className' => 'InstitutionShiftPeriods', 'foreignKey' => 'institution_shift_period_id']); //POCOR-5281
         $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_shift_id']);
         $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
         $this->addBehavior('OpenEmis.Autocomplete');
@@ -120,7 +121,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->field('previous_shift_id', ['visible' => 'false']);
 
         $this->setFieldOrder([
-            'academic_period_id', 'shift_option_id', 'start_time', 'end_time', 'institution_id', 'location_institution_id'
+            'academic_period_id', 'shift_option_id', 'start_time', 'end_time', 'institution_id', 'period','location_institution_id' //POCOR-5281
         ]);
     }
 
@@ -168,6 +169,20 @@ class InstitutionShiftsTable extends ControllerActionTable
         // return $buttons;
     }
 
+    //Start:POCOR-5281
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $InstitutionShiftsTable = TableRegistry::get('student_attendance_per_day_periods');
+        $shiftOptions = $InstitutionShiftsTable->find('list',['keyField' => 'id', 'valueField' => 'name']);
+        $this->field('period', [
+            'type' => 'chosenSelect',
+            'attr' => [
+                'label' => __('Period')
+            ]
+        ]);
+        $this->fields['period']['options'] = $shiftOptions;
+    }
+    //End:POCOR-5281
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
@@ -187,7 +202,23 @@ class InstitutionShiftsTable extends ControllerActionTable
 
         $this->setupFields($entity);
     }
+    //Start:POCOR-5281
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['InstitutionShiftPeriods']);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $arr =[];
+                foreach($row->institution_shift_periods as $key=> $period){
+                    $arr[$key] = ['id'=>$period['period_id']];
+                }
+                $row['period'] = $arr;
+                return $row;
+            });
+        });
 
+    }
+    //End:POCOR-5281
 /******************************************************************************************************************
 **
 ** view action methods
@@ -224,7 +255,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->field('previous_shift_id', ['visible' => 'false']);
 
         $this->setFieldOrder([
-            'academic_period_id', 'shift_option_id', 'start_time', 'end_time', 'institution_id', 'location_institution_id'
+            'academic_period_id', 'shift_option_id', 'start_time', 'end_time', 'institution_id', 'period','location_institution_id' //POCOR-5281
         ]);
     }
 
@@ -549,10 +580,30 @@ class InstitutionShiftsTable extends ControllerActionTable
                 $entity->location_institution_id = $this->request->data['InstitutionShifts']['institution_id'];
             }
         }//POCOR-6618 ends
+        
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+       //Start:POCOR-5281
+        $PeriodShiftTable = TableRegistry::get('institution_shift_periods');
+        if($this->request->params['pass'][0] == 'edit'){
+            $PeriodShiftData = $PeriodShiftTable->find()->where(['institution_shift_period_id'=>$entity->id])->toArray();
+            foreach($PeriodShiftData as $PeriodShiftDataEntity){
+                $deleteEntity = $PeriodShiftTable->delete($PeriodShiftDataEntity);
+            }
+        }
+        foreach($entity->period['_ids'] as $one){
+            $PeriodShiftEntity = [
+                'institution_shift_period_id' => $entity->id,
+                'period_id'=> $one
+            ];
+            $PeriodShift = $PeriodShiftTable->newEntity($PeriodShiftEntity);
+            if($PeriodShiftResult = $PeriodShiftTable->save($PeriodShift)){
+               
+            }
+        }
+        //End:POCOR-5281
         if ($this->AcademicPeriods->getCurrent() == $entity->academic_period_id) { //if the one that being added / edited is the current academic period
             // $owner = $entity->institution_id;
             // $occupier = $entity->location_institution_id;
@@ -922,8 +973,10 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->field('shift_option_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('start_time', ['type' => 'time']);
         $this->field('end_time', ['type' => 'time']);
+        $this->field('period'); //POCOR-5281
+        
         $this->field('location', [
-            'after' => 'end_time',
+            'after' => 'period', //POCOR-5281
             'visible' => [
                 'index' => false, 'view' => false, 'add' => true, 'edit' => true
             ],
@@ -935,6 +988,7 @@ class InstitutionShiftsTable extends ControllerActionTable
             'entity' => $entity
         ]);
         $this->field('previous_shift_id', ['visible' => 'false']);
+        
     }
 
     public function findShiftTime(Query $query, array $options)

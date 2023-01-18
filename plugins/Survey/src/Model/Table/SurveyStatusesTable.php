@@ -198,21 +198,7 @@ class SurveyStatusesTable extends ControllerActionTable
                                  'id' => $surveyDataVal['id'], //condition
                                 ] 
                             );
-                    }else{
-                        $surveyData = [
-                            'status_id' => 1,
-                            'academic_period_id' => $periodObj->id,
-                            'survey_form_id' => $surveyFormId,
-                            'institution_id' => $instId,
-                            'assignee_id' => 0,
-                            'created_user_id' => 1,
-                            'created' => new Time('NOW')
-                        ];
-                    
-    
-                        $surveyEntity = $InstitutionSurveys->newEntity($surveyData);
-                        $InstitutionSurveys->save($surveyEntity);
-                    }
+                    }//POCOR-7177 remove else part because its working wrong.
                     //POCOR-7005 end conditon change for update record
                 }
             }
