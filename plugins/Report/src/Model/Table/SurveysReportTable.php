@@ -369,8 +369,8 @@ class SurveysReportTable extends AppTable
         $SurveyRows = TableRegistry::get('survey_table_rows');
         $SurveyColumns = TableRegistry::get('survey_table_columns');
         $SurveyColumns = TableRegistry::get('survey_table_columns');
-        // $Areas = TableRegistry::get('areas');
-        // $AreaLevels = TableRegistry::get('area_levels');
+        $areas = TableRegistry::get('areas');
+        $areaLevels = TableRegistry::get('area_levels');
         $Areas = TableRegistry::get('AreaLevel.AreaLevels');
         $condition = [];
         // POCOR-6440 start
@@ -386,8 +386,8 @@ class SurveysReportTable extends AppTable
                     'code' => 'Institutions.code',
                     'area_code' => 'Areas.code',
                     'area_name' => 'Areas.name',
-                    'area_level_code' => 'Areas.code',
-                    'area_level_name' => 'Areas.name',
+                    'area_level_code' => $areaLevels->aliasField('level'),
+                    'area_level_name' => $areaLevels->aliasField('name'),
                     'survey_code' => $surveyForms->aliasField('code'),
                     'survey_name' => $surveyForms->aliasField('name'),
                     'survey_section' => $surveyFormsQuestion->aliasField('section'),
@@ -440,20 +440,24 @@ class SurveysReportTable extends AppTable
                 ->leftJoin(['Areas' => 'Areas'], [
                     'AreaLevels.id = Areas.area_level_id'
                 ])
+                ->innerJoin([$areaLevels->alias() => $areaLevels->table()],
+                [
+                    $areaLevels->aliasField('id') . ' = '. $areas->aliasField('area_level_id')
+                ])
                 ->contain([
                     'Institutions.Areas',
                     'Institutions.AreaAdministratives',
                     'Institutions.Statuses'
                 ])
-                //->distinct(['survey_question_name'])
+                ->group(['survey_question_name'])
                 ->where([$condition]);
                 print_r($query->sql()); die;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-        //$requestData = json_decode($settings['process']['params']);
-
+        
+        $requestData = json_decode($settings['process']['params']);
         // $institutionStatus = $requestData->institution_status;
 
         // To update to this code when upgrade server to PHP 5.5 and above
@@ -590,6 +594,45 @@ class SurveysReportTable extends AppTable
             'label' => __('Question Column - Grade 3')
         ];
 
+
+        $surveyQuestion = TableRegistry::get('survey_questions');
+        $SurveyCells = TableRegistry::get('institution_survey_table_cells');
+        $SurveyRows = TableRegistry::get('survey_table_rows');
+        $SurveyColumns = TableRegistry::get('survey_table_columns');
+        $SurveyColumns = TableRegistry::get('survey_table_columns');
+
+        $query->select([
+                    'institution_name' => 'Institutions.name',
+                    'code' => 'Institutions.code',
+                    'area_code' => 'Areas.code',
+                    'area_name' => 'Areas.name',
+                    'area_level_code' => $areaLevels->aliasField('level'),
+                    'area_level_name' => $areaLevels->aliasField('name'),
+                    'survey_code' => $surveyForms->aliasField('code'),
+                    'survey_name' => $surveyForms->aliasField('name'),
+                    'survey_section' => $surveyFormsQuestion->aliasField('section'),
+                    'survey_question_code' => $surveyQuestion->aliasField('code'),
+                    'survey_question_name' => $surveyQuestion->aliasField('name'),
+                    'question_row' => $SurveyRows->aliasField('name'),
+                    'question_grade_1' => $SurveyCells->aliasField('text_value'),
+                    'question_grade_2' => $SurveyCells->aliasField('text_value'),
+                    'question_grade_3' => $SurveyCells->aliasField('text_value')
+
+
+                ])
+                ->innerJoin([$surveyForms->alias() => $surveyForms->table()],
+                [
+                    $surveyForms->aliasField('id') . ' = '. $this->aliasField('survey_form_id')
+                ])
+                
+                ->contain([
+                    'Institutions.Areas',
+                    'Institutions.AreaAdministratives',
+                    'Institutions.Statuses'
+                ])
+                ->group(['survey_question_name'])
+                ->where([$condition]);
+                //print_r($query->sql()); die;
 
     }
 
