@@ -5550,7 +5550,8 @@ class InstitutionsController extends AppController
                                 $count++;
                             }
                         }
-                        $body = array_merge($bodys, $custom_field);//POCOR-7078 end
+                        $getClassData = $this->institutionClassStudentData($institutionClassId);//POCOR-6995
+                        $body = array_merge($bodys, $custom_field, $getClassData);//POCOR-7078 end
                         if (!empty($body)) {
                             $Webhooks = TableRegistry::get('Webhook.Webhooks');
                             if (!empty($studentId)) {
@@ -5804,6 +5805,15 @@ class InstitutionsController extends AppController
                                             ])
                                             ->first();
 
+                    //POCOR-7188[START]
+                    $staffPositionTitles = TableRegistry::get('staff_position_titles');
+                    $staffPositionTitlesTbl = $staffPositionTitles->find()
+                                            ->where([
+                                                $staffPositionTitles->aliasField('id') => $InstitutionPositionsTbl->staff_position_title_id,
+                                            ])
+                                            ->first();
+                    //POCOR-7188[END]
+
                     $SecurityGroupUsers = TableRegistry::get('security_group_users');
                     if(!empty($InstitutionPositionsTbl)){
                         $SecurityRoles = TableRegistry::get('security_roles');
@@ -5816,14 +5826,19 @@ class InstitutionsController extends AppController
                                             ->where([
                                                 $SecurityRoles->aliasField('code IN') => $roleArr
                                             ])->toArray();
-
+                        //POCOR-7182
+                        $institutionsTbl = TableRegistry::get('institutions');
+                        $institutionsSecurityGroupId = $institutionsTbl->find()
+                        ->where([$institutionsTbl->aliasField('id') => $institutionId])
+                        ->first();  
+                        //POCOR-7182                         
                         if(!empty($SecurityRolesTbl)){
                             foreach ($SecurityRolesTbl as $rolekey => $roleval) {
                                 $entityGroupData = [
                                     'id' => Text::uuid(),
-                                    'security_group_id' => $institutionId,
+                                    'security_group_id' =>$institutionsSecurityGroupId->security_group_id, // $institutionId POCOR-7182
                                     'security_user_id' => $staffId,
-                                    'security_role_id' => $roleval->id,
+                                    'security_role_id' => $staffPositionTitlesTbl->security_role_id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
                                     'created_user_id' => $userId,
                                     'created' => date('Y-m-d H:i:s')
                                 ];
@@ -6108,6 +6123,14 @@ class InstitutionsController extends AppController
                                                     $InstitutionPositions->aliasField('id') => $institutionPositionId,
                                                 ])
                                                 ->first();
+                         //POCOR-7188[START]
+                        $staffPositionTitles = TableRegistry::get('staff_position_titles');
+                        $staffPositionTitlesTbl = $staffPositionTitles->find()
+                                                ->where([
+                                                    $staffPositionTitles->aliasField('id') => $InstitutionPositionsTbl->staff_position_title_id,
+                                                ])
+                                                ->first();
+                        //POCOR-7188[END]
 
                         $SecurityGroupUsers = TableRegistry::get('security_group_users');
                         if(!empty($InstitutionPositionsTbl)){
@@ -6121,14 +6144,19 @@ class InstitutionsController extends AppController
                                                         ->where([
                                                             $SecurityRoles->aliasField('code IN') => $roleArr
                                                         ])->toArray();
-
+                            //POCOR-7182
+                            $institutionsTbl = TableRegistry::get('institutions');
+                            $institutionsSecurityGroupId = $institutionsTbl->find()
+                            ->where([$institutionsTbl->aliasField('id') => $institutionId])
+                            ->first(); 
+                            //POCOR-7182                                
                             if(!empty($SecurityRolesTbl)){
                                 foreach ($SecurityRolesTbl as $rolekey => $roleval) {
                                     $entityGroupData = [
                                         'id' => Text::uuid(),
-                                        'security_group_id' => $institutionId,
+                                        'security_group_id' => $institutionsSecurityGroupId->security_group_id,// $institutionId POCOR-7182
                                         'security_user_id' => $user_record_id,
-                                        'security_role_id' => $roleval->id,
+                                        'security_role_id' => $staffPositionTitlesTbl->security_role_id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
                                         'created_user_id' => $userId,
                                         'created' => date('Y-m-d H:i:s')
                                     ];
@@ -7013,5 +7041,100 @@ class InstitutionsController extends AppController
         ];
         // End POCOR-6871
         return $options;
+    }
+
+    /**
+     * POCOR-6995 
+     * show Institution Class data in webhook
+    **/ 
+    private function institutionClassStudentData($institutionClassId) 
+    {
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $bodyData = $InstitutionClasses->find('all',
+                        [ 'contain' => [
+                            'Institutions',
+                            'EducationGrades',
+                            'Staff',
+                            'AcademicPeriods',
+                            'InstitutionShifts',
+                            'InstitutionShifts.ShiftOptions',
+                            'ClassesSecondaryStaff.SecondaryStaff',
+                            'Students',
+                            'Students.Genders'
+                        ],
+                        ])->where([
+                            $InstitutionClasses->aliasField('id') => $institutionClassId
+                        ]);
+
+            $grades = $gradeId = $secondaryTeachers = $students = [];
+
+            if (!empty($bodyData)) {
+                foreach ($bodyData as $key => $value) {
+                    $capacity = $value->capacity;
+                    $shift = $value->institution_shift->shift_option->name;
+                    $academicPeriod = $value->academic_period->name;
+                    $homeRoomteacher = $value->staff->openemis_no;
+                    $institutionId = $value->institution->id;
+                    $institutionName = $value->institution->name;
+                    $institutionCode = $value->institution->code;
+                    $institutionClassId = $institutionClassId;
+                    $institutionClassName = $value->name;
+
+                    if(!empty($value->education_grades)) {
+                        foreach ($value->education_grades as $key => $gradeOptions) {
+                            $grades[] = $gradeOptions->name;
+                            $gradeId[] = $gradeOptions->id;
+                        }
+                    }
+
+                    if(!empty($value->classes_secondary_staff)) {
+                        foreach ($value->classes_secondary_staff as $key => $secondaryStaffs) {
+                            $secondaryTeachers[] = $secondaryStaffs->secondary_staff->openemis_no;
+                        }
+                    }
+
+                    $maleStudents = 0;
+                    $femaleStudents = 0;
+                    if(!empty($value->students)) {
+                        foreach ($value->students as $key => $studentsData) {
+                            $students[] = $studentsData->openemis_no;
+                            if($studentsData->gender->code == 'M') {
+                                $maleStudents = $maleStudents + 1;
+                            }
+                            if($studentsData->gender->code == 'F') {
+                                $femaleStudents = $femaleStudents + 1;
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            $body = array();
+
+            $body = [
+                'institution_Class' => 
+                [
+                    'institutions_id' => !empty($institutionId) ? $institutionId : NULL,
+                    'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+                    'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+                    'institutions_classes_id' => $institutionClassId,
+                    'institutions_classes_name' => $institutionClassName,
+                    'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
+                    'shift_options_name' => !empty($shift) ? $shift : NULL,
+                    'institutions_classes_capacity' => !empty($capacity) ? $capacity : NULL,
+                    'education_grades_id' => !empty($gradeId) ? $gradeId :NULL,
+                    'education_grades_name' => !empty($grades) ? $grades : NULL,
+                    'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
+                    'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
+                    'total_students' => !empty($students) ? count($students) : 0,
+                    'institution_classes_staff_openemis_no' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
+                    'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
+                    'institution_class_students_openemis_no' => !empty($students) ? $students : NULL
+                ],
+            ];
+
+            return $body;
+
     }
 }

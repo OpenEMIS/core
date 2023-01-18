@@ -11,8 +11,9 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\HtmlTrait;
+use App\Model\Table\ControllerActionTable;
 
-class SystemGroupsTable extends AppTable
+class SystemGroupsTable extends ControllerActionTable
 {
     use MessagesTrait;
     use HtmlTrait;
@@ -41,6 +42,10 @@ class SystemGroupsTable extends AppTable
             'through' => 'Security.SecurityGroupAreas',
             'dependent' => true
         ]);
+
+        $this->toggle('add', false);
+        $this->toggle('edit', false);
+        $this->toggle('remove', false);
     }
 
     public function institutionAfterSave(Event $event, Entity $entity)
@@ -90,7 +95,7 @@ class SystemGroupsTable extends AppTable
         return $events;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         $controller = $this->controller;
         $tabElements = [
@@ -107,24 +112,34 @@ class SystemGroupsTable extends AppTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
 
-        $roleOptions = $this->Roles->find('list')->toArray();
-        $this->ControllerAction->field('users', [
-            'type' => 'user_table',
-            'valueClass' => 'table-full-width',
-            'roleOptions' => $roleOptions,
-            'visible' => ['index' => false, 'view' => true, 'edit' => true]
-        ]);
+        // $roleOptions = $this->Roles->find('list')->toArray();
+        // $this->ControllerAction->field('users', [
+        //     'type' => 'user_table',
+        //     'valueClass' => 'table-full-width',
+        //     'roleOptions' => $roleOptions,
+        //     'visible' => ['index' => false, 'view' => true, 'edit' => true]
+        // ]);
 
         $this->ControllerAction->setFieldOrder(['name', 'users']);
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->ControllerAction->field('no_of_users', ['visible' => ['index' => true]]);
-        $this->ControllerAction->setFieldOrder(['name', 'no_of_users']);
+        $this->field('no_of_users', ['visible' => ['index' => true]]);
+        $this->setFieldOrder(['name', 'no_of_users','institution_id']);
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function onGetNoOfUsers(Event $event, Entity $entity)
+    {
+        $id = $entity->id;
+
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $count = $GroupUsers->findAllBySecurityGroupId($id)->count();
+
+        return $count;
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $request->query;
 
@@ -161,50 +176,32 @@ class SystemGroupsTable extends AppTable
         $query->contain(['Users']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->data[$this->alias()]['security_group_id'] = $entity->id;
-    }
 
-    public function onGetUserTableElement(Event $event, $action, $entity, $attr, $options = [])
-    {
-        $tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Role')];
-        $tableCells = [];
-        $alias = $this->alias();
-        $key = 'users';
 
-        if ($action == 'index') {
-            // not showing
-        } else if ($action == 'view') {
-            $roleOptions = $attr['roleOptions'];
-            $associated = $entity->extractOriginal([$key]);
-            if (!empty($associated[$key])) {
-                foreach ($associated[$key] as $i => $obj) {
-                    $rowData = [];
-                    $rowData[] = $event->subject()->Html->link($obj->openemis_no, [
-                        'plugin' => 'Directory',
-                        'controller' => 'Directories',
-                        'action' => 'Directories',
-                        'view',
-                        $this->paramsEncode(['id' => $obj->id])
-                    ]);
-                    $rowData[] = $obj->name;
-                    $roleId = $obj->_joinData->security_role_id;
+        $toolbarAttr = [
+                    'class' => 'btn btn-xs btn-default',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false
+                ];
 
-                    if (array_key_exists($roleId, $roleOptions)) {
-                        $rowData[] = $roleOptions[$roleId];
-                    } else {
-                        $this->log(__METHOD__ . ': Orphan record found for role id: ' . $roleId, 'debug');
-                        $rowData[] = '';
-                    }
-                    $tableCells[] = $rowData;
-                }
-            }
-        }
-        $attr['tableHeaders'] = $tableHeaders;
-        $attr['tableCells'] = $tableCells;
+        $listUrl = [
+            'plugin' => 'Security',
+            'controller' => 'Securities',
+            'action' => 'SystemGroupsList',
+            'userGroupId' => $entity->id,
+            'index'
+        ];
 
-        return $event->subject()->renderElement('Security.Groups/' . $key, ['attr' => $attr]);
+        $listButton['url'] = $listUrl;
+        $listButton['type'] = 'button';
+        $listButton['attr'] = $toolbarAttr;
+        $listButton['label'] = '<i class="fa kd-lists"></i>';
+        $listButton ['attr']['title'] = __('List');
+        $extra['toolbarButtons']['list'] = $listButton;
     }
 
     public function findInInstitutions(Query $query, array $options)
@@ -213,13 +210,5 @@ class SystemGroupsTable extends AppTable
         return $query;
     }
 
-    public function onGetNoOfUsers(Event $event, Entity $entity)
-    {
-        $id = $entity->id;
-
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        $count = $GroupUsers->findAllBySecurityGroupId($id)->count();
-
-        return $count;
-    }
+        
 }
