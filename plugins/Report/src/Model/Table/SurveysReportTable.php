@@ -372,9 +372,6 @@ class SurveysReportTable extends AppTable
         // $Areas = TableRegistry::get('areas');
         // $AreaLevels = TableRegistry::get('area_levels');
         $Areas = TableRegistry::get('AreaLevel.AreaLevels');
-
-
-        
         $condition = [];
         // POCOR-6440 start
         $requestData = json_decode($settings['process']['params']);
@@ -384,7 +381,7 @@ class SurveysReportTable extends AppTable
         }
         // POCOR-6440 end
 
-          $query->select([
+            $query->select([
                     'institution_name' => 'Institutions.name',
                     'code' => 'Institutions.code',
                     'area_code' => 'Areas.code',
@@ -403,23 +400,23 @@ class SurveysReportTable extends AppTable
 
 
                 ])
-                ->leftJoin([$surveyForms->alias() => $surveyForms->table()],
+                ->innerJoin([$surveyForms->alias() => $surveyForms->table()],
                 [
                     $surveyForms->aliasField('id') . ' = '. $this->aliasField('survey_form_id')
                 ])
-                ->leftJoin([$surveyFormsQuestion->alias() => $surveyFormsQuestion->table()],
+                ->innerJoin([$surveyFormsQuestion->alias() => $surveyFormsQuestion->table()],
                 [
                     $surveyFormsQuestion->aliasField('survey_form_id') . ' = '. $surveyForms->aliasField('id')
                 ])
-                ->leftJoin([$surveyQuestion->alias() => $surveyQuestion->table()],
+                ->innerJoin([$surveyQuestion->alias() => $surveyQuestion->table()],
                 [
                     $surveyQuestion->aliasField('id') . ' = '. $surveyFormsQuestion->aliasField('survey_question_id')
                 ])
-                ->leftJoin([$SurveyRows->alias() => $SurveyRows->table()],
+                ->innerJoin([$SurveyRows->alias() => $SurveyRows->table()],
                 [
                     $SurveyRows->aliasField('survey_question_id') . ' = '. $surveyQuestion->aliasField('id')
                 ])
-                ->leftJoin([$SurveyCells->alias() => $SurveyCells->table()],
+                ->innerJoin([$SurveyCells->alias() => $SurveyCells->table()],
                 [
                     $SurveyCells->aliasField('survey_question_id') . ' = '. $surveyQuestion->aliasField('id')
                 ])
@@ -448,7 +445,9 @@ class SurveysReportTable extends AppTable
                     'Institutions.AreaAdministratives',
                     'Institutions.Statuses'
                 ])
+                //->distinct(['survey_question_name'])
                 ->where([$condition]);
+                print_r($query->sql()); die;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
