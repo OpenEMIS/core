@@ -1328,6 +1328,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             code: selectedData.birth_area_code
         };
         StudentController.selectedStudentData.openemis_no = selectedData.openemis_no;
+        StudentController.selectedStudentData.name = selectedData.name;//POCOR-7172
         StudentController.selectedStudentData.first_name = selectedData.first_name;
         StudentController.selectedStudentData.middle_name = selectedData.middle_name;
         StudentController.selectedStudentData.third_name = selectedData.third_name;

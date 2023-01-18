@@ -151,6 +151,14 @@ class InstitutionsTable extends ControllerActionTable
             'through' => 'Security.SecurityGroupInstitutions',
             'dependent' => true
         ]);
+        $this->belongsToMany('UserGroups', [
+            'className' => 'Security.UserGroups',
+            'joinTable' => 'security_group_institutions',
+            'foreignKey' => 'institution_id',
+            'targetForeignKey' => 'security_group_id',
+            'through' => 'Security.SecurityGroupInstitutions',
+            'dependent' => true
+        ]);
         //POCOR-6520 starts: add isset condition only
        if(isset(Router::getRequest()->params['pass'][0]) && Router::getRequest()->params['pass'][0]!='excel'){ //POCOR-6520 ends
 
@@ -883,14 +891,16 @@ class InstitutionsTable extends ControllerActionTable
         if ($entity->isNew()) {
             $entity->shift_type = 0;
         }
+
+        $userId = $_SESSION['Auth']['User']['id']; //POCOR-7166
         //POCOR-7116 :Start
         $insName = $entity->code. " - ". $entity->name;
         $SecurityGroupsTable = TableRegistry::get('security_groups');
         $SecurityGroupsEntity = [
             'name' =>$insName,
-            'modified_user_id' => $entity->userId,
+            'modified_user_id' => $userId, //POCOR-7166
             'modified'=> NULL,
-            'created_user_id' =>$entity->userId,
+            'created_user_id' =>$userId, //POCOR-7166
             'created' => date('Y-m-d h:i:s')
         ];
         $SecurityGroups = $SecurityGroupsTable->newEntity($SecurityGroupsEntity);
@@ -905,12 +915,12 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $TransferConnections = TableRegistry::get('TransferConnections.TransferConnections');
-        $TransferConnectionsResult = $TransferConnections
+        $DataManagementConnections = TableRegistry::get('Archive.DataManagementConnections');
+        $DataManagementConnectionsResult = $DataManagementConnections
             ->find()
             ->select(['conn_status_id'])
             ->first();
-        $this->Session->write('is_connection_stablished', $TransferConnectionsResult->conn_status_id);
+        $this->Session->write('is_connection_stablished', $DataManagementConnectionsResult->conn_status_id);
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         // set action for webhook
         $this->webhookAction = $this->action;
