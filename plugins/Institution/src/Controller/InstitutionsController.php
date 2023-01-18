@@ -7125,7 +7125,7 @@ class InstitutionsController extends AppController
 
     /**
      * POCOR-7146
-     * assign student Role and group while creating student
+     * assign Role and group to student while creating student
     **/ 
     private function assignStudentRoleGroup($institutionId, $user_id) 
     {
