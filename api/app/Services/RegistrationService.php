@@ -96,16 +96,6 @@ class RegistrationService extends Controller
     public function administrativeAreasList()
     {
         try {
-            /*$data = $this->registrationRepository->administrativeAreasList()->map(
-                function ($item, $key) {
-                    return [
-                        "id" => $item->id,
-                        "name" => $item->name
-                    ];
-                }
-            );*/
-
-
             $data = $this->registrationRepository->administrativeAreasList();
             
             return $data;
@@ -117,6 +107,24 @@ class RegistrationService extends Controller
             );
 
             return $this->sendErrorResponse('Administrative Areas List Not Found');
+        }
+    }
+
+
+    public function generateOtp($request)
+    {
+        try {
+            $data = $this->registrationRepository->generateOtp($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to sent otp on email.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to sent otp on email.');
         }
     }
 

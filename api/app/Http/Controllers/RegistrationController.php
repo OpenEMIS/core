@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\RegistrationService;
 use Illuminate\Support\Facades\Log;
+use App\Http\Requests\GenerateOtpRequest;
 
 class RegistrationController extends Controller
 {
@@ -85,6 +86,30 @@ class RegistrationController extends Controller
             );
 
             return $this->sendErrorResponse('Administrative Areas List Not Found');
+        }
+    }
+
+
+    public function generateOtp(GenerateOtpRequest $request)
+    {
+        try {
+            $resp = $this->registrationService->generateOtp($request);
+
+
+            if($resp == 0){
+                return $this->sendSuccessResponse("Email is not registered.", $resp);
+            } else {
+                return $this->sendSuccessResponse("Otp sent successfully.", $resp);
+            }
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to sent otp on email.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to sent otp on email.');
         }
     }
 }
