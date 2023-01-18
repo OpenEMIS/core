@@ -835,13 +835,13 @@ class SurveysTable extends AppTable
                     $surveyQuestions = TableRegistry::get('FieldOption.IdentityTypes');
                     $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
 
-
                     $surveyFormOptions = $surveySection
-                        
                         ->find('list', ['keyField' => 'id', 'valueField' => 'section'])
                         ->where([
                             $surveySection->aliasField('survey_form_id') => $surveyForm
                         ])
+                        ->distinct(['section'])
+                        ->order([$surveySection->aliasField('section')])
                         ->toArray();
                     if (!empty($surveyFormOptions)) {
                         $attr['options'] = $surveyFormOptions;
@@ -868,7 +868,10 @@ class SurveysTable extends AppTable
      //POCOR-6695
     public function onUpdateFieldTableQuestion(Event $event, array $attr, $action, Request $request)
     {
-        $surveyQuestionId = $this->request->data[$this->alias()]['table_question'];
+        $surveyQuestionId = $this->request->data[$this->alias()]['survey_section'];
+        $surveySectionQuestions = TableRegistry::get('Survey.SurveyFormsQuestions')
+                ->find('all', ['conditions' => ['id' => $surveyQuestionId]])
+                ->first();
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
@@ -880,14 +883,11 @@ class SurveysTable extends AppTable
                     $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
                     $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
                     $surveyFormOptions = $surveySection
-                                        //->find('list')
                                         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                                        // ->innerJoin([$surveySection->alias() => $surveySection->table()], [
-                                        //     $surveySection->aliasField('survey_question_id = ') . $surveyQuestion->aliasField('id'),
-                                        // ])
-                                        // ->where([
-                                        //     $surveySection->aliasField('survey_question_id') => $surveyQuestionId
-                                        // ])
+                                        ->where([
+                                            $surveySection->aliasField('section') => 
+                                            $surveySectionQuestions->section
+                                        ])
                                         ->toArray();
                     if (!empty($surveyFormOptions)) {
                         $attr['options'] = $surveyFormOptions;
