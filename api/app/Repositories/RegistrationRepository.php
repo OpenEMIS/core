@@ -11,6 +11,9 @@ use App\Models\AcademicPeriod;
 use App\Models\EducationGrades;
 use App\Models\Institutions;
 use App\Models\AreaAdministratives;
+use App\Models\SecurityUsers;
+use App\Models\SecurityUserCode;
+use Mail;
 
 class RegistrationRepository extends Controller
 {
@@ -79,6 +82,70 @@ class RegistrationRepository extends Controller
             );
 
             return $this->sendErrorResponse('Area Administratives List Not Found');
+        }
+    }
+
+
+
+    public function generateOtp($request)
+    {
+        try {
+            $email = $request['email'];
+
+            $isExists = SecurityUsers::where('email', $email)->first();
+            $isExists = 1;
+            if($isExists){
+                $otpData = $this->getUniqueOtp($email);
+                $otp = $otpData['otp'];
+                $encodedOtp = $otpData['encodedOtp'];
+
+                $data['otp'] = $otp;
+
+                Mail::send(['text'=>'generateOtp'], $data, function($message) {
+                    $message->to('ravi.verma111@mailinator.com', 'OpenEMIS User')
+                        ->subject('OpenEMIS Registration OTP Verification.');
+                });
+
+                $insertData['security_user_id'] = 2;
+                $insertData['verification_otp'] = $encodedOtp;
+                $insertData['created'] = Carbon::now()->toDateTimeString();
+                $store = SecurityUserCode::insert($insertData);
+                return 1;
+            } else {
+                return 0;
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to sent otp on email.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to sent otp on email.');
+        }
+    }
+
+
+    public function getUniqueOtp()
+    {
+        try {
+            $otp = random_int(100000, 999999);
+            $encodedOtp = base64_encode($otp);
+
+            $securityUserCode = SecurityUserCode::where('verification_otp', $encodedOtp)->first();
+            if($securityUserCode){
+                return $this->getUniqueOtp();
+            } else {
+                $array = array('encodedOtp' => $encodedOtp, 'otp' => $otp);
+                return $array;
+            }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate otp.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to generate otp.');
         }
     }
 }

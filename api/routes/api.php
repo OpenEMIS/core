@@ -96,12 +96,14 @@ Route::group(
 
         Route::get('institutions/{id}/room-type-summaries', 'InstitutionController@institutionRoomTypeSummaries');
 
-
-        Route::get('academic-periods', 'RegistrationController@academicPeriodsList');
-        Route::get('education-grades', 'RegistrationController@educationGradesList');
-        Route::get('institution-drodown', 'RegistrationController@institutionDropdown');
-        Route::get('administrative-areas', 'RegistrationController@administrativeAreasList');
     }
 );
 
 
+
+//For PORGI-8 Routes...
+Route::get('academic-periods', 'RegistrationController@academicPeriodsList');
+Route::get('education-grades', 'RegistrationController@educationGradesList');
+Route::get('institution-drodown', 'RegistrationController@institutionDropdown');
+Route::get('administrative-areas', 'RegistrationController@administrativeAreasList');
+Route::post('generate-otp', 'RegistrationController@generateOtp');
