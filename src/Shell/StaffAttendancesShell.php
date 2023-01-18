@@ -219,12 +219,31 @@ class StaffAttendancesShell extends Shell
             }
         }
 
-        if (in_array('institution_staff_attendances', $tableSchema)) {
-            $table_name = 'institution_staff_attendances';
-        }
-        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_attendances_archived AS SELECT * FROM institution_staff_attendances");
-        $stmt1->execute();
-        $InstitutionStaffAttendancesData->deleteAll(['academic_period_id' => $academicPeriodId]);
+        // if (in_array('institution_staff_attendances', $tableSchema)) {
+        //     $table_name = 'institution_staff_attendances';
+        // }
+        // $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_attendances_archive AS SELECT * FROM institution_staff_attendances");
+        // $stmt1->execute();
+        // $InstitutionStaffAttendancesData->deleteAll(['academic_period_id' => $academicPeriodId]);
+
+        $connection->execute("CREATE TABLE IF NOT EXISTS `institution_staff_attendances_archive` (
+            `id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+            `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+            `institution_id` int(11) NOT NULL COMMENT 'links to instututions.id',
+            `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
+            `date` date NOT NULL,
+            `time_in` time DEFAULT NULL,
+            `time_out` time DEFAULT NULL,
+            `comment` text COLLATE utf8mb4_unicode_ci,
+            `modified_user_id` int(11) DEFAULT NULL,
+            `modified` datetime DEFAULT NULL,
+            `created_user_id` int(11) NOT NULL,
+            `created` datetime NOT NULL,
+            `absence_type_id` int(11) DEFAULT '1'
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the attendance records for staff';
+          ");
+          $connection->execute("INSERT INTO `institution_staff_attendances_archive` SELECT * FROM `institution_staff_attendances` WHERE academic_period_id = $academicPeriodId");
+          $connection->execute("DELETE FROM institution_staff_attendances WHERE academic_period_id = $academicPeriodId");
         //institution_staff_attendances[END]
 
         //institution_staff_leave[START]
@@ -375,12 +394,38 @@ class StaffAttendancesShell extends Shell
                 }
             }
         }
-        if (in_array('institution_staff_leave', $tableSchema)) {
-            $table_name = 'institution_staff_leave';
-        }
-        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_leave_archived AS SELECT * FROM institution_staff_leave");
-        $stmt1->execute();
-        $InstitutionStaffLeaveData->deleteAll(['academic_period_id' => $academicPeriodId]);
+        // if (in_array('institution_staff_leave', $tableSchema)) {
+        //     $table_name = 'institution_staff_leave';
+        // }
+        // $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW institution_staff_leave_archived AS SELECT * FROM institution_staff_leave");
+        // $stmt1->execute();
+        // $InstitutionStaffLeaveData->deleteAll(['academic_period_id' => $academicPeriodId]);
+
+        $connection->execute("CREATE TABLE IF NOT EXISTS `institution_staff_leave_archived` (
+            `id` int(11) NOT NULL,
+            `date_from` date NOT NULL,
+            `date_to` date NOT NULL,
+            `start_time` time DEFAULT NULL,
+            `end_time` time DEFAULT NULL,
+            `full_day` int(1) NOT NULL DEFAULT '1',
+            `comments` text COLLATE utf8mb4_unicode_ci,
+            `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+            `staff_leave_type_id` int(11) NOT NULL COMMENT 'links to staff_leave_types.id',
+            `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
+            `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
+            `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
+            `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
+            `number_of_days` decimal(5,1) NOT NULL,
+            `file_name` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `file_content` longblob,
+            `modified_user_id` int(11) DEFAULT NULL,
+            `modified` datetime DEFAULT NULL,
+            `created_user_id` int(11) NOT NULL,
+            `created` datetime NOT NULL
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of leave for a specific staff';
+          ");
+          $connection->execute("INSERT INTO `institution_staff_leave_archived` SELECT * FROM `institution_staff_leave` WHERE academic_period_id = $academicPeriodId");
+          $connection->execute("DELETE FROM institution_staff_leave WHERE academic_period_id = $academicPeriodId");
         //institution_staff_leave[END]
         return true;
     }

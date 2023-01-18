@@ -122,8 +122,7 @@ class StudentAssessmentsShell extends Shell
                     ->where([
                         'AssessmentItemResults.academic_period_id' => $academicPeriodId
                     ])
-                    ->toArray();
-
+                    ->toArray();              
         if(!empty($assessmentItemResultsData)){
             foreach($assessmentItemResultsData AS $data){
                 if(isset($data["modified_user_id"])){
@@ -203,12 +202,9 @@ class StudentAssessmentsShell extends Shell
             }
         }
 
-        if (in_array('assessment_item_results', $tableSchema)) {
-            $table_name = 'assessment_item_results';
-        }
-        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW assessment_item_results_archived AS SELECT * FROM assessment_item_results");
-        $stmt1->execute();
-        $assessmentItemResultsData->deleteAll(['academic_period_id' => $academicPeriodId]);
+        $connection->execute("CREATE TABLE IF NOT EXISTS `assessment_item_results_archived` LIKE `assessment_item_results`");
+        $connection->execute("INSERT INTO `assessment_item_results_archived` SELECT * FROM `assessment_item_results` WHERE academic_period_id = $academicPeriodId");
+        $connection->execute("DELETE FROM assessment_item_results WHERE academic_period_id = $academicPeriodId");
         //assessment_item_results[END]
         return true;
     }
