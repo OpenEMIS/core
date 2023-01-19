@@ -98,10 +98,6 @@ class StaffAttendancesTable extends ControllerActionTable
         if ($areaId != -1 && !empty($areaId)) {
             $conditions[$this->aliasField('Institutions.area_id')]=$areaId;
         }
-
-        if (!empty($academicPeriodId)) {
-            $conditions['academic_periods.id']=$academicPeriodId;
-        }
         
         $query
             ->select([
@@ -120,8 +116,8 @@ class StaffAttendancesTable extends ControllerActionTable
                 'middle_name' => 'Users.middle_name',
                 'third_name' => 'Users.third_name',
                 'last_name' => 'Users.last_name',
-                'month_generator'=>'year_name',
-                'month_generator'=>'month_name',
+                'year_name' => 'month_generator.year_name',
+                'month_name' => 'month_generator.month_name',
                'day_1'=> "(SELECT IFNULL(staff_attendance_info.day_1, ''))",                                         
                'day_2'=> "(SELECT IFNULL(staff_attendance_info.day_2, ''))",                                         
                'day_3'=> "(SELECT IFNULL(staff_attendance_info.day_3, ''))",                                          
@@ -213,9 +209,9 @@ class StaffAttendancesTable extends ControllerActionTable
                 ],      
             ];
 
-            $join[' '] = [
+            $join['month_generator'] = [
                 'type' => 'inner',
-                'table' => "(SELECT  academic_period_id
+                'table' => "(SELECT academic_period_id
         ,YEAR(m1) year_name
         ,MONTH(m1) month_id
         ,MONTHNAME(m1) month_name
@@ -262,11 +258,11 @@ class StaffAttendancesTable extends ControllerActionTable
             UNION
             SELECT  4) t4,(SELECT  @rownum:= -1) t0
         ) d1
-        WHERE academic_periods.id = 31
+        WHERE academic_periods.id = $academicPeriodId
     ) d2
     WHERE m1 <= d2.end_date
     ORDER BY m1
- ) AS month_generator",
+ )",
  'conditions' => ['month_generator.academic_period_id = academic_periods.id'],
 ];
  $join[' '] = [
@@ -345,26 +341,25 @@ class StaffAttendancesTable extends ControllerActionTable
             ,CASE WHEN DAY(institution_staff_attendances.date) = 31 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_31
         FROM institution_staff_attendances
         WHERE institution_staff_attendances.academic_period_id = $academicPeriodId
-        AND institution_staff_attendances.institution_id = 6
+        AND institution_staff_attendances.institution_id = $institutionId
         GROUP BY institution_staff_attendances.staff_id
             ,institution_staff_attendances.date
-    ) subq 
+    )) subq 
     GROUP BY subq.academic_period_id
         ,subq.staff_id
         ,YEAR(subq.date)
         ,MONTH(subq.date)
-) staff_attendance_info)"
-]; 
-$join[' '] = [
-            'conditions' => [
-                'staff_attendance_info.academic_period_id = month_generator.academic_period_id',
-                'staff_attendance_info.staff_id = security_users.id',
-                'staff_attendance_info.year_name = month_generator.year_name',
-                'staff_attendance_info.month_id  = month_generator.month_id'
-            ],
-        ];         
+ ) staff_attendance_info",
+    'conditions' => [
+        'staff_attendance_info.academic_period_id = month_generator.academic_period_id',
+        'staff_attendance_info.staff_id = security_users.id',
+        'staff_attendance_info.year_name = month_generator.year_name',
+        'staff_attendance_info.month_id  = month_generator.month_id'
+    ],
+    ];
+            
  $query->where($conditions)->group(['security_users.id','month_generator.year_name','month_generator.month_id'])
- ->order(['institutions.code','security_users.openemis_no','month_generator.year_name','month_generator.month_id']);
+->order(['institutions.code','security_users.openemis_no','month_generator.year_name','month_generator.month_id']);
   $query->join($join);
 print_r($query->sql());die('pkk');
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($academicPeriodId, $startDate, $endDate, $year) {
