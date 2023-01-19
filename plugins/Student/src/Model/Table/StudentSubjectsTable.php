@@ -220,7 +220,7 @@ class StudentSubjectsTable extends ControllerActionTable
             )//POCOR-6468
             //POCOR-6832
             ->matching('StudentStatuses', function ($q) {
-                return $q->where(['StudentStatuses.code IN' => ['TRANSFERRED',  'GRADUATED', 'PROMOTED', 'REPEATED']]);
+                return $q->where(['StudentStatuses.code IN' => ['TRANSFERRED', 'CURRENT', 'GRADUATED', 'PROMOTED', 'REPEATED']]);
             })
             //POCOR-6832
             ->where($where)
