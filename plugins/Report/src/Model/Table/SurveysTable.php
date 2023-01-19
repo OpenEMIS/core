@@ -883,7 +883,7 @@ class SurveysTable extends AppTable
                     $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
                     $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
                     $surveyFormOptions = $surveySection
-                                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                                        ->find('list', ['keyField' => 'survey_question_id', 'valueField' => 'name'])
                                         ->where([
                                             $surveySection->aliasField('section') => 
                                             $surveySectionQuestions->section
