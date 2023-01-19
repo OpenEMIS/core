@@ -1419,6 +1419,11 @@ class DirectoriesTable extends ControllerActionTable
             $institutionStaffShifts = TableRegistry::get('institution_staff_shifts')
                 ->find()->where(['staff_id' => $securityUserId])->count();
 
+            //// POCOR-7179[START]
+            $userNationalities = TableRegistry::get('user_nationalities')
+                ->find()->where(['security_user_id' => $securityUserId])->count();
+            // POCOR-7179[END]
+
             if($institutionClassStudents ||
                 $userActivities ||
                 $studentCustomFieldValues ||
@@ -1436,7 +1441,7 @@ class DirectoriesTable extends ControllerActionTable
                 $userSpecialNeedsServices ||
                 $userSpecialNeedsAssessments ||
                 $institutionCases ||
-                $institutionStaffShifts) {
+                $institutionStaffShifts || $userNationalities) {
                 $result = true;
             }
         }
