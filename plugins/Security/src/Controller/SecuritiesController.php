@@ -120,7 +120,19 @@ class SecuritiesController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $header = __('Security');
-        $header .= ' - ' . __($model->getHeader($model->alias));
+        if($model->alias =='SystemGroupsList'){
+            $listId = $this->request->query['userGroupId'];
+            $table= TableRegistry::get('security_groups');
+            $headerName = $table->find()->where(['id' => $listId])->first()->name;
+            $header .= ' - ' . __($model->getHeader($headerName));
+        }elseif($model->alias == 'UserGroupsList'){
+            $listId = $this->request->query['userGroupId'];
+            $table= TableRegistry::get('security_groups');
+            $headerName = $table->find()->where(['id' => $listId])->first()->name;
+            $header .= ' - ' . __($model->getHeader($headerName));
+        }else{
+             $header .= ' - ' . __($model->getHeader($model->alias));
+        }
         $this->set('contentHeader', $header);
     }
 
