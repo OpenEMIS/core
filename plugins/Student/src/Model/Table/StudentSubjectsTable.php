@@ -205,7 +205,7 @@ class StudentSubjectsTable extends ControllerActionTable
         }
         $InstitutionClassStudents = TableRegistry::get('institution_class_students');
         //POCOR-6468
-        $where[$this->aliasField('student_status_id')] = $enrolledStatus; //POCOR-7111
+      //  $where[$this->aliasField('student_status_id')] = $enrolledStatus; //POCOR-7111
         
         $query
             ->matching('InstitutionClasses.ClassGrades')
@@ -218,6 +218,11 @@ class StudentSubjectsTable extends ControllerActionTable
                     $InstitutionClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
                 ]
             )//POCOR-6468
+            //POCOR-6832
+            ->matching('StudentStatuses', function ($q) {
+                return $q->where(['StudentStatuses.code IN' => ['TRANSFERRED', 'CURRENT', 'GRADUATED', 'PROMOTED', 'REPEATED']]);
+            })
+            //POCOR-6832
             ->where($where)
             ->group([
                 $this->aliasField('education_subject_id'), 
