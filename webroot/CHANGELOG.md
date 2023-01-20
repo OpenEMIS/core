@@ -1,3 +1,13 @@
+### [3.77.7] - 2023-01-20
+- Bug Fixed: Institution > Staff > Timetables: User is having issue with staffs not being able to view their timetable under Institution > Staff > Timetables
+- Bug Fixed: Institutions>Performance>Assessments: Student that is transferred from School A to School B back to School A is not appearing for one of the subjects that it has marks on
+- Bug Fixed: Administration>System Setup>Configurations>Coordinates: Length validation issue
+- Bug Fixed: Institutions > Statistics > Standard Report : Marks Entered by Staff: Report is showing wrong data
+- Bug Fixed: Institutions>Students>Add: Students that are added are not added to the student user group
+- Bug Fixed: Institutions>Attendance>Shift: Slowness when loading
+- Bug Fixed: Personal/Institutions/Directory > Accounts : System should Insert into user_activities table when there is an update on the username and password fields
+- Bug Fixed: Institutions > Add Page : System throws error message when creating an institution
+
 ### [3.77.6] - 2023-01-17
 - Bug Fixed: Institutions > Performance > Student Report Cards: Report card are still showing
 - Bug Fixed: Institution > Attendance > Staff page: All users are not showing in the Institution > Attendance > Staff page list even though there are shifts assigned to them.
