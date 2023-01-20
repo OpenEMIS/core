@@ -1072,6 +1072,8 @@ class InstitutionsTable extends ControllerActionTable
                     
                 }
                 $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
+                //POCOR-7189[START]
+                if(!empty($SurveyFormIds)){
                 $institutionSurveysDelete = $InstitutionSurveys->find()
                 ->where([
                     $InstitutionSurveys->aliasField('institution_id = ').$entity->id,
@@ -1079,6 +1081,8 @@ class InstitutionsTable extends ControllerActionTable
                     $InstitutionSurveys->aliasField('academic_period_id IN') => $multipleFormIds,
                 ])
                 ->toArray();
+                }
+                //POCOR-7189[END]
                 if (empty($institutionSurveysDelete)) {
                     
                     foreach ($SurveyStatusesIds as $key => $periodObj) {
